@@ -1,0 +1,49 @@
+If you develop a test case for a unit, do the following in order to extend the test harness:
+
+===============================================================================
+0. we assume the new test case is TCXXXX
+
+===============================================================================
+1. paste the following test case overview template into test/index.html:
+
+---------------------------
+<div class="testcase" id="secTCXXXX" about="#TCXXXX" typeof="test:TestCase">
+	<span property="dcterms:identifier" content="TCXXXX"></span> 
+	<h2 property="dcterms:title" title="click to expand ..." content="TCXXXX: A TITLE">TCXXXX: A TITLE (...)</h2>
+	<span class="overallTestResult"></span>
+	<div class="testdetails">
+		<p><em>Purpose</em>: <span property="dcterms:description test:purpose">EXPLAIN WHAT IT DOES</span>
+		</p>
+		<p><em>See also</em>: 
+		</p>
+		<p><em>Test</em>: 
+			<a href="tcXXXX/index.html">View</a> | 
+			<button class="runTest" rel="ov:resultFrom" resource="tcXXXX/test_UUU.js">Run</button> 
+		</p>
+	</div>
+</div>
+-----------------
+
+
+===============================================================================
+2. create a sub-directory test/tcXXXX/ with two files in it:
+
+ + an index.html file, and
+ + a .js file, with the convention that
+   if the unit to be tested is called UUU,
+   then the file should be named test_UUU.js
+   (note that this must be the same file name
+   you use in step 1. in the @resource value 
+   of the runTest button)
+
+ Note: for a start, you can copy the two template files in test/template 
+ and paste them in your test/tcXXXX/ directory.
+
+===============================================================================
+3. That's it. The overview (TOC) in the right upper corner is created
+   dynamically and the rest should work automatically, given you stick to the
+   (few) conventions.
+
+
+Let michael.hausenblas@deri.org know if something doesn't work as expected or
+join #SWIG channel on Freenode irc://irc.freenode.net/swig and mention Tabulator, there.
