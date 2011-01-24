@@ -288,6 +288,9 @@ $rdf.sparqlUpdate = function() {
         if (! (ds instanceof Array)) throw "Type Error "+(typeof ds)+": "+ds;
         if (! (is instanceof Array)) throw "Type Error "+(typeof is)+": "+is;
         var doc = ds.length ? ds[0].why : is[0].why;
+        
+        ds.map(function(st){if (!doc.sameTerm(st.why)) throw "sparql update: destination "+doc+" inconsitent with ds "+st.why;});
+        is.map(function(st){if (!doc.sameTerm(st.why)) throw "sparql update: destination "+doc+" inconsitent with is "+st.why;});
 
         var protocol = this.editable(doc.uri, kb);
         if (!protocol) throw "Can't make changes in uneditable "+doc;

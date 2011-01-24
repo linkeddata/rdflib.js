@@ -779,12 +779,12 @@ $rdf.Fetcher = function(store, timeout, async) {
         // Is the script istelf is running in localhost, then access all data in a localhost mirror.
         // Do not remove without checking with TimBL :)
         var uri2 = docuri;
-        if (!isExtension) {
-            var here = '' + document.location
-            if (here.slice(0, 17) == 'http://localhost/') {
-                uri2 = 'http://localhost/' + uri2.slice(7, uri2.length)
+        if (tabulator.preferences.get('offlineModeUsingLocalhost')) {
+            // var here = '' + document.location  // This was fro online version
+            //if (here.slice(0, 17) == 'http://localhost/') {
+            //uri2 = 'http://localhost/' + uri2.slice(7, uri2.length)
+            if (uri2.slice(0,7) == 'http://'  && uri2.slice(7,17) != 'localhost/') uri2 = 'http://localhost/' + uri2.slice(7);
                 // dump("URI mapped to " + uri2)
-            }
         }
 
         // Setup the request

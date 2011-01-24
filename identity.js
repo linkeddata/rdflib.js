@@ -273,6 +273,7 @@ function RDFMakeTerm(formula,val, canonicalize) {
 // Add a triple to the store
 //
 //  Returns the statement added
+// (would it be better to return the original formula for chaining?)
 //
 $rdf.IndexedFormula.prototype.add = function(subj, pred, obj, why) {
     var actions, st;

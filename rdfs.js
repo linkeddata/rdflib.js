@@ -1,8 +1,11 @@
 // RDFS Inference
 //
 // These are hand-written implementations of a backward-chaining reasoner over the RDFS axioms
-// These RDFS bits were moved from panes/categoryPAne.js to a js/rdf/rdfs.js
+// These RDFS bits were moved from panes/categoryPane.js to a js/rdf/rdfs.js
 
+// @param seeds:   a hash of NTs of classes to start with
+// @param predicate: The property to trace though
+// @param inverse: trace inverse direction
 
 $rdf.Formula.prototype.transitiveClosure = function(seeds, predicate, inverse){
     var done = {}; // Classes we have looked up
@@ -11,10 +14,10 @@ $rdf.Formula.prototype.transitiveClosure = function(seeds, predicate, inverse){
     for(;;) {
         var t = (function(){for (var pickOne in agenda) {return pickOne;} return undefined}());
         if (t == undefined)  return done;
-        var sups = inverse  ? this.each(undefined, predicate, this.sym(t))
-                            : this.each(this.sym(t), predicate);
+        var sups = inverse  ? this.each(undefined, predicate, this.fromNT(t))
+                            : this.each(this.fromNT(t), predicate);
         for (var i=0; i<sups.length; i++) {
-            var s = sups[i].uri;
+            var s = sups[i].toNT();
             if (s in done) continue;
             if (s in agenda) continue;
             agenda[s] = agenda[t];
@@ -32,30 +35,48 @@ $rdf.Formula.prototype.transitiveClosure = function(seeds, predicate, inverse){
 // of something which has the type as its domain
 // We don't bother doing subproperty (yet?)as it doesn't seeem to be used much.
 
-$rdf.Formula.prototype.findMemberURIs = function (subject) {
-    var types = {}, types2 = this.transitiveClosure(types,
+$rdf.Formula.prototype.findMembersNT = function (thisClass) {
+    var seeds = {}; seeds [thisClass.toNT()] = true;
+    var types = this.transitiveClosure(seeds,
         this.sym('http://www.w3.org/2000/01/rdf-schema#subClassOf'), true);
     var members = {};
-    for (t in types2) {
-        this.statementsMatching(undefined, this.sym('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'), this.sym(t))
+    var kb = this;
+    for (t in types) {
+        this.statementsMatching(undefined, this.sym('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'), this.fromNT(t))
             .map(function(st){members[st.subject.toNT()] = st});
-        this.each(undefined, this.sym('http://www.w3.org/2000/01/rdf-schema#domain'), this.sym(t))
+        this.each(undefined, this.sym('http://www.w3.org/2000/01/rdf-schema#domain'), this.fromNT(t))
             .map(function(pred){
-                this.statementsMatching(undefined, pred).map(function(st){members[st.subject.toNT()] = st});
+                kb.statementsMatching(undefined, pred).map(function(st){members[st.subject.toNT()] = st});
             });
-        this.each(undefined, this.sym('http://www.w3.org/2000/01/rdf-schema#range'), this.sym(t))
+        this.each(undefined, this.sym('http://www.w3.org/2000/01/rdf-schema#range'), this.fromNT(t))
             .map(function(pred){
-                this.statementsMatching(undefined, pred).map(function(st){members[st.object.toNT()] = st});
+                kb.statementsMatching(undefined, pred).map(function(st){members[st.object.toNT()] = st});
             });
     }
     return members;
 };
 
+// Get all the Classes of which we can RDFS-infer the subject is a member
+// @returns  a hash of URIS
+
 $rdf.Formula.prototype.findTypeURIs = function (subject) {
-    // Get all the Classes of which we can RDFS-infer the subject is a member
-    // ** @@ This will loop is there is a class subclass loop which is actually valid
-    // Returns a hash table where key is URI of type and value is statement why we think so.
-    // Does NOT return terms, returns URI strings.
+    return this.NTtoURI(this.findTypesNT(subject));
+}
+
+$rdf.Formula.prototype.NTtoURI = function (t) {
+    var uris = {};
+    for (nt in t) {
+        if (nt[0] == '<') uris[nt.slice(1,-1)] = t[nt];
+    }
+    return uris;
+}
+
+$rdf.Formula.prototype.findTypesNT = function (subject) {
+// Get all the Classes of which we can RDFS-infer the subject is a member
+// ** @@ This will loop is there is a class subclass loop (Sublass loops are not illegal)
+// Returns a hash table where key is NT of type and value is statement why we think so.
+// Does NOT return terms, returns URI strings.
+// We use NT representations inthis version because they handle blank nodes.
 
     var sts = this.statementsMatching(subject, undefined, undefined); // fast
     var rdftype = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type';
@@ -63,12 +84,12 @@ $rdf.Formula.prototype.findTypeURIs = function (subject) {
     for (var i=0; i < sts.length; i++) {
         st = sts[i];
         if (st.predicate.uri == rdftype) {
-            types[st.object.uri] = st;
+            types[st.object.toNT()] = st;
         } else {
             // $rdf.log.warn('types: checking predicate ' + st.predicate.uri);
             var ranges = this.each(st.predicate, this.sym('http://www.w3.org/2000/01/rdf-schema#domain'))
             for (var j=0; j<ranges.length; j++) {
-                types[ranges[j].uri] = st; // A pointer to one part of the inference only
+                types[ranges[j].toNT()] = st; // A pointer to one part of the inference only
             }
         }
     }
@@ -77,35 +98,11 @@ $rdf.Formula.prototype.findTypeURIs = function (subject) {
         st = sts[i];
         var domains = this.each(st.predicate, this.sym('http://www.w3.org/2000/01/rdf-schema#range'))
         for (var j=0; j < domains.length; j++) {
-            types[domains[j].uri] = st;
+            types[domains[j].toNT()] = st;
         }
     }
     return this.transitiveClosure(types,
         this.sym('http://www.w3.org/2000/01/rdf-schema#subClassOf'), false);
-/*    
-    var done = {}; // Classes we have looked up
-    var go = true;
-    for(;go;) {
-        go = false;
-        var agenda = {};
-        for (var t in types) agenda[t] = types[t]; // Take a copy
-        for (var t in agenda) {
-            var sups = this.each(this.sym(t), this.sym('http://www.w3.org/2000/01/rdf-schema#subClassOf'));
-            for (var i=0; i<sups.length; i++) {
-                var s = sups[i].uri;
-                if (s in done) continue;
-                if (s in agenda) continue;
-                types[s] = types[t];
-                go = true;
-            }
-            done[t] = agenda[t];
-            delete types[t];
-        }
-        
-    }
-    // $rdf.log.warn('Types: ' + types.length); 
-    return done;
-*/
 };
         
 /* Find the types in the list which have no *stored* supertypes
