@@ -197,6 +197,7 @@ $rdf.sparqlUpdate = function() {
                 var success = (!xhr.status || (xhr.status >= 200 && xhr.status < 300));
                 if (!success) tabulator.log.error("sparql: update failed for <"+uri+"> status="+
                     xhr.status+", "+xhr.statusText+", body length="+xhr.responseText.length+"\n   for query: "+query);
+                else  tabulator.log.debug("sparql: update Ok for <"+uri+">");
                 callback(uri, success, xhr.responseText);
             }
         }
