@@ -124,6 +124,11 @@ $rdf.Util.uri.docpart = function (uri) {
     return uri.slice(0,i)
 } 
 
+/** The document in which something a thing defined  **/
+$rdf.Util.uri.document = function (x) {
+    return $rdf.sym($rdf.Util.uri.docpart(x.uri));
+} 
+
 /** return the protocol of a uri **/
 /** return null if there isn't one **/
 $rdf.Util.uri.protocol = function (uri) {
