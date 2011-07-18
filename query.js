@@ -200,7 +200,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher) {
             }
         }
         return res;
-    } //RDFArrayUnifyContents
+    } // RDFArrayUnifyContents
 
 
 
@@ -445,6 +445,13 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher) {
 	
 	//kb.remoteQuery(myQuery,'http://jena.hpl.hp.com:3040/backstage',callback);
 	//return;
+
+
+        // When there are OPTIONAL clauses, we must return bindings without them if none of them
+        // succeed. However, if any of them do succeed, we should not.  This is what branchcount()
+        // tracks. The problem currently ios (2011/7) that when several optionals exist, and they
+        // all match, multiple sets of bindings are returned, each with one optional filled in.
+        
 	function branchCount ()
 	{
 		this.count = 1;
@@ -455,7 +462,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher) {
 		return this;
 	}
 	
-	function optionalCallback (bindings,pat)
+	function optionalCallback (bindings, pat)
 	{
 		if (pat.optional.length==0) callback(bindings);
 		//alert("OPTIONAL: "+pat.optional)
@@ -466,7 +473,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher) {
 			var bc = new branchCount();
 			bc.onFail = function(){ callback(bindings); }
 			bc.numTasks = tc;
-			match(f,pat.optional[x],bindings,'',fetcher,optionalCallback,bc)
+			match(f, pat.optional[x], bindings, '', fetcher, optionalCallback, bc)
 		}
 		return this;
 	}
