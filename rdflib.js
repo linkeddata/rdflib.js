@@ -4604,6 +4604,25 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher) {
     //FUNCTIONS!! 
     //TODO:  Do these work here?
 
+    ///////////// Debug strings
+
+    function bindingsDebug(nbs) {
+        var str = "Bindings: ";
+        var i, n=nbs.length;
+        for (i=0; i<n; i++) {
+            str+= bindingDebug(nbs[i][0])+';\n\t';
+        };
+        return str;
+    } //bindingsDebug
+
+    function bindingDebug(b) {
+            var str = "", v;
+            for (v in b) {
+                str += "    "+v+" -> "+b[v];
+            }
+            return str;
+    }
+
 
 // Unification: see also 
 //  http://www.w3.org/2000/10/swap/term.py
@@ -4611,6 +4630,8 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher) {
 //
 // Unification finds all bindings such that when the binding is applied
 // to one term it is equal to the other.
+// Returns: a list of bindings, where a binding is an associative array
+//  mapping variuable to value.
 
 
     function RDFUnifyTerm(self, other, bindings, formula) {
@@ -4668,7 +4689,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher) {
             }
         }
         return res;
-    } //RDFArrayUnifyContents
+    } // RDFArrayUnifyContents
 
 
 
@@ -4739,11 +4760,12 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher) {
     * @param bindingsSoFar  - bindings accumulated in matching to date
     * @param level - spaces to indent stuff also lets you know what level of recursion you're at
     * @param fetcher - function (term, requestedBy) - myFetcher / AJAR_handleNewTerm / the sort
+    * @param localCallback - function(bindings, pattern, branch) called on sucess
     * @returns nothing 
     *
     * Will fetch linked data from the web iff the knowledge base an associated source fetcher (f.sf)
     ***/
-    function match(f, g, bindingsSoFar, level, fetcher, callback, branchCount) {
+    function match(f, g, bindingsSoFar, level, fetcher, localCallback, branch) {
         var sf = null;
         if( typeof f.sf != 'undefined' ) {
             sf = f.sf;
@@ -4751,15 +4773,34 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher) {
         //$rdf.log.debug("match: f has "+f.statements.length+", g has "+g.statements.length)
         var pattern = g.statements;
         if (pattern.length == 0) { //when it's satisfied all the pattern triples
-            //$rdf.log.msg("REACHED CALLBACK WITH BINDINGS:")
-            for (var b in bindingsSoFar) {
-                //$rdf.log.msg("b=" + b + ", bindingsSoFar[b]=" + bindingsSoFar[b])
+/*        
+            if (branch && branch.number) {
+                $rdf.log.debug("REACHED branch "+branch.number+" match: "+bindingDebug(bindingsSoFar));
+                branch.reportMatch(branch.number, bindingsSoFar)
+            } else {
+                $rdf.log.debug("REACHED internal CALLBACK WITH BINDINGS:"+bindingDebug(bindingsSoFar));
+                if (localCallback) localCallback(bindingsSoFar, g, branch) // e.g OptionalCallback
             }
-            if (callback) callback(bindingsSoFar,g)
-            branchCount.count--
-            branchCount.success=true
-            //$rdf.log.debug("Branch Count at end: "+branchCount.count)
-            return [[ [], null ]]; // Success
+*/
+
+
+
+            $rdf.log.debug("FOUND MATCH WITH BINDINGS:"+bindingDebug(bindingsSoFar));
+            if (g.optional.length==0) branch.reportMatch(bindingsSoFar);
+            else {
+                $rdf.log.debug("OPTIONAL: "+g.optional);
+                var junction = new OptionalBranchJunction(callback, bindingsSoFar); // @@ won't work with nested optionals? nest callbacks
+                var br = [];
+                for (var b =0; b < g.optional.length; b++)
+                    br[b] = new OptionalBranch(junction); // Allocate branches to prevent premature ending
+                for (var b =0; b < g.optional.length; b++)
+                    match(f, g.optional[b], bindingsSoFar, '', fetcher, optionalCallback, br[b]);
+            }
+
+
+
+
+            return; // Success
         }
         var item, i, n=pattern.length;
         //$rdf.log.debug(level + "Match "+n+" left, bs so far:"+bindingDebug(bindingsSoFar))
@@ -4778,8 +4819,8 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher) {
                             return true
                         }
 
-                        match(f, g, bindingsSoFar, level, fetcher, // @@tbl was match2
-                                          callback, branchCount)
+                        match(f, g, bindingsSoFar, level, fetcher, // match not match2 to look up any others necessary.
+                                          localCallback, branch)
                         return false
                     })
                 }
@@ -4792,21 +4833,21 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher) {
                     && sf && sf.getState($rdf.Util.uri.docpart(bindingsSoFar[item.subject].uri)) == "unrequested") {
                     //fetch the subject info and return to id
                     fetchResource(bindingsSoFar[item.subject],id)
-                    return; //@@tbl
+                    return; // only look up one per line this time, but we will come back again though match
                 } else if (item.object in bindingsSoFar
                            && bindingsSoFar[item.object].uri
                            && sf && sf.getState($rdf.Util.uri.docpart(bindingsSoFar[item.object].uri)) == "unrequested") {
                     fetchResource(bindingsSoFar[item.object], id)
-                    return; //@@tbl
+                    return;
                 }
             }
-            match2(f, g, bindingsSoFar, level, fetcher, callback, branchCount)
-        }
-        return; //when the sources have been fetched, match2 will be called
-    }
+        } // if fetcher
+        match2(f, g, bindingsSoFar, level, fetcher, localCallback, branch)        
+        return;
+    } // match
 
     /** match2 -- stuff after the fetch **/
-    function match2(f, g, bindingsSoFar, level, fetcher, callback, branchCount) //post-fetch
+    function match2(f, g, bindingsSoFar, level, fetcher, callback, branch) //post-fetch
     {
         var pattern = g.statements, n = pattern.length, i;
         for (i=0; i<n; i++) {  //For each statement left in the query, run prepare
@@ -4832,33 +4873,30 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher) {
             [st.subject, st.predicate, st.object], bindingsSoFar, f);
             $rdf.log.info(level+" From first: "+nbs1.length+": "+bindingsDebug(nbs1))
             var k, nk=nbs1.length, nb1, v;
-            branchCount.count+=nk;
+            branch.count += nk;
+            $rdf.log.debug("OptionalBranch count bumped to: "+branch.count);
             for (k=0; k<nk; k++) {  // For each way that statement binds
                 var bindings2 = [];
                 var newBindings1 = nbs1[k][0]; 
-                if (!constraintsSatisfied(newBindings1,g.constraints)) {branchCount--; continue;}
+                if (!constraintsSatisfied(newBindings1,g.constraints)) {branch.count--; continue;}
                 for (v in newBindings1){
                     bindings2[v] = newBindings1[v]; // copy
                 }
                 for (v in bindingsSoFar) {
                     bindings2[v] = bindingsSoFar[v]; // copy
                 }
-                match(f, rest, bindings2, level+ '  ', fetcher, callback, branchCount); //call match
+                
+                match(f, rest, bindings2, level+ '  ', fetcher, callback, branch); //call match
             }
         }
-        branchCount.count--;
-        $rdf.log.debug("BranchCount: "+branchCount.count);
-        if (branchCount.count == 0 && !branchCount.success)
+        branch.count--;
+        $rdf.log.debug("OptionalBranch count: "+branch.count);
+        if (branch.count == 0)
         {
-            branchCount.numTasks.val--;
-            //alert(branchCount.numTasks.val)
-            $rdf.log.debug("Branch finished. Tasks remaining: "+branchCount.numTasks.val+" Optional array length: "+g.optional.length);
-            if (branchCount.numTasks.val==0) branchCount.onFail();
-            //if (g.optional.length == 0 && branchCount.numTasks.val < 1) { branchCount.onComplete();}
-            //if (!branchCount.optional && branchCount.numTasks.val == -1) branchCount.onComplete();
+            branch.reportDone(branch);
+            $rdf.log.debug("OptionalBranch finished.");
         }
-        //return results;
-    } //match
+    } //match2
 
     function constraintsSatisfied(bindings,constraints)
     {
@@ -4871,25 +4909,6 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher) {
             }
             }
             return res;
-    }
-
-    ///////////// Debug strings
-
-    function bindingsDebug(nbs) {
-        var str = "Bindings:\n";
-        var i, n=nbs.length;
-        for (i=0; i<n; i++) {
-            str+= bindingDebug(nbs[i][0])+'\n';
-        };
-        return str;
-    } //bindingsDebug
-
-    function bindingDebug(b) {
-            var str = "", v;
-            for (v in b) {
-                str += "    "+v+" -> "+b[v];
-            }
-            return str;
     }
 
     //////////////////////////// Body of query()  ///////////////////////
@@ -4910,51 +4929,113 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher) {
     var f = this;
     $rdf.log.debug("Query on "+this.statements.length)
 //    if (kb != this) alert("@@@@??? this="+ this)
-	
-	//kb.remoteQuery(myQuery,'http://jena.hpl.hp.com:3040/backstage',callback);
-	//return;
-	function branchCount ()
-	{
-		this.count = 1;
-		var tcount = function () { this.val = 1; return this }
-		this.numTasks = tcount();
-		this.success = false;
-		this.onFail = function(){};
-		return this;
-	}
-	
-	function optionalCallback (bindings,pat)
-	{
-		if (pat.optional.length==0) callback(bindings);
-		//alert("OPTIONAL: "+pat.optional)
-		var tcount = function () { this.val = pat.optional.length; return this};
-		var tc = new tcount();
-		for (x in pat.optional)
-		{
-			var bc = new branchCount();
-			bc.onFail = function(){ callback(bindings); }
-			bc.numTasks = tc;
-			match(f,pat.optional[x],bindings,'',fetcher,optionalCallback,bc)
-		}
-		return this;
-	}
-	//alert("INIT OPT: "+myQuery.pat.optional);
-    setTimeout(function() { match(f, myQuery.pat, myQuery.pat.initBindings, '', fetcher, optionalCallback, new branchCount()); }, 0);
-    //match(this, myQuery, [], '', fetcher, callback);
-    //    $rdf.log.debug("Returning from query length="+res.length+" bindings: "+bindingsDebug(res))
-    /*var r, nr=res.length, b, v;
-    for (r=0; r<nr; r++) {
-        b = res[r][0];
-        for (v in b) {
-            if (v[0] == '_') { // bnodes' bindings are not to be returned
-                delete res[r][0][v];
-            }
-        }
+    
+    //kb.remoteQuery(myQuery,'http://jena.hpl.hp.com:3040/backstage',callback);
+    //return;
+
+
+    // When there are OPTIONAL clauses, we must return bindings without them if none of them
+    // succeed. However, if any of them do succeed, we should not.  (This is what branchCount()
+    // tracked. The problem currently is (2011/7) that when several optionals exist, and they
+    // all match, multiple sets of bindings are returned, each with one optional filled in.)
+    
+    union = function(a,b) {
+       var c= {}, x;
+       for (x in a) c[x] = a[x];
+       for (x in b) c[x] = b[x];
+       return c
     }
-    $rdf.log.debug("Returning from query length="+res.length+" bindings: "+bindingsDebug(res));
-        
-    return res;
-    */
+    
+    function OptionalBranchJunction(originalCallback, trunkBindings) {
+        this.trunkBindings = trunkBindings;
+        this.originalCallback = originalCallback;
+        this.branches = [];
+        //this.results = []; // result[i] is an array of bindings for branch i
+        //this.done = {};  // done[i] means all/any results are in for branch i
+        //this.count = {};
+        return this;
+    }
+
+    OptionalBranchJunction.prototype.checkAllDone = function() {
+        for (var i=0; i<this.branches.length; i++) if (!this.branches[i].done) return;
+        $rdf.log.debug("OPTIONAL BIDNINGS ALL DONE:");
+        this.doCallBacks(this.branches.length-1, this.trunkBindings);
+    
+    };
+    // Recrursively generate the cross product of the bindings
+    OptionalBranchJunction.prototype.doCallBacks = function(b, bindings) {
+        if (b < 0) return this.originalCallback(bindings); 
+        for (var j=0; j < this.branches[b].results.length; j++) {
+            this.doCallBacks(b-1, union(bindings, this.branches[b].results[j]));
+        }
+    };
+    
+    // A mandatory branch is the normal one, where callbacks
+    // are made immediatrely and no junction is needed
+    // Might be useful for onFinsihed callback for SPARQL.
+    function MandatoryBranch(callback) {
+        this.count = 0;
+        this.success = false;
+        this.done = false;
+        // this.results = [];
+        this.callback = callback;
+        // this.junction = junction;
+        // junction.branches.push(this);
+        return this;
+    }
+    
+    MandatoryBranch.prototype.reportMatch = function(bindings) {
+        this.callback(bindings);
+        this.success = true;
+    };
+
+    MandatoryBranch.prototype.reportDone = function(b) {
+        this.done = true;
+    };
+
+
+    // An optional branch hoards its results.
+    function OptionalBranch(junction) {
+        this.count = 0;
+        this.done = false;
+        this.results = [];
+        this.junction = junction;
+        junction.branches.push(this);
+        // var tcount = function () { this.val = 1; return this }
+        // this.numTasks = tcount();
+        // this.success = false;
+        // this.onFail = function(){}; // Call if the branch does not match and ...
+        return this;
+    }
+    
+    OptionalBranch.prototype.reportMatch = function(bindings) {
+        this.results.push(bindings);
+    };
+
+    OptionalBranch.prototype.reportDone = function(b) {
+        if (this.results == []) // This is what optional means: if no hits,
+            this.results = [{}];  // mimic success, but with no bindings
+        this.done = true;
+        this.junction.checkAllDone();
+    };
+
+    
+    function optionalCallback (bindings, pat, oldbranch) {
+        if (pat.optional.length==0) return callback(bindings);
+        $rdf.log.debug("OPTIONAL: "+pat.optional);
+        var junction = new OptionalBranchJunction(callback, bindings); // @@ won't work with nested optionals? nest callbacks
+        var b;
+        for (var b =0; b < pat.optional.length; b++)
+        { 
+            b = new OptionalBranch(junction);
+            match(f, pat.optional[x], bindings, '', fetcher, optionalCallback, b)
+        }
+        return;
+    }
+    //alert("INIT OPT: "+myQuery.pat.optional);
+    var trunck = new MandatoryBranch(callback);
+    setTimeout(function() { match(f, myQuery.pat, myQuery.pat.initBindings, '', fetcher, optionalCallback, trunck /*branch*/ ); }, 0);
+    
     return; //returns nothing; callback does the work
 }; //query
 //Converting between SPARQL queries and the $rdf query API
