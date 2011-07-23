@@ -4715,9 +4715,9 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher) {
     function prepare(f, item, bindings) {
         item.nvars = 0;
         item.index = null;
-        if (!f.statements) $rdf.log.warn("@@@ prepare: f is "+f);
+        // if (!f.statements) $rdf.log.warn("@@@ prepare: f is "+f);
     //    $rdf.log.debug("Prepare: f has "+ f.statements.length);
-        $rdf.log.debug("Prepare: Kb size "+f.statements.length+" Preparing "+item);
+        //$rdf.log.debug("Prepare: Kb size "+f.statements.length+" Preparing "+item);
         
         var t,c,terms = [item.subject,item.predicate,item.object],ind = [f.subjectIndex,f.predicateIndex,f.objectIndex];
         for (i=0;i<3;i++)
@@ -4732,7 +4732,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher) {
                     termIndex=ind[i]
                     item.index = termIndex[t.hashString()];
                     if (typeof item.index == 'undefined') {
-                    $rdf.log.debug("prepare: no occurrence [yet?] of term: "+ t);
+                    // $rdf.log.debug("prepare: no occurrence [yet?] of term: "+ t);
                     item.index = [];
                     }
             }
@@ -4740,7 +4740,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher) {
             
         if (item.index == null) item.index = f.statements;
         // $rdf.log.debug("Prep: index length="+item.index.length+" for "+item)
-        $rdf.log.debug("prepare: index length "+item.index.length +" for "+ item);
+        // $rdf.log.debug("prepare: index length "+item.index.length +" for "+ item);
         return false;
     } //prepare
         
@@ -4766,6 +4766,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher) {
     * Will fetch linked data from the web iff the knowledge base an associated source fetcher (f.sf)
     ***/
     function match(f, g, bindingsSoFar, level, fetcher, localCallback, branch) {
+        $rdf.log.debug("Match begins, Branch count now: "+branch.count+" for "+branch.pattern_debug);
         var sf = null;
         if( typeof f.sf != 'undefined' ) {
             sf = f.sf;
@@ -4773,35 +4774,27 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher) {
         //$rdf.log.debug("match: f has "+f.statements.length+", g has "+g.statements.length)
         var pattern = g.statements;
         if (pattern.length == 0) { //when it's satisfied all the pattern triples
-/*        
-            if (branch && branch.number) {
-                $rdf.log.debug("REACHED branch "+branch.number+" match: "+bindingDebug(bindingsSoFar));
-                branch.reportMatch(branch.number, bindingsSoFar)
-            } else {
-                $rdf.log.debug("REACHED internal CALLBACK WITH BINDINGS:"+bindingDebug(bindingsSoFar));
-                if (localCallback) localCallback(bindingsSoFar, g, branch) // e.g OptionalCallback
-            }
-*/
-
-
 
             $rdf.log.debug("FOUND MATCH WITH BINDINGS:"+bindingDebug(bindingsSoFar));
             if (g.optional.length==0) branch.reportMatch(bindingsSoFar);
             else {
                 $rdf.log.debug("OPTIONAL: "+g.optional);
                 var junction = new OptionalBranchJunction(callback, bindingsSoFar); // @@ won't work with nested optionals? nest callbacks
-                var br = [];
-                for (var b =0; b < g.optional.length; b++)
+                var br = [], b;
+                for (b =0; b < g.optional.length; b++) {
                     br[b] = new OptionalBranch(junction); // Allocate branches to prevent premature ending
-                for (var b =0; b < g.optional.length; b++)
-                    match(f, g.optional[b], bindingsSoFar, '', fetcher, optionalCallback, br[b]);
+                    br[b].pattern_debug = g.optional[b]; // for diagnotics only
+                }
+                for (b =0; b < g.optional.length; b++) {
+                    br[b].count =  br[b].count + 1;  // Count how many matches we have yet to complete
+                    match(f, g.optional[b], bindingsSoFar, '', fetcher, callback, br[b]);
+                }
             }
-
-
-
-
+            branch.count--;
+            $rdf.log.debug("Match ends -- success , Branch count now: "+branch.count+" for "+branch.pattern_debug);
             return; // Success
         }
+        
         var item, i, n=pattern.length;
         //$rdf.log.debug(level + "Match "+n+" left, bs so far:"+bindingDebug(bindingsSoFar))
 
@@ -4862,7 +4855,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher) {
         rest.optional = g.optional;
         rest.constraints = g.constraints;
         rest.statements = pattern.slice(1); // No indexes: we will not query g. 
-        $rdf.log.debug(level + "Match2 searching "+item.index.length+ " for "+item+
+        $rdf.log.debug(level + "match2 searching "+item.index.length+ " for "+item+
                 "; bindings so far="+bindingDebug(bindingsSoFar));
         //var results = [];
         var c, nc=item.index.length, nbs1, x;
@@ -4873,12 +4866,15 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher) {
             [st.subject, st.predicate, st.object], bindingsSoFar, f);
             $rdf.log.info(level+" From first: "+nbs1.length+": "+bindingsDebug(nbs1))
             var k, nk=nbs1.length, nb1, v;
-            branch.count += nk;
-            $rdf.log.debug("OptionalBranch count bumped to: "+branch.count);
+            //branch.count += nk;
+            //$rdf.log.debug("Branch count bumped "+nk+" to: "+branch.count);
             for (k=0; k<nk; k++) {  // For each way that statement binds
                 var bindings2 = [];
                 var newBindings1 = nbs1[k][0]; 
-                if (!constraintsSatisfied(newBindings1,g.constraints)) {branch.count--; continue;}
+                if (!constraintsSatisfied(newBindings1,g.constraints)) {
+                    //branch.count--;
+                    $rdf.log.debug("Branch count CS: "+branch.count);
+                    continue;}
                 for (v in newBindings1){
                     bindings2[v] = newBindings1[v]; // copy
                 }
@@ -4886,15 +4882,16 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher) {
                     bindings2[v] = bindingsSoFar[v]; // copy
                 }
                 
+                branch.count++;  // Count how many matches we have yet to complete
                 match(f, rest, bindings2, level+ '  ', fetcher, callback, branch); //call match
             }
         }
         branch.count--;
-        $rdf.log.debug("OptionalBranch count: "+branch.count);
+        $rdf.log.debug("Match2 ends, Branch count: "+branch.count +" for "+branch.pattern_debug);
         if (branch.count == 0)
         {
+            $rdf.log.debug("Branch finished.");
             branch.reportDone(branch);
-            $rdf.log.debug("OptionalBranch finished.");
         }
     } //match2
 
@@ -4971,8 +4968,8 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher) {
     };
     
     // A mandatory branch is the normal one, where callbacks
-    // are made immediatrely and no junction is needed
-    // Might be useful for onFinsihed callback for SPARQL.
+    // are made immediately and no junction is needed.
+    // Might be useful for onFinsihed callback for query API.
     function MandatoryBranch(callback) {
         this.count = 0;
         this.success = false;
@@ -4991,6 +4988,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher) {
 
     MandatoryBranch.prototype.reportDone = function(b) {
         this.done = true;
+        $rdf.log.info("Mandatory query branch finished.***")
     };
 
 
@@ -5012,29 +5010,21 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher) {
         this.results.push(bindings);
     };
 
-    OptionalBranch.prototype.reportDone = function(b) {
-        if (this.results == []) // This is what optional means: if no hits,
-            this.results = [{}];  // mimic success, but with no bindings
+    OptionalBranch.prototype.reportDone = function() {
+        $rdf.log.debug("Optional branch finished - length = "+this.results.length);
+        if (this.results.length == 0) {// This is what optional means: if no hits,
+            this.results.push({});  // mimic success, but with no bindings
+            $rdf.log.debug("Optional branch FAILED - that's OK.");
+        }
         this.done = true;
         this.junction.checkAllDone();
     };
 
     
-    function optionalCallback (bindings, pat, oldbranch) {
-        if (pat.optional.length==0) return callback(bindings);
-        $rdf.log.debug("OPTIONAL: "+pat.optional);
-        var junction = new OptionalBranchJunction(callback, bindings); // @@ won't work with nested optionals? nest callbacks
-        var b;
-        for (var b =0; b < pat.optional.length; b++)
-        { 
-            b = new OptionalBranch(junction);
-            match(f, pat.optional[x], bindings, '', fetcher, optionalCallback, b)
-        }
-        return;
-    }
     //alert("INIT OPT: "+myQuery.pat.optional);
     var trunck = new MandatoryBranch(callback);
-    setTimeout(function() { match(f, myQuery.pat, myQuery.pat.initBindings, '', fetcher, optionalCallback, trunck /*branch*/ ); }, 0);
+    trunck.count++; // count one branch to complete at the moment
+    setTimeout(function() { match(f, myQuery.pat, myQuery.pat.initBindings, '', fetcher, callback, trunck /*branch*/ ); }, 0);
     
     return; //returns nothing; callback does the work
 }; //query
