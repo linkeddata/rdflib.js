@@ -129,12 +129,11 @@ $rdf.Collection.prototype.isVar = 0;
  * @param	callback, 	whenever the pattern in myQuery is met this is called with 
  * 						the binding as parameter
  * @param	fetcher,	whenever a resource needs to be loaded this gets called
+ * @param       onDone          callback when 
  */
-$rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher) {
+$rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDone) {
     var kb = this;
-    dump("Query:"+myQuery.pat+", fetcher="+fetcher+"\n");
-    //FUNCTIONS!! 
-    //TODO:  Do these work here?
+    $rdf.log.info("Query:"+myQuery.pat+", fetcher="+fetcher+"\n");
 
     ///////////// Debug strings
 
@@ -390,7 +389,8 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher) {
         $rdf.log.debug(level + "match2 searching "+item.index.length+ " for "+item+
                 "; bindings so far="+bindingDebug(bindingsSoFar));
         //var results = [];
-        var c, nc=item.index.length, nbs1, x;
+        var c, nc=item.index.length, nbs1;
+        //var x;
         for (c=0; c<nc; c++) {   // For each candidate statement
             var st = item.index[c]; //for each statement in the item's index, spawn a new match with that binding 
             nbs1 = RDFArrayUnifyContents(
@@ -407,10 +407,10 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher) {
                     //branch.count--;
                     $rdf.log.debug("Branch count CS: "+branch.count);
                     continue;}
-                for (v in newBindings1){
+                for (var v in newBindings1){
                     bindings2[v] = newBindings1[v]; // copy
                 }
-                for (v in bindingsSoFar) {
+                for (var v in bindingsSoFar) {
                     bindings2[v] = bindingsSoFar[v]; // copy
                 }
                 
@@ -429,15 +429,15 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher) {
 
     function constraintsSatisfied(bindings,constraints)
     {
-            var res=true;
-            for (x in bindings) {
-                    if (constraints[x]) {
-                            var test = constraints[x].test;
-                            if (test && !test(bindings[x]))
-                                    res=false;
+        var res=true;
+        for (var x in bindings) {
+            if (constraints[x]) {
+                var test = constraints[x].test;
+                if (test && !test(bindings[x]))
+                        res=false;
             }
-            }
-            return res;
+        }
+        return res;
     }
 
     //////////////////////////// Body of query()  ///////////////////////
@@ -469,7 +469,8 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher) {
     // all match, multiple sets of bindings are returned, each with one optional filled in.)
     
     union = function(a,b) {
-       var c= {}, x;
+       var c= {};
+       var x;
        for (x in a) c[x] = a[x];
        for (x in b) c[x] = b[x];
        return c
@@ -502,12 +503,13 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher) {
     // A mandatory branch is the normal one, where callbacks
     // are made immediately and no junction is needed.
     // Might be useful for onFinsihed callback for query API.
-    function MandatoryBranch(callback) {
+    function MandatoryBranch(callback, onDone) {
         this.count = 0;
         this.success = false;
         this.done = false;
         // this.results = [];
         this.callback = callback;
+        this.onDone = onDone;
         // this.junction = junction;
         // junction.branches.push(this);
         return this;
@@ -521,6 +523,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher) {
     MandatoryBranch.prototype.reportDone = function(b) {
         this.done = true;
         $rdf.log.info("Mandatory query branch finished.***")
+        if (this.onDone != undefined) this.onDone();
     };
 
 
@@ -543,7 +546,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher) {
     };
 
     OptionalBranch.prototype.reportDone = function() {
-        $rdf.log.debug("Optional branch finished - length = "+this.results.length);
+        $rdf.log.debug("Optional branch finished - results.length = "+this.results.length);
         if (this.results.length == 0) {// This is what optional means: if no hits,
             this.results.push({});  // mimic success, but with no bindings
             $rdf.log.debug("Optional branch FAILED - that's OK.");
@@ -554,7 +557,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher) {
 
     
     //alert("INIT OPT: "+myQuery.pat.optional);
-    var trunck = new MandatoryBranch(callback);
+    var trunck = new MandatoryBranch(callback, onDone);
     trunck.count++; // count one branch to complete at the moment
     setTimeout(function() { match(f, myQuery.pat, myQuery.pat.initBindings, '', fetcher, callback, trunck /*branch*/ ); }, 0);
     
