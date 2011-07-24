@@ -22,7 +22,7 @@
 
 
     if (dump == undefined) {
-        var dump = function(str) { print("dump:  "+str);};
+        var dump = function(str) { print("----  "+str);};
         $rdf.log.debug = function(str) {print("debug: "+str)};
         $rdf.log.warn = function(str) {print("warn:  "+str)};
         $rdf.log.info = function(str) {print("info:  "+str)};
@@ -30,13 +30,31 @@
     }
     if (setTimeout == undefined) var setTimeout = function(f,t) {f()};
     
-        
+    /////////////////////////////////////////////////////////////////
+    
+    
+    var onResult = function(result) {
+        //print("TEST RESULT:");
+        var str = "\tTEST Result: ";
+        for (var v in result) {
+            str += "   "+v+'->'+result[v];
+        }
+        print(str);
+    };
+    
+    var onDone = function() {
+        print("\tTEST DONE -- final callback")
+    }
+    
+    
+    // Make some initial test data:
+    
     kb = $rdf.graph();
     var x = kb.sym('#foo');
     var foaf = $rdf.Namespace('http://xmlns.com/foaf/0.1/');
     kb.add(x, foaf('type'), foaf('Person'));
-    kb.add(x, foaf('name'), "Fred");
-    /* kb.add(x, foaf('mbox'), kb.sym('mailto:fred@example.com')) @@ */
+
+    // Make a query:
 
     q = new $rdf.Query('test', 3);
 
@@ -54,15 +72,16 @@
     opt2.add(who,  foaf('name'), name);
     q.pat.optional.push(opt2);
     
-    dump('Test:');
-    kb.query(q, function(result) {
-        print('TEST OK - CALLBACK');
-        var str = "Result: ";
-        for (var v in result) {
-            str += "   "+v+'->'+result[v];
-        }
-        print(str);
-              
-    });
+    print('\nTest1:');
+    kb.query(q, onResult, undefined, onDone);
     
+    kb.add(x, foaf('name'), "Fred");
+
+    print('\nTest 2:');
+    kb.query(q, onResult, undefined, onDone);
+
+    kb.add(x, foaf('mbox'), kb.sym('mailto:fred@example.com'));
+
+    print('\nTest 3: kb='+kb);
+    kb.query(q, onResult, undefined, onDone);
     
