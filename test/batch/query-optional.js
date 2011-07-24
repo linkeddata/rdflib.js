@@ -36,7 +36,7 @@
     var foaf = $rdf.Namespace('http://xmlns.com/foaf/0.1/');
     kb.add(x, foaf('type'), foaf('Person'));
     kb.add(x, foaf('name'), "Fred");
-    kb.add(x, foaf('mbox'), kb.sym('mailto:fred@example.com'))
+    /* kb.add(x, foaf('mbox'), kb.sym('mailto:fred@example.com')) @@ */
 
     q = new $rdf.Query('test', 3);
 
