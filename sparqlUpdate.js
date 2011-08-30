@@ -59,7 +59,7 @@ $rdf.sparqlUpdate = function() {
                 var author_via = kb.each(response, this.ns.httph("ms-author-via"));
                 if (author_via.length) {
                     for (var i = 0; i < author_via.length; i++) {
-                        var method = author_via[i].value.strip();
+                        var method = author_via[i].value.trim();
                         if (author_via[i].value == "SPARQL" || author_via[i].value == "DAV")
                             // dump("sparql.editable: Success for "+uri+": "+author_via[i] +"\n");
                             return author_via[i].value;
