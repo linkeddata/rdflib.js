@@ -23,9 +23,9 @@
 
     if (dump == undefined) {
         var dump = function(str) { print("----  "+str);};
-        $rdf.log.debug = function(str) {print("debug: "+str)};
-        $rdf.log.warn = function(str) {print("warn:  "+str)};
-        $rdf.log.info = function(str) {print("info:  "+str)};
+        // $rdf.log.debug = function(str) {print("debug: "+str)};
+        // $rdf.log.warn = function(str) {print("warn:  "+str)};
+        // $rdf.log.info = function(str) {print("info:  "+str)};
         $rdf.log.error = function(str) {print("error: "+str)};
     }
     if (setTimeout == undefined) var setTimeout = function(f,t) {f()};
