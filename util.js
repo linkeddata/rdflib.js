@@ -1,12 +1,20 @@
 /**
-* Utility functions for $rdf
+* Utility functions for $rdf and the $rdf object itself
  */
 
-if (typeof isExtension == 'undefined') isExtension = false; // stand-alone library
+if (typeof tabulator.isExtension == 'undefined') tabulator.isExtension = false; // stand-alone library
 
 if( typeof $rdf == 'undefined' ) {
-    $rdf = {};
-}
+    var $rdf = {};
+} else {
+    dump("Internal error: RDF libray has already been loaded\n");
+    dump("Internal error: $rdf type is "+typeof $rdf+"\n");
+    dump("Internal error: $rdf.log type is "+typeof $rdf.log+"\n");
+    dump("Internal error: $rdf.log.error type is "+typeof $rdf.log.error+"\n");
+    return $rdf;
+
+    throw "Internal error: RDF libray has already been loaded: $rdf already exists";
+};
 
 /**
  * @class a dummy logger
@@ -15,7 +23,13 @@ if( typeof $rdf == 'undefined' ) {
   https://developer.mozilla.org/en/nsIConsoleService
  */
 
-$rdf.log = {
+dump("@@ rdf/util.js test RESET RDF LOGGER  $rdf.log.error)\n");
+if($rdf.log != undefined) {
+    dump("WTF util.js:" + $rdf.log);
+    throw "Internal Error: $rdf.log already defined,  util.js: " + $rdf.log;
+}
+
+$rdf.log = {    
     'debug':function(x) {return;},
     'warn':function(x) {return;},
     'info':function(x) {return;},
@@ -101,7 +115,7 @@ $rdf.Util = {
     * A standard way to create XMLHttpRequest objects
      */
 	'XMLHTTPFactory': function () {
-        if (isExtension) {
+        if (tabulator.isExtension) {
             return Components.
             classes["@mozilla.org/xmlextras/xmlhttprequest;1"].
             createInstance().QueryInterface(Components.interfaces.nsIXMLHttpRequest);
@@ -129,7 +143,7 @@ $rdf.Util = {
 	},
 
 	'DOMParserFactory': function () {
-        if(isExtension) {
+        if(tabulator.isExtension) {
             return Components.classes["@mozilla.org/xmlextras/domparser;1"]
             .getService(Components.interfaces.nsIDOMParser);
         } else if ( window.DOMParser ){

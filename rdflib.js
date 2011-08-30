@@ -1,13 +1,21 @@
 $rdf = function() {
 /**
-* Utility functions for $rdf
+* Utility functions for $rdf and the $rdf object itself
  */
 
-if (typeof isExtension == 'undefined') isExtension = false; // stand-alone library
+if (typeof tabulator.isExtension == 'undefined') tabulator.isExtension = false; // stand-alone library
 
 if( typeof $rdf == 'undefined' ) {
-    $rdf = {};
-}
+    var $rdf = {};
+} else {
+    dump("Internal error: RDF libray has already been loaded\n");
+    dump("Internal error: $rdf type is "+typeof $rdf+"\n");
+    dump("Internal error: $rdf.log type is "+typeof $rdf.log+"\n");
+    dump("Internal error: $rdf.log.error type is "+typeof $rdf.log.error+"\n");
+    return $rdf;
+
+    throw "Internal error: RDF libray has already been loaded: $rdf already exists";
+};
 
 /**
  * @class a dummy logger
@@ -16,7 +24,13 @@ if( typeof $rdf == 'undefined' ) {
   https://developer.mozilla.org/en/nsIConsoleService
  */
 
-$rdf.log = {
+dump("@@ rdf/util.js test RESET RDF LOGGER  $rdf.log.error)\n");
+if($rdf.log != undefined) {
+    dump("WTF util.js:" + $rdf.log);
+    throw "Internal Error: $rdf.log already defined,  util.js: " + $rdf.log;
+}
+
+$rdf.log = {    
     'debug':function(x) {return;},
     'warn':function(x) {return;},
     'info':function(x) {return;},
@@ -102,7 +116,7 @@ $rdf.Util = {
     * A standard way to create XMLHttpRequest objects
      */
 	'XMLHTTPFactory': function () {
-        if (isExtension) {
+        if (tabulator.isExtension) {
             return Components.
             classes["@mozilla.org/xmlextras/xmlhttprequest;1"].
             createInstance().QueryInterface(Components.interfaces.nsIXMLHttpRequest);
@@ -130,7 +144,7 @@ $rdf.Util = {
 	},
 
 	'DOMParserFactory': function () {
-        if(isExtension) {
+        if(tabulator.isExtension) {
             return Components.classes["@mozilla.org/xmlextras/domparser;1"]
             .getService(Components.interfaces.nsIDOMParser);
         } else if ( window.DOMParser ){
@@ -424,7 +438,7 @@ $rdf.Util.uri.join = function (given, base) {
     return base.slice(0, baseSingle) + path
 }
 
-if (isExtension) {
+if (tabulator.isExtension) {
     $rdf.Util.uri.join2 = function (given, base){
         var tIOService = Components.classes['@mozilla.org/network/io-service;1']
                         .getService(Components.interfaces.nsIIOService);
@@ -1673,21 +1687,21 @@ $rdf.curie.createCurie = function (uri, options) {
 
 $rdf.curie = function (curie, options) {
     var opts = $rdf.extend({}, $rdf.curie.defaults, {
-        namespaces: this.xmlns()
+        namespaces: thisElement.xmlns()
     }, options || {});
     return $rdf.curie(curie, opts);
 };
 
 $rdf.safeCurie = function (safeCurie, options) {
     var opts = $rdf.extend({}, $rdf.curie.defaults, {
-        namespaces: this.xmlns()
+        namespaces: thisElement.xmlns()
     }, options || {});
     return $rdf.curie.safeCurie(safeCurie, opts);
 };
 
 $rdf.createCurie = function (uri, options) {
     var opts = $rdf.extend({}, $rdf.curie.defaults, {
-        namespaces: this.xmlns()
+        namespaces: thisElement.xmlns()
     }, options || {});
     return $rdf.curie.createCurie(uri, opts);
 };
@@ -1700,23 +1714,29 @@ $rdf.curie.defaults = {
 
 $rdf.safeCurie = function (safeCurie, options) {
     var opts = $rdf.extend({}, $rdf.curie.defaults, {
-        namespaces: this.xmlns()
+        namespaces: thisElement.xmlns()
     }, options || {});
     return $rdf.safeCurie(safeCurie, opts);
 };
 
+
+
 //////////////////////////////////////////////////////////////////////////////
 
+$rdf.rdfa = {};
 
-
-$rdf.RDFaParser = function (kb, docUri) {
-  var RDFaParser = {};
+$rdf.rdfa.parse = function (dom, kb, baseUri, doc) {
+    this.kb = kb;
+    this.baseUri = baseUri;
+    thisElement = dom;
+ 
 
 // Agenda:
-//  Replace all $jq.rdf.   with equivalent $rdf.
-// The original jQery "$" is now $jq in this code.
 //    fn.curie.
 //   docResource   (relies on database-wide document base)
+//  Replace all $jq.rdf.   with equivalent $rdf.
+//
+//  Note: The original jQuery "$" is now $jq in this code.
 ////////////////////////////////////////////////////
 
   //if ($ == undefined && tabulator && tabulator.jq) $ = tabulator.jq; // not sure hot this is upposed to be wired - tbl
@@ -1745,13 +1765,13 @@ $rdf.RDFaParser = function (kb, docUri) {
     ncNameStartChar = '[\u0041-\u005A\u0061-\u007A\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u00FF\u0100-\u0131\u0134-\u013E\u0141-\u0148\u014A-\u017E\u0180-\u01C3\u01CD-\u01F0\u01F4-\u01F5\u01FA-\u0217\u0250-\u02A8\u02BB-\u02C1\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03D6\u03DA\u03DC\u03DE\u03E0\u03E2-\u03F3\u0401-\u040C\u040E-\u044F\u0451-\u045C\u045E-\u0481\u0490-\u04C4\u04C7-\u04C8\u04CB-\u04CC\u04D0-\u04EB\u04EE-\u04F5\u04F8-\u04F9\u0531-\u0556\u0559\u0561-\u0586\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0641-\u064A\u0671-\u06B7\u06BA-\u06BE\u06C0-\u06CE\u06D0-\u06D3\u06D5\u06E5-\u06E6\u0905-\u0939\u093D\u0958-\u0961\u0985-\u098C\u098F-\u0990\u0993-\u09A8\u09AA-\u09B0\u09B2\u09B6-\u09B9\u09DC-\u09DD\u09DF-\u09E1\u09F0-\u09F1\u0A05-\u0A0A\u0A0F-\u0A10\u0A13-\u0A28\u0A2A-\u0A30\u0A32-\u0A33\u0A35-\u0A36\u0A38-\u0A39\u0A59-\u0A5C\u0A5E\u0A72-\u0A74\u0A85-\u0A8B\u0A8D\u0A8F-\u0A91\u0A93-\u0AA8\u0AAA-\u0AB0\u0AB2-\u0AB3\u0AB5-\u0AB9\u0ABD\u0AE0\u0B05-\u0B0C\u0B0F-\u0B10\u0B13-\u0B28\u0B2A-\u0B30\u0B32-\u0B33\u0B36-\u0B39\u0B3D\u0B5C-\u0B5D\u0B5F-\u0B61\u0B85-\u0B8A\u0B8E-\u0B90\u0B92-\u0B95\u0B99-\u0B9A\u0B9C\u0B9E-\u0B9F\u0BA3-\u0BA4\u0BA8-\u0BAA\u0BAE-\u0BB5\u0BB7-\u0BB9\u0C05-\u0C0C\u0C0E-\u0C10\u0C12-\u0C28\u0C2A-\u0C33\u0C35-\u0C39\u0C60-\u0C61\u0C85-\u0C8C\u0C8E-\u0C90\u0C92-\u0CA8\u0CAA-\u0CB3\u0CB5-\u0CB9\u0CDE\u0CE0-\u0CE1\u0D05-\u0D0C\u0D0E-\u0D10\u0D12-\u0D28\u0D2A-\u0D39\u0D60-\u0D61\u0E01-\u0E2E\u0E30\u0E32-\u0E33\u0E40-\u0E45\u0E81-\u0E82\u0E84\u0E87-\u0E88\u0E8A\u0E8D\u0E94-\u0E97\u0E99-\u0E9F\u0EA1-\u0EA3\u0EA5\u0EA7\u0EAA-\u0EAB\u0EAD-\u0EAE\u0EB0\u0EB2-\u0EB3\u0EBD\u0EC0-\u0EC4\u0F40-\u0F47\u0F49-\u0F69\u10A0-\u10C5\u10D0-\u10F6\u1100\u1102-\u1103\u1105-\u1107\u1109\u110B-\u110C\u110E-\u1112\u113C\u113E\u1140\u114C\u114E\u1150\u1154-\u1155\u1159\u115F-\u1161\u1163\u1165\u1167\u1169\u116D-\u116E\u1172-\u1173\u1175\u119E\u11A8\u11AB\u11AE-\u11AF\u11B7-\u11B8\u11BA\u11BC-\u11C2\u11EB\u11F0\u11F9\u1E00-\u1E9B\u1EA0-\u1EF9\u1F00-\u1F15\u1F18-\u1F1D\u1F20-\u1F45\u1F48-\u1F4D\u1F50-\u1F57\u1F59\u1F5B\u1F5D\u1F5F-\u1F7D\u1F80-\u1FB4\u1FB6-\u1FBC\u1FBE\u1FC2-\u1FC4\u1FC6-\u1FCC\u1FD0-\u1FD3\u1FD6-\u1FDB\u1FE0-\u1FEC\u1FF2-\u1FF4\u1FF6-\u1FFC\u2126\u212A-\u212B\u212E\u2180-\u2182\u3041-\u3094\u30A1-\u30FA\u3105-\u312C\uAC00-\uD7A3\u4E00-\u9FA5\u3007\u3021-\u3029_]', //"
     ncNameRegex = new RegExp('^' + ncNameStartChar + ncNameChar + '*$'),
 
-    docResource = kb.sym(docUri),
-    bnodeMap = {},
-    type = kb.sym("http://www.w3.org/1999/02/22-rdf-syntax-ns#type");
+    docResource = kb.sym(baseUri),
+    bnodeMap = {};
+    
+    var type = kb.sym("http://www.w3.org/1999/02/22-rdf-syntax-ns#type");
+    var why = docResource;
 
-    why = docResource,
-
-    parseEntities = function (string) {
+   parseEntities = function (string) {
       var result = "", m, entity;
       if (!/&/.test(string)) {
          return string;
@@ -1791,63 +1811,65 @@ $rdf.RDFaParser = function (kb, docUri) {
         }
       }
       return result;
-    },
+    };
+
 
     getAttributes = function (elem) {
-      var i, e, a, tag, name, value, attMap, prefix,
-        atts = {},
-        nsMap = {};
-      e = elem[0];
-      nsMap[':length'] = 0;
-      if (e.attributes && e.attributes.getNamedItemNS) {
-        attMap = e.attributes;
-        for (i = 0; i < attMap.length; i += 1) {
-          a = attMap[i];
-          if (/^xmlns(:(.+))?$/.test(a.nodeName) && a.nodeValue !== '') {
-            prefix = /^xmlns(:(.+))?$/.exec(a.nodeName)[2] || '';
-            if (ncNameRegex.test(prefix) && (prefix !== 'xml' || a.nodeValue === ns.xml) && (a.nodeValue !== ns.xml || prefix === 'xml') && prefix !== 'xmlns' && a.nodeValue !== ns.xmlns) {
-              nsMap[prefix] = $rdf.sym(a.nodeValue);
-              nsMap[':length'] += 1;
+        var i, e, a, tag, name, value, attMap, prefix,
+            atts = {},
+            nsMap = {};
+        var e = elem[0];
+        nsMap[':length'] = 0;
+      
+        if (e.attributes && e.attributes.getNamedItemNS) {
+            attMap = e.attributes;
+            for (i = 0; i < attMap.length; i += 1) {
+                a = attMap[i];
+                if (/^xmlns(:(.+))?$/.test(a.nodeName) && a.nodeValue !== '') {
+                    prefix = /^xmlns(:(.+))?$/.exec(a.nodeName)[2] || '';
+                    if (ncNameRegex.test(prefix) && (prefix !== 'xml' || a.nodeValue === ns.xml) && (a.nodeValue !== ns.xml || prefix === 'xml') && prefix !== 'xmlns' && a.nodeValue !== ns.xmlns) {
+                        nsMap[prefix] = $rdf.sym(a.nodeValue);
+                        nsMap[':length'] += 1;
+                    }
+//              } else if (/rel|rev|lang|xml:lang/.test(a.nodeName)) {
+//                      atts[a.nodeName] = a.nodeValue === '' ? undefined : a.nodeValue;
+                } else if (/rel|rev|lang|xml:lang|about|href|src|resource|property|typeof|content|datatype/.test(a.nodeName)) {
+                    atts[a.nodeName] = a.nodeValue === null ? undefined : a.nodeValue;
+                }
             }
-//          } else if (/rel|rev|lang|xml:lang/.test(a.nodeName)) {
-//            atts[a.nodeName] = a.nodeValue === '' ? undefined : a.nodeValue;
-          } else if (/rel|rev|lang|xml:lang|about|href|src|resource|property|typeof|content|datatype/.test(a.nodeName)) {
-            atts[a.nodeName] = a.nodeValue === null ? undefined : a.nodeValue;
-          }
-        }
-      } else { //   For IE, which hides namespaces to carefully
-        tag = /<[^>]+>/.exec(e.outerHTML);
-        a = attRegex.exec(tag);
-        while (a !== null) {
-          name = a[1];
-          value = a[2] || a[3] || a[4];
-          if (/^xmlns/.test(name) && name !== 'xmlns:' && value !== '') {
-            prefix = /^xmlns(:(.+))?$/.exec(name)[2] || '';
-            if (ncNameRegex.test(prefix) && (prefix !== 'xml' || a.nodeValue === ns.xml) && (a.nodeValue !== ns.xml || prefix === 'xml') && prefix !== 'xmlns' && a.nodeValue !== ns.xmlns) {
-              nsMap[prefix] = $rdf.sym(value);
-              nsMap[':length'] += 1;
+        } else { //   For IE, which hides namespaces to carefully
+            tag = /<[^>]+>/.exec(e.outerHTML);
+            a = attRegex.exec(tag);
+            while (a !== null) {
+                name = a[1];
+                value = a[2] || a[3] || a[4];
+                if (/^xmlns/.test(name) && name !== 'xmlns:' && value !== '') {
+                    prefix = /^xmlns(:(.+))?$/.exec(name)[2] || '';
+                    if (ncNameRegex.test(prefix) && (prefix !== 'xml' || a.nodeValue === ns.xml) && (a.nodeValue !== ns.xml || prefix === 'xml') && prefix !== 'xmlns' && a.nodeValue !== ns.xmlns) {
+                        nsMap[prefix] = $rdf.sym(value);
+                        nsMap[':length'] += 1;
+                    }
+                } else if (/about|href|src|resource|property|typeof|content|datatype|rel|rev|lang|xml:lang/.test(name)) {
+                    atts[name] = parseEntities(value);
+                }
+                a = attRegex.exec(tag);
             }
-          } else if (/about|href|src|resource|property|typeof|content|datatype|rel|rev|lang|xml:lang/.test(name)) {
-            atts[name] = parseEntities(value);
-          }
-          a = attRegex.exec(tag);
+            attRegex.lastIndex = 0;
         }
-        attRegex.lastIndex = 0;
-      }
-      return { atts: atts, namespaces: nsMap };
-    },
+        return { atts: atts, namespaces: nsMap };
+    };
 
     getAttribute = function (elem, attr) {
-      var val = elem[0].getAttribute(attr);
-//      if (attr === 'rev' || attr === 'rel' || attr === 'lang' || attr === 'xml:lang') {
-//        val = val === '' ? undefined : val;
-//      }
-      return val === null ? undefined : val;
-    },
+        var val = elem[0].getAttribute(attr);
+//          if (attr === 'rev' || attr === 'rel' || attr === 'lang' || attr === 'xml:lang') {
+//          val = val === '' ? undefined : val;
+//          }
+        return val === null ? undefined : val;
+    };
 
     resourceFromUri = function (uri) {
       return kb.sym(uri);
-    },
+    };
 
     resourceFromCurie = function (curie, elem, noblanks, options) {
       if (curie.substring(0, 2) === '_:') {
@@ -1905,22 +1927,28 @@ $rdf.RDFaParser = function (kb, docUri) {
     },
     */
 
+    $rdf.rdfaParser = function(kb, baseUri) {
+        this.kb = kb;
+        this.baseUri = baseUri;
+        return true;
+    }
+    
     getObjectResource = function (elem, context, relation) {
-      var r, resource, atts, curieOptions;
-      context = context || {};
-      atts = context.atts || getAttributes(elem).atts;
-      r = relation === undefined ? atts.rel !== undefined || atts.rev !== undefined : relation;
-      resource = atts.resource;
-      resource = resource === undefined ? atts.href : resource;
-      if (resource === undefined) {
-        resource = r ? kb.bnode() : resource;
-      } else {
-        curieOptions = context.curieOptions || $rdf.Util.extend(
+        var r, resource, atts, curieOptions;
+        context = context || {};
+        atts = context.atts || getAttributes(elem).atts;
+        r = relation === undefined ? atts.rel !== undefined || atts.rev !== undefined : relation;
+        resource = atts.resource;
+        resource = resource === undefined ? atts.href : resource;
+        if (resource === undefined) {
+            resource = r ? kb.bnode() : resource;
+        } else {
+            curieOptions = context.curieOptions || $rdf.Util.extend(
             {}, rdfaCurieDefaults, { namespaces: elem.xmlns() });
-        resource = resourceFromSafeCurie(resource, elem, curieOptions);
-      }
-      return resource;
-    },
+            resource = resourceFromSafeCurie(resource, elem, curieOptions);
+        }
+        return resource;
+    };
 
     getSubject = function (elem, context, relation) {
       var r, atts, curieOptions, subject, skip = false;
@@ -1954,7 +1982,7 @@ $rdf.RDFaParser = function (kb, docUri) {
         }
       }
       return { subject: subject, skip: skip };
-    },
+    };
 
     getLang = function (elem, context) {
       var lang;
@@ -1980,78 +2008,77 @@ $rdf.RDFaParser = function (kb, docUri) {
         }
       }
       return lang;
-    },
+    };
 
     entity = function (c) {
-      switch (c) {
-      case '<':
-        return '&lt;';
-      case '"':
-        return '&quot;';
-      case '&':
-        return '&amp;';
-      }
-    },
+        switch (c) {
+        case '<':
+            return '&lt;';
+        case '"':
+            return '&quot;';
+        case '&':
+            return '&amp;';
+        }
+    };
 
     serialize = function (elem, ignoreNs) {
-      var i, string = '', atts, a, name, ns, tag;
-      elem.contents().each(function () {
-        var j = $(this),
-          e = j[0];
+        var i, string = '', atts, a, name, ns, tag;
+            elem.contents().each(function () {
+        var j = $(thisElement), // @@@ ?   Use of "this'?
+            e = j[0];
         if (e.nodeType === 1) { // tests whether the node is an element
-          name = e.nodeName.toLowerCase();
-          string += '<' + name;
-          if (e.outerHTML) {
-            tag = /<[^>]+>/.exec(e.outerHTML);
-            a = attRegex.exec(tag);
-            while (a !== null) {
-              if (!/^jQuery/.test(a[1])) {
-                string += ' ' + a[1] + '=';
-                string += a[2] ? a[3] : '"' + a[1] + '"';
-              }
-              a = attRegex.exec(tag);
+            name = e.nodeName.toLowerCase();
+            string += '<' + name;
+            if (e.outerHTML) {
+                tag = /<[^>]+>/.exec(e.outerHTML);
+                a = attRegex.exec(tag);
+                while (a !== null) {
+                if (!/^jQuery/.test(a[1])) {
+                    string += ' ' + a[1] + '=';
+                    string += a[2] ? a[3] : '"' + a[1] + '"';
+                }
+                a = attRegex.exec(tag);
             }
             attRegex.lastIndex = 0;
-          } else {
+        } else {
             atts = e.attributes;
             for (i = 0; i < atts.length; i += 1) {
-              a = atts.item(i);
-              string += ' ' + a.nodeName + '="';
-              string += a.nodeValue.replace(/[<"&]/g, entity);
-              string += '"'; //'
+                a = atts.item(i);
+                string += ' ' + a.nodeName + '="';
+                string += a.nodeValue.replace(/[<"&]/g, entity);
+                string += '"'; //'
             }
-          }
-          if (!ignoreNs) {
+        }
+        if (!ignoreNs) {
             ns = j.xmlns('');
             if (ns !== undefined && j.attr('xmlns') === undefined) {
-              string += ' xmlns="' + ns + '"';
+                string += ' xmlns="' + ns + '"';
             }
-          }
+        }
           string += '>';
           string += serialize(j, true);
           string += '</' + name + '>';
         } else if (e.nodeType === 8) { // tests whether the node is a comment
-          string += '<!--';
-          string += e.nodeValue;
-          string += '-->';
+            string += '<!--';
+            string += e.nodeValue;
+            string += '-->';
         } else {
-          string += e.nodeValue;
+            string += e.nodeValue;
         }
       });
       return string;
     },
 
-    // This is the ain function whcih extracts te RDFA
-    // 'this' is the elemnt
-    
+    // Originally:
+    // This is the main function whcih extracts te RDFA
+    // 'this' is the element
     // $rdf.rdfaParser(kb).rdfa.call(element or document)
+    // parseElement = function(element) {
+    //     this.rdfa.call(element);
+    // };
     
-    parseElement = function(element) {
-        this.rdfa.call(element);
-    },
     
-    
-    rdfa = function (context) {
+    parse = function (thisElement, context) {
       var i, subject, resource, lang, datatype, content, text,
         types, object, triple, parent,
         properties, rels, revs,
@@ -2059,15 +2086,15 @@ $rdf.RDFaParser = function (kb, docUri) {
         triples = [],
         callback, relCurieOptions,
         attsAndNs, atts, namespaces, ns,
-        children = this.childNodes;
+        children = thisElement.childNodes;
       context = context || {};
       forward = context.forward || [];
       backward = context.backward || [];
-      callback = context.callback || function () { return this; };
-      attsAndNs = getAttributes(this);
+      callback = context.callback || function () { return thisElement; };
+      attsAndNs = getAttributes(thisElement);
       atts = attsAndNs.atts;
       context.atts = atts;
-      namespaces = context.namespaces || this.xmlns();
+      namespaces = context.namespaces || thisElement.xmlns();
       if (attsAndNs.namespaces[':length'] > 0) {
         namespaces = $rdf.Util.extend({}, namespaces);
         for (ns in attsAndNs.namespaces) {
@@ -2077,10 +2104,10 @@ $rdf.RDFaParser = function (kb, docUri) {
         }
       }
       context.curieOptions = $rdf.Util.extend({},
-        rdfaCurieDefaults, { reserved: [], namespaces: namespaces, base: this.base() });
+        rdfaCurieDefaults, { reserved: [], namespaces: namespaces, base: thisElement.base() });
       relCurieOptions = $rdf.Util.extend({}, context.curieOptions, { reserved: relReserved });
-      subject = getSubject(this, context);
-      lang = getLang(this, context);
+      subject = getSubject(thisElement, context);
+      lang = getLang(thisElement, context);
       if (subject.skip) {
         rels = context.forward;
         revs = context.backward;
@@ -2089,40 +2116,40 @@ $rdf.RDFaParser = function (kb, docUri) {
       } else {
         subject = subject.subject;
         if (forward.length > 0 || backward.length > 0) {
-          parent = context.subject || getSubject(this.parent()).subject; // @@
+          parent = context.subject || getSubject(thisElement.parent()).subject; // @@
           for (i = 0; i < forward.length; i += 1) {
             kb.add(parent, forward[i], subject, why);
-            // triple = callback.call(triple, this.get(0), triple);
+            // triple = callback.call(triple, thisElement.get(0), triple);
             //if (triple !== undefined && triple !== null) {
             //  triples = triples.concat(triple);
             //}
           }
           for (i = 0; i < backward.length; i += 1) {
             kb.add(subject, backward[i], parent, why);
-            //triple = callback.call(triple, this.get(0), triple);
+            //triple = callback.call(triple, thisElement.get(0), triple);
             //if (triple !== undefined && triple !== null) {
             //  triples = triples.concat(triple);
             //}
           }
         }
-        resource = getObjectResource(this, context);
-        types = resourcesFromCuries(atts['typeof'], this, false, context.curieOptions);
+        resource = getObjectResource(thisElement, context);
+        types = resourcesFromCuries(atts['typeof'], thisElement, false, context.curieOptions);
         for (i = 0; i < types.length; i += 1) {
           kb.add(subject, type, types[i], why);
-          //triple = callback.call(triple, this.get(0), triple);
+          //triple = callback.call(triple, thisElement.get(0), triple);
           //if (triple !== undefined && triple !== null) {
           //  triples = triples.concat(triple);
           //}
         }
-        properties = resourcesFromCuries(atts.property, this, true, context.curieOptions);
+        properties = resourcesFromCuries(atts.property, thisElement, true, context.curieOptions);
         if (properties.length > 0) {
           datatype = atts.datatype;
           content = atts.content;
-          text = this.text().replace(/"/g, '\\"'); //'
+          text = thisElement.text().replace(/"/g, '\\"'); //'
           if (datatype !== undefined && datatype !== '') {
             datatype = $rdf.curie.parse(datatype, context.curieOptions);
             if (datatype.toString() === rdfXMLLiteral) {
-              object = kb.literal(serialize(this), undefined, rdfXMLLiteralSym );
+              object = kb.literal(serialize(thisElement), undefined, rdfXMLLiteralSym );
             } else if (content !== undefined) {
               object = kb.literal(content, kb.sym(datatype));
             } else {
@@ -2136,21 +2163,21 @@ $rdf.RDFaParser = function (kb, docUri) {
             }
           } else if (children.length === 0 ||
                      datatype === '') {
-            lang = getLang(this, context);
+            lang = getLang(thisElement, context);
             if (lang === undefined) {
               object = kb.literal('"' + text + '"');    //@@ added double quote marks??
             } else {
               object = kb.literal(text, undefined, lang);
             }
           } else {
-            object = kb.literal(serialize(this), kb.sym(rdfXMLLiteral));
+            object = kb.literal(serialize(thisElement), kb.sym(rdfXMLLiteral));
           }
           for (i = 0; i < properties.length; i += 1) {
             kb.add(subject, properties[i], object, why);
           }
         }
-        rels = resourcesFromCuries(atts.rel, this, true, relCurieOptions);
-        revs = resourcesFromCuries(atts.rev, this, true, relCurieOptions);
+        rels = resourcesFromCuries(atts.rel, thisElement, true, relCurieOptions);
+        revs = resourcesFromCuries(atts.rev, thisElement, true, relCurieOptions);
         if (atts.resource !== undefined || atts.href !== undefined) {
           // make the triples immediately
           if (rels !== undefined) {
@@ -2168,36 +2195,42 @@ $rdf.RDFaParser = function (kb, docUri) {
         }
       }
       children.each(function () {
-        triples = triples.concat(rdfa.call($(this), { forward: rels, backward: revs,
+        triples = triples.concat(rdfa.call($(thisElement), { forward: rels, backward: revs,
             subject: subject, object: resource || subject,
             lang: lang, namespaces: namespaces, callback: callback }));
       });
       return triples;
-    },
+    };
 
+    // Ad to list of gleaners @@@
     gleaner = function (options) {
       var type, atts;
       if (options && options.about !== undefined) {
-        atts = getAttributes(this).atts;
+        atts = getAttributes(thisElement).atts;
         if (options.about === null) {
           return atts.property !== undefined ||
                  atts.rel !== undefined ||
                  atts.rev !== undefined ||
                  atts['typeof'] !== undefined;
         } else {
-          return getSubject(this, {atts: atts}).subject.value === options.about;
+          return getSubject(thisElement, {atts: atts}).subject.value === options.about;
         }
       } else if (options && options.type !== undefined) {
-        type = getAttribute(this, 'typeof');
+            type = getAttribute(thisElement, 'typeof');
         if (type !== undefined) {
-          return options.type === null ? true : this.curie(type) === options.type;
+            return options.type === null ? true : this.curie(type) === options.type;
         }
-        return false;
-      } else {
-        return rdfa.call(this, options);
-      }
+            return false;
+        } else {
+            return parse(thisElement, options);
+        }
     }
-    return RDFaParser;
+    
+    return;     // debug later   @@@@@@@@
+    
+    return parse(dom); 
+    // End of Parser object
+
 }
 
 
@@ -2219,15 +2252,15 @@ $rdf.RDFaParser = function (kb, docUri) {
    // 'this' is a jq bject whcih wraps an element
   $jq.fn.rdfa = function (triple) {
     if (triple === undefined) {
-      var triples = $jq.map($(this), function (elem) {
+      var triples = $jq.map($(thisElement), function (elem) {
         return rdfa.call($(elem));
       });
       return $jq.rdf({ triples: triples });
     } else {
-      $(this).each(function () {
-        addRDFa.call($(this), triple);
+      $(thisElement).each(function () {
+        addRDFa.call($(thisElement), triple);
       });
-      return this;
+      return thisElement;
     }
   };
   */
@@ -2251,20 +2284,20 @@ $rdf.RDFaParser = function (kb, docUri) {
    */
    /*
   $jq.fn.removeRdfa = function (triple) {
-    $(this).each(function () {
-      removeRDFa.call($(this), triple);
+    $(thisElement).each(function () {
+      removeRDFa.call($(thisElement), triple);
     });
-    return this;
+    return thisElement;
   };
 
   $jq.rdf.gleaners.push(gleaner);
 */
-
-$rdf.parseRdfa = function(element, kb, docURI) {
-    var p = $rdf.RDFaParser(kb, docURI);
+/*
+$rdf.parseRdfa = function(element, kb, baseUri) {
+    var p = new $rdf.RDFaParser(kb, baseUri);
     p.rdfa.call(element);
 };
-
+*/
 /**
 *
 *  UTF-8 data encode / decode
@@ -4597,12 +4630,13 @@ $rdf.Collection.prototype.isVar = 0;
  * @param	callback, 	whenever the pattern in myQuery is met this is called with 
  * 						the binding as parameter
  * @param	fetcher,	whenever a resource needs to be loaded this gets called
+ * @param       onDone          callback when 
  */
-$rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher) {
+$rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDone) {
     var kb = this;
-    dump("Query:"+myQuery.pat+", fetcher="+fetcher+"\n");
-    //FUNCTIONS!! 
-    //TODO:  Do these work here?
+    $rdf.log.info("Query:"+myQuery.pat+", fetcher="+fetcher+"\n");
+        tabulator.log.error("@@@@ query.js 4: "+$rdf.log.error); // @@ works
+        $rdf.log.error("@@@@ query.js 5");  // @@
 
     ///////////// Debug strings
 
@@ -4858,7 +4892,8 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher) {
         $rdf.log.debug(level + "match2 searching "+item.index.length+ " for "+item+
                 "; bindings so far="+bindingDebug(bindingsSoFar));
         //var results = [];
-        var c, nc=item.index.length, nbs1, x;
+        var c, nc=item.index.length, nbs1;
+        //var x;
         for (c=0; c<nc; c++) {   // For each candidate statement
             var st = item.index[c]; //for each statement in the item's index, spawn a new match with that binding 
             nbs1 = RDFArrayUnifyContents(
@@ -4875,10 +4910,10 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher) {
                     //branch.count--;
                     $rdf.log.debug("Branch count CS: "+branch.count);
                     continue;}
-                for (v in newBindings1){
+                for (var v in newBindings1){
                     bindings2[v] = newBindings1[v]; // copy
                 }
-                for (v in bindingsSoFar) {
+                for (var v in bindingsSoFar) {
                     bindings2[v] = bindingsSoFar[v]; // copy
                 }
                 
@@ -4897,15 +4932,15 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher) {
 
     function constraintsSatisfied(bindings,constraints)
     {
-            var res=true;
-            for (x in bindings) {
-                    if (constraints[x]) {
-                            var test = constraints[x].test;
-                            if (test && !test(bindings[x]))
-                                    res=false;
+        var res=true;
+        for (var x in bindings) {
+            if (constraints[x]) {
+                var test = constraints[x].test;
+                if (test && !test(bindings[x]))
+                        res=false;
             }
-            }
-            return res;
+        }
+        return res;
     }
 
     //////////////////////////// Body of query()  ///////////////////////
@@ -4937,7 +4972,8 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher) {
     // all match, multiple sets of bindings are returned, each with one optional filled in.)
     
     union = function(a,b) {
-       var c= {}, x;
+       var c= {};
+       var x;
        for (x in a) c[x] = a[x];
        for (x in b) c[x] = b[x];
        return c
@@ -4970,18 +5006,21 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher) {
     // A mandatory branch is the normal one, where callbacks
     // are made immediately and no junction is needed.
     // Might be useful for onFinsihed callback for query API.
-    function MandatoryBranch(callback) {
+    function MandatoryBranch(callback, onDone) {
         this.count = 0;
         this.success = false;
         this.done = false;
         // this.results = [];
         this.callback = callback;
+        this.onDone = onDone;
         // this.junction = junction;
         // junction.branches.push(this);
         return this;
     }
     
     MandatoryBranch.prototype.reportMatch = function(bindings) {
+        tabulator.log.error("@@@@ query.js 1"); // @@
+        $rdf.log.error("@@@@ query.js 2");  // @@
         this.callback(bindings);
         this.success = true;
     };
@@ -4989,6 +5028,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher) {
     MandatoryBranch.prototype.reportDone = function(b) {
         this.done = true;
         $rdf.log.info("Mandatory query branch finished.***")
+        if (this.onDone != undefined) this.onDone();
     };
 
 
@@ -4999,10 +5039,6 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher) {
         this.results = [];
         this.junction = junction;
         junction.branches.push(this);
-        // var tcount = function () { this.val = 1; return this }
-        // this.numTasks = tcount();
-        // this.success = false;
-        // this.onFail = function(){}; // Call if the branch does not match and ...
         return this;
     }
     
@@ -5011,7 +5047,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher) {
     };
 
     OptionalBranch.prototype.reportDone = function() {
-        $rdf.log.debug("Optional branch finished - length = "+this.results.length);
+        $rdf.log.debug("Optional branch finished - results.length = "+this.results.length);
         if (this.results.length == 0) {// This is what optional means: if no hits,
             this.results.push({});  // mimic success, but with no bindings
             $rdf.log.debug("Optional branch FAILED - that's OK.");
@@ -5020,9 +5056,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher) {
         this.junction.checkAllDone();
     };
 
-    
-    //alert("INIT OPT: "+myQuery.pat.optional);
-    var trunck = new MandatoryBranch(callback);
+    var trunck = new MandatoryBranch(callback, onDone);
     trunck.count++; // count one branch to complete at the moment
     setTimeout(function() { match(f, myQuery.pat, myQuery.pat.initBindings, '', fetcher, callback, trunck /*branch*/ ); }, 0);
     
@@ -5752,7 +5786,8 @@ $rdf.sparqlUpdate = function() {
                 var author_via = kb.each(response, this.ns.httph("ms-author-via"));
                 if (author_via.length) {
                     for (var i = 0; i < author_via.length; i++) {
-                        if (author_via[i] == "SPARQL" || author_via[i] == "DAV")
+                        var method = author_via[i].value.strip();
+                        if (author_via[i].value == "SPARQL" || author_via[i].value == "DAV")
                             // dump("sparql.editable: Success for "+uri+": "+author_via[i] +"\n");
                             return author_via[i].value;
                     }
@@ -5895,7 +5930,7 @@ $rdf.sparqlUpdate = function() {
             }
         }
 
-        if(!isExtension) {
+        if(!tabulator.isExtension) {
             try {
                 $rdf.Util.enablePrivilege("UniversalBrowserRead")
             } catch(e) {
@@ -7064,12 +7099,12 @@ $rdf.Fetcher = function(store, timeout, async) {
                 var kb = sf.store
                 if (!this.dom) {
                     var dparser;
-                    if (isExtension) {
+                    if ((tabulator !=undefined && tabulator.isExtension)) {
                         dparser = Components.classes["@mozilla.org/xmlextras/domparser;1"].getService(Components.interfaces.nsIDOMParser);
                     } else {
                         dparser = new DOMParser()
                     }
-                    //strange things hapeen when responseText is empty
+                    //strange things happen when responseText is empty
                     this.dom = dparser.parseFromString(xhr.responseText, 'application/xml')
                 }
 
@@ -7121,7 +7156,7 @@ $rdf.Fetcher = function(store, timeout, async) {
             xhr.handle = function(cb) {
                 if (!this.dom) {
                     var dparser;
-                    if (isExtension) {
+                    if (tabulator !=undefined && tabulator.isExtension) {
                         dparser = Components.classes["@mozilla.org/xmlextras/domparser;1"].getService(Components.interfaces.nsIDOMParser);
                     } else {
                         dparser = new DOMParser()
@@ -7149,7 +7184,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                     var profile = head.getAttribute('profile');
                     if (profile && $rdf.Util.uri.protocol(profile) == 'http') {
                         // $rdf.log.info("GRDDL: Using generic " + "2003/11/rdf-in-xhtml-processor.");
-                        sf.doGRDDL(kb, xhr.uri, "http://www.w3.org/2003/11/rdf-in-xhtml-processor", xhr.uri.uri)
+                         $rdf.Fetcher.doGRDDL(kb, xhr.uri, "http://www.w3.org/2003/11/rdf-in-xhtml-processor", xhr.uri.uri)
 /*			sf.requestURI('http://www.w3.org/2005/08/'
 					  + 'online_xslt/xslt?'
 					  + 'xslfile=http://www.w3.org'
@@ -7166,7 +7201,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                 kb.add(xhr.uri, ns.rdf('type'), ns.link('WebPage'), sf.appNode);
                 // @@ Do RDFa here
                 //var p = $rdf.RDFaParser(kb, xhr.uri.uri);
-                $rdf.parseRdfa(this.dom, kb, xhr.uri.uri);  // see rdfa.js
+                $rdf.rdfa.parse(this.dom, kb, xhr.uri.uri);  // see rdfa.js
             }
         }
     }
@@ -7189,7 +7224,7 @@ $rdf.Fetcher = function(store, timeout, async) {
             xhr.handle = function(cb) {
                 var kb = sf.store
                 var dparser;
-                if (isExtension) {
+                if (tabulator !=undefined && tabulator.isExtension) {
                     dparser = Components.classes["@mozilla.org/xmlextras/domparser;1"].getService(Components.interfaces.nsIDOMParser);
                 } else {
                     dparser = new DOMParser()
@@ -7217,7 +7252,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                         for (var i = 0; i < xforms.length; i++) {
                             var xform = xforms[i];
                             // $rdf.log.info(xhr.uri.uri + " namespace " + ns + " has GRDDL ns transform" + xform.uri);
-                            sf.doGRDDL(kb, xhr.uri, xform.uri, xhr.uri.uri);
+                             $rdf.Fetcher.doGRDDL(kb, xhr.uri, xform.uri, xhr.uri.uri);
                         }
                         break
                     }
@@ -7469,12 +7504,15 @@ $rdf.Fetcher = function(store, timeout, async) {
         kb.the(req, ns.link('status')).append(kb.literal(status))
     }
 
+    // Record errors in the system omn failure
+    // Returns xhr so can just do return this.failfetch(...)
     this.failFetch = function(xhr, status) {
         this.addStatus(xhr.req, status)
         kb.add(xhr.uri, ns.link('error'), status)
         this.requested[$rdf.Util.uri.docpart(xhr.uri.uri)] = false
         this.fireCallbacks('fail', [xhr.requestedURI])
         xhr.abort()
+        return xhr
     }
 
     this.linkData = function(xhr, rel, uri) {
@@ -7524,15 +7562,25 @@ $rdf.Fetcher = function(store, timeout, async) {
 
 
 
-    /** Looks up a thing.
-     **	    Looks up all the URIs a things has.
-     ** Parameters:
-     **	    term:  canonical term for the thing whose URI is to be dereferenced
-     **      rterm:  the resource which refered to this (for tracking bad links)
-     */
-    this.lookUpThing = function(term, rterm, force) {
+// Looks up something.
+//
+// Looks up all the URIs a things has.
+// Parameters:
+//
+//  term:       canonical term for the thing whose URI is to be dereferenced
+//  rterm:      the resource which refered to this (for tracking bad links)
+//  force:      Load the data even if loaded before
+//  callback:   is called as callback(uri, success, errorbody)
+
+    this.lookUpThing = function(term, rterm, force, callback) {
         var uris = kb.uris(term) // Get all URIs
+        var failed = false;
+        var outstanding;
         if (typeof uris != 'undefined') {
+        
+            if (callback) {
+                // @@@@@@@ not implemented
+            }
             for (var i = 0; i < uris.length; i++) {
                 this.lookedUp[uris[i]] = true;
                 this.requestURI($rdf.Util.uri.docpart(uris[i]), rterm, force)
@@ -7563,6 +7611,7 @@ $rdf.Fetcher = function(store, timeout, async) {
      ** Parameters:
      **	    term:  term for the thing whose URI is to be dereferenced
      **      rterm:  the resource which refered to this (for tracking bad links)
+     **      force:  Load the data even if loaded before
      ** Return value:
      **	    The xhr object for the HTTP access
      **      null if the protocol is not a look-up protocol,
@@ -7633,6 +7682,7 @@ $rdf.Fetcher = function(store, timeout, async) {
 
         // Set up callbacks
         xhr.onreadystatechange = function() {
+            // dump("@@ readystate "+xhr.readyState+" for "+xhr.uri+"\n");
             switch (xhr.readyState) {
             case 3:
                 // Intermediate states
@@ -7646,19 +7696,23 @@ $rdf.Fetcher = function(store, timeout, async) {
                     kb.add(response, ns.http('status'), kb.literal(xhr.status), response)
                     kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response)
 
-                    if (xhr.status >= 400) {
-                        sf.failFetch(xhr, "HTTP error " + xhr.status + ' ' + xhr.statusText);
-                        // @@ Here we should also make available the body of the error message.
-                        break
-                    }
-
                     xhr.headers = {}
                     if ($rdf.Util.uri.protocol(xhr.uri.uri) == 'http' || $rdf.Util.uri.protocol(xhr.uri.uri) == 'https') {
                         xhr.headers = $rdf.Util.getHTTPHeaders(xhr)
-                        for (var h in xhr.headers) {
-                            kb.add(response, ns.httph(h), xhr.headers[h], response)
+                        for (var h in xhr.headers) { // trim below for Safari - adds a CR!
+                            kb.add(response, ns.httph(h), xhr.headers[h].trim(), response)
                         }
                     }
+
+                    if (xhr.status >= 400) { // For extra dignostics, keep the reply
+                        if (xhr.responseText.length > 10) { 
+                            kb.add(response, ns.http('content'), kb.literal(xhr.responseText), response);
+                            // dump("HTTP >= 400 responseText:\n"+xhr.responseText+"\n"); // @@@@
+                        }
+                        sf.failFetch(xhr, "HTTP error for " +xhr.uri + ": "+ xhr.status + ' ' + xhr.statusText);
+                        break
+                    }
+
 
 
                     var loc = xhr.headers['content-location'];
@@ -7771,16 +7825,17 @@ $rdf.Fetcher = function(store, timeout, async) {
         }
 
         // Get privileges for cross-domain XHR
-        if (!isExtension) {
+        if (!(tabulator !=undefined && tabulator.isExtension)) {
             try {
                 $rdf.Util.enablePrivilege("UniversalXPConnect UniversalBrowserRead")
             } catch (e) {
-                throw ("Failed to get privileges: " + e)
+                this.failFetch(xhr, "Failed to get (UniversalXPConnect UniversalBrowserRead) privilege to read different web site: " + docuri);
+                return xhr;
             }
         }
 
-        // Map the URI to a localhot proxy if we are running on localhost
-        // This is used for working offline and on planes.
+        // Map the URI to a localhost proxy if we are running on localhost
+        // This is used for working offline, e.g. on planes.
         // Is the script istelf is running in localhost, then access all data in a localhost mirror.
         // Do not remove without checking with TimBL :)
         var uri2 = docuri;
@@ -7794,20 +7849,21 @@ $rdf.Fetcher = function(store, timeout, async) {
 
         // Setup the request
         xhr.open('GET', uri2, this.async)
-        //webdav.manager.register(docuri,function(docuri,success){});
-        // Set redirect callback and request headers
+        
+        // Set redirect callback and request headers -- alas Firefox Only
+        
         if ($rdf.Util.uri.protocol(xhr.uri.uri) == 'http' || $rdf.Util.uri.protocol(xhr.uri.uri) == 'https') {
             try {
                 xhr.channel.notificationCallbacks = {
                     getInterface: function(iid) {
-                        if (!isExtension) {
+                        if (!(tabulator !=undefined && tabulator.isExtension)) {
                             $rdf.Util.enablePrivilege("UniversalXPConnect")
                         }
                         if (iid.equals(Components.interfaces.nsIChannelEventSink)) {
                             return {
 
                                 onChannelRedirect: function(oldC, newC, flags) {
-                                    if (!isExtension) {
+                                    if (!(tabulator !=undefined && tabulator.isExtension)) {
                                         $rdf.Util.enablePrivilege("UniversalXPConnect")
                                     }
                                     if (xhr.aborted) return;
@@ -7879,7 +7935,8 @@ $rdf.Fetcher = function(store, timeout, async) {
                     }
                 }
             } catch (err) {
-                throw ("Couldn't set callback for redirects: " + err)
+                if (tabulator != undefined && tabulator.isExtension) return sf.failFetch(xhr,
+                        "Couldn't set callback for redirects: " + err);
             }
 
             try {
@@ -7908,13 +7965,13 @@ $rdf.Fetcher = function(store, timeout, async) {
         try {
             xhr.send(null)
         } catch (er) {
-            this.failFetch(xhr, "sendFailed")
+            this.failFetch(xhr, "sendFailed:" + er)
             return xhr
         }
         this.addStatus(xhr.req, "HTTP Request sent.");
 
         // Drop privs
-        if (!isExtension) {
+        if (!(tabulator !=undefined && tabulator.isExtension)) {
             try {
                 $rdf.Util.disablePrivilege("UniversalXPConnect UniversalBrowserRead")
             } catch (e) {
@@ -7996,7 +8053,7 @@ $rdf.parse = function parse(str, kb, base, contentType) {
 
     if (contentType == 'application/rdf+xml') {
         var dparser;
-        if (isExtension) {
+        if ((tabulator !=undefined && tabulator.isExtension)) {
             dparser = Components.classes["@mozilla.org/xmlextras/domparser;1"].getService(
                         Components.interfaces.nsIDOMParser);
         } else {

@@ -59,12 +59,12 @@ $rdf.Fetcher = function(store, timeout, async) {
                 var kb = sf.store
                 if (!this.dom) {
                     var dparser;
-                    if (isExtension) {
+                    if ((tabulator !=undefined && tabulator.isExtension)) {
                         dparser = Components.classes["@mozilla.org/xmlextras/domparser;1"].getService(Components.interfaces.nsIDOMParser);
                     } else {
                         dparser = new DOMParser()
                     }
-                    //strange things hapeen when responseText is empty
+                    //strange things happen when responseText is empty
                     this.dom = dparser.parseFromString(xhr.responseText, 'application/xml')
                 }
 
@@ -116,7 +116,7 @@ $rdf.Fetcher = function(store, timeout, async) {
             xhr.handle = function(cb) {
                 if (!this.dom) {
                     var dparser;
-                    if (isExtension) {
+                    if (tabulator !=undefined && tabulator.isExtension) {
                         dparser = Components.classes["@mozilla.org/xmlextras/domparser;1"].getService(Components.interfaces.nsIDOMParser);
                     } else {
                         dparser = new DOMParser()
@@ -144,7 +144,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                     var profile = head.getAttribute('profile');
                     if (profile && $rdf.Util.uri.protocol(profile) == 'http') {
                         // $rdf.log.info("GRDDL: Using generic " + "2003/11/rdf-in-xhtml-processor.");
-                        sf.doGRDDL(kb, xhr.uri, "http://www.w3.org/2003/11/rdf-in-xhtml-processor", xhr.uri.uri)
+                         $rdf.Fetcher.doGRDDL(kb, xhr.uri, "http://www.w3.org/2003/11/rdf-in-xhtml-processor", xhr.uri.uri)
 /*			sf.requestURI('http://www.w3.org/2005/08/'
 					  + 'online_xslt/xslt?'
 					  + 'xslfile=http://www.w3.org'
@@ -161,7 +161,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                 kb.add(xhr.uri, ns.rdf('type'), ns.link('WebPage'), sf.appNode);
                 // @@ Do RDFa here
                 //var p = $rdf.RDFaParser(kb, xhr.uri.uri);
-                $rdf.parseRdfa(this.dom, kb, xhr.uri.uri);  // see rdfa.js
+                $rdf.rdfa.parse(this.dom, kb, xhr.uri.uri);  // see rdfa.js
             }
         }
     }
@@ -184,7 +184,7 @@ $rdf.Fetcher = function(store, timeout, async) {
             xhr.handle = function(cb) {
                 var kb = sf.store
                 var dparser;
-                if (isExtension) {
+                if (tabulator !=undefined && tabulator.isExtension) {
                     dparser = Components.classes["@mozilla.org/xmlextras/domparser;1"].getService(Components.interfaces.nsIDOMParser);
                 } else {
                     dparser = new DOMParser()
@@ -212,7 +212,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                         for (var i = 0; i < xforms.length; i++) {
                             var xform = xforms[i];
                             // $rdf.log.info(xhr.uri.uri + " namespace " + ns + " has GRDDL ns transform" + xform.uri);
-                            sf.doGRDDL(kb, xhr.uri, xform.uri, xhr.uri.uri);
+                             $rdf.Fetcher.doGRDDL(kb, xhr.uri, xform.uri, xhr.uri.uri);
                         }
                         break
                     }
@@ -464,12 +464,15 @@ $rdf.Fetcher = function(store, timeout, async) {
         kb.the(req, ns.link('status')).append(kb.literal(status))
     }
 
+    // Record errors in the system omn failure
+    // Returns xhr so can just do return this.failfetch(...)
     this.failFetch = function(xhr, status) {
         this.addStatus(xhr.req, status)
         kb.add(xhr.uri, ns.link('error'), status)
         this.requested[$rdf.Util.uri.docpart(xhr.uri.uri)] = false
         this.fireCallbacks('fail', [xhr.requestedURI])
         xhr.abort()
+        return xhr
     }
 
     this.linkData = function(xhr, rel, uri) {
@@ -519,15 +522,25 @@ $rdf.Fetcher = function(store, timeout, async) {
 
 
 
-    /** Looks up a thing.
-     **	    Looks up all the URIs a things has.
-     ** Parameters:
-     **	    term:  canonical term for the thing whose URI is to be dereferenced
-     **      rterm:  the resource which refered to this (for tracking bad links)
-     */
-    this.lookUpThing = function(term, rterm, force) {
+// Looks up something.
+//
+// Looks up all the URIs a things has.
+// Parameters:
+//
+//  term:       canonical term for the thing whose URI is to be dereferenced
+//  rterm:      the resource which refered to this (for tracking bad links)
+//  force:      Load the data even if loaded before
+//  callback:   is called as callback(uri, success, errorbody)
+
+    this.lookUpThing = function(term, rterm, force, callback) {
         var uris = kb.uris(term) // Get all URIs
+        var failed = false;
+        var outstanding;
         if (typeof uris != 'undefined') {
+        
+            if (callback) {
+                // @@@@@@@ not implemented
+            }
             for (var i = 0; i < uris.length; i++) {
                 this.lookedUp[uris[i]] = true;
                 this.requestURI($rdf.Util.uri.docpart(uris[i]), rterm, force)
@@ -558,6 +571,7 @@ $rdf.Fetcher = function(store, timeout, async) {
      ** Parameters:
      **	    term:  term for the thing whose URI is to be dereferenced
      **      rterm:  the resource which refered to this (for tracking bad links)
+     **      force:  Load the data even if loaded before
      ** Return value:
      **	    The xhr object for the HTTP access
      **      null if the protocol is not a look-up protocol,
@@ -628,6 +642,7 @@ $rdf.Fetcher = function(store, timeout, async) {
 
         // Set up callbacks
         xhr.onreadystatechange = function() {
+            // dump("@@ readystate "+xhr.readyState+" for "+xhr.uri+"\n");
             switch (xhr.readyState) {
             case 3:
                 // Intermediate states
@@ -641,19 +656,23 @@ $rdf.Fetcher = function(store, timeout, async) {
                     kb.add(response, ns.http('status'), kb.literal(xhr.status), response)
                     kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response)
 
-                    if (xhr.status >= 400) {
-                        sf.failFetch(xhr, "HTTP error " + xhr.status + ' ' + xhr.statusText);
-                        // @@ Here we should also make available the body of the error message.
-                        break
-                    }
-
                     xhr.headers = {}
                     if ($rdf.Util.uri.protocol(xhr.uri.uri) == 'http' || $rdf.Util.uri.protocol(xhr.uri.uri) == 'https') {
                         xhr.headers = $rdf.Util.getHTTPHeaders(xhr)
-                        for (var h in xhr.headers) {
-                            kb.add(response, ns.httph(h), xhr.headers[h], response)
+                        for (var h in xhr.headers) { // trim below for Safari - adds a CR!
+                            kb.add(response, ns.httph(h), xhr.headers[h].trim(), response)
                         }
                     }
+
+                    if (xhr.status >= 400) { // For extra dignostics, keep the reply
+                        if (xhr.responseText.length > 10) { 
+                            kb.add(response, ns.http('content'), kb.literal(xhr.responseText), response);
+                            // dump("HTTP >= 400 responseText:\n"+xhr.responseText+"\n"); // @@@@
+                        }
+                        sf.failFetch(xhr, "HTTP error for " +xhr.uri + ": "+ xhr.status + ' ' + xhr.statusText);
+                        break
+                    }
+
 
 
                     var loc = xhr.headers['content-location'];
@@ -766,16 +785,17 @@ $rdf.Fetcher = function(store, timeout, async) {
         }
 
         // Get privileges for cross-domain XHR
-        if (!isExtension) {
+        if (!(tabulator !=undefined && tabulator.isExtension)) {
             try {
                 $rdf.Util.enablePrivilege("UniversalXPConnect UniversalBrowserRead")
             } catch (e) {
-                throw ("Failed to get privileges: " + e)
+                this.failFetch(xhr, "Failed to get (UniversalXPConnect UniversalBrowserRead) privilege to read different web site: " + docuri);
+                return xhr;
             }
         }
 
-        // Map the URI to a localhot proxy if we are running on localhost
-        // This is used for working offline and on planes.
+        // Map the URI to a localhost proxy if we are running on localhost
+        // This is used for working offline, e.g. on planes.
         // Is the script istelf is running in localhost, then access all data in a localhost mirror.
         // Do not remove without checking with TimBL :)
         var uri2 = docuri;
@@ -789,20 +809,21 @@ $rdf.Fetcher = function(store, timeout, async) {
 
         // Setup the request
         xhr.open('GET', uri2, this.async)
-        //webdav.manager.register(docuri,function(docuri,success){});
-        // Set redirect callback and request headers
+        
+        // Set redirect callback and request headers -- alas Firefox Only
+        
         if ($rdf.Util.uri.protocol(xhr.uri.uri) == 'http' || $rdf.Util.uri.protocol(xhr.uri.uri) == 'https') {
             try {
                 xhr.channel.notificationCallbacks = {
                     getInterface: function(iid) {
-                        if (!isExtension) {
+                        if (!(tabulator !=undefined && tabulator.isExtension)) {
                             $rdf.Util.enablePrivilege("UniversalXPConnect")
                         }
                         if (iid.equals(Components.interfaces.nsIChannelEventSink)) {
                             return {
 
                                 onChannelRedirect: function(oldC, newC, flags) {
-                                    if (!isExtension) {
+                                    if (!(tabulator !=undefined && tabulator.isExtension)) {
                                         $rdf.Util.enablePrivilege("UniversalXPConnect")
                                     }
                                     if (xhr.aborted) return;
@@ -874,7 +895,8 @@ $rdf.Fetcher = function(store, timeout, async) {
                     }
                 }
             } catch (err) {
-                throw ("Couldn't set callback for redirects: " + err)
+                if (tabulator != undefined && tabulator.isExtension) return sf.failFetch(xhr,
+                        "Couldn't set callback for redirects: " + err);
             }
 
             try {
@@ -903,13 +925,13 @@ $rdf.Fetcher = function(store, timeout, async) {
         try {
             xhr.send(null)
         } catch (er) {
-            this.failFetch(xhr, "sendFailed")
+            this.failFetch(xhr, "sendFailed:" + er)
             return xhr
         }
         this.addStatus(xhr.req, "HTTP Request sent.");
 
         // Drop privs
-        if (!isExtension) {
+        if (!(tabulator !=undefined && tabulator.isExtension)) {
             try {
                 $rdf.Util.disablePrivilege("UniversalXPConnect UniversalBrowserRead")
             } catch (e) {
@@ -991,7 +1013,7 @@ $rdf.parse = function parse(str, kb, base, contentType) {
 
     if (contentType == 'application/rdf+xml') {
         var dparser;
-        if (isExtension) {
+        if ((tabulator !=undefined && tabulator.isExtension)) {
             dparser = Components.classes["@mozilla.org/xmlextras/domparser;1"].getService(
                         Components.interfaces.nsIDOMParser);
         } else {
