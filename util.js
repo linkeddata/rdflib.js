@@ -2,7 +2,7 @@
 * Utility functions for $rdf and the $rdf object itself
  */
 
-if (typeof tabulator.isExtension == 'undefined') tabulator.isExtension = false; // stand-alone library
+if (typeof tabulator != 'undefined' && typeof tabulator.isExtension == 'undefined') tabulator.isExtension = false; // stand-alone library
 
 if( typeof $rdf == 'undefined' ) {
     var $rdf = {};
@@ -115,7 +115,7 @@ $rdf.Util = {
     * A standard way to create XMLHttpRequest objects
      */
 	'XMLHTTPFactory': function () {
-        if (tabulator.isExtension) {
+        if (typeof tabulator != 'undefined' && tabulator.isExtension) {
             return Components.
             classes["@mozilla.org/xmlextras/xmlhttprequest;1"].
             createInstance().QueryInterface(Components.interfaces.nsIXMLHttpRequest);
@@ -143,7 +143,7 @@ $rdf.Util = {
 	},
 
 	'DOMParserFactory': function () {
-        if(tabulator.isExtension) {
+        if(tabulator && tabulator.isExtension) {
             return Components.classes["@mozilla.org/xmlextras/domparser;1"]
             .getService(Components.interfaces.nsIDOMParser);
         } else if ( window.DOMParser ){

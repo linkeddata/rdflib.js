@@ -116,7 +116,7 @@ $rdf.Fetcher = function(store, timeout, async) {
             xhr.handle = function(cb) {
                 if (!this.dom) {
                     var dparser;
-                    if (tabulator !=undefined && tabulator.isExtension) {
+                    if (typeof tabulator != 'undefined' && tabulator.isExtension) {
                         dparser = Components.classes["@mozilla.org/xmlextras/domparser;1"].getService(Components.interfaces.nsIDOMParser);
                     } else {
                         dparser = new DOMParser()
@@ -184,7 +184,7 @@ $rdf.Fetcher = function(store, timeout, async) {
             xhr.handle = function(cb) {
                 var kb = sf.store
                 var dparser;
-                if (tabulator !=undefined && tabulator.isExtension) {
+                if (typeof tabulator != 'undefined' && tabulator.isExtension) {
                     dparser = Components.classes["@mozilla.org/xmlextras/domparser;1"].getService(Components.interfaces.nsIDOMParser);
                 } else {
                     dparser = new DOMParser()
@@ -200,7 +200,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                         var ns = dom.childNodes[c].namespaceURI;
 
                         // Is it RDF/XML?
-                        if (ns == ns['rdf']) {
+                        if (ns != undefined && ns == ns['rdf']) {
                             sf.addStatus(xhr.req, "Has XML root element in the RDF namespace, so assume RDF/XML.")
                             sf.switchHandler('RDFXMLHandler', xhr, cb, [dom])
                             return
@@ -464,7 +464,7 @@ $rdf.Fetcher = function(store, timeout, async) {
         kb.the(req, ns.link('status')).append(kb.literal(status))
     }
 
-    // Record errors in the system omn failure
+    // Record errors in the system on failure
     // Returns xhr so can just do return this.failfetch(...)
     this.failFetch = function(xhr, status) {
         this.addStatus(xhr.req, status)
@@ -779,7 +779,10 @@ $rdf.Fetcher = function(store, timeout, async) {
                     xhr.handle(function() {
                         sf.doneFetch(xhr, args)
                     })
-                }
+                } else {
+                    sf.failFetch(xhr, "HTTP failed unusually. (Skipped readyState3?) (cross-site violation?) for <"+
+                        docuri+">");
+                }    
                 break
             }
         }
@@ -799,7 +802,7 @@ $rdf.Fetcher = function(store, timeout, async) {
         // Is the script istelf is running in localhost, then access all data in a localhost mirror.
         // Do not remove without checking with TimBL :)
         var uri2 = docuri;
-        if (tabulator.preferences.get('offlineModeUsingLocalhost')) {
+        if (typeof tabulator != 'undefined' && tabulator.preferences.get('offlineModeUsingLocalhost')) {
             // var here = '' + document.location  // This was fro online version
             //if (here.slice(0, 17) == 'http://localhost/') {
             //uri2 = 'http://localhost/' + uri2.slice(7, uri2.length)
@@ -808,7 +811,11 @@ $rdf.Fetcher = function(store, timeout, async) {
         }
 
         // Setup the request
-        xhr.open('GET', uri2, this.async)
+        try {
+            xhr.open('GET', uri2, this.async)
+        } catch (er) {
+            return this.failFetch(xhr, "XHR open for GET failed for <"+uri2+">:\n\t" + er);
+        }
         
         // Set redirect callback and request headers -- alas Firefox Only
         
@@ -895,7 +902,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                     }
                 }
             } catch (err) {
-                if (tabulator != undefined && tabulator.isExtension) return sf.failFetch(xhr,
+                if (typeof tabulator != 'undefined' && tabulator.isExtension) return sf.failFetch(xhr,
                         "Couldn't set callback for redirects: " + err);
             }
 
@@ -925,8 +932,7 @@ $rdf.Fetcher = function(store, timeout, async) {
         try {
             xhr.send(null)
         } catch (er) {
-            this.failFetch(xhr, "sendFailed:" + er)
-            return xhr
+            return this.failFetch(xhr, "XHR send failed:" + er);
         }
         this.addStatus(xhr.req, "HTTP Request sent.");
 
@@ -1005,7 +1011,7 @@ $rdf.fetcher = function(store, timeout, async) { return new $rdf.Fetcher(store, 
 
 // Parse a string and put the result into the graph kb
 $rdf.parse = function parse(str, kb, base, contentType) {
-    if (contentType in ['text/n3', 'text/turtle']) {
+    if (contentType == 'text/n3' || contentType == 'text/turtle') {
         var p = $rdf.N3Parser(kb, kb, base, base, null, null, "", null)
         p.loadBuf(str);
         return;

@@ -52,33 +52,46 @@ $rdf.sparqlUpdate = function() {
         
         if (!kb) kb = this.store;
         if (!uri) return false; // Eg subject is bnode, no knowm doc to write to
-        var request = kb.any(undefined, this.ns.link("requestedURI"), $rdf.Util.uri.docpart(uri));
-        if (request !== undefined) {
-            var response = kb.any(request, this.ns.link("response"));
+        var request;
+        var definitive = false;
+        var requests = kb.each(undefined, this.ns.link("requestedURI"), $rdf.Util.uri.docpart(uri));
+        for (var r=0; r<requests.length; r++) {
+            request = requests[r];
             if (request !== undefined) {
-                var author_via = kb.each(response, this.ns.httph("ms-author-via"));
-                if (author_via.length) {
-                    for (var i = 0; i < author_via.length; i++) {
-                        var method = author_via[i].value.trim();
-                        if (author_via[i].value == "SPARQL" || author_via[i].value == "DAV")
-                            // dump("sparql.editable: Success for "+uri+": "+author_via[i] +"\n");
-                            return author_via[i].value;
-                    }
-                }
-                var status = kb.each(response, this.ns.http("status"));
-                if (status.length) {
-                    for (var i = 0; i < status.length; i++) {
-                        if (status[i] == 200 || status[i] == 404) {
-                            return false; // A definitive answer
+                var response = kb.any(request, this.ns.link("response"));
+                if (request !== undefined) {
+                    var author_via = kb.each(response, this.ns.httph("ms-author-via"));
+                    if (author_via.length) {
+                        for (var i = 0; i < author_via.length; i++) {
+                            var method = author_via[i].value.trim();
+                            if (method.indexOf('SPARQL') >=0 ) return 'SPARQL';
+                            if (method.indexOf('DAV') >0 ) return 'DAV';
+//                            if (author_via[i].value == "SPARQL" || author_via[i].value == "DAV")
+                                // dump("sparql.editable: Success for "+uri+": "+author_via[i] +"\n");
+                                //return author_via[i].value;
+                                
                         }
                     }
+                    var status = kb.each(response, this.ns.http("status"));
+                    if (status.length) {
+                        for (var i = 0; i < status.length; i++) {
+                            if (status[i] == 200 || status[i] == 404) {
+                                definitive = true;
+                                // return false; // A definitive answer
+                            }
+                        }
+                    }
+                } else {
+                    tabulator.log.warn("sparql.editable: No response for "+uri+"\n");
                 }
-            } else {
-                tabulator.log.warn("sparql.editable: No response for "+uri+"\n");
             }
-        } else {
-            tabulator.log.warn("sparql.editable: No request for "+uri+"\n");
         }
+        if (requests.length == 0) {
+            tabulator.log.warn("sparql.editable: No request for "+uri+"\n");
+        } else {
+            if (definitive) return false;  // We have got a request and it did NOT say editable => not editable
+        };
+
         tabulator.log.warn("sparql.editable: inconclusive for "+uri+"\n");
         return undefined; // We don't know (yet) as we haven't had a response (yet)
     }
@@ -291,8 +304,8 @@ $rdf.sparqlUpdate = function() {
         if (! (is instanceof Array)) throw "Type Error "+(typeof is)+": "+is;
         var doc = ds.length ? ds[0].why : is[0].why;
         
-        ds.map(function(st){if (!doc.sameTerm(st.why)) throw "sparql update: destination "+doc+" inconsitent with ds "+st.why;});
-        is.map(function(st){if (!doc.sameTerm(st.why)) throw "sparql update: destination "+doc+" inconsitent with is "+st.why;});
+        ds.map(function(st){if (!doc.sameTerm(st.why)) throw "sparql update: destination "+doc+" inconsistent with ds "+st.why;});
+        is.map(function(st){if (!doc.sameTerm(st.why)) throw "sparql update: destination = "+doc+" inconsistent with st.why ="+st.why;});
 
         var protocol = this.editable(doc.uri, kb);
         if (!protocol) throw "Can't make changes in uneditable "+doc;

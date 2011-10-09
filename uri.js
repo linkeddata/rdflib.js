@@ -68,7 +68,7 @@ $rdf.Util.uri.join = function (given, base) {
     return base.slice(0, baseSingle) + path
 }
 
-if (tabulator.isExtension) {
+if (typeof tabulator != 'undefined' && tabulator.isExtension) {
     $rdf.Util.uri.join2 = function (given, base){
         var tIOService = Components.classes['@mozilla.org/network/io-service;1']
                         .getService(Components.interfaces.nsIIOService);
