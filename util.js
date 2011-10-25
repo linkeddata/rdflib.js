@@ -7,10 +7,10 @@ if (typeof tabulator != 'undefined' && typeof tabulator.isExtension == 'undefine
 if( typeof $rdf == 'undefined' ) {
     var $rdf = {};
 } else {
-    dump("Internal error: RDF libray has already been loaded\n");
-    dump("Internal error: $rdf type is "+typeof $rdf+"\n");
-    dump("Internal error: $rdf.log type is "+typeof $rdf.log+"\n");
-    dump("Internal error: $rdf.log.error type is "+typeof $rdf.log.error+"\n");
+    //dump("Internal error: RDF libray has already been loaded\n");
+    //dump("Internal error: $rdf type is "+typeof $rdf+"\n");
+    //dump("Internal error: $rdf.log type is "+typeof $rdf.log+"\n");
+    //dump("Internal error: $rdf.log.error type is "+typeof $rdf.log.error+"\n");
     return $rdf;
 
     throw "Internal error: RDF libray has already been loaded: $rdf already exists";
@@ -23,9 +23,9 @@ if( typeof $rdf == 'undefined' ) {
   https://developer.mozilla.org/en/nsIConsoleService
  */
 
-dump("@@ rdf/util.js test RESET RDF LOGGER  $rdf.log.error)\n");
+//dump("@@ rdf/util.js test RESET RDF LOGGER  $rdf.log.error)\n");
 if($rdf.log != undefined) {
-    dump("WTF util.js:" + $rdf.log);
+    //dump("WTF util.js:" + $rdf.log);
     throw "Internal Error: $rdf.log already defined,  util.js: " + $rdf.log;
 }
 

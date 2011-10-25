@@ -59,7 +59,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                 var kb = sf.store
                 if (!this.dom) {
                     var dparser;
-                    if ((tabulator !=undefined && tabulator.isExtension)) {
+                    if ((typeof tabulator != 'undefined' && tabulator.isExtension)) {
                         dparser = Components.classes["@mozilla.org/xmlextras/domparser;1"].getService(Components.interfaces.nsIDOMParser);
                     } else {
                         dparser = new DOMParser()
@@ -417,16 +417,6 @@ $rdf.Fetcher = function(store, timeout, async) {
 
     $rdf.Util.callbackify(this, ['request', 'recv', 'load', 'fail', 'refresh', 'retract', 'done'])
 
-/* now see ns
-       this.store.setPrefixForURI('rdfs', "http://www.w3.org/2000/01/rdf-schema#")
-       this.store.setPrefixForURI('owl', "http://www.w3.org/2002/07/owl#")
-       this.store.setPrefixForURI('tab',"http://www.w3.org/2007/ont/link#")
-       this.store.setPrefixForURI('http',"http://www.w3.org/2007/ont/http#")
-       this.store.setPrefixForURI('httph',
-	   "http://www.w3.org/2007/ont/httph#")
-       this.store.setPrefixForURI('ical',"http://www.w3.org/2002/12/cal/icaltzd#")
-       
-    */
     this.addProtocol = function(proto) {
         sf.store.add(sf.appNode, ns.link("protocol"), sf.store.literal(proto), this.appNode)
     }
@@ -788,7 +778,7 @@ $rdf.Fetcher = function(store, timeout, async) {
         }
 
         // Get privileges for cross-domain XHR
-        if (!(tabulator !=undefined && tabulator.isExtension)) {
+        if (!(typeof tabulator != 'undefined' && tabulator.isExtension)) {
             try {
                 $rdf.Util.enablePrivilege("UniversalXPConnect UniversalBrowserRead")
             } catch (e) {
@@ -823,14 +813,14 @@ $rdf.Fetcher = function(store, timeout, async) {
             try {
                 xhr.channel.notificationCallbacks = {
                     getInterface: function(iid) {
-                        if (!(tabulator !=undefined && tabulator.isExtension)) {
+                        if (!(typeof tabulator != 'undefined' && tabulator.isExtension)) {
                             $rdf.Util.enablePrivilege("UniversalXPConnect")
                         }
                         if (iid.equals(Components.interfaces.nsIChannelEventSink)) {
                             return {
 
                                 onChannelRedirect: function(oldC, newC, flags) {
-                                    if (!(tabulator !=undefined && tabulator.isExtension)) {
+                                    if (!(typeof tabulator != 'undefined' && tabulator.isExtension)) {
                                         $rdf.Util.enablePrivilege("UniversalXPConnect")
                                     }
                                     if (xhr.aborted) return;
@@ -937,7 +927,7 @@ $rdf.Fetcher = function(store, timeout, async) {
         this.addStatus(xhr.req, "HTTP Request sent.");
 
         // Drop privs
-        if (!(tabulator !=undefined && tabulator.isExtension)) {
+        if (!(typeof tabulator != 'undefined' && tabulator.isExtension)) {
             try {
                 $rdf.Util.disablePrivilege("UniversalXPConnect UniversalBrowserRead")
             } catch (e) {
@@ -1011,25 +1001,37 @@ $rdf.fetcher = function(store, timeout, async) { return new $rdf.Fetcher(store, 
 
 // Parse a string and put the result into the graph kb
 $rdf.parse = function parse(str, kb, base, contentType) {
-    if (contentType == 'text/n3' || contentType == 'text/turtle') {
-        var p = $rdf.N3Parser(kb, kb, base, base, null, null, "", null)
-        p.loadBuf(str);
-        return;
-    }
-
-    if (contentType == 'application/rdf+xml') {
-        var dparser;
-        if ((tabulator !=undefined && tabulator.isExtension)) {
-            dparser = Components.classes["@mozilla.org/xmlextras/domparser;1"].getService(
-                        Components.interfaces.nsIDOMParser);
-        } else {
-            dparser = new DOMParser()
+    try {
+        parseXML = function(str) {
+            var dparser;
+            if ((typeof tabulator != 'undefined' && tabulator.isExtension)) {
+                dparser = Components.classes["@mozilla.org/xmlextras/domparser;1"].getService(
+                            Components.interfaces.nsIDOMParser);
+            } else {
+                dparser = new DOMParser()
+            }
+            return dparser.parseFromString(str, 'application/xml');
         }
-        var dom = dparser.parseFromString(str, 'application/xml');
-        var parser = new $rdf.RDFParser(kb);
-        parser.parse(dom, base, kb.sym(base));
+        if (contentType == 'text/n3' || contentType == 'text/turtle') {
+            var p = $rdf.N3Parser(kb, kb, base, base, null, null, "", null)
+            p.loadBuf(str);
+            return;
+        }
+
+        if (contentType == 'application/rdf+xml') {
+            var parser = new $rdf.RDFParser(kb);
+            parser.parse(parseXML(str), base, kb.sym(base));
+        }
+        
+        if (contentType == 'application/rdfa') {  // @@ not really a valid mime type
+            $rdf.rdfa.parse(parseXML(str), kb, base);  // see rdfa.js
+        }
+    } catch(e) {
+        throw "Error trying to parse <"+base+"> as "+contentType+":\n"+e;
     }
     throw "Don't know how to parse "+contentType+" yet";
 
 };
 
+
+// ends
