@@ -104,21 +104,21 @@ $rdf.curie.createCurie = function (uri, options) {
 
 $rdf.curie = function (curie, options) {
     var opts = $rdf.extend({}, $rdf.curie.defaults, {
-        namespaces: thisElement.xmlns()
+        namespaces: this.xmlns()
     }, options || {});
     return $rdf.curie(curie, opts);
 };
 
 $rdf.safeCurie = function (safeCurie, options) {
     var opts = $rdf.extend({}, $rdf.curie.defaults, {
-        namespaces: thisElement.xmlns()
+        namespaces: this.xmlns()
     }, options || {});
     return $rdf.curie.safeCurie(safeCurie, opts);
 };
 
 $rdf.createCurie = function (uri, options) {
     var opts = $rdf.extend({}, $rdf.curie.defaults, {
-        namespaces: thisElement.xmlns()
+        namespaces: this.xmlns()
     }, options || {});
     return $rdf.curie.createCurie(uri, opts);
 };
@@ -131,7 +131,7 @@ $rdf.curie.defaults = {
 
 $rdf.safeCurie = function (safeCurie, options) {
     var opts = $rdf.extend({}, $rdf.curie.defaults, {
-        namespaces: thisElement.xmlns()
+        namespaces: this.xmlns()
     }, options || {});
     return $rdf.safeCurie(safeCurie, opts);
 };
@@ -143,9 +143,12 @@ $rdf.safeCurie = function (safeCurie, options) {
 $rdf.rdfa = {};
 
 $rdf.rdfa.parse = function (dom, kb, baseUri, doc) {
+    return $rdf.rdfa.parseThis.call($(dom), kb, baseUri, doc); 
+};
+
+$rdf.rdfa.parseThis = function (kb, baseUri, doc) {
     this.kb = kb;
     this.baseUri = baseUri;
-    thisElement = dom;
  
 
 // Agenda:
@@ -235,9 +238,12 @@ $rdf.rdfa.parse = function (dom, kb, baseUri, doc) {
         var i, e, a, tag, name, value, attMap, prefix,
             atts = {},
             nsMap = {};
-        var e = elem[0];
+//        var e = elem[0];    // @@ original -- eh? fails
+        var e = elem;
         nsMap[':length'] = 0;
       
+        if (e.nodeType == 9) return  { atts: atts, namespaces: nsMap }; // Document 
+
         if (e.attributes && e.attributes.getNamedItemNS) {
             attMap = e.attributes;
             for (i = 0; i < attMap.length; i += 1) {
@@ -391,7 +397,7 @@ $rdf.rdfa.parse = function (dom, kb, baseUri, doc) {
           subject = docResource;
         } else if (atts['typeof'] !== undefined) {
           subject = kb.bnode();
-        } else if (elem[0].parentNode.nodeType === 1) {
+        } else if (elem[0].parentNode && elem[0].parentNode.nodeType === 1) {
           subject = context.object || getObjectResource(elem.parent()) || getSubject(elem.parent()).subject;
           skip = !r && atts.property === undefined;
         } else {
@@ -419,7 +425,7 @@ $rdf.rdfa.parse = function (dom, kb, baseUri, doc) {
         if (context.lang) {
           lang = context.lang;
         } else {
-          if (elem[0].parentNode.nodeType === 1) {
+          if (elem[0].parentNode && elem[0].parentNode.nodeType === 1) {
             lang = getLang(elem.parent());
           }
         }
@@ -441,7 +447,7 @@ $rdf.rdfa.parse = function (dom, kb, baseUri, doc) {
     serialize = function (elem, ignoreNs) {
         var i, string = '', atts, a, name, ns, tag;
             elem.contents().each(function () {
-        var j = $(thisElement), // @@@ ?   Use of "this'?
+        var j = $(this), // @@@ ?   Use of "this'?
             e = j[0];
         if (e.nodeType === 1) { // tests whether the node is an element
             name = e.nodeName.toLowerCase();
@@ -488,30 +494,30 @@ $rdf.rdfa.parse = function (dom, kb, baseUri, doc) {
 
     // Originally:
     // This is the main function whcih extracts te RDFA
-    // 'this' is the element
-    // $rdf.rdfaParser(kb).rdfa.call(element or document)
+    // 'this' is a JQ object for the DOM element to be parsed
+    // $rdf.rdfaParser(kb).rdfa.call($(element or document))
     // parseElement = function(element) {
-    //     this.rdfa.call(element);
+    //     this.rdfa.call($(element));
     // };
     
     
-    parse = function (thisElement, context) {
+    parse = function (context) {
       var i, subject, resource, lang, datatype, content, text,
         types, object, triple, parent,
         properties, rels, revs,
         forward, backward,
-        triples = [],
+        triples = [], 
         callback, relCurieOptions,
         attsAndNs, atts, namespaces, ns,
-        children = thisElement.childNodes;
+        children = this.children();
       context = context || {};
       forward = context.forward || [];
       backward = context.backward || [];
-      callback = context.callback || function () { return thisElement; };
-      attsAndNs = getAttributes(thisElement);
+      callback = context.callback || function () { return this; };
+      attsAndNs = getAttributes(this);
       atts = attsAndNs.atts;
       context.atts = atts;
-      namespaces = context.namespaces || thisElement.xmlns();
+      namespaces = context.namespaces || this.xmlns();
       if (attsAndNs.namespaces[':length'] > 0) {
         namespaces = $rdf.Util.extend({}, namespaces);
         for (ns in attsAndNs.namespaces) {
@@ -521,10 +527,10 @@ $rdf.rdfa.parse = function (dom, kb, baseUri, doc) {
         }
       }
       context.curieOptions = $rdf.Util.extend({},
-        rdfaCurieDefaults, { reserved: [], namespaces: namespaces, base: thisElement.base() });
+        rdfaCurieDefaults, { reserved: [], namespaces: namespaces, base: this.base() });
       relCurieOptions = $rdf.Util.extend({}, context.curieOptions, { reserved: relReserved });
-      subject = getSubject(thisElement, context);
-      lang = getLang(thisElement, context);
+      subject = getSubject(this, context);
+      lang = getLang(this, context);
       if (subject.skip) {
         rels = context.forward;
         revs = context.backward;
@@ -533,40 +539,40 @@ $rdf.rdfa.parse = function (dom, kb, baseUri, doc) {
       } else {
         subject = subject.subject;
         if (forward.length > 0 || backward.length > 0) {
-          parent = context.subject || getSubject(thisElement.parent()).subject; // @@
+          parent = context.subject || getSubject(this.parent()).subject; // @@
           for (i = 0; i < forward.length; i += 1) {
             kb.add(parent, forward[i], subject, why);
-            // triple = callback.call(triple, thisElement.get(0), triple);
+            // triple = callback.call(triple, this.get(0), triple);
             //if (triple !== undefined && triple !== null) {
             //  triples = triples.concat(triple);
             //}
           }
           for (i = 0; i < backward.length; i += 1) {
             kb.add(subject, backward[i], parent, why);
-            //triple = callback.call(triple, thisElement.get(0), triple);
+            //triple = callback.call(triple, this.get(0), triple);
             //if (triple !== undefined && triple !== null) {
             //  triples = triples.concat(triple);
             //}
           }
         }
-        resource = getObjectResource(thisElement, context);
-        types = resourcesFromCuries(atts['typeof'], thisElement, false, context.curieOptions);
+        resource = getObjectResource(this, context);
+        types = resourcesFromCuries(atts['typeof'], this, false, context.curieOptions);
         for (i = 0; i < types.length; i += 1) {
           kb.add(subject, type, types[i], why);
-          //triple = callback.call(triple, thisElement.get(0), triple);
+          //triple = callback.call(triple, this.get(0), triple);
           //if (triple !== undefined && triple !== null) {
           //  triples = triples.concat(triple);
           //}
         }
-        properties = resourcesFromCuries(atts.property, thisElement, true, context.curieOptions);
+        properties = resourcesFromCuries(atts.property, this, true, context.curieOptions);
         if (properties.length > 0) {
           datatype = atts.datatype;
           content = atts.content;
-          text = thisElement.text().replace(/"/g, '\\"'); //'
+          text = this.text().replace(/"/g, '\\"'); //'
           if (datatype !== undefined && datatype !== '') {
             datatype = $rdf.curie.parse(datatype, context.curieOptions);
             if (datatype.toString() === rdfXMLLiteral) {
-              object = kb.literal(serialize(thisElement), undefined, rdfXMLLiteralSym );
+              object = kb.literal(serialize(this), undefined, rdfXMLLiteralSym );
             } else if (content !== undefined) {
               object = kb.literal(content, kb.sym(datatype));
             } else {
@@ -580,21 +586,21 @@ $rdf.rdfa.parse = function (dom, kb, baseUri, doc) {
             }
           } else if (children.length === 0 ||
                      datatype === '') {
-            lang = getLang(thisElement, context);
+            lang = getLang(this, context);
             if (lang === undefined) {
               object = kb.literal('"' + text + '"');    //@@ added double quote marks??
             } else {
               object = kb.literal(text, undefined, lang);
             }
           } else {
-            object = kb.literal(serialize(thisElement), kb.sym(rdfXMLLiteral));
+            object = kb.literal(serialize(this), kb.sym(rdfXMLLiteral));
           }
           for (i = 0; i < properties.length; i += 1) {
             kb.add(subject, properties[i], object, why);
           }
         }
-        rels = resourcesFromCuries(atts.rel, thisElement, true, relCurieOptions);
-        revs = resourcesFromCuries(atts.rev, thisElement, true, relCurieOptions);
+        rels = resourcesFromCuries(atts.rel, this, true, relCurieOptions);
+        revs = resourcesFromCuries(atts.rev, this, true, relCurieOptions);
         if (atts.resource !== undefined || atts.href !== undefined) {
           // make the triples immediately
           if (rels !== undefined) {
@@ -612,40 +618,40 @@ $rdf.rdfa.parse = function (dom, kb, baseUri, doc) {
         }
       }
       children.each(function () {
-        triples = triples.concat(rdfa.call($(thisElement), { forward: rels, backward: revs,
+        parse.call($(this), { forward: rels, backward: revs,
             subject: subject, object: resource || subject,
-            lang: lang, namespaces: namespaces, callback: callback }));
+            lang: lang, namespaces: namespaces, callback: callback });
       });
-      return triples;
+      return;
     };
 
-    // Ad to list of gleaners @@@
+    // Add to list of gleaners @@@
     gleaner = function (options) {
       var type, atts;
       if (options && options.about !== undefined) {
-        atts = getAttributes(thisElement).atts;
+        atts = getAttributes(this).atts;
         if (options.about === null) {
           return atts.property !== undefined ||
                  atts.rel !== undefined ||
                  atts.rev !== undefined ||
                  atts['typeof'] !== undefined;
         } else {
-          return getSubject(thisElement, {atts: atts}).subject.value === options.about;
+          return getSubject(this, {atts: atts}).subject.value === options.about;
         }
       } else if (options && options.type !== undefined) {
-            type = getAttribute(thisElement, 'typeof');
+            type = getAttribute(this, 'typeof');
         if (type !== undefined) {
             return options.type === null ? true : this.curie(type) === options.type;
         }
             return false;
         } else {
-            return parse(thisElement, options);
+            return parse(this, options);
         }
     }
     
-    return;     // debug later   @@@@@@@@
+    // return;     // debug later   @@@@@@@@
     
-    return parse(dom); 
+    return parse.call(this); 
     // End of Parser object
 
 }
@@ -669,15 +675,15 @@ $rdf.rdfa.parse = function (dom, kb, baseUri, doc) {
    // 'this' is a jq bject whcih wraps an element
   $jq.fn.rdfa = function (triple) {
     if (triple === undefined) {
-      var triples = $jq.map($(thisElement), function (elem) {
+      var triples = $jq.map($(this), function (elem) {
         return rdfa.call($(elem));
       });
       return $jq.rdf({ triples: triples });
     } else {
-      $(thisElement).each(function () {
-        addRDFa.call($(thisElement), triple);
+      $(this).each(function () {
+        addRDFa.call($(this), triple);
       });
-      return thisElement;
+      return this;
     }
   };
   */
@@ -701,10 +707,10 @@ $rdf.rdfa.parse = function (dom, kb, baseUri, doc) {
    */
    /*
   $jq.fn.removeRdfa = function (triple) {
-    $(thisElement).each(function () {
-      removeRDFa.call($(thisElement), triple);
+    $(this).each(function () {
+      removeRDFa.call($(this), triple);
     });
-    return thisElement;
+    return this;
   };
 
   $jq.rdf.gleaners.push(gleaner);
