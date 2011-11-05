@@ -1,67 +1,145 @@
-//     Serialization tests
+//     Serialization tests ...
 //
 
-var tc0006Passed = true;
+var tc0007Passed = true;
 
-var base = "http://dig.csail.mit.edu/hg/tabulator/raw-file/tip/chrome/content/test/tc0006/";
+
+var mainifest_uri = 'http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/rdfa-xhtml1-test-manifest.rdf';
+// var mainifest_uri = 'http://localhost/www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/rdfa-xhtml1-test-manifest.rdf';
+
+var TD = $rdf.Namespace('http://www.w3.org/2006/03/test-description#');
+var DC = $rdf.Namespace('http://purl.org/dc/elements/1.1/');
+
+var base = 'http://dig.csail.mit.edu/hg/tabulator/raw-file/tip/chrome/content/test/tc0007/';
+
+var kludgeForOfflineUse = function kludgeForOfflineUse(uri) {
+    return uri.replace('http://', 'http://localhost/');
+}
 
 function escapeForXML(str) {
     if (typeof str == 'undefined') return '@@@undefined@@@@';
+    // return uri; 
     return str.replace(/&/g, '&amp;').replace(/</g, '&lt;')
 }
 
-function testTC0006(showDetails) {
+// HTTP get
+//
+// @@ param uri
+// @@ Param callback takes (error, body)
+
+var httpGetContents = function httpGetContents(uri,  callback) {
+    uri = kludgeForOfflineUse(uri);
+    var xhr = $rdf.Util.XMLHTTPFactory();
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4) {
+            var success = (!xhr.status || (xhr.status >= 200 && xhr.status < 300));
+            if (!success) {
+                callback(false, "HTTP GET failed for <"+uri+"> status = "+
+                xhr.status+", "+xhr.statusText+", body length = "+xhr.responseText.length);
+            } else {
+               callback(true, xhr.responseText);
+            }    
+        }
+    }
+
+    if(false) {
+        try {
+            $rdf.Util.enablePrivilege("UniversalBrowserRead")
+        } catch(e) {
+            alert("Failed to get privileges: " + e)
+        }
+    }
+    
+    xhr.open('GET', uri, true);  // async=true
+    // xhr.setRequestHeader('Content-type', 'application/sparql-query');
+    xhr.send();
+}
+
+
+function testTC0007(showDetails, callback) {
     var result = "";
     var expected = "";
     var failStyle = 'style="border: solid 2px red; padding: 1px 2px;"';
     var passStyle = 'style="border: solid 2px green; padding: 1px 2px;"';
-    var allResults = "<div><strong>Detailed Results:</strong></div>";
+    //var allResults = "<div><strong>Detailed Results:</strong></div>";
     var tests = [ ];
+    
+    callback(0, '<p>got here</p>');
 
-    tests.push({
-        'title': "Nested bnodes",
-        'input': ' :Fred :knows [ :name [ :first "Alice"; :second "Bill" ]]. ',
-        'expected': '{_:n1 <http://dig.csail.mit.edu/hg/tabulator/raw-file/tip/chrome/content/test/tc0006/#first> "Alice" . _:n1 <http://dig.csail.mit.edu/hg/tabulator/raw-file/tip/chrome/content/test/tc0006/#second> "Bill" . _:n0 <http://dig.csail.mit.edu/hg/tabulator/raw-file/tip/chrome/content/test/tc0006/#name> _:n1 . <http://dig.csail.mit.edu/hg/tabulator/raw-file/tip/chrome/content/test/tc0006/#Fred> <http://dig.csail.mit.edu/hg/tabulator/raw-file/tip/chrome/content/test/tc0006/#knows> _:n0 .}'
-    },
-    {
-        'title': "Looped bnodes",
-        'input': ' _:a :knows [ :knows _:a ]. ',
-        'expected': '{_:n3 <http://dig.csail.mit.edu/hg/tabulator/raw-file/tip/chrome/content/test/tc0006/#knows> _:n2 . _:n2 <http://dig.csail.mit.edu/hg/tabulator/raw-file/tip/chrome/content/test/tc0006/#knows> _:n3 .}'
-    });
-    
-    
-    for(var i=0; i < tests.length; i++) {
-        var test = tests[i];
-        allResults += "<h2>" + test.title + "</h2>";
-        var result, expected;
-        try {
-            var kb = $rdf.graph();
-            $rdf.parse(test.input, kb, base, 'text/n3');
-            result = kb.toNT();
-            result = result.replace(/\n/g, ' ').trim()
-            expected = test.expected.replace(/\n/g, ' ').trim()
-        } catch(e) {
-            result = "Runtime exception: "+e;
-        }
-        if(result != expected) {
-                for (var j=0; j<result.length; j++) {
-                    if (result[j] != expected[j]) {
-                        allResults += "Diff at "+j+": '"+(result[j])+"' ("+result.charCodeAt(j)+") vs '"
-                                    +test.expected[j]+"' ("+expected.charCodeAt(j)+").";
-                    }
-                }
-                
-                tc0006Passed = false;
-                styleResult =  failStyle;
-        }
-        else {
-                styleResult  =  passStyle;
-        }
-        allResults += "<p>EXPECTED: ("+test.expected.length+") " + escapeForXML(test.expected)+ "</p><p>RESULT ("+result.length+"): <span " + styleResult +">"+ escapeForXML(result) + "</p>";
+    var meta = $rdf.graph();
+    var fetcher = $rdf.fetcher(meta, undefined, false);
+    fetcher.nowOrWhenFetched(kludgeForOfflineUse(mainifest_uri), undefined, function(error, body) {
+
+
+        callback(0, "<p>Loaded <a href='"+escapeForXML(mainifest_uri)+"'>manifest</a></p>" );
         
-    }
-    if(showDetails) return allResults;
-    else return tc0006Passed;
+ 
+        
+        function loadDataAndRunTest(test, number){
+
+            test.no = number;
+            var xtitle = escapeForXML(meta.any(test, DC('title')).value);
+            // callback(0, "<p>Loaded test: "+xtitle+"</p>");
+            test.input = meta.any(test, TD('informationResourceInput'));
+            test.expected =  meta.any(test, TD('informationResourceResults'));
+            test.purpose = meta.any(test, TD('purpose')).value;
+            
+            var report = "<h2>" + xtitle + 
+                    "</h2>\n<p>"+escapeForXML(test.purpose)+"</p>";
+
+            test.inputData = test.expectedData = null;
+            
+            var tryTest = function() {
+                if (test.inputData != null && test.expectedData != null) {
+                    callback(0, "<hr><p>"+test.no+") "+xtitle+"</p>");
+                    try {
+                        var kb = $rdf.graph();
+                        $rdf.parse(test.inputData, kb, base, 'application/rdfa');
+                        callback(0, "<p>Parsed for test "+test.no+". "+
+                        "Test data:<pre>"+escapeForXML(test.inputData)+"</pre>"
+                        +"<br/>Results:<pre>"
+                        + escapeForXML(kb.toString()) +
+                        "</pre></p><p>Expected SPARQL: <pre>"+escapeForXML(test.expectedData)+"</pre></p>");
+
+                    } catch(e) {
+                        callback(1, "Exception for test "+test.no+": "+e)
+                    }
+
+                }
+            }
+            // callback(0, "<p>"+escapeForXML(test.purpose)+"</p>");
+            httpGetContents(test.input.uri, function(ok, body) {
+                if (!ok) {
+                    callback(1, "<p class='error'>Error getting input <"+test.input.uri+"> : "+
+                        escapeForXML(body)+"</p>");
+                } else {
+                    test.inputData = body;
+                    tryTest();
+                }
+            });
+            
+            httpGetContents(test.expected.uri, function(ok, body) {
+                if (!ok) {
+                    callback(1, "<p class='error'>Error getting expected <"+test.expected.uri+"> : "+
+                        escapeForXML(body)+"</p>");
+                } else {
+                    test.expectedData = body;
+                    tryTest();
+                }
+            });
+            return;
+        }; // loadDataAndRunTest
+        
+        
+        // var cases = meta.each(undefined, RDF('type'), TD('TestCase'));
+        var tests = meta.each(undefined, TD('reviewStatus'), TD('approved'));
+
+
+        for(var i=0; i < tests.length; i++) loadDataAndRunTest(tests[i], i+1);
+
+    
+    });
+
 }
 
 function test0(){
