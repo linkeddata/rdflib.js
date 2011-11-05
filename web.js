@@ -441,7 +441,6 @@ $rdf.Fetcher = function(store, timeout, async) {
                     '\n\tsf.handlers='+sf.handlers+'\n'
         }
         (new handler(args)).recv(xhr);
-        // kb.the(xhr.req, ns.link('handler')).append(handler.term)
         xhr.handle(cb)
     }
 
@@ -610,18 +609,12 @@ $rdf.Fetcher = function(store, timeout, async) {
         var requestHandlers = kb.collection()
         var sf = this
 
-        // The list of sources is kept in the source widget
-        // kb.add(this.appNode, ns.link("source"), docterm, this.appNode)
-        // kb.add(docterm, ns.link('request'), req, this.appNode)
         var now = new Date();
         var timeNow = "[" + now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds() + "] ";
 
         kb.add(req, ns.rdfs("label"), kb.literal(timeNow + ' Request for ' + docuri), this.appNode)
         kb.add(req, ns.link("requestedURI"), kb.literal(docuri), this.appNode)
         kb.add(req, ns.link('status'), kb.collection(), sf.req)
-
-        // This request will have handlers probably
-//        kb.add(req, ns.link('handler'), requestHandlers, sf.appNode)
 
 
         if (typeof kb.anyStatementMatching(this.appNode, ns.link("protocol"), $rdf.Util.uri.protocol(docuri)) == "undefined") {
@@ -632,134 +625,140 @@ $rdf.Fetcher = function(store, timeout, async) {
 
         // Set up callbacks
         xhr.onreadystatechange = function() {
-            // dump("@@ readystate "+xhr.readyState+" for "+xhr.uri+"\n");
-            switch (xhr.readyState) {
-            case 3:
-                // Intermediate states
-                if (!xhr.recv) {
-                    xhr.recv = true
-                    var handler = null
-                    var thisReq = xhr.req // Might have changes by redirect
-                    sf.fireCallbacks('recv', args)
-                    var response = kb.bnode();
-                    kb.add(thisReq, ns.link('response'), response);
-                    kb.add(response, ns.http('status'), kb.literal(xhr.status), response)
-                    kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response)
+            
+            var handleResponse = function() {
+                if (xhr.handleResponseDone) return;
+                xhr.handleResponseDone = true;
+                var handler = null;
+                var thisReq = xhr.req // Might have changes by redirect
+                sf.fireCallbacks('recv', args)
+                var response = kb.bnode();
+                kb.add(thisReq, ns.link('response'), response);
+                kb.add(response, ns.http('status'), kb.literal(xhr.status), response)
+                kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response)
 
-                    xhr.headers = {}
-                    if ($rdf.Util.uri.protocol(xhr.uri.uri) == 'http' || $rdf.Util.uri.protocol(xhr.uri.uri) == 'https') {
-                        xhr.headers = $rdf.Util.getHTTPHeaders(xhr)
-                        for (var h in xhr.headers) { // trim below for Safari - adds a CR!
-                            kb.add(response, ns.httph(h), xhr.headers[h].trim(), response)
-                        }
+                xhr.headers = {}
+                if ($rdf.Util.uri.protocol(xhr.uri.uri) == 'http' || $rdf.Util.uri.protocol(xhr.uri.uri) == 'https') {
+                    xhr.headers = $rdf.Util.getHTTPHeaders(xhr)
+                    for (var h in xhr.headers) { // trim below for Safari - adds a CR!
+                        kb.add(response, ns.httph(h), xhr.headers[h].trim(), response)
                     }
+                }
 
-                    if (xhr.status >= 400) { // For extra dignostics, keep the reply
-                        if (xhr.responseText.length > 10) { 
-                            kb.add(response, ns.http('content'), kb.literal(xhr.responseText), response);
-                            // dump("HTTP >= 400 responseText:\n"+xhr.responseText+"\n"); // @@@@
-                        }
-                        sf.failFetch(xhr, "HTTP error for " +xhr.uri + ": "+ xhr.status + ' ' + xhr.statusText);
-                        break
+                if (xhr.status >= 400) { // For extra dignostics, keep the reply
+                    if (xhr.responseText.length > 10) { 
+                        kb.add(response, ns.http('content'), kb.literal(xhr.responseText), response);
+                        // dump("HTTP >= 400 responseText:\n"+xhr.responseText+"\n"); // @@@@
                     }
+                    sf.failFetch(xhr, "HTTP error for " +xhr.uri + ": "+ xhr.status + ' ' + xhr.statusText);
+                    return;
+                }
 
 
 
-                    var loc = xhr.headers['content-location'];
+                var loc = xhr.headers['content-location'];
 
 
 
-                    // deduce some things from the HTTP transaction
-                    var addType = function(cla) { // add type to all redirected resources too
-                        var prev = thisReq;
-                        if (loc) {
-                            var docURI = kb.any(prev, ns.link('requestedURI'));
-                            if (docURI != loc) {
-                                kb.add(kb.sym(doc), ns.rdf('type'), cla, sf.appNode);
-                            }
-                        }
-                        for (;;) {
-                            var doc = kb.sym(kb.any(prev, ns.link('requestedURI')))
-                            kb.add(doc, ns.rdf('type'), cla, sf.appNode);
-                            prev = kb.any(undefined, kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'), prev);
-                            if (!prev) break;
-                            var response = kb.any(prev, kb.sym('http://www.w3.org/2007/ont/link#response'));
-                            if (!response) break;
-                            var redirection = kb.any(response, kb.sym('http://www.w3.org/2007/ont/http#status'));
-                            if (!redirection) break;
-                            if (redirection != '301' && redirection != '302') break;
-                        }
-                    }
-                    if (xhr.status == 200) {
-                        addType(ns.link('Document'));
-                        var ct = xhr.headers['content-type'];
-                        if (!ct) throw ('No content-type on 200 response for ' + xhr.uri)
-                        else {
-                            if (ct.indexOf('image/') == 0) addType(kb.sym('http://purl.org/dc/terms/Image'));
-                        }
-                    }
-
-                    if ($rdf.Util.uri.protocol(xhr.uri.uri) == 'file' || $rdf.Util.uri.protocol(xhr.uri.uri) == 'chrome') {
-                        switch (xhr.uri.uri.split('.').pop()) {
-                        case 'rdf':
-                        case 'owl':
-                            xhr.headers['content-type'] = 'application/rdf+xml';
-                            break;
-                        case 'n3':
-                        case 'nt':
-                        case 'ttl':
-                            xhr.headers['content-type'] = 'text/n3';
-                            break;
-                        default:
-                            xhr.headers['content-type'] = 'text/xml';
-                        }
-                    }
-
-                    // If we have alread got the thing at this location, abort
+                // deduce some things from the HTTP transaction
+                var addType = function(cla) { // add type to all redirected resources too
+                    var prev = thisReq;
                     if (loc) {
-                        var udoc = $rdf.Util.uri.join(xhr.uri.uri, loc)
-                        if (!force && udoc != xhr.uri.uri && sf.requested[udoc]) {
-                            // should we smush too?
-                            // $rdf.log.info("HTTP headers indicate we have already" + " retrieved " + xhr.uri + " as " + udoc + ". Aborting.")
-                            sf.doneFetch(xhr, args)
-                            xhr.abort()
-                            break
-                        }
-                        sf.requested[udoc] = true
-                    }
-
-
-                    for (var x = 0; x < sf.handlers.length; x++) {
-                        if (xhr.headers['content-type'].match(sf.handlers[x].pattern)) {
-                            handler = new sf.handlers[x]()
-                            requestHandlers.append(sf.handlers[x].term) // FYI
-                            break
+                        var docURI = kb.any(prev, ns.link('requestedURI'));
+                        if (docURI != loc) {
+                            kb.add(kb.sym(doc), ns.rdf('type'), cla, sf.appNode);
                         }
                     }
-
-                    var link = xhr.headers['link']; // Only one?
-                    if (link) {
-                        var rel = null;
-                        var arg = link.replace(/ /g, '').split(';');
-                        for (var i = 0; i < arg.length; i++) {
-                            lr = arg[i].split('=');
-                            if (lr[0] == 'rel') rel = lr[1];
-                        }
-                        if (rel) // Treat just like HTML link element
-                        sf.linkData(xhr, rel, arg[0]);
+                    for (;;) {
+                        var doc = kb.sym(kb.any(prev, ns.link('requestedURI')))
+                        kb.add(doc, ns.rdf('type'), cla, sf.appNode);
+                        prev = kb.any(undefined, kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'), prev);
+                        if (!prev) break;
+                        var response = kb.any(prev, kb.sym('http://www.w3.org/2007/ont/link#response'));
+                        if (!response) break;
+                        var redirection = kb.any(response, kb.sym('http://www.w3.org/2007/ont/http#status'));
+                        if (!redirection) break;
+                        if (redirection != '301' && redirection != '302') break;
                     }
+                }
+                if (xhr.status == 200) {
+                    addType(ns.link('Document'));
+                    var ct = xhr.headers['content-type'];
+                    if (!ct) throw ('No content-type on 200 response for ' + xhr.uri)
+                    else {
+                        if (ct.indexOf('image/') == 0) addType(kb.sym('http://purl.org/dc/terms/Image'));
+                    }
+                }
+
+                if ($rdf.Util.uri.protocol(xhr.uri.uri) == 'file' || $rdf.Util.uri.protocol(xhr.uri.uri) == 'chrome') {
+                    switch (xhr.uri.uri.split('.').pop()) {
+                    case 'rdf':
+                    case 'owl':
+                        xhr.headers['content-type'] = 'application/rdf+xml';
+                        break;
+                    case 'n3':
+                    case 'nt':
+                    case 'ttl':
+                        xhr.headers['content-type'] = 'text/n3';
+                        break;
+                    default:
+                        xhr.headers['content-type'] = 'text/xml';
+                    }
+                }
+
+                // If we have alread got the thing at this location, abort
+                if (loc) {
+                    var udoc = $rdf.Util.uri.join(xhr.uri.uri, loc)
+                    if (!force && udoc != xhr.uri.uri && sf.requested[udoc]) {
+                        // should we smush too?
+                        // $rdf.log.info("HTTP headers indicate we have already" + " retrieved " + xhr.uri + " as " + udoc + ". Aborting.")
+                        sf.doneFetch(xhr, args)
+                        xhr.abort()
+                        return
+                    }
+                    sf.requested[udoc] = true
+                }
 
 
-                    if (handler) {
-                        handler.recv(xhr)
-                    } else {
-                        sf.failFetch(xhr, "Unhandled content type: " + xhr.headers['content-type']);
+                for (var x = 0; x < sf.handlers.length; x++) {
+                    if (xhr.headers['content-type'].match(sf.handlers[x].pattern)) {
+                        handler = new sf.handlers[x]()
+                        requestHandlers.append(sf.handlers[x].term) // FYI
                         break
                     }
                 }
+
+                var link = xhr.headers['link']; // Only one?
+                if (link) {
+                    var rel = null;
+                    var arg = link.replace(/ /g, '').split(';');
+                    for (var i = 0; i < arg.length; i++) {
+                        lr = arg[i].split('=');
+                        if (lr[0] == 'rel') rel = lr[1];
+                    }
+                    if (rel) // Treat just like HTML link element
+                    sf.linkData(xhr, rel, arg[0]);
+                }
+
+
+                if (handler) {
+                    handler.recv(xhr)
+                } else {
+                    sf.failFetch(xhr, "Unhandled content type: " + xhr.headers['content-type']);
+                    return;
+                }
+            };
+
+
+
+            switch (xhr.readyState) {
+            case 3:
+                // Intermediate state -- 3 may OR MAY NOT be called, selon browser.
+                handleResponse();
                 break
             case 4:
                 // Final state
+                handleResponse();
                 // Now handle
                 if (xhr.handle) {
                     if (sf.requested[xhr.uri.uri] === 'redirected') {
@@ -774,7 +773,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                         docuri+">");
                 }    
                 break
-            }
+            } // switch
         }
 
         // Get privileges for cross-domain XHR
@@ -1021,10 +1020,12 @@ $rdf.parse = function parse(str, kb, base, contentType) {
         if (contentType == 'application/rdf+xml') {
             var parser = new $rdf.RDFParser(kb);
             parser.parse(parseXML(str), base, kb.sym(base));
+            return;
         }
         
         if (contentType == 'application/rdfa') {  // @@ not really a valid mime type
             $rdf.rdfa.parse(parseXML(str), kb, base);  // see rdfa.js
+            return;
         }
     } catch(e) {
         throw "Error trying to parse <"+base+"> as "+contentType+":\n"+e;
