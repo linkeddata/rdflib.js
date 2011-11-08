@@ -1,3 +1,320 @@
+/*
+ * jQuery URIs @VERSION
+ * 
+ * Copyright (c) 2008 Jeni Tennison
+ * Licensed under the MIT (MIT-LICENSE.txt)
+ *
+ */
+/*global jQuery */
+(function ($) {
+
+  var
+    mem = {},
+    uriRegex = /^(([a-z][\-a-z0-9+\.]*):)?(\/\/([^\/?#]+))?([^?#]*)?(\?([^#]*))?(#(.*))?$/i,
+    docURI,
+
+    parseURI = function (u) {
+      var m = u.match(uriRegex);
+      if (m === null) {
+        throw "Malformed URI: " + u;
+      }
+      return {
+        scheme: m[1] ? m[2].toLowerCase() : undefined,
+        authority: m[3] ? m[4] : undefined,
+        path: m[5] || '',
+        query: m[6] ? m[7] : undefined,
+        fragment: m[8] ? m[9] : undefined
+      };
+    },
+
+    removeDotSegments = function (u) {
+      var r = '', m = [];
+      if (/\./.test(u)) {
+        while (u !== undefined && u !== '') {
+          if (u === '.' || u === '..') {
+            u = '';
+          } else if (/^\.\.\//.test(u)) { // starts with ../
+            u = u.substring(3);
+          } else if (/^\.\//.test(u)) { // starts with ./
+            u = u.substring(2);
+          } else if (/^\/\.(\/|$)/.test(u)) { // starts with /./ or consists of /.
+            u = '/' + u.substring(3);
+          } else if (/^\/\.\.(\/|$)/.test(u)) { // starts with /../ or consists of /..
+            u = '/' + u.substring(4);
+            r = r.replace(/\/?[^\/]+$/, '');
+          } else {
+            m = u.match(/^(\/?[^\/]*)(\/.*)?$/);
+            u = m[2];
+            r = r + m[1];
+          }
+        }
+        return r;
+      } else {
+        return u;
+      }
+    },
+
+    merge = function (b, r) {
+      if (b.authority !== '' && (b.path === undefined || b.path === '')) {
+        return '/' + r;
+      } else {
+        return b.path.replace(/[^\/]+$/, '') + r;
+      }
+    };
+
+  $.uri = function (relative, base) {
+    var uri;
+    relative = relative || '';
+    if (mem[relative]) {
+      return mem[relative];
+    }
+    base = base || $.uri.base();
+    if (typeof base === 'string') {
+      base = $.uri.absolute(base);
+    }
+    uri = new $.uri.fn.init(relative, base);
+    if (mem[uri]) {
+      return mem[uri];
+    } else {
+      mem[uri] = uri;
+      return uri;
+    }
+  };
+
+  $.uri.fn = $.uri.prototype = {
+    init: function (relative, base) {
+      var r = {};
+      base = base || {};
+      $.extend(this, parseURI(relative));
+      if (this.scheme === undefined) {
+        this.scheme = base.scheme;
+        if (this.authority !== undefined) {
+          this.path = removeDotSegments(this.path);
+        } else {
+          this.authority = base.authority;
+          if (this.path === '') {
+            this.path = base.path;
+            if (this.query === undefined) {
+              this.query = base.query;
+            }
+          } else {
+            if (!/^\//.test(this.path)) {
+              this.path = merge(base, this.path);
+            }
+            this.path = removeDotSegments(this.path);
+          }
+        }
+      }
+      if (this.scheme === undefined) {
+        throw "Malformed URI: URI is not an absolute URI and no base supplied: " + relative;
+      }
+      return this;
+    },
+  
+    resolve: function (relative) {
+      return $.uri(relative, this);
+    },
+    
+    relative: function (absolute) {
+      var aPath, bPath, i = 0, j, resultPath = [], result = '';
+      if (typeof absolute === 'string') {
+        absolute = $.uri(absolute, {});
+      }
+      if (absolute.scheme !== this.scheme || 
+          absolute.authority !== this.authority) {
+        return absolute.toString();
+      }
+      if (absolute.path !== this.path) {
+        aPath = absolute.path.split('/');
+        bPath = this.path.split('/');
+        if (aPath[1] !== bPath[1]) {
+          result = absolute.path;
+        } else {
+          while (aPath[i] === bPath[i]) {
+            i += 1;
+          }
+          j = i;
+          for (; i < bPath.length - 1; i += 1) {
+            resultPath.push('..');
+          }
+          for (; j < aPath.length; j += 1) {
+            resultPath.push(aPath[j]);
+          }
+          result = resultPath.join('/');
+        }
+        result = absolute.query === undefined ? result : result + '?' + absolute.query;
+        result = absolute.fragment === undefined ? result : result + '#' + absolute.fragment;
+        return result;
+      }
+      if (absolute.query !== undefined && absolute.query !== this.query) {
+        return '?' + absolute.query + (absolute.fragment === undefined ? '' : '#' + absolute.fragment);
+      }
+      if (absolute.fragment !== undefined && absolute.fragment !== this.fragment) {
+        return '#' + absolute.fragment;
+      }
+      return '';
+    },
+  
+    toString: function () {
+      var result = '';
+      if (this._string) {
+        return this._string;
+      } else {
+        result = this.scheme === undefined ? result : (result + this.scheme + ':');
+        result = this.authority === undefined ? result : (result + '//' + this.authority);
+        result = result + this.path;
+        result = this.query === undefined ? result : (result + '?' + this.query);
+        result = this.fragment === undefined ? result : (result + '#' + this.fragment);
+        this._string = result;
+        return result;
+      }
+    }
+  
+  };
+
+  $.uri.fn.init.prototype = $.uri.fn;
+
+  $.uri.absolute = function (uri) {
+    return $.uri(uri, {});
+  };
+
+  $.uri.resolve = function (relative, base) {
+    return $.uri(relative, base);
+  };
+  
+  $.uri.relative = function (absolute, base) {
+    return $.uri(base, {}).relative(absolute);
+  };
+  
+  docURI = $.uri.absolute(document.location.href);
+  
+  $.uri.base = function () {
+    var base = $('head > base').attr('href');
+    return base === undefined ? docURI : $.uri(base, docURI);
+  };
+
+})(jQuery);
+/*
+ * jQuery CURIE @VERSION
+ * 
+ * Copyright (c) 2008 Jeni Tennison
+ * Licensed under the MIT (MIT-LICENSE.txt)
+ *
+ * Depends:
+ *  jquery.uri.js
+ */
+/*global jQuery */
+(function ($) {
+
+  var 
+    xmlnsRegex = /\sxmlns(?::([^ =]+))?\s*=\s*(?:"([^"]*)"|'([^']*)')/g;
+
+  $.fn.xmlns = function (prefix, uri, inherited) {
+    var 
+      elem = this.eq(0),
+      ns = elem.data('xmlns'),
+      e = elem[0], a, p, i,
+      decl = prefix ? 'xmlns:' + prefix : 'xmlns',
+      tag, found = false;
+    if (uri === undefined) {
+      if (prefix === undefined) { // get the in-scope declarations on the first element
+        if (ns === undefined) {
+          ns = {};
+          if (e.outerHTML !== undefined) {
+            tag = /<[^>]+>/.exec(e.outerHTML);
+            a = xmlnsRegex.exec(tag);
+            while (a !== null) {
+              prefix = a[1] || '';
+              ns[prefix] = $.uri(a[2] || a[3]);
+              found = true;
+              a = xmlnsRegex.exec(tag);
+            }
+            xmlnsRegex.lastIndex = 0;
+          } else {
+            for (i = 0; i < e.attributes.length; i += 1) {
+              a = e.attributes[i];
+              if (/^xmlns/.test(a.nodeName)) {
+                prefix = /^xmlns(:(.+))?$/.exec(a.nodeName)[2] || '';
+                ns[prefix] = $.uri(a.nodeValue);
+                found = true;
+              }
+            }
+          }
+          inherited = inherited || (e.parentNode.nodeType === 1 ? elem.parent().xmlns() : {});
+          ns = found ? $.extend({}, inherited, ns) : inherited;
+          elem.data('xmlns', ns);
+        }
+        return ns;
+      } else if (typeof prefix === 'object') { // set the prefix mappings defined in the object
+        for (p in prefix) {
+          if (typeof prefix[p] === 'string') {
+            this.xmlns(p, prefix[p]);
+          }
+        }
+        this.find('*').andSelf().removeData('xmlns');
+        return this;
+      } else { // get the in-scope declaration associated with this prefix on the first element
+        if (ns === undefined) {
+          ns = elem.xmlns();
+        }
+        return ns[prefix];
+      }
+    } else { // set
+      this.find('*').andSelf().removeData('xmlns');
+      return this.attr(decl, uri);
+    }
+  };
+  
+  $.fn.removeXmlns = function (prefix) {
+    var decl, p, i;
+    if (typeof prefix === 'object') {
+      if (prefix.length === undefined) { // assume an object representing namespaces
+        for (p in prefix) {
+          if (typeof prefix[p] === 'string') {
+            this.removeXmlns(p);
+          }
+        }
+      } else { // it's an array
+        for (i = 0; i < prefix.length; i += 1) {
+          this.removeXmlns(prefix[i]);
+        }
+      }
+    } else {
+      decl = prefix ? 'xmlns:' + prefix : 'xmlns';
+      this.removeAttr(decl);
+    }
+    this.find('*').andSelf().removeData('xmlns');
+    return this;
+  };
+
+  $.fn.qname = function (name) {
+    var m, prefix, namespace;
+    if (name === undefined) {
+      if (this[0].outerHTML === undefined) {
+        name = this[0].nodeName.toLowerCase();
+      } else {
+        name = /<([^ >]+)/.exec(this[0].outerHTML)[1].toLowerCase();
+      }
+    }
+    if (name === '?xml:namespace') {
+      // there's a prefix on the name, but we can't get at it
+      throw "XMLinHTML: Unable to get the prefix to resolve the name of this element";
+    }
+    m = /^(([^:]+):)?([^:]+)$/.exec(name);
+    prefix = m[2] || '';
+    namespace = this.xmlns(prefix);
+    if (namespace === undefined && prefix !== '') {
+      throw "MalformedQName: The prefix " + prefix + " is not declared";
+    }
+    return {
+      namespace: namespace,
+      localPart: m[3],
+      prefix: prefix,
+      name: name
+    };
+  };
+
+})(jQuery);
 $rdf = function() {
 /**
 * Utility functions for $rdf and the $rdf object itself
