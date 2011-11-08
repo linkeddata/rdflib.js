@@ -102,8 +102,16 @@ function testTC0007(showDetails, callback) {
                         "</pre></p><p><a href='"+test.expected.uri+"'>Expected SPARQL</a>: <pre>"+escapeForXML(test.expectedData)+"</pre></p>");
 
                     } catch(e) {
+
                         callback(1, "<p style='background-color: #fcc'>Exception for test "
                                 +test.no+": "+e+'</p>')
+                        if (typeof e == 'Object') {
+                            var details = ""; 
+                            for (var prop in e) {  
+                               details += '' + prop+ ": '"+ e[prop]+ "';\n"; 
+                            } 
+                            callback(1, "<p style='background-color: #fcc'>Details:"+details+'</p>');
+                        }
                     }
 
                 }
