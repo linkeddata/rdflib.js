@@ -1,7 +1,8 @@
 
 
-J=../jquery
-Q=$J/jquery-1.4.2.min.js
+#J=../jquery
+J=.
+Q=../jquery/jquery-1.4.2.min.js
 X=$J/jquery.uri.js $J/jquery.xmlns.js
 R=util.js uri.js term.js match.js rdfparser.js rdfa.js \
 n3parser.js identity.js rdfs.js query.js sparql.js sparqlUpdate.js jsonparser.js serialize.js web.js
