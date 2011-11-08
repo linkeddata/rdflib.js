@@ -46,10 +46,10 @@
  */
 /*global jQuery */
 
-$rdf.curie = {};
-$rdf.curie.parse = function (curie, options) {
+// The curie module itself is also the parse function
+$rdf.curie = function (curie, options) {
     var
-    opts = $rdf.extend({}, $rdf.curie.defaults, options || {}),
+    opts = $rdf.Util.extend({}, $rdf.curie.defaults, options || {}),
         m = /^(([^:]*):)?(.+)$/.exec(curie),
         prefix = m[2],
         local = m[3],
@@ -68,7 +68,7 @@ $rdf.curie.parse = function (curie, options) {
     } else {
         ns = opts.defaultNamespace;
     }
-    return $rdf.sym(ns + local);
+    return $rdf.sym(ns.uri + local);
 };
 
 $rdf.curie.defaults = {
@@ -84,7 +84,7 @@ $rdf.curie.safeCurie = function (safeCurie, options) {
 };
 
 $rdf.curie.createCurie = function (uri, options) {
-    var opts = $rdf.extend({}, $rdf.curie.defaults, options || {}),
+    var opts = $rdf.Util.extend({}, $rdf.curie.defaults, options || {}),
         ns = opts.namespaces,
         curie;
     uri = $rdf.sym(uri).toString();
@@ -102,22 +102,23 @@ $rdf.curie.createCurie = function (uri, options) {
     }
 };
 
-$rdf.curie = function (curie, options) {
-    var opts = $rdf.extend({}, $rdf.curie.defaults, {
+// Extend JQuery with the curie functionr
+$.fn.curie = function (curie, options) {
+    var opts = $rdf.Util.extend({}, $rdf.curie.defaults, {
         namespaces: this.xmlns()
     }, options || {});
     return $rdf.curie(curie, opts);
 };
 
 $rdf.safeCurie = function (safeCurie, options) {
-    var opts = $rdf.extend({}, $rdf.curie.defaults, {
+    var opts = $rdf.Util.extend({}, $rdf.curie.defaults, {
         namespaces: this.xmlns()
     }, options || {});
     return $rdf.curie.safeCurie(safeCurie, opts);
 };
 
 $rdf.createCurie = function (uri, options) {
-    var opts = $rdf.extend({}, $rdf.curie.defaults, {
+    var opts = $rdf.Util.extend({}, $rdf.curie.defaults, {
         namespaces: this.xmlns()
     }, options || {});
     return $rdf.curie.createCurie(uri, opts);
@@ -130,7 +131,7 @@ $rdf.curie.defaults = {
 };
 
 $rdf.safeCurie = function (safeCurie, options) {
-    var opts = $rdf.extend({}, $rdf.curie.defaults, {
+    var opts = $rdf.Util.extend({}, $rdf.curie.defaults, {
         namespaces: this.xmlns()
     }, options || {});
     return $rdf.safeCurie(safeCurie, opts);
@@ -233,13 +234,14 @@ $rdf.rdfa.parseThis = function (kb, baseUri, doc) {
       return result;
     };
 
-
+    // @param elem is a JQ object
+    // returns attrubtes an namespaces
+    //
     getAttributes = function (elem) {
         var i, e, a, tag, name, value, attMap, prefix,
             atts = {},
             nsMap = {};
-//        var e = elem[0];    // @@ original -- eh? fails
-        var e = elem;
+        var e = elem[0];
         nsMap[':length'] = 0;
       
         if (e.nodeType == 9) return  { atts: atts, namespaces: nsMap }; // Document 
@@ -306,7 +308,7 @@ $rdf.rdfa.parseThis = function (kb, baseUri, doc) {
         return bn;
       } else {
         try {
-          return resourceFromUri($rdf.curie.parse(curie, options));
+          return $rdf.curie(curie, options);
         } catch (e) {
           return undefined;
         }
@@ -316,7 +318,7 @@ $rdf.rdfa.parseThis = function (kb, baseUri, doc) {
     resourceFromSafeCurie = function (safeCurie, elem, options) {
       var m = /^\[(.*)\]$/.exec(safeCurie),
         base = options.base || elem.base();
-      return m ? resourceFromCurie(m[1], elem, false, options) : resourceFromUri($rdf.sym(safeCurie, base));
+      return m ? resourceFromCurie(m[1], elem, false, options) : $rdf.sym(safeCurie, base);
     },
 
     resourcesFromCuries = function (curies, elem, noblanks, options) {
@@ -568,9 +570,9 @@ $rdf.rdfa.parseThis = function (kb, baseUri, doc) {
         if (properties.length > 0) {
           datatype = atts.datatype;
           content = atts.content;
-          text = this.text().replace(/"/g, '\\"'); //'
+          text = this.text().replace(/"/g, '\\"'); //')
           if (datatype !== undefined && datatype !== '') {
-            datatype = $rdf.curie.parse(datatype, context.curieOptions);
+            datatype = $rdf.curie(datatype, context.curieOptions);
             if (datatype.toString() === rdfXMLLiteral) {
               object = kb.literal(serialize(this), undefined, rdfXMLLiteralSym );
             } else if (content !== undefined) {
@@ -588,7 +590,7 @@ $rdf.rdfa.parseThis = function (kb, baseUri, doc) {
                      datatype === '') {
             lang = getLang(this, context);
             if (lang === undefined) {
-              object = kb.literal('"' + text + '"');    //@@ added double quote marks??
+              object = kb.literal(text);    //@@ removed extra double quote marks??
             } else {
               object = kb.literal(text, undefined, lang);
             }
@@ -598,7 +600,7 @@ $rdf.rdfa.parseThis = function (kb, baseUri, doc) {
           for (i = 0; i < properties.length; i += 1) {
             kb.add(subject, properties[i], object, why);
           }
-        }
+        } // if properties/length > 0
         rels = resourcesFromCuries(atts.rel, this, true, relCurieOptions);
         revs = resourcesFromCuries(atts.rev, this, true, relCurieOptions);
         if (atts.resource !== undefined || atts.href !== undefined) {
@@ -616,14 +618,14 @@ $rdf.rdfa.parseThis = function (kb, baseUri, doc) {
           }
           revs = [];
         }
-      }
+      } // end subject not skip
       children.each(function () {
         parse.call($(this), { forward: rels, backward: revs,
             subject: subject, object: resource || subject,
             lang: lang, namespaces: namespaces, callback: callback });
       });
       return;
-    };
+    }; // parse
 
     // Add to list of gleaners @@@
     gleaner = function (options) {
