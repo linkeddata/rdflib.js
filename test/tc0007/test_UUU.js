@@ -102,7 +102,8 @@ function testTC0007(showDetails, callback) {
                         "</pre></p><p><a href='"+test.expected.uri+"'>Expected SPARQL</a>: <pre>"+escapeForXML(test.expectedData)+"</pre></p>");
 
                     } catch(e) {
-                        callback(1, "Exception for test "+test.no+": "+e)
+                        callback(1, "<p style='background-color: #fcc'>Exception for test "
+                                +test.no+": "+e+'</p>')
                     }
 
                 }
@@ -133,10 +134,12 @@ function testTC0007(showDetails, callback) {
         
         // var cases = meta.each(undefined, RDF('type'), TD('TestCase'));
         var tests = meta.each(undefined, TD('reviewStatus'), TD('approved'));
+        
         // Just try 1 for now
         loadDataAndRunTest(meta.sym(
         'http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/Test0001'), 1);
-        // for(var i=0; i < tests.length; i++) loadDataAndRunTest(tests[i], i+1);
+        
+        for(var i=0; i < tests.length; i++) loadDataAndRunTest(tests[i], i+1);
 
     
     });
