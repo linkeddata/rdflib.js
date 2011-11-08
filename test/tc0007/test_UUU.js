@@ -13,13 +13,13 @@ var DC = $rdf.Namespace('http://purl.org/dc/elements/1.1/');
 var base = 'http://dig.csail.mit.edu/hg/tabulator/raw-file/tip/chrome/content/test/tc0007/';
 
 var kludgeForOfflineUse = function kludgeForOfflineUse(uri) {
+    return uri; // comment out on planes
     return uri.replace('http://', 'http://localhost/');
 }
 
 function escapeForXML(str) {
     if (typeof str == 'undefined') return '@@@undefined@@@@';
-    // return uri; 
-    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;');
 }
 
 // HTTP get
@@ -91,15 +91,15 @@ function testTC0007(showDetails, callback) {
             
             var tryTest = function() {
                 if (test.inputData != null && test.expectedData != null) {
-                    callback(0, "<hr><p>"+test.no+") "+xtitle+"</p>");
+                    callback(0, "<hr><p>"+test.no+") <a href='"+test.uri+"'>"+xtitle+"</a></p>");
                     try {
                         var kb = $rdf.graph();
                         $rdf.parse(test.inputData, kb, base, 'application/rdfa');
                         callback(0, "<p>Parsed for test "+test.no+". "+
-                        "Test data:<pre>"+escapeForXML(test.inputData)+"</pre>"
+                        "<a href='"+test.input.uri+"'>Test data</a>:<pre>"+escapeForXML(test.inputData)+"</pre>"
                         +"<br/>Results:<pre>"
                         + escapeForXML(kb.toString()) +
-                        "</pre></p><p>Expected SPARQL: <pre>"+escapeForXML(test.expectedData)+"</pre></p>");
+                        "</pre></p><p><a href='"+test.expected.uri+"'>Expected SPARQL</a>: <pre>"+escapeForXML(test.expectedData)+"</pre></p>");
 
                     } catch(e) {
                         callback(1, "Exception for test "+test.no+": "+e)
@@ -133,9 +133,10 @@ function testTC0007(showDetails, callback) {
         
         // var cases = meta.each(undefined, RDF('type'), TD('TestCase'));
         var tests = meta.each(undefined, TD('reviewStatus'), TD('approved'));
-
-
-        for(var i=0; i < tests.length; i++) loadDataAndRunTest(tests[i], i+1);
+        // Just try 1 for now
+        loadDataAndRunTest(meta.sym(
+        'http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/Test0001'), 1);
+        // for(var i=0; i < tests.length; i++) loadDataAndRunTest(tests[i], i+1);
 
     
     });
