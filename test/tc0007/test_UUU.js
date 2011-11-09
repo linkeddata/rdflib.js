@@ -84,22 +84,26 @@ function testTC0007(showDetails, callback) {
             test.expected =  meta.any(test, TD('informationResourceResults'));
             test.purpose = meta.any(test, TD('purpose')).value;
             
-            var report = "<h2>" + xtitle + 
-                    "</h2>\n<p>"+escapeForXML(test.purpose)+"</p>";
-
             test.inputData = test.expectedData = null;
             
             var tryTest = function() {
                 if (test.inputData != null && test.expectedData != null) {
-                    callback(0, "<hr><p>"+test.no+") <a href='"+test.uri+"'>"+xtitle+"</a></p>");
+                    callback(0, "<hr><h2>"+test.no+") <a href='"+test.uri+"'>"+xtitle+"</a></h2>");
+                    var displayTestData = function() {
+                        callback(0,"<a href='"+test.input.uri+"'><h3>Test data:</h3></a><pre>"+
+                                escapeForXML(test.inputData)+"</pre>");
+                    };
+
                     try {
                         var kb = $rdf.graph();
                         $rdf.parse(test.inputData, kb, base, 'application/rdfa');
-                        callback(0, "<p>Parsed for test "+test.no+". "+
-                        "<a href='"+test.input.uri+"'>Test data</a>:<pre>"+escapeForXML(test.inputData)+"</pre>"
-                        +"<br/>Results:<pre>"
+                        callback(0, "<p>Parsed for test "+test.no+". ");
+                        displayTestData();
+                        callback(0,"<h3>Results:</h3><pre>"
                         + escapeForXML(kb.toString()) +
-                        "</pre></p><p><a href='"+test.expected.uri+"'>Expected SPARQL</a>: <pre>"+escapeForXML(test.expectedData)+"</pre></p>");
+                        "</pre></p><h3><a href='"+test.expected.uri+
+                            "'>Expected SPARQL:</a></h3><p><pre>"+
+                            escapeForXML(test.expectedData)+"</pre></p>");
 
                     } catch(e) {
 
@@ -112,6 +116,8 @@ function testTC0007(showDetails, callback) {
                             } 
                             callback(1, "<p style='background-color: #fcc'>Details:"+details+'</p>');
                         }
+                        displayTestData();
+
                     }
 
                 }
@@ -144,8 +150,8 @@ function testTC0007(showDetails, callback) {
         var tests = meta.each(undefined, TD('reviewStatus'), TD('approved'));
         
         // Just try 1 for now
-        loadDataAndRunTest(meta.sym(
-        'http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/Test0001'), 1);
+        // oadDataAndRunTest(meta.sym(
+        // 'http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/Test0001'), 1);
         
         for(var i=0; i < tests.length; i++) loadDataAndRunTest(tests[i], i+1);
 
