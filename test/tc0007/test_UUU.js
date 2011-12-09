@@ -75,9 +75,10 @@ function testTC0007(showDetails, callback) {
         
  
         
-        function loadDataAndRunTest(test, number){
+        function loadDataAndRunTest(tests, number){
 
-            test.no = number;
+            var test = tests[number];
+            test.no = number + 1;
             var xtitle = escapeForXML(meta.any(test, DC('title')).value);
             // callback(0, "<p>Loaded test: "+xtitle+"</p>");
             test.input = meta.any(test, TD('informationResourceInput'));
@@ -119,7 +120,7 @@ function testTC0007(showDetails, callback) {
                         displayTestData();
 
                     }
-
+                    if (number < tests.length) loadDataAndRunTest(tests, number + 1);
                 }
             }
             // callback(0, "<p>"+escapeForXML(test.purpose)+"</p>");
@@ -153,7 +154,8 @@ function testTC0007(showDetails, callback) {
         // oadDataAndRunTest(meta.sym(
         // 'http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/Test0001'), 1);
         
-        for(var i=0; i < tests.length; i++) loadDataAndRunTest(tests[i], i+1);
+        loadDataAndRunTest(tests, 0);
+        // for(var i=0; i < tests.length; i++) loadDataAndRunTest(tests[i], i+1);
 
     
     });
