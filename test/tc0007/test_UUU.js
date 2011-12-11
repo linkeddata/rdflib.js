@@ -1,6 +1,14 @@
 //     Serialization tests ...
 //
 
+
+if (typeof module !== 'undefined' && module.exports) { // Node.js environment
+    var jQuery = require('jquery');
+    var $rdf = require('../../js/rdf/node-rdflib.js').$rdf; // @@
+    var util = require('util');
+    var alert = function(s){util.print('alert:'+s+'\n')};
+}
+
 var tc0007Passed = true;
 
 
@@ -67,7 +75,7 @@ function testTC0007(showDetails, callback) {
     callback(0, '<p>got here</p>');
 
     var meta = $rdf.graph();
-    var fetcher = $rdf.fetcher(meta, undefined, false);
+    var fetcher = $rdf.fetcher(meta, undefined, true); // (store, timeout, async)
     fetcher.nowOrWhenFetched(kludgeForOfflineUse(mainifest_uri), undefined, function(error, body) {
 
 
@@ -165,3 +173,11 @@ function testTC0007(showDetails, callback) {
 function test0(){
 	return true;
 }
+
+if (typeof module !== 'undefined' && module.exports) { // Node.js environment
+    testTC0007(true, function(errs, html){
+        util.print(html+'\n');
+    })
+    // while(1) {};
+};
+
