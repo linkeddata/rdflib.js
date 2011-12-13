@@ -113,6 +113,13 @@ function testTC0007(showDetails, callback) {
                         "</pre></p><h3><a href='"+test.expected.uri+
                             "'>Expected SPARQL:</a></h3><p><pre>"+
                             escapeForXML(test.expectedData)+"</pre></p>");
+                        var askPattern = /^\s*ASK\s+WHERE\s*\{([\n\s\r]*<[^\}]*)\}[\n\s\r]*$/m
+                       // var askPattern = /^\s*ASK\s+WHERE\s*{.*}\s*$/
+                        var match = askPattern.exec(test.expectedData);
+                        if (match !== null) {
+                            callback(0, "<p>graph expected:"+escapeForXML(match[1])+"</p>")
+                        }
+                        
 
                     } catch(e) {
 
