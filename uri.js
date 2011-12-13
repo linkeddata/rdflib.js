@@ -84,6 +84,9 @@ if (typeof tabulator != 'undefined' && tabulator.isExtension) {
 // based on code in http://www.w3.org/2000/10/swap/uripath.py
 //
 $rdf.Util.uri.commonHost = new RegExp("^[-_a-zA-Z0-9.]+:(//[^/]*)?/[^/]*$");
+
+$rdf.Util.uri.hostpart = function(u) { var m = /[^\/]*\/\/([^\/]*)\//.exec(u); return m? m[1]: '' };
+
 $rdf.Util.uri.refTo = function(base, uri) {
     if (!base) return uri;
     if (base == uri) return "";

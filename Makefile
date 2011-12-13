@@ -12,15 +12,20 @@ n3parser.js identity.js rdfs.js query.js sparql.js sparqlUpdate.js jsonparser.js
 
 
 rdflib.js: $R
-	echo "\$$rdf = function() {" >> rdflib.js
+	echo "\$$rdf = function() {" > rdflib.js
 	cat $R >> rdflib.js
 	echo "return \$$rdf;}()" >> rdflib.js
 
+node-rdflib.js: $R
+	echo "module.\$$rdf = function() {" > $@
+	cat $R >> $@
+	echo "return \$$rdf;}()" >> $@
+
 rdflib2.js: $X $R rdfa.js
 	cat $X > rdflib2.js
-	echo "\$$rdf = function() {" >> rdflib.js
-	cat $R rdfa.js >> rdflib.js
-	echo "return \$$rdf;}()" >> rdflib.js
+	echo "\$$rdf = function() {" >> rdflib2.js
+	cat $R rdfa.js >> rdflib2.js
+	echo "return \$$rdf;}()" >> rdflib2.js
 
-jq-rdflib.js : rdflib2.js rdfa.js
-	cat $Q rdflib2.js > jq-rdflib.js 
+#jq-rdflib.js : rdflib2.js rdfa.js
+#	cat $Q rdflib2.js > jq-rdflib.js 

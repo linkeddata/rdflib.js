@@ -115,30 +115,26 @@ $rdf.Util = {
     * A standard way to create XMLHttpRequest objects
      */
 	'XMLHTTPFactory': function () {
+        if (typeof module != 'undefined' && module && module.exports) { //Node.js
+            var XMLHttpRequest = require("XMLHttpRequest").XMLHttpRequest;
+            return new XMLHttpRequest()
+        }
         if (typeof tabulator != 'undefined' && tabulator.isExtension) {
             return Components.
             classes["@mozilla.org/xmlextras/xmlhttprequest;1"].
             createInstance().QueryInterface(Components.interfaces.nsIXMLHttpRequest);
         } else if (window.XMLHttpRequest) {
-            try {
-                return new XMLHttpRequest()
-            } catch (e) {
-                return false
-            }
+                return new window.XMLHttpRequest()
 	    }
 	    else if (window.ActiveXObject) {
-            try {
-                return new ActiveXObject("Msxml2.XMLHTTP")
-            } catch (e) {
                 try {
-                    return new ActiveXObject("Microsoft.XMLHTTP")
+                    return new ActiveXObject("Msxml2.XMLHTTP")
                 } catch (e) {
-                    return false
+                    return new ActiveXObject("Microsoft.XMLHTTP")
                 }
-            }
 	    }
 	    else {
-            return false
+                return false
 	    }
 	},
 
@@ -154,6 +150,7 @@ $rdf.Util = {
             return false;
 	    }
 	},
+
     /**
     * Returns a hash of headers and values
     **
@@ -274,6 +271,26 @@ $rdf.Util = {
     }
     
 };
+
+///////////////////// Parse XML
+//
+// Returns: A DOM
+//
+
+$rdf.Util.parseXML = function(str) {
+    var dparser;
+    if ((typeof tabulator != 'undefined' && tabulator.isExtension)) {
+        dparser = Components.classes["@mozilla.org/xmlextras/domparser;1"].getService(
+                    Components.interfaces.nsIDOMParser);
+    } else if (typeof module != 'undefined' ){ // Node.js
+        var jsdom = require('jsdom');
+        return jsdom.jsdom(str, undefined, {} );// html, level, options
+    } else {
+        dparser = new DOMParser()
+    }
+    return dparser.parseFromString(str, 'application/xml');
+};
+
 
 //////////////////////String Utility
 // substitutes given terms for occurrnces of %s
