@@ -21,11 +21,11 @@ node-rdflib.js: $R
 	cat $R >> $@
 	echo "return \$$rdf;}()" >> $@
 
-rdflib2.js: $X $R rdfa.js
-	cat $X > rdflib2.js
-	echo "\$$rdf = function() {" >> rdflib2.js
-	cat $R rdfa.js >> rdflib2.js
-	echo "return \$$rdf;}()" >> rdflib2.js
+rdf-rdfa-lib.js: $X $R rdfa.js
+	cat $X > rdf-rdfa-lib.js
+	echo "\$$rdf = function() {" >> rdf-rdfa-lib.js
+	cat $R rdfa.js >> rdf-rdfa-lib.js
+	echo "return \$$rdf;}()" >> rdf-rdfa-lib.js
 
-#jq-rdflib.js : rdflib2.js rdfa.js
-#	cat $Q rdflib2.js > jq-rdflib.js 
+#jq-rdflib.js : rdf-rdfa-lib.js rdfa.js
+#	cat $Q rdf-rdfa-lib.js > jq-rdflib.js 
