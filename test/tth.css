@@ -49,7 +49,7 @@ a:link img, a:visited img {
 
 a img {
   color: white;	
-  border 0px solid white;
+  border: 0px solid white;
 }
 
 ul.toc {
