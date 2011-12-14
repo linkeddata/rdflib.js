@@ -4,7 +4,7 @@
 
 if (typeof module !== 'undefined' && module.exports) { // Node.js environment
     var jQuery = require('jquery');
-    var $rdf = require('../../js/rdf/node-rdflib.js').$rdf; // @@
+    var $rdf = require('../../js/rdf/dist/node-rdflib.js').$rdf; // @@
     var util = require('util');
     var alert = function(s){util.print('alert:'+s+'\n')};
 }

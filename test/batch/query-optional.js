@@ -2,7 +2,7 @@
 // js
 // Rhino 1.6 release 5 2006 11 18
     
-   // load('../../js/rdf/rdflib.js')
+   // load('../../js/rdf/dist/rdflib.js')
 
     load('../../js/rdf/util.js');
     load('../../js/rdf/uri.js');
