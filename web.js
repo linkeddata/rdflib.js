@@ -246,7 +246,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                 // @@  Get namespace document <n>, parse it, look for  <n> grddl:namespaceTransform ?y
                 // Apply ?y to   dom
                 // We give up. What dialect is this?
-                sf.failFetch(xhr, "unsupportedDialect")
+                sf.failFetch(xhr, "Unsupported dialect of XML: not RDF or XHTML namespace, etc.\n"+xhr.responseText.slice(0,80));
             }
         }
     }
@@ -617,10 +617,10 @@ $rdf.Fetcher = function(store, timeout, async) {
         kb.add(req, ns.link("requestedURI"), kb.literal(docuri), this.appNode)
         kb.add(req, ns.link('status'), kb.collection(), sf.req)
 
-
+        // This should not be stored in the store, but in the JS data
         if (typeof kb.anyStatementMatching(this.appNode, ns.link("protocol"), $rdf.Util.uri.protocol(docuri)) == "undefined") {
             // update the status before we break out
-            this.failFetch(xhr, "Unsupported protocol")
+            this.failFetch(xhr, "Unsupported protocol: "+$rdf.Util.uri.protocol(docuri))
             return xhr
         }
 
@@ -947,7 +947,79 @@ $rdf.Fetcher = function(store, timeout, async) {
                                         xhr2.req, sf.appNode); 
         
                                     // else dump("No xhr.req available for redirect from "+xhr.uri+" to "+newURI+"\n")
-                                }
+                                },
+                                
+                                // See https://developer.mozilla.org/en/XPCOM_Interface_Reference/nsIChannelEventSink
+                                asyncOnChannelRedirect: function(oldC, newC, flags, callback) {
+                                    if (!(typeof tabulator != 'undefined' && tabulator.isExtension)) {
+                                        $rdf.Util.enablePrivilege("UniversalXPConnect")
+                                    }
+                                    if (xhr.aborted) return;
+                                    var kb = sf.store;
+                                    var newURI = newC.URI.spec;
+                                    var oldreq = xhr.req;
+                                    sf.addStatus(xhr.req, "Redirected: " + xhr.status + " to <" + newURI + ">");
+                                    kb.add(oldreq, ns.http('redirectedTo'), kb.sym(newURI), xhr.req);
+
+
+
+                                    ////////////// Change the request node to a new one:  @@@@@@@@@@@@ Duplicate?
+                                    var newreq = xhr.req = kb.bnode() // Make NEW reqest for everything else
+                                    // xhr.uri = docterm
+                                    // xhr.requestedURI = args[0]
+                                    // var requestHandlers = kb.collection()
+
+                                    // kb.add(kb.sym(newURI), ns.link("request"), req, this.appNode)
+                                    kb.add(oldreq, ns.http('redirectedRequest'), newreq, xhr.req);
+
+                                    var now = new Date();
+                                    var timeNow = "[" + now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds() + "] ";
+                                    kb.add(newreq, ns.rdfs("label"), kb.literal(timeNow + ' Request for ' + newURI), this.appNode)
+                                    kb.add(newreq, ns.link('status'), kb.collection(), sf.req)
+                                    kb.add(newreq, ns.link("requestedURI"), kb.literal(newURI), this.appNode)
+                                    ///////////////
+
+                                    
+                                    //// $rdf.log.info('@@ sources onChannelRedirect'+
+                                    //               "Redirected: "+ 
+                                    //               xhr.status + " to <" + newURI + ">"); //@@
+                                    var response = kb.bnode();
+                                    // kb.add(response, ns.http('location'), newURI, response); Not on this response
+                                    kb.add(oldreq, ns.link('response'), response);
+                                    kb.add(response, ns.http('status'), kb.literal(xhr.status), response);
+                                    if (xhr.statusText) kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response)
+
+                                    if (xhr.status - 0 != 303) kb.HTTPRedirects[xhr.uri.uri] = newURI; // same document as
+                                    if (xhr.status - 0 == 301 && rterm) { // 301 Moved
+                                        var badDoc = $rdf.Util.uri.docpart(rterm.uri);
+                                        var msg = 'Warning: ' + xhr.uri + ' has moved to <' + newURI + '>.';
+                                        if (rterm) {
+                                            msg += ' Link in <' + badDoc + ' >should be changed';
+                                            kb.add(badDoc, kb.sym('http://www.w3.org/2007/ont/link#warning'), msg, sf.appNode);
+                                        }
+                                        // dump(msg+"\n");
+                                    }
+                                    xhr.abort()
+                                    xhr.aborted = true
+
+                                    sf.addStatus(oldreq, 'done') // why
+                                    sf.fireCallbacks('done', args) // Are these args right? @@@
+                                    sf.requested[xhr.uri.uri] = 'redirected';
+
+                                    var hash = newURI.indexOf('#');
+                                    if (hash >= 0) {
+                                        var msg = ('Warning: ' + xhr.uri + ' HTTP redirects to' + newURI + ' which should not contain a "#" sign');
+                                        // dump(msg+"\n");
+                                        kb.add(xhr.uri, kb.sym('http://www.w3.org/2007/ont/link#warning'), msg)
+                                        newURI = newURI.slice(0, hash);
+                                    }
+                                    var xhr2 = sf.requestURI(newURI, xhr.uri);
+                                    if (xhr2 && xhr2.req) kb.add(xhr.req,
+                                        kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'),
+                                        xhr2.req, sf.appNode); 
+        
+                                    // else dump("No xhr.req available for redirect from "+xhr.uri+" to "+newURI+"\n")
+                                } // asyncOnChannelRedirect
                             }
                         }
                         return Components.results.NS_NOINTERFACE
