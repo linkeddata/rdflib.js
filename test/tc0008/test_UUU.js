@@ -13,8 +13,7 @@ var tc0007Passed = true;
 
 
 var mainifest_uri = 'http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/rdfa-xhtml1-test-manifest.rdf';
-var mainifest_uri = 'http://localhost/www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/rdfa-xhtml1-test-manifest.rdf';
-var mainifest_uri = 'rdfa-xhtml1-test-manifest.rdf';
+// var mainifest_uri = 'http://localhost/www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/rdfa-xhtml1-test-manifest.rdf';
 
 var TD = $rdf.Namespace('http://www.w3.org/2006/03/test-description#');
 var DC = $rdf.Namespace('http://purl.org/dc/elements/1.1/');

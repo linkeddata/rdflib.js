@@ -21,6 +21,11 @@ npm:
 test:
 	NODE_PATH=$N node node-test.js
 
+# Do node-inspector in diff windows .. but for the record:
+debug:
+	node-inspector &
+	open http://0.0.0.0:8080/debug?port=5858
+	node --debug-brk node-test-writeStore.js
 
 rdflib2.js: $X $R rdfa.js
 	cat $X > rdflib2.js
