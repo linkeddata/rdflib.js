@@ -1,6 +1,15 @@
 /* requests */
 
-function onBeforeSendHeaders(d) {}
+function onBeforeSendHeaders(d) {
+    for (var i in d.requestHeaders) {
+        var header = d.requestHeaders[i];
+        if (header.name && header.name.toLowerCase() == 'accept') {
+            header.value += ',text/turtle,application/rdf+xml';
+            break;
+        }
+    }
+    return {requestHeaders: d.requestHeaders};
+}
 
 /* responses */
 
@@ -20,7 +29,8 @@ function finish(d) {
 function onHeadersReceived(d) {
     for (var i in d.responseHeaders) {
         var header = d.responseHeaders[i];
-        if (header.name && header.name.match(/content-type/i) && header.value.match(/text\/(n3|turtle)/))
+        if (header.name && header.name.match(/content-type/i)
+                        && header.value.match(/\/(n3|rdf|turtle)/))
             init(d);
     }
     return finish(d);
@@ -32,6 +42,7 @@ function onCompleted(d) { return finish(d); }
 function onErrorOccurred(d) { return finish(d); }
 
 var events = {
+    'onBeforeSendHeaders': ['requestHeaders', 'blocking'],
     'onHeadersReceived': ['responseHeaders', 'blocking']
     //'onCompleted': ['responseHeaders']
 };
