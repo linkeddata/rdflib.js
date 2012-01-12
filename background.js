@@ -10,30 +10,34 @@ function tracking(d) { return _r[d.requestId] == true; }
 function finish(d) {
     if (tracking(d)) {
         chrome.tabs.update(d.tabId, {
-            url: chrome.extension.getURL('tabulator.html?url='+encodeURI(d.url))
+            url: chrome.extension.getURL('tabulator.html?uri='+encodeURI(d.url))
         });
+        delete _r[d.requestId];
+        return { cancel: true };
     }
-    delete _r[d.requestId];
 }
 
 function onHeadersReceived(d) {
     for (var i in d.responseHeaders) {
         var header = d.responseHeaders[i];
-        if (header.name && header.name.match(/content-type/i) && header.value.match(/text\/(n3|turtle)/)) {
+        if (header.name && header.name.match(/content-type/i) && header.value.match(/text\/(n3|turtle)/))
             init(d);
-            return { cancel: true };
-        }
     }
+    return finish(d);
 }
 
 function onBeforeRedirect(d) {}
+
 function onCompleted(d) { return finish(d); }
 function onErrorOccurred(d) { return finish(d); }
 
-var events = ['onHeadersReceived', 'onCompleted'];
+var events = {
+    'onHeadersReceived': ['responseHeaders', 'blocking']
+    //'onCompleted': ['responseHeaders']
+};
 (function setup(api) {
     api.onErrorOccurred.addListener(onErrorOccurred, {types: ['main_frame']});
     for (j in events)
-        if (api[events[j]])
-            api[events[j]].addListener(eval(events[j]), {types: ["main_frame"]}, ['responseHeaders' /*TODO:,'blocking'*/]);
+        if (api[j])
+            api[j].addListener(eval(j), {types: ["main_frame"]}, events[j]);
 })(chrome.webRequest || chrome.experimental.webRequest);
