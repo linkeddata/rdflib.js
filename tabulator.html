@@ -1,5 +1,31 @@
-<h1>TODO</h1>
-URL:
-<script type="text/javascript">
-document.write(window.location);
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="http://dig.csail.mit.edu/hg/tabulator/raw-file/tip/content/tabbedtab.css">
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+<!--script type="text/javascript" src="lib/rdflib.js/dist/rdflib.js"></script-->
+<script src="http://www.w3.org/2011/datastuff/init/mashlib.js"></script>
+<script>
+var qs = (function(a) {
+    if (a == "") return {};
+    var b = {};
+    for (var i = 0; i < a.length; ++i) {
+        var p=a[i].split('=');
+        if (p.length != 2) continue;
+        b[p[0]] = decodeURIComponent(p[1].replace(/\+/g, " "));
+    }
+    return b;
+})(window.location.search.substr(1).split('&'));
+jQuery(document).ready(function() {
+    window.history.pushState({}, document.title, qs.uri);
+    var kb = tabulator.kb;
+    var subject = kb.sym(qs.uri);
+    tabulator.outline.GotoSubject(subject, true, undefined, true, undefined);
+});
 </script>
+</head>
+<body>
+<div class="TabulatorOutline" id="DummyUUID">
+    <table id="outline"></table>
+</div>
+</body>
