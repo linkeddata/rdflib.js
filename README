@@ -1,0 +1,5 @@
+This is an initial proof of concept, implementing a simple content-type filter
+using the chrome.experimental.webRequest API. You must enable this functionality
+explicitly by starting Google Chrome:
+
+$ google-chrome --enable-experimental-extension-apis
