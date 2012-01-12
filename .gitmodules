@@ -1,0 +1,3 @@
+[submodule "lib/rdflib.js"]
+	path = lib/rdflib.js
+	url = git@github.com:linkeddata/rdflib.js
