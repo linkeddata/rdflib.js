@@ -18,10 +18,9 @@ function init(d) { _r[d.requestId] = true; }
 function tracking(d) { return _r[d.requestId] == true; }
 function finish(d) {
     if (tracking(d)) {
-        chrome.tabs.update(d.tabId, {
-            url: chrome.extension.getURL('tabulator.html?uri='+encodeURIComponent(d.url))
-        });
+        var next = chrome.extension.getURL('tabulator.html?uri='+encodeURIComponent(d.url));
         delete _r[d.requestId];
+        chrome.tabs.update(d.tabId, { url: next });
         return { cancel: true };
     }
 }

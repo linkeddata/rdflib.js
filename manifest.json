@@ -9,7 +9,6 @@
         "file:///*",
         "http://*/*",
         "https://*/*",
-        "tabs",
         "unlimitedStorage",
         "experimental",
         "webRequest",
