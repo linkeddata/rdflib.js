@@ -1,4 +1,32 @@
-This is a library for working with RDF in that browser.
-Currently more information is available from here:
+This is a library for working with RDF on the web.
+Originally targetted at the AJAX environment in the browser,
+it can also be used server side with Node.js.
+
+Possible out of date information is available from here:
 
 http://tabulator.org/2005/ajar/ajaw/Developer.html
+
+This is a linked data library, which can look up data 
+on the web as it goes. 
+
+- Reads and writes RDF/xml, turtle and N3.
+- Read/Write Linked Data client, using WebDav or SPARQL/Update
+- Parses RDF/a. (rdflib-rdfa.js version only)
+- Local API for querying store
+- SPARQL queries (not full SPARQL)
+- Smushing of nodes from owl:sameAs, and owl:{f,inverseF}unctionProperty
+- Tracks provence of triples keeps metadata (in RDF) from HTTP accesses
+
+SUBDIRECTORIES
+
+- dist    Run 'make' in this directory to generate dist in whch libraries are buit
+- test    Tests are here.
+
+DEPENDENCIES
+
+    jQuery   (rdfa version only)
+    jQuery, XMLHTTPRequest (Node.js version)
+
+Thanks to the many contributors who have been involved along the way.
+LinkedData team & TimBL
+
