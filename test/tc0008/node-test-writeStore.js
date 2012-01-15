@@ -8,7 +8,7 @@
 
 // var jQuery = require('jquery');
 
-var $rdf = require('../../js/rdf/dist/node-rdflib.js').$rdf; // sic
+var $rdf = require('../../dist/node-rdflib.js').$rdf; // sic
 var util = require('util');
 var print = util.print;
 var k = $rdf.graph()

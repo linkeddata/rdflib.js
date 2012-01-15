@@ -2,23 +2,23 @@
 // js
 // Rhino 1.6 release 5 2006 11 18
     
-   // load('../../js/rdf/dist/rdflib.js')
+   // load('../../dist/rdflib.js')
 
-    load('../../js/rdf/util.js');
-    load('../../js/rdf/uri.js');
-    load('../../js/rdf/term.js');
-    load('../../js/rdf/match.js');
-    load('../../js/rdf/rdfparser.js');
-    load('../../js/rdf/rdfa.js');
-    load('../../js/rdf/n3parser.js');
-    load('../../js/rdf/identity.js');
-    load('../../js/rdf/rdfs.js');
-    load('../../js/rdf/query.js');
-    load('../../js/rdf/sparql.js');
-    load('../../js/rdf/sparqlUpdate.js');
-    load('../../js/rdf/jsonparser.js');
-    load('../../js/rdf/serialize.js');
-    load('../../js/rdf/web.js');
+    load('../../util.js');
+    load('../../uri.js');
+    load('../../term.js');
+    load('../../match.js');
+    load('../../rdfparser.js');
+    load('../../rdfa.js');
+    load('../../n3parser.js');
+    load('../../identity.js');
+    load('../../rdfs.js');
+    load('../../query.js');
+    load('../../sparql.js');
+    load('../../sparqlUpdate.js');
+    load('../../jsonparser.js');
+    load('../../serialize.js');
+    load('../../web.js');
 
 
     if (dump == undefined) {
