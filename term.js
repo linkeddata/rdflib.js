@@ -155,7 +155,7 @@ $rdf.term = function(val) {
         if ((''+val).indexOf('e')>=0) dt = $rdf.Symbol.prototype.XSDfloat;
         else if ((''+val).indexOf('.')>=0) dt = $rdf.Symbol.prototype.XSDdecimal;
         else dt = $rdf.Symbol.prototype.XSDinteger;
-        return new $rdf.Literal(val, undefined, dt);
+        return new $rdf.Literal(''+val, undefined, dt); // Stored as string - good idea?
     }
     if (typeof val == 'boolean') return new $rdf.Literal(val?"1":"0", undefined, 
                                                        $rdf.Symbol.prototype.XSDboolean);

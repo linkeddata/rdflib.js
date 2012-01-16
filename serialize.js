@@ -125,7 +125,7 @@ __Serializer.prototype.rootSubjects = function(sts) {
 */
 
 
-    tabulator.log.debug('serialize.js Find bnodes with only one incoming arc\n')
+    // $rdf.log.debug('serialize.js Find bnodes with only one incoming arc\n')
     for (var i = 0; i<sts.length; i++) {
         var st = sts[i];
         [ st.subject, st.predicate, st.object].map(function(y){
@@ -137,7 +137,7 @@ __Serializer.prototype.rootSubjects = function(sts) {
         if (!ss) ss = [];
         ss.push(st);
         subjects[this.toStr(st.subject)] = ss; // Make hash. @@ too slow for formula?
-        //$rdf.log.debug(' sz potential subject: '+sts[i].subject)
+        // $rdf.log.debug(' sz potential subject: '+sts[i].subject)
     }
 
     var roots = [];
@@ -157,7 +157,7 @@ __Serializer.prototype.rootSubjects = function(sts) {
 // and at the same time accumulates a list of all bnodes mentioned.
 // This is in fact a cut down N3 serialization
 /*
-    tabulator.log.debug('serialize.js Looking for connected bnode loops\n')
+    // $rdf.log.debug('serialize.js Looking for connected bnode loops\n')
     for (var i=0; i<sts.length; i++) { // @@TBL
         // dump('\t'+sts[i]+'\n');
     }
@@ -188,7 +188,7 @@ __Serializer.prototype.rootSubjects = function(sts) {
     // Scan for bnodes nested inside lists too
     function dummyTermToN3(expr, subjects, rootsHash) {
         if (expr.termType == 'bnode') doneBnodesNT[expr.toNT()] = true;
-        tabulator.log.debug('serialize: seen '+expr);
+        // $rdf.log.debug('serialize: seen '+expr);
         if (expr.termType == 'collection') {
             for (i=0; i<expr.elements.length; i++) {
                 if (expr.elements[i].termType == 'bnode')
@@ -208,7 +208,7 @@ __Serializer.prototype.rootSubjects = function(sts) {
     }
 */    
     // Now do the scan using existing roots
-    tabulator.log.debug('serialize.js Dummy serialize to check for missing nodes')
+    // $rdf.log.debug('serialize.js Dummy serialize to check for missing nodes')
     var rootsHash = {};
     for (var i = 0; i< roots.length; i++) rootsHash[roots[i].toNT()] = true;
 /*
@@ -223,7 +223,7 @@ __Serializer.prototype.rootSubjects = function(sts) {
 // Such bnodes must be in isolated rings of pure bnodes.
 // They each have incoming link of 1.
 
-    tabulator.log.debug('serialize.js Looking for connected bnode loops\n')
+    // $rdf.log.debug('serialize.js Looking for connected bnode loops\n')
     for (;;) {
         var bnt;
         var found = null;
@@ -238,7 +238,7 @@ __Serializer.prototype.rootSubjects = function(sts) {
         var root = this.store.fromNT(found);
         roots.push(root); // Add a new root
         rootsHash[found] = true;
-        tabulator.log.debug('isolated bnode:'+found+', subjects[found]:'+subjects[found]+'\n');
+        // $rdf.log.debug('isolated bnode:'+found+', subjects[found]:'+subjects[found]+'\n');
         if (subjects[found] == undefined) {
             for (var i=0; i<sts.length; i++) {
                 // dump('\t'+sts[i]+'\n');
@@ -412,19 +412,12 @@ __Serializer.prototype.statementsToN3 = function(sts) {
     
     function termToN3(expr, stats) {
         switch(expr.termType) {
-            case 'bnode':
-            case 'variable':  return expr.toNT();
-            case 'literal':
-                var str = stringToN3(expr.value);
-                if (expr.lang) str+= '@' + expr.lang;
-                if (expr.datatype) str+= '^^' + termToN3(expr.datatype, stats);
-                return str;
-            case 'symbol':
-                return symbolToN3(expr.uri);
+        
             case 'formula':
                 var res = ['{'];
                 res = res.concat(statementListToTree(expr.statements));
                 return  res.concat(['}']);
+
             case 'collection':
                 var res = ['('];
                 for (i=0; i<expr.elements.length; i++) {
@@ -434,54 +427,11 @@ __Serializer.prototype.statementsToN3 = function(sts) {
                 return res;
                 
            default:
-                throw "Internal: termToN3 cannot handle "+expr+" of termType+"+expr.termType
-                return ''+expr;
+                return sz.atomicTermToN3(expr);
         }
     }
     
-    ////////////////////////////////////////////// Atomic Terms
-    
-    //  Deal with term level things and nesting with no bnode structure
-    
-    function symbolToN3(uri) {  // c.f. symbolString() in notation3.py
-        var j = uri.indexOf('#');
-        if (j<0 && sz.flags.indexOf('/') < 0) {
-            j = uri.lastIndexOf('/');
-        }
-        if (j >= 0 && sz.flags.indexOf('p') < 0)  { // Can split at namespace
-            var canSplit = true;
-            for (var k=j+1; k<uri.length; k++) {
-                if (__Serializer.prototype._notNameChars.indexOf(uri[k]) >=0) {
-                    canSplit = false; break;
-                }
-            }
-            if (canSplit) {
-                var localid = uri.slice(j+1);
-                var namesp = uri.slice(0,j+1);
-                if (sz.defaultNamespace && sz.defaultNamespace == namesp
-                    && sz.flags.indexOf('d') < 0) {// d -> suppress default
-                    if (sz.flags.indexOf('k') >= 0 &&
-                        sz.keyords.indexOf(localid) <0)
-                        return localid; 
-                    return ':' + localid;
-                }
-                var prefix = sz.prefixes[namesp];
-                if (prefix) {
-                    namespaceCounts[namesp] = true;
-                    return prefix + ':' + localid;
-                }
-                if (uri.slice(0, j) == sz.base)
-                    return '<#' + localid + '>';
-                // Fall though if can't do qname
-            }
-        }
-        if (sz.flags.indexOf('r') < 0 && sz.base)
-            uri = $rdf.Util.uri.refTo(sz.base, uri);
-        else if (sz.flags.indexOf('u') >= 0)
-            uri = backslashUify(uri);
-        else uri = hexify(uri);
-        return '<'+uri+'>';
-    }
+
     
     function prefixDirectives() {
         str = '';
@@ -492,72 +442,169 @@ __Serializer.prototype.statementsToN3 = function(sts) {
         }
         return str + '\n';
     }
-    
-    //  stringToN3:  String escaping for N3
-    //
-    var forbidden1 = new RegExp(/[\\"\b\f\r\v\t\n\u0080-\uffff]/gm);
-    var forbidden3 = new RegExp(/[\\"\b\f\r\v\u0080-\uffff]/gm);
-    function stringToN3(str, flags) {
-        if (!flags) flags = "e";
-        var res = '', i=0, j=0;
-        var delim;
-        var forbidden;
-        if (str.length > 20 // Long enough to make sense
-                && str.slice(-1) != '"'  // corner case'
-                && flags.indexOf('n') <0  // Force single line
-                && (str.indexOf('\n') >0 || str.indexOf('"') > 0)) {
-            delim = '"""';
-            forbidden =  forbidden3;
-        } else {
-            delim = '"';
-            forbidden = forbidden1;
-        }
-        for(i=0; i<str.length;) {
-            forbidden.lastIndex = 0;
-            var m = forbidden.exec(str.slice(i));
-            if (m == null) break;
-            j = i + forbidden.lastIndex -1;
-            res += str.slice(i,j);
-            var ch = str[j];
-            if (ch=='"' && delim == '"""' &&  str.slice(j,j+3) != '"""') {
-                res += ch;
-            } else {
-                var k = '\b\f\r\t\v\n\\"'.indexOf(ch); // No escaping of bell (7)?
-                if (k >= 0) {
-                    res += "\\" + 'bfrtvn\\"'[k];
-                } else  {
-                    if (flags.indexOf('e')>=0) {
-                        res += '\\u' + ('000'+
-                         ch.charCodeAt(0).toString(16).toLowerCase()).slice(-4)
-                    } else { // no 'e' flag
-                        res += ch;
-                    }
-                }
-            }
-            i = j+1;
-        }
-        return delim + res + str.slice(i) + delim
-    }
 
-    // Body of toN3:
+
+
+
+
+
+
+
+
+
+    // Body of statementsToN3:
     
     var tree = statementListToTree(sts);
     return prefixDirectives() + treeToString(tree, -1);
     
 }
 
+
+////////////////////////////////////////////// Atomic Terms
+
+//  Deal with term level things and nesting with no bnode structure
+
+
+__Serializer.prototype.atomicTermToN3 = function atomicTermToN3(expr, stats) {
+    switch(expr.termType) {
+        case 'bnode':
+        case 'variable':  return expr.toNT();
+        case 'literal':
+            if (expr.datatype) {
+                switch (expr.datatype.uri) {
+                case 'http://www.w3.org/2001/XMLSchema#integer':
+                    return expr.value.toString();
+                    
+                //case 'http://www.w3.org/2001/XMLSchema#double': // Must force use of 'e'
+                
+                case 'http://www.w3.org/2001/XMLSchema#boolean':
+                    return expr.value? 'true' : 'false';
+                }
+            }
+            var str = this.stringToN3(expr.value);
+            if (expr.lang) str+= '@' + expr.lang;
+            if (expr.datatype) str+= '^^' + termToN3(expr.datatype, stats);
+            return str;
+        case 'symbol':
+            return this.symbolToN3(expr);
+       default:
+            throw "Internal: atomicTermToN3 cannot handle "+expr+" of termType+"+expr.termType
+            return ''+expr;
+    }
+};
+
+
+
+
+
+
+
+
+
+
+    //  stringToN3:  String escaping for N3
+    //
+
+__Serializer.prototype.forbidden1 = new RegExp(/[\\"\b\f\r\v\t\n\u0080-\uffff]/gm);
+__Serializer.prototype.forbidden3 = new RegExp(/[\\"\b\f\r\v\u0080-\uffff]/gm);
+__Serializer.prototype.stringToN3 = function stringToN3(str, flags) {
+    if (!flags) flags = "e";
+    var res = '', i=0, j=0;
+    var delim;
+    var forbidden;
+    if (str.length > 20 // Long enough to make sense
+            && str.slice(-1) != '"'  // corner case'
+            && flags.indexOf('n') <0  // Force single line
+            && (str.indexOf('\n') >0 || str.indexOf('"') > 0)) {
+        delim = '"""';
+        forbidden =  __Serializer.prototype.forbidden3;
+    } else {
+        delim = '"';
+        forbidden = __Serializer.prototype.forbidden1;
+    }
+    for(i=0; i<str.length;) {
+        forbidden.lastIndex = 0;
+        var m = forbidden.exec(str.slice(i));
+        if (m == null) break;
+        j = i + forbidden.lastIndex -1;
+        res += str.slice(i,j);
+        var ch = str[j];
+        if (ch=='"' && delim == '"""' &&  str.slice(j,j+3) != '"""') {
+            res += ch;
+
+
+
+        } else {
+
+            var k = '\b\f\r\t\v\n\\"'.indexOf(ch); // No escaping of bell (7)?
+            if (k >= 0) {
+                res += "\\" + 'bfrtvn\\"'[k];
+            } else  {
+                if (flags.indexOf('e')>=0) {
+                    res += '\\u' + ('000'+
+                     ch.charCodeAt(0).toString(16).toLowerCase()).slice(-4)
+                } else { // no 'e' flag
+                    res += ch;
+
+                }
+            }
+        }
+        i = j+1;
+    }
+    return delim + res + str.slice(i) + delim
+}
+
+
+
+//  A single symbol, either in  <> or namespace notation
+
+
+__Serializer.prototype.symbolToN3 = function symbolToN3(x) {  // c.f. symbolString() in notation3.py
+    var uri = x.uri;
+    var j = uri.indexOf('#');
+    if (j<0 && this.flags.indexOf('/') < 0) {
+        j = uri.lastIndexOf('/');
+    }
+    if (j >= 0 && this.flags.indexOf('p') < 0)  { // Can split at namespace
+        var canSplit = true;
+        for (var k=j+1; k<uri.length; k++) {
+            if (__Serializer.prototype._notNameChars.indexOf(uri[k]) >=0) {
+                canSplit = false; break;
+            }
+        }
+        if (canSplit) {
+            var localid = uri.slice(j+1);
+            var namesp = uri.slice(0,j+1);
+            if (this.defaultNamespace && this.defaultNamespace == namesp
+                && this.flags.indexOf('d') < 0) {// d -> suppress default
+                if (this.flags.indexOf('k') >= 0 &&
+                    this.keyords.indexOf(localid) <0)
+                    return localid; 
+                return ':' + localid;
+            }
+            var prefix = this.prefixes[namesp];
+            if (prefix) {
+                namespaceCounts[namesp] = true;
+                return prefix + ':' + localid;
+            }
+            if (uri.slice(0, j) == this.base)
+                return '<#' + localid + '>';
+            // Fall though if can't do qname
+        }
+    }
+    if (this.flags.indexOf('r') < 0 && this.base)
+        uri = $rdf.Util.uri.refTo(this.base, uri);
+    else if (this.flags.indexOf('u') >= 0)
+        uri = backslashUify(uri);
+    else uri = hexify(uri);
+    return '<'+uri+'>';
+}
+
+
 // String ecaping utilities 
 
+
 function hexify(str) { // also used in parser
-//     var res = '';
-//     for (var i=0; i<str.length; i++) {
-//         k = str.charCodeAt(i);
-//         if (k>126 || k<33)
-//             res += '%' + ('0'+n.toString(16)).slice(-2); // convert to upper?
-//         else
-//             res += str[i];
-//     }
-//     return res;
   return encodeURI(str);
 }
 
@@ -577,7 +624,31 @@ function backslashUify(str) {
 }
 
 
+///////////////////////////// Quad store serialization
 
+ 
+// @para. write  - a function taking a single string to be output
+//
+__Serializer.prototype.writeStore = function(write) {
+ 
+    var kb = this.store;
+    var fetcher = kb.fetcher;
+    var session = fetcher && fetcher.appNode;
+    
+    // Everything we know from experience just write out.
+    if (session) write(this.statementsToN3(kb.statementsMatching(
+                                undefined, undefined, undefined, session)));
+                                
+    var sources = this.store.index[3];
+    for (s in sources) {  // -> assume we can use -> as short for log:semantics
+        var source = kb.fromNT(s);
+        if (session && source.sameTerm(session)) continue;
+        write('\n'+ this.atomicTermToN3(source)+' -> { '+ this.statementsToN3(kb.statementsMatching(
+                            undefined, undefined, undefined, source)) + ' }.\n');
+    }
+}
+ 
+ 
 
 
 

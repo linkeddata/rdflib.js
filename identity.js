@@ -72,7 +72,7 @@ $rdf.IndexedFormula = function(features) {
     if ($rdf.Util.ArrayIndexOf(features,"sameAs") >= 0)
         this.propertyActions['<http://www.w3.org/2002/07/owl#sameAs>'] = [
 	function(formula, subj, pred, obj, why) {
-            // tabulator.log.warn("Equating "+subj.uri+" sameAs "+obj.uri);  //@@
+            // $rdf.log.warn("Equating "+subj.uri+" sameAs "+obj.uri);  //@@
             formula.equate(subj,obj);
             return true; // true if statement given is NOT needed in the store
 	}]; //sameAs -> equate & don't add to index
@@ -92,7 +92,7 @@ $rdf.IndexedFormula = function(features) {
     function handle_IFP(formula, subj, pred, obj)  {
         var s1 = formula.any(undefined, pred, obj);
         if (s1 == undefined) return false; // First time with this value
-        // tabulator.log.warn("Equating "+s1.uri+" and "+subj.uri + " because IFP "+pred.uri);  //@@
+        // $rdf.log.warn("Equating "+s1.uri+" and "+subj.uri + " because IFP "+pred.uri);  //@@
         formula.equate(s1, subj);
         return true;
     } //handle_IFP
@@ -100,7 +100,7 @@ $rdf.IndexedFormula = function(features) {
     function handle_FP(formula, subj, pred, obj)  {
         var o1 = formula.any(subj, pred, undefined);
         if (o1 == undefined) return false; // First time with this value
-        // tabulator.log.warn("Equating "+o1.uri+" and "+obj.uri + " because FP "+pred.uri);  //@@
+        // $rdf.log.warn("Equating "+o1.uri+" and "+obj.uri + " because FP "+pred.uri);  //@@
         formula.equate(o1, obj);
         return true ;
     } //handle_FP
@@ -147,7 +147,7 @@ We replace the bigger with the smaller.
 
 */
 $rdf.IndexedFormula.prototype.equate = function(u1, u2) {
-    // tabulator.log.warn("Equating "+u1+" and "+u2); // @@
+    // $rdf.log.warn("Equating "+u1+" and "+u2); // @@
     //@@JAMBO Must canonicalize the uris to prevent errors from a=b=c
     //03-21-2010
     u1 = this.canon( u1 );
@@ -160,7 +160,7 @@ $rdf.IndexedFormula.prototype.equate = function(u1, u2) {
     } else {
 	    return this.replaceWith(u1, u2);
     }
-}
+};
 
 // Replace big with small, obsoleted with obsoleting.
 //
@@ -249,26 +249,6 @@ $rdf.IndexedFormula.prototype.uris = function(term) {
     return res
 }
 
-// On input parameters, convert constants to terms
-// 
-function RDFMakeTerm(formula,val, canonicalize) {
-    if (typeof val != 'object') {   
-	    if (typeof val == 'string')
-	        return new $rdf.Literal(val);
-        if (typeof val == 'number')
-            return new $rdf.Literal(val); // @@ differet types
-        if (typeof val == 'boolean')
-            return new $rdf.Literal(val?"1":"0", undefined, 
-                                    $rdf.Symbol.prototype.XSDboolean);
-	    else if (typeof val == 'number')
-	        return new $rdf.Literal(''+val);   // @@ datatypes
-	    else if (typeof val == 'undefined')
-	        return undefined;
-	    else    // @@ add converting of dates and numbers
-	        throw "Can't make Term from " + val + " of type " + typeof val; 
-    }
-    return val;
-}
 
 // Add a triple to the store
 //
@@ -278,11 +258,11 @@ function RDFMakeTerm(formula,val, canonicalize) {
 $rdf.IndexedFormula.prototype.add = function(subj, pred, obj, why) {
     var actions, st;
     if (why == undefined) why = this.fetcher ? this.fetcher.appNode: this.sym("chrome:theSession"); //system generated
-                               //defined in source.js, is this OK with identity.js only user?
-    subj = RDFMakeTerm(this, subj);
-    pred = RDFMakeTerm(this, pred);
-    obj = RDFMakeTerm(this, obj);
-    why = RDFMakeTerm(this, why);
+                //defined in source.js, is this OK with identity.js only user?
+    subj = $rdf.term(subj);
+    pred = $rdf.term(pred);
+    obj = $rdf.term(obj);
+    why = $rdf.term(why);
     
     var hash = [ this.canon(subj).hashString(), this.canon(pred).hashString(),
             this.canon(obj).hashString(), this.canon(why).hashString()];
@@ -353,7 +333,7 @@ $rdf.IndexedFormula.prototype.statementsMatching = function(subj,pred,obj,why,ju
     var wild = []; // wildcards
     var given = []; // Not wild
     for (var p=0; p<4; p++) {
-        pattern[p] = this.canon(RDFMakeTerm(this, pat[p]));
+        pattern[p] = this.canon($rdf.term(pat[p]));
         if (pattern[p] == undefined) {
             wild.push(p);
         } else {

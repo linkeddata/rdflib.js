@@ -134,7 +134,7 @@ $rdf.Collection.prototype.isVar = 0;
 $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDone) {
     var kb = this;
     $rdf.log.info("Query:"+myQuery.pat+", fetcher="+fetcher+"\n");
-        tabulator.log.error("@@@@ query.js 4: "+$rdf.log.error); // @@ works
+        $rdf.log.error("@@@@ query.js 4: "+$rdf.log.error); // @@ works
         $rdf.log.error("@@@@ query.js 5");  // @@
 
     ///////////// Debug strings
@@ -518,7 +518,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
     }
     
     MandatoryBranch.prototype.reportMatch = function(bindings) {
-        tabulator.log.error("@@@@ query.js 1"); // @@
+        $rdf.log.error("@@@@ query.js 1"); // @@
         $rdf.log.error("@@@@ query.js 2");  // @@
         this.callback(bindings);
         this.success = true;
