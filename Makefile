@@ -14,8 +14,11 @@ dist/rdflib.js: $R
 	cat $R >> $@
 	echo "return \$$rdf;}()" >> $@
 
+# Currently the blow is suboptimal == you have to say $rdf=require(â€¦).$rdf
+# but this doesn't work at all: echo "module.\$$rdf = function() {" > $@
+
 dist/node-rdflib.js: $R
-	echo "module.\$$rdf = function() {" > $@
+	echo "exports.\$$rdf = function() {" > $@
 	cat $R >> $@
 	echo "return \$$rdf;}()" >> $@
 
