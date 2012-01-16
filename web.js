@@ -376,7 +376,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                     p.loadBuf(xhr.responseText)
 
                 } catch (e) {
-                    var msg = ("Error trying to parse " + xhr.uri + ' as Notation3:\n' + e)
+                    var msg = ("Error trying to parse " + xhr.uri + ' as Notation3:\n' + e +':\n'+e.stack)
                     // dump(msg+"\n")
                     sf.failFetch(xhr, msg)
                     return;
@@ -1168,7 +1168,7 @@ $rdf.parse = function parse(str, kb, base, contentType) {
             return;
         }
     } catch(e) {
-        throw "Error trying to parse <"+base+"> as "+contentType+":\n"+e;
+        throw "Error trying to parse <"+base+"> as "+contentType+":\n"+e +':\n'+e.stack;
     }
     throw "Don't know how to parse "+contentType+" yet";
 
