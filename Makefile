@@ -35,8 +35,10 @@ dist/rdflib-rdfa.js: $X $R rdfa.js
 dist/jquery-1.4.2.min.js:
 	wget http://code.jquery.com/jquery-1.4.2.min.js -O $@
 
-#dist/jquery.uri.js:
-#	wget http://rdfquery.googlecode.com/svn-history/trunk/jquery.uri.js -O $@
+jquery.uri.js:
+	wget http://rdfquery.googlecode.com/svn-history/trunk/jquery.uri.js -O $@
 #
-#dist/jquery.xmlns.js:
-#	wget http://rdfquery.googlecode.com/svn-history/trunk/jquery.xmlns.js -O $@
+jquery.xmlns.js:
+	wget http://rdfquery.googlecode.com/svn-history/trunk/jquery.xmlns.js -O $@
+
+upstream: jquery.uri.js jquery.xmlns.js
