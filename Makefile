@@ -24,7 +24,7 @@ dist/node-rdflib.js: $R
 
 J=dist
 Q=$J/jquery-1.4.2.min.js
-X=$J/jquery.uri.js $J/jquery.xmlns.js
+X=jquery.uri.js jquery.xmlns.js
 
 dist/rdflib-rdfa.js: $X $R rdfa.js
 	cat $X > $@
@@ -35,8 +35,24 @@ dist/rdflib-rdfa.js: $X $R rdfa.js
 dist/jquery-1.4.2.min.js:
 	wget http://code.jquery.com/jquery-1.4.2.min.js -O $@
 
-dist/jquery.uri.js:
+jquery.uri.js:
 	wget http://rdfquery.googlecode.com/svn-history/trunk/jquery.uri.js -O $@
-
-dist/jquery.xmlns.js:
+#
+jquery.xmlns.js:
 	wget http://rdfquery.googlecode.com/svn-history/trunk/jquery.xmlns.js -O $@
+
+upstream: jquery.uri.js jquery.xmlns.js
+
+.PHONY: detach gh-pages
+
+detach:
+	git checkout origin/master
+	git reset --hard HEAD
+	
+gh-pages: detach all
+	git branch -D gh-pages ||:
+	git checkout -b gh-pages
+	git add -f dist/*.js
+	git commit -m 'gh-pages: add dist'
+	git push -f origin gh-pages
+	git checkout master
