@@ -43,14 +43,15 @@ jquery.xmlns.js:
 
 upstream: jquery.uri.js jquery.xmlns.js
 
-.PHONY: reset gh-pages
+.PHONY: detach gh-pages
 
-reset:
+detach:
+	git checkout origin/master
 	git reset --hard HEAD
 	
-gh-pages: reset all
-	git branch -d gh-pages ||:
+gh-pages: detach all
+	git branch -D gh-pages ||:
 	git checkout -B gh-pages
 	git add -f dist/*.js
-	git commit -m 'add dist'
+	git commit -m 'gh-pages: add dist'
 	git branch -av
