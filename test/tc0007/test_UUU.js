@@ -4,9 +4,19 @@
 
 if (typeof module !== 'undefined' && module.exports) { // Node.js environment
     var jQuery = require('jquery');
-    var $rdf = require('../../dist/node-rdflib.js').$rdf; // @@
+    var $rdf = require('../../dist/node-rdflib.js');
     var util = require('util');
     var alert = function(s){util.print('alert:'+s+'\n')};
+    var kludgeForOfflineUse = function kludgeForOfflineUse(uri) {
+        return uri.replace('http://', 'http://localhost/');
+
+    }
+    } else { // Asssume browser environment
+    var kludgeForOfflineUse = function kludgeForOfflineUse(uri) {
+        return uri; // comment out on planes
+        return uri.replace('http://', 'http://localhost/');
+    }
+
 }
 
 var tc0007Passed = true;
@@ -21,10 +31,6 @@ var DC = $rdf.Namespace('http://purl.org/dc/elements/1.1/');
 
 var base = 'http://dig.csail.mit.edu/hg/tabulator/raw-file/tip/chrome/content/test/tc0007/';
 
-var kludgeForOfflineUse = function kludgeForOfflineUse(uri) {
-    return uri; // comment out on planes
-    return uri.replace('http://', 'http://localhost/');
-}
 
 function escapeForXML(str) {
     if (typeof str == 'undefined') return '@@@undefined@@@@';
@@ -139,6 +145,11 @@ function testTC0007(showDetails, callback) {
                                     }
                                 }
                             }
+                            // Try the given SPARQL query
+                            var sq = $rdf.SPARQLToQuery(match[1], true);
+                            
+
+                            //  Compare two graphs using unification
                             var q = new $rdf.Query();
                             q.pat = exp;
                             kb.query(q, function(bindings){callback(0,"<p>Match - result includes expected</p>");
@@ -149,7 +160,8 @@ function testTC0007(showDetails, callback) {
                             var q2 = new $rdf.Query();
                             q.pat = kb;
                             exp.query(q, function(bindings){callback(0,"<p>Match - expected includes result</p>");
-                                reverse ++}, undefined, 
+                                                            reverse ++},
+                                 undefined, 
                                  function(){callback(0,"<p>Done exp in res</p>"); countDone();});
                         }
                         
