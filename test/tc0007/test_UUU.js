@@ -118,10 +118,11 @@ function testTC0007(showDetails, callback) {
                        // var askPattern = /^\s*ASK\s+WHERE\s*{.*}\s*$/
                         var match = askPattern.exec(test.expectedData);
                         if (match !== null) {
+                            var kludge = match[1].replace(/\?/g, '_:').replace(/FILTER.*/,'');
                             callback(0, "<h3>Turtle expected</h3><p><pre>"
-                                    +escapeForXML(match[1])+"</pre></p>");
+                                    +escapeForXML(kludge)+"</pre></p>");
                             var exp = $rdf.graph();
-                            $rdf.parse(match[1], exp, base, 'text/turtle');
+                            $rdf.parse(kludge, exp, base, 'text/turtle');
                             callback(0,"<h3>Expected graph:</h3><p><pre>"
                             + escapeForXML(exp.toString()) +"</pre></p>")
 
