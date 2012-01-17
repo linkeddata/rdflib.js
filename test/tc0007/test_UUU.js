@@ -128,6 +128,29 @@ function testTC0007(showDetails, callback) {
 
                             // Now we need to test where kb and exp RDF-entail each  other.
                             // @@ To be added
+                            var done = 0, forwards = 0, reverse = 0;
+                            var countDone = function() {
+                                done++;
+                                if (done == 2) {
+                                    if (reverse && forwards) {
+                                        callback(1, "<p style='color: green'>Test "+test.no+" PASSED.</p>");
+                                    } else {
+                                        callback(1, "<p style='color: red'>Test "+test.no+" FAILED.</p>");
+                                    }
+                                }
+                            }
+                            var q = new $rdf.Query();
+                            q.pat = exp;
+                            kb.query(q, function(bindings){callback(0,"<p>Match - result includes expected</p>");
+                                                            forwards++},
+                                 undefined, 
+                                 function(){callback(0,"<p>Done res in exp!</p>"); countDone();});
+                                 
+                            var q2 = new $rdf.Query();
+                            q.pat = kb;
+                            exp.query(q, function(bindings){callback(0,"<p>Match - expected includes result</p>");
+                                reverse ++}, undefined, 
+                                 function(){callback(0,"<p>Done exp in res</p>"); countDone();});
                         }
                         
 
