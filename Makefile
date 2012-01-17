@@ -42,3 +42,15 @@ jquery.xmlns.js:
 	wget http://rdfquery.googlecode.com/svn-history/trunk/jquery.xmlns.js -O $@
 
 upstream: jquery.uri.js jquery.xmlns.js
+
+.PHONY: reset gh-pages
+
+reset:
+	git reset --hard HEAD
+	
+gh-pages: reset all
+	git branch -d gh-pages ||:
+	git checkout -B gh-pages
+	git add -f dist/*.js
+	git commit -m 'add dist'
+	git branch -av
