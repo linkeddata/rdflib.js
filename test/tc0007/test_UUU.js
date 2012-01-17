@@ -11,6 +11,8 @@ if (typeof module !== 'undefined' && module.exports) { // Node.js environment
 
 var tc0007Passed = true;
 
+// Here is a totaly differnet manifest format for rdfa1.1. 
+// https://raw.github.com/msporny/rdfa-test-suite/master/manifest.ttl 
 
 var mainifest_uri = 'http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/rdfa-xhtml1-test-manifest.rdf';
 
@@ -71,7 +73,7 @@ function testTC0007(showDetails, callback) {
     //var allResults = "<div><strong>Detailed Results:</strong></div>";
     var tests = [ ];
     
-    callback(0, '<p>got here</p>');
+    callback(0, '<p>Now to get manifest ...</p>');
 
     var meta = $rdf.graph();
     var fetcher = $rdf.fetcher(meta, undefined, true); // (store, timeout, async)
@@ -110,13 +112,21 @@ function testTC0007(showDetails, callback) {
                         callback(0,"<h3>Results:</h3><pre>"
                         + escapeForXML(kb.toString()) +
                         "</pre></p><h3><a href='"+test.expected.uri+
-                            "'>Expected SPARQL:</a></h3><p><pre>"+
+                            "'>Pass criterion SPARQL:</a></h3><p><pre>"+
                             escapeForXML(test.expectedData)+"</pre></p>");
                         var askPattern = /^\s*ASK\s+WHERE\s*\{([\n\s\r]*<[^\}]*)\}[\n\s\r]*$/m
                        // var askPattern = /^\s*ASK\s+WHERE\s*{.*}\s*$/
                         var match = askPattern.exec(test.expectedData);
                         if (match !== null) {
-                            callback(0, "<p>graph expected:"+escapeForXML(match[1])+"</p>")
+                            callback(0, "<h3>Turtle expected</h3><p><pre>"
+                                    +escapeForXML(match[1])+"</pre></p>");
+                            var exp = $rdf.graph();
+                            $rdf.parse(match[1], exp, base, 'text/turtle');
+                            callback(0,"<h3>Expected graph:</h3><p><pre>"
+                            + escapeForXML(exp.toString()) +"</pre></p>")
+
+                            // Now we need to test where kb and exp RDF-entail each  other.
+                            // @@ To be added
                         }
                         
 
