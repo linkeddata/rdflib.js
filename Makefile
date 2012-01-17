@@ -54,6 +54,5 @@ gh-pages: detach all
 	git checkout -b gh-pages
 	git add -f dist/*.js
 	git commit -m 'gh-pages: add dist'
-	git branch -av
 	git push -f origin gh-pages
 	git checkout master
