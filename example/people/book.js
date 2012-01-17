@@ -16,23 +16,23 @@ var CONTACT = $rdf.Namespace("http://www.w3.org/2000/10/swap/pim/contact#")
 
 
 var card = function(who) {
-    document.write('<div>')
+    var snip = '<div>'
     var image = kb.any(who, FOAF('img'));
     if (!image) image = kb.any(who, FOAF('depiction'));
     if (image) {
-        document.write('<img src="' + image.uri +'" align="right" height="100"/>');
+        snip += '<img src="' + image.uri +'" align="right" height="100"/>';
     }
     var nam = kb.any(who, FOAF('name'));
     if (!nam) { nam = "???";}
-    document.write("<h3>"+nam+"</h3>");
+    snip+="<h3>"+nam+"</h3>";
 
     nam = kb.any(who, FOAF('phone'));
     if (nam) {
-        document.write("<p>"+nam+"</p>");
+        snip+="<p>"+nam+"</p>";
     }
-
-    document.write('</div>')
-}
+    snip += "</div>"
+    $("body").append(snip)
+};
 
 
 
@@ -48,13 +48,13 @@ var kb = $rdf.graph();
 
 var uri = 'http://bblfish.net/people/henry/card#me';
 
-var person = $rdf.sym(uri)
-var docURI = uri.slice(0, uri.indexOf('#'))
-var fetch = $rdf.fetcher(kb)
+var person = $rdf.sym(uri);
+var docURI = uri.slice(0, uri.indexOf('#'));
+var fetch = $rdf.fetcher(kb);
 fetch.nowOrWhenFetched(docURI,undefined,function(){
     alert("it's now!")
     card(person)
-})
+});
 
 
 
