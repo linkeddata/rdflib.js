@@ -31,7 +31,7 @@ var card = function(who) {
         snip+="<p>"+nam+"</p>";
     }
     snip += "</div>"
-    $("body").append(snip)
+    return snip
 };
 
 
@@ -51,34 +51,43 @@ var uri = 'http://bblfish.net/people/henry/card#me';
 var person = $rdf.sym(uri);
 var docURI = uri.slice(0, uri.indexOf('#'));
 var fetch = $rdf.fetcher(kb);
-fetch.nowOrWhenFetched(docURI,undefined,function(){
-    alert("it's now!")
-    card(person)
-});
 
+fetch.nowOrWhenFetched(docURI, undefined, function () {
+        alert("callback is being called!")
+        $("#description").replaceWith(card(person))
+        var friends = kb.each(person, FOAF('knows'));
+        var i, n = friends.length, friend;
+        var lis = "";
 
+        for (i = 0; i < n; i++) {
+            friend = friends[i];
+            var names = kb.each(friend, FOAF('name'))
+            if (names.length != 0) {
+                lis += "<li><a href='" + friend.uri + "'>" + names[0] + "</a></li>"
 
-// document.write("<p><small>"+uri+ " Size: "+kb.statements.length+"</small></p>")
-
-var friends = kb.each(person, FOAF('knows'));
-var i, n = friends.length, friend;
-document.write("<p>"+n+" acquaintainces</p>")
-for (i=0; i<n; i++) {
-    friend = friends[i];
-    furi = friend.uri
-    if (furi && (furi.indexOf('#') >= 0)) {
-//	document.write('<small>Loading:  '+furi+'</small>') 
-        furi = furi.slice(0, furi.indexOf('#'))
-        kb.load(furi)
+            }
+        }
+        $("#foaf").append(lis)
     }
+);
 
-    sa = kb.any(friend, RDFS('seeAlso'))
-    if (sa) {
-//	document.write('<small>See also: '+sa.uri+'</small>') 
-        kb.load(sa.uri)
-    }
 
-    card(friend)
-} 
+//
+//    furi = friend.uri
+//    if (furi && (furi.indexOf('#') >= 0)) {
+//        furi = furi.slice(0, furi.indexOf('#'))
+//        kb.load(furi)
+//    }
+//
+//    sa = kb.any(friend, RDFS('seeAlso'))
+//    if (sa) {
+////	document.write('<small>See also: '+sa.uri+'</small>')
+//        kb.load(sa.uri)
+//    }
+//
+//    card(friend)
+//}
+
+
 
 

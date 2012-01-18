@@ -2,8 +2,8 @@
         "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-    <title>Address Book</title>
-    <link rel="stylesheet" href="book.css" />
+    <title>Simple Address Book Demo</title>
+    <link rel="stylesheet" href="card.css" />
     <script src="../../dist/rdflib.js" type="text/javascript">
     </script>
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js">
@@ -28,7 +28,7 @@
     </script>
     <script src="../../web.js" type="text/javascript">
     </script-->
-    <script src="book.js" type="text/javascript" >
+    <script src="card.js" type="text/javascript" >
     </script>
 
     <!--
@@ -36,6 +36,16 @@
     -->
 </head>
 <body>
-<h1 id="heading"></h1>
+<h1 id="heading">Simple Foaf Card Demo</h1>
+
+<p id="description">If you see this then fetching the remote profile did not succeed,
+ or is not yet finished.</p>
+<p>Below are the friends as linked to from that profile. Here we limit ourselves to
+    simply name information and links. More information should be found
+at the remote profile, which could be merged here and shown as a card too. But well, one
+step at a time. </p>
+<ul id="foaf">
+
+</ul>
 </body>
 </html>
