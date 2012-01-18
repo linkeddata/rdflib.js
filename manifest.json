@@ -1,0 +1,18 @@
+{
+    "background_page": "background.html",
+    "description": "Linked Data Browser",
+    "icons": {
+        "48": "rdf_flyer.48.gif"
+    },
+    "name": "Tabulator",
+    "permissions": [
+        "file:///*",
+        "http://*/*",
+        "https://*/*",
+        "unlimitedStorage",
+        "experimental",
+        "webRequest",
+        "webRequestBlocking"
+    ],
+    "version": "0.0"
+}
