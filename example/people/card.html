@@ -3,7 +3,7 @@
 <html>
 <head>
     <title>Simple Address Book Demo</title>
-    <link rel="stylesheet" href="card.css" />
+    <link rel="stylesheet" href="card.css" >
     <script src="../../dist/rdflib.js" type="text/javascript">
     </script>
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js">
@@ -40,7 +40,7 @@
 
 <p>Enter a <a href="http://www.w3.org/2005/Incubator/webid/spec/#dfn-webid">WebID</a> into the following box, then 
     click to display its content. </p>
-<form onsubmit="redraw($('#url').attr('value')); return false">
+<form onsubmit="redraw($('#url').attr('value')); return false" action="GET">
     <input id="url" type="text" size="100" value="http://bblfish.net/people/henry/card#me">
     <input type="submit" value="display">
 </form>
@@ -62,7 +62,7 @@ restriction' is, if it is one at all. </p>
 at the remote profile, which could be merged here and shown as a card too. But well, one
 step at a time. </p>
 <ul id="foaf">
-
+  <li>friends to be</li>
 </ul>
 </body>
 </html>
