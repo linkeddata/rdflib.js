@@ -14,11 +14,13 @@ var XSD = $rdf.Namespace("http://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#dt
 var CONTACT = $rdf.Namespace("http://www.w3.org/2000/10/swap/pim/contact#")
 
 
+var graphs = {}
 
 function card(who,kb) {
     var snip = '<div>'
     var image = kb.any(who, FOAF('img'));
     if (!image) image = kb.any(who, FOAF('depiction'));
+    if (!image) image = kb.any(who, FOAF('img'));
     if (image) {
         snip += '<img src="' + image.uri +'" align="right" height="100"/>';
     }
@@ -59,11 +61,11 @@ function draw (person,kb) {
 
     for (i = 0; i < n; i++) {
         friend = friends[i];
-        var names = kb.each(friend, FOAF('name'))
-        if (names.length != 0) {
-            lis += "<li><a href='" + friend.uri + "'>" + names[0] + "</a></li>"
-
+        var name = kb.any(friend, FOAF('name'))
+        if ("" == name) {
+           name = name.uri
         }
+        lis +=  "<li><a href='" + friend.uri + "'>" + name + "</a></li>"
     }
     $("#foaf").html(lis)
     $("#foaf a").bind('click',function() {
@@ -73,9 +75,10 @@ function draw (person,kb) {
 }
 
 function redraw(webid) {
-    var kb = $rdf.graph();
     var person = $rdf.sym(webid);
-    var docURI = uri.slice(0, uri.indexOf('#'));
+    var docURI = webid.slice(0, webid.indexOf('#'));
+    var kb = graphs[docURI]
+    if (!kb) kb = graphs[docURI] = new $rdf.IndexedFormula();
     var fetch = $rdf.fetcher(kb);
     fetch.nowOrWhenFetched(docURI, undefined, function() { draw(person,kb) });
 }
