@@ -52,6 +52,7 @@ var uri = 'http://bblfish.net/people/henry/card#me';
 
 function draw (person,kb) {
     $("#description").html(card(person,kb))
+    $("#url").attr("value",person.uri)
     var friends = kb.each(person, FOAF('knows'));
     var i, n = friends.length, friend;
     var lis = "";
@@ -80,7 +81,6 @@ function redraw(webid) {
 }
 
 
-redraw(uri)
 
 
 

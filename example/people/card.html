@@ -38,6 +38,16 @@
 <body>
 <h1 id="heading">Simple Foaf Card Demo</h1>
 
+<p>Enter a <a href="http://www.w3.org/2005/Incubator/webid/spec/#dfn-webid">WebID</a> into the following box, then 
+    click to display its content. </p>
+<form onsubmit="redraw($('#url').attr('value')); return false">
+    <input id="url" type="text" size="100" value="http://bblfish.net/people/henry/card#me">
+    <input type="submit" value="display">
+</form>
+<p>The contents should be in a machine readable format (RDF/XML, Turtle, N3, RDFa) which this page will parse and
+    then display a very small subsection of information with the
+help of the <a href="https://github.com/linkeddata/rdflib.js">rdflib javascript library</a>.</p>
+
 <p id="description">If you see this then fetching the remote profile did not succeed,
  or is not yet finished.</p>
 <p>Below are the friends as linked to from that profile. Here we limit ourselves to
