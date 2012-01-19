@@ -52,7 +52,6 @@ var person = $rdf.sym(uri);
 var docURI = uri.slice(0, uri.indexOf('#'));
 var fetch = $rdf.fetcher(kb);
 fetch.nowOrWhenFetched(docURI,undefined,function(){
-    alert("it's now!")
     card(person)
 });
 
