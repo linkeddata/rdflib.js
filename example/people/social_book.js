@@ -118,10 +118,10 @@ function friends (person,kb,col) {
         if (!name) {
             name = friend.uri
         }
-        lis +=  "<a href='" + friend.uri + "'>" + name + "</a><br>"
+        lis +=  "<span class='listing_user' href='" + friend.uri + "'>" + name + "</span><br>"
     }
     $(panel).html(lis)
-    $(panel+" a").bind('click',function() {
+    $(panel+" span").bind('click',function() {
         redraw($(this).attr("href"),col)
         return false
     })
