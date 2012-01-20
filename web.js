@@ -625,7 +625,50 @@ $rdf.Fetcher = function(store, timeout, async) {
         }
 
         xhr.onerror = function(event) {
-            sf.failFetch(xhr, "XHR Error: "+event)
+            if (this.crossSiteProxyTemplate && document && document.location && !this.proxyUsed) { // In mashup situation
+                var hostpart = $rdf.Util.uri.hostpart;
+                var here = '' + document.location;
+                if (hostpart(here) && hostpart(uri) && hostpart(here) != hostpart(uri)) {
+                    this.proxyUsed = true; //only try the proxy once
+                    newURI = this.crossSiteProxyTemplate.replace('{uri}', encodeURIComponent(uri));
+                    sf.addStatus(xhr.req, "BLOCKED -> Cross-site Proxy to <" + newURI + ">");
+                    if (xhr.aborted) return;
+
+                    var kb = sf.store;
+                    var oldreq = xhr.req;
+                    kb.add(oldreq, ns.http('redirectedTo'), kb.sym(newURI), oldreq);
+
+
+                    ////////////// Change the request node to a new one:  @@@@@@@@@@@@ Duplicate?
+                    var newreq = xhr.req = kb.bnode() // Make NEW reqest for everything else
+                    kb.add(oldreq, ns.http('redirectedRequest'), newreq, xhr.req);
+
+                    var now = new Date();
+                    var timeNow = "[" + now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds() + "] ";
+                    kb.add(newreq, ns.rdfs("label"), kb.literal(timeNow + ' Request for ' + newURI), this.appNode)
+                    kb.add(newreq, ns.link('status'), kb.collection(), sf.req);
+                    kb.add(newreq, ns.link("requestedURI"), kb.literal(newURI), this.appNode);
+
+                    var response = kb.bnode();
+                    kb.add(oldreq, ns.link('response'), response);
+                    // kb.add(response, ns.http('status'), kb.literal(xhr.status), response);
+                    // if (xhr.statusText) kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response)
+
+                    xhr.abort()
+                    xhr.aborted = true
+
+                    sf.addStatus(oldreq, 'done') // why
+                    sf.fireCallbacks('done', args) // Are these args right? @@@
+                    sf.requested[xhr.uri.uri] = 'redirected';
+
+                    var xhr2 = sf.requestURI(newURI, xhr.uri);
+                    if (xhr2 && xhr2.req) kb.add(xhr.req,
+                        kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'),
+                        xhr2.req, sf.appNode);                             return;
+                }
+            } else {
+                sf.failFetch(xhr, "XHR Error: "+event)
+            }
         }
         
         // Set up callbacks
@@ -764,49 +807,9 @@ $rdf.Fetcher = function(store, timeout, async) {
             switch (xhr.readyState) {
             case 0:
                     var uri = xhr.uri.uri, newURI;
-                    if (this.crossSiteProxyTemplate && document && document.location) { // In mashup situation
-                        var hostpart = $rdf.Util.uri.hostpart;
-                        var here = '' + document.location;
-                        if (hostpart(here) && hostpart(uri) && hostpart(here) != hostpart(uri)) {
-                            newURI = this.crossSiteProxyTemplate.replace('{uri}', encodeURIComponent(uri));
-                            sf.addStatus(xhr.req, "BLOCKED -> Cross-site Proxy to <" + newURI + ">");
-                            if (xhr.aborted) return;
-                            
-                            var kb = sf.store;
-                            var oldreq = xhr.req;
-                            kb.add(oldreq, ns.http('redirectedTo'), kb.sym(newURI), oldreq);
-
-
-                            ////////////// Change the request node to a new one:  @@@@@@@@@@@@ Duplicate?
-                            var newreq = xhr.req = kb.bnode() // Make NEW reqest for everything else
-                            kb.add(oldreq, ns.http('redirectedRequest'), newreq, xhr.req);
-
-                            var now = new Date();
-                            var timeNow = "[" + now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds() + "] ";
-                            kb.add(newreq, ns.rdfs("label"), kb.literal(timeNow + ' Request for ' + newURI), this.appNode)
-                            kb.add(newreq, ns.link('status'), kb.collection(), sf.req);
-                            kb.add(newreq, ns.link("requestedURI"), kb.literal(newURI), this.appNode);
-
-                            var response = kb.bnode();
-                            kb.add(oldreq, ns.link('response'), response);
-                            // kb.add(response, ns.http('status'), kb.literal(xhr.status), response);
-                            // if (xhr.statusText) kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response)
-
-                            xhr.abort()
-                            xhr.aborted = true
-
-                            sf.addStatus(oldreq, 'done') // why
-                            sf.fireCallbacks('done', args) // Are these args right? @@@
-                            sf.requested[xhr.uri.uri] = 'redirected';
-
-                            var xhr2 = sf.requestURI(newURI, xhr.uri);
-                            if (xhr2 && xhr2.req) kb.add(xhr.req,
-                                kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'),
-                                xhr2.req, sf.appNode);                             return;
-                        }
-                    }
                     sf.failFetch(xhr, "HTTP Blocked. (ReadyState 0) Cross-site violation for <"+
-                        docuri+">");
+                    docuri+">");
+
                     break;
                 
             case 3:
