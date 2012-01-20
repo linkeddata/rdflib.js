@@ -50,6 +50,11 @@ $rdf.Fetcher = function(store, timeout, async) {
     ns.rdfs = $rdf.Namespace("http://www.w3.org/2000/01/rdf-schema#");
     ns.dc = $rdf.Namespace("http://purl.org/dc/elements/1.1/");
 
+    $rdf.Fetcher.crossSiteProxy = function(uri) {
+        if ($rdf.Fetcher.crossSiteProxyTemplate)
+          return crossSiteProxyTemplate.replace('{uri}', encodeURIComponent(uri));
+        else return undefined
+    }
     $rdf.Fetcher.RDFXMLHandler = function(args) {
         if (args) {
             this.dom = args[0]
@@ -546,7 +551,8 @@ $rdf.Fetcher = function(store, timeout, async) {
         var sta = this.getState(uri);
         if (sta == 'fetched') return callback();
         this.addCallback('done', function(uri2) {
-            if (uri2 == uri || this.proxyUsed) callback();
+            if (uri2 == uri ||
+                ( $rdf.Fetcher.crossSiteProxy(uri) == uri2  )) callback();
             return (uri2 != uri); // Call me again?
         });
         if (sta == 'unrequested') this.requestURI(
@@ -630,7 +636,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                 var here = '' + document.location;
                 if (hostpart(here) && hostpart(uri) && hostpart(here) != hostpart(uri)) {
                     this.proxyUsed = true; //only try the proxy once
-                    newURI = $rdf.Fetcher.crossSiteProxyTemplate.replace('{uri}', encodeURIComponent(uri));
+                    newURI = $rdf.Fetcher.crossSiteProxy(uri);
                     sf.addStatus(xhr.req, "BLOCKED -> Cross-site Proxy to <" + newURI + ">");
                     if (xhr.aborted) return;
 
