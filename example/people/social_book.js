@@ -23,7 +23,7 @@ var cardTemplate = ""
 
 function initialize() {
     cardTemplate = $("#user_wrapper").clone()
-    $rdf.Fetcher.crossSiteProxyTemplate="http://data.fm/proxy?uri="
+    $rdf.Fetcher.crossSiteProxyTemplate="http://data.fm/proxy?uri={uri}"
 }
 
 function card(who,kb) {
