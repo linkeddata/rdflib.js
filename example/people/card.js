@@ -50,8 +50,6 @@ function card(who,kb) {
 
 var uri = 'http://bblfish.net/people/henry/card#me';
 
-
-
 function draw (person,kb) {
     $("#description").html(card(person,kb))
     $("#url").attr("value",person.uri)
