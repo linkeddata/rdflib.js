@@ -23,7 +23,7 @@ var cardTemplate = ""
 
 function initialize() {
     cardTemplate = $("#user_wrapper").clone()
-
+    $rdf.Fetcher.crossSiteProxyTemplate="http://data.fm/proxy?uri="
 }
 
 function card(who,kb) {
@@ -136,7 +136,6 @@ function redraw(webid, col) {
         kb = graphs[docURI] = new $rdf.IndexedFormula();
     }
     var fetch = $rdf.fetcher(kb);
-    fetch.crossSiteProxyTemplate="http://data.fm/proxy?uri="
     fetch.nowOrWhenFetched(docURI, undefined, function() {
         card(person,kb)
         friends(person,kb,col+1)
