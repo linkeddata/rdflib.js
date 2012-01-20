@@ -546,7 +546,7 @@ $rdf.Fetcher = function(store, timeout, async) {
         var sta = this.getState(uri);
         if (sta == 'fetched') return callback();
         this.addCallback('done', function(uri2) {
-            if (uri2 == uri) callback();
+            if (uri2 == uri || this.proxyUsed) callback();
             return (uri2 != uri); // Call me again?
         });
         if (sta == 'unrequested') this.requestURI(
@@ -663,9 +663,14 @@ $rdf.Fetcher = function(store, timeout, async) {
                     sf.requested[xhr.uri.uri] = 'redirected';
 
                     var xhr2 = sf.requestURI(newURI, xhr.uri);
-                    if (xhr2 && xhr2.req) kb.add(xhr.req,
-                        kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'),
-                        xhr2.req, sf.appNode);                             return;
+
+                    if (xhr2 && xhr2.req) {
+                        kb.add(xhr.req,
+                            kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'),
+                            xhr2.req,
+                            sf.appNode);
+                        return;
+                    }
                 }
             } else {
                 sf.failFetch(xhr, "XHR Error: "+event)
