@@ -768,7 +768,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                         var hostpart = $rdf.Util.uri.hostpart;
                         var here = '' + document.location;
                         if (hostpart(here) && hostpart(uri) && hostpart(here) != hostpart(uri)) {
-                            newURI = uri.replace('{uri}', encodeURIComponent(uri));
+                            newURI = this.crossSiteProxyTemplate.replace('{uri}', encodeURIComponent(uri));
                             sf.addStatus(xhr.req, "BLOCKED -> Cross-site Proxy to <" + newURI + ">");
                             if (xhr.aborted) return;
                             
