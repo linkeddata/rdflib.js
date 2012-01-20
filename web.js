@@ -52,7 +52,7 @@ $rdf.Fetcher = function(store, timeout, async) {
 
     $rdf.Fetcher.crossSiteProxy = function(uri) {
         if ($rdf.Fetcher.crossSiteProxyTemplate)
-          return crossSiteProxyTemplate.replace('{uri}', encodeURIComponent(uri));
+          return $rdf.Fetcher.crossSiteProxyTemplate.replace('{uri}', encodeURIComponent(uri));
         else return undefined
     }
     $rdf.Fetcher.RDFXMLHandler = function(args) {
