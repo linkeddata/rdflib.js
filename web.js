@@ -634,9 +634,9 @@ $rdf.Fetcher = function(store, timeout, async) {
             if ($rdf.Fetcher.crossSiteProxyTemplate && document && document.location && !this.proxyUsed) { // In mashup situation
                 var hostpart = $rdf.Util.uri.hostpart;
                 var here = '' + document.location;
-                if (hostpart(here) && hostpart(uri) && hostpart(here) != hostpart(uri)) {
+                if (hostpart(here) && hostpart(xhr.uri) && hostpart(here) != hostpart(xhr.uri)) {
                     this.proxyUsed = true; //only try the proxy once
-                    newURI = $rdf.Fetcher.crossSiteProxy(uri);
+                    newURI = $rdf.Fetcher.crossSiteProxy(xhr.uri);
                     sf.addStatus(xhr.req, "BLOCKED -> Cross-site Proxy to <" + newURI + ">");
                     if (xhr.aborted) return;
 
