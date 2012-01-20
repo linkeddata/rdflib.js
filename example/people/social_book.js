@@ -132,8 +132,11 @@ function redraw(webid, col) {
     var person = $rdf.sym(webid);
     var docURI = webid.slice(0, webid.indexOf('#'));
     var kb = graphs[docURI]
-    if (!kb) kb = graphs[docURI] = new $rdf.IndexedFormula();
+    if (!kb) {
+        kb = graphs[docURI] = new $rdf.IndexedFormula();
+    }
     var fetch = $rdf.fetcher(kb);
+    fetch.crossSiteProxyTemplate="http://data.fm/proxy?uri="
     fetch.nowOrWhenFetched(docURI, undefined, function() {
         card(person,kb)
         friends(person,kb,col+1)
