@@ -625,7 +625,7 @@ $rdf.Fetcher = function(store, timeout, async) {
         }
 
         xhr.onerror = function(event) {
-            if (this.crossSiteProxyTemplate && document && document.location && !this.proxyUsed) { // In mashup situation
+            if ($rdf.Fetcher.crossSiteProxyTemplate && document && document.location && !this.proxyUsed) { // In mashup situation
                 var hostpart = $rdf.Util.uri.hostpart;
                 var here = '' + document.location;
                 if (hostpart(here) && hostpart(uri) && hostpart(here) != hostpart(uri)) {
