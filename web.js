@@ -690,8 +690,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                 if (xhr.status == 200) {
                     addType(ns.link('Document'));
                     var ct = xhr.headers['content-type'];
-                    if (!ct) throw ('No content-type on 200 response for ' + xhr.uri)
-                    else {
+                    if (ct) {
                         if (ct.indexOf('image/') == 0) addType(kb.sym('http://purl.org/dc/terms/Image'));
                     }
                 }
@@ -838,8 +837,9 @@ $rdf.Fetcher = function(store, timeout, async) {
             try {
                 $rdf.Util.enablePrivilege("UniversalXPConnect UniversalBrowserRead")
             } catch (e) {
-                this.failFetch(xhr, "Failed to get (UniversalXPConnect UniversalBrowserRead) privilege to read different web site: " + docuri);
-                return xhr;
+                //(!CORS?)
+                //this.failFetch(xhr, "Failed to get (UniversalXPConnect UniversalBrowserRead) privilege to read different web site: " + docuri);
+                //return xhr;
             }
         }
 
