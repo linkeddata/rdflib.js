@@ -658,7 +658,8 @@ $rdf.Fetcher = function(store, timeout, async) {
                     xhr.aborted = true
 
                     sf.addStatus(oldreq, 'done') // why
-                    sf.fireCallbacks('done', args) // Are these args right? @@@
+                    //the callback throws an exception when called from xhr.onerror (so removed)
+                    //sf.fireCallbacks('done', args) // Are these args right? @@@
                     sf.requested[xhr.uri.uri] = 'redirected';
 
                     var xhr2 = sf.requestURI(newURI, xhr.uri);
