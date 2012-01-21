@@ -283,10 +283,11 @@ $rdf.Util.parseXML = function(str) {
         dparser = Components.classes["@mozilla.org/xmlextras/domparser;1"].getService(
                     Components.interfaces.nsIDOMParser);
     } else if (typeof module != 'undefined' ){ // Node.js
-        var jsdom = require('jsdom');
-        return jsdom.jsdom(str, undefined, {} );// html, level, options
+        var libxmljs = require('libxmljs'); // Was jsdom before 2012-01
+        return libxmljs.parseXmlString(str);
+        // return require('jsdom).jsdom(str, undefined, {} );// html, level, options
     } else {
-        dparser = new DOMParser()
+        dparser = new DOMParser();
     }
     return dparser.parseFromString(str, 'application/xml');
 };
