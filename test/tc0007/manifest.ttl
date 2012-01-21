@@ -1,0 +1,1692 @@
+#@base <http://rdfa.digitalbazaar.com/test-suite/> .
+@prefix : <http://www.w3.org/2006/03/test-description#> .
+@prefix dc: <http://purl.org/dc/elements/1.1/> .
+@prefix log: <http://www.w3.org/2000/10/swap/log#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix test: <http://www.w3.org/2006/03/test-description#> .
+@prefix rdfatest: <http://rdfa.digitalbazaar.com/vocabs/rdfa-test#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<test-cases/0001> dc:contributor "Elias Torres";
+   dc:title "Predicate establishment with @property";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0001.html>;
+   test:informationResourceResults <test-cases/0001.sparql>;
+   test:purpose "Tests @property to establish the predicate; literal object is in the content of the element.";
+   test:specificationReference "" .
+<test-cases/0006> dc:contributor "Elias Torres";
+   dc:title "@rel and @rev";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0006.html>;
+   test:informationResourceResults <test-cases/0006.sparql>;
+   test:purpose "Tests @rev and @rel together, with the object being specified by @href, ignoring content";
+   test:specificationReference "" .
+<test-cases/0007> dc:contributor "Elias Torres";
+   dc:title "@rel, @rev, @property, @content";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0007.html>;
+   test:informationResourceResults <test-cases/0007.sparql>;
+   test:purpose "Tests @rel, @rev, @property, and @content together to generate several RDF triples.";
+   test:specificationReference "" .
+<test-cases/0008> dc:contributor "Elias Torres";
+   dc:title "empty string @about";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0008.html>;
+   test:informationResourceResults <test-cases/0008.sparql>;
+   test:purpose "Tests empty @about.";
+   test:specificationReference "" .
+<test-cases/0009> dc:contributor "Elias Torres";
+   dc:title "@rev";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0009.html>;
+   test:informationResourceResults <test-cases/0009.sparql>;
+   test:purpose "Tests @rev.";
+   test:specificationReference "" .
+<test-cases/0010> dc:contributor "Elias Torres";
+   dc:title "@rel, @rev, @href";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0010.html>;
+   test:informationResourceResults <test-cases/0010.sparql>;
+   test:purpose "Tests @rel, @rev, and @href to generate two RDF triples.";
+   test:specificationReference "" .
+<test-cases/0012> dc:contributor "Elias Torres";
+   dc:title "@xml:lang";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0012.html>;
+   test:informationResourceResults <test-cases/0012.sparql>;
+   test:purpose "Tests @xml:lang";
+   test:specificationReference "" .
+<test-cases/0013> dc:contributor "Elias Torres";
+   dc:title "@xml:lang inheritance";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0013.html>;
+   test:informationResourceResults <test-cases/0013.sparql>;
+   test:purpose "Tests @xml:lang inheritance";
+   test:specificationReference "" .
+<test-cases/0014> dc:contributor "Elias Torres";
+   dc:title "@datatype, xsd:integer";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0014.html>;
+   test:informationResourceResults <test-cases/0014.sparql>;
+   test:purpose "Tests setting the @datatype to xsd:integer";
+   test:specificationReference "" .
+<test-cases/0015> dc:contributor "Elias Torres";
+   dc:title "meta and link";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0015.html>;
+   test:informationResourceResults <test-cases/0015.sparql>;
+   test:purpose "Tests meta and link with no parent @about";
+   test:specificationReference "" .
+<test-cases/0017> dc:contributor "Elias Torres";
+   dc:title "Related blanknodes";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0017.html>;
+   test:informationResourceResults <test-cases/0017.sparql>;
+   test:purpose "Tests creation of statements involving explicitly created blank nodes.";
+   test:specificationReference "" .
+<test-cases/0018> dc:contributor "Wing Yung";
+   dc:title "@rel for predicate";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0018.html>;
+   test:informationResourceResults <test-cases/0018.sparql>;
+   test:purpose "Tests @rel to establish predicate.";
+   test:specificationReference "" .
+<test-cases/0019> dc:contributor "Wing Yung";
+   dc:title "@about for subject";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0019.html>;
+   test:informationResourceResults <test-cases/0019.sparql>;
+   test:purpose "Tests @about to establish subject.";
+   test:specificationReference "" .
+<test-cases/0020> dc:contributor "Wing Yung";
+   dc:title "Inheriting @about for subject";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0020.html>;
+   test:informationResourceResults <test-cases/0020.sparql>;
+   test:purpose "Tests @about inheritance to establish subject.";
+   test:specificationReference "" .
+<test-cases/0021> dc:contributor "Wing Yung";
+   dc:title "Subject inheritance with no @about";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0021.html>;
+   test:informationResourceResults <test-cases/0021.sparql>;
+   test:purpose "Tests inheritance of subject when no @about can be found";
+   test:specificationReference "" .
+<test-cases/0023> dc:contributor "Wing Yung";
+   dc:title "@id does not generate subjects";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0023.html>;
+   test:informationResourceResults <test-cases/0023.sparql>;
+   test:purpose "Tests that @id does not generate subjects";
+   test:specificationReference "" .
+<test-cases/0025> dc:contributor "Ben Adida";
+   dc:title "simple chaining test";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0025.html>;
+   test:informationResourceResults <test-cases/0025.sparql>;
+   test:purpose "Tests simple chaining with cascade of @resource and @property";
+   test:specificationReference "" .
+<test-cases/0026> dc:contributor "Wing Yung";
+   dc:title "@content";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0026.html>;
+   test:informationResourceResults <test-cases/0026.sparql>;
+   test:purpose "Tests @content for literal object";
+   test:specificationReference "" .
+<test-cases/0027> dc:contributor "Wing Yung";
+   dc:title "@content, ignore element content";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0027.html>;
+   test:informationResourceResults <test-cases/0027.sparql>;
+   test:purpose "Tests @content for literal object, overriding element content.";
+   test:specificationReference "" .
+<test-cases/0029> dc:contributor "Michael Hausenblas";
+   dc:title "markup stripping with @datatype";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0029.html>;
+   test:informationResourceResults <test-cases/0029.sparql>;
+   test:purpose "Tests markup stripping from a span element with @datatype=xsd:string";
+   test:specificationReference "" .
+<test-cases/0030> dc:contributor "Michael Hausenblas";
+   dc:title "omitted @about";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0030.html>;
+   test:informationResourceResults <test-cases/0030.sparql>;
+   test:purpose "Tests omitted @about.";
+   test:specificationReference "" .
+<test-cases/0031> dc:contributor "Ralph Swick";
+   dc:title "simple @resource";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0031.html>;
+   test:informationResourceResults <test-cases/0031.sparql>;
+   test:purpose "Tests if @resource sets URIref object correct.";
+   test:specificationReference "" .
+<test-cases/0032> dc:contributor "Ralph Swick";
+   dc:title "@resource overrides @href";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0032.html>;
+   test:informationResourceResults <test-cases/0032.sparql>;
+   test:purpose "Tests if @resource overrides @href to set the URIref object.";
+   test:specificationReference "" .
+<test-cases/0033> dc:contributor "Michael Hausenblas";
+   dc:title "simple chaining test with bNode";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0033.html>;
+   test:informationResourceResults <test-cases/0033.sparql>;
+   test:purpose "Tests simple chaining with cascade of bNode and @property";
+   test:specificationReference "" .
+<test-cases/0034> dc:contributor "Michael Hausenblas";
+   dc:title "simple img[@src] test";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0034.html>;
+   test:informationResourceResults <test-cases/0034.sparql>;
+   test:purpose "Tests if a @src (in img element) correctly sets the URIref object";
+   test:specificationReference "" .
+<test-cases/0035> dc:contributor "Michael Hausenblas";
+   dc:title "@src/@href test";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0035.html>;
+   test:informationResourceResults <test-cases/0035.sparql>;
+   test:purpose "Tests if @href overwrites @src";
+   test:specificationReference "" .
+<test-cases/0036> dc:contributor "Michael Hausenblas";
+   dc:title "@src/@resource test";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0036.html>;
+   test:informationResourceResults <test-cases/0036.sparql>;
+   test:purpose "Tests if @resource overwrites @src";
+   test:specificationReference "" .
+<test-cases/0037> dc:contributor "Steven Pemberton";
+   dc:title "@src/@href/@resource test";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0037.html>;
+   test:informationResourceResults <test-cases/0037.sparql>;
+   test:purpose "Tests if @resource overwrites both @href and @src";
+   test:specificationReference "" .
+<test-cases/0038> dc:contributor "Mark Birbeck";
+   dc:title "@rev - img[@src] test";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0038.html>;
+   test:informationResourceResults <test-cases/0038.sparql>;
+   test:purpose "Tests if a @src (in img element) correctly sets the URIref subject (due to @rev)";
+   test:specificationReference "" .
+<test-cases/0039> dc:contributor "Mark Birbeck";
+   dc:title "@rev - @src/@href test";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0039.html>;
+   test:informationResourceResults <test-cases/0039.sparql>;
+   test:purpose "Tests if @href overwrites @src correctly to set the URIref subject (due to @rev)";
+   test:specificationReference "" .
+<test-cases/0040> dc:contributor "Mark Birbeck";
+   dc:title "@rev - @src/@resource test";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0";
+   test:classification test:required;
+   rdfatest:hostLanguage "xhtml1", "html4";
+   test:informationResourceInput <test-cases/0040.html>;
+   test:informationResourceResults <test-cases/0040.sparql>;
+   test:purpose "Tests if @resource overwrites @src correctly to set the URIref subject (due to @rev)";
+   test:specificationReference "" .
+<test-cases/0041> dc:contributor "Mark Birbeck";
+   dc:title "@rev - @src/@href/@resource test";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0041.html>;
+   test:informationResourceResults <test-cases/0041.sparql>;
+   test:purpose "Tests if @resource overwrites both @href and @src correctly to set the URIref subject (due to @rev)";
+   test:specificationReference "" .
+<test-cases/0042> dc:contributor "Ben Adida";
+   dc:title "img[@src] test with omitted @about";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0";
+   test:classification test:required;
+   :expectedResults "false"^^xsd:boolean;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4";
+   test:informationResourceInput <test-cases/0042.html>;
+   test:informationResourceResults <test-cases/0042.sparql>;
+   test:purpose "Tests if a @src (in img element) correctly sets the URIref object (with omitted @about)";
+   test:specificationReference "" .
+<test-cases/0046> dc:contributor "Ivan Herman";
+   dc:title "@typeof with @rel present, no @href, @resource, or @about";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1";
+   test:informationResourceInput <test-cases/0046.html>;
+   test:informationResourceResults <test-cases/0046.sparql>;
+   test:purpose "Tests @typeof with @rel present, no @href, @resource, or @about";
+   test:specificationReference "" .
+<test-cases/0047> dc:contributor "Ivan Herman";
+   dc:title "@typeof with @rel and @resource present, no @about";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1";
+   test:informationResourceInput <test-cases/0047.html>;
+   test:informationResourceResults <test-cases/0047.sparql>;
+   test:purpose "Tests @typeof with @rel and @resource present, no @about";
+   test:specificationReference "" .
+<test-cases/0048> dc:contributor "Ivan Herman";
+   dc:title "@typeof with @about and @rel present, no @resource";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0048.html>;
+   test:informationResourceResults <test-cases/0048.sparql>;
+   test:purpose "Tests @typeof with @about and @rel present, no @resource";
+   test:specificationReference "" .
+<test-cases/0049> dc:contributor "Ivan Herman";
+   dc:title "@typeof with @about, no @rel or @resource";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0049.html>;
+   test:informationResourceResults <test-cases/0049.sparql>;
+   test:purpose "Tests @typeof with @about, no @rel or @resource";
+   test:specificationReference "" .
+<test-cases/0050> dc:contributor "Ivan Herman";
+   dc:title "@typeof without anything else";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0050.html>;
+   test:informationResourceResults <test-cases/0050.sparql>;
+   test:purpose "Tests @typeof without anything else";
+   test:specificationReference "" .
+<test-cases/0051> dc:contributor "Ivan Herman";
+   dc:title "@typeof with a single @property";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0051.html>;
+   test:informationResourceResults <test-cases/0051.sparql>;
+   test:purpose "Tests @typeof with a single @property";
+   test:specificationReference "" .
+<test-cases/0052> dc:contributor "Ivan Herman";
+   dc:title "@typeof with @resource and nothing else";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0052.html>;
+   test:informationResourceResults <test-cases/0052.sparql>;
+   test:purpose "Tests to ensure that @typeof does not apply to @resource";
+   test:specificationReference "" .
+<test-cases/0053> dc:contributor "Ivan Herman";
+   dc:title "@typeof with @resource and nothing else, with a subelement";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0053.html>;
+   test:informationResourceResults <test-cases/0053.sparql>;
+   test:purpose "Tests to make sure that @typeof does not apply to @resource, but @resource sets the subject for the next triple to be generated";
+   test:specificationReference "" .
+<test-cases/0054> dc:contributor "Fabien Gandon";
+   dc:title "multiple @property";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0054.html>;
+   test:informationResourceResults <test-cases/0054.sparql>;
+   test:purpose "Tests multiple @property separated by white spaces";
+   test:specificationReference "" .
+<test-cases/0055> dc:contributor "Fabien Gandon";
+   dc:title "multiple @rel";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0055.html>;
+   test:informationResourceResults <test-cases/0055.sparql>;
+   test:purpose "Tests multiple @rel separated by white spaces";
+   test:specificationReference "" .
+<test-cases/0056> dc:contributor "Manu Sporny";
+   dc:title "@typeof applies to @about on same element with hanging rel";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0056.html>;
+   test:informationResourceResults <test-cases/0056.sparql>;
+   test:purpose "Tests if @typeof applies to @about on same element with hanging @rel";
+   test:specificationReference "" .
+<test-cases/0057> dc:contributor "Manu Sporny";
+   dc:title "hanging @rel creates multiple triples";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0057.html>;
+   test:informationResourceResults <test-cases/0057.sparql>;
+   test:purpose "Tests if hanging @rel creates multiple triples";
+   test:specificationReference "" .
+<test-cases/0058> dc:contributor "Manu Sporny";
+   dc:title "hanging @rel creates multiple triples, @typeof permutation";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0058.html>;
+   test:informationResourceResults <test-cases/0058.sparql>;
+   test:purpose "Tests if hanging @rel creates multiple triples with @typeof permutation";
+   test:specificationReference "" .
+<test-cases/0059> dc:contributor "Manu Sporny";
+   dc:title "multiple hanging @rels with multiple children";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0059.html>;
+   test:informationResourceResults <test-cases/0059.sparql>;
+   test:purpose "Tests multiple hanging @rels with multiple children";
+   test:specificationReference "" .
+<test-cases/0060> dc:contributor "Manu Sporny";
+   dc:title "UTF-8 conformance";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0060.html>;
+   test:informationResourceResults <test-cases/0060.sparql>;
+   test:purpose "Tests conformance with UTF-8 encoding";
+   test:specificationReference "" .
+<test-cases/0061> dc:contributor "Manu Sporny";
+   dc:title "@rel in head using reserved, non-prefixed XHTML value";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xhtml1";
+   test:informationResourceInput <test-cases/0061.html>;
+   test:informationResourceResults <test-cases/0061.sparql>;
+   test:purpose "Tests @rel in head using reserved, non-prefixed XHTML value";
+   test:specificationReference "" .
+<test-cases/0062> dc:contributor "Manu Sporny";
+   dc:title "@rev in head using reserved, non-prefixed XHTML value";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xhtml1";
+   test:informationResourceInput <test-cases/0062.html>;
+   test:informationResourceResults <test-cases/0062.sparql>;
+   test:purpose "Tests @rev in head using reserved, non-prefixed XHTML value";
+   test:specificationReference "" .
+<test-cases/0063> dc:contributor "Manu Sporny";
+   dc:title "@rel in head using reserved XHTML value and empty-prefix CURIE syntax";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0063.html>;
+   test:informationResourceResults <test-cases/0063.sparql>;
+   test:purpose "Tests @rel in head using reserved XHTML value and empty-prefix CURIE syntax";
+   test:specificationReference "" .
+<test-cases/0064> dc:contributor "Manu Sporny";
+   dc:title "@about with safe CURIE";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0064.html>;
+   test:informationResourceResults <test-cases/0064.sparql>;
+   test:purpose "Tests if @about generates a proper triple when a safe CURIE is used";
+   test:specificationReference "" .
+<test-cases/0065> dc:contributor "Manu Sporny";
+   dc:title "@rel with safe CURIE";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0065.html>;
+   test:informationResourceResults <test-cases/0065.sparql>;
+   test:purpose "Tests if @rel properly connects triples generated when safe CURIEs are used";
+   test:specificationReference "" .
+<test-cases/0066> dc:contributor "Manu Sporny";
+   dc:title "@about with @typeof in the head";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0066.html>;
+   test:informationResourceResults <test-cases/0066.sparql>;
+   test:purpose "Test to make sure that @about (with current document) is implied in the head, and the proper triples are generated using @typeof";
+   test:specificationReference "" .
+<test-cases/0067> dc:contributor "Manu Sporny";
+   dc:title "@property in the head";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0067.html>;
+   test:informationResourceResults <test-cases/0067.sparql>;
+   test:purpose "Test to make sure that @property in head uses the implied current document as the subject if no other subject is specified";
+   test:specificationReference "" .
+<test-cases/0068> dc:contributor "Manu Sporny";
+   dc:title "Relative URI in @about";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0068.html>;
+   test:informationResourceResults <test-cases/0068.sparql>;
+   test:purpose "Tests to ensure that relative URI is resolved correctly when used in @about";
+   test:specificationReference "" .
+<test-cases/0069> dc:contributor "Manu Sporny";
+   dc:title "Relative URI in @href";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0069.html>;
+   test:informationResourceResults <test-cases/0069.sparql>;
+   test:purpose "Tests to ensure that relative URI is resolved correctly when used in @href";
+   test:specificationReference "" .
+<test-cases/0070> dc:contributor "Manu Sporny";
+   dc:title "Relative URI in @resource";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0070.html>;
+   test:informationResourceResults <test-cases/0070.sparql>;
+   test:purpose "Tests to ensure that relative URI is resolved correctly when used in @resource";
+   test:specificationReference "" .
+<test-cases/0071> dc:contributor "Manu Sporny";
+   dc:title "No explicit @about";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0071.html>;
+   test:informationResourceResults <test-cases/0071.sparql>;
+   test:purpose "Tests to ensure that a triple is generated even if @typeof and @about is not specified anywhere in the document";
+   test:specificationReference "" .
+<test-cases/0072> dc:contributor "Manu Sporny";
+   dc:title "Relative URI in @about (with XHTML base in head)";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0072.html>;
+   test:informationResourceResults <test-cases/0072.sparql>;
+   test:purpose "Tests to ensure that relative URIs are resolved correctly when used in @about with XHTML base set in head";
+   test:specificationReference "" .
+<test-cases/0073> dc:contributor "Manu Sporny";
+   dc:title "Relative URI in @resource (with XHTML base in head)";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0073.html>;
+   test:informationResourceResults <test-cases/0073.sparql>;
+   test:purpose "Tests to ensure that relative URIs are resolved correctly when used in @resource with XHTML base set in head";
+   test:specificationReference "" .
+<test-cases/0074> dc:contributor "Manu Sporny";
+   dc:title "Relative URI in @href (with XHTML base in head)";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0074.html>;
+   test:informationResourceResults <test-cases/0074.sparql>;
+   test:purpose "Tests to ensure that relative URIs are resolved correctly when used in @href with XHTML base set in head";
+   test:specificationReference "" .
+<test-cases/0075> dc:contributor "Manu Sporny";
+   dc:title "Reserved word 'license' in @rel with no explizit @about";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0075.html>;
+   test:informationResourceResults <test-cases/0075.sparql>;
+   test:purpose "Tests to ensure that the XHTML+RDFa reserved word 'license' when used in @rel (with no @about) generates the proper triple";
+   test:specificationReference "" .
+<test-cases/0076> dc:contributor "Manu Sporny";
+   dc:title "All reserved XHTML @rel values";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xhtml1";
+   test:informationResourceInput <test-cases/0076.html>;
+   test:informationResourceResults <test-cases/0076.sparql>;
+   test:purpose "Tests to ensure that all reserved XHTML words are supported in @rel";
+   test:specificationReference "" .
+<test-cases/0077> dc:contributor "Manu Sporny";
+   dc:title "All reserved XHTML @rev values";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xhtml1";
+   test:informationResourceInput <test-cases/0077.html>;
+   test:informationResourceResults <test-cases/0077.sparql>;
+   test:purpose "Tests to ensure that all reserved XHTML words are supported in @rev";
+   test:specificationReference "" .
+<test-cases/0078> dc:contributor "Ivan Herman";
+   dc:title "Multiple incomplete triples";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0078.html>;
+   test:informationResourceResults <test-cases/0078.sparql>;
+   test:purpose "Tests multiple ways of handling incomplete triples; the first two triples should use the same bnode as subject ('merged'). The third should have a separate bNode.";
+   test:specificationReference "" .
+<test-cases/0079> dc:contributor "Ivan Herman";
+   dc:title "@resource and @href in completing incomplete triples";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0079.html>;
+   test:informationResourceResults <test-cases/0079.sparql>;
+   test:purpose "Tests role of @resource and @href in completing incomplete triples (including their mutual priorities)";
+   test:specificationReference "" .
+<test-cases/0080> dc:contributor "Ivan Herman";
+   dc:title "@about overrides @resource in incomplete triples";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0080.html>;
+   test:informationResourceResults <test-cases/0080.sparql>;
+   test:purpose "Tests if @about has a higher priority than @resource in handling incomplete triples";
+   test:specificationReference "" .
+<test-cases/0081> dc:contributor "Ivan Herman";
+   dc:title "multiple ways of handling incomplete triples (with @rev)";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0081.html>;
+   test:informationResourceResults <test-cases/0081.sparql>;
+   test:purpose "Tests multiple ways of handling incomplete triples, this time with @rev";
+   test:specificationReference "" .
+<test-cases/0082> dc:contributor "Ivan Herman";
+   dc:title "multiple ways of handling incomplete triples (with @rel and @rev)";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0082.html>;
+   test:informationResourceResults <test-cases/0082.sparql>;
+   test:purpose "Tests multiple ways of handling incomplete triples, this time with both @rel and @rev";
+   test:specificationReference "" .
+<test-cases/0083> dc:contributor "Ivan Herman";
+   dc:title "multiple ways of handling incomplete triples (merged)";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0083.html>;
+   test:informationResourceResults <test-cases/0083.sparql>;
+   test:purpose "Tests multiple ways of handling incomplete triples; the first two triples should use the same bNode as subject ('merged'); the third case should use @about";
+   test:specificationReference "" .
+<test-cases/0084> dc:contributor "Ivan Herman";
+   dc:title "multiple ways of handling incomplete triples, this time with both @rel and @rev";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0084.html>;
+   test:informationResourceResults <test-cases/0084.sparql>;
+   test:purpose "Tests multiple ways of handling incomplete triples, this time with both @rel and @rev. There is an intermediate div that should be ignored by the process";
+   test:specificationReference "" .
+<test-cases/0085> dc:contributor "Ivan Herman";
+   dc:title "@resource and @href in completing incomplete triples";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0085.html>;
+   test:informationResourceResults <test-cases/0085.sparql>;
+   test:purpose "Tests the role of @resource and @href in completing incomplete triples (including their mutual priorities), but with an intermediate layer (ie, bNode) added";
+   test:specificationReference "" .
+<test-cases/0087> dc:contributor "Ivan Herman";
+   dc:title "All reserved XHTML @rel values (with :xxx)";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0087.html>;
+   test:informationResourceResults <test-cases/0087.sparql>;
+   test:purpose "Tests to ensure that all reserved XHTML words are supported in @rel (with :xxx)";
+   test:specificationReference "" .
+<test-cases/0088> dc:contributor "Ivan Herman";
+   dc:title "Interpretation of the CURIE \"_:\"";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0088.html>;
+   test:informationResourceResults <test-cases/0088.sparql>;
+   test:purpose "Test the interpretation of the CURIE \"_:\"";
+   test:specificationReference "" .
+<test-cases/0089> dc:contributor "Manu Sporny";
+   dc:title "@src sets a new subject (@typeof)";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0089.html>;
+   test:informationResourceResults <test-cases/0089.sparql>;
+   test:purpose "Tests to ensure that @src sets a new subject (focuses on @typeof).";
+   test:specificationReference "" .
+<test-cases/0090> dc:contributor "Manu Sporny";
+   dc:title "@src sets a new subject (@rel/@href)";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0";
+   test:classification test:required;
+   rdfatest:hostLanguage "xhtml1", "html4";
+   test:informationResourceInput <test-cases/0090.html>;
+   test:informationResourceResults <test-cases/0090.sparql>;
+   test:purpose "Tests to ensure that @src sets a new subject (focuses on @rel/@href).";
+   test:specificationReference "" .
+<test-cases/0091> dc:contributor "Manu Sporny";
+   dc:title "Non-reserved, un-prefixed CURIE in @property";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0091.html>;
+   test:informationResourceResults <test-cases/0091.sparql>;
+   test:purpose "Tests to ensure that non-reserved, un-prefixed CURIEs, when used in @property, generate triples.";
+   test:specificationReference "" .
+<test-cases/0093> dc:contributor "Ivan Herman";
+   dc:title "Tests XMLLiteral content with explicit @datatype (user-data-typed literal)";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0093.html>;
+   test:informationResourceResults <test-cases/0093.sparql>;
+   test:purpose "Tests the explicit specification of an RDF XMLLiteral with @datatype using a non-RDF namespace, yielding a user-data-typed literal";
+   test:specificationReference "" .
+<test-cases/0099> dc:contributor "Ivan Herman";
+   dc:title "Preservation of white space in literals";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0099.html>;
+   test:informationResourceResults <test-cases/0099.sparql>;
+   test:purpose "Tests the preservation of white space in literals.";
+   test:specificationReference "" .
+<test-cases/0104> dc:contributor "Fabien Gandon";
+   dc:title "rdf:value";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0104.html>;
+   test:informationResourceResults <test-cases/0104.sparql>;
+   test:purpose "Tests rdf:value with blank nodes to give a value with a unit";
+   test:specificationReference "" .
+<test-cases/0106> dc:contributor "Manu Sporny";
+   dc:title "chaining with empty value in inner @rel";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0106.html>;
+   test:informationResourceResults <test-cases/0106.sparql>;
+   test:purpose "Tests the behavior of triple generation in the case where the inner @rel is defined, but is blank, which halts chaining.";
+   test:specificationReference "" .
+<test-cases/0107> dc:contributor "Manu Sporny";
+   dc:title "no garbage collecting bnodes";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   :expectedResults "false"^^xsd:boolean;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0107.html>;
+   test:informationResourceResults <test-cases/0107.sparql>;
+   test:purpose "Checks to make sure that that while we shouldn't garbage collect bnodes no triples are generated.";
+   test:specificationReference "" .
+<test-cases/0108> dc:contributor "Manu Sporny";
+   dc:title "plain literal with datatype=\"\" and xml:lang preservation";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0108.html>;
+   test:informationResourceResults <test-cases/0108.sparql>;
+   test:purpose """Checks to make sure that the RDFa parser emits a plain literal when the datatype is specified as "" and preserves the xml:lang value. The text, with control characters and whitespace preserved, reads "Greek
+white   space
+".""";
+   test:specificationReference "" .
+<test-cases/0109> dc:contributor "Manu Sporny";
+   dc:title "Tests to ensure @xml:base is ignored";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0109.html>;
+   test:informationResourceResults <test-cases/0109.sparql>;
+   test:purpose "Tests to make sure that @xml:base is ignored in XHTML+RDFa 1.0. The input test document is invalid XHTML.";
+   test:specificationReference "" .
+<test-cases/0110> dc:contributor "Manu Sporny";
+   dc:title "bNode generated even though no nested @about exists";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0110.html>;
+   test:informationResourceResults <test-cases/0110.sparql>;
+   test:purpose "Tests to make sure that a bNode is generated even though no nested @about exists.";
+   test:specificationReference "" .
+<test-cases/0111> dc:contributor "Manu Sporny";
+   dc:title "two bNodes generated after three levels of nesting";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0111.html>;
+   test:informationResourceResults <test-cases/0111.sparql>;
+   test:purpose "Tests to make sure that two bNodes are generated after three levels of nesting and that the last div does not generate a triple.";
+   test:specificationReference "" .
+<test-cases/0112> dc:contributor "Manu Sporny";
+   dc:title "plain literal with datatype=\"\"";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0112.html>;
+   test:informationResourceResults <test-cases/0112.sparql>;
+   test:purpose "Checks to make sure that the RDFa parser emits a plain literal when the datatype is specified as \"\".";
+   test:specificationReference "" .
+<test-cases/0113> dc:contributor "Manu Sporny";
+   dc:title "element with @property and no child nodes generates  empty plain literal";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0113.html>;
+   test:informationResourceResults <test-cases/0113.sparql>;
+   test:purpose "Checks to make sure that an element with @property and no child nodes generates empty plain literal.";
+   test:specificationReference "" .
+<test-cases/0114> dc:contributor "Manu Sporny";
+   dc:title "Relative URI";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0114.html>;
+   test:informationResourceResults <test-cases/0114.sparql>;
+   test:purpose "Checks to make sure that a relative URI is resolved correctly according to RFC3986, section 5 (even when the relative URI is invalid, in this case).";
+   test:specificationReference "" .
+<test-cases/0115> dc:contributor "Ivan Herman",
+   "Toby Inkster";
+   dc:title "XML Entities must be supported by RDFa parser";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0115.html>;
+   test:informationResourceResults <test-cases/0115.sparql>;
+   test:purpose "Checks to make sure that XML Entities are treated properly by the RDFa parser.";
+   test:specificationReference "" .
+<test-cases/0117> dc:contributor "Manu Sporny";
+   dc:title "Fragment identifiers stripped from BASE";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0117.html>;
+   test:informationResourceResults <test-cases/0117.sparql>;
+   test:purpose "Checks to make sure that fragment identifiers are stripped from [base] when used to generate triples.";
+   test:specificationReference "" .
+<test-cases/0118> dc:contributor "Ben Adida";
+   dc:title "empty string \"\" is not equivalent to NULL - @about";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0118.html>;
+   test:informationResourceResults <test-cases/0118.sparql>;
+   test:purpose """Checks to make sure that the empty
+  string "" isn't considered as NULL in languages such as Javascript when
+  generating triples. This test sets the subject in a chain using @href
+  and then immediately changes the subject using @about and generates a
+  triple. A buggy parser may use the @href subject
+  (http://example.org/javascript.html) instead of the one defined by @about.""";
+   test:specificationReference "" .
+<test-cases/0119> dc:contributor "Manu Sporny";
+   dc:title "\"[prefix:]\" CURIE format is valid";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0119.html>;
+   test:informationResourceResults <test-cases/0119.sparql>;
+   test:purpose """Checks to make sure that an RDFa processor expands CURIEs having only a prefix and a
+    colon if a prefix is properly defined using xmlns.
+    """;
+   test:specificationReference "" .
+<test-cases/0120> dc:contributor "Manu Sporny";
+   dc:title "\"[:]\" CURIE format is valid";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0120.html>;
+   test:informationResourceResults <test-cases/0120.sparql>;
+   test:purpose """Checks to make sure that an RDFa processor expands CURIEs having only a colon to the
+  default prefix "http://www.w3.org/1999/test-cases/vocab#".
+        """;
+   test:specificationReference "" .
+<test-cases/0121> dc:contributor "Manu Sporny";
+   dc:title "\"[]\" is a valid safe CURIE";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "xhtml5";
+   test:informationResourceInput <test-cases/0121.html>;
+   test:informationResourceResults <test-cases/0121.sparql>;
+   test:purpose """Checks to make sure RDFa processors resolve the empty CURIE correctly. Note that this is not valid HTML due to recursive <p> elements.""";
+   test:specificationReference "" .
+<test-cases/0122> dc:contributor "Manu Sporny";
+   dc:title "resource=\"[]\" does not set the object since RDFa does not allow non-prefixed CURIEs";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   :expectedResults "false"^^xsd:boolean;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0122.html>;
+   test:informationResourceResults <test-cases/0122.sparql>;
+   test:purpose """Checks to make sure that resource="[]" does not set the object since RDFa does not allow non-prefixed CURIEs.
+        """;
+   test:specificationReference "" .
+<test-cases/0126> dc:contributor "Shane P. McCarron";
+   dc:title "Multiple @typeof values";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0126.html>;
+   test:informationResourceResults <test-cases/0126.sparql>;
+   test:purpose "Checks to ensure that multiple (white space separated) values in @typeof trigger multiple rdf:type triples.";
+   test:specificationReference "" .
+<test-cases/0131> dc:contributor "Philip Taylor";
+   dc:title "Whitespace alternatives in attributes";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   :expectedResults "true"^^xsd:boolean;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0131.html>;
+   test:informationResourceResults <test-cases/0131.sparql>;
+   test:purpose "Ensures that multiple whitespace alternatives in attributes are allowed.";
+   test:specificationReference "" .
+<test-cases/0134> dc:contributor "Philip Taylor";
+   dc:title "Uppercase reserved words";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   :expectedResults "true"^^xsd:boolean;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0134.html>;
+   test:informationResourceResults <test-cases/0134.sparql>;
+   test:purpose "Ensures that mixed-case reserved words generate triples.";
+   test:specificationReference "" .
+<test-cases/0140> dc:contributor "Philip Taylor";
+   dc:title "Underscore is not allowed in xmlns";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   :expectedResults "false"^^xsd:boolean;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0140.html>;
+   test:informationResourceResults <test-cases/0140.sparql>;
+   test:purpose "Ensures that a prefix cannot start with an underscore character when specified using xmlns.";
+   test:specificationReference "" .
+<test-cases/0147> dc:contributor "Philip Taylor";
+   dc:title "xmlns prefix 'xmlzzz' (reserved)";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   :expectedResults "true"^^xsd:boolean;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0147.html>;
+   test:informationResourceResults <test-cases/0147.sparql>;
+   test:purpose "Ensures that RDFa processors allow the prefix 'xmlzzz', even though it is a reserved prefix in XML.";
+   test:specificationReference "" .
+<test-cases/0172> dc:contributor "KANZAKI, Masahide";
+   dc:title "@datatype=\"\" generates plain literal in presence of child nodes";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   :expectedResults "true"^^xsd:boolean;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0172.html>;
+   test:informationResourceResults <test-cases/0172.sparql>;
+   test:purpose "Checks to ensure that when @datatype=\"\" is used on an element that contains child nodes, that the literal that is generated is a plain literal.";
+   test:specificationReference "" .
+<test-cases/0173> dc:contributor "KANZAKI, Masahide";
+   dc:title "@xml:lang=\"\" clears language setting";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   :expectedResults "true"^^xsd:boolean;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0173.html>;
+   test:informationResourceResults <test-cases/0173.sparql>;
+   test:purpose "Checks to ensure that when @xml:lang=\"\" is used that any parent element language setting is cleared and a language-less literal is generated.";
+   test:specificationReference "" .
+<test-cases/0174> dc:contributor "I. Stewartson";
+   dc:title "Support single character prefix in CURIEs";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   :expectedResults "true"^^xsd:boolean;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0174.html>;
+   test:informationResourceResults <test-cases/0174.sparql>;
+   test:purpose "Checks to ensure that the RDFa processor correctly processes single character prefixes when processing CURIEs.";
+   test:specificationReference "" .
+<test-cases/0175> dc:contributor "Gregg Kellogg";
+   dc:title "Property is URI";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.1";
+   test:classification test:required;
+   :expectedResults "true"^^xsd:boolean;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0175.html>;
+   test:informationResourceResults <test-cases/0175.sparql>;
+   test:purpose "Checks to make sure that a URI may be used as a @property value";
+   test:specificationReference "" .
+<test-cases/0176> dc:contributor "Gregg Kellogg";
+   dc:title "Rel and Rev is URI";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.1";
+   test:classification test:required;
+   :expectedResults "true"^^xsd:boolean;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0176.html>;
+   test:informationResourceResults <test-cases/0176.sparql>;
+   test:purpose "Checks to make sure that a URI may be used as @rel and @rev values";
+   test:specificationReference "" .
+<test-cases/0177> dc:contributor "Ivan Herman";
+   dc:title "Test @prefix";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.1";
+   test:classification test:required;
+   :expectedResults "true"^^xsd:boolean;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0177.html>;
+   test:informationResourceResults <test-cases/0177.sparql>;
+   test:purpose "Checks to make sure @prefix with a single entry creates a URI mapping";
+   test:specificationReference "" .
+<test-cases/0178> dc:contributor "Ivan Herman";
+   dc:title "Test @prefix with multiple mappings";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.1";
+   test:classification test:required;
+   :expectedResults "true"^^xsd:boolean;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0178.html>;
+   test:informationResourceResults <test-cases/0178.sparql>;
+   test:purpose "Checks to make sure @prefix with multiple entires creates multiple URI mappings";
+   test:specificationReference "" .
+<test-cases/0179> dc:contributor "Ivan Herman";
+   dc:title "Test @prefix vs @xmlns priority";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.1";
+   test:classification test:required;
+   :expectedResults "true"^^xsd:boolean;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0179.html>;
+   test:informationResourceResults <test-cases/0179.sparql>;
+   test:purpose "Checks to make sure @prefix has a higher priority than @xmlns";
+   test:specificationReference "" .
+<test-cases/0180> dc:contributor "Ivan Herman";
+   dc:title "Test @prefix with empty mapping";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.1";
+   test:classification test:required;
+   :expectedResults "false"^^xsd:boolean;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0180.html>;
+   test:informationResourceResults <test-cases/0180.sparql>;
+   test:purpose "Checks to make sure @prefix with empty prefix does not create a mapping.";
+   test:specificationReference "" .
+<test-cases/0181> dc:contributor "Ivan Herman";
+   dc:title "Test default XHTML vocabulary";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   :expectedResults "true"^^xsd:boolean;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0181.html>;
+   test:informationResourceResults <test-cases/0181.sparql>;
+   test:purpose "Checks Tests a CURIE with default namespace uses XHTML Vocabulary namespace.";
+   test:specificationReference "" .
+<test-cases/0182> dc:contributor "Ivan Herman";
+   dc:title "Test prefix locality";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.1";
+   test:classification test:required;
+   :expectedResults "true"^^xsd:boolean;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0182.html>;
+   test:informationResourceResults <test-cases/0182.sparql>;
+   test:purpose "Checks to be sure that prefixes are defined within the element hierarchy.";
+   test:specificationReference "" .
+<test-cases/0183> dc:contributor "Ivan Herman";
+   dc:title "Test @xmlns redefines @prefix";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.1";
+   test:classification test:required;
+   :expectedResults "true"^^xsd:boolean;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0183.html>;
+   test:informationResourceResults <test-cases/0183.sparql>;
+   test:purpose "A new @xmlns definition should override a previous @prefix definition at this element.";
+   test:specificationReference "" .
+<test-cases/0184> dc:contributor "Ivan Herman";
+   dc:title "Test @profile";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.1";
+   test:classification test:deprecated;
+   :expectedResults "true"^^xsd:boolean;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0184.html>;
+   test:informationResourceResults <test-cases/0184.sparql>;
+   test:purpose "Check that @profile imports terms";
+   test:specificationReference "" .
+<test-cases/0185> dc:contributor "Ivan Herman";
+   dc:title "Test @profile";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.1";
+   test:classification test:deprecated;
+   :expectedResults "true"^^xsd:boolean;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0185.html>;
+   test:informationResourceResults <test-cases/0185.sparql>;
+   test:purpose "Check that @profile imports prefixes";
+   test:specificationReference "" .
+<test-cases/0186> dc:contributor "Ivan Herman";
+   dc:title "Test @vocab";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.1";
+   test:classification test:required;
+   :expectedResults "true"^^xsd:boolean;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0186.html>;
+   test:informationResourceResults <test-cases/0186.sparql>;
+   test:purpose "Check that @vocab defines a new default mapping";
+   test:specificationReference "" .
+<test-cases/0187> dc:contributor "Ivan Herman";
+   dc:title "Test @vocab redefinition";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.1";
+   test:classification test:required;
+   :expectedResults "true"^^xsd:boolean;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0187.html>;
+   test:informationResourceResults <test-cases/0187.sparql>;
+   test:purpose "Check that @vocab redefines a previous @vocab definition";
+   test:specificationReference "" .
+<test-cases/0188> dc:contributor "Ivan Herman";
+   dc:title "Test @vocab";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.1";
+   test:classification test:required;
+   :expectedResults "true"^^xsd:boolean;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0188.html>;
+   test:informationResourceResults <test-cases/0188.sparql>;
+   test:purpose "Check that @vocab defines a new default mapping";
+   test:specificationReference "" .
+<test-cases/0189> dc:contributor "Ivan Herman";
+   dc:title "Test @vocab does not override default term";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.1";
+   test:classification test:required;
+   :expectedResults "true"^^xsd:boolean;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0189.html>;
+   test:informationResourceResults <test-cases/0189.sparql>;
+   test:purpose "Check that @vocab does not change a default term from XHV";
+   test:specificationReference "" .
+<test-cases/0190> dc:contributor "Ivan Herman";
+   dc:title "Test term case insensitivity";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.1";
+   test:classification test:required;
+   :expectedResults "true"^^xsd:boolean;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0190.html>;
+   test:informationResourceResults <test-cases/0190.sparql>;
+   test:purpose "Check to ensure a mixed case term matches a case insensitive definition";
+   test:specificationReference "" .
+<test-cases/0193> dc:contributor "Gregg Kellogg";
+   dc:title "Test @profile defines vocabulary";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.1";
+   test:classification test:deprecated;
+   :expectedResults "true"^^xsd:boolean;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0193.html>;
+   test:informationResourceResults <test-cases/0193.sparql>;
+   test:purpose "Check that @profile imports prefixes";
+   test:specificationReference "" .
+<test-cases/0195> dc:contributor "Gregg Kellogg";
+   dc:title "Test process @profile aborts processing";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.1";
+   test:classification test:deprecated;
+   :expectedResults "false"^^xsd:boolean;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0195.html>;
+   test:informationResourceResults <test-cases/0195.sparql>;
+   test:purpose "If any referenced RDFa Profile is not available, then the current element and its children must not place any triples in the default graph";
+   test:specificationReference "" .
+<test-cases/0196> dc:contributor "Gregg Kellogg";
+   dc:title "Test process explicit XMLLiteral";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.1";
+   test:classification test:required;
+   :expectedResults "true"^^xsd:boolean;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0196.html>;
+   test:informationResourceResults <test-cases/0196.sparql>;
+   test:purpose "XMLLiteral must be explicitly specified, otherwise a normal untyped literal is created";
+   test:specificationReference "" .
+<test-cases/0197> dc:contributor "Gregg Kellogg";
+   dc:title "Test TERMorCURIEorAbsURI requires an absolute URI";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   :expectedResults "true"^^xsd:boolean;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0197.html>;
+   test:informationResourceResults <test-cases/0197.sparql>;
+   test:purpose "TERMorCURIEorAbsURI requires an absolute URI";
+   test:specificationReference "" .
+<test-cases/0198> dc:contributor "Shane P. McCarron";
+   dc:title "datatype XMLLiteral with other embedded RDFa";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.1";
+   test:classification test:required;
+   :expectedResults "true"^^xsd:boolean;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0198.html>;
+   test:informationResourceResults <test-cases/0198.sparql>;
+   test:purpose "Checks to ensure that when datatype is the default the parser generates triples for embedded content.";
+   test:specificationReference "" .
+<test-cases/0200> dc:contributor "Ivan Herman";
+   dc:title "Test term case insensitivity";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.1";
+   test:classification test:deprecated;
+   :expectedResults "true"^^xsd:boolean;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0200.html>;
+   test:informationResourceResults <test-cases/0200.sparql>;
+   test:purpose "Check to ensure that terms that differ only in case match to distinct URIs";
+   test:specificationReference "" .
+<test-cases/0201> dc:contributor "Manu Sporny";
+   dc:title "Expressing an attribute using @property";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "svgtiny1.2", "svg";
+   test:informationResourceInput <test-cases/0201.html>;
+   test:informationResourceResults <test-cases/0201.sparql>;
+   test:purpose "Tests @property to establish the predicate; literal object is in the content of the element.";
+   test:specificationReference "" .
+<test-cases/0202> dc:contributor "Gregg Kellogg";
+   dc:title "Tests to ensure @xml:base used in SVG";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "svgtiny1.2", "svg";
+   test:informationResourceInput <test-cases/0202.html>;
+   test:informationResourceResults <test-cases/0202.sparql>;
+   test:purpose "Tests to make sure that @xml:base is used in SVG+RDFa.";
+   test:specificationReference "http://www.w3.org/QA/2008/12/rdfa_and_svg_tiny_and_the_rdfa.html" .
+<test-cases/0203> dc:contributor "Gregg Kellogg";
+   dc:title "Tests to ensure @xml:base used in non-root elements in SVG";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "svgtiny1.2", "svg";
+   test:informationResourceInput <test-cases/0203.html>;
+   test:informationResourceResults <test-cases/0203.sparql>;
+   test:purpose "Tests to make sure that @xml:base is used in non-root elements in SVG+RDFa.";
+   test:specificationReference "http://www.w3.org/QA/2008/12/rdfa_and_svg_tiny_and_the_rdfa.html" .
+<test-cases/0204> dc:contributor "Gregg Kellogg";
+   dc:title "Test process @profile in document order";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.1";
+   test:classification test:deprecated;
+   :expectedResults "true"^^xsd:boolean;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0204.html>;
+   test:informationResourceResults <test-cases/0204.sparql>;
+   test:purpose "Check that profiles are processed in document order, so that terms defined in later profiles take precedence over those processed earlier";
+   test:specificationReference "" .
+<test-cases/0205> dc:contributor "Gregg Kellogg";
+   dc:title "Test that default prefix cannot be redefined";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:deprecated;
+   :expectedResults "true"^^xsd:boolean;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0205.html>;
+   test:informationResourceResults <test-cases/0205.sparql>;
+   test:purpose """
+          Check that the default prefix is not redefined through @prefix or through @profile @rdfa:prefix.
+          Prefix must be NCName. Default prefix always resolves to http://www.w3.org/1999/xhtml/vocab#.
+        """;
+   test:specificationReference "" .
+<test-cases/0206> dc:contributor "Ivan Herman";
+   dc:title "Usage of Default Profile";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0206.html>;
+   test:informationResourceResults <test-cases/0206.sparql>;
+   test:purpose "Tests whether the default RDFa 1.1 profile (which contains prefix definitions, among others, to the Semantic Web Standard vocabularies) is properly handled.";
+   test:specificationReference "N.A." .
+<test-cases/0207> dc:contributor "Fabien Gandon";
+   dc:title "Vevent using @typeof";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0", "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0207.html>;
+   test:informationResourceResults <test-cases/0207.sparql>;
+   test:purpose "Tests Vevent using @typeof (inlc. dtstart, dtend, etc.)";
+   test:specificationReference "N.A." .
+<test-cases/0208> dc:contributor "Ivan Herman";
+   dc:title "Default Profile should be ignored with version set to 1.0";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0";
+   test:classification test:required;
+   :expectedResults "false"^^xsd:boolean;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0208.html>;
+   test:informationResourceResults <test-cases/0208.sparql>;
+   test:purpose "Tests whether the default RDFa 1.1 profile is ignored if version is explicitly set to 1.0";
+   test:specificationReference "N.A." .
+<test-cases/0209> dc:contributor "Ivan Herman";
+   dc:title "@prefix should be ignored with version set to 1.0";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0";
+   test:classification test:required;
+   :expectedResults "false"^^xsd:boolean;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0209.html>;
+   test:informationResourceResults <test-cases/0209.sparql>;
+   test:purpose "Tests whether the @prefix attribute is ignored if version is explicitly set to 1.0";
+   test:specificationReference "N.A." .
+<test-cases/0210> dc:contributor "Ivan Herman";
+   dc:title "@prefix should be ignored with version set to 1.0, and @xmlns should prevail";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0";
+   test:classification test:required;
+   :expectedResults "true"^^xsd:boolean;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0210.html>;
+   test:informationResourceResults <test-cases/0210.sparql>;
+   test:purpose "Tests whether the @prefix attribute is ignored and @xmlns is used instead if version is explicitly set to 1.0";
+   test:specificationReference "N.A." .
+<test-cases/0211> dc:contributor "Ivan Herman";
+   dc:title "@vocab should be ignored with version set to 1.0";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0";
+   test:classification test:required;
+   :expectedResults "false"^^xsd:boolean;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0211.html>;
+   test:informationResourceResults <test-cases/0211.sparql>;
+   test:purpose "Tests whether the @vocab attribute is ignored if version is explicitly set to 1.0";
+   test:specificationReference "N.A." .
+<test-cases/0212> dc:contributor "Ivan Herman";
+   dc:title "Datatype generation for a literal with XML content, version 1.0";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0";
+   test:classification test:required;
+   :expectedResults "true"^^xsd:boolean;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0212.html>;
+   test:informationResourceResults <test-cases/0212.sparql>;
+   test:purpose "In RDFa 1.0, if a literal contains XML elements, and no explicit datatype is set, the result is XMLLiteral";
+   test:specificationReference "N.A." .
+<test-cases/0213> dc:contributor "Ivan Herman";
+   dc:title "Datatype generation for a literal with XML content, version 1.1";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.1";
+   test:classification test:required;
+   :expectedResults "true"^^xsd:boolean;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0213.html>;
+   test:informationResourceResults <test-cases/0213.sparql>;
+   test:purpose "In RDFa 1.1, even if a literal contains XML elements, and no explicit datatype is set, the result is plain literal";
+   test:specificationReference "N.A." .
+<test-cases/0214> dc:contributor "Gregg Kellogg";
+   dc:title "Root element has implicit @about=\"\"";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.1";
+   test:classification test:required;
+   :expectedResults "true"^^xsd:boolean;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5", "svg";
+   test:informationResourceInput <test-cases/0214.html>;
+   test:informationResourceResults <test-cases/0214.sparql>;
+   test:purpose "All documents have an implicit @about=\"\"";
+   test:specificationReference "N.A." .
+<test-cases/0215> dc:contributor "Ivan Herman";
+   dc:title "Character encoding should work even in view of a large set of characters as attributes in the header";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.0";
+   test:classification test:required;
+   :expectedResults "true"^^xsd:boolean;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0215.html>;
+   test:informationResourceResults <test-cases/0215.sparql>;
+   test:purpose "Character encoding should work even in view of a large set of characters as attributes in the header, ie, when content sniffing may not work to establish encoding.";
+   test:specificationReference "" .
+<test-cases/0216> dc:contributor "Ivan Herman";
+   dc:title "Character encoding should work even in view of a large set of characters as attributes in the header";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.1";
+   test:classification test:required;
+   :expectedResults "true"^^xsd:boolean;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0216.html>;
+   test:informationResourceResults <test-cases/0216.sparql>;
+   test:purpose "Character encoding should work even in view of a large set of characters as attributes in the header, ie, when content sniffing may not work to establish encoding.";
+   test:specificationReference "" .
+<test-cases/0217> dc:contributor "Gregg Kellogg";
+   dc:title "@vocab causes rdfa:hasVocabulary triple to be added";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.1";
+   test:classification test:required;
+   :expectedResults "true"^^xsd:boolean;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0217.html>;
+   test:informationResourceResults <test-cases/0217.sparql>;
+   test:purpose "When encountering @vocab, a processor generates a triple with the base URI, rdfa:hasVocabulary and the IRI of the added vocabulary.";
+   test:specificationReference "7.5 step 2" .
+<test-cases/0218> dc:contributor "Gregg Kellogg";
+   dc:title "@inlist to create empty list";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.1";
+   test:classification test:required;
+   :expectedResults "true"^^xsd:boolean;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5", "svg";
+   test:informationResourceInput <test-cases/0218.html>;
+   test:informationResourceResults <test-cases/0218.sparql>;
+   test:purpose "@inlist on @rel with no incomplete triples creates an empty list.";
+   test:specificationReference "7.5 step 14" .
+<test-cases/0219> dc:contributor "Gregg Kellogg";
+   dc:title "@inlist with literal";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.1";
+   test:classification test:required;
+   :expectedResults "true"^^xsd:boolean;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5", "svg";
+   test:informationResourceInput <test-cases/0219.html>;
+   test:informationResourceResults <test-cases/0219.sparql>;
+   test:purpose "@inlist with @property creates a list having a literal as a single element.";
+   test:specificationReference "7.5 step 11" .
+<test-cases/0220> dc:contributor "Gregg Kellogg";
+   dc:title "@inlist with IRI";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.1";
+   test:classification test:required;
+   :expectedResults "true"^^xsd:boolean;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5", "svg";
+   test:informationResourceInput <test-cases/0220.html>;
+   test:informationResourceResults <test-cases/0220.sparql>;
+   test:purpose "@inlist with @rel and @href creates a list having an IRI as a single element.";
+   test:specificationReference "7.5 step 9" .
+<test-cases/0221> dc:contributor "Gregg Kellogg";
+   dc:title "@inlist with hetrogenious membership";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.1";
+   test:classification test:required;
+   :expectedResults "true"^^xsd:boolean;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5", "svg";
+   test:informationResourceInput <test-cases/0221.html>;
+   test:informationResourceResults <test-cases/0221.sparql>;
+   test:purpose "@inlist with @rel and @property creates a list with both IRI and Literal elements.";
+   test:specificationReference "7.5 Step 11" .
+<test-cases/0222> dc:contributor "Gregg Kellogg";
+   dc:title "@inlist with multi-level elements";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.1";
+   test:classification test:required;
+   :expectedResults "true"^^xsd:boolean;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5", "svg";
+   test:informationResourceInput <test-cases/0222.html>;
+   test:informationResourceResults <test-cases/0222.sparql>;
+   test:purpose "@inlist with @property at different levels of descendence creates single list.";
+   test:specificationReference "7.5 Step 11" .
+<test-cases/0223> dc:contributor "Gregg Kellogg";
+   dc:title "@inlist with non-list property";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.1";
+   test:classification test:required;
+   :expectedResults "true"^^xsd:boolean;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5", "svg";
+   test:informationResourceInput <test-cases/0223.html>;
+   test:informationResourceResults <test-cases/0223.sparql>;
+   test:purpose "Use of predicate with @inlist and without @inlist creates both list and non-list triples.";
+   test:specificationReference "7.5 Step 9" .
+<test-cases/0224> dc:contributor "Gregg Kellogg";
+   dc:title "@inlist hanging @rel";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.1";
+   test:classification test:required;
+   :expectedResults "true"^^xsd:boolean;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5", "svg";
+   test:informationResourceInput <test-cases/0224.html>;
+   test:informationResourceResults <test-cases/0224.sparql>;
+   test:purpose "Use of @rel and @inlist with decendent IRI elements creates list";
+   test:specificationReference "7.5 Step 11" .
+<test-cases/0225> dc:contributor "Gregg Kellogg";
+   dc:title "@inlist on different elements with same subject";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.1";
+   test:classification test:required;
+   :expectedResults "true"^^xsd:boolean;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5", "svg";
+   test:informationResourceInput <test-cases/0225.html>;
+   test:informationResourceResults <test-cases/0225.sparql>;
+   test:purpose "@inlist with same property and subject on different elements creates multiple lists";
+   test:specificationReference "7.5 Step 11" .
+<test-cases/0226> dc:contributor "Gregg Kellogg";
+   dc:title "confusion between multiple implicit collections (resource)";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.1";
+   test:classification test:required;
+   :expectedResults "true"^^xsd:boolean;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5", "svg";
+   test:informationResourceInput <test-cases/0226.html>;
+   test:informationResourceResults <test-cases/0226.sparql>;
+   test:purpose "Use of @inlist with implicit subject uses different list";
+   test:specificationReference "7.5 Step 8" .
+<test-cases/0227> dc:contributor "Gregg Kellogg";
+   dc:title "confusion between multiple implicit collections (about)";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.1";
+   test:classification test:required;
+   :expectedResults "true"^^xsd:boolean;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5", "svg";
+   test:informationResourceInput <test-cases/0227.html>;
+   test:informationResourceResults <test-cases/0227.sparql>;
+   test:purpose "Use of @inlist with implicit subject uses different list";
+   test:specificationReference "7.5 Step 9" .
+<test-cases/0228> dc:contributor "Gregg Kellogg";
+   dc:title "1.1 alternate for test 0040: @rev - @src/@resource test";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0228.html>;
+   test:informationResourceResults <test-cases/0228.sparql>;
+   test:purpose "@src is a lower priority than @resource";
+   test:specificationReference "7.5 Step 6" .
+<test-cases/0229> dc:contributor "Gregg Kellogg";
+   dc:title "img[@src] test with omitted @about";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.1";
+   test:classification test:required;
+   :expectedResults "true"^^xsd:boolean;
+   rdfatest:hostLanguage "xml1", "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0229.html>;
+   test:informationResourceResults <test-cases/0229.sparql>;
+   test:purpose "Tests if a @src (in img element) does not set the URIref object (with omitted @about) -- from 0042";
+   test:specificationReference "7.5 Step 6" .
+<test-cases/0230> dc:contributor "Gregg Kellogg";
+   dc:title "@src does not set a new subject (@rel/@href)";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0230.html>;
+   test:informationResourceResults <test-cases/0230.sparql>;
+   test:purpose "Tests to ensure that @src does not set a new subject (oposite of 0090 for 1.0).";
+   test:specificationReference "7.5 Step 6" .
+<test-cases/0231> dc:contributor "Gregg Kellogg";
+   dc:title "Set image license information";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0231.html>;
+   test:informationResourceResults <test-cases/0231.sparql>;
+   test:purpose "Tests new behavior of @src in 1.1";
+   test:specificationReference "7.5 Step 6" .
+<test-cases/0232> dc:contributor "Gregg Kellogg";
+   dc:title "@typeof with @rel present, no @href, @resource, or @about (1.1 behavior of 0046);";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0232.html>;
+   test:informationResourceResults <test-cases/0232.sparql>;
+   test:purpose "Tests @typeof with @rel present, no @href, @resource, or @about creates a BNode object";
+   test:specificationReference "7.5 Step 6" .
+<test-cases/0233> dc:contributor "Gregg Kellogg";
+   dc:title "@typeof with @rel and @resource present, no @about (1.1 behavior of 0047)";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5";
+   test:informationResourceInput <test-cases/0233.html>;
+   test:informationResourceResults <test-cases/0233.sparql>;
+   test:purpose "Tests @typeof with @rel and @resource present, no @about adds type to object";
+   test:specificationReference "" .
+<test-cases/0234> dc:contributor "Gregg Kellogg";
+   dc:title "All defined HTML link relation values";
+   a test:TestCase;
+   rdfatest:rdfaVersion "rdfa1.1";
+   test:classification test:required;
+   rdfatest:hostLanguage "xhtml1", "html4", "html5", "xhtml5", "svg";
+   test:informationResourceInput <test-cases/0234.html>;
+   test:informationResourceResults <test-cases/0234.sparql>;
+   test:purpose "Tests to ensure that all defined linked relations expand";
+   test:specificationReference "" .

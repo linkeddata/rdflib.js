@@ -867,7 +867,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                 
             case 3:
                 // Intermediate state -- 3 may OR MAY NOT be called, selon browser.
-                handleResponse();
+                // handleResponse();   // In general it you can't do it yet as the headers are in but not the data
                 break
             case 4:
                 // Final state

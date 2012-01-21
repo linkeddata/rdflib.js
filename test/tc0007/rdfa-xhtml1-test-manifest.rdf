@@ -1135,6 +1135,161 @@
         <specificationReference></specificationReference>
     </TestCase>	
 
+	<TestCase rdf:about="http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/Test0113">
+        <dc:contributor>Manu Sporny</dc:contributor>
+        <dc:title>element with @property and no child nodes generates  empty plain literal</dc:title>
+        <informationResourceInput rdf:resource="http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0113.xhtml"/>
+        <informationResourceResults rdf:resource="http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0113.sparql"/>
+        <purpose>Checks to make sure that an element with @property and no child nodes generates empty plain literal.</purpose>
+        <reviewStatus rdf:resource="http://www.w3.org/2006/03/test-description#approved"/>
+        <specificationReference></specificationReference>
+    </TestCase>	
+
+	<TestCase rdf:about="http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/Test0114">
+        <dc:contributor>Manu Sporny</dc:contributor>
+        <dc:title>Relative URI</dc:title>
+        <informationResourceInput rdf:resource="http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0114.xhtml"/>
+        <informationResourceResults rdf:resource="http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0114.sparql"/>
+        <purpose>Checks to make sure that a relative URI is resolved correctly according to RFC3986, section 5 (even when the relative URI is invalid, in this case).</purpose>
+        <reviewStatus rdf:resource="http://www.w3.org/2006/03/test-description#approved"/>
+        <specificationReference></specificationReference>
+    </TestCase>	
+
+	<TestCase rdf:about="http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/Test0115">
+        <dc:contributor>Ivan Herman</dc:contributor>
+        <dc:contributor>Toby Inkster</dc:contributor>
+        <dc:title>XML Entities must be supported by RDFa parser</dc:title>
+        <informationResourceInput rdf:resource="http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0115.xhtml"/>
+        <informationResourceResults rdf:resource="http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0115.sparql"/>
+        <purpose>Checks to make sure that XML Entities are treated properly by the RDFa parser.</purpose>
+        <reviewStatus rdf:resource="http://www.w3.org/2006/03/test-description#approved"/>
+        <specificationReference></specificationReference>
+    </TestCase>
+
+	<TestCase rdf:about="http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/Test0116">
+        <dc:contributor>Toby Inkster</dc:contributor>
+        <dc:title>Reserved word used in @property should not generate triple</dc:title>
+        <informationResourceInput rdf:resource="http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0116.xhtml"/>
+        <informationResourceResults rdf:resource="http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0116.sparql"/>
+        <purpose>Checks to make sure that reserved words that are used in @property do not generate triples. This is a NEGATIVE test case.</purpose>
+        <reviewStatus rdf:resource="http://www.w3.org/2006/03/test-description#approved"/>
+        <specificationReference></specificationReference>
+		<expectedResults rdf:datatype="xsd:boolean">false</expectedResults>
+    </TestCase>
+
+	<TestCase rdf:about="http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/Test0117">
+        <dc:contributor>Manu Sporny</dc:contributor>
+        <dc:title>Fragment identifiers stripped from BASE</dc:title>
+        <informationResourceInput rdf:resource="http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0117.xhtml"/>
+        <informationResourceResults rdf:resource="http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0117.sparql"/>
+        <purpose>Checks to make sure that fragment identifiers are stripped from [base] when used to generate triples.</purpose>
+        <reviewStatus rdf:resource="http://www.w3.org/2006/03/test-description#approved"/>
+        <specificationReference></specificationReference>
+    </TestCase>
+
+	<TestCase rdf:about="http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/Test0118">
+        <dc:contributor>Ben Adida</dc:contributor>
+        <dc:title>empty string "" is not equivalent to NULL - @about</dc:title>
+        <informationResourceInput rdf:resource="http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0118.xhtml"/>
+        <informationResourceResults rdf:resource="http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0118.sparql"/>
+        <purpose>Checks to make sure that the empty
+		string "" isn't considered as NULL in languages such as Javascript when
+		generating triples. This test sets the subject in a chain using @href
+		and then immediately changes the subject using @about and generates a
+		triple. A buggy parser may use the @href subject
+		(http://example.org/javascript.html) instead of the one defined by @about.</purpose>
+        <reviewStatus rdf:resource="http://www.w3.org/2006/03/test-description#approved"/>
+        <specificationReference></specificationReference>
+    </TestCase>
+
+	<TestCase rdf:about="http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/Test0119">
+        <dc:contributor>Manu Sporny</dc:contributor>
+        <dc:title>"[prefix:]" CURIE format is valid</dc:title>
+        <informationResourceInput rdf:resource="http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0119.xhtml"/>
+        <informationResourceResults rdf:resource="http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0119.sparql"/>
+        <purpose>Checks to make sure that an RDFa processor expands CURIEs having only a prefix and a
+		colon if a prefix is properly defined using xmlns.
+		</purpose>
+        <reviewStatus rdf:resource="http://www.w3.org/2006/03/test-description#approved"/>
+        <specificationReference></specificationReference>
+    </TestCase>
+
+	<TestCase rdf:about="http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/Test0120">
+        <dc:contributor>Manu Sporny</dc:contributor>
+        <dc:title>"[:]" CURIE format is valid</dc:title>
+        <informationResourceInput rdf:resource="http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0120.xhtml"/>
+        <informationResourceResults rdf:resource="http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0120.sparql"/>
+        <purpose>Checks to make sure that an RDFa processor expands CURIEs having only a colon to the
+		default prefix "http://www.w3.org/1999/xhtml/vocab#".
+		</purpose>
+        <reviewStatus rdf:resource="http://www.w3.org/2006/03/test-description#approved"/>
+        <specificationReference></specificationReference>
+    </TestCase>
+
+	<TestCase rdf:about="http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/Test0121">
+        <dc:contributor>Manu Sporny</dc:contributor>
+        <dc:title>"[]" is a valid safe CURIE</dc:title>
+        <informationResourceInput rdf:resource="http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0121.xhtml"/>
+        <informationResourceResults rdf:resource="http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0121.sparql"/>
+        <purpose>Checks to make sure RDFa processors resolve the empty CURIE correctly.
+		</purpose>
+        <reviewStatus rdf:resource="http://www.w3.org/2006/03/test-description#approved"/>
+        <specificationReference></specificationReference>
+    </TestCase>
+
+	<TestCase rdf:about="http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/Test0122">
+        <dc:contributor>Manu Sporny</dc:contributor>
+        <dc:title>resource="[]" does not set the object since RDFa does not allow non-prefixed CURIEs</dc:title>
+        <informationResourceInput rdf:resource="http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0122.xhtml"/>
+        <informationResourceResults rdf:resource="http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0122.sparql"/>
+        <purpose>Checks to make sure that resource="[]" does not set the object since RDFa does not allow non-prefixed CURIEs.
+		</purpose>
+        <reviewStatus rdf:resource="http://www.w3.org/2006/03/test-description#unreviewed"/>
+        <specificationReference></specificationReference>
+		<expectedResults rdf:datatype="xsd:boolean">false</expectedResults>
+    </TestCase>
+
+	<TestCase rdf:about="http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/Test0123">
+        <dc:contributor>Shane P. McCarron</dc:contributor>
+        <dc:title>case sensitivity in prefix names</dc:title>
+        <informationResourceInput rdf:resource="http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0123.xhtml"/>
+        <informationResourceResults rdf:resource="http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0123.sparql"/>
+        <purpose>Checks to make sure that prefix names are treated case sensitive.</purpose>
+        <reviewStatus rdf:resource="http://www.w3.org/2006/03/test-description#unreviewed"/>
+        <specificationReference></specificationReference>
+    </TestCase>
+
+	<TestCase rdf:about="http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/Test0124">
+        <dc:contributor>Shane P. McCarron</dc:contributor>
+        <dc:title>XMLLiteral with explicit @datatype=''</dc:title>
+        <informationResourceInput rdf:resource="http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0124.xhtml"/>
+        <informationResourceResults rdf:resource="http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0124.sparql"/>
+        <purpose>Checks to make sure that XMLLiteral gets processed properly if surrounding element is tagged with @datatype=''.</purpose>
+        <reviewStatus rdf:resource="http://www.w3.org/2006/03/test-description#unreviewed"/>
+        <specificationReference></specificationReference>
+    </TestCase>
+
+	<TestCase rdf:about="http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/Test0125">
+        <dc:contributor>Shane P. McCarron</dc:contributor>
+        <dc:title>datatype XMLLiteral with other embedded RDFa</dc:title>
+        <informationResourceInput rdf:resource="http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0125.xhtml"/>
+        <informationResourceResults rdf:resource="http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0125.sparql"/>
+        <purpose>Checks to ensure that when datatype is the default the parser does not generate triples for embedded content.</purpose>
+        <reviewStatus rdf:resource="http://www.w3.org/2006/03/test-description#unreviewed"/>
+        <specificationReference></specificationReference>
+		<expectedResults rdf:datatype="xsd:boolean">false</expectedResults>
+    </TestCase>
+
+	<TestCase rdf:about="http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/Test0126">
+        <dc:contributor>Shane P. McCarron</dc:contributor>
+        <dc:title>Multiple @typeof values</dc:title>
+        <informationResourceInput rdf:resource="http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0126.xhtml"/>
+        <informationResourceResults rdf:resource="http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0126.sparql"/>
+        <purpose>Checks to ensure that multiple (white space separated) values in @typeof trigger multiple rdf:type triples.</purpose>
+        <reviewStatus rdf:resource="http://www.w3.org/2006/03/test-description#unreviewed"/>
+        <specificationReference></specificationReference>
+    </TestCase>
+
 	<TestCase rdf:about="http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/Test1001">
         <dc:contributor>Fabien Gandon</dc:contributor>
         <dc:title>Vevent using @typeof</dc:title>

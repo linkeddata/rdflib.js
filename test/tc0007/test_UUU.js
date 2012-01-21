@@ -1,4 +1,4 @@
-//     Serialization tests ...
+//     RDFA Parser tests ...
 //
 
 
@@ -22,9 +22,10 @@ if (typeof module !== 'undefined' && module.exports) { // Node.js environment
 var tc0007Passed = true;
 
 // Here is a totaly differnet manifest format for rdfa1.1. 
-// https://raw.github.com/msporny/rdfa-test-suite/master/manifest.ttl 
+var manifest_uri = 'https://raw.github.com/msporny/rdfa-test-suite/master/manifest.ttl'; 
 
-var mainifest_uri = 'http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/rdfa-xhtml1-test-manifest.rdf';
+// Original RDFa 1.0 one:
+//var manifest_uri = 'http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/rdfa-xhtml1-test-manifest.rdf';
 
 var TD = $rdf.Namespace('http://www.w3.org/2006/03/test-description#');
 var DC = $rdf.Namespace('http://purl.org/dc/elements/1.1/');
@@ -79,14 +80,14 @@ function testTC0007(showDetails, callback) {
     //var allResults = "<div><strong>Detailed Results:</strong></div>";
     var tests = [ ];
     
-    callback(0, '<p>Now to get manifest ...</p>');
+    callback(0, '<p>Now to get manifest '+escapeForXML(manifest_uri)+'...</p>');
 
     var meta = $rdf.graph();
     var fetcher = $rdf.fetcher(meta, undefined, true); // (store, timeout, async)
-    fetcher.nowOrWhenFetched(kludgeForOfflineUse(mainifest_uri), undefined, function(error, body) {
+    fetcher.nowOrWhenFetched(kludgeForOfflineUse(manifest_uri), undefined, function(error, body) {
 
 
-        callback(0, "<p>Loaded <a href='"+escapeForXML(mainifest_uri)+"'>manifest</a></p>" );
+        callback(0, "<p>Loaded <a href='"+escapeForXML(manifest_uri)+"'>manifest</a></p>" );
         
  
         
