@@ -14,24 +14,26 @@ var XSD = $rdf.Namespace("http://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#dt
 var CONTACT = $rdf.Namespace("http://www.w3.org/2000/10/swap/pim/contact#")
 
 
+var graphs = {}
 
-var card = function(who) {
+function card(who,kb) {
     var snip = '<div>'
     var image = kb.any(who, FOAF('img'));
     if (!image) image = kb.any(who, FOAF('depiction'));
+    if (!image) image = kb.any(who, FOAF('img'));
     if (image) {
         snip += '<img src="' + image.uri +'" align="right" height="100"/>';
     }
     var nam = kb.any(who, FOAF('name'));
     if (!nam) { nam = "???";}
-    snip+="<h3>"+nam+"</h3>";
+    snip+="<h3> <a href='"+who.uri+"'>"+nam+"</a></h3>";
 
     nam = kb.any(who, FOAF('phone'));
     if (nam) {
         snip+="<p>"+nam+"</p>";
     }
     snip += "</div>"
-    $("body").append(snip)
+    return snip
 };
 
 
@@ -44,40 +46,42 @@ var card = function(who) {
 
 // var kb = new TestStore()
 
-var kb = $rdf.graph();
+
 
 var uri = 'http://bblfish.net/people/henry/card#me';
 
-var person = $rdf.sym(uri);
-var docURI = uri.slice(0, uri.indexOf('#'));
-var fetch = $rdf.fetcher(kb);
-fetch.nowOrWhenFetched(docURI,undefined,function(){
-    card(person)
-});
+function draw (person,kb) {
+    $("#description").html(card(person,kb))
+    $("#url").attr("value",person.uri)
+    var friends = kb.each(person, FOAF('knows'));
+    var i, n = friends.length, friend;
+    var lis = "";
 
-
-
-// document.write("<p><small>"+uri+ " Size: "+kb.statements.length+"</small></p>")
-
-var friends = kb.each(person, FOAF('knows'));
-var i, n = friends.length, friend;
-document.write("<p>"+n+" acquaintainces</p>")
-for (i=0; i<n; i++) {
-    friend = friends[i];
-    furi = friend.uri
-    if (furi && (furi.indexOf('#') >= 0)) {
-//	document.write('<small>Loading:  '+furi+'</small>') 
-        furi = furi.slice(0, furi.indexOf('#'))
-        kb.load(furi)
+    for (i = 0; i < n; i++) {
+        friend = friends[i];
+        var name = kb.any(friend, FOAF('name'))
+        if ("" == name) {
+           name = name.uri
+        }
+        lis +=  "<li><a href='" + friend.uri + "'>" + name + "</a></li>"
     }
+    $("#foaf").html(lis)
+    $("#foaf a").bind('click',function() {
+        redraw($(this).attr("href"))
+        return false
+    })
+}
 
-    sa = kb.any(friend, RDFS('seeAlso'))
-    if (sa) {
-//	document.write('<small>See also: '+sa.uri+'</small>') 
-        kb.load(sa.uri)
-    }
+function redraw(webid) {
+    var person = $rdf.sym(webid);
+    var docURI = webid.slice(0, webid.indexOf('#'));
+    var kb = graphs[docURI]
+    if (!kb) kb = graphs[docURI] = new $rdf.IndexedFormula();
+    var fetch = $rdf.fetcher(kb);
+    fetch.nowOrWhenFetched(docURI, undefined, function() { draw(person,kb) });
+}
 
-    card(friend)
-} 
+
+
 
 

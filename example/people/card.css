@@ -1,0 +1,14 @@
+
+body { font-family: sans-serif; color: black; background-color: #eed;  }
+
+div { width: 20em;  height: 8em; padding: 1em;
+    background-color: white;
+    border: 5px black;
+    margin-left:20em;
+    margin-right: 1em;
+    margin-bottom: 1em;
+    margin-top: 1em}
+
+img { height: 8em}
+
+small { color: #999; }
