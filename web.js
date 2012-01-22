@@ -609,10 +609,7 @@ $rdf.Fetcher = function(store, timeout, async) {
             // $rdf.log.info('SF.request: ' + docuri + ' no referring doc')
         };
 
-        var xhr = $rdf.Util.XMLHTTPFactory()
-        var req = xhr.req = kb.bnode()
-        xhr.uri = docterm;
-        xhr.requestedURI = args[0];
+        var req = kb.bnode()
         var requestHandlers = kb.collection()
         var sf = this
 
@@ -624,13 +621,15 @@ $rdf.Fetcher = function(store, timeout, async) {
         kb.add(req, ns.link('status'), kb.collection(), sf.req)
 
         // This should not be stored in the store, but in the JS data
+        /*
         if (typeof kb.anyStatementMatching(this.appNode, ns.link("protocol"), $rdf.Util.uri.protocol(docuri)) == "undefined") {
             // update the status before we break out
             this.failFetch(xhr, "Unsupported protocol: "+$rdf.Util.uri.protocol(docuri))
             return xhr
         }
+        */
 
-        xhr.onerror = function(event) {
+        onerrorFactory = function(xhr) { return function(event) {
             if ($rdf.Fetcher.crossSiteProxyTemplate && document && document.location && !this.proxyUsed) { // In mashup situation
                 var hostpart = $rdf.Util.uri.hostpart;
                 var here = '' + document.location;
@@ -682,11 +681,10 @@ $rdf.Fetcher = function(store, timeout, async) {
             } else {
                 sf.failFetch(xhr, "XHR Error: "+event)
             }
-        }
+        }; }
         
         // Set up callbacks
-        xhr.onreadystatechange = function() {
-            
+        onreadystatechangeFactory = function(xhr) { return function() {
             var handleResponse = function() {
                 if (xhr.handleResponseDone) return;
                 xhr.handleResponseDone = true;
@@ -887,7 +885,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                 }    
                 break
             } // switch
-        }
+        }; }
 
         // Get privileges for cross-domain XHR
         if (!(typeof tabulator != 'undefined' && tabulator.isExtension)) {
@@ -916,10 +914,27 @@ $rdf.Fetcher = function(store, timeout, async) {
 
         // Setup the request
         try {
-            xhr.open('GET', uri2, this.async)
+            //xhr.open('GET', uri2, this.async)
         } catch (er) {
             return this.failFetch(xhr, "XHR open for GET failed for <"+uri2+">:\n\t" + er);
         }
+        var xhr = jQuery.ajax({
+            uri: docuri,
+            accepts: {'*': 'text/turtle,text/n3,application/rdf+xml'},
+            processData: false,
+            error: function(xhr, s, e) {
+                if (s == 'timeout')
+                    sf.failFetch(xhr, "requestTimeout");
+                else
+                    onerrorFactory(xhr)(e);
+            },
+            success: function(d, s, xhr) {
+                onreadystatechangeFactory(xhr)();
+            }
+        });
+        xhr.req = req;
+        xhr.uri = docterm;
+        xhr.requestedURI = docuri;
         
         // Set redirect callback and request headers -- alas Firefox Extension Only
         
@@ -1111,7 +1126,7 @@ $rdf.Fetcher = function(store, timeout, async) {
 
         // Fire
         try {
-            xhr.send(null)
+            //xhr.send(null)
         } catch (er) {
             return this.failFetch(xhr, "XHR send failed:" + er);
         }
@@ -1126,11 +1141,6 @@ $rdf.Fetcher = function(store, timeout, async) {
             }
         }
 
-        setTimeout(function() {
-            if (xhr.readyState != 4 && sf.isPending(xhr.uri.uri)) {
-                sf.failFetch(xhr, "requestTimeout")
-            }
-        }, this.timeout)
         return xhr
     }
 
