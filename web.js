@@ -919,7 +919,7 @@ $rdf.Fetcher = function(store, timeout, async) {
             return this.failFetch(xhr, "XHR open for GET failed for <"+uri2+">:\n\t" + er);
         }
         var xhr = jQuery.ajax({
-            uri: docuri,
+            url: docuri,
             accepts: {'*': 'text/turtle,text/n3,application/rdf+xml'},
             processData: false,
             error: function(xhr, s, e) {
