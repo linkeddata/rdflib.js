@@ -938,9 +938,9 @@ $rdf.Fetcher = function(store, timeout, async) {
         
         // Set redirect callback and request headers -- alas Firefox Extension Only
         
-        if (typeof tabulator != 'undefined' && tabulator.isExtension &&
-                $rdf.Util.uri.protocol(xhr.uri.uri) == 'http' ||
-                $rdf.Util.uri.protocol(xhr.uri.uri) == 'https') {
+        if (typeof tabulator != 'undefined' && tabulator.isExtension && xhr.channel &&
+            ($rdf.Util.uri.protocol(xhr.uri.uri) == 'http' ||
+             $rdf.Util.uri.protocol(xhr.uri.uri) == 'https')) {
             try {
                 xhr.channel.notificationCallbacks = {
                     getInterface: function(iid) {
