@@ -584,7 +584,7 @@ __Serializer.prototype.symbolToN3 = function symbolToN3(x) {  // c.f. symbolStri
             }
             var prefix = this.prefixes[namesp];
             if (prefix) {
-                namespaceCounts[namesp] = true;
+                //namespaceCounts[namesp] = true;
                 return prefix + ':' + localid;
             }
             if (uri.slice(0, j) == this.base)
