@@ -787,16 +787,20 @@ $rdf.Fetcher = function(store, timeout, async) {
                     }
                 }
 
-                var link = xhr.headers['link']; // Only one?
+                var link = xhr.getResponseHeader('link');
                 if (link) {
                     var rel = null;
                     var arg = link.replace(/ /g, '').split(';');
-                    for (var i = 0; i < arg.length; i++) {
+                    for (var i = 1; i < arg.length; i++) {
                         lr = arg[i].split('=');
                         if (lr[0] == 'rel') rel = lr[1];
                     }
+                    var v = arg[0];
+                    // eg. Link: <.meta>, rel=meta
+                    if (v.length && v[0] == '<' && v[v.length-1] == '>' && v.slice)
+                        v = v.slice(1, -1);
                     if (rel) // Treat just like HTML link element
-                    sf.linkData(xhr, rel, arg[0]);
+                        sf.linkData(xhr, rel, v);
                 }
 
 
