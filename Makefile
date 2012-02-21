@@ -57,3 +57,6 @@ gh-pages: detach all
 	git commit -m 'gh-pages: add dist'
 	git push -f origin gh-pages
 	git checkout master
+
+clean:
+	rm -f $(targets)
