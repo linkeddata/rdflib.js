@@ -50,7 +50,7 @@ $rdf.sparqlUpdate = function() {
         //@@ Would be nifty of course to see whether we actually have write acess first.
         }
         
-        if (!kb) kb = this.store;
+        if (!kb) kb = tabulator.kb;
         if (!uri) return false; // Eg subject is bnode, no knowm doc to write to
         var request;
         var definitive = false;
@@ -65,7 +65,7 @@ $rdf.sparqlUpdate = function() {
                         for (var i = 0; i < author_via.length; i++) {
                             var method = author_via[i].value.trim();
                             if (method.indexOf('SPARQL') >=0 ) return 'SPARQL';
-                            if (method.indexOf('DAV') >0 ) return 'DAV';
+                            if (method.indexOf('DAV') >=0 ) return 'DAV';
 //                            if (author_via[i].value == "SPARQL" || author_via[i].value == "DAV")
                                 // dump("sparql.editable: Success for "+uri+": "+author_via[i] +"\n");
                                 //return author_via[i].value;
