@@ -337,7 +337,7 @@ $rdf.sparqlUpdate = function() {
                 }
                 if (is.length) {
                     if (ds.length) query += " ; ";
-                    query += "INSERT DATA { ";
+                    query += "INSERT INTO <> { ";
                     for (var i=0; i<is.length;i++) query+= anonymizeNT(is[i])+"\n";
                     query += " }\n";
                 }
