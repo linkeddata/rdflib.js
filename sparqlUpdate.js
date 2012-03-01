@@ -247,7 +247,7 @@ $rdf.sparqlUpdate = function() {
             set_object: function(obj, callback) {
                 query = this.where;
                 query += "DELETE DATA { " + this.statementNT + " } ;\n";
-                query += "INSERT DATA { " +
+                query += "INSERT INTO <> { " +
                     anonymize(this.statement[0]) + " " +
                     anonymize(this.statement[1]) + " " +
                     anonymize(obj) + " " + " . }\n";
@@ -266,9 +266,9 @@ $rdf.sparqlUpdate = function() {
             for (var i=0;i<st.length;i++) stText+=st[i]+'\n';
             //query += "INSERT DATA { "+st.map(RDFStatement.prototype.toNT.call).join('\n')+" }\n";
             //the above should work, but gives an error "called on imcompatible XUL...scope..."
-            query += "INSERT DATA { " + stText + " }\n";
+            query += "INSERT INTO <> { " + stText + " }\n";
         } else {
-            query += "INSERT DATA { " +
+            query += "INSERT INTO <> { " +
                 anonymize(st.subject) + " " +
                 anonymize(st.predicate) + " " +
                 anonymize(st.object) + " " + " . }\n";
