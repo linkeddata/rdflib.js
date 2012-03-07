@@ -60,3 +60,8 @@ gh-pages: detach all
 
 clean:
 	rm -f $(targets)
+
+status:
+	@pwd
+	@git branch -v
+	@git status -s
