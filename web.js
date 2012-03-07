@@ -917,11 +917,7 @@ $rdf.Fetcher = function(store, timeout, async) {
         
 
         // Setup the request
-        try {
-            //xhr.open('GET', uri2, this.async)
-        } catch (er) {
-            return this.failFetch(xhr, "XHR open for GET failed for <"+uri2+">:\n\t" + er);
-        }
+        if (typeof jQuery !== 'undefined' && jQuery.ajax)
         var xhr = jQuery.ajax({
             url: docuri,
             accepts: {'*': 'text/turtle,text/n3,application/rdf+xml'},
@@ -936,10 +932,20 @@ $rdf.Fetcher = function(store, timeout, async) {
                 onreadystatechangeFactory(xhr)();
             }
         });
+        else {
+            var xhr = $rdf.Util.XMLHTTPFactory();
+            xhr.onerror = onerrorFactory(xhr);
+            xhr.onreadystatechange = onreadystatechangeFactory(xhr);
+            try {
+                xhr.open('GET', docuri, this.async);
+            } catch (er) {
+                return this.failFetch(xhr, "XHR open for GET failed for <"+uri2+">:\n\t" + er);
+            }
+        }
         xhr.req = req;
         xhr.uri = docterm;
         xhr.requestedURI = docuri;
-        
+
         // Set redirect callback and request headers -- alas Firefox Extension Only
         
         if (typeof tabulator != 'undefined' && tabulator.isExtension && xhr.channel &&
