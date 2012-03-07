@@ -1,6 +1,6 @@
 /************************************************************
  * 
- * Project: rdflib, part of Tabulator project
+ * Project: rdflib.js, part of Tabulator project
  * 
  * File: web.js
  * 
@@ -13,10 +13,13 @@
  * - implements semantics of HTTP headers, Internet Content Types
  * - selects parsers for rdf/xml, n3, rdfa, grddl
  * 
+ * Dependencies:
+ *
  * needs: util.js uri.js term.js match.js rdfparser.js rdfa.js n3parser.js
- * identity.js rdfs.js sparql.js jsonparser.js
+ *      identity.js rdfs.js sparql.js jsonparser.js
+ *
+ * If jQuery is defined, it uses jQuery.ajax, else is independent of jQuery
  * 
- *  Was: js/tab/sources.js
  ************************************************************/
 
 /**
@@ -609,9 +612,18 @@ $rdf.Fetcher = function(store, timeout, async) {
             // $rdf.log.info('SF.request: ' + docuri + ' no referring doc')
         };
 
-        var req = kb.bnode()
-        var requestHandlers = kb.collection()
-        var sf = this
+
+        var useJQuery = typeof jQuery != 'undefined';
+        if (!useJQuery) {
+            var xhr = $rdf.Util.XMLHTTPFactory();
+            var req = xhr.req = kb.bnode();
+            xhr.uri = docterm;
+            xhr.requestedURI = args[0];
+        } else {
+            var req = kb.bnode(); // @@ Joe, no need for xhr.req?
+        }
+        var requestHandlers = kb.collection();
+        var sf = this;
 
         var now = new Date();
         var timeNow = "[" + now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds() + "] ";
@@ -908,30 +920,26 @@ $rdf.Fetcher = function(store, timeout, async) {
         // Do not remove without checking with TimBL :)
         var uri2 = docuri;
         if (typeof tabulator != 'undefined' && tabulator.preferences.get('offlineModeUsingLocalhost')) {
-            // var here = '' + document.location  // This was fro online version
-            //if (here.slice(0, 17) == 'http://localhost/') {
-            //uri2 = 'http://localhost/' + uri2.slice(7, uri2.length)
             if (uri2.slice(0,7) == 'http://'  && uri2.slice(7,17) != 'localhost/') uri2 = 'http://localhost/' + uri2.slice(7);
-                // dump("URI mapped to " + uri2)
         }
         
 
         // Setup the request
         if (typeof jQuery !== 'undefined' && jQuery.ajax)
-        var xhr = jQuery.ajax({
-            url: docuri,
-            accepts: {'*': 'text/turtle,text/n3,application/rdf+xml'},
-            processData: false,
-            error: function(xhr, s, e) {
-                if (s == 'timeout')
-                    sf.failFetch(xhr, "requestTimeout");
-                else
-                    onerrorFactory(xhr)(e);
-            },
-            success: function(d, s, xhr) {
-                onreadystatechangeFactory(xhr)();
-            }
-        });
+            var xhr = jQuery.ajax({
+                url: docuri,
+                accepts: {'*': 'text/turtle,text/n3,application/rdf+xml'},
+                processData: false,
+                error: function(xhr, s, e) {
+                    if (s == 'timeout')
+                        sf.failFetch(xhr, "requestTimeout");
+                    else
+                        onerrorFactory(xhr)(e);
+                },
+                success: function(d, s, xhr) {
+                    onreadystatechangeFactory(xhr)();
+                }
+            });
         else {
             var xhr = $rdf.Util.XMLHTTPFactory();
             xhr.onerror = onerrorFactory(xhr);
@@ -943,9 +951,9 @@ $rdf.Fetcher = function(store, timeout, async) {
             }
         }
         xhr.req = req;
-        xhr.uri = docterm;
-        xhr.requestedURI = docuri;
-
+            xhr.uri = docterm;
+            xhr.requestedURI = docuri;
+        
         // Set redirect callback and request headers -- alas Firefox Extension Only
         
         if (typeof tabulator != 'undefined' && tabulator.isExtension && xhr.channel &&
@@ -1135,12 +1143,23 @@ $rdf.Fetcher = function(store, timeout, async) {
         }
 
         // Fire
-        try {
-            //xhr.send(null)
-        } catch (er) {
-            return this.failFetch(xhr, "XHR send failed:" + er);
+        if (!useJQuery) {
+            try {
+                xhr.send(null)
+            } catch (er) {
+                return this.failFetch(xhr, "XHR send failed:" + er);
+            }
+            setTimeout(function() {
+                if (xhr.readyState != 4 && sf.isPending(xhr.uri.uri)) {
+                    sf.failFetch(xhr, "requestTimeout")
+                }
+            }, this.timeout);
+            this.addStatus(xhr.req, "HTTP Request sent.");
+
+        } else {
+            this.addStatus(xhr.req, "HTTP Request sent (using jQuery)");
         }
-        this.addStatus(xhr.req, "HTTP Request sent.");
+        
 
         // Drop privs
         if (!(typeof tabulator != 'undefined' && tabulator.isExtension)) {
