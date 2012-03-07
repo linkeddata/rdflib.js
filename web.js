@@ -1136,7 +1136,8 @@ $rdf.Fetcher = function(store, timeout, async) {
 
         // Fire
         try {
-            //xhr.send(null)
+            if (typeof jQuery === 'undefined' || !jQuery.ajax)
+            xhr.send(null)
         } catch (er) {
             return this.failFetch(xhr, "XHR send failed:" + er);
         }
