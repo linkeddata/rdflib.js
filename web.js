@@ -1143,6 +1143,7 @@ $rdf.Fetcher = function(store, timeout, async) {
         }
 
         // Fire
+
         if (!useJQuery) {
             try {
                 xhr.send(null)
