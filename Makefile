@@ -61,3 +61,6 @@ status:
 	@pwd
 	@git branch -v
 	@git status -s
+
+writable:
+	@sed -i -re 's/git:\/\/github.com\//git@github.com:/' .git/config
