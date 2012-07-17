@@ -29,9 +29,3 @@ DEPENDENCIES
 
 Thanks to the many contributors who have been involved along the way.
 LinkedData team & TimBL
-
-# was:
-#This is an initial proof of concept, implementing a simple content-type filter
-#using the chrome.experimental.webRequest API. You must enable this functionality
-#explicitly by starting Google Chrome:
-
