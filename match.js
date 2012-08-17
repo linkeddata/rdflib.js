@@ -116,6 +116,10 @@ $rdf.Formula.prototype.holds = function(s,p,o,w) {
     return true;
 }
 
+$rdf.Formula.prototype.holdsStatement = function(st) {
+    return this.holds(st.subject, st.predicate, st.object, st.why);
+}
+
 $rdf.Formula.prototype.the = function(s,p,o,w) {
     // the() should contain a check there is only one
     var x = this.any(s,p,o,w)
