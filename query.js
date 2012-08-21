@@ -518,8 +518,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
     }
     
     MandatoryBranch.prototype.reportMatch = function(bindings) {
-        $rdf.log.error("@@@@ query.js 1"); // @@
-        $rdf.log.error("@@@@ query.js 2");  // @@
+        // $rdf.log.error("@@@@ query.js 1"); // @@
         this.callback(bindings);
         this.success = true;
     };

@@ -31,7 +31,7 @@ $rdf.Formula.prototype.transitiveClosure = function(seeds, predicate, inverse){
 // Find members of classes
 //
 // For this class or any subclass, anything which has it is its type
-// or is the object of something which has the tpe as its range, or subject
+// or is the object of something which has the type as its range, or subject
 // of something which has the type as its domain
 // We don't bother doing subproperty (yet?)as it doesn't seeem to be used much.
 
@@ -76,7 +76,7 @@ $rdf.Formula.prototype.findTypesNT = function (subject) {
 // ** @@ This will loop is there is a class subclass loop (Sublass loops are not illegal)
 // Returns a hash table where key is NT of type and value is statement why we think so.
 // Does NOT return terms, returns URI strings.
-// We use NT representations inthis version because they handle blank nodes.
+// We use NT representations in this version because they handle blank nodes.
 
     var sts = this.statementsMatching(subject, undefined, undefined); // fast
     var rdftype = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type';
@@ -104,9 +104,36 @@ $rdf.Formula.prototype.findTypesNT = function (subject) {
     return this.transitiveClosure(types,
         this.sym('http://www.w3.org/2000/01/rdf-schema#subClassOf'), false);
 };
+
+
+// Get all the Classes of which we can RDFS-infer the subject is a subclass
+// Returns a hash table where key is NT of type and value is statement why we think so.
+// Does NOT return terms, returns URI strings.
+// We use NT representations in this version because they handle blank nodes.
+
+$rdf.Formula.prototype.findSuperClassesNT = function (subject) {
+    types = [];
+    types[subject.toNT()] = true;
+    return this.transitiveClosure(types,
+        this.sym('http://www.w3.org/2000/01/rdf-schema#subClassOf'), false);
+}
+
+        
+// Get all the Classes of which we can RDFS-infer the subject is a superclass
+// Returns a hash table where key is NT of type and value is statement why we think so.
+// Does NOT return terms, returns URI strings.
+// We use NT representations in this version because they handle blank nodes.
+
+$rdf.Formula.prototype.findSubClassesNT = function (subject) {
+    types = [];
+    types[subject.toNT()] = true;
+    return this.transitiveClosure(types,
+        this.sym('http://www.w3.org/2000/01/rdf-schema#subClassOf'), true);
+}
+
         
 /* Find the types in the list which have no *stored* supertypes
-** We exclude the universal class, owl:Things and rdf:Resource, as it is not information-free.*/
+** We exclude the universal class, owl:Things and rdf:Resource, as it is information-free.*/
         
 $rdf.Formula.prototype.topTypeURIs = function(types) {
     var tops = [];

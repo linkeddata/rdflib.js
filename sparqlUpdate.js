@@ -247,7 +247,7 @@ $rdf.sparqlUpdate = function() {
             set_object: function(obj, callback) {
                 query = this.where;
                 query += "DELETE DATA { " + this.statementNT + " } ;\n";
-                query += "INSERT INTO <> { " +
+                query += "INSERT DATA { " +
                     anonymize(this.statement[0]) + " " +
                     anonymize(this.statement[1]) + " " +
                     anonymize(obj) + " " + " . }\n";
@@ -264,11 +264,9 @@ $rdf.sparqlUpdate = function() {
         if (st instanceof Array) {
             var stText="";
             for (var i=0;i<st.length;i++) stText+=st[i]+'\n';
-            //query += "INSERT DATA { "+st.map(RDFStatement.prototype.toNT.call).join('\n')+" }\n";
-            //the above should work, but gives an error "called on imcompatible XUL...scope..."
-            query += "INSERT INTO <> { " + stText + " }\n";
+            query += "INSERT DATA { " + stText + " }\n";
         } else {
-            query += "INSERT INTO <> { " +
+            query += "INSERT DATA { " +
                 anonymize(st.subject) + " " +
                 anonymize(st.predicate) + " " +
                 anonymize(st.object) + " " + " . }\n";
@@ -337,16 +335,21 @@ $rdf.sparqlUpdate = function() {
                 }
                 if (is.length) {
                     if (ds.length) query += " ; ";
-                    query += "INSERT INTO <> { ";
+                    query += "INSERT DATA { ";
                     for (var i=0; i<is.length;i++) query+= anonymizeNT(is[i])+"\n";
                     query += " }\n";
                 }
             }
             this._fire(doc.uri, query,
                 function(uri, success, body) {
-                    tabulator.log.info("\t sparql: Return "+success+" for query "+query+"\n");
+                    tabulator.log.info("\t sparql: Return success="+success+" for query "+query+"\n");
                     if (success) {
-                        for (var i=0; i<ds.length;i++) kb.remove(ds[i]);
+                        for (var i=0; i<ds.length;i++)
+                            try { kb.remove(ds[i]) } catch(e) {
+                                callback(uri, false,
+                                "sparqlUpdate: Remote OK but error deleting statemmnt "+
+                                    ds[i] + " from local store:\n" + e)
+                            }
                         for (var i=0; i<is.length;i++)
                             kb.add(is[i].subject, is[i].predicate, is[i].object, doc); 
                     }
