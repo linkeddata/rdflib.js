@@ -40,10 +40,16 @@ function testTC0000(showDetails) {
 			["http://example/x%2Fy/z", "http://example/x%2Fy/abc", "abc"],
 			// Ryan Lee
 			["http://example/x/abc.efg", "http://example/x/", "./"],
+                        
 			// Tim BL 2005-11-28  A version of the uri.js URIjoin() failed:
-			['http://www.w3.org/People/Berners-Lee/card.rdf', 'http://www.w3.org/2002/01/tr-automation/tr.rdf', '../../2002/01/tr-automation/tr.rdf'],
-			["http://example.com/", "http://example.com/", "."],
-			["http://example.com/.meta.n3", "http://example.com/.meta.n3", ".meta.n3"]
+			// ['http://www.w3.org/People/Berners-Lee/card.rdf', 'http://www.w3.org/2002/01/tr-automation/tr.rdf', '../../2002/01/tr-automation/tr.rdf'],
+			// ["http://example.com/", "http://example.com/", "."],  // wrong
+			// ["http://example.com/.meta.n3", "http://example.com/.meta.n3", ".meta.n3"]  // wrong
+                        
+			// Tim BL 2005-11-28  A version of the uri.js URIjoin() get right:
+			['http://www.w3.org/People/Berners-Lee/card.rdf', 'http://www.w3.org/2002/01/tr-automation/tr.rdf', '/2002/01/tr-automation/tr.rdf'],
+			["http://example.com/", "http://example.com/", ""], // Self-reference is the empty string
+			["http://example.com/.meta.n3", "http://example.com/.meta.n3", ""] // Self-reference is the empty string
 	];
 
     var n = testCases.length;
