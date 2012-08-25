@@ -56,8 +56,8 @@ $rdf.Fetcher = function(store, timeout, async) {
     $rdf.Fetcher.crossSiteProxy = function(uri) {
         if ($rdf.Fetcher.crossSiteProxyTemplate)
           return $rdf.Fetcher.crossSiteProxyTemplate.replace('{uri}', encodeURIComponent(uri));
-        else return undefined
-    }
+        else return undefined;
+    };
     $rdf.Fetcher.RDFXMLHandler = function(args) {
         if (args) {
             this.dom = args[0]
@@ -102,20 +102,20 @@ $rdf.Fetcher = function(store, timeout, async) {
                 cb();
             }
         }
-    }
-    $rdf.Fetcher.RDFXMLHandler.term = this.store.sym(this.thisURI + ".RDFXMLHandler")
+    };
+    $rdf.Fetcher.RDFXMLHandler.term = this.store.sym(this.thisURI + ".RDFXMLHandler");
     $rdf.Fetcher.RDFXMLHandler.toString = function() {
         return "RDFXMLHandler"
-    }
+    };
     $rdf.Fetcher.RDFXMLHandler.register = function(sf) {
         sf.mediatypes['application/rdf+xml'] = {}
-    }
+    };
     $rdf.Fetcher.RDFXMLHandler.pattern = new RegExp("application/rdf\\+xml");
 
     // This would much better use on-board XSLT engine. @@
     $rdf.Fetcher.doGRDDL = function(kb, doc, xslturi, xmluri) {
         sf.requestURI('http://www.w3.org/2005/08/' + 'online_xslt/xslt?' + 'xslfile=' + escape(xslturi) + '&xmlfile=' + escape(xmluri), doc)
-    }
+    };
 
     $rdf.Fetcher.XHTMLHandler = function(args) {
         if (args) {
@@ -173,17 +173,17 @@ $rdf.Fetcher = function(store, timeout, async) {
                 $rdf.rdfa.parse(this.dom, kb, xhr.uri.uri);  // see rdfa.js
             }
         }
-    }
-    $rdf.Fetcher.XHTMLHandler.term = this.store.sym(this.thisURI + ".XHTMLHandler")
+    };
+    $rdf.Fetcher.XHTMLHandler.term = this.store.sym(this.thisURI + ".XHTMLHandler");
     $rdf.Fetcher.XHTMLHandler.toString = function() {
         return "XHTMLHandler"
-    }
+    };
     $rdf.Fetcher.XHTMLHandler.register = function(sf) {
         sf.mediatypes['application/xhtml+xml'] = {
             'q': 0.3
         }
-    }
-    $rdf.Fetcher.XHTMLHandler.pattern = new RegExp("application/xhtml")
+    };
+    $rdf.Fetcher.XHTMLHandler.pattern = new RegExp("application/xhtml");
 
 
     /******************************************************/
@@ -257,11 +257,11 @@ $rdf.Fetcher = function(store, timeout, async) {
                 sf.failFetch(xhr, "Unsupported dialect of XML: not RDF or XHTML namespace, etc.\n"+xhr.responseText.slice(0,80));
             }
         }
-    }
-    $rdf.Fetcher.XMLHandler.term = this.store.sym(this.thisURI + ".XMLHandler")
+    };
+    $rdf.Fetcher.XMLHandler.term = this.store.sym(this.thisURI + ".XMLHandler");
     $rdf.Fetcher.XMLHandler.toString = function() {
         return "XMLHandler"
-    }
+    };
     $rdf.Fetcher.XMLHandler.register = function(sf) {
         sf.mediatypes['text/xml'] = {
             'q': 0.2
@@ -269,8 +269,8 @@ $rdf.Fetcher = function(store, timeout, async) {
         sf.mediatypes['application/xml'] = {
             'q': 0.2
         }
-    }
-    $rdf.Fetcher.XMLHandler.pattern = new RegExp("(text|application)/(.*)xml")
+    };
+    $rdf.Fetcher.XMLHandler.pattern = new RegExp("(text|application)/(.*)xml");
 
     $rdf.Fetcher.HTMLHandler = function() {
         this.recv = function(xhr) {
@@ -315,17 +315,17 @@ $rdf.Fetcher = function(store, timeout, async) {
                 sf.failFetch(xhr, "Sorry, can't yet parse non-XML HTML")
             }
         }
-    }
-    $rdf.Fetcher.HTMLHandler.term = this.store.sym(this.thisURI + ".HTMLHandler")
+    };
+    $rdf.Fetcher.HTMLHandler.term = this.store.sym(this.thisURI + ".HTMLHandler");
     $rdf.Fetcher.HTMLHandler.toString = function() {
         return "HTMLHandler"
-    }
+    };
     $rdf.Fetcher.HTMLHandler.register = function(sf) {
         sf.mediatypes['text/html'] = {
             'q': 0.3
         }
-    }
-    $rdf.Fetcher.HTMLHandler.pattern = new RegExp("text/html")
+    };
+    $rdf.Fetcher.HTMLHandler.pattern = new RegExp("text/html");
 
     /***********************************************/
 
@@ -359,17 +359,17 @@ $rdf.Fetcher = function(store, timeout, async) {
 
             }
         }
-    }
-    $rdf.Fetcher.TextHandler.term = this.store.sym(this.thisURI + ".TextHandler")
+    };
+    $rdf.Fetcher.TextHandler.term = this.store.sym(this.thisURI + ".TextHandler");
     $rdf.Fetcher.TextHandler.toString = function() {
-        return "TextHandler"
-    }
+        return "TextHandler";
+    };
     $rdf.Fetcher.TextHandler.register = function(sf) {
         sf.mediatypes['text/plain'] = {
             'q': 0.1
         }
     }
-    $rdf.Fetcher.TextHandler.pattern = new RegExp("text/plain")
+    $rdf.Fetcher.TextHandler.pattern = new RegExp("text/plain");
 
     /***********************************************/
 
@@ -396,10 +396,10 @@ $rdf.Fetcher = function(store, timeout, async) {
                 sf.doneFetch(xhr, args)
             }
         }
-    }
-    $rdf.Fetcher.N3Handler.term = this.store.sym(this.thisURI + ".N3Handler")
+    };
+    $rdf.Fetcher.N3Handler.term = this.store.sym(this.thisURI + ".N3Handler");
     $rdf.Fetcher.N3Handler.toString = function() {
-        return "N3Handler"
+        return "N3Handler";
     }
     $rdf.Fetcher.N3Handler.register = function(sf) {
         sf.mediatypes['text/n3'] = {
@@ -641,7 +641,7 @@ $rdf.Fetcher = function(store, timeout, async) {
         }
         */
 
-        onerrorFactory = function(xhr) { return function(event) {
+        var onerrorFactory = function(xhr) { return function(event) {
             if ($rdf.Fetcher.crossSiteProxyTemplate && document && document.location && !this.proxyUsed) { // In mashup situation
                 var hostpart = $rdf.Util.uri.hostpart;
                 var here = '' + document.location;
@@ -696,7 +696,7 @@ $rdf.Fetcher = function(store, timeout, async) {
         }; }
         
         // Set up callbacks
-        onreadystatechangeFactory = function(xhr) { return function() {
+        var onreadystatechangeFactory = function(xhr) { return function() {
             var handleResponse = function() {
                 if (xhr.handleResponseDone) return;
                 xhr.handleResponseDone = true;
@@ -1226,7 +1226,7 @@ $rdf.Fetcher = function(store, timeout, async) {
         //if it's not pending: false -> flailed 'done' -> done 'redirected' -> redirected
         return this.requested[docuri] == true;
     }
-}
+};
 
 $rdf.fetcher = function(store, timeout, async) { return new $rdf.Fetcher(store, timeout, async) };
 
