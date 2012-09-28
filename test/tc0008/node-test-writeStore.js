@@ -1,5 +1,5 @@
 
-// See npm and node.js documentstion http://nodejs.org/docs/v0.6.5/api/modules.html
+// See npm and node.js documentation http://nodejs.org/docs/v0.6.5/api/modules.html
 //
 
 
@@ -8,7 +8,8 @@
 
 // var jQuery = require('jquery');
 
-var $rdf = require('../../dist/node-rdflib.js').$rdf; // sic
+//var $rdf = require('../../dist/node-rdflib.js').$rdf; // sic
+var $rdf = require('../../dist/node-rdflib.js');
 var util = require('util');
 var print = util.print;
 var k = $rdf.graph()
@@ -23,6 +24,6 @@ k.add(s, p, 21, w);
 k.add(s, k.sym('baz:name'), 'Aimée', w);
 print('Dump 2:');
 z.writeStore(print);
-print('Done.');
+print('Done.\n');
 
 

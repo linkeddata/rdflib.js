@@ -424,7 +424,7 @@ $rdf.Fetcher = function(store, timeout, async) {
 
 
 
-    $rdf.Util.callbackify(this, ['request', 'recv', 'load', 'fail', 'refresh', 'retract', 'done'])
+    $rdf.Util.callbackify(this, ['request', 'recv', 'load', 'fail', 'refresh', 'retract', 'done']);
 
     this.addProtocol = function(proto) {
         sf.store.add(sf.appNode, ns.link("protocol"), sf.store.literal(proto), this.appNode)
@@ -489,7 +489,7 @@ $rdf.Fetcher = function(store, timeout, async) {
 
 
     this.doneFetch = function(xhr, args) {
-        this.addStatus(xhr.req, 'done')
+        this.addStatus(xhr.req, 'Done.')
         // $rdf.log.info("Done with parse, firing 'done' callbacks for " + xhr.uri)
         this.requested[xhr.uri.uri] = 'done'; //Kenny
         this.fireCallbacks('done', args)
@@ -675,7 +675,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                     xhr.abort()
                     xhr.aborted = true
 
-                    sf.addStatus(oldreq, 'done') // why
+                    sf.addStatus(oldreq, 'done - redirected') // why
                     //the callback throws an exception when called from xhr.onerror (so removed)
                     //sf.fireCallbacks('done', args) // Are these args right? @@@
                     sf.requested[xhr.uri.uri] = 'redirected';
@@ -896,7 +896,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                         sf.doneFetch(xhr, args)
                     })
                 } else {
-                    sf.failFetch(xhr, "HTTP failed unusually. (no handler set) (cross-site violation?) for <"+
+                    sf.failFetch(xhr, "HTTP failed unusually. (no handler set) (cross-site violation? no net?) for <"+
                         docuri+">");
                 }    
                 break

@@ -9,9 +9,8 @@ if (typeof module !== 'undefined' && module.exports) { // Node.js environment
     var alert = function(s){util.print('alert:'+s+'\n')};
     var kludgeForOfflineUse = function kludgeForOfflineUse(uri) {
         return uri.replace('http://', 'http://localhost/');
-
     }
-    } else { // Asssume browser environment
+} else { // Asssume browser environment
     var kludgeForOfflineUse = function kludgeForOfflineUse(uri) {
         return uri; // comment out on planes
         return uri.replace('http://', 'http://localhost/');

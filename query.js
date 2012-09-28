@@ -1,4 +1,5 @@
 // Matching a formula against another formula
+// Assync as well as Synchronously
 //
 //
 // W3C open source licence 2005.
@@ -129,6 +130,7 @@ $rdf.Collection.prototype.isVar = 0;
  * @param	callback, 	whenever the pattern in myQuery is met this is called with 
  * 						the binding as parameter
  * @param	fetcher,	whenever a resource needs to be loaded this gets called
+ *                              DO NOT CONFUSE WITH f.sf the source fetcher module! 
  * @param       onDone          callback when 
  */
 $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDone) {
@@ -346,8 +348,8 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
                         }
 
                         match(f, g, bindingsSoFar, level, fetcher, // match not match2 to look up any others necessary.
-                                          localCallback, branch)
-                        return false
+                                          localCallback, branch);
+                        return false;
                     })
                 }
                 fetcher(requestedTerm, id)	    

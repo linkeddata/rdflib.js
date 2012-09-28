@@ -85,7 +85,8 @@ div.issue {
 
 .testdetails p {
 	margin-left: 0.6em;
-	line-height: 0.6em;
+	/* line-height: 0.6em; */
+
 }
 
 .overallTestResult {
