@@ -45,7 +45,9 @@ upstream: jquery.uri.js jquery.xmlns.js
 detach:
 	git checkout origin/master
 	git reset --hard HEAD
-	
+
+#   WARNING  .. don't do this if you have uncommitted local changes
+#
 gh-pages: detach all
 	git branch -D gh-pages ||:
 	git checkout -b gh-pages
