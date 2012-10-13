@@ -16,11 +16,11 @@ class $rdf.Util.uri
     @join: (given, base) ->
         baseHash = base.indexOf '#'
         if baseHash > 0
-            base = base[..baseHash-1]
+            base = base[...baseHash]
         if given.length == 0
             # before chopping its filename off
             return base
-        if given.indexOf '#' == 0
+        if given.indexOf('#') == 0
             return base + given
 
         colon = given.indexOf ':'
@@ -56,8 +56,8 @@ class $rdf.Util.uri
                     return baseScheme + given
 
         # starts with / but not //
-        if given.indexOf '/' == 0
-            return base[..baseSingle-1] + given
+        if given.indexOf('/') == 0
+            return base[...baseSingle] + given
 
         path = base[baseSingle..]
         lastSlash = path.lastIndexOf '/'
@@ -69,14 +69,17 @@ class $rdf.Util.uri
             path = path[..lastSlash]
 
         path += given
-        while path.match /[^\/]*\/\.\.\// # must apply to result of prev
+
+        # must apply to result of prev
+        while path.match /[^\/]*\/\.\.\//
             # ECMAscript spec 7.8.5
             path = path.replace /[^\/]*\/\.\.\//, ''
-            # spec vague on escaping
-            path = path.replace /\.\//g, ''
-            path = path.replace /\/\.$/, '/'
 
-        base.slice[..baseSingle-1] + path
+        # spec vague on escaping
+        path = path.replace /\.\//g, ''
+        path = path.replace /\/\.$/, '/'
+
+        base[...baseSingle] + path
 
     if tabulator?.isExtension
         @join2: (given, base) ->
@@ -103,13 +106,13 @@ class $rdf.Util.uri
         for c, i in uri
             if c != base[i]
                 break
-        if base[..i-1].match $rdf.Util.uri.commonHost
+        if base[...i].match $rdf.Util.uri.commonHost
             k = uri.indexOf '//'
             if k < 0
                 k = -2
             # first *single* slash
             l = uri.indexOf '/', k + 2
-            if uri[l+1] != '/' and base[l+1] != '/' and uri[..l-1] == base[..l-1]
+            if uri[l+1] != '/' and base[l+1] != '/' and uri[...l] == base[...l]
                 # common path to single slash but no other common path segments
                 return uri[l..]
 
@@ -121,10 +124,10 @@ class $rdf.Util.uri
         if i < 3
             # no way
             return uri
-        if base.indexOf '//', i-2 > 0 or uri.indexOf '//', i-2 > 0
+        if base.indexOf('//', i-2) > 0 or uri.indexOf('//', i-2) > 0
             # unshared '//'
             return uri
-        if base.indexOf ':', i > 0
+        if base.indexOf(':', i) > 0
             # unshared '#'
             return uri
 
@@ -143,7 +146,7 @@ class $rdf.Util.uri
     # returns URI without the frag
     @docpart: (uri) ->
         i = uri.indexOf '#'
-        if i < 0 then uri else uri[..i-1]
+        if i < 0 then uri else uri[...i]
 
     # document in which a thing is defined
     @document: (x) =>
@@ -152,6 +155,6 @@ class $rdf.Util.uri
     # return the protocol of a uri or null
     @protocol: (uri) ->
         i = uri.indexOf ':'
-        if i < 0 then null else uri[..i-1]
+        if i < 0 then null else uri[...i]
 
 module?.exports = $rdf.Util.uri
