@@ -78,5 +78,5 @@ coffee: $(LIB)
 
 .PHONY: test
 test: coffee
-	make -B coffee
+	@make -B coffee
 	nodeunit tests/*.js
