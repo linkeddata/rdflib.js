@@ -38,7 +38,9 @@ $rdf.sparqlUpdate = function() {
     // We don't actually check for write access on files.
     //
     sparql.prototype.editable = function(uri, kb) {
-        // dump("sparql.prototype.editable: CALLED for "+uri+"\n")
+        if (!uri) return false; // Eg subject is bnode, no known doc to write to
+        if (!kb) kb = tabulator.kb;
+
         if (uri.slice(0,8) == 'file:///') {
             if (kb.holds(kb.sym(uri), tabulator.ns.rdf('type'), tabulator.ns.link('MachineEditableDocument')))
                 return 'LOCALFILE';
@@ -49,9 +51,7 @@ $rdf.sparqlUpdate = function() {
             return false;
         //@@ Would be nifty of course to see whether we actually have write acess first.
         }
-        
-        if (!kb) kb = tabulator.kb;
-        if (!uri) return false; // Eg subject is bnode, no knowm doc to write to
+
         var request;
         var definitive = false;
         var requests = kb.each(undefined, this.ns.link("requestedURI"), $rdf.Util.uri.docpart(uri));
