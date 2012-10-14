@@ -127,7 +127,7 @@ __Serializer.prototype.rootSubjects = function(sts) {
         [ st.subject, st.predicate, st.object].map(function(y){
             if (y.termType =='bnode'){allBnodes[y.toNT()] = true}});
         var x = sts[i].object;
-        if (!incoming[x]) incoming[x] = [];
+        if (!incoming.hasOwnProperty(x)) incoming[x] = [];
         incoming[x].push(st.subject) // List of things which will cause this to be printed
         var ss =  subjects[this.toStr(st.subject)]; // Statements with this as subject
         if (!ss) ss = [];
