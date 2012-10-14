@@ -717,9 +717,3 @@ $rdf.rdfa.parseThis = function (kb, baseUri, doc) {
 
   $jq.rdf.gleaners.push(gleaner);
 */
-/*
-$rdf.parseRdfa = function(element, kb, baseUri) {
-    var p = new $rdf.RDFaParser(kb, baseUri);
-    p.rdfa.call(element);
-};
-*/
