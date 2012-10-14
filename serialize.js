@@ -24,8 +24,6 @@ var __Serializer = function( store ){
     /* pass */
 }
 
-var Serializer = function( store ) {return new __Serializer( store )}; 
-
 __Serializer.prototype.setBase = function(base)
     { this.base = base };
 
@@ -76,24 +74,23 @@ __Serializer.prototype.makeUpPrefix = function(uri) {
     var p = uri;
     var namespaces = [];
     var pok;
-    var sz = this;
     
     function canUse(pp) {
         if (namespaces[pp]) return false; // already used
-
-        sz.prefixes[uri] = pp;
+        this.prefixes[uri] = pp;
         pok = pp;
         return true
     }
-    for (var ns in sz.prefixes) {
-        namespaces[sz.prefixes[ns]] = ns; // reverse index
+    canUse = canUse.bind(this);
+    for (var ns in this.prefixes) {
+        namespaces[this.prefixes[ns]] = ns; // reverse index
     }
     if ('#/'.indexOf(p[p.length-1]) >= 0) p = p.slice(0, -1);
     var slash = p.lastIndexOf('/');
     if (slash >= 0) p = p.slice(slash+1);
     var i = 0;
     while (i < p.length)
-        if (sz.prefixchars.indexOf(p[i])) i++; else break;
+        if (this.prefixchars.indexOf(p[i])) i++; else break;
     p = p.slice(0,i);
     if (p.length < 6 && canUse(p)) return pok; // exact i sbest
     if (canUse(p.slice(0,3))) return pok;
@@ -113,7 +110,6 @@ __Serializer.prototype.makeUpPrefix = function(uri) {
 __Serializer.prototype.rootSubjects = function(sts) {
     var incoming = [];
     var subjects = [];
-    var sz = this;
     var allBnodes = {};
 
 /* This scan is to find out which nodes will have to be the roots of trees
@@ -133,7 +129,7 @@ __Serializer.prototype.rootSubjects = function(sts) {
         var x = sts[i].object;
         if (!incoming[x]) incoming[x] = [];
         incoming[x].push(st.subject) // List of things which will cause this to be printed
-        var ss =  subjects[sz.toStr(st.subject)]; // Statements with this as subject
+        var ss =  subjects[this.toStr(st.subject)]; // Statements with this as subject
         if (!ss) ss = [];
         ss.push(st);
         subjects[this.toStr(st.subject)] = ss; // Make hash. @@ too slow for formula?
@@ -142,7 +138,7 @@ __Serializer.prototype.rootSubjects = function(sts) {
 
     var roots = [];
     for (var xNT in subjects) {
-        var x = sz.fromStr(xNT);
+        var x = this.fromStr(xNT);
         if ((x.termType != 'bnode') || !incoming[x] || (incoming[x].length != 1)){
             roots.push(x);
             //$rdf.log.debug(' sz actual subject -: ' + x)
@@ -267,7 +263,6 @@ __Serializer.prototype._notNameChars =
 __Serializer.prototype.statementsToN3 = function(sts) {
     var indent = 4;
     var width = 80;
-    var sz = this;
 
     var namespaceCounts = []; // which have been used
 
@@ -288,7 +283,7 @@ __Serializer.prototype.statementsToN3 = function(sts) {
         return s
     }
 
-    treeToLine = function(tree) {
+    var treeToLine = function(tree) {
         var str = '';
         for (var i=0; i<tree.length; i++) {
             var branch = tree[i];
@@ -300,7 +295,7 @@ __Serializer.prototype.statementsToN3 = function(sts) {
     }
     
     // Convert a nested tree of lists and strings to a string
-    treeToString = function(tree, level) {
+    var treeToString = function(tree, level) {
         var str = '';
         var lastLength = 100000;
         if (!level) level = 0;
@@ -354,7 +349,7 @@ __Serializer.prototype.statementsToN3 = function(sts) {
     function statementListToTree(statements) {
         // print('Statement tree for '+statements.length);
         var res = [];
-        var stats = sz.rootSubjects(statements);
+        var stats = this.rootSubjects(statements);
         var roots = stats.roots;
         var results = []
         for (var i=0; i<roots.length; i++) {
@@ -363,6 +358,7 @@ __Serializer.prototype.statementsToN3 = function(sts) {
         }
         return results;
     }
+    statementListToTree = statementListToTree.bind(this);
     
     // The tree for a subject
     function subjectTree(subject, stats) {
@@ -377,7 +373,7 @@ __Serializer.prototype.statementsToN3 = function(sts) {
         // print('Proprty tree for '+subject);
         var results = []
         var lastPred = null;
-        var sts = stats.subjects[sz.toStr(subject)]; // relevant statements
+        var sts = stats.subjects[this.toStr(subject)]; // relevant statements
         if (typeof sts == 'undefined') {
             throw('Cant find statements for '+subject);
         }
@@ -401,14 +397,16 @@ __Serializer.prototype.statementsToN3 = function(sts) {
         results=results.concat([objects]);
         return results;
     }
+    propertyTree = propertyTree.bind(this);
 
     function objectTree(obj, stats, force) {
         if (obj.termType == 'bnode' &&
-                stats.subjects[sz.toStr(obj)] && // and there are statements
+                stats.subjects[this.toStr(obj)] && // and there are statements
                 (force || stats.rootsHash[obj.toNT()] == undefined)) // and not a root
             return  ['['].concat(propertyTree(obj, stats)).concat([']']);
         return termToN3(obj, stats);
     }
+    objectTree = objectTree.bind(this);
     
     function termToN3(expr, stats) {
         switch(expr.termType) {
@@ -427,30 +425,21 @@ __Serializer.prototype.statementsToN3 = function(sts) {
                 return res;
                 
            default:
-                return sz.atomicTermToN3(expr);
+                return this.atomicTermToN3(expr);
         }
     }
-    
+    termToN3 = termToN3.bind(this);
 
-    
     function prefixDirectives() {
         str = '';
-	if (sz.defaultNamespace)
-	  str += '@prefix : <'+sz.defaultNamespace+'>.\n';
+        if (this.defaultNamespace)
+          str += '@prefix : <'+this.defaultNamespace+'>.\n';
         for (var ns in namespaceCounts) {
-            str += '@prefix ' + sz.prefixes[ns] + ': <'+ns+'>.\n';
+            str += '@prefix ' + this.prefixes[ns] + ': <'+ns+'>.\n';
         }
         return str + '\n';
     }
-
-
-
-
-
-
-
-
-
+    prefixDirectives = prefixDirectives.bind(this);
 
     // Body of statementsToN3:
     
@@ -492,13 +481,6 @@ __Serializer.prototype.atomicTermToN3 = function atomicTermToN3(expr, stats) {
             return ''+expr;
     }
 };
-
-
-
-
-
-
-
 
 
 
@@ -657,7 +639,6 @@ __Serializer.prototype.writeStore = function(write) {
 __Serializer.prototype.statementsToXML = function(sts) {
     var indent = 4;
     var width = 80;
-    var sz = this;
 
     var namespaceCounts = []; // which have been used
     namespaceCounts['http://www.w3.org/1999/02/22-rdf-syntax-ns#'] = true;
@@ -670,7 +651,7 @@ __Serializer.prototype.statementsToXML = function(sts) {
         return s
     }
 
-    XMLtreeToLine = function(tree) {
+    var XMLtreeToLine = function(tree) {
         var str = '';
         for (var i=0; i<tree.length; i++) {
             var branch = tree[i];
@@ -681,7 +662,7 @@ __Serializer.prototype.statementsToXML = function(sts) {
     }
     
     // Convert a nested tree of lists and strings to a string
-    XMLtreeToString = function(tree, level) {
+    var XMLtreeToString = function(tree, level) {
         var str = '';
         var lastLength = 100000;
         if (!level) level = 0;
@@ -718,16 +699,17 @@ __Serializer.prototype.statementsToXML = function(sts) {
     };
 
     function statementListToXMLTree(statements) {
-        sz.suggestPrefix('rdf', 'http://www.w3.org/1999/02/22-rdf-syntax-ns#');
-        var stats = sz.rootSubjects(statements);
+        this.suggestPrefix('rdf', 'http://www.w3.org/1999/02/22-rdf-syntax-ns#');
+        var stats = this.rootSubjects(statements);
         var roots = stats.roots;
-        results = []
+        var results = []
         for (var i=0; i<roots.length; i++) {
             root = roots[i];
             results.push(subjectXMLTree(root, stats))
         }
         return results;
     }
+    statementListToXMLTree = statementListToXMLTree.bind(this);
     
     function escapeForXML(str) {
         if (typeof str == 'undefined') return '@@@undefined@@@@';
@@ -735,8 +717,9 @@ __Serializer.prototype.statementsToXML = function(sts) {
     }
 
     function relURI(term) {
-        return escapeForXML((sz.base) ? $rdf.Util.uri.refTo(this.base, term.uri) : term.uri);
+        return escapeForXML((this.base) ? $rdf.Util.uri.refTo(this.base, term.uri) : term.uri);
     }
+    relURI = relURI.bind(this);
 
     // The tree for a subject
     function subjectXMLTree(subject, stats) {
@@ -755,7 +738,7 @@ __Serializer.prototype.statementsToXML = function(sts) {
                 [propertyXMLTree(subject, stats)]).concat(["</rdf:Description>"]);
     }
     function collectionXMLTree(subject, stats) {
-        res = []
+        var res = []
         for (var i=0; i< subject.elements.length; i++) {
             res.push(subjectXMLTree(subject.elements[i], stats));
          }
@@ -765,7 +748,7 @@ __Serializer.prototype.statementsToXML = function(sts) {
     // The property tree for a single subject or anonymos node
     function propertyXMLTree(subject, stats) {
         var results = []
-        var sts = stats.subjects[sz.toStr(subject)]; // relevant statements
+        var sts = stats.subjects[this.toStr(subject)]; // relevant statements
         if (sts == undefined) return results;  // No relevant statements
         sts.sort();
         for (var i=0; i<sts.length; i++) {
@@ -804,12 +787,13 @@ __Serializer.prototype.statementsToXML = function(sts) {
         }
         return results;
     }
+    propertyXMLTree = propertyXMLTree.bind(this);
 
     function qname(term) {
         var uri = term.uri;
 
         var j = uri.indexOf('#');
-        if (j<0 && sz.flags.indexOf('/') < 0) {
+        if (j<0 && this.flags.indexOf('/') < 0) {
             j = uri.lastIndexOf('/');
         }
         if (j < 0) throw ("Cannot make qname out of <"+uri+">")
@@ -822,25 +806,26 @@ __Serializer.prototype.statementsToXML = function(sts) {
         }
         var localid = uri.slice(j+1);
         var namesp = uri.slice(0,j+1);
-        if (sz.defaultNamespace && sz.defaultNamespace == namesp
-            && sz.flags.indexOf('d') < 0) {// d -> suppress default
+        if (this.defaultNamespace && this.defaultNamespace == namesp
+            && this.flags.indexOf('d') < 0) {// d -> suppress default
             return localid;
         }
-        var prefix = sz.prefixes[namesp];
-        if (!prefix) prefix = sz.makeUpPrefix(namesp);
+        var prefix = this.prefixes[namesp];
+        if (!prefix) prefix = this.makeUpPrefix(namesp);
         namespaceCounts[namesp] = true;
         return prefix + ':' + localid;
 //        throw ('No prefix for namespace "'+namesp +'" for XML qname for '+uri+', namespaces: '+sz.prefixes+' sz='+sz); 
     }
+    qname = qname.bind(this);
 
     // Body of toXML:
     
     var tree = statementListToXMLTree(sts);
     var str = '<rdf:RDF';
-    if (sz.defaultNamespace)
-      str += ' xmlns="'+escapeForXML(sz.defaultNamespace)+'"';
+    if (this.defaultNamespace)
+      str += ' xmlns="'+escapeForXML(this.defaultNamespace)+'"';
     for (var ns in namespaceCounts) {
-        str += '\n xmlns:' + sz.prefixes[ns] + '="'+escapeForXML(ns)+'"';
+        str += '\n xmlns:' + this.prefixes[ns] + '="'+escapeForXML(ns)+'"';
     }
     str += '>';
 
@@ -850,7 +835,7 @@ __Serializer.prototype.statementsToXML = function(sts) {
 
 } // End @@ body
 
+var Serializer = function( store ) {return new __Serializer( store )}; 
 return Serializer;
 
 }();
-
