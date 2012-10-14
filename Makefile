@@ -77,6 +77,5 @@ LIB=$(SRC:%.coffee=%.js)
 coffee: $(LIB)
 
 .PHONY: test
-test: coffee
-	@make -B coffee
-	nodeunit tests/*.js
+test: $(LIB)
+	@nodeunit tests/*.js
