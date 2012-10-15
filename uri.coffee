@@ -157,4 +157,6 @@ class $rdf.Util.uri
         i = uri.indexOf ':'
         if i < 0 then null else uri[...i]
 
-module?.exports = $rdf.Util.uri
+if module?.exports?
+    module.exports.Util ?= {}
+    module.exports.Util[k] = v for own k, v of $rdf.Util

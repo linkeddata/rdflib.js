@@ -2,7 +2,7 @@
 # nodeunit tests for uri.js
 ###
 
-uri = require('../uri.js')
+uri = (require '../uri.js').Util.uri
 
 tests = [
     ["foo:xyz", "bar:abc", "bar:abc"]
@@ -67,4 +67,3 @@ module.exports =
 for [base, abs, rel] in tests
     module.exports.join["(<#{rel}>, <#{base}>) == <#{abs}>"] = joinTest base, abs, rel
     module.exports.refTo["(<#{base}>, <#{abs}>) == <#{rel}>"] = refToTest base, abs, rel
-
