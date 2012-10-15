@@ -169,8 +169,8 @@ $rdf.Fetcher = function(store, timeout, async) {
                 }
                 kb.add(xhr.uri, ns.rdf('type'), ns.link('WebPage'), sf.appNode);
                 // Do RDFa here
-                //var p = $rdf.RDFaParser(kb, xhr.uri.uri);
-                $rdf.rdfa.parse(this.dom, kb, xhr.uri.uri);  // see rdfa.js
+                if ($rdf.rdfa && $rdf.rdfa.parse)
+                    $rdf.rdfa.parse(this.dom, kb, xhr.uri.uri);
             }
         }
     };
@@ -1261,7 +1261,8 @@ $rdf.parse = function parse(str, kb, base, contentType) {
         }
         
         if (contentType == 'application/rdfa') {  // @@ not really a valid mime type
-            $rdf.rdfa.parse($rdf.Util.parseXML(str), kb, base);  // see rdfa.js
+            if ($rdf.rdfa && $rdf.rdfa.parse)
+                $rdf.rdfa.parse($rdf.Util.parseXML(str), kb, base);
             return;
         }
     } catch(e) {

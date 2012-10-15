@@ -1,6 +1,9 @@
 This is a library for working with RDF on the web.
+
+LICENSE: MIT
+
 Originally targetted at the AJAX environment in the browser,
-it can also be used server side with Node.js.
+it can also be used server side with for example Node.js.
 
 Possible out of date information is available from here:
 

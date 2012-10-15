@@ -277,7 +277,6 @@ $rdf.RDFParser = function (store) {
      * @param {Object} why The context to which this resource belongs
      */
     this['parse'] = function (document, base, why) {
-        // alert('parse base:'+base);
 	var children = document['childNodes']
 
 	// clean up for the next run
@@ -336,7 +335,7 @@ $rdf.RDFParser = function (store) {
                 result = result + el['nodeName'];
         }
 	    return result;
-	}
+	}.bind(this);
 	var dig = true // if we'll dig down in the tree on the next iter
 
 	while (frame['parent']) {

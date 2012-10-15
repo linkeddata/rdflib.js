@@ -66,3 +66,18 @@ status:
 
 writable:
 	@sed -i -re 's/git:\/\/github.com\//git@github.com:/' .git/config
+
+# npm install coffee-script
+
+SRC=$(wildcard *.coffee */*.coffee)
+LIB=$(SRC:%.coffee=%.js)
+
+%.js: %.coffee
+	coffee -bp $< > $@
+
+.PHONY: coffee
+coffee: $(LIB)
+
+.PHONY: test
+test: $(LIB)
+	@nodeunit tests/*.js
