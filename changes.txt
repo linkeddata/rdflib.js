@@ -3,7 +3,6 @@ REMOVED FILES:
 plistClosure.js -> no refs to about() or pickOne.
 unify.js        -> contained _no_ code !
 remote.js       -> remoteQuery ref'd in query.js, but commented out.
-rdfs.js         -> cool functionality, but not used anywhere?
 parser.js       -> not used anymore.
 
 LOGGING:
@@ -16,7 +15,6 @@ ORDERING:
 util.js - done (util-nonlib.js) - FIGURE OUT AJAR_HandleNew  (should be in sources probably..) for now in util class.
 uri.js  - done (REMOVED URIjoin, uri_docpart, uri_protocol
 term.js - done..
-match.js     -done..
 rdfparser.js -done..
 n3parser.js  -ew, but done.
 identity.js  21k -RDFArrayRemove now in Util.RDFArrayRemove.

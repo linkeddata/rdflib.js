@@ -13,7 +13,7 @@ X=$J/jquery.uri.js $J/jquery.xmlns.js
 # rdfa.js
 
 R=util.js uri.js term.js rdfparser.js \
-n3parser.js identity.js rdfs.js query.js sparql.js sparqlUpdate.js jsonparser.js serialize.js web.js
+n3parser.js identity.js query.js sparql.js sparqlUpdate.js jsonparser.js serialize.js web.js
 
 
 npm:

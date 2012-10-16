@@ -11,7 +11,6 @@
     load('../../rdfa.js');
     load('../../n3parser.js');
     load('../../identity.js');
-    load('../../rdfs.js');
     load('../../query.js');
     load('../../sparql.js');
     load('../../sparqlUpdate.js');

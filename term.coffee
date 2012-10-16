@@ -108,8 +108,8 @@ class $rdf.Collection
     toNT: -> $rdf.NTAnonymousNodePrefix + @id
     toString: -> '(' + @elements.join(' ') + ')'
 
-    append: (el) -> @elements.push(el)
-    unshift: (el) -> @elements.unshift(el)
+    append: (el) -> @elements.push el
+    unshift: (el) -> @elements.unshift el
     shift: -> @elements.shift()
     close: -> @closed = true
 
@@ -127,7 +127,7 @@ $rdf.term = (val) ->
 
             else if val instanceof Array
                 x = new $rdf.Collection
-                x.append $rdf.term(elt) for elt in val
+                x.append($rdf.term(elt)) for elt in val
                 return x
 
             return val
@@ -150,7 +150,7 @@ $rdf.term = (val) ->
         when 'undefined'
             return undefined
 
-    throw "Can't make term from " + val + " of type " + typeof val
+    throw "Can't make term from #{val} of type " + typeof val
 
 class $rdf.Statement
     # This is a triple with an optional reason
@@ -180,13 +180,13 @@ class $rdf.Formula
     toString: @::toNT
 
     add: (s, p, o, why) ->
-        @statements.push new $rdf.Statement s, p, o, why
+        @statements.push new $rdf.Statement(s, p, o, why)
 
     # convenience methods
     sym: (uri, name) ->
         if name?
             throw 'This feature (kb.sym with 2 args) is removed. Do not assume prefix mappings.'
-            if !$rdf.ns[uri]
+            unless $rdf.ns[uri]
                 throw "The prefix #{uri} is not set in the API"
             uri = $rdf.ns[uri] + name
         new $rdf.Symbol uri
@@ -201,7 +201,7 @@ class $rdf.Formula
     list: (values) ->
         r = new $rdf.Collection
         if values
-            r.append elt for elt in values
+            r.append(elt) for elt in values
         return r
     variable: (name) ->
         new $rdf.Variable name
@@ -293,6 +293,136 @@ class $rdf.Formula
     whether: (s, p, o, w) ->
         @statementsMatching(s, p, o, w, false).length
 
+    # RDFS Inference
+    # These are hand-written implementations of a backward-chaining reasoner over the RDFS axioms
+
+    transitiveClosure: (seeds, predicate, inverse) ->
+        # @param seeds:   a hash of NTs of classes to start with
+        # @param predicate: The property to trace though
+        # @param inverse: trace inverse direction
+        done = {} # classes we have looked up
+        agenda = {}
+        for own k, v of seeds # take a copy
+            agenda[k] = v
+        loop
+            t = do ->
+                for own p of agenda
+                    return p
+            unless t?
+                return done
+            sups = if inverse then @each(undefined, predicate, @fromNT(t)) else @each(@fromNT(t), predicate)
+            for elt in sups
+                s = elt.toNT()
+                if s of done
+                    continue
+                if s of agenda
+                    continue
+                agenda[s] = agenda[t]
+            done[t] = agenda[t]
+            delete agenda[t]
+
+    findMembersNT: (thisClass) ->
+        # For thisClass or any subclass, anything which has it is its type
+        # or is the object of something which has the type as its range, or subject
+        # of something which has the type as its domain
+        # We don't bother doing subproperty (yet?)as it doesn't seeem to be used much.
+        # Get all the Classes of which we can RDFS-infer the subject is a member
+        # @returns hash of URIs
+        seeds = {}
+        seeds[thisClass.toNT()] = true
+        members = {}
+        for own t of @transitiveClosure(seeds, @sym('http://www.w3.org/2000/01/rdf-schema#subClassOf'), true)
+            for st in @statementsMatching(undefined, @sym('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'), @fromNT(t))
+                members[st.subject.toNT()] = st
+            for pred in @each(undefined, @sym('http://www.w3.org/2000/01/rdf-schema#domain'), @fromNT(t))
+                for st in @statementsMatching(undefined, pred)
+                    members[st.subject.toNT()] = st
+            for pred in @each(undefined, @sym('http://www.w3.org/2000/01/rdf-schema#range'), @fromNT(t))
+                for st in @statementsMatching(undefined, pred)
+                    members[st.object.toNT()] = st
+        return members
+
+    NTtoURI: (t) ->
+        uris = {}
+        for own k, v of t
+            uris[k[1...-1]] = v if k[0] is '<'
+        return uris
+
+    findTypeURIs: (subject) ->
+        @NTtoURI @findTypesNT subject
+
+    findTypesNT: (subject) ->
+        # Get all the Classes of which we can RDFS-infer the subject is a member
+        # ** @@ This will loop is there is a class subclass loop (Sublass loops are not illegal)
+        # Returns a hash table where key is NT of type and value is statement why we think so.
+        # Does NOT return terms, returns URI strings.
+        # We use NT representations in this version because they handle blank nodes.
+        rdftype = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type'
+        types = []
+        for st in @statementsMatching(subject, undefined, undefined) # fast
+            if st.predicate.uri is rdftype
+                types[st.object.toNT()] = st
+            else
+                # $rdf.log.warn('types: checking predicate ' + st.predicate.uri)
+                for range in @each(st.predicate, @sym('http://www.w3.org/2000/01/rdf-schema#domain'))
+                    types[range.toNT()] = st # A pointer to one part of the inference only
+        for st in @statementsMatching(undefined, undefined, subject) # fast
+            for domain in @each(st.predicate, @sym('http://www.w3.org/2000/01/rdf-schema#range'))
+                types[domain.toNT()] = st
+        return @transitiveClosure(types, @sym('http://www.w3.org/2000/01/rdf-schema#subClassOf'), false)
+
+    findSuperClassesNT: (subject) ->
+        # Get all the Classes of which we can RDFS-infer the subject is a subclass
+        # Returns a hash table where key is NT of type and value is statement why we think so.
+        # Does NOT return terms, returns URI strings.
+        # We use NT representations in this version because they handle blank nodes.
+        types = []
+        types[subject.toNT()] = true
+        return @transitiveClosure(types, @sym('http://www.w3.org/2000/01/rdf-schema#subClassOf'), false)
+
+    findSubClassesNT: (subject) ->
+        # Get all the Classes of which we can RDFS-infer the subject is a superclass
+        # Returns a hash table where key is NT of type and value is statement why we think so.
+        # Does NOT return terms, returns URI strings.
+        # We use NT representations in this version because they handle blank nodes.
+        types = []
+        types[subject.toNT()] = true
+        return @transitiveClosure(types, @sym('http://www.w3.org/2000/01/rdf-schema#subClassOf'), true)
+
+    topTypeURIs: (types) ->
+        # Find the types in the list which have no *stored* supertypes
+        # We exclude the universal class, owl:Things and rdf:Resource, as it is information-free.
+        tops = []
+        for own k, v of types
+            n = 0
+            for j in @each(@sym(k), @sym('http://www.w3.org/2000/01/rdf-schema#subClassOf'))
+                unless j.uri is 'http://www.w3.org/2000/01/rdf-schema#Resource'
+                    n++
+                    break
+            unless n
+                tops[k] = v
+        if tops['http://www.w3.org/2000/01/rdf-schema#Resource']
+            delete tops['http://www.w3.org/2000/01/rdf-schema#Resource']
+        if tops['http://www.w3.org/2002/07/owl#Thing']
+            delete tops['http://www.w3.org/2002/07/owl#Thing']
+        return tops
+
+    bottomTypeURIs: (types) ->
+        # Find the types in the list which have no *stored* subtypes
+        # These are a set of classes which provide by themselves complete
+        # information -- the other classes are redundant for those who
+        # know the class DAG.
+        bots = []
+        for own k, v of types
+            subs = @each(undefined, @sym('http://www.w3.org/2000/01/rdf-schema#subClassOf'), @sym(k))
+            bottom = true
+            for elt in subs
+                if elt.uri in types
+                    bottom = false
+                    break
+            bots[k] = v if bottom
+        return bots
+
 $rdf.sym = (uri) -> new $rdf.Symbol uri
 $rdf.lit = $rdf.Formula::literal
 $rdf.Namespace = $rdf.Formula::ns
@@ -337,4 +467,5 @@ $rdf.fromNT = $rdf.Formula::fromNT
 $rdf.graph = -> new $rdf.IndexedFormula
 
 if module?.exports?
-    module.exports[k] = v for own k, v of $rdf
+    for own k, v of $rdf
+        module.exports[k] = v
