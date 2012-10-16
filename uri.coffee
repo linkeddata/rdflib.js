@@ -9,7 +9,7 @@
 #
 ###
 
-$rdf = {} if not $rdf?
+$rdf = {} unless $rdf?
 $rdf.Util ?= {}
 
 class $rdf.Util.uri
@@ -17,10 +17,10 @@ class $rdf.Util.uri
         baseHash = base.indexOf '#'
         if baseHash > 0
             base = base[...baseHash]
-        if given.length == 0
+        if given.length is 0
             # before chopping its filename off
             return base
-        if given.indexOf('#') == 0
+        if given.indexOf('#') is 0
             return base + given
 
         colon = given.indexOf ':'
@@ -28,7 +28,7 @@ class $rdf.Util.uri
             # absolute URI form overrides base URI
             return given
         baseColon = base.indexOf ':'
-        if base.length == 0
+        if base.length is 0
             return given
         if baseColon < 0
             alert "Invalid base: #{base} in join with given: #{given}"
@@ -36,10 +36,10 @@ class $rdf.Util.uri
 
         # eg. http:
         baseScheme = base[..baseColon]
-        if given.indexOf('//') == 0
+        if given.indexOf('//') is 0
             # starts with //
             return baseScheme + given
-        if base.indexOf('//', baseColon) == baseColon + 1
+        if base.indexOf('//', baseColon) is baseColon + 1
             # any hostpart
             baseSingle = base.indexOf('/', baseColon+3)
             if baseSingle < 0
@@ -56,7 +56,7 @@ class $rdf.Util.uri
                     return baseScheme + given
 
         # starts with / but not //
-        if given.indexOf('/') == 0
+        if given.indexOf('/') is 0
             return base[...baseSingle] + given
 
         path = base[baseSingle..]
@@ -98,9 +98,9 @@ class $rdf.Util.uri
 
     # relativize URI to a given base
     @refTo: (base, uri) ->
-        if not base
+        unless base
             return uri
-        if base == uri
+        if base is uri
             return ''
         # how much are they identical
         for c, i in uri
@@ -112,12 +112,12 @@ class $rdf.Util.uri
                 k = -2
             # first *single* slash
             l = uri.indexOf '/', k + 2
-            if uri[l+1] != '/' and base[l+1] != '/' and uri[...l] == base[...l]
+            if uri[l+1] != '/' and base[l+1] != '/' and uri[...l] is base[...l]
                 # common path to single slash but no other common path segments
                 return uri[l..]
 
         # fragment of base
-        if uri[i] == '#' and base.length == i
+        if uri[i] is '#' and base.length is i
             return uri[i..]
         while i > 0 and uri[i-1] != '/'
             i--
@@ -132,10 +132,10 @@ class $rdf.Util.uri
             return uri
 
         n = 0
-        n++ for c in base[i..] when c == '/'
-        if n == 0 and i < uri.length and uri[i] == '#'
+        n++ for c in base[i..] when c is '/'
+        if n is 0 and i < uri.length and uri[i] is '#'
             return './' + uri[i..]
-        if n == 0 and i == uri.length
+        if n is 0 and i is uri.length
             return './'
 
         s = ''

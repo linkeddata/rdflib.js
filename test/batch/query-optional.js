@@ -7,7 +7,6 @@
     load('../../util.js');
     load('../../uri.js');
     load('../../term.js');
-    load('../../match.js');
     load('../../rdfparser.js');
     load('../../rdfa.js');
     load('../../n3parser.js');

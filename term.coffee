@@ -4,7 +4,7 @@
 # Designed to look like rdflib and cwm
 ###
 
-$rdf = {} if not $rdf?
+$rdf = {} unless $rdf?
 
 class $rdf.Empty
     termType: 'empty'
@@ -17,6 +17,18 @@ class $rdf.Symbol
     termType: 'symbol'
     toString: -> "<#{@uri}>"
     toNT: @::toString
+
+    sameTerm: (other) ->
+        unless other
+            return false
+        (@termType is other.termType) and (@uri is other.uri)
+
+    compareTerm: (other) ->
+        if @classOrder < other.classOrder then return -1
+        if @classOrder > other.classOrder then return +1
+        if @uri < other.uri then return -1
+        if @uri > other.uri then return +1
+        return 0
 
     # precalculated symbols
     XSDboolean: new @('http://www.w3.org/2001/XMLSchema#boolean')
@@ -41,6 +53,18 @@ class $rdf.BlankNode
     toNT: -> $rdf.NTAnonymousNodePrefix + @id
     toString: @::toNT
 
+    sameTerm: (other) ->
+        unless other
+            return false
+        (@termType is other.termType) and (@id is other.id)
+
+    compareTerm: (other) ->
+        if @classOrder < other.classOrder then return -1
+        if @classOrder > other.classOrder then return +1
+        if @id < other.id then return -1
+        if @id > other.id then return +1
+        return 0
+
 class $rdf.Literal
     constructor: (@value, @lang, @datatype) ->
         @lang ?= undefined
@@ -60,7 +84,20 @@ class $rdf.Literal
             str += '^^' + @datatype.toNT()
         if @lang
             str += '@' + @lang
-        str
+        return str
+
+    sameTerm: (other) ->
+        unless other
+            return false
+        (@termType is other.termType) and (@value is other.value) and (@lang is other.lang) and
+            ((!@datatype and !other.datatype) or (@datatype and @datatype.sameTerm(other.datatype)))
+
+    compareTerm: (other) ->
+        if @classOrder < other.classOrder then return -1
+        if @classOrder > other.classOrder then return +1
+        if @value < other.value then return -1
+        if @value > other.value then return +1
+        return 0
 
 class $rdf.Collection
     constructor: ->
@@ -75,6 +112,9 @@ class $rdf.Collection
     unshift: (el) -> @elements.unshift(el)
     shift: -> @elements.shift()
     close: -> @closed = true
+
+$rdf.Collection::sameTerm = $rdf.BlankNode::sameTerm
+$rdf.Collection::compareTerm = $rdf.BlankNode::compareTerm
 
 $rdf.term = (val) ->
     switch typeof val
@@ -98,7 +138,7 @@ $rdf.term = (val) ->
         when 'number'
             if (''+val).indexOf('e') >= 0
                 dt = $rdf.Symbol.prototype.XSDfloat
-            else if (''+val).indexOf('.')>=0
+            else if (''+val).indexOf('.') >= 0
                 dt = $rdf.Symbol.prototype.XSDdecimal
             else
                 dt = $rdf.Symbol.prototype.XSDinteger
@@ -117,9 +157,9 @@ class $rdf.Statement
     # The reason can point to provenece or inference
 
     constructor: (subject, predicate, object, why) ->
-        @subject = $rdf.term(subject)
-        @predicate = $rdf.term(predicate)
-        @object = $rdf.term(object)
+        @subject = $rdf.term subject
+        @predicate = $rdf.term predicate
+        @object = $rdf.term object
         @why = why if why?
     toNT: -> [@subject.toNT(), @predicate.toNT(), @object.toNT()].join(' ') + ' .'
     toString: @::toNT
@@ -140,14 +180,14 @@ class $rdf.Formula
     toString: @::toNT
 
     add: (s, p, o, why) ->
-        @statements.push(new $rdf.Statement s, p, o, why)
+        @statements.push new $rdf.Statement s, p, o, why
 
     # convenience methods
     sym: (uri, name) ->
         if name?
             throw 'This feature (kb.sym with 2 args) is removed. Do not assume prefix mappings.'
             if !$rdf.ns[uri]
-                throw 'The prefix "'+uri+'" is not set in the API'
+                throw "The prefix #{uri} is not set in the API"
             uri = $rdf.ns[uri] + name
         new $rdf.Symbol uri
     literal: (val, lang, dt) ->
@@ -162,11 +202,11 @@ class $rdf.Formula
         r = new $rdf.Collection
         if values
             r.append elt for elt in values
-        r
+        return r
     variable: (name) ->
         new $rdf.Variable name
     ns: (nsuri) ->
-        (ln) -> new $rdf.Symbol(nsuri + (if ln? then ln else ''))
+        (ln) -> new $rdf.Symbol(nsuri + (ln ? ''))
 
     fromNT: (str) ->
         # The bnode bit should not be used on program-external values; designed
@@ -205,8 +245,55 @@ class $rdf.Formula
 
         throw "Can't convert from NT: #{str}"
 
+    sameTerm: (other) ->
+        unless other
+            return false
+        @hashString() is other.hashString()
 
-$rdf.sym = (uri) -> new $rdf.Symbol(uri)
+    each: (s, p, o, w) ->
+        # Only one of s p o can be undefined, and w is optional.
+        results = []
+        sts = @statementsMatching s, p, o, w, false
+        if !s?
+            results.push elt.subject for elt in sts
+        else if !p?
+            results.push elt.predicate for elt in sts
+        else if !o?
+            results.push elt.object for elt in sts
+        else if !w?
+            results.push elt.why for elt in sts
+        return results
+
+    any: (s, p, o, w) ->
+        st = @anyStatementMatching s, p, o, w
+        if !st?
+            return undefined
+        else if !s?
+            return st.subject
+        else if !p?
+            return st.predicate
+        else if !o?
+            return st.object
+        return undefined
+
+    holds: (s, p, o, w) ->
+        st = @anyStatementMatching s, p, o, w
+        return st?
+
+    holdsStatement: (st) ->
+        @holds st.subject, st.predicate, st.object, st.why
+
+    the: (s, p, o, w) ->
+        # the() should contain a check there is only one
+        x = @any s, p, o, w
+        unless x?
+            $rdf.log.error "No value found for the() {#{s} #{p} #{o}}."
+        return x
+
+    whether: (s, p, o, w) ->
+        @statementsMatching(s, p, o, w, false).length
+
+$rdf.sym = (uri) -> new $rdf.Symbol uri
 $rdf.lit = $rdf.Formula::literal
 $rdf.Namespace = $rdf.Formula::ns
 $rdf.variable = $rdf.Formula::variable
@@ -232,12 +319,22 @@ class $rdf.Variable
         "?#{@uri}"
     toString: @::toNT
     hashString: @::toNT
-    classOrder: 7
+
+    sameTerm: (other) ->
+        unless other
+            false
+        (@termType is other.termType) and (@uri is other.uri)
+
+$rdf.Literal::classOrder = 1
+$rdf.Collection::classOrder = 3
+$rdf.Formula::classOrder = 4
+$rdf.Symbol::classOrder = 5
+$rdf.BlankNode::classOrder = 6
+$rdf.Variable::classOrder = 7
 
 $rdf.fromNT = $rdf.Formula::fromNT
 
-$rdf.graph = ->
-    new $rdf.IndexedFormula
+$rdf.graph = -> new $rdf.IndexedFormula
 
 if module?.exports?
     module.exports[k] = v for own k, v of $rdf

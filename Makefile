@@ -1,6 +1,6 @@
 # rdflib.js Makefile
 
-R=util.js uri.js term.js match.js rdfparser.js n3parser.js identity.js rdfs.js query.js sparql.js sparqlUpdate.js jsonparser.js serialize.js web.js
+R=util.js uri.js term.js rdfparser.js n3parser.js identity.js rdfs.js query.js sparql.js sparqlUpdate.js jsonparser.js serialize.js web.js
 
 targets=$(addprefix dist/, rdflib.js node-rdflib.js rdflib-rdfa.js)
 
@@ -51,8 +51,8 @@ detach:
 gh-pages: detach all
 	git branch -D gh-pages ||:
 	git checkout -b gh-pages
-	git add -f dist/*.js
-	git commit -m 'gh-pages: add dist'
+	git add -f dist/*.js *.js
+	git commit -m 'gh-pages: update to latest'
 	git push -f origin gh-pages
 	git checkout master
 
@@ -67,7 +67,7 @@ status:
 writable:
 	@sed -i -re 's/git:\/\/github.com\//git@github.com:/' .git/config
 
-# npm install coffee-script
+# npm install -g coffee-script nodeunit
 
 SRC=$(wildcard *.coffee */*.coffee)
 LIB=$(SRC:%.coffee=%.js)

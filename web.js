@@ -15,7 +15,7 @@
  * 
  * Dependencies:
  *
- * needs: util.js uri.js term.js match.js rdfparser.js rdfa.js n3parser.js
+ * needs: util.js uri.js term.js rdfparser.js rdfa.js n3parser.js
  *      identity.js rdfs.js sparql.js jsonparser.js
  *
  * If jQuery is defined, it uses jQuery.ajax, else is independent of jQuery

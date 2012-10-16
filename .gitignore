@@ -1,2 +1,4 @@
 dist
 tests/*.js
+term.js
+uri.js
