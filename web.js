@@ -30,7 +30,6 @@
 $rdf.Fetcher = function(store, timeout, async) {
     this.store = store
     this.thisURI = "http://dig.csail.mit.edu/2005/ajar/ajaw/rdf/sources.js" + "#SourceFetcher" // -- Kenny
-//    this.timeout = timeout ? timeout : 300000
     this.timeout = timeout ? timeout : 30000
     this.async = async != null ? async : true
     this.appNode = this.store.bnode(); // Denoting this session
@@ -738,12 +737,13 @@ $rdf.Fetcher = function(store, timeout, async) {
                     if (loc) {
                         var docURI = kb.any(prev, ns.link('requestedURI'));
                         if (docURI != loc) {
-                            kb.add(kb.sym(doc), ns.rdf('type'), cla, sf.appNode);
+                            kb.add(kb.sym(loc), ns.rdf('type'), cla, sf.appNode);
                         }
                     }
                     for (;;) {
-                        var doc = kb.sym(kb.any(prev, ns.link('requestedURI')))
-                        kb.add(doc, ns.rdf('type'), cla, sf.appNode);
+                        var doc = kb.any(prev, ns.link('requestedURI'));
+                        if (doc && doc.value) // convert Literal
+                            kb.add(kb.sym(doc.value), ns.rdf('type'), cla, sf.appNode);
                         prev = kb.any(undefined, kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'), prev);
                         if (!prev) break;
                         var response = kb.any(prev, kb.sym('http://www.w3.org/2007/ont/link#response'));
@@ -925,7 +925,7 @@ $rdf.Fetcher = function(store, timeout, async) {
         
 
         // Setup the request
-        if (typeof jQuery !== 'undefined' && jQuery.ajax)
+        if (typeof jQuery !== 'undefined' && jQuery.ajax) {
             var xhr = jQuery.ajax({
                 url: docuri,
                 accepts: {'*': 'text/turtle,text/n3,application/rdf+xml'},
@@ -940,7 +940,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                     onreadystatechangeFactory(xhr)();
                 }
             });
-        else {
+        } else {
             var xhr = $rdf.Util.XMLHTTPFactory();
             xhr.onerror = onerrorFactory(xhr);
             xhr.onreadystatechange = onreadystatechangeFactory(xhr);
