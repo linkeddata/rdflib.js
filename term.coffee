@@ -191,7 +191,7 @@ class $rdf.Formula
             uri = $rdf.ns[uri] + name
         new $rdf.Symbol uri
     literal: (val, lang, dt) ->
-        new $rdf.Literal val.toString(), lang, dt
+        new $rdf.Literal "#{val}", lang, dt
     bnode: (id) ->
         new $rdf.BlankNode id
     formula: ->
