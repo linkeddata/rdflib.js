@@ -1,6 +1,6 @@
 # rdflib.js Makefile
 
-R=util.js uri.js term.js rdfparser.js n3parser.js identity.js query.js sparql.js sparqlUpdate.js jsonparser.js serialize.js web.js
+R=util.js uri.js term.js rdfparser.js n3parser.js identity.js query.js sparql.js sparqlUpdate.js jsonparser.js serialize.js updatesVia.js web.js
 
 targets=$(addprefix dist/, rdflib.js node-rdflib.js rdflib-rdfa.js)
 

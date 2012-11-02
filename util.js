@@ -60,34 +60,35 @@ $rdf.Util = {
      **
      */
     'callbackify': function (obj,callbacks) {
-	    obj.callbacks = {}
-	    for (var x=callbacks.length-1; x>=0; x--) {
-            obj.callbacks[callbacks[x]] = []
-	    }
-	    
-	    obj.addHook = function (hook) {
-            if (!obj.callbacks[hook]) { obj.callbacks[hook] = [] }
-	    }
-        
-	    obj.addCallback = function (hook, func) {
-            obj.callbacks[hook].push(func)
-	    }
-        
+        obj.callbacks = {}
+        for (var x=callbacks.length-1; x>=0; x--) {
+            obj.callbacks[callbacks[x]] = [];
+        }
+
+        obj.addHook = function (hook) {
+            if (!obj.callbacks[hook])
+                obj.callbacks[hook] = [];
+        }
+
+        obj.addCallback = function (hook, func) {
+            obj.callbacks[hook].push(func);
+        }
+
         obj.removeCallback = function (hook, funcName) {
             for (var i=0;i<obj.callbacks[hook].length;i++){
-                //alert(obj.callbacks[hook][i].name);
                 if (obj.callbacks[hook][i].name==funcName){
-                    
                     obj.callbacks[hook].splice(i,1);
                     return true;
                 }
             }
             return false; 
         }
+
         obj.insertCallback=function (hook,func){
             obj.callbacks[hook].unshift(func);
         }
-	    obj.fireCallbacks = function (hook, args) {
+
+        obj.fireCallbacks = function (hook, args) {
             var newCallbacks = []
             var replaceCallbacks = []
             var len = obj.callbacks[hook].length
@@ -98,18 +99,19 @@ $rdf.Util = {
                     newCallbacks.push(obj.callbacks[hook][x])
                 }
             }
-            
+
             for (var x=newCallbacks.length-1; x>=0; x--) {
                 replaceCallbacks.push(newCallbacks[x])
             }
-            
+
             for (var x=len; x<obj.callbacks[hook].length; x++) {
                 replaceCallbacks.push(obj.callbacks[hook][x])
             }
-            
+
             obj.callbacks[hook] = replaceCallbacks
-	    }
-	},
+        }
+
+    },
     
     /**
     * A standard way to create XMLHttpRequest objects

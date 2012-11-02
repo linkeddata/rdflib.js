@@ -416,14 +416,9 @@ $rdf.Fetcher = function(store, timeout, async) {
     }
     $rdf.Fetcher.N3Handler.pattern = new RegExp("(application|text)/(x-)?(rdf\\+)?(n3|turtle)")
 
-
     /***********************************************/
 
-
-
-
-
-    $rdf.Util.callbackify(this, ['request', 'recv', 'load', 'fail', 'refresh', 'retract', 'done']);
+    $rdf.Util.callbackify(this, ['request', 'recv', 'headers', 'load', 'fail', 'refresh', 'retract', 'done']);
 
     this.addProtocol = function(proto) {
         sf.store.add(sf.appNode, ns.link("protocol"), sf.store.literal(proto), this.appNode)
@@ -485,7 +480,6 @@ $rdf.Fetcher = function(store, timeout, async) {
             }
         }
     };
-
 
     this.doneFetch = function(xhr, args) {
         this.addStatus(xhr.req, 'Done.')
@@ -715,6 +709,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                         kb.add(response, ns.httph(h), xhr.headers[h].trim(), response)
                     }
                 }
+                sf.fireCallbacks('headers', [{uri: docuri, headers: xhr.headers}]);
 
                 if (xhr.status >= 400) { // For extra dignostics, keep the reply
                     if (xhr.responseText.length > 10) { 
@@ -725,11 +720,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                     return;
                 }
 
-
-
                 var loc = xhr.headers['content-location'];
-
-
 
                 // deduce some things from the HTTP transaction
                 var addType = function(cla) { // add type to all redirected resources too
@@ -1226,6 +1217,8 @@ $rdf.Fetcher = function(store, timeout, async) {
         //if it's not pending: false -> flailed 'done' -> done 'redirected' -> redirected
         return this.requested[docuri] == true;
     }
+
+    var updatesVia = new $rdf.UpdatesVia(this);
 };
 
 $rdf.fetcher = function(store, timeout, async) { return new $rdf.Fetcher(store, timeout, async) };
