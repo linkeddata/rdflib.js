@@ -7,6 +7,9 @@ id                          [a-zA-Z][a-zA-Z0-9]*
 
 %%
 "<"[^<>\"{}|^`\\]*">"       return 'IRIREF';
+"'"[^\x27\x5c\x0a\x0d]*"'"  return 'STRING_LITERAL1';
+'"'[^\x22\x5c\x0a\x0d]*'"'  return 'STRING_LITERAL2';
+"\\"[tbnrf\\"']             return 'ECHAR';
 "BASE"                      return 'BASE';
 "PREFIX"                    return 'PREFIX';
 "DATA"                      return 'DATA';
@@ -226,6 +229,14 @@ Var
     | VAR2 ;
 
 GraphTerm: iri | RDFLiteral | NumericLiteral | BooleanLiteral | BlankNode | NIL ;
+
+RDFLiteral
+    : String '^^' iri
+    | String LANGTAG
+    | String
+    ;
+
+String: STRING_LITERAL1 | STRING_LITERAL2 ;
 
 iri
     : IRIREF -> { type: 'uri', value: yytext.slice(1,-1) }

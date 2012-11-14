@@ -11,3 +11,7 @@ test: all
 	node sparul.js tests/sparul.ru
 .PHONY: test
 
+todo: all
+	node sparul.js tests/sparul-todo.ru
+.PHONY: todo
+
