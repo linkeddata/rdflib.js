@@ -1,4 +1,5 @@
 dist
+parsers/*.js
 tests/*.js
 term.js
 updatesVia.js
