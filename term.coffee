@@ -351,6 +351,9 @@ class $rdf.Formula
     findTypeURIs: (subject) ->
         @NTtoURI @findTypesNT subject
 
+    findMemberURIs: (subject) ->
+        @NTtoURI @findMembersNT subject
+
     findTypesNT: (subject) ->
         # Get all the Classes of which we can RDFS-infer the subject is a member
         # ** @@ This will loop is there is a class subclass loop (Sublass loops are not illegal)
