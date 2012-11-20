@@ -194,8 +194,8 @@ $rdf.Util = {
             + hour + ":" + minute + ":" + second + "Z";
 	},
     
-    'enablePrivilege': ((typeof netscape != 'undefined') && netscape.security.PrivilegeManager.enablePrivilege) || function() { return; },
-    'disablePrivilege': ((typeof netscape != 'undefined') && netscape.security.PrivilegeManager.disablePrivilege) || function() { return; },
+    'enablePrivilege': ((typeof netscape != 'undefined') && (typeof netscape.security.PrivilegeManager != 'undefined') && netscape.security.PrivilegeManager.enablePrivilege) || function() { return; },
+    'disablePrivilege': ((typeof netscape != 'undefined') && (typeof netscape.security.PrivilegeManager != 'undefined') && netscape.security.PrivilegeManager.disablePrivilege) || function() { return; },
 
 
 
