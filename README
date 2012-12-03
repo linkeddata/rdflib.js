@@ -7,7 +7,7 @@ it can also be used server side with for example Node.js.
 
 Possible out of date information is available from here:
 
-http://tabulator.org/2005/ajar/ajaw/Developer.html
+http://dig.csail.mit.edu/2005/ajar/ajaw/Developer.html
 
 This is a linked data library, which can look up data 
 on the web as it goes. 
