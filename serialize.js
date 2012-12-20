@@ -429,6 +429,7 @@ __Serializer.prototype.statementsToN3 = function(sts) {
                 return this.atomicTermToN3(expr);
         }
     }
+    __Serializer.prototype.termToN3 = termToN3;
     termToN3 = termToN3.bind(this);
 
     function prefixDirectives() {
@@ -484,29 +485,7 @@ __Serializer.prototype.atomicTermToN3 = function atomicTermToN3(expr, stats) {
     }
 };
 
-__Serializer.prototype.termToN3 = function termToN3(expr, stats) {
-    switch (expr.termType) {
-        case 'formula':
-            var res = ['{'];
-            res = res.concat(statementListToTree(expr.statements));
-            return res.concat(['}']);
-
-        case 'collection':
-            var res = ['('];
-            for ( var i = 0; i < expr.elements.length; i++) {
-                res.push([ objectTree(expr.elements[i], stats) ]);
-            }
-            res.push(')');
-            return res;
-
-        default:
-            return this.atomicTermToN3(expr);
-    }
-};
-
-
     //  stringToN3:  String escaping for N3
-    //
 
 __Serializer.prototype.forbidden1 = new RegExp(/[\\"\b\f\r\v\t\n\u0080-\uffff]/gm);
 __Serializer.prototype.forbidden3 = new RegExp(/[\\"\b\f\r\v\u0080-\uffff]/gm);
