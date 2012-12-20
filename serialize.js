@@ -436,6 +436,7 @@ __Serializer.prototype.statementsToN3 = function(sts) {
         if (this.defaultNamespace)
           str += '@prefix : <'+this.defaultNamespace+'>.\n';
         for (var ns in namespaceCounts) {
+            if (!namespaceCounts.hasOwnProperty(ns)) continue;
             str += '@prefix ' + this.prefixes[ns] + ': <'+ns+'>.\n';
         }
         return str + '\n';
@@ -845,6 +846,7 @@ __Serializer.prototype.statementsToXML = function(sts) {
     if (this.defaultNamespace)
       str += ' xmlns="'+escapeForXML(this.defaultNamespace)+'"';
     for (var ns in namespaceCounts) {
+        if (!namespaceCounts.hasOwnProperty(ns)) continue;
         str += '\n xmlns:' + this.prefixes[ns] + '="'+escapeForXML(ns)+'"';
     }
     str += '>';
