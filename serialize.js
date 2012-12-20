@@ -138,6 +138,7 @@ __Serializer.prototype.rootSubjects = function(sts) {
 
     var roots = [];
     for (var xNT in subjects) {
+        if (!subjects.hasOwnProperty(xNT)) continue;
         var x = this.fromStr(xNT);
         if ((x.termType != 'bnode') || !incoming[x] || (incoming[x].length != 1)){
             roots.push(x);
@@ -472,7 +473,7 @@ __Serializer.prototype.atomicTermToN3 = function atomicTermToN3(expr, stats) {
             }
             var str = this.stringToN3(expr.value);
             if (expr.lang) str+= '@' + expr.lang;
-            if (expr.datatype) str+= '^^' + termToN3(expr.datatype, stats);
+            if (expr.datatype) str+= '^^' + this.termToN3(expr.datatype, stats);
             return str;
         case 'symbol':
             return this.symbolToN3(expr);
@@ -482,6 +483,25 @@ __Serializer.prototype.atomicTermToN3 = function atomicTermToN3(expr, stats) {
     }
 };
 
+__Serializer.prototype.termToN3 = function termToN3(expr, stats) {
+    switch (expr.termType) {
+        case 'formula':
+            var res = ['{'];
+            res = res.concat(statementListToTree(expr.statements));
+            return res.concat(['}']);
+
+        case 'collection':
+            var res = ['('];
+            for ( var i = 0; i < expr.elements.length; i++) {
+                res.push([ objectTree(expr.elements[i], stats) ]);
+            }
+            res.push(')');
+            return res;
+
+        default:
+            return this.atomicTermToN3(expr);
+    }
+};
 
 
     //  stringToN3:  String escaping for N3
