@@ -3,6 +3,7 @@
 R=util.js uri.js term.js rdfparser.js n3parser.js identity.js query.js sparql.js sparqlUpdate.js jsonparser.js serialize.js updatesVia.js web.js
 
 targets=$(addprefix dist/, rdflib.js node-rdflib.js rdflib-rdfa.js)
+coffeejs=$(patsubst %.coffee,%.js,$(wildcard *.coffee))
 
 all: dist $(targets)
 
@@ -57,7 +58,7 @@ gh-pages: detach all
 	git checkout master
 
 clean:
-	rm -f $(targets)
+	rm -f $(targets) $(coffeejs)
 
 status:
 	@pwd
