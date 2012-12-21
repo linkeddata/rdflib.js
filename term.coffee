@@ -121,8 +121,8 @@ $rdf.term = (val) ->
         when 'object'
             if val instanceof Date
                 d2 = (x) -> (''+(100+x))[1...3] # just two digits
-                value = ''+ val.getUTCFullYear() + '-' + d2(val.getUTCMonth()+1) +'-'+d2(val.getUTCDate())+
-                        'T'+d2(val.getUTCHours())+':'+d2(val.getUTCMinutes())+':'+d2(val.getUTCSeconds())+'Z'
+                value = '' + val.getUTCFullYear() + '-' + d2(val.getUTCMonth()+1) + '-' + d2(val.getUTCDate()) +
+                        'T' + d2(val.getUTCHours()) + ':'+d2(val.getUTCMinutes()) + ':' + d2(val.getUTCSeconds()) + 'Z'
                 return new $rdf.Literal value, undefined, $rdf.Symbol.prototype.XSDdateTime
 
             else if val instanceof Array

@@ -108,8 +108,8 @@ __Serializer.prototype.makeUpPrefix = function(uri) {
 //  - do stuff about the docu first and then (or first) about its primary topic.
 
 __Serializer.prototype.rootSubjects = function(sts) {
-    var incoming = [];
-    var subjects = [];
+    var incoming = {};
+    var subjects = {};
     var allBnodes = {};
 
 /* This scan is to find out which nodes will have to be the roots of trees
@@ -267,7 +267,7 @@ __Serializer.prototype.statementsToN3 = function(sts) {
 
     var namespaceCounts = []; // which have been used
 
-    predMap = {
+    var predMap = {
         'http://www.w3.org/2002/07/owl#sameAs': '=',
         'http://www.w3.org/2000/10/swap/log#implies': '=>',
         'http://www.w3.org/1999/02/22-rdf-syntax-ns#type': 'a'
@@ -433,7 +433,7 @@ __Serializer.prototype.statementsToN3 = function(sts) {
     termToN3 = termToN3.bind(this);
 
     function prefixDirectives() {
-        str = '';
+        var str = '';
         if (this.defaultNamespace)
           str += '@prefix : <'+this.defaultNamespace+'>.\n';
         for (var ns in namespaceCounts) {
@@ -592,13 +592,13 @@ function hexify(str) { // also used in parser
 
 
 function backslashUify(str) {
-    var res = '';
+    var res = '', k;
     for (var i=0; i<str.length; i++) {
         k = str.charCodeAt(i);
         if (k>65535)
-            res += '\\U' + ('00000000'+n.toString(16)).slice(-8); // convert to upper?
+            res += '\\U' + ('00000000'+k.toString(16)).slice(-8); // convert to upper?
         else if (k>126) 
-            res += '\\u' + ('0000'+n.toString(16)).slice(-4);
+            res += '\\u' + ('0000'+k.toString(16)).slice(-4);
         else
             res += str[i];
     }
@@ -642,6 +642,8 @@ __Serializer.prototype.statementsToXML = function(sts) {
 
     var namespaceCounts = []; // which have been used
     namespaceCounts['http://www.w3.org/1999/02/22-rdf-syntax-ns#'] = true;
+
+    var liPrefix = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#_';	//prefix for ordered list items
 
     ////////////////////////// Arrange the bits of XML text 
 
@@ -713,7 +715,16 @@ __Serializer.prototype.statementsToXML = function(sts) {
     
     function escapeForXML(str) {
         if (typeof str == 'undefined') return '@@@undefined@@@@';
-        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        return str.replace(/[&<"]/g, function(m) {
+          switch(m[0]) {
+            case '&':
+              return '&amp;';
+            case '<':
+              return '&lt;';
+            case '"':
+              return '&quot;';
+          }
+        });
     }
 
     function relURI(term) {
@@ -723,20 +734,111 @@ __Serializer.prototype.statementsToXML = function(sts) {
 
     // The tree for a subject
     function subjectXMLTree(subject, stats) {
-        var start
-        if (subject.termType == 'bnode') {
-            if (!stats.incoming[subject]) { // anonymous bnode
-                var start = '<rdf:Description>';
-            } else {
-                var start = '<rdf:Description rdf:nodeID="'+subject.toNT().slice(2)+'">';
-            }
-        } else {
-            var start = '<rdf:Description rdf:about="'+ relURI(subject)+'">';
+      var results = [];
+      var type, t, st, pred;
+      var sts = stats.subjects[this.toStr(subject)]; // relevant statements
+      if (typeof sts == 'undefined') {
+        throw('Cant find statements for '+subject);
+      }
+
+
+      // Sort only on the predicate, leave the order at object
+      // level undisturbed.  This leaves multilingual content in
+      // the order of entry (for partner literals), which helps
+      // readability.
+      //
+      // For the predicate sort, we attempt to split the uri
+      // as a hint to the sequence
+      sts.sort(function(a,b) {
+        var ap = a.predicate.uri;
+        var bp = b.predicate.uri;
+        if(ap.substring(0,liPrefix.length) == liPrefix || bp.substring(0,liPrefix.length) == liPrefix) {	//we're only interested in sorting list items
+          return ap.localeCompare(bp);
         }
 
-        return [ start ].concat(
-                [propertyXMLTree(subject, stats)]).concat(["</rdf:Description>"]);
+        var as = ap.substring(liPrefix.length);
+        var bs = bp.substring(liPrefix.length);
+        var an = parseInt(as);
+        var bn = parseInt(bs);
+        if(isNaN(an) || isNaN(bn) ||
+            an != as || bn != bs) {	//we only care about integers
+          return ap.localeCompare(bp);
+        }
+
+        return an - bn;
+      });
+
+
+      for (var i=0; i<sts.length; i++) {
+        st = sts[i];
+        // look for a type
+        if(st.predicate.uri == 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type' && !type && st.object.termType == "symbol") {
+          type = st.object;
+          continue;	//don't include it as a child element
+        }
+
+        // see whether predicate can be replaced with "li"
+        pred = st.predicate;
+        if(pred.uri.substr(0, liPrefix.length) == liPrefix) {
+          var number = pred.uri.substr(liPrefix.length);
+          // make sure these are actually numeric list items
+          var intNumber = parseInt(number);
+          if(number == intNumber.toString()) {
+            // was numeric; don't need to worry about ordering since we've already
+            // sorted the statements
+            pred = $rdf.Symbol('http://www.w3.org/1999/02/22-rdf-syntax-ns#li');
+          }
+        }
+
+        t = qname(pred);
+        switch (st.object.termType) {
+          case 'bnode':
+            if(stats.incoming[st.object].length == 1) {	//there should always be something in the incoming array for a bnode
+              results = results.concat(['<'+ t +'>', 
+                subjectXMLTree(st.object, stats),
+                '</'+ t +'>']);
+            } else {
+              results = results.concat(['<'+ t +' rdf:nodeID="'
+                +st.object.toNT().slice(2)+'"/>']);
+            }
+          break;
+          case 'symbol':
+            results = results.concat(['<'+ t +' rdf:resource="'
+              + relURI(st.object)+'"/>']); 
+          break;
+          case 'literal':
+            results = results.concat(['<'+ t
+              + (st.object.dt ? ' rdf:datatype="'+escapeForXML(st.object.dt.uri)+'"' : '') 
+              + (st.object.lang ? ' xml:lang="'+st.object.lang+'"' : '') 
+              + '>' + escapeForXML(st.object.value)
+              + '</'+ t +'>']);
+          break;
+          case 'collection':
+            results = results.concat(['<'+ t +' rdf:parseType="Collection">', 
+              collectionXMLTree(st.object, stats),
+              '</'+ t +'>']);
+          break;
+          default:
+            throw "Can't serialize object of type "+st.object.termType +" into XML";
+        } // switch
+      }
+
+      var tag = type ? qname(type) : 'rdf:Description';
+
+      var attrs = '';
+      if (subject.termType == 'bnode') {
+          if(!stats.incoming[subject] || stats.incoming[subject].length != 1) { // not an anonymous bnode
+              attrs = ' rdf:nodeID="'+subject.toNT().slice(2)+'"';
+          }
+      } else {
+          attrs = ' rdf:about="'+ relURI(subject)+'"';
+      }
+
+      return [ '<' + tag + attrs + '>' ].concat([results]).concat(["</"+ tag +">"]);
     }
+
+    subjectXMLTree = subjectXMLTree.bind(this);
+
     function collectionXMLTree(subject, stats) {
         var res = []
         for (var i=0; i< subject.elements.length; i++) {

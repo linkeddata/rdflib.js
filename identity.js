@@ -119,7 +119,7 @@ $rdf.IndexedFormula.prototype.newPropertyAction = function newPropertyAction(pre
     this.propertyActions[hash].push(action);
     // Now apply the function to to statements already in the store
     var toBeFixed = this.statementsMatching(undefined, pred, undefined);
-    done = false;
+    var done = false;
     for (var i=0; i<toBeFixed.length; i++) { // NOT optimized - sort toBeFixed etc
         done = done || action(this, toBeFixed[i].subject, pred, toBeFixed[i].object);
     }
@@ -263,16 +263,13 @@ $rdf.IndexedFormula.prototype.add = function(subj, pred, obj, why) {
     pred = $rdf.term(pred);
     obj = $rdf.term(obj);
     why = $rdf.term(why);
-    
-    var hash = [ this.canon(subj).hashString(), this.canon(pred).hashString(),
-            this.canon(obj).hashString(), this.canon(why).hashString()];
-
 
     if (this.predicateCallback != undefined)
 	this.predicateCallback(this, pred, why);
 	
     // Action return true if the statement does not need to be added
-    var actions = this.propertyActions[hash[1]]; // Predicate hash
+    var predHash = this.canon(pred).hashString()
+    var actions = this.propertyActions[predHash]; // Predicate hash
     var done = false;
     if (actions) {
         // alert('type: '+typeof actions +' @@ actions='+actions);
@@ -284,6 +281,8 @@ $rdf.IndexedFormula.prototype.add = function(subj, pred, obj, why) {
     //If we are tracking provenanance, every thing should be loaded into the store
     //if (done) return new Statement(subj, pred, obj, why); // Don't put it in the store
                                                              // still return this statement for owl:sameAs input
+    var hash = [ this.canon(subj).hashString(), predHash,
+            this.canon(obj).hashString(), this.canon(why).hashString()];
     var st = new $rdf.Statement(subj, pred, obj, why);
     for (var i=0; i<4; i++) {
         var ix = this.index[i];
@@ -385,13 +384,12 @@ $rdf.IndexedFormula.prototype.statementsMatching = function(subj,pred,obj,why,ju
                 break;
             }
         }
-        if (st != null) results.push(st);
+        if (st != null) {
+          results.push(st);
+          if(justOne) break;
+        }
     }
 
-    if(justOne) {
-        if(results.length>1)
-            results = results.slice(0,1);
-    }
     return results;
 }; // statementsMatching
 
