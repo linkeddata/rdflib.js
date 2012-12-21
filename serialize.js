@@ -108,8 +108,8 @@ __Serializer.prototype.makeUpPrefix = function(uri) {
 //  - do stuff about the docu first and then (or first) about its primary topic.
 
 __Serializer.prototype.rootSubjects = function(sts) {
-    var incoming = [];
-    var subjects = [];
+    var incoming = {};
+    var subjects = {};
     var allBnodes = {};
 
 /* This scan is to find out which nodes will have to be the roots of trees
