@@ -267,7 +267,7 @@ __Serializer.prototype.statementsToN3 = function(sts) {
 
     var namespaceCounts = []; // which have been used
 
-    predMap = {
+    var predMap = {
         'http://www.w3.org/2002/07/owl#sameAs': '=',
         'http://www.w3.org/2000/10/swap/log#implies': '=>',
         'http://www.w3.org/1999/02/22-rdf-syntax-ns#type': 'a'
@@ -433,7 +433,7 @@ __Serializer.prototype.statementsToN3 = function(sts) {
     termToN3 = termToN3.bind(this);
 
     function prefixDirectives() {
-        str = '';
+        var str = '';
         if (this.defaultNamespace)
           str += '@prefix : <'+this.defaultNamespace+'>.\n';
         for (var ns in namespaceCounts) {
@@ -592,13 +592,13 @@ function hexify(str) { // also used in parser
 
 
 function backslashUify(str) {
-    var res = '';
+    var res = '', k;
     for (var i=0; i<str.length; i++) {
         k = str.charCodeAt(i);
         if (k>65535)
-            res += '\\U' + ('00000000'+n.toString(16)).slice(-8); // convert to upper?
+            res += '\\U' + ('00000000'+k.toString(16)).slice(-8); // convert to upper?
         else if (k>126) 
-            res += '\\u' + ('0000'+n.toString(16)).slice(-4);
+            res += '\\u' + ('0000'+k.toString(16)).slice(-4);
         else
             res += str[i];
     }
