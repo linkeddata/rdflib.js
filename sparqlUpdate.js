@@ -225,7 +225,7 @@ $rdf.sparqlUpdate = function() {
         }
         
         xhr.open('POST', uri, true);  // async=true
-        xhr.setRequestHeader('Content-type', 'application/sparql-query');
+        xhr.setRequestHeader('Content-type', 'application/sparql-update');
         xhr.send(query);
     }
 
