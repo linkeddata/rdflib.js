@@ -748,7 +748,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                     addType(ns.link('Document'));
                     var ct = xhr.headers['content-type'];
                     if (ct) {
-                        if (ct.indexOf('image/') == 0) addType(kb.sym('http://purl.org/dc/terms/Image'));
+                        if (ct.indexOf('image/') == 0 || ct.indexOf('application/pdf') == 0) addType(kb.sym('http://purl.org/dc/terms/Image'));
                     }
                 }
 
@@ -911,14 +911,21 @@ $rdf.Fetcher = function(store, timeout, async) {
         // Do not remove without checking with TimBL :)
         var uri2 = docuri;
         if (typeof tabulator != 'undefined' && tabulator.preferences.get('offlineModeUsingLocalhost')) {
-            if (uri2.slice(0,7) == 'http://'  && uri2.slice(7,17) != 'localhost/') uri2 = 'http://localhost/' + uri2.slice(7);
+            if (uri2.slice(0,7) == 'http://'  && uri2.slice(7,17) != 'localhost/') {
+                uri2 = 'http://localhost/' + uri2.slice(7);
+                $rdf.log.warn("Localhost kludge for offline use: actually getting <" + uri2 + ">");
+            } else {
+                // $rdf.log.warn("Localhost kludge NOT USED <" + uri2 + ">");
+            };
+        } else {
+            // $rdf.log.warn("Localhost kludge OFF offline use: actually getting <" + uri2 + ">");
         }
         
 
         // Setup the request
         if (typeof jQuery !== 'undefined' && jQuery.ajax) {
             var xhr = jQuery.ajax({
-                url: docuri,
+                url: uri2,
                 accepts: {'*': 'text/turtle,text/n3,application/rdf+xml'},
                 processData: false,
                 error: function(xhr, s, e) {
@@ -936,14 +943,14 @@ $rdf.Fetcher = function(store, timeout, async) {
             xhr.onerror = onerrorFactory(xhr);
             xhr.onreadystatechange = onreadystatechangeFactory(xhr);
             try {
-                xhr.open('GET', docuri, this.async);
+                xhr.open('GET', uri2, this.async);
             } catch (er) {
                 return this.failFetch(xhr, "XHR open for GET failed for <"+uri2+">:\n\t" + er);
             }
         }
         xhr.req = req;
             xhr.uri = docterm;
-            xhr.requestedURI = docuri;
+            xhr.requestedURI = uri2;
         
         // Set redirect callback and request headers -- alas Firefox Extension Only
         

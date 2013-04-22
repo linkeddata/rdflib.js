@@ -2,7 +2,7 @@
 # nodeunit tests for uri.js
 ###
 
-uri = (require '../uri.js').Util.uri
+uri = (require '../uri.js').uri
 
 tests = [
     ["foo:xyz", "bar:abc", "bar:abc"]

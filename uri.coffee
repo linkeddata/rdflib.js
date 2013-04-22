@@ -12,7 +12,7 @@
 $rdf = {} unless $rdf?
 $rdf.Util ?= {}
 
-class $rdf.Util.uri
+class $rdf.uri
     @join: (given, base) ->
         baseHash = base.indexOf '#'
         if baseHash > 0
@@ -157,7 +157,15 @@ class $rdf.Util.uri
         i = uri.indexOf ':'
         if i < 0 then null else uri[...i]
 
+#   @@ For now, allow old calling method through Util
+#    2012-11 tbl
+#
+$rdf.Util.uri = $rdf.uri
+
 if module?.exports?
     module.exports.Util ?= {}
     for own k, v of $rdf.Util
         module.exports.Util[k] = v
+    module.exports.uri = $rdf.uri
+
+#ends
