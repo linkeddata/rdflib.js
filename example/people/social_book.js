@@ -130,7 +130,11 @@ function friends (person,kb,col) {
 function redraw(webid, col) {
     if (!col) col = 0
     var person = $rdf.sym(webid);
-    var docURI = webid.slice(0, webid.indexOf('#'));
+    var indexOf = webid.indexOf('#');
+    var docURI
+    if (indexOf >= 0)
+        docURI = webid.slice(0, indexOf)
+    else  docURI = webid
     var kb = graphs[docURI]
     if (!kb) {
         kb = graphs[docURI] = new $rdf.IndexedFormula();
