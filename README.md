@@ -30,5 +30,18 @@ DEPENDENCIES
     jQuery   (rdfa version only)
     jQuery, XMLHTTPRequest (Node.js version)
 
+INSTALL
+ 
+ Install the Node Package Manager https://npmjs.org/
+ As root run
+
+```bash
+$ npm install -g coffee-script nodeunit   
+```
+ 
+ Run `make` to generate the dist directory
+
+THANKS
+
 Thanks to the many contributors who have been involved along the way.
 LinkedData team & TimBL

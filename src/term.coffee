@@ -116,6 +116,11 @@ class $rdf.Collection
 $rdf.Collection::sameTerm = $rdf.BlankNode::sameTerm
 $rdf.Collection::compareTerm = $rdf.BlankNode::compareTerm
 
+###
+ function to transform a value into an RDF Node, ie. a Literal, IRI, Bnode.
+ @param val can be an rdf node or a date, string, number, boolean, or undefined. RDF Nodes are returned as is, as
+  is undefined
+###
 $rdf.term = (val) ->
     switch typeof val
         when 'object'
@@ -152,23 +157,32 @@ $rdf.term = (val) ->
 
     throw "Can't make term from #{val} of type " + typeof val
 
+###
+  An RDF Statement composed of Subject, Predicate, Object and an optional W for the graph
+  The graph identifier can be used for provenece or inference
+###
 class $rdf.Statement
-    # This is a triple with an optional reason
-    # The reason can point to provenece or inference
-
     constructor: (subject, predicate, object, why) ->
         @subject = $rdf.term subject
         @predicate = $rdf.term predicate
         @object = $rdf.term object
         @why = why if why?
+    # transforms statement to NTriples format
     toNT: -> [@subject.toNT(), @predicate.toNT(), @object.toNT()].join(' ') + ' .'
     toString: @::toNT
 
+###
+  Short cut to function for creating an rdf$Statement
+###
 $rdf.st = (subject, predicate, object, why) ->
     new $rdf.Statement subject, predicate, object, why
 
+###
+   set of statements, where Statements include graph locations.
+   Hence also a set of graphs, including a default graph
+   Forumla contain convenience methods to create RDF
+###
 class $rdf.Formula
-    # set of statements
 
     constructor: ->
         @statements = []
@@ -183,6 +197,13 @@ class $rdf.Formula
         @statements.push new $rdf.Statement(s, p, o, why)
 
     # convenience methods
+
+    ###
+      create an $rdf.Symbol from the uri+name
+      @param uri the prefix uri as String
+      @param name as String
+      @return $rdf.Symbol
+    ###
     sym: (uri, name) ->
         if name?
             throw 'This feature (kb.sym with 2 args) is removed. Do not assume prefix mappings.'
@@ -205,6 +226,8 @@ class $rdf.Formula
         return r
     variable: (name) ->
         new $rdf.Variable name
+    # given a base string construct a function that given a string constructs an $rdf.Symbols
+    # by concatenating that base and a terminal string ln
     ns: (nsuri) ->
         (ln) -> new $rdf.Symbol(nsuri + (ln ? ''))
 
@@ -250,8 +273,11 @@ class $rdf.Formula
             return false
         @hashString() is other.hashString()
 
+    ###
+    Find all the values matching the undefined element in pattern (s,p,o,w)
+    Only one of s p o can be undefined, and w is optional. The others must be $rdf.terms
+    ###
     each: (s, p, o, w) ->
-        # Only one of s p o can be undefined, and w is optional.
         results = []
         sts = @statementsMatching s, p, o, w, false
         if !s?
@@ -264,6 +290,11 @@ class $rdf.Formula
             results.push elt.why for elt in sts
         return results
 
+    ###
+    Find the first value found to be matching the undefined element in pattern (s,p,o,w)
+    Only one of s p o can be undefined, and w is optional. The others must be $rdf.terms
+    @return the value or undefined
+    ###
     any: (s, p, o, w) ->
         st = @anyStatementMatching s, p, o, w
         if !st?
@@ -274,12 +305,20 @@ class $rdf.Formula
             return st.predicate
         else if !o?
             return st.object
+        else if !w?
+            return st.why
         return undefined
 
+    ###
+      @return does the formula contain $rdf.Statement(s,p,o,w) ?
+    ###
     holds: (s, p, o, w) ->
         st = @anyStatementMatching s, p, o, w
         return st?
-
+    ###
+      @param an $rdf.Statement
+      @return does the formula contain the statement ?
+    ###
     holdsStatement: (st) ->
         @holds st.subject, st.predicate, st.object, st.why
 
@@ -290,16 +329,21 @@ class $rdf.Formula
             $rdf.log.error "No value found for the() {#{s} #{p} #{o}}."
         return x
 
+    ###
+      @return does the formulae contain the $rdf.Statement(s,p,o,w)
+    ###
     whether: (s, p, o, w) ->
         @statementsMatching(s, p, o, w, false).length
 
     # RDFS Inference
     # These are hand-written implementations of a backward-chaining reasoner over the RDFS axioms
 
+    ###
+     @param seeds   a hash of NTs of classes to start with
+     @param predicate The property to trace though
+     @param inverse trace inverse direction
+    ###
     transitiveClosure: (seeds, predicate, inverse) ->
-        # @param seeds:   a hash of NTs of classes to start with
-        # @param predicate: The property to trace though
-        # @param inverse: trace inverse direction
         done = {} # classes we have looked up
         agenda = {}
         for own k, v of seeds # take a copy
