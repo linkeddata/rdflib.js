@@ -1,9 +1,9 @@
 # rdflib.js Makefile
 
-R=src/util.js src/make/uri.js src/make/term.js src/rdfparser.js src/n3parser.js src/identity.js src/query.js src/sparql.js src/sparqlUpdate.js src/jsonparser.js src/serialize.js src/make/updatesVia.js src/web.js
+R=src/util.js make/src/uri.js make/src/term.js src/rdfparser.js src/n3parser.js src/identity.js src/query.js src/sparql.js src/sparqlUpdate.js src/jsonparser.js src/serialize.js make/src/updatesVia.js src/web.js
 
 targets=$(addprefix dist/, rdflib.js node-rdflib.js rdflib-rdfa.js)
-coffeejs=$(patsubst %.coffee,make/%.js,$(wildcard *.coffee))
+coffeejs=$(patsubst %.coffee,make/%.js,$(wildcard */*.coffee))
 
 all: dist $(targets)
 
@@ -70,15 +70,22 @@ writable:
 
 # npm install -g coffee-script nodeunit
 
-SRC=$(wildcard *.coffee */*.coffee)
-LIB=$(SRC:%.coffee=%.js)
+testjs=$(patsubst %.coffee,make/%.js,$(wildcard tests/*.coffee))
+#LIB=$(SRC)
 
-src/make/%.js: src/%.coffee
+make/src/%.js: src/%.coffee 
+	mkdir -p make/src
+	coffee -bp $< > $@
+
+make/tests/%.js: tests/%.coffee
+	mkdir -p make/tests
 	coffee -bp $< > $@
 
 .PHONY: coffee
-coffee: $(LIB)
+coffee: $(testjs)
 
 .PHONY: test
-test: $(LIB)
-	@nodeunit tests/*.js
+test: $(testjs)
+	@nodeunit make/tests/*.js
+
+

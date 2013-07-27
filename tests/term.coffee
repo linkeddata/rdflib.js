@@ -2,7 +2,7 @@
 # nodeunit tests for term.js
 ###
 
-$rdf = require '../term.js'
+$rdf = require '../src/term.js'
 
 tests =
     statement: [{
