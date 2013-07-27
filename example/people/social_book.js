@@ -29,6 +29,8 @@ function initialize() {
 function card(who,kb) {
     var newCard = cardTemplate.clone()
 
+    /** mailboxes in foaf are usually written as <mailto:henry.story@bblfish.net> . This
+     * function removes the 'mailto:' part, if it exists */
     function removeProtocol(uri) {
         var parts= uri.split(":")
         if (parts.length > 1) return parts[1]
