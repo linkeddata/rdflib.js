@@ -1,9 +1,9 @@
 # rdflib.js Makefile
 
-R=util.js uri.js term.js rdfparser.js n3parser.js identity.js query.js sparql.js sparqlUpdate.js jsonparser.js serialize.js updatesVia.js web.js
+R=src/util.js src/make/uri.js src/make/term.js src/rdfparser.js src/n3parser.js src/identity.js src/query.js src/sparql.js src/sparqlUpdate.js src/jsonparser.js src/serialize.js src/make/updatesVia.js src/web.js
 
 targets=$(addprefix dist/, rdflib.js node-rdflib.js rdflib-rdfa.js)
-coffeejs=$(patsubst %.coffee,%.js,$(wildcard *.coffee))
+coffeejs=$(patsubst %.coffee,make/%.js,$(wildcard *.coffee))
 
 all: dist $(targets)
 
@@ -27,10 +27,10 @@ dist/node-rdflib.js: $R
 J=dist
 X=jquery.uri.js jquery.xmlns.js
 
-dist/rdflib-rdfa.js: $X $R rdfa.js
+dist/rdflib-rdfa.js: $X $R src/rdfa.js
 	cat $X > $@
 	echo "\$$rdf = function() {" >> $@
-	cat $R rdfa.js >> $@
+	cat $R src/rdfa.js >> $@
 	echo "return \$$rdf;}()" >> $@
 
 jquery.uri.js:
@@ -73,7 +73,7 @@ writable:
 SRC=$(wildcard *.coffee */*.coffee)
 LIB=$(SRC:%.coffee=%.js)
 
-%.js: %.coffee
+src/make/%.js: src/%.coffee
 	coffee -bp $< > $@
 
 .PHONY: coffee
