@@ -575,7 +575,7 @@ $rdf.Fetcher = function(store, timeout, async) {
         }
 
         var pcol = $rdf.Util.uri.protocol(docuri);
-        if (pcol == 'tel' || pcol == 'mailto' || pcol == 'urn') return null; // No look-up operaion on these, but they are not errors
+        if (pcol == 'tel' || pcol == 'mailto' || pcol == 'urn') return null; // No look-up operation on these, but they are not errors
         var force = !! force
         var kb = this.store
         var args = arguments
@@ -949,8 +949,8 @@ $rdf.Fetcher = function(store, timeout, async) {
             }
         }
         xhr.req = req;
-            xhr.uri = docterm;
-            xhr.requestedURI = uri2;
+        xhr.uri = docterm;
+        xhr.requestedURI = uri2;
         
         // Set redirect callback and request headers -- alas Firefox Extension Only
         
