@@ -6,7 +6,7 @@
  */
 
 
-// For quick access to those namespaces:
+// For quick access to namespace often used in foaf profiles
 var FOAF = $rdf.Namespace("http://xmlns.com/foaf/0.1/")
 var RDF = $rdf.Namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#")
 var RDFS = $rdf.Namespace("http://www.w3.org/2000/01/rdf-schema#")
@@ -21,11 +21,18 @@ var graphs = {}
 
 var cardTemplate = ""
 
+/**
+ * run on initialization
+ */ 
 function initialize() {
     cardTemplate = $("#user_wrapper").clone()
+    //todo: place the proxy default somewhere else ( where?) so it can be easy to configure
     $rdf.Fetcher.crossSiteProxyTemplate="http://data.fm/proxy?uri={uri}"
 }
 
+/**
+ * render the card for the user identified by who as described in the graph/knowledge base kb
+ */
 function card(who,kb) {
     var newCard = cardTemplate.clone()
 
@@ -126,6 +133,10 @@ function card(who,kb) {
 
 var uri = 'http://bblfish.net/people/henry/card#me';
 
+/**
+ * fill out the html template for the person identified by the WebID person as described in the knowledge
+ * base kb, in column col of the explorer
+ */
 function friends (person,kb,col) {
     var panel = "#panel"+col
     var friends = kb.each(person, FOAF('knows'));
@@ -152,6 +163,10 @@ function friends (person,kb,col) {
     })
 }
 
+/**
+ *  redraw the screen when the selected user identified by webid is pressed in 
+ *  explorer column col
+ */ 
 function redraw(webid, col) {
     if (!col) col = 0
     var person = $rdf.sym(webid);
@@ -161,14 +176,15 @@ function redraw(webid, col) {
         docURI = webid.slice(0, indexOf)
     else  docURI = webid
     var kb = graphs[docURI]
-    if (!kb) {
+    if (!kb) { 
+        //if the knowledge base was not initialised fetch info from the web (if need CORS go through CORS proxy)
         kb = graphs[docURI] = new $rdf.IndexedFormula();
         var fetch = $rdf.fetcher(kb);
         fetch.nowOrWhenFetched(docURI, undefined, function() {
             card(person,kb)
             friends(person,kb,col+1)
         });
-    } else {  //this does not take into account aging!
+    } else {  //this does not take into account ageing!
         card(person,kb)
         friends(person,kb,col+1)
     }
