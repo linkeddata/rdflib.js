@@ -9,11 +9,15 @@ class $rdf.UpdatesSocket
         @connected = false
         @pending = {}
         @subscribed = {}
-        @socket = new WebSocket via
-        @socket.onopen = @onOpen
-        @socket.onclose = @onClose
-        @socket.onmessage = @onMessage
-        @socket.onerror = @onError
+        @socket = {}
+        try
+            @socket = new WebSocket via
+            @socket.onopen = @onOpen
+            @socket.onclose = @onClose
+            @socket.onmessage = @onMessage
+            @socket.onerror = @onError
+        catch error
+            @onError error
 
     _decode: (q) ->
         r = {}
@@ -26,7 +30,7 @@ class $rdf.UpdatesSocket
 
     _send: (method, uri, data) =>
         message = [method, uri, data].join ' '
-        @socket.send message
+        @socket.send? message
 
     _subscribe: (uri) =>
         @_send 'sub', uri, ''
@@ -47,7 +51,7 @@ class $rdf.UpdatesSocket
     onMessage: (e) =>
         message = e.data.split ' '
         if message[0] is 'ping'
-            @socket.send 'pong ' + message[1...].join(' ')
+            @socket.send? 'pong ' + message[1...].join(' ')
         else if message[0] is 'pub'
             @parent.onUpdate message[1], @_decode(message[2])
 

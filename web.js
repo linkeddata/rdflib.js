@@ -575,7 +575,7 @@ $rdf.Fetcher = function(store, timeout, async) {
         }
 
         var pcol = $rdf.uri.protocol(docuri);
-        if (pcol == 'tel' || pcol == 'mailto' || pcol == 'urn') return null; // No look-up operaion on these, but they are not errors
+        if (pcol == 'tel' || pcol == 'mailto' || pcol == 'urn') return null; // No look-up operation on these, but they are not errors
         var force = !! force
         var kb = this.store
         var args = arguments
@@ -635,12 +635,11 @@ $rdf.Fetcher = function(store, timeout, async) {
         */
 
         var onerrorFactory = function(xhr) { return function(event) {
-            if ($rdf.Fetcher.crossSiteProxyTemplate && document && document.location && !this.proxyUsed) { // In mashup situation
+            if ($rdf.Fetcher.crossSiteProxyTemplate && document && document.location && !xhr.proxyUsed) { // In mashup situation
                 var hostpart = $rdf.uri.hostpart;
                 var here = '' + document.location;
                 var uri = xhr.uri.uri
                 if (hostpart(here) && hostpart(uri) && hostpart(here) != hostpart(uri)) {
-                    this.proxyUsed = true; //only try the proxy once
                     newURI = $rdf.Fetcher.crossSiteProxy(uri);
                     sf.addStatus(xhr.req, "BLOCKED -> Cross-site Proxy to <" + newURI + ">");
                     if (xhr.aborted) return;
@@ -674,6 +673,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                     sf.requested[xhr.uri.uri] = 'redirected';
 
                     var xhr2 = sf.requestURI(newURI, xhr.uri);
+                    xhr2.proxyUsed = true; //only try the proxy once
 
                     if (xhr2 && xhr2.req) {
                         kb.add(xhr.req,
@@ -949,8 +949,8 @@ $rdf.Fetcher = function(store, timeout, async) {
             }
         }
         xhr.req = req;
-            xhr.uri = docterm;
-            xhr.requestedURI = uri2;
+        xhr.uri = docterm;
+        xhr.requestedURI = uri2;
         
         // Set redirect callback and request headers -- alas Firefox Extension Only
         
