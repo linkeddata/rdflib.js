@@ -150,7 +150,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                 var head = this.dom.getElementsByTagName('head')[0]
                 if (head) {
                     var profile = head.getAttribute('profile');
-                    if (profile && $rdf.Util.uri.protocol(profile) == 'http') {
+                    if (profile && $rdf.uri.protocol(profile) == 'http') {
                         // $rdf.log.info("GRDDL: Using generic " + "2003/11/rdf-in-xhtml-processor.");
                          $rdf.Fetcher.doGRDDL(kb, xhr.uri, "http://www.w3.org/2003/11/rdf-in-xhtml-processor", xhr.uri.uri)
 /*			sf.requestURI('http://www.w3.org/2005/08/'
@@ -461,7 +461,7 @@ $rdf.Fetcher = function(store, timeout, async) {
     this.failFetch = function(xhr, status) {
         this.addStatus(xhr.req, status)
         kb.add(xhr.uri, ns.link('error'), status)
-        this.requested[$rdf.Util.uri.docpart(xhr.uri.uri)] = false
+        this.requested[$rdf.uri.docpart(xhr.uri.uri)] = false
         this.fireCallbacks('fail', [xhr.requestedURI])
         xhr.abort()
         return xhr
@@ -472,8 +472,8 @@ $rdf.Fetcher = function(store, timeout, async) {
         if (!uri) return;
         // See http://www.w3.org/TR/powder-dr/#httplink for describedby 2008-12-10
         if (rel == 'alternate' || rel == 'seeAlso' || rel == 'meta' || rel == 'describedby') {
-            var join = $rdf.Util.uri.join2;
-            var obj = kb.sym(join(uri, xhr.uri.uri))
+            // var join = $rdf.uri.join2;   // doesn't work, now a method of rdf.uri
+            var obj = kb.sym($rdf.uri.join(uri, xhr.uri.uri))
             if (obj.uri != xhr.uri) {
                 kb.add(xhr.uri, ns.rdfs('seeAlso'), obj, xhr.uri);
                 // $rdf.log.info("Loading " + obj + " from link rel in " + xhr.uri);
@@ -534,7 +534,7 @@ $rdf.Fetcher = function(store, timeout, async) {
             }
             for (var i = 0; i < uris.length; i++) {
                 this.lookedUp[uris[i]] = true;
-                this.requestURI($rdf.Util.uri.docpart(uris[i]), rterm, force)
+                this.requestURI($rdf.uri.docpart(uris[i]), rterm, force)
             }
         }
         return uris.length
@@ -574,7 +574,7 @@ $rdf.Fetcher = function(store, timeout, async) {
             throw ("requestURI should not be called with fragid: " + uri)
         }
 
-        var pcol = $rdf.Util.uri.protocol(docuri);
+        var pcol = $rdf.uri.protocol(docuri);
         if (pcol == 'tel' || pcol == 'mailto' || pcol == 'urn') return null; // No look-up operaion on these, but they are not errors
         var force = !! force
         var kb = this.store
@@ -627,16 +627,16 @@ $rdf.Fetcher = function(store, timeout, async) {
 
         // This should not be stored in the store, but in the JS data
         /*
-        if (typeof kb.anyStatementMatching(this.appNode, ns.link("protocol"), $rdf.Util.uri.protocol(docuri)) == "undefined") {
+        if (typeof kb.anyStatementMatching(this.appNode, ns.link("protocol"), $rdf.uri.protocol(docuri)) == "undefined") {
             // update the status before we break out
-            this.failFetch(xhr, "Unsupported protocol: "+$rdf.Util.uri.protocol(docuri))
+            this.failFetch(xhr, "Unsupported protocol: "+$rdf.uri.protocol(docuri))
             return xhr
         }
         */
 
         var onerrorFactory = function(xhr) { return function(event) {
             if ($rdf.Fetcher.crossSiteProxyTemplate && document && document.location && !this.proxyUsed) { // In mashup situation
-                var hostpart = $rdf.Util.uri.hostpart;
+                var hostpart = $rdf.uri.hostpart;
                 var here = '' + document.location;
                 var uri = xhr.uri.uri
                 if (hostpart(here) && hostpart(uri) && hostpart(here) != hostpart(uri)) {
@@ -703,7 +703,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                 kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response)
 
                 xhr.headers = {}
-                if ($rdf.Util.uri.protocol(xhr.uri.uri) == 'http' || $rdf.Util.uri.protocol(xhr.uri.uri) == 'https') {
+                if ($rdf.uri.protocol(xhr.uri.uri) == 'http' || $rdf.uri.protocol(xhr.uri.uri) == 'https') {
                     xhr.headers = $rdf.Util.getHTTPHeaders(xhr)
                     for (var h in xhr.headers) { // trim below for Safari - adds a CR!
                         kb.add(response, ns.httph(h), xhr.headers[h].trim(), response)
@@ -752,7 +752,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                     }
                 }
 
-                if ($rdf.Util.uri.protocol(xhr.uri.uri) == 'file' || $rdf.Util.uri.protocol(xhr.uri.uri) == 'chrome') {
+                if ($rdf.uri.protocol(xhr.uri.uri) == 'file' || $rdf.uri.protocol(xhr.uri.uri) == 'chrome') {
                     switch (xhr.uri.uri.split('.').pop()) {
                     case 'rdf':
                     case 'owl':
@@ -770,7 +770,7 @@ $rdf.Fetcher = function(store, timeout, async) {
 
                 // If we have alread got the thing at this location, abort
                 if (loc) {
-                    var udoc = $rdf.Util.uri.join(xhr.uri.uri, loc)
+                    var udoc = $rdf.uri.join(xhr.uri.uri, loc)
                     if (!force && udoc != xhr.uri.uri && sf.requested[udoc]) {
                         // should we smush too?
                         // $rdf.log.info("HTTP headers indicate we have already" + " retrieved " + xhr.uri + " as " + udoc + ". Aborting.")
@@ -825,7 +825,7 @@ $rdf.Fetcher = function(store, timeout, async) {
             case 0:
                     var uri = xhr.uri.uri, newURI;
                     if (this.crossSiteProxyTemplate && document && document.location) { // In mashup situation
-                        var hostpart = $rdf.Util.uri.hostpart;
+                        var hostpart = $rdf.uri.hostpart;
                         var here = '' + document.location;
                         if (hostpart(here) && hostpart(uri) && hostpart(here) != hostpart(uri)) {
                             newURI = this.crossSiteProxyTemplate.replace('{uri}', encodeURIComponent(uri));
@@ -955,8 +955,8 @@ $rdf.Fetcher = function(store, timeout, async) {
         // Set redirect callback and request headers -- alas Firefox Extension Only
         
         if (typeof tabulator != 'undefined' && tabulator.isExtension && xhr.channel &&
-            ($rdf.Util.uri.protocol(xhr.uri.uri) == 'http' ||
-             $rdf.Util.uri.protocol(xhr.uri.uri) == 'https')) {
+            ($rdf.uri.protocol(xhr.uri.uri) == 'http' ||
+             $rdf.uri.protocol(xhr.uri.uri) == 'https')) {
             try {
                 xhr.channel.notificationCallbacks = {
                     getInterface: function(iid) {
@@ -1007,7 +1007,7 @@ $rdf.Fetcher = function(store, timeout, async) {
 
                                     if (xhr.status - 0 != 303) kb.HTTPRedirects[xhr.uri.uri] = newURI; // same document as
                                     if (xhr.status - 0 == 301 && rterm) { // 301 Moved
-                                        var badDoc = $rdf.Util.uri.docpart(rterm.uri);
+                                        var badDoc = $rdf.uri.docpart(rterm.uri);
                                         var msg = 'Warning: ' + xhr.uri + ' has moved to <' + newURI + '>.';
                                         if (rterm) {
                                             msg += ' Link in <' + badDoc + ' >should be changed';
@@ -1079,7 +1079,7 @@ $rdf.Fetcher = function(store, timeout, async) {
 
                                     if (xhr.status - 0 != 303) kb.HTTPRedirects[xhr.uri.uri] = newURI; // same document as
                                     if (xhr.status - 0 == 301 && rterm) { // 301 Moved
-                                        var badDoc = $rdf.Util.uri.docpart(rterm.uri);
+                                        var badDoc = $rdf.uri.docpart(rterm.uri);
                                         var msg = 'Warning: ' + xhr.uri + ' has moved to <' + newURI + '>.';
                                         if (rterm) {
                                             msg += ' Link in <' + badDoc + ' >should be changed';
@@ -1178,7 +1178,7 @@ $rdf.Fetcher = function(store, timeout, async) {
         var uris = kb.uris(term) // Get all URIs
         if (typeof uris != 'undefined') {
             for (var i = 0; i < uris.length; i++) {
-                this.refresh(this.store.sym($rdf.Util.uri.docpart(uris[i])));
+                this.refresh(this.store.sym($rdf.uri.docpart(uris[i])));
                 //what about rterm?
             }
         }
@@ -1198,7 +1198,7 @@ $rdf.Fetcher = function(store, timeout, async) {
     this.retract = function(term) { // sources_retract
         this.store.removeMany(undefined, undefined, undefined, term)
         if (term.uri) {
-            delete this.requested[$rdf.Util.uri.docpart(term.uri)]
+            delete this.requested[$rdf.uri.docpart(term.uri)]
         }
         this.fireCallbacks('retract', arguments)
     }
