@@ -1,0 +1,32 @@
+{
+  "name": "rdflib",
+  "description": "an rdf parser for node.js",
+  "version": "0.1",
+  "private": false,
+  "author": "J. Presbrey <presbrey@mit.edu>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/linkeddata/rdflib.js.git"
+  },
+  "homepage": "http://github.com/linkeddata/rdflib.js",
+  "dependencies": {
+    "coffee": "*",
+    "jsdom": "*",
+    "xmlhttprequest": "*"
+  },
+  "devDependencies": {
+    "nodeunit": "*"
+  },
+  "scripts": {
+    "test": "make test"
+  },
+  "files": [
+    "dist/node-rdflib.js"
+  ],
+  "main": "dist/node_rdflib.js",
+  "keywords": [
+    "linkeddata", "linked data",  "rdf", "rdfa",
+    "turtle", "semantic", "web"
+  ]
+}
