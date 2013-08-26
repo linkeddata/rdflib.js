@@ -1,3 +1,4 @@
+/* vim: set ts=2 sts=2 sw=2 et: */
 /*
  * jQuery RDFa @VERSION
  *                                U N T E S T E D      T R I A L    O N L Y
