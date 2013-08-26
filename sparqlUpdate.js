@@ -379,7 +379,6 @@ $rdf.sparqlUpdate = function() {
                 case 'application/rdf+xml': 
                     documentString = sz.statementsToXML(newSts);
                     break;
-                case 'text/rdf+n3': // Legacy
                 case 'text/n3':
                 case 'text/turtle':
                 case 'application/x-turtle': // Legacy

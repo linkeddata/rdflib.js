@@ -404,9 +404,6 @@ $rdf.Fetcher = function(store, timeout, async) {
         sf.mediatypes['text/n3'] = {
             'q': '1.0'
         } // as per 2008 spec
-        sf.mediatypes['text/rdf+n3'] = {
-            'q': 1.0
-        } // pre 2008 spec
         sf.mediatypes['application/x-turtle'] = {
             'q': 1.0
         } // pre 2008
