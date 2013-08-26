@@ -24,7 +24,7 @@
   "files": [
     "dist/node-rdflib.js"
   ],
-  "main": "dist/node_rdflib.js",
+  "main": "dist/node-rdflib.js",
   "keywords": [
     "linkeddata", "linked data",  "rdf", "rdfa",
     "turtle", "semantic", "web"
