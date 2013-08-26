@@ -1,7 +1,7 @@
 {
   "name": "rdflib",
   "description": "an rdf parser for node.js",
-  "version": "0.1",
+  "version": "0.0.1",
   "private": false,
   "author": "J. Presbrey <presbrey@mit.edu>",
   "license": "MIT",
