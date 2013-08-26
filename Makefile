@@ -49,9 +49,10 @@ detach:
 
 #   WARNING  .. don't do this if you have uncommitted local changes
 #
-gh-pages: detach all
+gh-pages: detach
 	git branch -D gh-pages ||:
 	git checkout -b gh-pages
+	make -B
 	git add -f dist/*.js *.js
 	git commit -m 'gh-pages: update to latest'
 	git push -f origin gh-pages
