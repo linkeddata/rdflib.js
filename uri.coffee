@@ -81,14 +81,6 @@ class $rdf.uri
 
         base[...baseSingle] + path
 
-    @join2: (given, base) ->
-        if tabulator?.isExtension
-            tIOService = Components.classes['@mozilla.org/network/io-service;1']
-                                   .getService(Components.interfaces.nsIIOService)
-            baseURI = tIOService.newURI(base, null, null)
-            tIOService.newURI(baseURI.resolve(given), null, null).spec
-        else
-            @join given, base
 
     @commonHost: new RegExp('^[-_a-zA-Z0-9.]+:(//[^/]*)?/[^/]*$')
 

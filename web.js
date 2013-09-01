@@ -63,6 +63,7 @@ $rdf.Fetcher = function(store, timeout, async) {
         }
         this.recv = function(xhr) {
             xhr.handle = function(cb) {
+                sf.addStatus(xhr.req, 'parsing soon as RDF/XML...');
                 var kb = sf.store;
                 if (!this.dom) this.dom = $rdf.Util.parseXML(xhr.responseText);
 /*                {
@@ -376,6 +377,8 @@ $rdf.Fetcher = function(store, timeout, async) {
         this.recv = function(xhr) {
             xhr.handle = function(cb) {
                 // Parse the text of this non-XML file
+                $rdf.log.debug("web.js: Parsing as N3 " + xhr.uri.uri); // @@@@ comment me out 
+                sf.addStatus(xhr.req, "N3 not parsed yet...")
                 var rt = xhr.responseText
                 var p = $rdf.N3Parser(kb, kb, xhr.uri.uri, xhr.uri.uri, null, null, "", null)
                 //                p.loadBuf(xhr.responseText)
@@ -383,13 +386,13 @@ $rdf.Fetcher = function(store, timeout, async) {
                     p.loadBuf(xhr.responseText)
 
                 } catch (e) {
-                    var msg = ("Error trying to parse " + xhr.uri + ' as Notation3:\n' + e +':\n'+e.stack)
+                    var msg = ("Error trying to parse " + xhr.uri + " as Notation3:\n" + e +':\n'+e.stack)
                     // dump(msg+"\n")
                     sf.failFetch(xhr, msg)
                     return;
                 }
 
-                sf.addStatus(xhr.req, 'N3 parsed: ' + p.statementCount + ' statements in ' + p.lines + ' lines.')
+                sf.addStatus(xhr.req, "N3 parsed: " + p.statementCount + " triples in " + p.lines + " lines.")
                 sf.store.add(xhr.uri, ns.rdf('type'), ns.link('RDFDocument'), sf.appNode);
                 args = [xhr.uri.uri]; // Other args needed ever?
                 sf.doneFetch(xhr, args)
@@ -706,6 +709,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                         kb.add(response, ns.httph(h), xhr.headers[h].trim(), response)
                     }
                 }
+
                 sf.fireCallbacks('headers', [{uri: docuri, headers: xhr.headers}]);
 
                 if (xhr.status >= 400) { // For extra dignostics, keep the reply
@@ -778,7 +782,6 @@ $rdf.Fetcher = function(store, timeout, async) {
                     sf.requested[udoc] = true
                 }
 
-
                 for (var x = 0; x < sf.handlers.length; x++) {
                     if (xhr.headers['content-type'] && xhr.headers['content-type'].match(sf.handlers[x].pattern)) {
                         handler = new sf.handlers[x]()
@@ -805,7 +808,11 @@ $rdf.Fetcher = function(store, timeout, async) {
 
 
                 if (handler) {
-                    handler.recv(xhr)
+                    try {
+                        handler.recv(xhr);
+                    } catch(e) { // Try to avoid silent errors
+                        sf.failFetch(xhr, "Exception handling content-type " + xhr.headers['content-type'] + ' was: '+e);
+                    };
                 } else {
                     sf.failFetch(xhr, "Unhandled content type: " + xhr.headers['content-type']+
                             ", readyState = "+xhr.readyState);
@@ -818,6 +825,9 @@ $rdf.Fetcher = function(store, timeout, async) {
             // LOADING: 3
             // OPENED: 1
             // UNSENT: 0
+
+            // $rdf.log.debug("web.js: XHR " + xhr.uri.uri + ' readyState='+xhr.readyState); // @@@@ comment me out 
+
             switch (xhr.readyState) {
             case 0:
                     var uri = xhr.uri.uri, newURI;

@@ -77,6 +77,7 @@ class $rdf.UpdatesVia
 
     onHeaders: (d) =>
         return true unless d.headers?
+        return true unless WebSocket?
         etag = d.headers['etag']
         via = d.headers['updates-via']
         uri = d.uri
