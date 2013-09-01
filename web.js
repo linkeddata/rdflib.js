@@ -63,7 +63,7 @@ $rdf.Fetcher = function(store, timeout, async) {
         }
         this.recv = function(xhr) {
             xhr.handle = function(cb) {
-                sf.addStatus(xhr.req, 'parsing soon as RDF/XML...');
+                //sf.addStatus(xhr.req, 'parsing soon as RDF/XML...');
                 var kb = sf.store;
                 if (!this.dom) this.dom = $rdf.Util.parseXML(xhr.responseText);
 /*                {
@@ -96,7 +96,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                 }
                 //dump('lastRequested 3:'+lastRequested+'\n')
                 var parser = new $rdf.RDFParser(kb);
-                sf.addStatus(xhr.req, 'parsing as RDF/XML...');
+                // sf.addStatus(xhr.req, 'parsing as RDF/XML...');
                 parser.parse(this.dom, lastRequested.uri, lastRequested);
                 kb.add(lastRequested, ns.rdf('type'), ns.link('RDFDocument'), sf.appNode);
                 cb();
@@ -378,7 +378,7 @@ $rdf.Fetcher = function(store, timeout, async) {
             xhr.handle = function(cb) {
                 // Parse the text of this non-XML file
                 $rdf.log.debug("web.js: Parsing as N3 " + xhr.uri.uri); // @@@@ comment me out 
-                sf.addStatus(xhr.req, "N3 not parsed yet...")
+                //sf.addStatus(xhr.req, "N3 not parsed yet...")
                 var rt = xhr.responseText
                 var p = $rdf.N3Parser(kb, kb, xhr.uri.uri, xhr.uri.uri, null, null, "", null)
                 //                p.loadBuf(xhr.responseText)
@@ -453,7 +453,12 @@ $rdf.Fetcher = function(store, timeout, async) {
         status = "[" + now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds() + "." + now.getMilliseconds() + "] " + status;
         //</Debug>
         var kb = this.store
-        kb.the(req, ns.link('status')).append(kb.literal(status))
+        var s = kb.the(req, ns.link('status'));
+        if (s && s.append) {
+            s.append(kb.literal(status));
+        } else {
+            $rdf.log.warn("web.js: No list to add to: " + s + ',' + status); // @@@
+        };
     }
 
     // Record errors in the system on failure

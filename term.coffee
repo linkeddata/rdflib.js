@@ -19,8 +19,10 @@ class $rdf.Empty
     toNT: @::toString
 
 ###
-   an RDF URI
-    todo: badly named.
+   A named node in an RDF graph
+    todo: badly named. 
+    No, formally a URI is a string, this is a node whose name is a URI.
+    Connolly pointed out it isa symbol on the language.
     @param uri the uri as string
 ###
 class $rdf.Symbol
