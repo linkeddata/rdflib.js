@@ -265,8 +265,6 @@ __Serializer.prototype.statementsToN3 = function(sts) {
     var indent = 4;
     var width = 80;
 
-    var namespaceCounts = []; // which have been used
-
     var predMap = {
         'http://www.w3.org/2002/07/owl#sameAs': '=',
         'http://www.w3.org/2000/10/swap/log#implies': '=>',
@@ -436,8 +434,8 @@ __Serializer.prototype.statementsToN3 = function(sts) {
         var str = '';
         if (this.defaultNamespace)
           str += '@prefix : <'+this.defaultNamespace+'>.\n';
-        for (var ns in namespaceCounts) {
-            if (!namespaceCounts.hasOwnProperty(ns)) continue;
+        for (var ns in this.prefixes) {
+            if (!this.prefixes.hasOwnProperty(ns)) continue;
             str += '@prefix ' + this.prefixes[ns] + ': <'+ns+'>.\n';
         }
         return str + '\n';
@@ -722,7 +720,7 @@ __Serializer.prototype.statementsToXML = function(sts) {
             case '<':
               return '&lt;';
             case '"':
-              return '&quot;';
+              return '&quot;'; //'
           }
         });
     }

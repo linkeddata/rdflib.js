@@ -54,7 +54,7 @@ $rdf.sparqlUpdate = function() {
 
         var request;
         var definitive = false;
-        var requests = kb.each(undefined, this.ns.link("requestedURI"), $rdf.Util.uri.docpart(uri));
+        var requests = kb.each(undefined, this.ns.link("requestedURI"), $rdf.uri.docpart(uri));
         for (var r=0; r<requests.length; r++) {
             request = requests[r];
             if (request !== undefined) {
@@ -392,8 +392,8 @@ $rdf.sparqlUpdate = function() {
             // Write the new version back
             
             var candidateTarget = kb.the(response, this.ns.httph("content-location"));
-            if (candidateTarget) targetURI = Util.uri.join(candidateTarget.value, targetURI);
-            var xhr = Util.XMLHTTPFactory();
+            if (candidateTarget) targetURI = $rdf.uri.join(candidateTarget.value, targetURI);
+            var xhr = $rdf.Util.XMLHTTPFactory();
             xhr.onreadystatechange = function (){
                 if (xhr.readyState == 4){
                     //formula from sparqlUpdate.js, what about redirects?
@@ -482,7 +482,47 @@ $rdf.sparqlUpdate = function() {
         } else throw "Unhandled edit method: '"+protocol+"' for "+doc;
     };
 
+    // This suitable for an inital creation of a document
+    //
+    sparql.prototype.put = function(doc, newSts, content_type, callback) {
 
+        var documentString;
+        var kb = this.store;
+       
+        //serialize to te appropriate format
+        var sz = $rdf.Serializer(kb);
+        sz.suggestNamespaces(kb.namespaces);
+        sz.setBase(doc.uri);//?? beware of this - kenny (why? tim)                   
+        switch(content_type){
+            case 'application/rdf+xml': 
+                documentString = sz.statementsToXML(newSts);
+                break;
+            case 'text/n3':
+            case 'text/turtle':
+            case 'application/x-turtle': // Legacy
+            case 'application/n3': // Legacy
+                documentString = sz.statementsToN3(newSts);
+                break;
+            default:
+                throw "Content-type "+content_type +" not supported for data PUT";                                                                            
+        }
+        
+        var xhr = $rdf.Util.XMLHTTPFactory();
+        xhr.onreadystatechange = function (){
+            if (xhr.readyState == 4){
+                //formula from sparqlUpdate.js, what about redirects?
+                var success = (!xhr.status || (xhr.status >= 200 && xhr.status < 300));
+                callback(doc.uri, success, xhr.responseText);
+            }
+        };
+        xhr.open('PUT', doc.uri, true);
+        //assume the server does PUT content-negotiation.
+        xhr.setRequestHeader('Content-type', content_type);//OK?
+        xhr.send(documentString);
+    
+    };
+    
+    
 
     return sparql;
 
