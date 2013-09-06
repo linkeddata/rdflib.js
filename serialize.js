@@ -15,6 +15,7 @@ var __Serializer = function( store ){
     this.flags = "";
     this.base = null;
     this.prefixes = [];
+    this.namespacesUsed = [];
     this.keywords = ['a']; // The only one we generate at the moment
     this.prefixchars = "abcdefghijklmnopqustuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
     this.incoming = null;  // Array not calculated yet
@@ -59,6 +60,8 @@ __Serializer.prototype.fromStr = function(s) {
 */
 
 __Serializer.prototype.suggestPrefix = function(prefix, uri) {
+    if (prefix.slice(0,7) === 'default') return; // Try to weed these out
+    if (prefix.slice(0,2) === 'ns') return; //  From others inferior algos
     this.prefixes[uri] = prefix;
 }
 
@@ -436,6 +439,7 @@ __Serializer.prototype.statementsToN3 = function(sts) {
           str += '@prefix : <'+this.defaultNamespace+'>.\n';
         for (var ns in this.prefixes) {
             if (!this.prefixes.hasOwnProperty(ns)) continue;
+            if (!this.namespacesUsed[ns]) continue;
             str += '@prefix ' + this.prefixes[ns] + ': <'+ns+'>.\n';
         }
         return str + '\n';
@@ -564,7 +568,7 @@ __Serializer.prototype.symbolToN3 = function symbolToN3(x) {  // c.f. symbolStri
             }
             var prefix = this.prefixes[namesp];
             if (prefix) {
-                //namespaceCounts[namesp] = true;
+                this.namespacesUsed[namesp] = true;
                 return prefix + ':' + localid;
             }
             if (uri.slice(0, j) == this.base)
@@ -736,7 +740,7 @@ __Serializer.prototype.statementsToXML = function(sts) {
       var type, t, st, pred;
       var sts = stats.subjects[this.toStr(subject)]; // relevant statements
       if (typeof sts == 'undefined') {
-        throw('Cant find statements for '+subject);
+        throw('Serializing XML - Cant find statements for '+subject);
       }
 
 
