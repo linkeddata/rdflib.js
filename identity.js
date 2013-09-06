@@ -131,8 +131,11 @@ $rdf.IndexedFormula.prototype.setPrefixForURI = function(prefix, nsuri) {
     //See http://dig.csail.mit.edu/cgi-bin/roundup.cgi/$rdf/issue227
     if(prefix=="tab" && this.namespaces["tab"]) {
         return;
-    }
-    this.namespaces[prefix] = nsuri
+    } // There are files around with long badly generated prefixes like this
+    if (prefix.slice(0,2) === 'ns' || prefix.slice(0,7) === 'default') {
+        return;
+    };
+    this.namespaces[prefix] = nsuri;
 }
 
 // Deprocated ... name too generic
