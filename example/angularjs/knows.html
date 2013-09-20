@@ -6,37 +6,43 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"> 
     <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
-    <script src="file:///Users/joe/git/linkeddata/rdflib.js/dist/rdflib.js"></script>
+    <script src="https://w3.scripts.mit.edu/rdflib.js/dist/rdflib.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.1.5/angular.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui/0.4.0/angular-ui.min.js"></script>
     <script>
-
-      // ** rdflib.js
-      FOAF = $rdf.Namespace("http://xmlns.com/foaf/0.1/")
       kb = $rdf.graph();
       fetch = $rdf.fetcher(kb);
-      uri = 'http://bblfish.net/people/henry/card#me';
-      doc = uri.slice(0, uri.indexOf('#'));
-      card = $rdf.sym(doc);
-      cardi = $rdf.sym(uri);
+      ngTest = angular.module('Test', ['ui','ui.filters']);
 
-      // ** angular
-      ngTest = angular.module('Test', []);
-      function IC($scope, $http, $timeout) {
-        fetch.nowOrWhenFetched(doc, undefined, function() {
-          $scope.$apply(function(){
-            $scope.knows = kb.each(cardi, FOAF('knows'))
+      function Example($scope, $timeout) {
+        $scope.subj = "http://bblfish.net/people/henry/card#me";
+        $scope.pred = "http://xmlns.com/foaf/0.1/knows";
+
+        $scope.query = function() {
+          $scope.preds = kb.each($rdf.sym($scope.subj));
+          $scope.objs = kb.each($rdf.sym($scope.subj), $rdf.sym($scope.pred));
+        }
+
+        $scope.fetch = function() {
+          doc = (function(uri){return uri.slice(0, uri.indexOf('#'));})($scope.subj);
+          fetch.nowOrWhenFetched(doc, undefined, function() {
+            $timeout(function(){ $scope.query(); });
           });
-        });
+        }
+        $scope.fetch();
       }
-
     </script>
   </head>
   <body ng-cloak class="ng-cloak">
-    <div ng-controller="IC">
+    <div ng-controller="Example">
+      subject: <input name="subj" ng-model="subj" ng-change="fetch()" size=40>
+      predicate: <input list="preds" name="pred" ng-model="pred" ng-change="query()" size=40>
+      <datalist id="preds">
+        <option value="{{p.uri}}" ng-repeat="p in preds | unique:p">
+      </datalist>
       <ul>
-        <li ng-repeat="i in knows">
-          <p>{{i.uri}}</p>
+        <li ng-repeat="o in objs">
+        <p>{{o.value}}</p>
         </li>
       </ul>
     </div>
