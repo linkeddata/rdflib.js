@@ -795,7 +795,10 @@ $rdf.Fetcher = function(store, timeout, async) {
                     }
                 }
 
-                var link = xhr.getResponseHeader('link');
+                var link;
+                try {
+                    link = xhr.getResponseHeader('link');
+                }catch(e){}
                 if (link) {
                     var rel = null;
                     var arg = link.replace(/ /g, '').split(';');
