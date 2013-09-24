@@ -1,6 +1,6 @@
 /**
  * @fileoverview
- * TABULATOR RDF PARSER
+ *  RDF/XML PARSER
  *
  * Version 0.1
  *  Parser believed to be in full positive RDF/XML parsing compliance
@@ -9,7 +9,6 @@
  *  and industry standards where appropriate (DOM, ECMAScript, &c.)
  *
  *  Author: David Sheets <dsheets@mit.edu>
- *  SVN ID: $Id$
  *
  * W3C® SOFTWARE NOTICE AND LICENSE
  * http://www.w3.org/Consortium/Legal/2002/copyright-software-20021231
@@ -60,18 +59,24 @@
  * 
  * @constructor
  * @param {RDFStore} store An RDFStore object
- */$rdf.RDFParser = function(store){
-    var RDFParser = {};/** Standard namespaces that we know how to handle @final
+ */
+ 
+ $rdf.RDFParser = function(store){
+    var RDFParser = {};
+    
+    /** Standard namespaces that we know how to handle @final
      *  @member RDFParser
      */
-    RDFParser.ns = {'RDF': "http://www.w3.org/1999/02/22-rdf-syntax-ns#", 'RDFS': "http://www.w3.org/2000/01/rdf-schema#"};/** DOM Level 2 node type magic numbers @final
+    RDFParser.ns = {'RDF': "http://www.w3.org/1999/02/22-rdf-syntax-ns#", 'RDFS': "http://www.w3.org/2000/01/rdf-schema#"};
+    
+    /** DOM Level 2 node type magic numbers @final
      *  @member RDFParser
      */
     RDFParser.nodeType = {'ELEMENT': 1, 'ATTRIBUTE': 2, 'TEXT': 3,
 			     'CDATA_SECTION': 4, 'ENTITY_REFERENCE': 5,
 			     'ENTITY': 6, 'PROCESSING_INSTRUCTION': 7,
 			     'COMMENT': 8, 'DOCUMENT': 9, 'DOCUMENT_TYPE': 10,
-			     'DOCUMENT_FRAGMENT': 11, 'NOTATION': 12}
+			     'DOCUMENT_FRAGMENT': 11, 'NOTATION': 12};
 
     /**
      * Frame class for namespace and base URI lookups
@@ -103,7 +108,7 @@
             else {
                 this.store.add(this.parent.parent.node, this.parent.node, this.node, this.parser.why);
             }
-            if (this.parent.rdfid != null){
+            if (this.parent.rdfid !== null){
                   // reify
                 var triple = this.store.sym($rdf.Util.uri.join("#" + this.parent.rdfid, this.base));
                 this.store.add(triple, this.store.sym(RDFParser.ns.RDF + "type"), this.store.sym(RDFParser.ns.RDF + "Statement"), this.parser.why);
@@ -115,8 +120,8 @@
         }
         , /** Check if it's OK to load a triple */'isTripleToLoad': function(){
             
-            return (this.parent != null && this.parent.parent != null && this.nodeType == this.NODE && this.parent.nodeType == 
-               this.ARC && this.parent.parent.nodeType == this.NODE);
+            return (this.parent !== null && this.parent.parent !== null && this.nodeType === this.NODE && this.parent.nodeType === 
+               this.ARC && this.parent.parent.nodeType === this.NODE);
         }
         , /** Add a symbolic node to this frame */'addNode': function(uri){
             this.addSymbol(this.NODE, uri);
@@ -139,8 +144,8 @@
             this.nodeType = this.ARC;
         }
         , /** Add a bnode to this frame */'addBNode': function(id){
-            if (id != null){
-                if (this.parser.bnodes[id] != null){
+            if (id !== null){
+                if (this.parser.bnodes[id] !== null){
                     this.node = this.parser.bnodes[id];
                 }
                 else {
@@ -157,8 +162,9 @@
             }
         }
         , /** Add an arc or property to this frame */'addArc': function(uri){
-            if (uri == RDFParser.ns.RDF + "li"){
-                uri = RDFParser.ns.RDF + "_" + this.parent.listIndex++;
+            if (uri === RDFParser.ns.RDF + "li"){
+                uri = RDFParser.ns.RDF + "_" + this.parent.listIndex;
+                this.parent.listIndex++;
             }
             
             this.addSymbol(this.ARC, uri);
@@ -176,8 +182,9 @@
             }
         }
         };
-    };//from the OpenLayers source .. needed to get around IE problems.
+    };
     
+    //from the OpenLayers source .. needed to get around IE problems.
     this.getAttributeNodeNS = function(node, uri, name){
         var attributeNode = null;
         if (node.getAttributeNodeNS){
@@ -188,9 +195,9 @@
             var potentialNode, fullName;
             for (var i = 0;i < attributes.length; ++ i){
                 potentialNode = attributes[i];
-                if (potentialNode.namespaceURI == uri){
+                if (potentialNode.namespaceURI === uri){
                     fullName = (potentialNode.prefix) ? (potentialNode.prefix +":" + name): name;
-                    if (fullName == potentialNode.nodeName){
+                    if (fullName === potentialNode.nodeName){
                         attributeNode = potentialNode;
                         break;
                     }
@@ -198,11 +205,17 @@
             }
         }
         return attributeNode;
-    };/** Our triple store reference @private */
+    };
+    
+    
+    /** Our triple store reference @private */
+    
     this.store = store;/** Our identified blank nodes @private */
     this.bnodes = {};/** A context for context-aware stores @private */
     this.why = null;/** Reification flag */
-    this.reify = false;/**
+    this.reify = false;
+    
+    /**
      * Build our initial scope frame and parse the DOM into triples
      * @param {DOMTree} document The DOM to parse
      * @param {String} base The base URL to use 
@@ -212,21 +225,21 @@
     this.parse = function(document, base, why){
         var children = document.childNodes;// clean up for the next run
         this.cleanParser();// figure out the root element
-           //var root = document.documentElement; //this is faster, I think, cross-browser issue? well, DOM 2
-        if (document.nodeType == RDFParser.nodeType.DOCUMENT){
+        var root;
+        if (document.nodeType === RDFParser.nodeType.DOCUMENT){
             for (var c = 0;c < children.length;c++){
-                if (children[c].nodeType == RDFParser.nodeType.ELEMENT){
-                    var root = children[c];
+                if (children[c].nodeType === RDFParser.nodeType.ELEMENT){
+                    root = children[c];
                     break;
                 }
             }
         }
-        else if (document.nodeType == RDFParser.nodeType.ELEMENT){
-            var root = document;
+        else if (document.nodeType === RDFParser.nodeType.ELEMENT){
+            root = document;
         }
         else {
             throw new Error("RDFParser: can't find root in " + base +". Halting. ");
-            return false;
+            // return false;
         }
         this.why = why;// our topmost frame
         var f = this.frameFactory(this);
@@ -239,10 +252,10 @@
     
     this.parseDOM = function(frame){
          // a DOM utility function used in parsing
-        
+        var rdfid;
         var elementURI = function(el){
             var result = "";
-            if (el.namespaceURI == null){
+            if (el.namespaceURI === null){
                 throw new Error("RDF/XML syntax error: No namespace for " + el.localName + " in " + this.base);
             }
             if (el.namespaceURI){
@@ -261,11 +274,11 @@
         while (frame.parent){
             var dom = frame.element;
             var attrs = dom.attributes;
-            if (dom.nodeType == RDFParser.nodeType.TEXT || dom.nodeType == RDFParser.nodeType.CDATA_SECTION){
+            if (dom.nodeType === RDFParser.nodeType.TEXT || dom.nodeType === RDFParser.nodeType.CDATA_SECTION){
                   //we have a literal
                 frame.addLiteral(dom.nodeValue);
             }
-            else if (elementURI(dom)!= RDFParser.ns.RDF + "RDF"){
+            else if (elementURI(dom)!== RDFParser.ns.RDF + "RDF"){
                   // not root
                 if (frame.parent && frame.parent.collection){
                      // we're a collection element
@@ -273,19 +286,19 @@
                     frame = this.buildFrame(frame, frame.element);
                     frame.parent.element = null;
                 }
-                if ( ! frame.parent || ! frame.parent.nodeType || frame.parent.nodeType == frame.ARC){
+                if ( ! frame.parent || ! frame.parent.nodeType || frame.parent.nodeType === frame.ARC){
                      // we need a node
                     var about = this.getAttributeNodeNS(dom, RDFParser.ns.RDF, "about");
-                    var rdfid = this.getAttributeNodeNS(dom, RDFParser.ns.RDF, "ID");
+                    rdfid = this.getAttributeNodeNS(dom, RDFParser.ns.RDF, "ID");
                     if (about && rdfid){
                         throw new Error("RDFParser: " + dom.nodeName + " has both rdf:id and rdf:about." + 
                            " Halting. Only one of these" + " properties may be specified on a" + " node.");
                     }
-                    if (about == null && rdfid){
+                    if (about === null && rdfid){
                         frame.addNode("#" + rdfid.nodeValue);
                         dom.removeAttributeNode(rdfid);
                     }
-                    else if (about == null && rdfid == null){
+                    else if (about === null && rdfid === null){
                         var bnid = this.getAttributeNodeNS(dom, RDFParser.ns.RDF, "nodeID");
                         if (bnid){
                             frame.addBNode(bnid.nodeValue);
@@ -301,10 +314,10 @@
                     }
                     // Typed nodes
                     var rdftype = this.getAttributeNodeNS(dom, RDFParser.ns.RDF, "type");
-                    if (RDFParser.ns.RDF + "Description" != elementURI(dom)){
+                    if (RDFParser.ns.RDF + "Description" !== elementURI(dom)){
                         rdftype = {'nodeValue': elementURI(dom)};
                     }
-                    if (rdftype != null){
+                    if (rdftype !== null){
                         this.store.add(frame.node, this.store.sym(RDFParser.ns.RDF + "type"), this.store.sym($rdf.Util.uri.join(rdftype.nodeValue, 
                            frame.base)), this.why);
                         if (rdftype.nodeName){
@@ -321,7 +334,7 @@
                       // we should add an arc (or implicit bnode+arc)
                     frame.addArc(elementURI(dom));// save the arc's rdf:ID if it has one
                     if (this.reify){
-                        var rdfid = this.getAttributeNodeNS(dom, RDFParser.ns.RDF, "ID");
+                        rdfid = this.getAttributeNodeNS(dom, RDFParser.ns.RDF, "ID");
                         if (rdfid){
                             frame.rdfid = rdfid.nodeValue;
                             dom.removeAttributeNode(rdfid);
@@ -335,54 +348,54 @@
                     }
                     if (parsetype){
                         var nv = parsetype.nodeValue;
-                        if (nv == "Literal"){
+                        if (nv === "Literal"){
                             frame.datatype = RDFParser.ns.RDF + "XMLLiteral";// (this.buildFrame(frame)).addLiteral(dom)
                                // should work but doesn't
                             frame = this.buildFrame(frame);
                             frame.addLiteral(dom);
                             dig = false;
                         }
-                        else if (nv == "Resource"){
+                        else if (nv === "Resource"){
                             frame = this.buildFrame(frame, frame.element);
                             frame.parent.element = null;
                             frame.addBNode();
                         }
-                        else if (nv == "Collection"){
+                        else if (nv === "Collection"){
                             frame = this.buildFrame(frame, frame.element);
                             frame.parent.element = null;
                             frame.addCollection();
                         }
                         dom.removeAttributeNode(parsetype);
                     }
-                    if (attrs.length != 0){
+                    if (attrs.length !== 0){
                         var resource = this.getAttributeNodeNS(dom, RDFParser.ns.RDF, "resource");
-                        var bnid = this.getAttributeNodeNS(dom, RDFParser.ns.RDF, "nodeID");
+                        var bnid2 = this.getAttributeNodeNS(dom, RDFParser.ns.RDF, "nodeID");
                         frame = this.buildFrame(frame);
                         if (resource){
                             frame.addNode(resource.nodeValue);
                             dom.removeAttributeNode(resource);
                         }
                         else {
-                            if (bnid){
-                                frame.addBNode(bnid.nodeValue);
-                                dom.removeAttributeNode(bnid);
+                            if (bnid2){
+                                frame.addBNode(bnid2.nodeValue);
+                                dom.removeAttributeNode(bnid2);
                             }
                             else {
                                 frame.addBNode();
                             }
                         }
-                        for (var x = attrs.length - 1;x >= 0;x--){
+                        for (var x1 = attrs.length - 1; x1 >= 0; x1--){
                             var f = this.buildFrame(frame);
-                            f.addArc(elementURI(attrs[x]));
-                            if (elementURI(attrs[x])== RDFParser.ns.RDF + "type"){
-                                (this.buildFrame(f)).addNode(attrs[x].nodeValue);
+                            f.addArc(elementURI(attrs[x1]));
+                            if (elementURI(attrs[x1])=== RDFParser.ns.RDF + "type"){
+                                (this.buildFrame(f)).addNode(attrs[x1].nodeValue);
                             }
                             else {
-                                (this.buildFrame(f)).addLiteral(attrs[x].nodeValue);
+                                (this.buildFrame(f)).addLiteral(attrs[x1].nodeValue);
                             }
                         }
                     }
-                    else if (dom.childNodes.length == 0){
+                    else if (dom.childNodes.length === 0){
                         (this.buildFrame(frame)).addLiteral("");
                     }
                 }
@@ -391,12 +404,12 @@
             dom = frame.element;
             while (frame.parent){
                 var pframe = frame;
-                while (dom == null){
+                while (dom === null){
                     frame = frame.parent;
                     dom = frame.element;
                 }
                 var candidate = dom.childNodes[frame.lastChild];
-                if (candidate == null || ! dig){
+                if (candidate === null || ! dig){
                     frame.terminateFrame();
                     if ( ! (frame = frame.parent)){
                         break;
@@ -404,9 +417,12 @@
                     dom = frame.element;
                     dig = true;
                 }
-                else if ((candidate.nodeType != RDFParser.nodeType.ELEMENT && candidate.nodeType != RDFParser.nodeType.TEXT && 
-                   candidate.nodeType != RDFParser.nodeType.CDATA_SECTION)|| ((candidate.nodeType == RDFParser.nodeType.TEXT || candidate.nodeType == RDFParser.nodeType.CDATA_SECTION)&& 
-                   dom.childNodes.length != 1)){
+                else if ((candidate.nodeType !== RDFParser.nodeType.ELEMENT &&
+                        candidate.nodeType !== RDFParser.nodeType.TEXT && 
+                        candidate.nodeType !== RDFParser.nodeType.CDATA_SECTION) ||
+                    ((candidate.nodeType === RDFParser.nodeType.TEXT ||
+                        candidate.nodeType === RDFParser.nodeType.CDATA_SECTION) && 
+                        dom.childNodes.length !== 1)){
                     frame.lastChild++;
                 }
                 else {
@@ -417,43 +433,46 @@
                 }
             }
         }// while
-    };/**
+    };
+    
+    /**
      * Cleans out state from a previous parse run
      * @private
      */
-    
     this.cleanParser = function(){
         this.bnodes = {};
         this.why = null;
-    };/**
+    };
+    
+    /**
      * Builds scope frame 
      * @private
      */
-    
     this.buildFrame = function(parent, element){
         var frame = this.frameFactory(this, parent, element);
         if (parent){
             frame.base = parent.base;
             frame.lang = parent.lang;
         }
-        if (element == null || element.nodeType == RDFParser.nodeType.TEXT || element.nodeType == RDFParser.nodeType.CDATA_SECTION){
+        if (element === null || element.nodeType === RDFParser.nodeType.TEXT ||
+                element.nodeType === RDFParser.nodeType.CDATA_SECTION){
             return frame;
         }
         var attrs = element.attributes;
         var base = element.getAttributeNode("xml:base");
-        if (base != null){
+        if (base !== null){
             frame.base = base.nodeValue;
             element.removeAttribute("xml:base");
         }
         var lang = element.getAttributeNode("xml:lang");
-        if (lang != null){
+        if (lang !== null){
             frame.lang = lang.nodeValue;
             element.removeAttribute("xml:lang");
         }
         // remove all extraneous xml and xmlns attributes
         for (var x = attrs.length - 1;x >= 0;x--){
-            if (attrs[x].nodeName.substr(0, 3) == "xml"){
-                if (attrs[x].name.slice(0, 6) == 'xmlns:'){
+            if (attrs[x].nodeName.substr(0, 3) === "xml"){
+                if (attrs[x].name.slice(0, 6) === 'xmlns:'){
                     var uri = attrs[x].nodeValue;// alert('base for namespac attr:'+this.base);
                     if (this.base) uri = $rdf.Util.uri.join(uri, this.base);
                     this.store.setPrefixForURI(attrs[x].name.slice(6), uri);
