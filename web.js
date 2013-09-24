@@ -547,13 +547,23 @@ $rdf.Fetcher = function(store, timeout, async) {
 
 
 /*  Ask for a doc to be loaded if necessary then call back
-    **/
+**
+** Changed 2013-08-20:  Added (ok, body) params to callback
+**
+**/
     this.nowOrWhenFetched = function(uri, referringTerm, callback) {
         var sta = this.getState(uri);
-        if (sta == 'fetched') return callback();
+        if (sta == 'fetched') return callback(true, "");
         this.addCallback('done', function(uri2) {
             if (uri2 == uri ||
-                ( $rdf.Fetcher.crossSiteProxy(uri) == uri2  )) callback();
+                ( $rdf.Fetcher.crossSiteProxy(uri) == uri2  )) callback(true, "");
+            return (uri2 != uri); // Call me again?
+        });
+        this.addCallback('fail', function(uri2) {
+            if (uri2 == uri ||
+                ( $rdf.Fetcher.crossSiteProxy(uri) == uri2  )) {
+                callback(false, "Fetch failed @@ " + uri);
+            }
             return (uri2 != uri); // Call me again?
         });
         if (sta == 'unrequested') this.requestURI(

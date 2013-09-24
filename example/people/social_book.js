@@ -180,7 +180,8 @@ function redraw(webid, col) {
         //if the knowledge base was not initialised fetch info from the web (if need CORS go through CORS proxy)
         kb = graphs[docURI] = new $rdf.IndexedFormula();
         var fetch = $rdf.fetcher(kb);
-        fetch.nowOrWhenFetched(docURI, undefined, function() {
+        fetch.nowOrWhenFetched(docURI, undefined, function(ok, body) {
+            // @@ check ok
             card(person,kb)
             friends(person,kb,col+1)
         });
