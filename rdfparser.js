@@ -108,7 +108,7 @@
             else {
                 this.store.add(this.parent.parent.node, this.parent.node, this.node, this.parser.why);
             }
-            if (this.parent.rdfid !== null){
+            if (this.parent.rdfid != null){
                   // reify
                 var triple = this.store.sym($rdf.Util.uri.join("#" + this.parent.rdfid, this.base));
                 this.store.add(triple, this.store.sym(RDFParser.ns.RDF + "type"), this.store.sym(RDFParser.ns.RDF + "Statement"), this.parser.why);
@@ -120,7 +120,7 @@
         }
         , /** Check if it's OK to load a triple */'isTripleToLoad': function(){
             
-            return (this.parent !== null && this.parent.parent !== null && this.nodeType === this.NODE && this.parent.nodeType === 
+            return (this.parent != null && this.parent.parent != null && this.nodeType === this.NODE && this.parent.nodeType === 
                this.ARC && this.parent.parent.nodeType === this.NODE);
         }
         , /** Add a symbolic node to this frame */'addNode': function(uri){
@@ -144,8 +144,8 @@
             this.nodeType = this.ARC;
         }
         , /** Add a bnode to this frame */'addBNode': function(id){
-            if (id !== null){
-                if (this.parser.bnodes[id] !== null){
+            if (id != null){
+                if (this.parser.bnodes[id] != null){
                     this.node = this.parser.bnodes[id];
                 }
                 else {
@@ -255,7 +255,7 @@
         var rdfid;
         var elementURI = function(el){
             var result = "";
-            if (el.namespaceURI === null){
+            if (el.namespaceURI == null){
                 throw new Error("RDF/XML syntax error: No namespace for " + el.localName + " in " + this.base);
             }
             if (el.namespaceURI){
@@ -294,11 +294,11 @@
                         throw new Error("RDFParser: " + dom.nodeName + " has both rdf:id and rdf:about." + 
                            " Halting. Only one of these" + " properties may be specified on a" + " node.");
                     }
-                    if (about === null && rdfid){
+                    if (!about && rdfid){
                         frame.addNode("#" + rdfid.nodeValue);
                         dom.removeAttributeNode(rdfid);
                     }
-                    else if (about === null && rdfid === null){
+                    else if (about == null && rdfid == null){
                         var bnid = this.getAttributeNodeNS(dom, RDFParser.ns.RDF, "nodeID");
                         if (bnid){
                             frame.addBNode(bnid.nodeValue);
@@ -317,7 +317,7 @@
                     if (RDFParser.ns.RDF + "Description" !== elementURI(dom)){
                         rdftype = {'nodeValue': elementURI(dom)};
                     }
-                    if (rdftype !== null){
+                    if (rdftype != null){
                         this.store.add(frame.node, this.store.sym(RDFParser.ns.RDF + "type"), this.store.sym($rdf.Util.uri.join(rdftype.nodeValue, 
                            frame.base)), this.why);
                         if (rdftype.nodeName){
@@ -404,12 +404,12 @@
             dom = frame.element;
             while (frame.parent){
                 var pframe = frame;
-                while (dom === null){
+                while (dom == null){
                     frame = frame.parent;
                     dom = frame.element;
                 }
                 var candidate = dom.childNodes[frame.lastChild];
-                if (candidate === null || ! dig){
+                if (!candidate || ! dig){
                     frame.terminateFrame();
                     if ( ! (frame = frame.parent)){
                         break;
@@ -454,18 +454,18 @@
             frame.base = parent.base;
             frame.lang = parent.lang;
         }
-        if (element === null || element.nodeType === RDFParser.nodeType.TEXT ||
+        if (!element || element.nodeType === RDFParser.nodeType.TEXT ||
                 element.nodeType === RDFParser.nodeType.CDATA_SECTION){
             return frame;
         }
         var attrs = element.attributes;
         var base = element.getAttributeNode("xml:base");
-        if (base !== null){
+        if (base != null){
             frame.base = base.nodeValue;
             element.removeAttribute("xml:base");
         }
         var lang = element.getAttributeNode("xml:lang");
-        if (lang !== null){
+        if (lang != null){
             frame.lang = lang.nodeValue;
             element.removeAttribute("xml:lang");
         }
