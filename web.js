@@ -547,7 +547,10 @@ $rdf.Fetcher = function(store, timeout, async) {
 
 
 /*  Ask for a doc to be loaded if necessary then call back
-    **/
+**
+** Changed 2013-08-20:  Added (ok, body) params to callback
+**
+**/
     this.nowOrWhenFetched = function(uri, referringTerm, callback) {
         var sta = this.getState(uri);
         if (sta == 'fetched') return callback(true);
@@ -801,7 +804,10 @@ $rdf.Fetcher = function(store, timeout, async) {
                     }
                 }
 
-                var link = xhr.getResponseHeader('link');
+                var link;
+                try {
+                    link = xhr.getResponseHeader('link');
+                }catch(e){}
                 if (link) {
                     var rel = null;
                     var arg = link.replace(/ /g, '').split(';');

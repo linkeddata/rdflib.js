@@ -78,7 +78,7 @@ function redraw(webid) {
     var kb = graphs[docURI]
     if (!kb) kb = graphs[docURI] = new $rdf.IndexedFormula();
     var fetch = $rdf.fetcher(kb);
-    fetch.nowOrWhenFetched(docURI, undefined, function() { draw(person,kb) });
+    fetch.nowOrWhenFetched(docURI, undefined, function(ok, body) { draw(person,kb) }); // @@ check ok
 }
 
 
