@@ -52,6 +52,7 @@ $rdf.Fetcher = function(store, timeout, async) {
     ns.rdfs = $rdf.Namespace("http://www.w3.org/2000/01/rdf-schema#");
     ns.dc = $rdf.Namespace("http://purl.org/dc/elements/1.1/");
 
+    
     $rdf.Fetcher.crossSiteProxy = function(uri) {
         if ($rdf.Fetcher.crossSiteProxyTemplate)
           return $rdf.Fetcher.crossSiteProxyTemplate.replace('{uri}', encodeURIComponent(uri));
@@ -61,7 +62,7 @@ $rdf.Fetcher = function(store, timeout, async) {
         if (args) {
             this.dom = args[0]
         }
-        this.recv = function(xhr) {
+        this.handlerFactory = function(xhr) {
             xhr.handle = function(cb) {
                 //sf.addStatus(xhr.req, 'parsing soon as RDF/XML...');
                 var kb = sf.store;
@@ -78,7 +79,6 @@ $rdf.Fetcher = function(store, timeout, async) {
                 }
 */
                 var root = this.dom.documentElement;
-                //some simple syntax issue should be dealt here, I think
                 if (root.nodeName == 'parsererror') { //@@ Mozilla only See issue/issue110
                     sf.failFetch(xhr, "Badly formed XML in " + xhr.uri.uri); //have to fail the request
                     throw new Error("Badly formed XML in " + xhr.uri.uri); //@@ Add details
@@ -86,15 +86,11 @@ $rdf.Fetcher = function(store, timeout, async) {
                 // Find the last URI we actual URI in a series of redirects
                 // (xhr.uri.uri is the original one)
                 var lastRequested = kb.any(xhr.req, ns.link('requestedURI'));
-                //dump('lastRequested 1:'+lastRequested+'\n')
                 if (!lastRequested) {
-                    //dump("Eh? No last requested for "+xhr.uri+"\n");
                     lastRequested = xhr.uri;
                 } else {
                     lastRequested = kb.sym(lastRequested.value);
-                    //dump('lastRequested 2:'+lastRequested+'\n')
                 }
-                //dump('lastRequested 3:'+lastRequested+'\n')
                 var parser = new $rdf.RDFParser(kb);
                 // sf.addStatus(xhr.req, 'parsing as RDF/XML...');
                 parser.parse(this.dom, lastRequested.uri, lastRequested);
@@ -121,7 +117,7 @@ $rdf.Fetcher = function(store, timeout, async) {
         if (args) {
             this.dom = args[0]
         }
-        this.recv = function(xhr) {
+        this.handlerFactory = function(xhr) {
             xhr.handle = function(cb) {
                 if (!this.dom) {
                     var dparser;
@@ -171,6 +167,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                 // Do RDFa here
                 if ($rdf.rdfa && $rdf.rdfa.parse)
                     $rdf.rdfa.parse(this.dom, kb, xhr.uri.uri);
+                cb(); // Fire done callbacks
             }
         }
     };
@@ -189,7 +186,7 @@ $rdf.Fetcher = function(store, timeout, async) {
     /******************************************************/
 
     $rdf.Fetcher.XMLHandler = function() {
-        this.recv = function(xhr) {
+        this.handlerFactory = function(xhr) {
             xhr.handle = function(cb) {
                 var kb = sf.store
                 var dparser;
@@ -273,7 +270,7 @@ $rdf.Fetcher = function(store, timeout, async) {
     $rdf.Fetcher.XMLHandler.pattern = new RegExp("(text|application)/(.*)xml");
 
     $rdf.Fetcher.HTMLHandler = function() {
-        this.recv = function(xhr) {
+        this.handlerFactory = function(xhr) {
             xhr.handle = function(cb) {
                 var rt = xhr.responseText
                 // We only handle XHTML so we have to figure out if this is XML
@@ -330,7 +327,7 @@ $rdf.Fetcher = function(store, timeout, async) {
     /***********************************************/
 
     $rdf.Fetcher.TextHandler = function() {
-        this.recv = function(xhr) {
+        this.handlerFactory = function(xhr) {
             xhr.handle = function(cb) {
                 // We only speak dialects of XML right now. Is this XML?
                 var rt = xhr.responseText
@@ -374,7 +371,7 @@ $rdf.Fetcher = function(store, timeout, async) {
     /***********************************************/
 
     $rdf.Fetcher.N3Handler = function() {
-        this.recv = function(xhr) {
+        this.handlerFactory = function(xhr) {
             xhr.handle = function(cb) {
                 // Parse the text of this non-XML file
                 $rdf.log.debug("web.js: Parsing as N3 " + xhr.uri.uri); // @@@@ comment me out 
@@ -443,7 +440,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                     ';\n\t $rdf.Fetcher.HTMLHandler='+$rdf.Fetcher.HTMLHandler+'\n' +
                     '\n\tsf.handlers='+sf.handlers+'\n'
         }
-        (new handler(args)).recv(xhr);
+        (new handler(args)).handlerFactory(xhr);
         xhr.handle(cb)
     }
 
@@ -571,6 +568,30 @@ $rdf.Fetcher = function(store, timeout, async) {
 
 
 
+    // Look up response header
+    // 
+    // Returns: a list of header values found in a stored HTTP response
+    //      or [] if response was found but no header found
+    //      or undefined if no response is available.
+    //
+    this.getHeader = function(doc, header) {
+        var kb = this.store;
+        var requests = kb.each(undefined, tabulator.ns.link("requestedURI"), doc.uri);
+        for (var r=0; r<requests.length; r++) {
+            request = requests[r];
+            if (request !== undefined) {
+                var response = kb.any(request, tabulator.ns.link("response"));
+                if (request !== undefined) {
+                    var results = kb.each(response, tabulator.ns.httph(header.toLowerCase()));
+                    if (results.length) {
+                        return results.map(function(v){return v.value});
+                    }
+                    return [];
+                }
+            }
+        }
+        return undefined;
+    };
 
 
     /** Requests a document URI and arranges to load the document.
@@ -720,7 +741,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                 if ($rdf.uri.protocol(xhr.uri.uri) == 'http' || $rdf.uri.protocol(xhr.uri.uri) == 'https') {
                     xhr.headers = $rdf.Util.getHTTPHeaders(xhr)
                     for (var h in xhr.headers) { // trim below for Safari - adds a CR!
-                        kb.add(response, ns.httph(h), xhr.headers[h].trim(), response)
+                        kb.add(response, ns.httph(h.toLowerCase()), xhr.headers[h].trim(), response)
                     }
                 }
 
@@ -826,13 +847,16 @@ $rdf.Fetcher = function(store, timeout, async) {
 
                 if (handler) {
                     try {
-                        handler.recv(xhr);
+                        handler.handlerFactory(xhr); 
                     } catch(e) { // Try to avoid silent errors
                         sf.failFetch(xhr, "Exception handling content-type " + xhr.headers['content-type'] + ' was: '+e);
                     };
                 } else {
-                    sf.failFetch(xhr, "Unhandled content type: " + xhr.headers['content-type']+
-                            ", readyState = "+xhr.readyState);
+                    sf.doneFetch(xhr, args); //  Not a problem, we just don't extract data.
+                    /*
+                    // sf.failFetch(xhr, "Unhandled content type: " + xhr.headers['content-type']+
+                    //        ", readyState = "+xhr.readyState);
+                    */
                     return;
                 }
             };
@@ -911,8 +935,10 @@ $rdf.Fetcher = function(store, timeout, async) {
                         sf.doneFetch(xhr, args)
                     })
                 } else {
-                    sf.failFetch(xhr, "HTTP failed unusually. (no handler set) (cross-site violation? no net?) for <"+
-                        docuri+">");
+                    sf.addStatus(xhr.req, "Fetch OK. No known semantics.");
+                    sf.doneFetch(xhr, args);
+                    //sf.failFetch(xhr, "HTTP failed unusually. (no handler set) (x-site violation? no net?) for <"+
+                    //    docuri+">");
                 }    
                 break
             } // switch
