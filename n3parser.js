@@ -198,6 +198,8 @@ var LOG_implies_URI = "http://www.w3.org/2000/10/swap/log#implies";
 var INTEGER_DATATYPE = "http://www.w3.org/2001/XMLSchema#integer";
 var FLOAT_DATATYPE = "http://www.w3.org/2001/XMLSchema#double";
 var DECIMAL_DATATYPE = "http://www.w3.org/2001/XMLSchema#decimal";
+var DATE_DATATYPE = "http://www.w3.org/2001/XMLSchema#date";
+var DATETIME_DATATYPE = "http://www.w3.org/2001/XMLSchema#dateTime";
 var BOOLEAN_DATATYPE = "http://www.w3.org/2001/XMLSchema#boolean";
 var option_noregen = 0;
 var _notQNameChars = "\t\r\n !\"#$%&'()*.,+/;<=>?@[\\]^`{|}~";
@@ -209,6 +211,8 @@ var eof = new RegExp("^[ \\t]*(#[^\\n]*)?$", 'g');
 var ws = new RegExp("^[ \\t]*", 'g');
 var signed_integer = new RegExp("^[-+]?[0-9]+", 'g');
 var number_syntax = new RegExp("^([-+]?[0-9]+)(\\.[0-9]+)?(e[-+]?[0-9]+)?", 'g');
+var datetime_syntax = new RegExp('[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9](T[0-9][0-9]:[0-9][0-9](:[0-9][0-9](\\.[0-9]*)?)?)?Z?');
+
 var digitstring = new RegExp("^[0-9]+", 'g');
 var interesting = new RegExp("[\\\\\\r\\n\\\"]", 'g');
 var langcode = new RegExp("^[a-zA-Z0-9]+(-[a-zA-Z0-9]+)?", 'g');
@@ -1288,23 +1292,38 @@ __SinkParser.prototype.nodeOrLiteral = function(str, i, res) {
         }
         var ch = str.charAt(i);
         if (("-+0987654321".indexOf(ch) >= 0)) {
-            number_syntax.lastIndex = 0;
-            var m = number_syntax.exec(str.slice(i));
-            if ((m == null)) {
-                throw BadSyntax(this._thisDoc, this.lines, str, i, "Bad number syntax");
-            }
-            var j =  ( i + number_syntax.lastIndex ) ;
-            var val = pyjslib_slice(str, i, j);
-            if ((val.indexOf("e") >= 0)) {
-                res.push(this._store.literal(parseFloat(val), undefined, this._store.sym(FLOAT_DATATYPE)));
-            }
-            else if ((pyjslib_slice(str, i, j).indexOf(".") >= 0)) {
-                res.push(this._store.literal(parseFloat(val), undefined, this._store.sym(DECIMAL_DATATYPE)));
-            }
-            else {
-                res.push(this._store.literal(parseInt(val), undefined, this._store.sym(INTEGER_DATATYPE)));
-            }
-            return j;
+	
+	    datetime_syntax.lastIndex = 0;
+            var m = datetime_syntax.exec(str.slice(i));
+            if ((m != null)) {
+		// j =  ( i + datetime_syntax.lastIndex ) ;
+		var val = m[0];
+		j = i + val.length;
+		if ((val.indexOf("T") >= 0)) {
+		    res.push(this._store.literal(val, undefined, this._store.sym(DATETIME_DATATYPE)));
+		} else {
+		    res.push(this._store.literal(val, undefined, this._store.sym(DATE_DATATYPE)));
+		}	
+	
+	    } else {
+		number_syntax.lastIndex = 0;
+		var m = number_syntax.exec(str.slice(i));
+		if ((m == null)) {
+		    throw BadSyntax(this._thisDoc, this.lines, str, i, "Bad number or date syntax");
+		}
+		j =  ( i + number_syntax.lastIndex ) ;
+		var val = pyjslib_slice(str, i, j);
+		if ((val.indexOf("e") >= 0)) {
+		    res.push(this._store.literal(parseFloat(val), undefined, this._store.sym(FLOAT_DATATYPE)));
+		}
+		else if ((pyjslib_slice(str, i, j).indexOf(".") >= 0)) {
+		    res.push(this._store.literal(parseFloat(val), undefined, this._store.sym(DECIMAL_DATATYPE)));
+		}
+		else {
+		    res.push(this._store.literal(parseInt(val), undefined, this._store.sym(INTEGER_DATATYPE)));
+		}
+	    };
+	    return j; // Where we have got up to
         }
         if ((str.charAt(i) == "\"")) {
             if ((pyjslib_slice(str, i,  ( i + 3 ) ) == "\"\"\"")) {
