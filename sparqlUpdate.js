@@ -276,11 +276,22 @@ $rdf.sparqlUpdate = function() {
     }
 
     sparql.prototype.delete_statement = function(st, callback) {
-        var query = this._context_where(this._statement_context(st));
+
+        var st0 = st instanceof Array ? st[0] : st;
+        var query = this._context_where(this._statement_context(st0));
         
-        query += "DELETE DATA { " + anonymizeNT(st) + " }\n";
+        if (st instanceof Array) {
+            var stText="";
+            for (var i=0;i<st.length;i++) stText+=st[i]+'\n';
+            query += "DELETE DATA { " + stText + " }\n";
+        } else {
+            query += "DELETE DATA { " +
+                anonymize(st.subject) + " " +
+                anonymize(st.predicate) + " " +
+                anonymize(st.object) + " " + " . }\n";
+        }
         
-        this._fire(st instanceof Array?st[0].why.uri:st.why.uri, query, callback);
+        this._fire(st0.why.uri, query, callback);
     }
 
     // This high-level function updates the local store iff the web is changed successfully. 
