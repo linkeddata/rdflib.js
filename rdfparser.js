@@ -408,7 +408,7 @@
                     frame = frame.parent;
                     dom = frame.element;
                 }
-                var candidate = dom.childNodes[frame.lastChild];
+                var candidate = dom.childNodes && dom.childNodes[frame.lastChild];
                 if (!candidate || ! dig){
                     frame.terminateFrame();
                     if ( ! (frame = frame.parent)){
