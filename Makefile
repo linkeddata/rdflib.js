@@ -2,7 +2,7 @@
 
 R=util.js uri.js term.js rdfparser.js n3parser.js identity.js query.js sparql.js sparqlUpdate.js jsonparser.js serialize.js updatesVia.js web.js
 
-targets=$(addprefix dist/, rdflib.js node-rdflib.js rdflib-rdfa.js)
+targets=$(addprefix dist/, rdflib.js rdflib-rdfa.js)
 coffeejs=$(patsubst %.coffee,%.js,$(wildcard *.coffee))
 
 all: dist $(targets)
@@ -10,28 +10,19 @@ all: dist $(targets)
 dist:
 	mkdir -p dist
 
-dist/rdflib.js: $R
-	echo "\$$rdf = function() {" > $@
-	cat $R >> $@
-	echo "return \$$rdf;}()" >> $@
-
-# Currently the blow is suboptimal == you have to say $rdf=require(â€¦).$rdf
-# but this doesn't work at all: echo "module.\$$rdf = function() {" > $@
-# But module.exports = $rdf should
-
-dist/node-rdflib.js: $R
-	echo "module.exports = \$$rdf = function() {" > $@
-	cat $R >> $@
-	echo "return \$$rdf;}()" >> $@
+dist/rdflib.js: $R module.js
+	echo "(function(root, undef) {" > $@
+	cat $R module.js >> $@
+	echo "})(this);" >> $@
 
 J=dist
 X=jquery.uri.js jquery.xmlns.js
 
-dist/rdflib-rdfa.js: $X $R rdfa.js
+dist/rdflib-rdfa.js: $X $R rdfa.js module.js
 	cat $X > $@
-	echo "\$$rdf = function() {" >> $@
-	cat $R rdfa.js >> $@
-	echo "return \$$rdf;}()" >> $@
+	echo "(function(root, undef) {" > $@
+	cat $R rdfa.js module.js >> $@
+	echo "})(this);" >> $@
 
 jquery.uri.js:
 	wget http://rdfquery.googlecode.com/svn-history/trunk/jquery.uri.js -O $@
