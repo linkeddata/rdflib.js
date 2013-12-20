@@ -211,7 +211,7 @@ var eof = new RegExp("^[ \\t]*(#[^\\n]*)?$", 'g');
 var ws = new RegExp("^[ \\t]*", 'g');
 var signed_integer = new RegExp("^[-+]?[0-9]+", 'g');
 var number_syntax = new RegExp("^([-+]?[0-9]+)(\\.[0-9]+)?(e[-+]?[0-9]+)?", 'g');
-var datetime_syntax = new RegExp('[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9](T[0-9][0-9]:[0-9][0-9](:[0-9][0-9](\\.[0-9]*)?)?)?Z?');
+var datetime_syntax = new RegExp('^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9](T[0-9][0-9]:[0-9][0-9](:[0-9][0-9](\\.[0-9]*)?)?)?Z?');
 
 var digitstring = new RegExp("^[0-9]+", 'g');
 var interesting = new RegExp("[\\\\\\r\\n\\\"]", 'g');
@@ -1129,6 +1129,9 @@ __SinkParser.prototype.skipSpace = function(str, i) {
                 break;
             }
         }
+	if (str.charAt(j) == '\n') {
+	    this.lines = this.lines + 1;
+	}
     }
     var val = (tmp.length - str.length) + j;
     if( val === tmp.length ) {
