@@ -275,7 +275,12 @@
             var dom = frame.element;
             var attrs = dom.attributes;
             if (dom.nodeType === RDFParser.nodeType.TEXT || dom.nodeType === RDFParser.nodeType.CDATA_SECTION){
-                  //we have a literal
+                //we have a literal
+                if(frame.parent.nodeType == frame.NODE) {
+                    //must have had attributes, store as rdf:value
+                    frame.addArc(RDFParser.ns.RDF + 'value');
+                    frame = this.buildFrame(frame);
+                }
                 frame.addLiteral(dom.nodeValue);
             }
             else if (elementURI(dom)!== RDFParser.ns.RDF + "RDF"){
