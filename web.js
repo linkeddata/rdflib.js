@@ -606,7 +606,7 @@ $rdf.Fetcher = function(store, timeout, async) {
      */
     this.requestURI = function(docuri, rterm, force) { //sources_request_new
         if (docuri.indexOf('#') >= 0) { // hash
-            throw ("requestURI should not be called with fragid: " + uri)
+            throw ("requestURI should not be called with fragid: " + docuri);
         }
 
         var pcol = $rdf.uri.protocol(docuri);
@@ -968,6 +968,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                 url: uri2,
                 accepts: {'*': 'text/turtle,text/n3,application/rdf+xml'},
                 processData: false,
+                timeout: sf.timeout,
                 error: function(xhr, s, e) {
                     if (s == 'timeout')
                         sf.failFetch(xhr, "requestTimeout");
@@ -982,6 +983,10 @@ $rdf.Fetcher = function(store, timeout, async) {
             var xhr = $rdf.Util.XMLHTTPFactory();
             xhr.onerror = onerrorFactory(xhr);
             xhr.onreadystatechange = onreadystatechangeFactory(xhr);
+            xhr.timeout = sf.timeout;
+            xhr.ontimeout = function () {
+                sf.failFetch(xhr, "requestTimeout");
+            }
             try {
                 xhr.open('GET', uri2, this.async);
             } catch (er) {
