@@ -944,16 +944,6 @@ $rdf.Fetcher = function(store, timeout, async) {
             } // switch
         }; }
 
-        // Get privileges for cross-domain XHR
-        if (!(typeof tabulator != 'undefined' && tabulator.isExtension)) {
-            try {
-                $rdf.Util.enablePrivilege("UniversalXPConnect UniversalBrowserRead")
-            } catch (e) {
-                //(!CORS?)
-                //this.failFetch(xhr, "Failed to get (UniversalXPConnect UniversalBrowserRead) privilege to read different web site: " + docuri);
-                //return xhr;
-            }
-        }
 
         // Map the URI to a localhost proxy if we are running on localhost
         // This is used for working offline, e.g. on planes.
@@ -1010,16 +1000,10 @@ $rdf.Fetcher = function(store, timeout, async) {
             try {
                 xhr.channel.notificationCallbacks = {
                     getInterface: function(iid) {
-                        if (!(typeof tabulator != 'undefined' && tabulator.isExtension)) {
-                            $rdf.Util.enablePrivilege("UniversalXPConnect")
-                        }
                         if (iid.equals(Components.interfaces.nsIChannelEventSink)) {
                             return {
 
                                 onChannelRedirect: function(oldC, newC, flags) {
-                                    if (!(typeof tabulator != 'undefined' && tabulator.isExtension)) {
-                                        $rdf.Util.enablePrivilege("UniversalXPConnect")
-                                    }
                                     if (xhr.aborted) return;
                                     var kb = sf.store;
                                     var newURI = newC.URI.spec;
@@ -1089,9 +1073,6 @@ $rdf.Fetcher = function(store, timeout, async) {
                                 
                                 // See https://developer.mozilla.org/en/XPCOM_Interface_Reference/nsIChannelEventSink
                                 asyncOnChannelRedirect: function(oldC, newC, flags, callback) {
-                                    if (!(typeof tabulator != 'undefined' && tabulator.isExtension)) {
-                                        $rdf.Util.enablePrivilege("UniversalXPConnect")
-                                    }
                                     if (xhr.aborted) return;
                                     var kb = sf.store;
                                     var newURI = newC.URI.spec;
@@ -1209,16 +1190,6 @@ $rdf.Fetcher = function(store, timeout, async) {
             this.addStatus(xhr.req, "HTTP Request sent (using jQuery)");
         }
         
-
-        // Drop privs
-        if (!(typeof tabulator != 'undefined' && tabulator.isExtension)) {
-            try {
-                $rdf.Util.disablePrivilege("UniversalXPConnect UniversalBrowserRead")
-            } catch (e) {
-                throw ("Can't drop privilege: " + e)
-            }
-        }
-
         return xhr
     }
 
