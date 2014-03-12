@@ -968,6 +968,9 @@ $rdf.Fetcher = function(store, timeout, async) {
                 url: uri2,
                 accepts: {'*': 'text/turtle,text/n3,application/rdf+xml'},
                 processData: false,
+                xhrFields: {
+                    withCredentials: true
+                },
                 timeout: sf.timeout,
                 error: function(xhr, s, e) {
                     if (s == 'timeout')
@@ -984,6 +987,7 @@ $rdf.Fetcher = function(store, timeout, async) {
             xhr.onerror = onerrorFactory(xhr);
             xhr.onreadystatechange = onreadystatechangeFactory(xhr);
             xhr.timeout = sf.timeout;
+            xhr.withCredentials = true;
             xhr.ontimeout = function () {
                 sf.failFetch(xhr, "requestTimeout");
             }
