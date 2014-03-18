@@ -548,7 +548,7 @@ $rdf.Fetcher = function(store, timeout, async) {
 ** Changed 2013-08-20:  Added (ok, body) params to callback
 **
 **/
-    this.nowOrWhenFetched = function(uri, referringTerm, callback) {
+    this.nowOrWhenFetched = function(uri, referringTerm, callback, options) {
         var sta = this.getState(uri);
         if (sta == 'fetched') return callback(true);
         this.addCallback('done', function(uri2) {
@@ -562,8 +562,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                     false, "Asynch fetch fail: " + status + " for " + uri);
             return (uri2 != uri); // Call me again?
         });
-        if (sta == 'unrequested') this.requestURI(
-        uri, referringTerm, false);
+        if (sta == 'unrequested') this.requestURI(uri, referringTerm, false, options);
     }
 
 
@@ -597,14 +596,19 @@ $rdf.Fetcher = function(store, timeout, async) {
     /** Requests a document URI and arranges to load the document.
      ** Parameters:
      **	    term:  term for the thing whose URI is to be dereferenced
-     **      rterm:  the resource which refered to this (for tracking bad links)
-     **      force:  Load the data even if loaded before
+     **     rterm:  the resource which refered to this (for tracking bad links)
+     **     force:  Load the data even if loaded before
+     **     options
+     **
+     ** Options available are:
+     ** - jqueryAjaxOptions: an object that permits to override JQuery.ajax default settings
+     **
      ** Return value:
      **	    The xhr object for the HTTP access
      **      null if the protocol is not a look-up protocol,
      **              or URI has already been loaded
      */
-    this.requestURI = function(docuri, rterm, force) { //sources_request_new
+    this.requestURI = function(docuri, rterm, force, options) { //sources_request_new
         if (docuri.indexOf('#') >= 0) { // hash
             throw ("requestURI should not be called with fragid: " + docuri);
         }
@@ -960,11 +964,10 @@ $rdf.Fetcher = function(store, timeout, async) {
         } else {
             // $rdf.log.warn("Localhost kludge OFF offline use: actually getting <" + uri2 + ">");
         }
-        
 
         // Setup the request
         if (typeof jQuery !== 'undefined' && jQuery.ajax) {
-            var xhr = jQuery.ajax({
+            var defaultJQueryAjaxSettings = {
                 url: uri2,
                 accepts: {'*': 'text/turtle,text/n3,application/rdf+xml'},
                 processData: false,
@@ -981,7 +984,16 @@ $rdf.Fetcher = function(store, timeout, async) {
                 success: function(d, s, xhr) {
                     onreadystatechangeFactory(xhr)();
                 }
-            });
+            };
+
+            // We merge the default ajax settings with the settings set as option so that the options settings
+            // can eventually override the default settings
+            // This can be useful to add an extra request header for exemple
+            // see https://github.com/linkeddata/rdflib.js/issues/36
+            var jqueryAjaxOptions = options && options.jqueryAjaxOptions ? options.jqueryAjaxOptions : {};
+            var finalSettings = $.extend(defaultJQueryAjaxSettings,jqueryAjaxOptions);
+
+            var xhr = jQuery.ajax(finalSettings);
         } else {
             var xhr = $rdf.Util.XMLHTTPFactory();
             xhr.onerror = onerrorFactory(xhr);
@@ -1141,7 +1153,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                                         kb.add(xhr.uri, kb.sym('http://www.w3.org/2007/ont/link#warning'), msg)
                                         newURI = newURI.slice(0, hash);
                                     }
-                                    var xhr2 = sf.requestURI(newURI, xhr.uri);
+                                    var xhr2 = sf.requestURI(newURI, xhr.uri, undefined, options);
                                     if (xhr2 && xhr2.req) kb.add(xhr.req,
                                         kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'),
                                         xhr2.req, sf.appNode); 
