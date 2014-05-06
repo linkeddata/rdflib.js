@@ -32,6 +32,7 @@ $rdf.Fetcher = function(store, timeout, async) {
     this.thisURI = "http://dig.csail.mit.edu/2005/ajar/ajaw/rdf/sources.js" + "#SourceFetcher" // -- Kenny
     this.timeout = timeout ? timeout : 30000
     this.async = async != null ? async : true
+    this.forceProxy = false;
     this.appNode = this.store.bnode(); // Denoting this session
     this.store.fetcher = this; //Bi-linked
     this.requested = {}
@@ -957,6 +958,8 @@ $rdf.Fetcher = function(store, timeout, async) {
             } else {
                 // $rdf.log.warn("Localhost kludge NOT USED <" + uri2 + ">");
             };
+        } else if ($rdf.Fetcher.forceProxy) {
+            uri2 = $rdf.Fetcher.crossSiteProxyTemplate.replace('{uri}', encodeURIComponent(uri2));
         } else {
             // $rdf.log.warn("Localhost kludge OFF offline use: actually getting <" + uri2 + ">");
         }
