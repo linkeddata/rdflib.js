@@ -959,7 +959,8 @@ $rdf.Fetcher = function(store, timeout, async) {
                 // $rdf.log.warn("Localhost kludge NOT USED <" + uri2 + ">");
             };
         } else if ($rdf.Fetcher.forceProxy) {
-            uri2 = $rdf.Fetcher.crossSiteProxyTemplate.replace('{uri}', encodeURIComponent(uri2));
+            if ($rdf.Fetcher.crossSiteProxyTemplate)
+                uri2 = $rdf.Fetcher.crossSiteProxyTemplate.replace('{uri}', encodeURIComponent(uri2));
         } else {
             // $rdf.log.warn("Localhost kludge OFF offline use: actually getting <" + uri2 + ">");
         }
