@@ -1158,26 +1158,27 @@ $rdf.Fetcher = function(store, timeout, async) {
                         "@@ Couldn't set callback for redirects: " + err);
             }
 
-            try {
-                var acceptstring = ""
-                for (var type in this.mediatypes) {
-                    var attrstring = ""
-                    if (acceptstring != "") {
-                        acceptstring += ", "
-                    }
-                    acceptstring += type
-                    for (var attr in this.mediatypes[type]) {
-                        acceptstring += ';' + attr + '=' + this.mediatypes[type][attr]
-                    }
-                }
-                xhr.setRequestHeader('Accept', acceptstring)
-                // $rdf.log.info('Accept: ' + acceptstring)
+        }
 
-                // See http://dig.csail.mit.edu/issues/tabulator/issue65
-                //if (requester) { xhr.setRequestHeader('Referer',requester) }
-            } catch (err) {
-                throw ("Can't set Accept header: " + err)
+        try {
+            var acceptstring = ""
+            for (var type in this.mediatypes) {
+                var attrstring = ""
+                if (acceptstring != "") {
+                    acceptstring += ", "
+                }
+                acceptstring += type
+                for (var attr in this.mediatypes[type]) {
+                    acceptstring += ';' + attr + '=' + this.mediatypes[type][attr]
+                }
             }
+            xhr.setRequestHeader('Accept', acceptstring)
+            // $rdf.log.info('Accept: ' + acceptstring)
+
+            // See http://dig.csail.mit.edu/issues/tabulator/issue65
+            //if (requester) { xhr.setRequestHeader('Referer',requester) }
+        } catch (err) {
+            throw ("Can't set Accept header: " + err)
         }
 
         // Fire
