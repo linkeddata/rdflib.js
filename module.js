@@ -8,7 +8,7 @@ if (typeof exports !== 'undefined') {
 }
 else {
     if (typeof define === 'function' && define.amd) {
-        define('rdflib', function() {
+        define([], function() {
             return $rdf;
         });
     }
