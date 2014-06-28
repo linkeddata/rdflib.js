@@ -464,7 +464,7 @@ $rdf.Fetcher = function(store, timeout, async) {
         this.addStatus(xhr.req, status)
         kb.add(xhr.uri, ns.link('error'), status)
         this.requested[$rdf.uri.docpart(xhr.uri.uri)] = false
-        this.fireCallbacks('fail', [xhr.requestedURI, status])
+        this.fireCallbacks('fail', [xhr.requestedURI, status, xhr])
         xhr.abort()
         return xhr
     }
