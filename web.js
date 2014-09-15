@@ -464,6 +464,9 @@ $rdf.Fetcher = function(store, timeout, async) {
         this.addStatus(xhr.req, status)
         kb.add(xhr.uri, ns.link('error'), status)
         this.requested[$rdf.uri.docpart(xhr.uri.uri)] = false
+        if (xhr.userCallback) {
+            xhr.userCallback(false, "Fetch of <" + xhr.uri.uri + "> failed: "+status)
+        };
         this.fireCallbacks('fail', [xhr.requestedURI, status])
         xhr.abort()
         return xhr
@@ -487,12 +490,15 @@ $rdf.Fetcher = function(store, timeout, async) {
         this.addStatus(xhr.req, 'Done.')
         // $rdf.log.info("Done with parse, firing 'done' callbacks for " + xhr.uri)
         this.requested[xhr.uri.uri] = 'done'; //Kenny
+        if (xhr.userCallback) {
+            xhr.userCallback(true);
+        };
         this.fireCallbacks('done', args)
     }
 
     this.store.add(this.appNode, ns.rdfs('label'), this.store.literal('This Session'), this.appNode);
 
-    ['http', 'https', 'file', 'chrome'].map(this.addProtocol); // ftp?
+    ['http', 'https', 'file', 'chrome'].map(this.addProtocol); // ftp? mailto:?
     [$rdf.Fetcher.RDFXMLHandler, $rdf.Fetcher.XHTMLHandler, $rdf.Fetcher.XMLHandler, $rdf.Fetcher.HTMLHandler, $rdf.Fetcher.TextHandler, $rdf.Fetcher.N3Handler, ].map(this.addHandler)
 
 
@@ -505,7 +511,7 @@ $rdf.Fetcher = function(store, timeout, async) {
      */
     this.nowKnownAs = function(was, now) {
         if (this.lookedUp[was.uri]) {
-            if (!this.lookedUp[now.uri]) this.lookUpThing(now, was)
+            if (!this.lookedUp[now.uri]) this.lookUpThing(now, was) //  @@@@  Transfer userCallback
         } else if (this.lookedUp[now.uri]) {
             if (!this.lookedUp[was.uri]) this.lookUpThing(was, now)
         }
@@ -523,20 +529,40 @@ $rdf.Fetcher = function(store, timeout, async) {
 //  term:       canonical term for the thing whose URI is to be dereferenced
 //  rterm:      the resource which refered to this (for tracking bad links)
 //  force:      Load the data even if loaded before
-//  callback:   is called as callback(uri, success, errorbody)
+//  oneDone:   is called as callback(ok, errorbody) for each one
+//  allDone:   is called as callback(ok, errorbody) for all of them
+// Returns      the number of things looked up
+//
 
-    this.lookUpThing = function(term, rterm, force, callback) {
+
+    this.lookUpThing = function(term, rterm, force, oneDone, allDone) {
         var uris = kb.uris(term) // Get all URIs
-        var failed = false;
-        var outstanding;
-        if (typeof uris != 'undefined') {
+        var success = true;
+        var errors = '';
+        var outstanding = {};
         
-            if (callback) {
-                // @@@@@@@ not implemented
-            }
+        if (typeof uris !== 'undefined') {
             for (var i = 0; i < uris.length; i++) {
-                this.lookedUp[uris[i]] = true;
-                this.requestURI($rdf.uri.docpart(uris[i]), rterm, force)
+                var u = uris[i];
+                outstanding[u] = true;
+                this.lookedUp[u] = true;
+                var sf = this;
+
+                var requestOne = function requestOne(u1){
+                    sf.requestURI($rdf.uri.docpart(u1), rterm, force, function(ok, body){
+                        if (ok) {
+                            if (oneDone) oneDone(true, u1);
+                        } else {
+                            if (oneDone) oneDone(false, body);
+                            success = false;
+                            errors += body + '\n';
+                        };
+                        delete outstanding[u];
+                        for (x in outstanding) return;
+                        if (allDone) allDone(success, errors);
+                    });
+                };
+                requestOne(u);
             }
         }
         return uris.length
@@ -548,9 +574,10 @@ $rdf.Fetcher = function(store, timeout, async) {
 ** Changed 2013-08-20:  Added (ok, body) params to callback
 **
 **/
-    this.nowOrWhenFetched = function(uri, referringTerm, callback) {
+    this.nowOrWhenFetched = function(uri, referringTerm, userCallback) {
         var sta = this.getState(uri);
-        if (sta == 'fetched') return callback(true);
+        if (sta == 'fetched') return userCallback(true);
+        /*
         this.addCallback('done', function(uri2) {
             if (uri2 == uri ||
                 ( $rdf.Fetcher.crossSiteProxy(uri) == uri2  )) callback(true);
@@ -562,8 +589,9 @@ $rdf.Fetcher = function(store, timeout, async) {
                     false, "Asynch fetch fail: " + status + " for " + uri);
             return (uri2 != uri); // Call me again?
         });
+        */
         if (sta == 'unrequested') this.requestURI(
-        uri, referringTerm, false);
+            uri, referringTerm, false, userCallback);
     }
 
 
@@ -599,12 +627,13 @@ $rdf.Fetcher = function(store, timeout, async) {
      **	    term:  term for the thing whose URI is to be dereferenced
      **      rterm:  the resource which refered to this (for tracking bad links)
      **      force:  Load the data even if loaded before
+     **      userCallback:  Called with (true) or (false, errorbody) after load is done or failed
      ** Return value:
      **	    The xhr object for the HTTP access
      **      null if the protocol is not a look-up protocol,
      **              or URI has already been loaded
      */
-    this.requestURI = function(docuri, rterm, force) { //sources_request_new
+    this.requestURI = function(docuri, rterm, force, userCallback) { //sources_request_new
         if (docuri.indexOf('#') >= 0) { // hash
             throw ("requestURI should not be called with fragid: " + docuri);
         }
@@ -614,12 +643,8 @@ $rdf.Fetcher = function(store, timeout, async) {
         var force = !! force
         var kb = this.store
         var args = arguments
-        //	var term = kb.sym(docuri)
         var docterm = kb.sym(docuri)
-        // dump("requestURI: dereferencing " + docuri)
-        //this.fireCallbacks('request',args)
         if (!force && typeof(this.requested[docuri]) != "undefined") {
-            // dump("We already have requested " + docuri + ". Skipping.\n")
             return null
         }
 
@@ -707,7 +732,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                     //sf.fireCallbacks('done', args) // Are these args right? @@@
                     sf.requested[xhr.uri.uri] = 'redirected';
 
-                    var xhr2 = sf.requestURI(newURI, xhr.uri);
+                    var xhr2 = sf.requestURI(newURI, xhr.uri, force, userCallback);
                     xhr2.proxyUsed = true; //only try the proxy once
 
                     if (xhr2 && xhr2.req) {
@@ -748,6 +773,8 @@ $rdf.Fetcher = function(store, timeout, async) {
                 sf.fireCallbacks('headers', [{uri: docuri, headers: xhr.headers}]);
 
                 if (xhr.status >= 400) { // For extra dignostics, keep the reply
+                //  @@@ 401 should cause  a retry with credential son 
+                // @@@ cache the credentials flag by host ????
                     if (xhr.responseText.length > 10) { 
                         kb.add(response, ns.http('content'), kb.literal(xhr.responseText), response);
                         // dump("HTTP >= 400 responseText:\n"+xhr.responseText+"\n"); // @@@@
@@ -819,7 +846,7 @@ $rdf.Fetcher = function(store, timeout, async) {
 
                 for (var x = 0; x < sf.handlers.length; x++) {
                     if (xhr.headers['content-type'] && xhr.headers['content-type'].match(sf.handlers[x].pattern)) {
-                        handler = new sf.handlers[x]()
+                        handler = new sf.handlers[x]();
                         requestHandlers.append(sf.handlers[x].term) // FYI
                         break
                     }
@@ -904,6 +931,9 @@ $rdf.Fetcher = function(store, timeout, async) {
                             xhr.aborted = true
 
                             sf.addStatus(oldreq, 'done') // why
+                            if (xhr.userCallback) {
+                                xhr.userCallback(true);
+                            };
                             sf.fireCallbacks('done', args) // Are these args right? @@@
                             sf.requested[xhr.uri.uri] = 'redirected';
 
@@ -998,6 +1028,7 @@ $rdf.Fetcher = function(store, timeout, async) {
             }
         }
         xhr.req = req;
+        xhr.userCallback = userCallback;
         xhr.uri = docterm;
         xhr.requestedURI = uri2;
         
@@ -1130,7 +1161,12 @@ $rdf.Fetcher = function(store, timeout, async) {
                                     xhr.abort()
                                     xhr.aborted = true
 
+
                                     sf.addStatus(oldreq, 'done') // why
+
+                                    if (xhr.userCallback) {
+                                        xhr.userCallback(true);
+                                    };
                                     sf.fireCallbacks('done', args) // Are these args right? @@@
                                     sf.requested[xhr.uri.uri] = 'redirected';
 
@@ -1281,7 +1317,7 @@ $rdf.parse = function parse(str, kb, base, contentType) {
         */
         if (contentType == 'text/n3' || contentType == 'text/turtle') {
             var p = $rdf.N3Parser(kb, kb, base, base, null, null, "", null)
-            p.loadBuf(str);
+            p.loadBuf(str)
             return;
         }
 

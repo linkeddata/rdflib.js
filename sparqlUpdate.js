@@ -108,7 +108,7 @@ $rdf.sparqlUpdate = function() {
         bnodes.sort(); // in place sort - result may have duplicates
         bnodes2 = [];
         for (var j=0; j<bnodes.length; j++)
-            if (j==0 || !bnodes[j].sameTermAs(bnodes[j-1])) bnodes2.push(bnodes[j]);
+            if (j==0 || !bnodes[j].sameTerm(bnodes[j-1])) bnodes2.push(bnodes[j]);
         return bnodes2;
     }
 
