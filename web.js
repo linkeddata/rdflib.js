@@ -1,6 +1,6 @@
 /************************************************************
  * 
- * Project: rdflib.js, part of Tabulator project
+ * Project: rdflib.js, originally part of Tabulator project
  * 
  * File: web.js
  * 
@@ -25,6 +25,8 @@
 /**
  * Things to test: callbacks on request, refresh, retract
  *   loading from HTTP, HTTPS, FTP, FILE, others?
+ * To do:
+ * Firing up a mail client for mid:  (message:) URLs
  */
 
 $rdf.Fetcher = function(store, timeout, async) {
@@ -577,21 +579,10 @@ $rdf.Fetcher = function(store, timeout, async) {
     this.nowOrWhenFetched = function(uri, referringTerm, userCallback) {
         var sta = this.getState(uri);
         if (sta == 'fetched') return userCallback(true);
-        /*
-        this.addCallback('done', function(uri2) {
-            if (uri2 == uri ||
-                ( $rdf.Fetcher.crossSiteProxy(uri) == uri2  )) callback(true);
-            return (uri2 != uri); // Call me again?
-        });
-        this.addCallback('fail', function(uri2, status) {
-            if (uri2 == uri ||
-                ( $rdf.Fetcher.crossSiteProxy(uri) == uri2  )) callback(
-                    false, "Asynch fetch fail: " + status + " for " + uri);
-            return (uri2 != uri); // Call me again?
-        });
-        */
-        if (sta == 'unrequested') this.requestURI(
-            uri, referringTerm, false, userCallback);
+        
+        // If it is 'failed', then shoulkd we try again?  I think so so an old error doens't get stuck
+        //if (sta == 'unrequested')
+        this.requestURI(uri, referringTerm, false, userCallback);
     }
 
 
@@ -709,8 +700,8 @@ $rdf.Fetcher = function(store, timeout, async) {
                     kb.add(oldreq, ns.http('redirectedTo'), kb.sym(newURI), oldreq);
 
 
-                    ////////////// Change the request node to a new one:  @@@@@@@@@@@@ Duplicate?
-                    var newreq = xhr.req = kb.bnode() // Make NEW reqest for everything else
+                    ////////////// Change the request node to a new one:  @@@@@@@@@@@@ Duplicate of what will be done by requestURI below
+                    /* var newreq = xhr.req = kb.bnode() // Make NEW reqest for everything else
                     kb.add(oldreq, ns.http('redirectedRequest'), newreq, xhr.req);
 
                     var now = new Date();
@@ -721,6 +712,7 @@ $rdf.Fetcher = function(store, timeout, async) {
 
                     var response = kb.bnode();
                     kb.add(oldreq, ns.link('response'), response);
+                    */
                     // kb.add(response, ns.http('status'), kb.literal(xhr.status), response);
                     // if (xhr.statusText) kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response)
 
@@ -729,7 +721,7 @@ $rdf.Fetcher = function(store, timeout, async) {
 
                     sf.addStatus(oldreq, 'done - redirected') // why
                     //the callback throws an exception when called from xhr.onerror (so removed)
-                    //sf.fireCallbacks('done', args) // Are these args right? @@@
+                    //sf.fireCallbacks('done', args) // Are these args right? @@@   Noit done yet! done means success
                     sf.requested[xhr.uri.uri] = 'redirected';
 
                     var xhr2 = sf.requestURI(newURI, xhr.uri, force, userCallback);
@@ -744,7 +736,14 @@ $rdf.Fetcher = function(store, timeout, async) {
                     }
                 }
             } else {
-                sf.failFetch(xhr, "XHR Error: "+event)
+                if (xhr.withCredentials) {
+                    xhr.abort();
+                    xhr.withCredentials = false;
+                    sf.addStatus(xhr.req, "Credentials SUPPRESSED to see if that helps");
+                    xhr.send(); // try again                
+                } else {
+                    sf.failFetch(xhr, "XHR Error: "+event); // Alas we get no error message
+                }
             }
         }; }
         
@@ -990,7 +989,12 @@ $rdf.Fetcher = function(store, timeout, async) {
         } else {
             // $rdf.log.warn("Localhost kludge OFF offline use: actually getting <" + uri2 + ">");
         }
-        
+        // 2014 probelm:
+        // XMLHttpRequest cannot load http://www.w3.org/People/Berners-Lee/card. 
+        // A wildcard '*' cannot be used in the 'Access-Control-Allow-Origin' header when the credentials flag is true. 
+
+
+        var withCredentials = ( uri2.slice(0,6) == 'https:'); // @@ Kludge -- need for webid which typically is served from https
 
         // Setup the request
         if (typeof jQuery !== 'undefined' && jQuery.ajax) {
@@ -1339,5 +1343,28 @@ $rdf.parse = function parse(str, kb, base, contentType) {
 
 };
 
+//   Serialize to the appropriate format
+// 
+$rdf.serialize = function(kb, base, contentType) {
+
+    var sz = $rdf.Serializer(kb);
+    sz.suggestNamespaces(kb.namespaces);
+    sz.setBase(base);//?? beware of this - kenny (why? tim)                   
+    switch(content_type){
+        case 'application/rdf+xml': 
+            documentString = sz.statementsToXML(newSts);
+            break;
+        case 'text/n3':
+        case 'text/turtle':
+        case 'application/x-turtle': // Legacy
+        case 'application/n3': // Legacy
+            documentString = sz.statementsToN3(newSts);
+            break;
+        default:
+            throw "serialise: Content-type "+content_type +" not supported for data write";                                                                            
+    }
+
+
+};
 
 // ends

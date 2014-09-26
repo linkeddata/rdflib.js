@@ -3,7 +3,7 @@
 
 var tc0006Passed = true;
 
-var base = "http://dig.csail.mit.edu/hg/tabulator/raw-file/tip/chrome/content/test/tc0006/";
+var base = "http://linkeddata.github.io/rdflib.js/test/tc0006";
 
 function escapeForXML(str) {
     if (typeof str == 'undefined') return '@@@undefined@@@@';
@@ -13,21 +13,44 @@ function escapeForXML(str) {
 function testTC0006(showDetails) {
     var result = "";
     var expected = "";
-    var failStyle = 'style="border: solid 2px red; padding: 1px 2px;"';
-    var passStyle = 'style="border: solid 2px green; padding: 1px 2px;"';
+    var failStyle = 'style="background-color: #fee;"';
+    var passStyle = 'style="background-color: #efe;"';
+//    var failStyle = 'style="border: solid 2px red; padding: 1px 2px;"';
+//    var passStyle = 'style="border: solid 2px green; padding: 1px 2px;"';
     var allResults = "<div><strong>Detailed Results:</strong></div>";
     var tests = [ ];
 
-    tests.push({
-        'title': "Nested bnodes",
-        'input': ' :Fred :knows [ :name [ :first "Alice"; :second "Bill" ]]. ',
-        'expected': '{_:n1 <http://dig.csail.mit.edu/hg/tabulator/raw-file/tip/chrome/content/test/tc0006/#first> "Alice" . _:n1 <http://dig.csail.mit.edu/hg/tabulator/raw-file/tip/chrome/content/test/tc0006/#second> "Bill" . _:n0 <http://dig.csail.mit.edu/hg/tabulator/raw-file/tip/chrome/content/test/tc0006/#name> _:n1 . <http://dig.csail.mit.edu/hg/tabulator/raw-file/tip/chrome/content/test/tc0006/#Fred> <http://dig.csail.mit.edu/hg/tabulator/raw-file/tip/chrome/content/test/tc0006/#knows> _:n0 .}'
+    tests = [
+    {
+        'title': "substitute in Statement",
+        'input': ' <> :insert {  ?x :p1 1.  :b ?y 2. :c :p3 ?z . }.',
+        'bindings': {   '?x': $rdf.sym('http://example.com/foo#xxx'),
+                        '?y': $rdf.sym('http://example.com/foo#yyy'),
+                        '?z': $rdf.sym('http://example.com/foo#zzz')
+                    },
+        'expected': '<>\n\
+    <#insert>\n\
+            {    <http://example.com/foo#xxx> <#p1> 1.\n\
+               <#b> <http://example.com/foo#yyy> 2.\n\
+               <#c> <#p3> <http://example.com/foo#zzz>. }.'
     },
     {
-        'title': "Looped bnodes",
-        'input': ' _:a :knows [ :knows _:a ]. ',
-        'expected': '{_:n3 <http://dig.csail.mit.edu/hg/tabulator/raw-file/tip/chrome/content/test/tc0006/#knows> _:n2 . _:n2 <http://dig.csail.mit.edu/hg/tabulator/raw-file/tip/chrome/content/test/tc0006/#knows> _:n3 .}'
-    });
+        'title': "substitute in Collection",
+        'input': ' <> :insert {  :b :p ( ?x 2 ( 31 ?y 33 ) 4). }.',
+        'bindings': {   '?x': $rdf.sym('http://example.com/foo#xxx'),
+                        '?y': $rdf.sym('http://example.com/foo#yyy'),
+                        '?z': $rdf.sym('http://example.com/foo#zzz')
+                    },
+        'expected': '<>\n\
+    <#insert>\n\
+            {\n\
+                <#b>\n\
+                    <#p>\n\
+                            (    <http://example.com/foo#xxx>\n\
+                               2\n\
+                               ( 31 <http://example.com/foo#yyy> 33 ) ). }.'
+    }
+    ];
     
     
     for(var i=0; i < tests.length; i++) {
@@ -37,27 +60,24 @@ function testTC0006(showDetails) {
         try {
             var kb = $rdf.graph();
             $rdf.parse(test.input, kb, base, 'text/n3');
-            result = kb.toNT();
-            result = result.replace(/\n/g, ' ').trim()
-            expected = test.expected.replace(/\n/g, ' ').trim()
+            var before = kb.serialize(base);
+            var graph = kb.substitute(test.bindings); // as a debugger trace variable
+            var after = graph.serialize(base) // default is N3
+            result = after    // .replace(/\n/g, ' ').trim()
+            expected = test.expected   // .replace(/\n/g, ' ').trim()
         } catch(e) {
-            result = "Runtime exception: "+e;
+            result = "Runtime exception: "+ stackString(e);
         }
-        if(result != expected) {
-                for (var j=0; j<result.length; j++) {
-                    if (result[j] != expected[j]) {
-                        allResults += "Diff at "+j+": '"+(result[j])+"' ("+result.charCodeAt(j)+") vs '"
-                                    +test.expected[j]+"' ("+expected.charCodeAt(j)+").";
-                    }
-                }
-                
+        allResults += "<pre>Before: " + escapeForXML(before) + "</pre>\n"
+        if(result.trim() != expected.trim()) {
                 tc0006Passed = false;
                 styleResult =  failStyle;
         }
         else {
                 styleResult  =  passStyle;
         }
-        allResults += "<p>EXPECTED: ("+test.expected.length+") " + escapeForXML(test.expected)+ "</p><p>RESULT ("+result.length+"): <span " + styleResult +">"+ escapeForXML(result) + "</p>";
+        allResults += "<pre "+styleResult+">After: " + escapeForXML(after) + "</pre>";
+        allResults += "<pre>EXPECTED: ("+test.expected.length+"): " + escapeForXML(test.expected)+ "</pre>";
         
     }
     if(showDetails) return allResults;

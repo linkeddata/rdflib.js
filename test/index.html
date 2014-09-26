@@ -81,7 +81,9 @@
 	<div id="goOffline" title="OFF-LINE mode" class="offlinemodeswitch"></div>
 	<div id="main">
 		<h1>Tabulator Test Harness</h1>
-                <p>Note: Run this in Firefox+tabulator as <a href"chrome://tabulator/content/test/index.html">chrome://tabulator/content/test/index.html</a></p>
+                https://linkeddata.github.io/rdflib.js/test/index.html
+                <p>Note: Run this in Firefox+tabulator as <a href"chrome://tabulator/content/js/rdf/test/index.html">chrome://tabulator/content/js/rdf/test/index.html</a><br/>
+                Run this from GITHUB as <a href"https://linkeddata.github.io/rdflib.js/test/index.html">https://linkeddata.github.io/rdflib.js/test/index.html</a></p>
 		<div id="toc"></div>
 		<div id="cmd">
 			<button id="reset" title="Reset all tests ...">Reset</button> |
@@ -183,12 +185,12 @@
             
             <div class="testcase" id="secTC0006" about="#TC0006" typeof="test:TestCase">
                 <span property="dcterms:identifier" content="TC0006"></span>
-                <h2 property="dcterms:title" title="click to expand ..." content="TC0006: A TITLE">TC0006: Testing x.toNT() and $rdf.fromNT() functions - Graphs (...))</h2>
+                <h2 property="dcterms:title" title="click to expand ..." content="TC0006: A TITLE">TC0006: Testing the substitute method on terms</h2>
                 <span class="overallTestResult"></span>
                 <div class="testdetails">
-                    <p><em>Purpose</em>: <span property="dcterms:description test:purpose">This tests the
-                        internal serialization used to make hashez and now used in the SPARQL code to actually serialize SPARQL.
-                        If you take a valid term serialization s then $rdf.fromNT().toNT() should be s.</span>
+                    <p><em>Purpose</em>: <span property="dcterms:description test:purpose">Substitution of variables into a term is recurive into the parts
+                    of a statement, the elements of a list, and the statements in a formula. We need to test that the recursion works as well as
+                    that the basic subsitution of a variable works at the top level.</span>
                     </p>
                     <p><em>See also</em>:
                     </p>

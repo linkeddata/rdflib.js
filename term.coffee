@@ -2,6 +2,8 @@
 # These are the classes corresponding to the RDF and N3 data models
 #
 # Designed to look like rdflib and cwm
+#
+# This is coffee see http://coffeescript.org
 ###
 
 $rdf = {} unless $rdf?
@@ -13,7 +15,9 @@ $rdf = {} unless $rdf?
 ###
 class $rdf.Node
 
-class $rdf.Empty
+    substitute:(bindings) -> this  # Default is to return this
+
+class $rdf.Empty extends $rdf.Node
     termType: 'empty'
     toString: -> '()'
     toNT: @::toString
@@ -25,7 +29,7 @@ class $rdf.Empty
     Connolly pointed out it isa symbol on the language.
     @param uri the uri as string
 ###
-class $rdf.Symbol
+class $rdf.Symbol extends $rdf.Node
     constructor: (@uri) ->
         @value = @uri   # why?
     termType: 'symbol'
@@ -59,7 +63,7 @@ else
 
 $rdf.NTAnonymousNodePrefix = "_:n"
 
-class $rdf.BlankNode
+class $rdf.BlankNode extends $rdf.Node
     constructor: (id) ->
         @id = $rdf.NextId++
         @value = if id then id else @id.toString()
@@ -79,7 +83,7 @@ class $rdf.BlankNode
         if @id > other.id then return +1
         return 0
 
-class $rdf.Literal
+class $rdf.Literal extends $rdf.Node
     constructor: (@value, @lang, @datatype) ->
         @lang ?= undefined
         @datatype ?= undefined
@@ -113,14 +117,20 @@ class $rdf.Literal
         if @value > other.value then return +1
         return 0
 
-class $rdf.Collection
-    constructor: ->
+class $rdf.Collection extends $rdf.Node
+    constructor: (initial) ->
         @id = $rdf.NextId++ # for hashString
         @elements = []
         @closed = false
+        if typeof initial != 'undefined'
+            @elements.push($rdf.term(s)) for s in initial
+
     termType: 'collection'
     toNT: -> $rdf.NTAnonymousNodePrefix + @id
     toString: -> '(' + @elements.join(' ') + ')'
+
+    substitute: (bindings) ->
+        return new $rdf.Collection(s.substitute(bindings) for s in @elements)
 
     append: (el) -> @elements.push el
     unshift: (el) -> @elements.unshift el
@@ -182,11 +192,16 @@ class $rdf.Statement
         @why = why if why?
     toNT: -> [@subject.toNT(), @predicate.toNT(), @object.toNT()].join(' ') + ' .'
     toString: @::toNT
+    
+    substitute:(bindings) ->
+        new $rdf.Statement @subject.substitute(bindings),
+            @predicate.substitute(bindings),
+            @object.substitute(bindings), @why
 
 $rdf.st = (subject, predicate, object, why) ->
     new $rdf.Statement subject, predicate, object, why
 
-class $rdf.Formula
+class $rdf.Formula extends $rdf.Node
     # set of statements
 
     constructor: ->
@@ -200,6 +215,14 @@ class $rdf.Formula
 
     add: (s, p, o, why) ->
         @statements.push new $rdf.Statement(s, p, o, why)
+
+    addStatement: (st) ->
+        @statements.push st
+    
+    substitute: (bindings) ->
+        g = new $rdf.Formula
+        g.addStatement s.substitute(bindings) for s in @.statements
+        return g
 
     # convenience methods
     sym: (uri, name) ->
@@ -217,7 +240,8 @@ class $rdf.Formula
         new $rdf.Formula
     collection: ->
         new $rdf.Collection
-    #todo: this is really badly named. It suggests that it creates a list, when in fact it creates a collection
+    #todo: this is really badly named. @@
+    # It suggests that it creates a list, when in fact it creates a collection
     list: (values) ->
         r = new $rdf.Collection
         if values
@@ -468,6 +492,31 @@ class $rdf.Formula
             bots[k] = v if bottom
         return bots
 
+#   Serialize to the given format
+# 
+    serialize: (base, contentType, provenance) ->
+        sz = $rdf.Serializer(this)
+        sz.suggestNamespaces(@namespaces)
+        sz.setBase(base)
+        
+        if provenance
+            sts = @.statementsMatching(undefined, undefined, undefined, provenance)
+        else
+            sts = @statements
+                    
+        switch contentType ? 'text/n3'
+            when 'application/rdf+xml'
+                documentString = sz.statementsToXML(sts);
+            when 'text/n3', 'text/turtle'
+                documentString = sz.statementsToN3(sts);
+            else
+                throw "serialize: Content-type "+contentType +" not supported.";                                                                            
+
+        return documentString
+
+
+
+
 $rdf.sym = (uri) -> new $rdf.Symbol uri
 $rdf.lit = $rdf.Formula::literal
 $rdf.Namespace = $rdf.Formula::ns
@@ -483,7 +532,7 @@ $rdf.variable = $rdf.Formula::variable
 # but the ? nottaion has an implicit base uri of 'varid:'
 ###
 
-class $rdf.Variable
+class $rdf.Variable extends $rdf.Node
     constructor: (rel) ->
         @base = 'varid:'
         @uri = $rdf.Util.uri.join rel, @base
@@ -494,6 +543,9 @@ class $rdf.Variable
         "?#{@uri}"
     toString: @::toNT
     hashString: @::toNT
+    
+    substitute:(bindings) ->
+        bindings[@toNT()] ? this
 
     sameTerm: (other) ->
         unless other

@@ -34,3 +34,33 @@ function startBusy(){
 function stopBusy(){
 	$("#busy").remove();
 }
+
+function stackString(e){
+	
+    var str = "" + e + "\n";    
+    if (!e.stack) {
+            return str + 'No stack available.\n'
+    };
+    var lines = e.stack.toString().split('\n');
+    var toprint = [];
+    for (var i = 0; i < lines.length; i++) {
+            var line = lines[i];
+            if (line.indexOf('ecmaunit.js') > -1) {
+                    // remove useless bit of traceback
+                    break;
+            };
+            if (line.charAt(0) == '(') {
+                    line = 'function' + line;
+            };
+            var chunks = line.split('@');
+            toprint.push(chunks);
+    };
+    //toprint.reverse();  No - I prefer the latest at the top by the error message -tbl
+    
+    for (var i = 0; i < toprint.length; i++) {
+            str += '  ' + toprint[i][1] + '\n    '+ toprint[i][0];
+    };
+    return str;
+}
+
+
