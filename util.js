@@ -274,6 +274,31 @@ $rdf.Util = {
     
 };
 
+
+////////////////// find the variables in a graph
+//  SHALLOW
+//  used?
+//
+$rdf.Util.variablesIn = function(g) {
+    for (var i=0; i<g.statements.length; i++) {
+        var st = g.statatements[i];
+        var vars = {}
+        if (st.subject instanceof $rdf.Variable) {
+            vars[st.subject.toNT()] = true;
+        }
+        if (st.predicate instanceof $rdf.Variable) {
+            vars[st.predicate.toNT()] = true;
+        }
+        if (st.object instanceof $rdf.Variable) {
+            vars[st.object.toNT()] = true;
+        }
+    }
+    return vars;
+};
+
+
+
+
 ///////////////////// Parse XML
 //
 // Returns: A DOM

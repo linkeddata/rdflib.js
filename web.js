@@ -1336,6 +1336,16 @@ $rdf.parse = function parse(str, kb, base, contentType) {
                 $rdf.rdfa.parse($rdf.Util.parseXML(str), kb, base);
             return;
         }
+        
+        if (contentType == 'application/sparql-update') {  // @@ we handle a subset
+            spaqlUpdateParser(store, str, base)
+
+            if ($rdf.rdfa && $rdf.rdfa.parse)
+                $rdf.rdfa.parse($rdf.Util.parseXML(str), kb, base);
+            return;
+        }
+        
+
     } catch(e) {
         throw "Error trying to parse <"+base+"> as "+contentType+":\n"+e +':\n'+e.stack;
     }
@@ -1345,12 +1355,13 @@ $rdf.parse = function parse(str, kb, base, contentType) {
 
 //   Serialize to the appropriate format
 // 
-$rdf.serialize = function(kb, base, contentType) {
-
+$rdf.serialize = function(target, kb, base, contentType) {
+    var documentString;
     var sz = $rdf.Serializer(kb);
+    var newSts = kb.statementsMatching(undefined, undefined, undefined, target);
     sz.suggestNamespaces(kb.namespaces);
-    sz.setBase(base);//?? beware of this - kenny (why? tim)                   
-    switch(content_type){
+    sz.setBase(base);                   
+    switch(contentType){
         case 'application/rdf+xml': 
             documentString = sz.statementsToXML(newSts);
             break;
@@ -1363,8 +1374,7 @@ $rdf.serialize = function(kb, base, contentType) {
         default:
             throw "serialise: Content-type "+content_type +" not supported for data write";                                                                            
     }
-
-
+    return documentString;
 };
 
 // ends
