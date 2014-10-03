@@ -1117,28 +1117,39 @@ __SinkParser.prototype.skipSpace = function(str, i) {
     /*
     Skip white space, newlines and comments.
     return -1 if EOF, else position of first non-ws character*/
-    var tmp = str;
+
     var whitespace = ' \n\r\t\f\x0b\xa0\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u200b\u2028\u2029\u3000';
     for (var j = (i ? i : 0); j < str.length; j++) {
-        if (whitespace.indexOf(str.charAt(j)) === -1) {
+        var ch = str.charAt(j);
+        // console.log("    skipspace j= "+j + " i= " + i + " n= " + str.length);
+        // console.log(" skipspace ch <" + ch + ">");
+        if (whitespace.indexOf(ch) < 0 ) { //not ws
+            // console.log(" skipspace 2 ch <" + ch + ">");
             if( str.charAt(j)==='#' ) {
-                str = str.slice(i).replace(/^[^\n]*\n/,"");
-                i=0;
-                j=-1;
-            } else {
-                break;
+                for (;; j++) {
+                    // console.log("    skipspace2 j= "+j + " i= " + i + " n= " + str.length);
+                    if (j === str.length) {
+                        return -1; // EOF
+                    }
+                    if (str.charAt(j) === '\n') {
+                        this.lines = this.lines + 1;
+                        break;
+                    }
+                }; 
+            } else { // Not hash - something interesting
+                // console.log(" skipspace 3 ch <" + ch + ">");
+                return j
+            }
+        } else { // Whitespace
+            // console.log(" skipspace 5 ch <" + ch + ">");
+            if (str.charAt(j) === '\n') {
+                this.lines = this.lines + 1;
             }
         }
-	if (str.charAt(j) == '\n') {
-	    this.lines = this.lines + 1;
-	}
-    }
-    var val = (tmp.length - str.length) + j;
-    if( val === tmp.length ) {
-        return -1;
-    }
-    return val;
+    } // next j
+    return -1; // EOF
 };
+
 __SinkParser.prototype.variable = function(str, i, res) {
     /*
     ?abc -> variable(:abc)

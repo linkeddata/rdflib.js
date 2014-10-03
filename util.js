@@ -296,7 +296,41 @@ $rdf.Util.variablesIn = function(g) {
     return vars;
 };
 
+//   Heavy comparison is for repeatable canonical ordering
+$rdf.Util.heavyCompare = function(x, y, g) {
+    var nonBlank = function(x) {
+        return (x.termType === 'bnode') ?  null : x; 
+    }
+    var signature = function(b) {
+        var lis = g.statementsMatching(x).map(function(st){
+            return ('' + nonBlank(st.subject) + ' ' + nonBlank(st.predicate)
+                + ' ' + nonBlank(st.object));
+        }).concat(g.statementsMatching(undefined, undefined, x).map(function(st){
+            return ('' + nonBlank(st.subject) + ' ' + nonBlank(st.predicate)
+                + ' ' + nonBlank(st.object));
+        }))
+        lis.sort();
+        return lis.join('\n');
+    }
+    if ((x.termType === 'bnode') || (y.termType === 'bnode')) {
+        if (x.compareTerm(y) === 0) return 0; // Same
+        if (signature(x) > signature(y)) return +1; 
+        if (signature(x) < signature(y)) return -1;
+        return x.compareTerm(y); // Too bad -- this order not canonical.
+        //throw "different bnodes indistinquishable for sorting" 
+    } else {
+        return x.compareTerm(y);
+    }
+};
 
+$rdf.Util.heavyCompareSPO = function(x, y, g) {
+    var comp = $rdf.Util.heavyCompare;
+    var d = comp(x.subject, y.subject, g);
+    if (d) return d;
+    d = comp(x.predicate, y.predicate, g);
+    if (d) return d;
+    return comp(x.object, y.object, g);
+};
 
 
 ///////////////////// Parse XML

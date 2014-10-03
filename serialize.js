@@ -379,7 +379,12 @@ __Serializer.prototype.statementsToN3 = function(sts) {
         if (typeof sts == 'undefined') {
             throw('Cant find statements for '+subject);
         }
-        sts.sort();
+        
+        var SPO = function(x, y) {
+            return $rdf.Util.heavyCompareSPO(x, y, this.store)
+        }
+        sts.sort(); // 2014-09-30
+//        sts.sort(SPO); // 2014-09-30
         var objects = [];
         for (var i=0; i<sts.length; i++) {
             var st = sts[i];
