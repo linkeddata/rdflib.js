@@ -38,7 +38,7 @@ $rdf.sparqlUpdateParser = function(str, kb, base) {
         }
         // console.log("B After space at j= " + j)
         if (str[j] === ';') {
-            i = skipSpace(str, j + 1);
+            i = p.skipSpace(str, j + 1);
             if ( i < 0) {
                 return clauses ; // Allow end in a ;
             }
