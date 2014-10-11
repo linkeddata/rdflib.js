@@ -1007,21 +1007,47 @@ $rdf.Fetcher = function(store, timeout, async) {
                 },
                 timeout: sf.timeout,
                 error: function(xhr, s, e) {
+
+                    xhr.req = req;   // Add these in case fails before .ajax returns
+                    xhr.userCallback = userCallback;
+                    xhr.uri = docterm;
+                    xhr.requestedURI = uri2;
+
+
                     if (s == 'timeout')
                         sf.failFetch(xhr, "requestTimeout");
                     else
                         onerrorFactory(xhr)(e);
                 },
                 success: function(d, s, xhr) {
+
+                    xhr.req = req;
+                    xhr.userCallback = userCallback;
+                    xhr.uri = docterm;
+                    xhr.requestedURI = uri2;
+
                     onreadystatechangeFactory(xhr)();
                 }
             });
+
+            xhr.req = req;
+            xhr.userCallback = userCallback;
+            xhr.uri = docterm;
+            xhr.requestedURI = uri2;
+
+
         } else {
             var xhr = $rdf.Util.XMLHTTPFactory();
             xhr.onerror = onerrorFactory(xhr);
             xhr.onreadystatechange = onreadystatechangeFactory(xhr);
             xhr.timeout = sf.timeout;
             xhr.withCredentials = true;
+
+            xhr.req = req;
+            xhr.userCallback = userCallback;
+            xhr.uri = docterm;
+            xhr.requestedURI = uri2;
+
             xhr.ontimeout = function () {
                 sf.failFetch(xhr, "requestTimeout");
             }
@@ -1031,10 +1057,6 @@ $rdf.Fetcher = function(store, timeout, async) {
                 return this.failFetch(xhr, "XHR open for GET failed for <"+uri2+">:\n\t" + er);
             }
         }
-        xhr.req = req;
-        xhr.userCallback = userCallback;
-        xhr.uri = docterm;
-        xhr.requestedURI = uri2;
         
         // Set redirect callback and request headers -- alas Firefox Extension Only
         

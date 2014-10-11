@@ -14,7 +14,7 @@ $rdf.sparqlUpdateParser = function(str, kb, base) {
     var clauses = {};
     
     var badSyntax = function (uri, lines, str, i, why) {
-    return  ("Line " +  ( lines + 1 ) + " of <" + uri + ">: Bad syntax:\n   " +
+        return  ("Line " +  ( lines + 1 ) + " of <" + uri + ">: Bad syntax:\n   " +
                 why + "\n   at: \"" + str.slice(i, (i + 30))  + "\"" ) ;
     };
     
