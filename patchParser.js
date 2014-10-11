@@ -47,7 +47,7 @@ $rdf.sparqlUpdateParser = function(str, kb, base) {
                 if (i < 0) {
                     throw badSyntax(p._thisDoc, p.lines, str, j+ key.length, "found EOF, needed {...} after "+key);
                 };
-                if (key === 'INSERT' && str.slice(i, i+4) === 'DATA') { // Some wanted 'DATA'. Whatever
+                if (((key === 'INSERT') || (key === 'DELETE')) && str.slice(i, i+4) === 'DATA') { // Some wanted 'DATA'. Whatever
                     j = p.skipSpace(str, i+4);
                     if (j < 0) {
                         throw badSyntax(p._thisDoc, p.lines, str, i+4, "needed {...} after INSERT DATA "+key);

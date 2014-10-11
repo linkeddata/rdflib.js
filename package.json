@@ -12,22 +12,24 @@
   "homepage": "http://github.com/linkeddata/rdflib.js",
   "bugs": "http://github.com/linkeddata/rdflib.js/issues",
   "dependencies": {
-    "coffee-script": "*",
     "jsdom": "*",
     "xmlhttprequest": "*"
   },
   "devDependencies": {
+    "coffee-script": "*",
     "nodeunit": "*"
   },
   "scripts": {
-    "test": "make test"
+    "test": "make test",
+    "prepublish": "make all"
   },
   "files": [
+    "dist",
     "dist/rdflib.js"
   ],
   "main": "dist/rdflib.js",
   "keywords": [
     "linkeddata", "linked data",  "rdf", "rdfa",
-    "turtle", "semantic", "web"
+    "turtle", "semantic", "web", "read-write web"
   ]
 }

@@ -290,7 +290,8 @@ __Serializer.prototype.statementsToN3 = function(sts) {
         for (var i=0; i<tree.length; i++) {
             var branch = tree[i];
             var s2 = (typeof branch == 'string') ? branch : treeToLine(branch);
-            if (i!=0 && s2 != ',' && s2 != ';' && s2 != '.') str += ' ';
+             // Note the space before the dot in case statement ends 123. which is in fact allowed but be conservative.
+            if (i!=0 && s2 != ',' && s2 != ';') str += ' '; // was also:  && s2 != '.'
             str += s2;
         }
         return str;
@@ -365,9 +366,9 @@ __Serializer.prototype.statementsToN3 = function(sts) {
     // The tree for a subject
     function subjectTree(subject, stats) {
         if (subject.termType == 'bnode' && !stats.incoming[subject])
-            return objectTree(subject, stats, true).concat(["."]); // Anonymous bnode subject
-        return [ termToN3(subject, stats) ].concat([propertyTree(subject, stats)]).concat(["."]);
-    }
+            return objectTree(subject, stats, true).concat(['.']); // Anonymous bnode subject
+        return [ termToN3(subject, stats) ].concat([propertyTree(subject, stats)]).concat(['.']); 
+    } 
     
 
     // The property tree for a single subject or anonymous node
