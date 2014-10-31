@@ -562,6 +562,10 @@ __Serializer.prototype.symbolToN3 = function symbolToN3(x) {  // c.f. symbolStri
                 canSplit = false; break;
             }
         }
+
+        if (uri.slice(0, j) == this.base) { // base-relative
+            return '<#' + uri.slice(j+1) + '>';
+        }
         if (canSplit) {
             var localid = uri.slice(j+1);
             var namesp = uri.slice(0,j+1);
@@ -573,12 +577,11 @@ __Serializer.prototype.symbolToN3 = function symbolToN3(x) {  // c.f. symbolStri
                 return ':' + localid;
             }
             var prefix = this.prefixes[namesp];
+            if (!prefix) prefix = this.makeUpPrefix(namesp);
             if (prefix) {
                 this.namespacesUsed[namesp] = true;
                 return prefix + ':' + localid;
             }
-            if (uri.slice(0, j) == this.base)
-                return '<#' + localid + '>';
             // Fall though if can't do qname
         }
     }
