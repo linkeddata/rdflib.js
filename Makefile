@@ -1,6 +1,8 @@
 # rdflib.js Makefile
 
-R=util.js uri.js term.js rdfparser.js n3parser.js patchParser.js identity.js query.js sparql.js sparqlUpdate.js jsonparser.js serialize.js updatesVia.js web.js
+R=util.js uri.js term.js rdfparser.js n3parser.js identity.js \
+	green-turtle/src/RDFaProcessor.js rdfa.js \
+	patchParser.js query.js sparql.js sparqlUpdate.js jsonparser.js serialize.js updatesVia.js web.js
 
 targets=$(addprefix dist/, rdflib.js rdflib-rdfa.js)
 coffeejs=$(patsubst %.coffee,%.js,$(wildcard *.coffee))
@@ -9,6 +11,14 @@ all: dist $(targets)
 
 dist:
 	mkdir -p dist
+
+alpha: dist/rdflib-alpha.js
+	echo
+
+dist/rdflib-alpha.js: $R module.js
+	echo "(function(root, undef) {" > $@
+	cat $R module.js >> $@
+	echo "})(this);" >> $@
 
 dist/rdflib.js: $R module.js
 	echo "(function(root, undef) {" > $@
