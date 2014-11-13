@@ -80,6 +80,8 @@ __Serializer.prototype.makeUpPrefix = function(uri) {
     
     function canUse(pp) {
         if (namespaces[pp]) return false; // already used
+        if (! __Serializer.prototype.validPrefix.test(pp)) return false; // bad format
+        if (pp === 'ns') return false; // boring 
         this.prefixes[uri] = pp;
         pok = pp;
         return true
@@ -101,6 +103,9 @@ __Serializer.prototype.makeUpPrefix = function(uri) {
     if (canUse(p.slice(0,4))) return pok;
     if (canUse(p.slice(0,1))) return pok;
     if (canUse(p.slice(0,5))) return pok;
+    if (! __Serializer.prototype.validPrefix.test(pp)) {
+        pp = 'n';  // Otherwise the loop below may never termimnate
+    }
     for (var i=0;; i++) if (canUse(p.slice(0,3)+i)) return pok; 
 }
 
@@ -494,6 +499,8 @@ __Serializer.prototype.atomicTermToN3 = function atomicTermToN3(expr, stats) {
 };
 
     //  stringToN3:  String escaping for N3
+
+__Serializer.prototype.validPrefix = new RegExp(/[a-zA-Z][a-zA-Z0-9]*/);
 
 __Serializer.prototype.forbidden1 = new RegExp(/[\\"\b\f\r\v\t\n\u0080-\uffff]/gm);
 __Serializer.prototype.forbidden3 = new RegExp(/[\\"\b\f\r\v\u0080-\uffff]/gm);
