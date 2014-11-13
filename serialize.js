@@ -103,8 +103,8 @@ __Serializer.prototype.makeUpPrefix = function(uri) {
     if (canUse(p.slice(0,4))) return pok;
     if (canUse(p.slice(0,1))) return pok;
     if (canUse(p.slice(0,5))) return pok;
-    if (! __Serializer.prototype.validPrefix.test(pp)) {
-        pp = 'n';  // Otherwise the loop below may never termimnate
+    if (! __Serializer.prototype.validPrefix.test(p)) {
+        p = 'n';  // Otherwise the loop below may never termimnate
     }
     for (var i=0;; i++) if (canUse(p.slice(0,3)+i)) return pok; 
 }
