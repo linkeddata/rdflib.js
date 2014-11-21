@@ -993,8 +993,8 @@ $rdf.Fetcher = function(store, timeout, async) {
         // XMLHttpRequest cannot load http://www.w3.org/People/Berners-Lee/card. 
         // A wildcard '*' cannot be used in the 'Access-Control-Allow-Origin' header when the credentials flag is true. 
 
-
-        var withCredentials = ( uri2.slice(0,6) == 'https:'); // @@ Kludge -- need for webid which typically is served from https
+        // @ Many ontology files under http: and need CORD wildcard -> can't have withCredentials
+        var withCredentials = ( uri2.slice(0,6) === 'https:'); // @@ Kludge -- need for webid which typically is served from https
 
         // Setup the request
         if (typeof jQuery !== 'undefined' && jQuery.ajax) {
@@ -1003,7 +1003,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                 accepts: {'*': 'text/turtle,text/n3,application/rdf+xml'},
                 processData: false,
                 xhrFields: {
-                    withCredentials: true
+                    withCredentials: withCredentials,
                 },
                 timeout: sf.timeout,
                 error: function(xhr, s, e) {
@@ -1041,7 +1041,7 @@ $rdf.Fetcher = function(store, timeout, async) {
             xhr.onerror = onerrorFactory(xhr);
             xhr.onreadystatechange = onreadystatechangeFactory(xhr);
             xhr.timeout = sf.timeout;
-            xhr.withCredentials = true;
+            xhr.withCredentials = withCredentials;
 
             xhr.req = req;
             xhr.userCallback = userCallback;
