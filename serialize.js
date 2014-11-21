@@ -500,7 +500,7 @@ __Serializer.prototype.atomicTermToN3 = function atomicTermToN3(expr, stats) {
 
     //  stringToN3:  String escaping for N3
 
-__Serializer.prototype.validPrefix = new RegExp(/[a-zA-Z][a-zA-Z0-9]*/);
+__Serializer.prototype.validPrefix = new RegExp(/^[a-zA-Z][a-zA-Z0-9]*$/);
 
 __Serializer.prototype.forbidden1 = new RegExp(/[\\"\b\f\r\v\t\n\u0080-\uffff]/gm);
 __Serializer.prototype.forbidden3 = new RegExp(/[\\"\b\f\r\v\u0080-\uffff]/gm);
