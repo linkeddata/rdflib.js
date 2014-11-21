@@ -56,8 +56,9 @@ class $rdf.UpdatesSocket
             @parent.onUpdate message[1], @_decode(message[2])
 
     onError: (e) =>
-        console.log [this, 'onError', arguments]
-
+#        console.log [this, 'onError', arguments]
+        throw 'onError' + e
+                       
     subscribe: (uri) =>
         if @connected
             @_subscribe uri
@@ -68,7 +69,9 @@ class $rdf.UpdatesVia
     constructor: (@fetcher) ->
         @graph = {}
         @via = {}
-        @fetcher.addCallback 'headers', @onHeaders
+        
+        # Don't add the callback -- we can find the headers by looking at stored
+        #        @fetcher.addCallback 'headers', @onHeaders
 
     register: (via, uri) =>
         unless @via[via]?
