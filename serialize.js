@@ -451,7 +451,8 @@ __Serializer.prototype.statementsToN3 = function(sts) {
         for (var ns in this.prefixes) {
             if (!this.prefixes.hasOwnProperty(ns)) continue;
             if (!this.namespacesUsed[ns]) continue;
-            str += '@prefix ' + this.prefixes[ns] + ': <'+ns+'>.\n';
+            str += '@prefix ' + this.prefixes[ns] + ': <' + 
+                 $rdf.uri.refTo(this.base, ns) + '>.\n';
         }
         return str + '\n';
     }
@@ -593,7 +594,7 @@ __Serializer.prototype.symbolToN3 = function symbolToN3(x) {  // c.f. symbolStri
         }
     }
     if (this.flags.indexOf('r') < 0 && this.base)
-        uri = $rdf.Util.uri.refTo(this.base, uri);
+        uri = $rdf.uri.refTo(this.base, uri);
     else if (this.flags.indexOf('u') >= 0)
         uri = backslashUify(uri);
     else uri = hexify(uri);
