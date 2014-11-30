@@ -597,7 +597,7 @@ $rdf.Fetcher = function(store, timeout, async) {
         var kb = this.store;
         var requests = kb.each(undefined, tabulator.ns.link("requestedURI"), doc.uri);
         for (var r=0; r<requests.length; r++) {
-            request = requests[r];
+            var request = requests[r];
             if (request !== undefined) {
                 var response = kb.any(request, tabulator.ns.link("response"));
                 if (request !== undefined) {
