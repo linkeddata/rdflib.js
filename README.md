@@ -1,6 +1,6 @@
-This is a library for working with RDF on the web.
+# rdflib.js
 
-LICENSE: MIT
+This is a library for working with RDF on the web.
 
 Originally targetted at the AJAX environment in the browser,
 it can also be used server side with for example Node.js.
@@ -20,17 +20,17 @@ on the web as it goes.
 - Smushing of nodes from owl:sameAs, and owl:{f,inverseF}unctionProperty
 - Tracks provence of triples keeps metadata (in RDF) from HTTP accesses
 
-SUBDIRECTORIES
+## Subdirectories
 
 - dist    Run 'make' in this directory to generate dist in whch libraries are buit
 - test    Tests are here.
 
-DEPENDENCIES
+## Dependencies
 
-    jQuery   (rdfa version only)
-    jQuery, XMLHTTPRequest (Node.js version)
+    - jQuery   (rdfa version only)
+    - jQuery, XMLHTTPRequest (Node.js version)
 
-INSTALL
+## Install
  
  Install the Node Package Manager https://npmjs.org/
  As root run
@@ -41,7 +41,10 @@ $ npm install -g coffee-script nodeunit
  
  Run `make` to generate the dist directory
 
-THANKS
+# Thanks
 
 Thanks to the many contributors who have been involved along the way.
 LinkedData team & TimBL
+
+# LICENSE
+MIT
