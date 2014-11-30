@@ -46,7 +46,7 @@ $rdf.sparqlUpdateParser = function(str, kb, base) {
         }
         var found = false;
         for (k=0;  k< keywords.length; k++) {
-            key = keywords[k];
+            var key = keywords[k];
             if (str.slice(j, j + key.length) === key) {
                 // console.log("C got one " + key);
                 i = p.skipSpace(str, j+ key.length);
@@ -62,7 +62,7 @@ $rdf.sparqlUpdateParser = function(str, kb, base) {
                     i = j;
                 }
                 var res2 = [];
-                var j = p.node(str, i, res2);
+                j = p.node(str, i, res2);
                 // console.log("M Now at j= " + j + " i= " + i)
                 
                 if (j < 0) {
@@ -118,6 +118,7 @@ $rdf.IndexedFormula.prototype.applyPatch = function(patch, target, patchCallback
                 if (sts.length === 0) {
                     // $rdf.log.info("NOT FOUND deletable " + st);
                     bad.push(st);
+                    return null;
                 } else {
                     // $rdf.log.info("Found deletable " + st);
                     return sts[0]
@@ -138,7 +139,9 @@ $rdf.IndexedFormula.prototype.applyPatch = function(patch, target, patchCallback
             ds = ds.statements;
             ds.map(function(st){st.why = target;
                 // $rdf.log.info("Adding: " + st);
-                targetKB.add(st.subject, st.predicate, st.object, st.why)});
+                targetKB.add(st.subject, st.predicate, st.object, st.why);
+                console.log("@@@ Adding to: " + st.why);
+            });
         };
         onDonePatch();
     };
