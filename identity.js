@@ -412,6 +412,62 @@ $rdf.IndexedFormula.prototype.remove = function (st) {
     $rdf.Util.RDFArrayRemove(this.statements, st);
 }; //remove
 
+
+
+//////////////////// Self-consistency checking for diagnostis only
+
+
+// Is each statement properly indexed?
+$rdf.IndexedFormula.prototype.checkStatementList = function(sts, from) {
+    var names = ['subject', 'predicate', 'object', 'why'];
+    var origin = " found in " + names[from] + " index.";
+    for (var j=0; j < sts.length; j++) {
+        st = sts[j];
+        var term = [ st.subject, st.predicate, st.object, st.why];
+
+        var arrayContains = function(a, x) {
+            for(var i=0; i<a.length; i++) {
+            if (a[i].subject.sameTerm( x.subject ) && 
+                a[i].predicate.sameTerm( x.predicate ) && 
+                a[i].object.sameTerm( x.object ) &&
+                a[i].why.sameTerm( x.why )) {
+                    return true;
+                }
+            };
+        };
+
+        for (var p=0; p<4; p++) {
+            var c = this.canon(term[p]);
+            var h = c.hashString();
+            if (this.index[p][h] == undefined) {
+                throw new Error("No " + name[p] + " index for statement " + st + "@" + st.why + origin)
+            } else {
+                if (!arrayContains(this.index[p][h], st)) {
+                    throw new Error("Index for " + name[p] + " does not have statement " + st + "@" + st.why + origin)
+                }
+            }
+        };
+        if (!arrayContains(this.statements, st)) {
+            throw new Error("Statement list does not statement " + st + "@" + st.why + origin)
+        
+        }
+    };
+}
+
+$rdf.IndexedFormula.prototype.check = function() {
+    this.checkStatementList(this.statements);
+    for (var p=0; p<4; p++) {
+        var ix = this.index[p];
+        for (var key in ix) {
+            if (ix.hasOwnProperty(key)) {
+                this.checkStatementList(ix[key], p);
+            }
+        };
+    };
+ };   
+
+
+
 /** remove all statements matching args (within limit) **/
 $rdf.IndexedFormula.prototype.removeMany = function (subj, pred, obj, why, limit) {
     //$rdf.log.debug("entering removeMany w/ subj,pred,obj,why,limit = " + subj +", "+ pred+", " + obj+", " + why+", " + limit);
