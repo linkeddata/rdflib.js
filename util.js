@@ -211,7 +211,7 @@ $rdf.Util = {
                 return;
             }
         }
-        throw "RDFArrayRemove: Array did not contain " + x;
+        throw "RDFArrayRemove: Array did not contain " + x + " " +  x.why;
     },
 
     'string_startswith': function(str, pref) { // missing library routines
