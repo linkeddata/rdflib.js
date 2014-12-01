@@ -1,6 +1,9 @@
 # rdflib.js Makefile
 
 R=util.js uri.js term.js rdfparser.js n3parser.js identity.js \
+	patchParser.js query.js sparql.js sparqlUpdate.js jsonparser.js serialize.js updatesVia.js web.js
+
+A=util.js uri.js term.js rdfparser.js n3parser.js identity.js \
 	green-turtle/src/RDFaProcessor.js rdfa.js \
 	patchParser.js query.js sparql.js sparqlUpdate.js jsonparser.js serialize.js updatesVia.js web.js
 
