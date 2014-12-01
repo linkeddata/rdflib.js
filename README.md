@@ -1,16 +1,6 @@
 # rdflib.js
 
-This is a library for working with RDF on the web.
-
-Originally targetted at the AJAX environment in the browser,
-it can also be used server side with for example Node.js.
-
-Possible out of date information is available from here:
-
-http://dig.csail.mit.edu/2005/ajar/ajaw/Developer.html
-
-This is a linked data library, which can look up data 
-on the web as it goes. 
+Javascript RDF library for browsers and NodeJS.
 
 - Reads and writes RDF/xml, turtle and N3.
 - Read/Write Linked Data client, using WebDav or SPARQL/Update
@@ -20,31 +10,49 @@ on the web as it goes.
 - Smushing of nodes from owl:sameAs, and owl:{f,inverseF}unctionProperty
 - Tracks provence of triples keeps metadata (in RDF) from HTTP accesses
 
-## Subdirectories
-
-- dist    Run 'make' in this directory to generate dist in whch libraries are buit
-- test    Tests are here.
-
-## Dependencies
-
-    - jQuery   (rdfa version only)
-    - jQuery, XMLHTTPRequest (Node.js version)
-
 ## Install
- 
- Install the Node Package Manager https://npmjs.org/
- As root run
+
+#### Browser
+
+Install dependencies you may need to generate the js file.
 
 ```bash
 $ npm install -g coffee-script nodeunit   
 ```
- 
- Run `make` to generate the dist directory
 
-# Thanks
+Generate the dist directory
+
+```bash
+$ make
+```
+
+#### NodeJS
+
+Make sure you have NodeJS and Node Package Manager ([npm](https://npmjs.org/)) installed.
+```bash
+npm install --save rdflib
+```
+
+## Documentation
+
+Possible out of date information is available from here: [http://dig.csail.mit.edu/2005/ajar/ajaw/Developer.html](http://dig.csail.mit.edu/2005/ajar/ajaw/Developer.html).
+
+## Contribute
+
+### Subdirectories
+
+- `dist`, Run 'make' in this directory to generate dist in whch libraries are buit
+- `test`, Tests are here.
+
+### Dependencies
+
+    - jQuery   (rdfa version only)
+    - jQuery, XMLHTTPRequest (Node.js version)
+
+## Thanks
 
 Thanks to the many contributors who have been involved along the way.
 LinkedData team & TimBL
 
-# LICENSE
+## LICENSE
 MIT
