@@ -39,12 +39,12 @@ Possible out of date information is available from here: [http://dig.csail.mit.e
 
 ## Contribute
 
-### Subdirectories
+#### Subdirectories
 
 - `dist`, Run 'make' in this directory to generate dist in whch libraries are buit
 - `test`, Tests are here.
 
-### Dependencies
+#### Dependencies
 
     - jQuery   (rdfa version only)
     - jQuery, XMLHTTPRequest (Node.js version)
