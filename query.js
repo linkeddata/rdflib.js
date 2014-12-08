@@ -578,7 +578,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
         $rdf.log.debug(level + "match2 searching "+item.index.length+ " for "+item+
                 "; bindings so far="+bindingDebug(bindingsSoFar));
         //var results = [];
-        var c, nc=item.index.length, nbs1, st;
+        var c, nc=item.index.length, nbs1, st, onward = 0;
         //var x;
         for (c=0; c<nc; c++) {   // For each candidate statement
             st = item.index[c]; //for each statement in the item's index, spawn a new match with that binding 
@@ -608,11 +608,15 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
                     }
                     
                     branch.count++;  // Count how many matches we have yet to complete
+                    onward ++;
                     match(f, rest, bindings2, level+ '  ', fetcher, callback, branch); //call match
                 }
             }
         }
         branch.count--;
+        if (onward === 0) {
+            $rdf.log.debug("Match2 fails completely on " + item);
+        }
         $rdf.log.debug("Match2 ends, Branch count: "+branch.count +" for "+branch.pattern_debug);
         if (branch.count === 0) {
             $rdf.log.debug("Branch finished.");

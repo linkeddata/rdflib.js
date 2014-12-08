@@ -138,9 +138,7 @@ $rdf.IndexedFormula.prototype.applyPatch = function(patch, target, patchCallback
             if (bindings) ds = ds.substitute(bindings);
             ds = ds.statements;
             ds.map(function(st){st.why = target;
-                // $rdf.log.info("Adding: " + st);
                 targetKB.add(st.subject, st.predicate, st.object, st.why);
-                console.log("@@@ Adding to: " + st.why);
             });
         };
         onDonePatch();

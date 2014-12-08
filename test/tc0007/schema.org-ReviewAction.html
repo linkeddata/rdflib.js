@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>ReviewAction - schema.org</title>
+    <meta name="description" content="Schema.org is a set of extensible schemas that enables webmasters to embed
+    structured data on their web pages for use by search engines and other applications." />
+    <link rel="stylesheet" type="text/css"
+          href="/docs/schemaorg.css" />
+
+    <link href="/docs/prettify.css" type="text/css"
+          rel="stylesheet" />
+    <script type="text/javascript" src="/docs/prettify.js">
+    </script>
+    <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"></script>
+
+<script type="text/javascript">
+      $(document).ready(function(){
+        prettyPrint();
+        setTimeout(function(){
+
+  $(".atn:contains(itemscope), .atn:contains(itemtype), .atn:contains(itemprop), .atn:contains(itemid), .atn:contains(time), .atn:contains(datetime), .atn:contains(datetime), .tag:contains(time) ").addClass('new');
+  $('.new + .pun + .atv').addClass('curl');
+
+        }, 500);
+        setTimeout(function(){
+
+  $(".atn:contains(property), .atn:contains(typeof) ").addClass('new');
+  $('.new + .pun + .atv').addClass('curl');
+
+        }, 500);
+        setTimeout(function() {
+          $('.ds-selector-tabs .selectors a').click(function() {
+            var $this = $(this);
+            var $p = $this.parents('.ds-selector-tabs');
+            $('.selected', $p).removeClass('selected');
+            $this.addClass('selected');
+            $('pre.' + $this.data('selects'), $p).addClass('selected');
+          });
+        }, 0);
+      });
+</script>
+
+<style>
+
+  .pln    { color: #444;    } /* plain text                 */
+  .tag    { color: #515484; } /* div, span, a, etc          */
+  .atn,
+  .atv    { color: #314B17; } /* href, datetime             */
+  .new    { color: #660003; } /* itemscope, itemtype, etc,. */
+  .curl   { color: #080;    } /* new url                    */
+
+  table.definition-table {
+    border-spacing: 3px;
+    border-collapse: separate;
+  }
+
+</style>
+
+</head>
+<body>
+    <div id="container">
+        <div id="intro">
+            <div id="pageHeader">
+              <div class="wrapper">
+                <h1>schema.org</h1>
+
+<div id="cse-search-form" style="width: 400px;"></div>
+
+<script type="text/javascript" src="//www.google.com/jsapi"></script>
+<script type="text/javascript">
+  google.load('search', '1', {language : 'en', style : google.loader.themes.ESPRESSO});
+  google.setOnLoadCallback(function() {
+    var customSearchControl = new google.search.CustomSearchControl('013516846811604855281:nj5laplixaa');
+    customSearchControl.setResultSetSize(google.search.Search.FILTERED_CSE_RESULTSET);
+    var options = new google.search.DrawOptions();
+    options.enableSearchboxOnly("/docs/search_results.html", null, false, '#');
+    customSearchControl.draw('cse-search-form', options);
+  }, true);
+</script>
+
+
+              </div>
+            </div>
+        </div>
+    </div>
+
+            <div id="selectionbar">
+               <div class="wrapper">
+                <ul>
+                    <li >
+                      <a href="docs/documents.html">Documentation</a></li>
+                    <li class="activelink">
+                      <a href="docs/schemas.html">Schemas</a></li>
+                    <li >
+                      <a href=".">Home</a></li>
+                </ul>
+                </div>
+
+            </div>
+        <div style="padding: 14px; float: right;" id="languagebox"></div>
+
+
+
+  <div id="mainContent" vocab="http://schema.org/" typeof="rdfs:Class" resource="http://schema.org/ReviewAction">
+  <!-- no external mappings noted for this term. -->
+
+<h1 class="page-title">
+<a href="Thing">Thing</a> &gt; <a href="Action">Action</a> &gt; <a href="AssessAction">AssessAction</a> &gt; <span property="rdfs:label"><a href="ReviewAction">ReviewAction</a></span></h1> <div property="rdfs:comment">The act of producing a balanced opinion about the object for an audience. An agent reviews an object with participants resulting in a review.</div>
+
+
+<table class="definition-table">
+        <thead>
+  <tr><th>Property</th><th>Expected Type</th><th>Description</th>               
+  </tr>
+  </thead>
+
+<thead class="supertype">
+  <tr>
+    <th class="supertype-name" colspan="3">Properties from <a href="ReviewAction" property="rdfs:subClassOf">ReviewAction</a></th>
+  </tr>
+</thead>
+
+<tbody class="supertype">
+  <tr typeof="rdfs:Property" resource="http://schema.org/resultReview">
+    
+      <th class="prop-nam" scope="row">
+
+<code property="rdfs:label"><a href="resultReview">resultReview</a></code>
+    </th>
+ <td class="prop-ect">
+<a href="Review" property="rangeIncludes">Review</a>&nbsp;</td><td class="prop-desc" property="rdfs:comment">A sub property of result. The review that resulted in the performing of the action.</td></tr><thead class="supertype">
+  <tr>
+    <th class="supertype-name" colspan="3">Properties from <a href="Action">Action</a></th>
+  </tr>
+</thead>
+
+<tbody class="supertype">
+  <tr typeof="rdfs:Property" resource="http://schema.org/actionStatus">
+    
+      <th class="prop-nam" scope="row">
+
+<code property="rdfs:label"><a href="actionStatus">actionStatus</a></code>
+    </th>
+ <td class="prop-ect">
+<a href="ActionStatusType" property="rangeIncludes">ActionStatusType</a>&nbsp;</td><td class="prop-desc" property="rdfs:comment">Indicates the current disposition of the Action.</td></tr><tr typeof="rdfs:Property" resource="http://schema.org/agent">
+    
+      <th class="prop-nam" scope="row">
+
+<code property="rdfs:label"><a href="agent">agent</a></code>
+    </th>
+ <td class="prop-ect">
+<a href="Person" property="rangeIncludes">Person</a>&nbsp; or <br/> <a href="Organization" property="rangeIncludes">Organization</a>&nbsp;</td><td class="prop-desc" property="rdfs:comment">The direct performer or driver of the action (animate or inanimate). e.g. *John* wrote a book.</td></tr><tr typeof="rdfs:Property" resource="http://schema.org/endTime">
+    
+      <th class="prop-nam" scope="row">
+
+<code property="rdfs:label"><a href="endTime">endTime</a></code>
+    </th>
+ <td class="prop-ect">
+<a href="DateTime" property="rangeIncludes">DateTime</a>&nbsp;</td><td class="prop-desc" property="rdfs:comment">The endTime of something. For a reserved event or service (e.g. FoodEstablishmentReservation), the time that it is expected to end. For actions that span a period of time, when the action was performed. e.g. John wrote a book from January to *December*.
+
+Note that Event uses startDate/endDate instead of startTime/endTime, even when describing dates with times. This situation may be clarified in future revisions.
+</td></tr><tr typeof="rdfs:Property" resource="http://schema.org/instrument">
+    
+      <th class="prop-nam" scope="row">
+
+<code property="rdfs:label"><a href="instrument">instrument</a></code>
+    </th>
+ <td class="prop-ect">
+<a href="Thing" property="rangeIncludes">Thing</a>&nbsp;</td><td class="prop-desc" property="rdfs:comment">The object that helped the agent perform the action. e.g. John wrote a book with *a pen*.</td></tr><tr typeof="rdfs:Property" resource="http://schema.org/location">
+    
+      <th class="prop-nam" scope="row">
+
+<code property="rdfs:label"><a href="location">location</a></code>
+    </th>
+ <td class="prop-ect">
+<a href="Place" property="rangeIncludes">Place</a>&nbsp; or <br/> <a href="PostalAddress" property="rangeIncludes">PostalAddress</a>&nbsp;</td><td class="prop-desc" property="rdfs:comment">The location of the event, organization or action.</td></tr><tr typeof="rdfs:Property" resource="http://schema.org/object">
+    
+      <th class="prop-nam" scope="row">
+
+<code property="rdfs:label"><a href="object">object</a></code>
+    </th>
+ <td class="prop-ect">
+<a href="Thing" property="rangeIncludes">Thing</a>&nbsp;</td><td class="prop-desc" property="rdfs:comment">The object upon the action is carried out, whose state is kept intact or changed. Also known as the semantic roles patient, affected or undergoer (which change their state) or theme (which doesn't). e.g. John read *a book*.</td></tr><tr typeof="rdfs:Property" resource="http://schema.org/participant">
+    
+      <th class="prop-nam" scope="row">
+
+<code property="rdfs:label"><a href="participant">participant</a></code>
+    </th>
+ <td class="prop-ect">
+<a href="Person" property="rangeIncludes">Person</a>&nbsp; or <br/> <a href="Organization" property="rangeIncludes">Organization</a>&nbsp;</td><td class="prop-desc" property="rdfs:comment">Other co-agents that participated in the action indirectly. e.g. John wrote a book with *Steve*.</td></tr><tr typeof="rdfs:Property" resource="http://schema.org/result">
+    
+      <th class="prop-nam" scope="row">
+
+<code property="rdfs:label"><a href="result">result</a></code>
+    </th>
+ <td class="prop-ect">
+<a href="Thing" property="rangeIncludes">Thing</a>&nbsp;</td><td class="prop-desc" property="rdfs:comment">The result produced in the action. e.g. John wrote *a book*.</td></tr><tr typeof="rdfs:Property" resource="http://schema.org/startTime">
+    
+      <th class="prop-nam" scope="row">
+
+<code property="rdfs:label"><a href="startTime">startTime</a></code>
+    </th>
+ <td class="prop-ect">
+<a href="DateTime" property="rangeIncludes">DateTime</a>&nbsp;</td><td class="prop-desc" property="rdfs:comment">The startTime of something. For a reserved event or service (e.g. FoodEstablishmentReservation), the time that it is expected to start. For actions that span a period of time, when the action was performed. e.g. John wrote a book from *January* to December.
+
+Note that Event uses startDate/endDate instead of startTime/endTime, even when describing dates with times. This situation may be clarified in future revisions.
+</td></tr><tr typeof="rdfs:Property" resource="http://schema.org/target">
+    
+      <th class="prop-nam" scope="row">
+
+<code property="rdfs:label"><a href="target">target</a></code>
+    </th>
+ <td class="prop-ect">
+<a href="EntryPoint" property="rangeIncludes">EntryPoint</a>&nbsp;</td><td class="prop-desc" property="rdfs:comment">Indicates a target EntryPoint for an Action.</td></tr><thead class="supertype">
+  <tr>
+    <th class="supertype-name" colspan="3">Properties from <a href="Thing">Thing</a></th>
+  </tr>
+</thead>
+
+<tbody class="supertype">
+  <tr typeof="rdfs:Property" resource="http://schema.org/additionalType">
+    
+      <th class="prop-nam" scope="row">
+
+<code property="rdfs:label"><a href="additionalType">additionalType</a></code>
+    </th>
+ <td class="prop-ect">
+<a href="URL" property="rangeIncludes">URL</a>&nbsp;</td><td class="prop-desc" property="rdfs:comment">An additional type for the item, typically used for adding more specific types from external vocabularies in microdata syntax. This is a relationship between something and a class that the thing is in. In RDFa syntax, it is better to use the native RDFa syntax - the 'typeof' attribute - for multiple types. Schema.org tools may have only weaker understanding of extra types, in particular those defined externally.</td></tr><tr typeof="rdfs:Property" resource="http://schema.org/alternateName">
+    
+      <th class="prop-nam" scope="row">
+
+<code property="rdfs:label"><a href="alternateName">alternateName</a></code>
+    </th>
+ <td class="prop-ect">
+<a href="Text" property="rangeIncludes">Text</a>&nbsp;</td><td class="prop-desc" property="rdfs:comment">An alias for the item.</td></tr><tr typeof="rdfs:Property" resource="http://schema.org/description">
+    
+      <th class="prop-nam" scope="row">
+
+<code property="rdfs:label"><a href="description">description</a></code>
+    </th>
+ <td class="prop-ect">
+<a href="Text" property="rangeIncludes">Text</a>&nbsp;</td><td class="prop-desc" property="rdfs:comment">A short description of the item.</td></tr><tr typeof="rdfs:Property" resource="http://schema.org/image">
+    
+      <th class="prop-nam" scope="row">
+
+<code property="rdfs:label"><a href="image">image</a></code>
+    </th>
+ <td class="prop-ect">
+<a href="URL" property="rangeIncludes">URL</a>&nbsp; or <br/> <a href="ImageObject" property="rangeIncludes">ImageObject</a>&nbsp;</td><td class="prop-desc" property="rdfs:comment">An image of the item. This can be a <a href="http://schema.org/URL">URL</a> or a fully described <a href="http://schema.org/ImageObject">ImageObject</a>.</td></tr><tr typeof="rdfs:Property" resource="http://schema.org/name">
+    
+      <th class="prop-nam" scope="row">
+
+<code property="rdfs:label"><a href="name">name</a></code>
+    </th>
+ <td class="prop-ect">
+<a href="Text" property="rangeIncludes">Text</a>&nbsp;</td><td class="prop-desc" property="rdfs:comment">The name of the item.</td></tr><tr typeof="rdfs:Property" resource="http://schema.org/potentialAction">
+    
+      <th class="prop-nam" scope="row">
+
+<code property="rdfs:label"><a href="potentialAction">potentialAction</a></code>
+    </th>
+ <td class="prop-ect">
+<a href="Action" property="rangeIncludes">Action</a>&nbsp;</td><td class="prop-desc" property="rdfs:comment">Indicates a potential Action, which describes an idealized action in which this thing would play an 'object' role.</td></tr><tr typeof="rdfs:Property" resource="http://schema.org/sameAs">
+    
+      <th class="prop-nam" scope="row">
+
+<code property="rdfs:label"><a href="sameAs">sameAs</a></code>
+    </th>
+ <td class="prop-ect">
+<a href="URL" property="rangeIncludes">URL</a>&nbsp;</td><td class="prop-desc" property="rdfs:comment">URL of a reference Web page that unambiguously indicates the item's identity. E.g. the URL of the item's Wikipedia page, Freebase page, or official website.</td></tr><tr typeof="rdfs:Property" resource="http://schema.org/url">
+    
+      <th class="prop-nam" scope="row">
+
+<code property="rdfs:label"><a href="url">url</a></code>
+    </th>
+ <td class="prop-ect">
+<a href="URL" property="rangeIncludes">URL</a>&nbsp;</td><td class="prop-desc" property="rdfs:comment">URL of the item.</td></tr></table>
+
+
+</table>
+
+<br/><br/><b>Examples</b><br/><br/>
+
+<div class='ds-selector-tabs ds-selector'>
+  <div class='selectors'>
+    <a value='original_html' data-selects='original_html' class='selected'>Without Markup</a>
+    <a value='microdata' data-selects='microdata' class=''>Microdata</a>
+    <a value='rdfa' data-selects='rdfa' class=''>RDFa</a>
+    <a value='jsonld' data-selects='jsonld' class=''>JSON-LD</a>
+</div>
+
+<pre class="prettyprint lang-html linenums original_html selected">John and Steve reviewed an article.
+</pre>
+
+<pre class="prettyprint lang-html linenums microdata ">This example is JSON only.
+</pre>
+
+<pre class="prettyprint lang-html linenums rdfa ">This example is JSON only.
+</pre>
+
+<pre class="prettyprint lang-html linenums jsonld ">&lt;!--  John and Steve reviewed an article. --&gt;
+&lt;script type="application/ld+json"&gt;
+{
+  "@context": "http://schema.org",
+  "@type": "ReviewAction",
+  "agent": {
+    "@type": "Person",
+    "name": "John"
+  },
+  "resultReview": {
+    "@type": "Review",
+    "reviewBody": "It is pretty awesome!"
+  },
+  "object": {
+    "@type": "ScholarlyArticle",
+    "name": "We found out that P = NP!"
+  },
+  "participant": {
+    "@type": "Person",
+    "name": "Steve"
+  }
+}
+&lt;/script&gt;
+</pre>
+
+</div>
+
+<p class="version"><b>Schema Version 1.91</b></p>
+
+<script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+	  ga('create', 'UA-52672119-1', 'auto');ga('send', 'pageview');</script> 
+
+</div>
+</body>
+</html>
