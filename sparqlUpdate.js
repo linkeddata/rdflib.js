@@ -241,7 +241,7 @@ $rdf.sparqlUpdate = function() {
                 if (!success) tabulator.log.error("sparql: update failed for <"+uri+"> status="+
                     xhr.status+", "+xhr.statusText+", body length="+xhr.responseText.length+"\n   for query: "+query);
                 else  tabulator.log.debug("sparql: update Ok for <"+uri+">");
-                callback(uri, success, xhr.responseText);
+                callback(uri, success, xhr.responseText, xhr);
             }
         }
 
@@ -381,7 +381,7 @@ $rdf.sparqlUpdate = function() {
                 }
             }
             this._fire(doc.uri, query,
-                function(uri, success, body) {
+                function(uri, success, body, xhr) {
                     tabulator.log.info("\t sparql: Return success="+success+" for query "+query+"\n");
                     if (success) {
                         for (var i=0; i<ds.length;i++)
@@ -393,7 +393,7 @@ $rdf.sparqlUpdate = function() {
                         for (var i=0; i<is.length;i++)
                             kb.add(is[i].subject, is[i].predicate, is[i].object, doc); 
                     }
-                    callback(uri, success, body);
+                    callback(uri, success, body, xhr);
                 });
             
         } else if (protocol.indexOf('DAV') >=0) {
@@ -524,42 +524,45 @@ $rdf.sparqlUpdate = function() {
 
     // This suitable for an inital creation of a document
     //
-    sparql.prototype.put = function(doc, newSts, content_type, callback) {
+    // data:    string, or array of statements
+    //
+    sparql.prototype.put = function(doc, data, content_type, callback) {
 
         var documentString;
         var kb = this.store;
        
-        //serialize to te appropriate format
-        var sz = $rdf.Serializer(kb);
-        sz.suggestNamespaces(kb.namespaces);
-        sz.setBase(doc.uri);//?? beware of this - kenny (why? tim)                   
-        switch(content_type){
-            case 'application/rdf+xml': 
-                documentString = sz.statementsToXML(newSts);
-                break;
-            case 'text/n3':
-            case 'text/turtle':
-            case 'application/x-turtle': // Legacy
-            case 'application/n3': // Legacy
-                documentString = sz.statementsToN3(newSts);
-                break;
-            default:
-                throw "Content-type "+content_type +" not supported for data PUT";                                                                            
+        if (typeof data === typeof '') {
+            documentString = data;
+        } else {
+            //serialize to te appropriate format
+            var sz = $rdf.Serializer(kb);
+            sz.suggestNamespaces(kb.namespaces);
+            sz.setBase(doc.uri);//?? beware of this - kenny (why? tim)                   
+            switch(content_type){
+                case 'application/rdf+xml': 
+                    documentString = sz.statementsToXML(data);
+                    break;
+                case 'text/n3':
+                case 'text/turtle':
+                case 'application/x-turtle': // Legacy
+                case 'application/n3': // Legacy
+                    documentString = sz.statementsToN3(data);
+                    break;
+                default:
+                    throw "Content-type "+content_type +" not supported for data PUT";                                                                            
+            }
         }
-        
         var xhr = $rdf.Util.XMLHTTPFactory();
         xhr.onreadystatechange = function (){
             if (xhr.readyState == 4){
                 //formula from sparqlUpdate.js, what about redirects?
                 var success = (!xhr.status || (xhr.status >= 200 && xhr.status < 300));
-                callback(doc.uri, success, xhr.responseText);
+                callback(doc.uri, success, xhr.responseText, xhr);
             }
         };
         xhr.open('PUT', doc.uri, true);
-        //assume the server does PUT content-negotiation.
-        xhr.setRequestHeader('Content-type', content_type);//OK?
+        xhr.setRequestHeader('Content-type', content_type);
         xhr.send(documentString);
-    
     };
     
     
