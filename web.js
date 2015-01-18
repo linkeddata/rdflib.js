@@ -82,14 +82,14 @@ $rdf.Fetcher = function(store, timeout, async) {
 */
                 var root = this.dom.documentElement;
                 if (root.nodeName == 'parsererror') { //@@ Mozilla only See issue/issue110
-                    sf.failFetch(xhr, "Badly formed XML in " + xhr.uri.uri); //have to fail the request
-                    throw new Error("Badly formed XML in " + xhr.uri.uri); //@@ Add details
+                    sf.failFetch(xhr, "Badly formed XML in " + xhr.resource.uri); //have to fail the request
+                    throw new Error("Badly formed XML in " + xhr.resource.uri); //@@ Add details
                 }
                 // Find the last URI we actual URI in a series of redirects
-                // (xhr.uri.uri is the original one)
+                // (xhr.resource.uri is the original one)
                 var lastRequested = kb.any(xhr.req, ns.link('requestedURI'));
                 if (!lastRequested) {
-                    lastRequested = xhr.uri;
+                    lastRequested = xhr.resource;
                 } else {
                     lastRequested = kb.sym(lastRequested.value);
                 }
@@ -135,8 +135,8 @@ $rdf.Fetcher = function(store, timeout, async) {
                 // dc:title
                 var title = this.dom.getElementsByTagName('title')
                 if (title.length > 0) {
-                    kb.add(xhr.uri, ns.dc('title'), kb.literal(title[0].textContent), xhr.uri)
-                    // $rdf.log.info("Inferring title of " + xhr.uri)
+                    kb.add(xhr.resource, ns.dc('title'), kb.literal(title[0].textContent), xhr.resource)
+                    // $rdf.log.info("Inferring title of " + xhr.resource)
                 }
 
                 // link rel
@@ -151,24 +151,24 @@ $rdf.Fetcher = function(store, timeout, async) {
                     var profile = head.getAttribute('profile');
                     if (profile && $rdf.uri.protocol(profile) == 'http') {
                         // $rdf.log.info("GRDDL: Using generic " + "2003/11/rdf-in-xhtml-processor.");
-                         $rdf.Fetcher.doGRDDL(kb, xhr.uri, "http://www.w3.org/2003/11/rdf-in-xhtml-processor", xhr.uri.uri)
+                         $rdf.Fetcher.doGRDDL(kb, xhr.resource, "http://www.w3.org/2003/11/rdf-in-xhtml-processor", xhr.resource.uri)
 /*			sf.requestURI('http://www.w3.org/2005/08/'
 					  + 'online_xslt/xslt?'
 					  + 'xslfile=http://www.w3.org'
 					  + '/2003/11/'
 					  + 'rdf-in-xhtml-processor'
 					  + '&xmlfile='
-					  + escape(xhr.uri.uri),
-				      xhr.uri)
+					  + escape(xhr.resource.uri),
+				      xhr.resource)
                         */
                     } else {
-                        // $rdf.log.info("GRDDL: No GRDDL profile in " + xhr.uri)
+                        // $rdf.log.info("GRDDL: No GRDDL profile in " + xhr.resource)
                     }
                 }
-                kb.add(xhr.uri, ns.rdf('type'), ns.link('WebPage'), sf.appNode);
+                kb.add(xhr.resource, ns.rdf('type'), ns.link('WebPage'), sf.appNode);
                 // Do RDFa here
                 if ($rdf.rdfa && $rdf.rdfa.parse)
-                    $rdf.rdfa.parse(this.dom, kb, xhr.uri.uri);
+                    $rdf.rdfa.parse(this.dom, kb, xhr.resource.uri);
                 cb(); // Fire done callbacks
             }
         }
@@ -219,8 +219,8 @@ $rdf.Fetcher = function(store, timeout, async) {
                         var xforms = kb.each(kb.sym(ns), kb.sym("http://www.w3.org/2003/g/data-view#namespaceTransformation"));
                         for (var i = 0; i < xforms.length; i++) {
                             var xform = xforms[i];
-                            // $rdf.log.info(xhr.uri.uri + " namespace " + ns + " has GRDDL ns transform" + xform.uri);
-                             $rdf.Fetcher.doGRDDL(kb, xhr.uri, xform.uri, xhr.uri.uri);
+                            // $rdf.log.info(xhr.resource.uri + " namespace " + ns + " has GRDDL ns transform" + xform.uri);
+                             $rdf.Fetcher.doGRDDL(kb, xhr.resource, xform.uri, xhr.resource.uri);
                         }
                         break
                     }
@@ -229,7 +229,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                 // Or it could be XHTML?
                 // Maybe it has an XHTML DOCTYPE?
                 if (dom.doctype) {
-                    // $rdf.log.info("We found a DOCTYPE in " + xhr.uri)
+                    // $rdf.log.info("We found a DOCTYPE in " + xhr.resource)
                     if (dom.doctype.name == 'html' && dom.doctype.publicId.match(/^-\/\/W3C\/\/DTD XHTML/) && dom.doctype.systemId.match(/http:\/\/www.w3.org\/TR\/xhtml/)) {
                         sf.addStatus(xhr.req,"Has XHTML DOCTYPE. Switching to XHTML Handler.\n")
                         sf.switchHandler('XHTMLHandler', xhr, cb)
@@ -276,7 +276,7 @@ $rdf.Fetcher = function(store, timeout, async) {
             xhr.handle = function(cb) {
                 var rt = xhr.responseText
                 // We only handle XHTML so we have to figure out if this is XML
-                // $rdf.log.info("Sniffing HTML " + xhr.uri + " for XHTML.");
+                // $rdf.log.info("Sniffing HTML " + xhr.resource + " for XHTML.");
 
                 if (rt.match(/\s*<\?xml\s+version\s*=[^<>]+\?>/)) {
                     sf.addStatus(xhr.req, "Has an XML declaration. We'll assume " +
@@ -305,8 +305,8 @@ $rdf.Fetcher = function(store, timeout, async) {
                 var titleMatch = (new RegExp("<title>([\\s\\S]+?)</title>", 'im')).exec(rt);
                 if (titleMatch) {
                     var kb = sf.store;
-                    kb.add(xhr.uri, ns.dc('title'), kb.literal(titleMatch[1]), xhr.uri); //think about xml:lang later
-                    kb.add(xhr.uri, ns.rdf('type'), ns.link('WebPage'), sf.appNode);
+                    kb.add(xhr.resource, ns.dc('title'), kb.literal(titleMatch[1]), xhr.resource); //think about xml:lang later
+                    kb.add(xhr.resource, ns.rdf('type'), ns.link('WebPage'), sf.appNode);
                     cb(); //doneFetch, not failed
                     return;
                 }
@@ -336,7 +336,7 @@ $rdf.Fetcher = function(store, timeout, async) {
 
                 // Look for an XML declaration
                 if (rt.match(/\s*<\?xml\s+version\s*=[^<>]+\?>/)) {
-                    sf.addStatus(xhr.req, "Warning: "+xhr.uri + " has an XML declaration. We'll assume " 
+                    sf.addStatus(xhr.req, "Warning: "+xhr.resource + " has an XML declaration. We'll assume " 
                         + "it's XML but its content-type wasn't XML.\n")
                     sf.switchHandler('XMLHandler', xhr, cb)
                     return
@@ -352,9 +352,9 @@ $rdf.Fetcher = function(store, timeout, async) {
 
                 // We give up finding semantics - this is not an error, just no data
                 sf.addStatus(xhr.req, "Plain text document, no known RDF semantics.");
-                sf.doneFetch(xhr, [xhr.uri.uri]);
+                sf.doneFetch(xhr, [xhr.resource.uri]);
 //                sf.failFetch(xhr, "unparseable - text/plain not visibly XML")
-//                dump(xhr.uri + " unparseable - text/plain not visibly XML, starts:\n" + rt.slice(0, 500)+"\n")
+//                dump(xhr.resource + " unparseable - text/plain not visibly XML, starts:\n" + rt.slice(0, 500)+"\n")
 
             }
         }
@@ -376,24 +376,24 @@ $rdf.Fetcher = function(store, timeout, async) {
         this.handlerFactory = function(xhr) {
             xhr.handle = function(cb) {
                 // Parse the text of this non-XML file
-                $rdf.log.debug("web.js: Parsing as N3 " + xhr.uri.uri); // @@@@ comment me out 
+                $rdf.log.debug("web.js: Parsing as N3 " + xhr.resource.uri); // @@@@ comment me out 
                 //sf.addStatus(xhr.req, "N3 not parsed yet...")
                 var rt = xhr.responseText
-                var p = $rdf.N3Parser(kb, kb, xhr.uri.uri, xhr.uri.uri, null, null, "", null)
+                var p = $rdf.N3Parser(kb, kb, xhr.resource.uri, xhr.resource.uri, null, null, "", null)
                 //                p.loadBuf(xhr.responseText)
                 try {
                     p.loadBuf(xhr.responseText)
 
                 } catch (e) {
-                    var msg = ("Error trying to parse " + xhr.uri + " as Notation3:\n" + e +':\n'+e.stack)
+                    var msg = ("Error trying to parse " + xhr.resource + " as Notation3:\n" + e +':\n'+e.stack)
                     // dump(msg+"\n")
                     sf.failFetch(xhr, msg)
                     return;
                 }
 
                 sf.addStatus(xhr.req, "N3 parsed: " + p.statementCount + " triples in " + p.lines + " lines.")
-                sf.store.add(xhr.uri, ns.rdf('type'), ns.link('RDFDocument'), sf.appNode);
-                args = [xhr.uri.uri]; // Other args needed ever?
+                sf.store.add(xhr.resource, ns.rdf('type'), ns.link('RDFDocument'), sf.appNode);
+                args = [xhr.resource.uri]; // Other args needed ever?
                 sf.doneFetch(xhr, args)
             }
         }
@@ -464,10 +464,10 @@ $rdf.Fetcher = function(store, timeout, async) {
     // Returns xhr so can just do return this.failfetch(...)
     this.failFetch = function(xhr, status) {
         this.addStatus(xhr.req, status)
-        kb.add(xhr.uri, ns.link('error'), status)
-        this.requested[$rdf.uri.docpart(xhr.uri.uri)] = false
+        kb.add(xhr.resource, ns.link('error'), status)
+        this.requested[$rdf.uri.docpart(xhr.resource.uri)] = false
         if (xhr.userCallback) {
-            xhr.userCallback(false, "Fetch of <" + xhr.uri.uri + "> failed: "+status)
+            xhr.userCallback(false, "Fetch of <" + xhr.resource.uri + "> failed: "+status, xhr)
         };
         this.fireCallbacks('fail', [xhr.requestedURI, status])
         xhr.abort()
@@ -475,25 +475,25 @@ $rdf.Fetcher = function(store, timeout, async) {
     }
 
     this.linkData = function(xhr, rel, uri) {
-        var x = xhr.uri;
+        var x = xhr.resource;
         if (!uri) return;
         // See http://www.w3.org/TR/powder-dr/#httplink for describedby 2008-12-10
         if (rel == 'alternate' || rel == 'seeAlso' || rel == 'meta' || rel == 'describedby') {
             // var join = $rdf.uri.join2;   // doesn't work, now a method of rdf.uri
-            var obj = kb.sym($rdf.uri.join(uri, xhr.uri.uri))
-            if (obj.uri != xhr.uri) {
-                kb.add(xhr.uri, ns.rdfs('seeAlso'), obj, xhr.uri);
-                // $rdf.log.info("Loading " + obj + " from link rel in " + xhr.uri);
+            var obj = kb.sym($rdf.uri.join(uri, xhr.resource.uri))
+            if (obj.uri != xhr.resource) {
+                kb.add(xhr.resource, ns.rdfs('seeAlso'), obj, xhr.resource);
+                // $rdf.log.info("Loading " + obj + " from link rel in " + xhr.resource);
             }
         }
     };
 
     this.doneFetch = function(xhr, args) {
         this.addStatus(xhr.req, 'Done.')
-        // $rdf.log.info("Done with parse, firing 'done' callbacks for " + xhr.uri)
-        this.requested[xhr.uri.uri] = 'done'; //Kenny
+        // $rdf.log.info("Done with parse, firing 'done' callbacks for " + xhr.resource)
+        this.requested[xhr.resource.uri] = 'done'; //Kenny
         if (xhr.userCallback) {
-            xhr.userCallback(true);
+            xhr.userCallback(true, undefined, xhr);
         };
         this.fireCallbacks('done', args)
     }
@@ -531,7 +531,7 @@ $rdf.Fetcher = function(store, timeout, async) {
 //  term:       canonical term for the thing whose URI is to be dereferenced
 //  rterm:      the resource which refered to this (for tracking bad links)
 //  force:      Load the data even if loaded before
-//  oneDone:   is called as callback(ok, errorbody) for each one
+//  oneDone:   is called as callback(ok, errorbody, xhr) for each one
 //  allDone:   is called as callback(ok, errorbody) for all of them
 // Returns      the number of things looked up
 //
@@ -551,7 +551,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                 var sf = this;
 
                 var requestOne = function requestOne(u1){
-                    sf.requestURI($rdf.uri.docpart(u1), rterm, force, function(ok, body){
+                    sf.requestURI($rdf.uri.docpart(u1), rterm, force, function(ok, body, xhr){
                         if (ok) {
                             if (oneDone) oneDone(true, u1);
                         } else {
@@ -612,6 +612,16 @@ $rdf.Fetcher = function(store, timeout, async) {
         return undefined;
     };
 
+    this.proxyIfNecessary = function(uri) {
+        if (tabulator && tabulator.isExtension) return uri; // Extenstion does not need proxy
+                        // browser does 2014 on as https browser script not trusted
+        if ($rdf.Fetcher.crossSiteProxyTemplate && document && document.location
+			&& ('' + document.location).slice(0,6) === 'https:'
+                && uri.slice(0,5) === 'http:') {
+              return $rdf.Fetcher.crossSiteProxyTemplate.replace('{uri}', encodeURIComponent(uri));
+        }
+        return uri;
+    };
 
     /** Requests a document URI and arranges to load the document.
      ** Parameters:
@@ -661,7 +671,7 @@ $rdf.Fetcher = function(store, timeout, async) {
         if (!useJQuery) {
             var xhr = $rdf.Util.XMLHTTPFactory();
             var req = xhr.req = kb.bnode();
-            xhr.uri = docterm;
+            xhr.resource = docterm;
             xhr.requestedURI = args[0];
         } else {
             var req = kb.bnode(); // @@ Joe, no need for xhr.req?
@@ -689,7 +699,7 @@ $rdf.Fetcher = function(store, timeout, async) {
             if ($rdf.Fetcher.crossSiteProxyTemplate && document && document.location && !xhr.proxyUsed) { // In mashup situation
                 var hostpart = $rdf.uri.hostpart;
                 var here = '' + document.location;
-                var uri = xhr.uri.uri
+                var uri = xhr.resource.uri
                 if (hostpart(here) && hostpart(uri) && hostpart(here) != hostpart(uri)) {
                     newURI = $rdf.Fetcher.crossSiteProxy(uri);
                     sf.addStatus(xhr.req, "BLOCKED -> Cross-site Proxy to <" + newURI + ">");
@@ -722,9 +732,9 @@ $rdf.Fetcher = function(store, timeout, async) {
                     sf.addStatus(oldreq, 'done - redirected') // why
                     //the callback throws an exception when called from xhr.onerror (so removed)
                     //sf.fireCallbacks('done', args) // Are these args right? @@@   Noit done yet! done means success
-                    sf.requested[xhr.uri.uri] = 'redirected';
+                    sf.requested[xhr.resource.uri] = 'redirected';
 
-                    var xhr2 = sf.requestURI(newURI, xhr.uri, force, userCallback);
+                    var xhr2 = sf.requestURI(newURI, xhr.resource, force, userCallback);
                     xhr2.proxyUsed = true; //only try the proxy once
 
                     if (xhr2 && xhr2.req) {
@@ -762,7 +772,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                 kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response)
 
                 xhr.headers = {}
-                if ($rdf.uri.protocol(xhr.uri.uri) == 'http' || $rdf.uri.protocol(xhr.uri.uri) == 'https') {
+                if ($rdf.uri.protocol(xhr.resource.uri) == 'http' || $rdf.uri.protocol(xhr.resource.uri) == 'https') {
                     xhr.headers = $rdf.Util.getHTTPHeaders(xhr)
                     for (var h in xhr.headers) { // trim below for Safari - adds a CR!
                         kb.add(response, ns.httph(h.toLowerCase()), xhr.headers[h].trim(), response)
@@ -778,7 +788,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                         kb.add(response, ns.http('content'), kb.literal(xhr.responseText), response);
                         // dump("HTTP >= 400 responseText:\n"+xhr.responseText+"\n"); // @@@@
                     }
-                    sf.failFetch(xhr, "HTTP error for " +xhr.uri + ": "+ xhr.status + ' ' + xhr.statusText);
+                    sf.failFetch(xhr, "HTTP error for " +xhr.resource + ": "+ xhr.status + ' ' + xhr.statusText);
                     return;
                 }
 
@@ -814,8 +824,8 @@ $rdf.Fetcher = function(store, timeout, async) {
                     }
                 }
 
-                if ($rdf.uri.protocol(xhr.uri.uri) == 'file' || $rdf.uri.protocol(xhr.uri.uri) == 'chrome') {
-                    switch (xhr.uri.uri.split('.').pop()) {
+                if ($rdf.uri.protocol(xhr.resource.uri) == 'file' || $rdf.uri.protocol(xhr.resource.uri) == 'chrome') {
+                    switch (xhr.resource.uri.split('.').pop()) {
                     case 'rdf':
                     case 'owl':
                         xhr.headers['content-type'] = 'application/rdf+xml';
@@ -832,10 +842,10 @@ $rdf.Fetcher = function(store, timeout, async) {
 
                 // If we have alread got the thing at this location, abort
                 if (loc) {
-                    var udoc = $rdf.uri.join(xhr.uri.uri, loc)
-                    if (!force && udoc != xhr.uri.uri && sf.requested[udoc]) {
+                    var udoc = $rdf.uri.join(xhr.resource.uri, loc)
+                    if (!force && udoc != xhr.resource.uri && sf.requested[udoc]) {
                         // should we smush too?
-                        // $rdf.log.info("HTTP headers indicate we have already" + " retrieved " + xhr.uri + " as " + udoc + ". Aborting.")
+                        // $rdf.log.info("HTTP headers indicate we have already" + " retrieved " + xhr.resource + " as " + udoc + ". Aborting.")
                         sf.doneFetch(xhr, args)
                         xhr.abort()
                         return
@@ -893,11 +903,11 @@ $rdf.Fetcher = function(store, timeout, async) {
             // OPENED: 1
             // UNSENT: 0
 
-            // $rdf.log.debug("web.js: XHR " + xhr.uri.uri + ' readyState='+xhr.readyState); // @@@@ comment me out 
+            // $rdf.log.debug("web.js: XHR " + xhr.resource.uri + ' readyState='+xhr.readyState); // @@@@ comment me out 
 
             switch (xhr.readyState) {
             case 0:
-                    var uri = xhr.uri.uri, newURI;
+                    var uri = xhr.resource.uri, newURI;
                     if (this.crossSiteProxyTemplate && document && document.location) { // In mashup situation
                         var hostpart = $rdf.uri.hostpart;
                         var here = '' + document.location;
@@ -934,9 +944,9 @@ $rdf.Fetcher = function(store, timeout, async) {
                                 xhr.userCallback(true);
                             };
                             sf.fireCallbacks('done', args) // Are these args right? @@@
-                            sf.requested[xhr.uri.uri] = 'redirected';
+                            sf.requested[xhr.resource.uri] = 'redirected';
 
-                            var xhr2 = sf.requestURI(newURI, xhr.uri);
+                            var xhr2 = sf.requestURI(newURI, xhr.resource);
                             if (xhr2 && xhr2.req) kb.add(xhr.req,
                                 kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'),
                                 xhr2.req, sf.appNode);                             return;
@@ -956,7 +966,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                 handleResponse();
                 // Now handle
                 if (xhr.handle) {
-                    if (sf.requested[xhr.uri.uri] === 'redirected') {
+                    if (sf.requested[xhr.resource.uri] === 'redirected') {
                         break;
                     }
                     sf.fireCallbacks('load', args)
@@ -993,13 +1003,14 @@ $rdf.Fetcher = function(store, timeout, async) {
         // XMLHttpRequest cannot load http://www.w3.org/People/Berners-Lee/card. 
         // A wildcard '*' cannot be used in the 'Access-Control-Allow-Origin' header when the credentials flag is true. 
 
-        // @ Many ontology files under http: and need CORD wildcard -> can't have withCredentials
+        // @ Many ontology files under http: and need CORS wildcard -> can't have withCredentials
         var withCredentials = ( uri2.slice(0,6) === 'https:'); // @@ Kludge -- need for webid which typically is served from https
 
+        var actualProxyURI = this.proxyIfNecessary(uri2);
         // Setup the request
         if (typeof jQuery !== 'undefined' && jQuery.ajax) {
             var xhr = jQuery.ajax({
-                url: uri2,
+                url: actualProxyURI,
                 accepts: {'*': 'text/turtle,text/n3,application/rdf+xml'},
                 processData: false,
                 xhrFields: {
@@ -1010,7 +1021,7 @@ $rdf.Fetcher = function(store, timeout, async) {
 
                     xhr.req = req;   // Add these in case fails before .ajax returns
                     xhr.userCallback = userCallback;
-                    xhr.uri = docterm;
+                    xhr.resource = docterm;
                     xhr.requestedURI = uri2;
 
 
@@ -1023,7 +1034,7 @@ $rdf.Fetcher = function(store, timeout, async) {
 
                     xhr.req = req;
                     xhr.userCallback = userCallback;
-                    xhr.uri = docterm;
+                    xhr.resource = docterm;
                     xhr.requestedURI = uri2;
 
                     onreadystatechangeFactory(xhr)();
@@ -1032,8 +1043,9 @@ $rdf.Fetcher = function(store, timeout, async) {
 
             xhr.req = req;
             xhr.userCallback = userCallback;
-            xhr.uri = docterm;
+            xhr.resource = docterm;
             xhr.requestedURI = uri2;
+            xhr.actualProxyURI = actualProxyURI;
 
 
         } else {
@@ -1042,17 +1054,18 @@ $rdf.Fetcher = function(store, timeout, async) {
             xhr.onreadystatechange = onreadystatechangeFactory(xhr);
             xhr.timeout = sf.timeout;
             xhr.withCredentials = withCredentials;
+            xhr.actualProxyURI = actualProxyURI;
 
             xhr.req = req;
             xhr.userCallback = userCallback;
-            xhr.uri = docterm;
+            xhr.resource = docterm;
             xhr.requestedURI = uri2;
 
             xhr.ontimeout = function () {
                 sf.failFetch(xhr, "requestTimeout");
             }
             try {
-                xhr.open('GET', uri2, this.async);
+                xhr.open('GET', actualProxyURI, this.async);
             } catch (er) {
                 return this.failFetch(xhr, "XHR open for GET failed for <"+uri2+">:\n\t" + er);
             }
@@ -1061,8 +1074,8 @@ $rdf.Fetcher = function(store, timeout, async) {
         // Set redirect callback and request headers -- alas Firefox Extension Only
         
         if (typeof tabulator != 'undefined' && tabulator.isExtension && xhr.channel &&
-            ($rdf.uri.protocol(xhr.uri.uri) == 'http' ||
-             $rdf.uri.protocol(xhr.uri.uri) == 'https')) {
+            ($rdf.uri.protocol(xhr.resource.uri) == 'http' ||
+             $rdf.uri.protocol(xhr.resource.uri) == 'https')) {
             try {
                 xhr.channel.notificationCallbacks = {
                     getInterface: function(iid) {
@@ -1081,7 +1094,7 @@ $rdf.Fetcher = function(store, timeout, async) {
 
                                     ////////////// Change the request node to a new one:  @@@@@@@@@@@@ Duplicate?
                                     var newreq = xhr.req = kb.bnode() // Make NEW reqest for everything else
-                                    // xhr.uri = docterm
+                                    // xhr.resource = docterm
                                     // xhr.requestedURI = args[0]
                                     // var requestHandlers = kb.collection()
 
@@ -1105,10 +1118,10 @@ $rdf.Fetcher = function(store, timeout, async) {
                                     kb.add(response, ns.http('status'), kb.literal(xhr.status), response);
                                     if (xhr.statusText) kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response)
 
-                                    if (xhr.status - 0 != 303) kb.HTTPRedirects[xhr.uri.uri] = newURI; // same document as
+                                    if (xhr.status - 0 != 303) kb.HTTPRedirects[xhr.resource.uri] = newURI; // same document as
                                     if (xhr.status - 0 == 301 && rterm) { // 301 Moved
                                         var badDoc = $rdf.uri.docpart(rterm.uri);
-                                        var msg = 'Warning: ' + xhr.uri + ' has moved to <' + newURI + '>.';
+                                        var msg = 'Warning: ' + xhr.resource + ' has moved to <' + newURI + '>.';
                                         if (rterm) {
                                             msg += ' Link in <' + badDoc + ' >should be changed';
                                             kb.add(badDoc, kb.sym('http://www.w3.org/2007/ont/link#warning'), msg, sf.appNode);
@@ -1120,21 +1133,21 @@ $rdf.Fetcher = function(store, timeout, async) {
 
                                     sf.addStatus(oldreq, 'done') // why
                                     sf.fireCallbacks('done', args) // Are these args right? @@@
-                                    sf.requested[xhr.uri.uri] = 'redirected';
+                                    sf.requested[xhr.resource.uri] = 'redirected';
 
                                     var hash = newURI.indexOf('#');
                                     if (hash >= 0) {
-                                        var msg = ('Warning: ' + xhr.uri + ' HTTP redirects to' + newURI + ' which should not contain a "#" sign');
+                                        var msg = ('Warning: ' + xhr.resource + ' HTTP redirects to' + newURI + ' which should not contain a "#" sign');
                                         // dump(msg+"\n");
-                                        kb.add(xhr.uri, kb.sym('http://www.w3.org/2007/ont/link#warning'), msg)
+                                        kb.add(xhr.resource, kb.sym('http://www.w3.org/2007/ont/link#warning'), msg)
                                         newURI = newURI.slice(0, hash);
                                     }
-                                    var xhr2 = sf.requestURI(newURI, xhr.uri);
+                                    var xhr2 = sf.requestURI(newURI, xhr.resource);
                                     if (xhr2 && xhr2.req) kb.add(xhr.req,
                                         kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'),
                                         xhr2.req, sf.appNode); 
         
-                                    // else dump("No xhr.req available for redirect from "+xhr.uri+" to "+newURI+"\n")
+                                    // else dump("No xhr.req available for redirect from "+xhr.resource+" to "+newURI+"\n")
                                 },
                                 
                                 // See https://developer.mozilla.org/en/XPCOM_Interface_Reference/nsIChannelEventSink
@@ -1150,7 +1163,7 @@ $rdf.Fetcher = function(store, timeout, async) {
 
                                     ////////////// Change the request node to a new one:  @@@@@@@@@@@@ Duplicate?
                                     var newreq = xhr.req = kb.bnode() // Make NEW reqest for everything else
-                                    // xhr.uri = docterm
+                                    // xhr.resource = docterm
                                     // xhr.requestedURI = args[0]
                                     // var requestHandlers = kb.collection()
 
@@ -1174,10 +1187,10 @@ $rdf.Fetcher = function(store, timeout, async) {
                                     kb.add(response, ns.http('status'), kb.literal(xhr.status), response);
                                     if (xhr.statusText) kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response)
 
-                                    if (xhr.status - 0 != 303) kb.HTTPRedirects[xhr.uri.uri] = newURI; // same document as
+                                    if (xhr.status - 0 != 303) kb.HTTPRedirects[xhr.resource.uri] = newURI; // same document as
                                     if (xhr.status - 0 == 301 && rterm) { // 301 Moved
                                         var badDoc = $rdf.uri.docpart(rterm.uri);
-                                        var msg = 'Warning: ' + xhr.uri + ' has moved to <' + newURI + '>.';
+                                        var msg = 'Warning: ' + xhr.resource + ' has moved to <' + newURI + '>.';
                                         if (rterm) {
                                             msg += ' Link in <' + badDoc + ' >should be changed';
                                             kb.add(badDoc, kb.sym('http://www.w3.org/2007/ont/link#warning'), msg, sf.appNode);
@@ -1194,21 +1207,21 @@ $rdf.Fetcher = function(store, timeout, async) {
                                         xhr.userCallback(true);
                                     };
                                     sf.fireCallbacks('done', args) // Are these args right? @@@
-                                    sf.requested[xhr.uri.uri] = 'redirected';
+                                    sf.requested[xhr.resource.uri] = 'redirected';
 
                                     var hash = newURI.indexOf('#');
                                     if (hash >= 0) {
-                                        var msg = ('Warning: ' + xhr.uri + ' HTTP redirects to' + newURI + ' which should not contain a "#" sign');
+                                        var msg = ('Warning: ' + xhr.resource + ' HTTP redirects to' + newURI + ' which should not contain a "#" sign');
                                         // dump(msg+"\n");
-                                        kb.add(xhr.uri, kb.sym('http://www.w3.org/2007/ont/link#warning'), msg)
+                                        kb.add(xhr.resource, kb.sym('http://www.w3.org/2007/ont/link#warning'), msg)
                                         newURI = newURI.slice(0, hash);
                                     }
-                                    var xhr2 = sf.requestURI(newURI, xhr.uri);
+                                    var xhr2 = sf.requestURI(newURI, xhr.resource);
                                     if (xhr2 && xhr2.req) kb.add(xhr.req,
                                         kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'),
                                         xhr2.req, sf.appNode); 
         
-                                    // else dump("No xhr.req available for redirect from "+xhr.uri+" to "+newURI+"\n")
+                                    // else dump("No xhr.req available for redirect from "+xhr.resource+" to "+newURI+"\n")
                                 } // asyncOnChannelRedirect
                             }
                         }
@@ -1252,7 +1265,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                 return this.failFetch(xhr, "XHR send failed:" + er);
             }
             setTimeout(function() {
-                if (xhr.readyState != 4 && sf.isPending(xhr.uri.uri)) {
+                if (xhr.readyState != 4 && sf.isPending(xhr.resource.uri)) {
                     sf.failFetch(xhr, "requestTimeout")
                 }
             }, this.timeout);
@@ -1318,7 +1331,7 @@ $rdf.Fetcher = function(store, timeout, async) {
         return this.requested[docuri] == true;
     }
 
-    var updatesVia = new $rdf.UpdatesVia(this);
+    // var updatesVia = new $rdf.UpdatesVia(this);
 };
 
 $rdf.fetcher = function(store, timeout, async) { return new $rdf.Fetcher(store, timeout, async) };
