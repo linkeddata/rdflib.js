@@ -637,14 +637,25 @@ __Serializer.prototype.writeStore = function(write) {
     var session = fetcher && fetcher.appNode;
     
     // Everything we know from experience just write out.
-    if (session) write(this.statementsToN3(kb.statementsMatching(
-                                undefined, undefined, undefined, session)));
+    // It is undder the session and the requests.
+    
+    var metaSources = kb.statementsMatching(undefined,
+            kb.sym('http://www.w3.org/2007/ont/link#requestedURI')).map(
+                function(st){return st.subject});
+    if (session) metaSources.push(session);
+    var metadata = [];
+    metaSources.map(function(source){
+        metadata = metadata.concat(kb.statementsMatching(undefined, undefined, undefined, source));
+    });
+    write(this.statementsToN3(metadata));
                                 
     var sources = this.store.index[3];
     for (s in sources) {  // -> assume we can use -> as short for log:semantics
         var source = kb.fromNT(s);
         if (session && source.sameTerm(session)) continue;
-        write('\n'+ this.atomicTermToN3(source)+' -> { '+ this.statementsToN3(kb.statementsMatching(
+        write('\n'+ this.atomicTermToN3(source)+' ' + 
+                this.atomicTermToN3(kb.sym('http://www.w3.org/2000/10/swap/log#'))
+                 + ' { '+ this.statementsToN3(kb.statementsMatching(
                             undefined, undefined, undefined, source)) + ' }.\n');
     }
 }
