@@ -340,6 +340,9 @@ $rdf.sparqlUpdate = function() {
                     : insertions instanceof Array ? insertions : [ insertions ];
         if (! (ds instanceof Array)) throw "Type Error "+(typeof ds)+": "+ds;
         if (! (is instanceof Array)) throw "Type Error "+(typeof is)+": "+is;
+        if (ds.length === 0 && is.length === 0) {
+            return callback(null, true); // success -- nothing needed to be done.
+        }
         var doc = ds.length ? ds[0].why : is[0].why;
         
         ds.map(function(st){if (!doc.sameTerm(st.why)) throw "sparql update: destination "+doc+" inconsistent with ds "+st.why;});
