@@ -580,15 +580,15 @@ $rdf.SPARQLResultsInterpreter = function (xml, callback, doneCallback)
 	
 	function xmlMakeTerm(node)
 	{
-		//alert("xml Node name: "+node.nodeName+"\nxml Child value: "+node.childNodes[0].nodeValue);
+		//alert("xml Node name: "+node.nodeName+"\nxml Child value: "+node.childNodes[0].value);
 		var val=node.childNodes[0]
 		for (var x=0; x<node.childNodes.length;x++)
 			if (node.childNodes[x].nodeType==3) { val=node.childNodes[x]; break; }
 		
 		if (handleP(node.nodeName) == spns+"uri") 
-			return kb.sym(val.nodeValue);
+			return kb.sym(val.value);
 		else if (handleP(node.nodeName) == spns+"literal")
-			return kb.literal(val.nodeValue);
+			return kb.literal(val.value);
 		else if (handleP(node.nodeName) == spns+"unbound")
 			return 'unbound'
 		
@@ -632,7 +632,7 @@ $rdf.SPARQLResultsInterpreter = function (xml, callback, doneCallback)
 		
 	for (var x=0;x<sparql.childNodes.length;x++) //looks for the head and results childNodes
 	{
-		$rdf.log.info("Type: "+sparql.childNodes[x].nodeType+"\nName: "+sparql.childNodes[x].nodeName+"\nValue: "+sparql.childNodes[x].nodeValue);
+		$rdf.log.info("Type: "+sparql.childNodes[x].nodeType+"\nName: "+sparql.childNodes[x].nodeName+"\nValue: "+sparql.childNodes[x].value);
 		
 		if (sparql.childNodes[x].nodeType==1 && handleP(sparql.childNodes[x].nodeName)== spns+"head")
 			head = sparql.childNodes[x];
