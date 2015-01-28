@@ -281,7 +281,7 @@
                     frame.addArc(RDFParser.ns.RDF + 'value');
                     frame = this.buildFrame(frame);
                 }
-                frame.addLiteral(dom.value);
+                frame.addLiteral(dom.nodeValue);
             }
             else if (elementURI(dom)!== RDFParser.ns.RDF + "RDF"){
                   // not root
@@ -300,13 +300,13 @@
                            " Halting. Only one of these" + " properties may be specified on a" + " node.");
                     }
                     if (!about && rdfid){
-                        frame.addNode("#" + rdfid.value);
+                        frame.addNode("#" + rdfid.nodeValue);
                         dom.removeAttributeNode(rdfid);
                     }
                     else if (about == null && rdfid == null){
                         var bnid = this.getAttributeNodeNS(dom, RDFParser.ns.RDF, "nodeID");
                         if (bnid){
-                            frame.addBNode(bnid.value);
+                            frame.addBNode(bnid.nodeValue);
                             dom.removeAttributeNode(bnid);
                         }
                         else {
@@ -314,16 +314,16 @@
                         }
                     }
                     else {
-                        frame.addNode(about.value);
+                        frame.addNode(about.nodeValue);
                         dom.removeAttributeNode(about);
                     }
                     // Typed nodes
                     var rdftype = this.getAttributeNodeNS(dom, RDFParser.ns.RDF, "type");
                     if (RDFParser.ns.RDF + "Description" !== elementURI(dom)){
-                        rdftype = {'value': elementURI(dom)};
+                        rdftype = {'nodeValue': elementURI(dom)};
                     }
                     if (rdftype != null){
-                        this.store.add(frame.node, this.store.sym(RDFParser.ns.RDF + "type"), this.store.sym($rdf.Util.uri.join(rdftype.value, 
+                        this.store.add(frame.node, this.store.sym(RDFParser.ns.RDF + "type"), this.store.sym($rdf.Util.uri.join(rdftype.nodeValue, 
                            frame.base)), this.why);
                         if (rdftype.nodeName){
                             dom.removeAttributeNode(rdftype);
@@ -331,7 +331,7 @@
                     }
                     // Property Attributes
                     for (var x = attrs.length - 1;x >= 0;x--){
-                        this.store.add(frame.node, this.store.sym(elementURI(attrs[x])), this.store.literal(attrs[x].value, 
+                        this.store.add(frame.node, this.store.sym(elementURI(attrs[x])), this.store.literal(attrs[x].nodeValue, 
                            frame.lang), this.why);
                     }
                 }
@@ -341,18 +341,18 @@
                     if (this.reify){
                         rdfid = this.getAttributeNodeNS(dom, RDFParser.ns.RDF, "ID");
                         if (rdfid){
-                            frame.rdfid = rdfid.value;
+                            frame.rdfid = rdfid.nodeValue;
                             dom.removeAttributeNode(rdfid);
                         }
                     }
                     var parsetype = this.getAttributeNodeNS(dom, RDFParser.ns.RDF, "parseType");
                     var datatype = this.getAttributeNodeNS(dom, RDFParser.ns.RDF, "datatype");
                     if (datatype){
-                        frame.datatype = datatype.value;
+                        frame.datatype = datatype.nodeValue;
                         dom.removeAttributeNode(datatype);
                     }
                     if (parsetype){
-                        var nv = parsetype.value;
+                        var nv = parsetype.nodeValue;
                         if (nv === "Literal"){
                             frame.datatype = RDFParser.ns.RDF + "XMLLiteral";// (this.buildFrame(frame)).addLiteral(dom)
                                // should work but doesn't
@@ -377,12 +377,12 @@
                         var bnid2 = this.getAttributeNodeNS(dom, RDFParser.ns.RDF, "nodeID");
                         frame = this.buildFrame(frame);
                         if (resource){
-                            frame.addNode(resource.value);
+                            frame.addNode(resource.nodeValue);
                             dom.removeAttributeNode(resource);
                         }
                         else {
                             if (bnid2){
-                                frame.addBNode(bnid2.value);
+                                frame.addBNode(bnid2.nodeValue);
                                 dom.removeAttributeNode(bnid2);
                             }
                             else {
@@ -393,10 +393,10 @@
                             var f = this.buildFrame(frame);
                             f.addArc(elementURI(attrs[x1]));
                             if (elementURI(attrs[x1])=== RDFParser.ns.RDF + "type"){
-                                (this.buildFrame(f)).addNode(attrs[x1].value);
+                                (this.buildFrame(f)).addNode(attrs[x1].nodeValue);
                             }
                             else {
-                                (this.buildFrame(f)).addLiteral(attrs[x1].value);
+                                (this.buildFrame(f)).addLiteral(attrs[x1].nodeValue);
                             }
                         }
                     }
@@ -466,19 +466,19 @@
         var attrs = element.attributes;
         var base = element.getAttributeNode("xml:base");
         if (base != null){
-            frame.base = base.value;
+            frame.base = base.nodeValue;
             element.removeAttribute("xml:base");
         }
         var lang = element.getAttributeNode("xml:lang");
         if (lang != null){
-            frame.lang = lang.value;
+            frame.lang = lang.nodeValue;
             element.removeAttribute("xml:lang");
         }
         // remove all extraneous xml and xmlns attributes
         for (var x = attrs.length - 1;x >= 0;x--){
             if (attrs[x].nodeName.substr(0, 3) === "xml"){
                 if (attrs[x].name.slice(0, 6) === 'xmlns:'){
-                    var uri = attrs[x].value;// alert('base for namespac attr:'+this.base);
+                    var uri = attrs[x].nodeValue;// alert('base for namespac attr:'+this.base);
                     if (this.base) uri = $rdf.Util.uri.join(uri, this.base);
                     this.store.setPrefixForURI(attrs[x].name.slice(6), uri);
                 }
