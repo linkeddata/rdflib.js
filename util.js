@@ -344,7 +344,7 @@ $rdf.Util.parseXML = function(str) {
     if ((typeof tabulator != 'undefined' && tabulator.isExtension)) {
         dparser = Components.classes["@mozilla.org/xmlextras/domparser;1"].getService(
                     Components.interfaces.nsIDOMParser);
-    } else if (typeof module != 'undefined' ){ // Node.js
+    } else if (typeof module != 'undefined' && module && module.exports){ // Node.js
         //var libxmljs = require('libxmljs'); // Was jsdom before 2012-01 then libxmljs but that nonstandard
         //return libxmljs.parseXmlString(str);
         var jsdom = require('jsdom');
