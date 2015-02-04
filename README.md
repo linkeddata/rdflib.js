@@ -1,5 +1,7 @@
 # rdflib.js
 
+[![Join the chat at https://gitter.im/linkeddata/rdflib.js](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/linkeddata/rdflib.js?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Javascript RDF library for browsers and NodeJS.
 
 - Reads and writes RDF/xml, turtle and N3.
