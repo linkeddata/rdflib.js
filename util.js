@@ -118,7 +118,7 @@ $rdf.Util = {
      */
 	'XMLHTTPFactory': function () {
         if (typeof module != 'undefined' && module && module.exports) { //Node.js
-            var XMLHttpRequest = require("XMLHttpRequest").XMLHttpRequest;
+            var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
             return new XMLHttpRequest()
         }
         if (typeof tabulator != 'undefined' && tabulator.isExtension) {
@@ -220,10 +220,11 @@ $rdf.Util = {
 
     // This is the callback from the kb to the fetcher which is used to 
     // load ontologies of the data we load.
+    
     'AJAR_handleNewTerm': function(kb, p, requestedBy) {
         var sf = null;
-        if( typeof kb.sf != 'undefined' ) {
-            sf = kb.sf;
+        if( typeof kb.fetcher != 'undefined' ) {
+            sf = kb.fetcher;
         } else {
             return;
         }

@@ -524,18 +524,19 @@ $rdf.SPARQLToQuery = function(SPARQL, testMode, kb)
 	setWhere (sp.slice(whereLoc+2,sp.length-1),q.pat);
 	
     if (testMode) return q;
+    
     for (var x in q.pat.statements)
     {
 	var st = q.pat.statements[x];
 	if (st.subject.termType == 'symbol'
 	    /*&& sf.isPending(st.subject.uri)*/) { //This doesn't work.
 	    //sf.requestURI(st.subject.uri,"sparql:"+st.subject) Kenny: I remove these two
-	    if($rdf.sf) $rdf.sf.lookUpThing(st.subject,"sparql:"+st.subject);
+	    if($rdf.fetcher) $rdf.fetcher.lookUpThing(st.subject,"sparql:"+st.subject);
 	}
 	if (st.object.termType == 'symbol'
 	    /*&& sf.isPending(st.object.uri)*/) {
 	    //sf.requestURI(st.object.uri,"sparql:"+st.object)
-	    if($rdf.sf) $rdf.sf.lookUpThing(st.object,"sparql:"+st.object);
+	    if($rdf.fetcher) $rdf.fetcher.lookUpThing(st.object,"sparql:"+st.object);
 	}
     }
     //alert(q.pat);

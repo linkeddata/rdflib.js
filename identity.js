@@ -206,8 +206,8 @@ $rdf.IndexedFormula.prototype.replaceWith = function(big, small) {
 	    this.add(small, this.sym('http://www.w3.org/2007/ont/link#uri'), big.uri)
         
 	    // If two things are equal, and one is requested, we should request the other.
-	    if (this.sf) {
-	        this.sf.nowKnownAs(big, small)
+	    if (this.fetcher) {
+	        this.fetcher.nowKnownAs(big, small)
 	    }    
     }
     

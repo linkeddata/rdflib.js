@@ -134,16 +134,13 @@ $rdf.Collection.prototype.isVar = 0;
  * 
  * @param	myQuery,	a knowledgebase containing a pattern to use as query
  * @param	callback, 	whenever the pattern in myQuery is met this is called with 
- * 						the binding as parameter
- * @param	fetcher,	whenever a resource needs to be loaded this gets called
- *                              DO NOT CONFUSE WITH f.sf the source fetcher module! 
+ * 						the new bindings as parameter
+ * @param	fetcher,	whenever a resource needs to be loaded this gets called  IGNORED OBSOLETE
+ *                              f.fetecher is used as a Fetcher instance to do this.
  * @param       onDone          callback when 
  */
 $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDone) {
     var kb = this;
-    $rdf.log.info("Query:"+myQuery.pat+", fetcher="+fetcher+"\n");
-        $rdf.log.error("@@@@ query.js 4: " + $rdf.log.error); // @@ works
-        $rdf.log.error("@@@@ query.js 5");  // @@
 
     ///////////// Debug strings
 
@@ -462,14 +459,11 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
     * @param localCallback - function(bindings, pattern, branch) called on sucess
     * @returns nothing 
     *
-    * Will fetch linked data from the web iff the knowledge base an associated source fetcher (f.sf)
+    * Will fetch linked data from the web iff the knowledge base an associated source fetcher (f.fetcher)
     ***/
     var match = function (f, g, bindingsSoFar, level, fetcher, localCallback, branch) {
         $rdf.log.debug("Match begins, Branch count now: "+branch.count+" for "+branch.pattern_debug);
-        var sf = null;
-        if(f.sf !== undefined) {
-            sf = f.sf;
-        }
+        var sf = f.fetcher ? f.fetcher : null;
         //$rdf.log.debug("match: f has "+f.statements.length+", g has "+g.statements.length)
         var pattern = g.statements;
         if (pattern.length === 0) { //when it's satisfied all the pattern triples
@@ -500,24 +494,28 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
         //$rdf.log.debug(level + "Match "+n+" left, bs so far:"+bindingDebug(bindingsSoFar))
 
         // Follow links from variables in query
-        if (fetcher) {   //Fetcher is used to fetch URIs, function first term is a URI term, second is the requester
+        if (sf) {   //Fetcher is used to fetch URIs, function first term is a URI term, second is the requester
             var id = "match" + match_index++;
             var fetchResource = function (requestedTerm, id) {
-                var path = requestedTerm.uri;
-                if(path.indexOf("#") !== -1) {
-                    path=path.split("#")[0];
-                }
+                var docuri = requestedTerm.uri.split("#")[0];
+                sf.nowOrWhenFetched(docuri, undefined, function(err, body, xhr) {
+                    if (err) {
+                        console.log("Error following link to <" + requestedTerm.uri + "> in query: " + body )
+                    }
+                    match(f, g, bindingsSoFar, level, fetcher, // match not match2 to look up any others necessary.
+                        localCallback, branch);
+                });
+                /*
                 if( sf ) {
                     sf.addCallback('done', function(uri) {
                         if ((kb.canon(kb.sym(uri)).uri !== path) && (uri !== kb.canon(kb.sym(path)))) {
                             return true;
                         }
-                        match(f, g, bindingsSoFar, level, fetcher, // match not match2 to look up any others necessary.
-                                          localCallback, branch);
                         return false;
                     });
                 }
-                fetcher(requestedTerm, id);	    
+                fetcher(requestedTerm, id);
+                */    
             };
             for (i=0; i<n; i++) {
                 item = pattern[i];  //for each of the triples in the query
@@ -535,7 +533,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
                     return;
                 }
             }
-        } // if fetcher
+        } // if sf
         match2(f, g, bindingsSoFar, level, fetcher, localCallback, branch);     
         return;
     }; // match
@@ -625,7 +623,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
     }; //match2
 
     //////////////////////////// Body of query()  ///////////////////////
-    
+    /*
     if(!fetcher) {
         fetcher=function (x, requestedBy) {
             if (x === null) {
@@ -634,6 +632,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
             $rdf.Util.AJAR_handleNewTerm(kb, x, requestedBy);
         };
     } 
+    */
     //prepare, oncallback: match1
     //match1: fetcher, oncallback: match2
     //match2, oncallback: populatetable
