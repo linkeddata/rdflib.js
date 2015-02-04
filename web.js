@@ -501,7 +501,7 @@ $rdf.Fetcher = function(store, timeout, async) {
     this.store.add(this.appNode, ns.rdfs('label'), this.store.literal('This Session'), this.appNode);
 
     ['http', 'https', 'file', 'chrome'].map(this.addProtocol); // ftp? mailto:?
-    [$rdf.Fetcher.RDFXMLHandler, $rdf.Fetcher.XHTMLHandler, $rdf.Fetcher.XMLHandler, $rdf.Fetcher.HTMLHandler, $rdf.Fetcher.TextHandler, $rdf.Fetcher.N3Handler, ].map(this.addHandler)
+    [$rdf.Fetcher.RDFXMLHandler, $rdf.Fetcher.XHTMLHandler, $rdf.Fetcher.XMLHandler, $rdf.Fetcher.HTMLHandler, $rdf.Fetcher.TextHandler, $rdf.Fetcher.N3Handler ].map(this.addHandler)
 
 
  
@@ -1014,7 +1014,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                 accepts: {'*': 'text/turtle,text/n3,application/rdf+xml'},
                 processData: false,
                 xhrFields: {
-                    withCredentials: withCredentials,
+                    withCredentials: withCredentials
                 },
                 timeout: sf.timeout,
                 error: function(xhr, s, e) {
