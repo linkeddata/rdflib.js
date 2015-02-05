@@ -1,7 +1,6 @@
 /*
-# Updates-Via
-*/
-
+ * Updates-Via
+ */
 var $rdf, k, v,
   __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
   __hasProp = {}.hasOwnProperty;
@@ -11,24 +10,17 @@ if (typeof $rdf === "undefined" || $rdf === null) {
 }
 
 $rdf.UpdatesSocket = (function() {
-
   function UpdatesSocket(parent, via) {
+    var error;
     this.parent = parent;
     this.via = via;
     this.subscribe = __bind(this.subscribe, this);
-
     this.onError = __bind(this.onError, this);
-
     this.onMessage = __bind(this.onMessage, this);
-
     this.onClose = __bind(this.onClose, this);
-
     this.onOpen = __bind(this.onOpen, this);
-
     this._subscribe = __bind(this._subscribe, this);
-
     this._send = __bind(this._send, this);
-
     this.connected = false;
     this.pending = {};
     this.subscribed = {};
@@ -39,7 +31,8 @@ $rdf.UpdatesSocket = (function() {
       this.socket.onclose = this.onClose;
       this.socket.onmessage = this.onMessage;
       this.socket.onerror = this.onError;
-    } catch (error) {
+    } catch (_error) {
+      error = _error;
       this.onError(error);
     }
   }
@@ -110,7 +103,7 @@ $rdf.UpdatesSocket = (function() {
   };
 
   UpdatesSocket.prototype.onError = function(e) {
-    return console.log([this, 'onError', arguments]);
+    throw 'onError' + e;
   };
 
   UpdatesSocket.prototype.subscribe = function(uri) {
@@ -126,18 +119,13 @@ $rdf.UpdatesSocket = (function() {
 })();
 
 $rdf.UpdatesVia = (function() {
-
   function UpdatesVia(fetcher) {
     this.fetcher = fetcher;
     this.onUpdate = __bind(this.onUpdate, this);
-
     this.onHeaders = __bind(this.onHeaders, this);
-
     this.register = __bind(this.register, this);
-
     this.graph = {};
     this.via = {};
-    this.fetcher.addCallback('headers', this.onHeaders);
   }
 
   UpdatesVia.prototype.register = function(via, uri) {

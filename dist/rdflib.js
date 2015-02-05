@@ -119,7 +119,7 @@ $rdf.Util = {
      */
 	'XMLHTTPFactory': function () {
         if (typeof module != 'undefined' && module && module.exports) { //Node.js
-            var XMLHttpRequest = require("XMLHttpRequest").XMLHttpRequest;
+            var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
             return new XMLHttpRequest()
         }
         if (typeof tabulator != 'undefined' && tabulator.isExtension) {
@@ -212,7 +212,7 @@ $rdf.Util = {
                 return;
             }
         }
-        throw "RDFArrayRemove: Array did not contain " + x;
+        throw "RDFArrayRemove: Array did not contain " + x + " " +  x.why;
     },
 
     'string_startswith': function(str, pref) { // missing library routines
@@ -221,10 +221,11 @@ $rdf.Util = {
 
     // This is the callback from the kb to the fetcher which is used to 
     // load ontologies of the data we load.
+    
     'AJAR_handleNewTerm': function(kb, p, requestedBy) {
         var sf = null;
-        if( typeof kb.sf != 'undefined' ) {
-            sf = kb.sf;
+        if( typeof kb.fetcher != 'undefined' ) {
+            sf = kb.fetcher;
         } else {
             return;
         }
@@ -275,6 +276,65 @@ $rdf.Util = {
     
 };
 
+
+////////////////// find the variables in a graph
+//  SHALLOW
+//  used?
+//
+$rdf.Util.variablesIn = function(g) {
+    for (var i=0; i<g.statements.length; i++) {
+        var st = g.statatements[i];
+        var vars = {}
+        if (st.subject instanceof $rdf.Variable) {
+            vars[st.subject.toNT()] = true;
+        }
+        if (st.predicate instanceof $rdf.Variable) {
+            vars[st.predicate.toNT()] = true;
+        }
+        if (st.object instanceof $rdf.Variable) {
+            vars[st.object.toNT()] = true;
+        }
+    }
+    return vars;
+};
+
+//   Heavy comparison is for repeatable canonical ordering
+$rdf.Util.heavyCompare = function(x, y, g) {
+    var nonBlank = function(x) {
+        return (x.termType === 'bnode') ?  null : x; 
+    }
+    var signature = function(b) {
+        var lis = g.statementsMatching(x).map(function(st){
+            return ('' + nonBlank(st.subject) + ' ' + nonBlank(st.predicate)
+                + ' ' + nonBlank(st.object));
+        }).concat(g.statementsMatching(undefined, undefined, x).map(function(st){
+            return ('' + nonBlank(st.subject) + ' ' + nonBlank(st.predicate)
+                + ' ' + nonBlank(st.object));
+        }))
+        lis.sort();
+        return lis.join('\n');
+    }
+    if ((x.termType === 'bnode') || (y.termType === 'bnode')) {
+        if (x.compareTerm(y) === 0) return 0; // Same
+        if (signature(x) > signature(y)) return +1; 
+        if (signature(x) < signature(y)) return -1;
+        return x.compareTerm(y); // Too bad -- this order not canonical.
+        //throw "different bnodes indistinquishable for sorting" 
+    } else {
+        return x.compareTerm(y);
+    }
+};
+
+$rdf.Util.heavyCompareSPO = function(x, y, g) {
+    var comp = $rdf.Util.heavyCompare;
+    var d = comp(x.subject, y.subject, g);
+    if (d) return d;
+    d = comp(x.predicate, y.predicate, g);
+    if (d) return d;
+    return comp(x.object, y.object, g);
+};
+
+
 ///////////////////// Parse XML
 //
 // Returns: A DOM
@@ -285,7 +345,7 @@ $rdf.Util.parseXML = function(str) {
     if ((typeof tabulator != 'undefined' && tabulator.isExtension)) {
         dparser = Components.classes["@mozilla.org/xmlextras/domparser;1"].getService(
                     Components.interfaces.nsIDOMParser);
-    } else if (typeof module != 'undefined' ){ // Node.js
+    } else if (typeof module != 'undefined' && module && module.exports){ // Node.js
         //var libxmljs = require('libxmljs'); // Was jsdom before 2012-01 then libxmljs but that nonstandard
         //return libxmljs.parseXmlString(str);
         var jsdom = require('jsdom');
@@ -3150,28 +3210,39 @@ __SinkParser.prototype.skipSpace = function(str, i) {
     /*
     Skip white space, newlines and comments.
     return -1 if EOF, else position of first non-ws character*/
-    var tmp = str;
+
     var whitespace = ' \n\r\t\f\x0b\xa0\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u200b\u2028\u2029\u3000';
     for (var j = (i ? i : 0); j < str.length; j++) {
-        if (whitespace.indexOf(str.charAt(j)) === -1) {
+        var ch = str.charAt(j);
+        // console.log("    skipspace j= "+j + " i= " + i + " n= " + str.length);
+        // console.log(" skipspace ch <" + ch + ">");
+        if (whitespace.indexOf(ch) < 0 ) { //not ws
+            // console.log(" skipspace 2 ch <" + ch + ">");
             if( str.charAt(j)==='#' ) {
-                str = str.slice(i).replace(/^[^\n]*\n/,"");
-                i=0;
-                j=-1;
-            } else {
-                break;
+                for (;; j++) {
+                    // console.log("    skipspace2 j= "+j + " i= " + i + " n= " + str.length);
+                    if (j === str.length) {
+                        return -1; // EOF
+                    }
+                    if (str.charAt(j) === '\n') {
+                        this.lines = this.lines + 1;
+                        break;
+                    }
+                }; 
+            } else { // Not hash - something interesting
+                // console.log(" skipspace 3 ch <" + ch + ">");
+                return j
+            }
+        } else { // Whitespace
+            // console.log(" skipspace 5 ch <" + ch + ">");
+            if (str.charAt(j) === '\n') {
+                this.lines = this.lines + 1;
             }
         }
-	if (str.charAt(j) == '\n') {
-	    this.lines = this.lines + 1;
-	}
-    }
-    var val = (tmp.length - str.length) + j;
-    if( val === tmp.length ) {
-        return -1;
-    }
-    return val;
+    } // next j
+    return -1; // EOF
 };
+
 __SinkParser.prototype.variable = function(str, i, res) {
     /*
     ?abc -> variable(:abc)
@@ -3790,8 +3861,8 @@ $rdf.IndexedFormula.prototype.replaceWith = function(big, small) {
 	    this.add(small, this.sym('http://www.w3.org/2007/ont/link#uri'), big.uri)
         
 	    // If two things are equal, and one is requested, we should request the other.
-	    if (this.sf) {
-	        this.sf.nowKnownAs(big, small)
+	    if (this.fetcher) {
+	        this.fetcher.nowKnownAs(big, small)
 	    }    
     }
     
@@ -3996,6 +4067,62 @@ $rdf.IndexedFormula.prototype.remove = function (st) {
     $rdf.Util.RDFArrayRemove(this.statements, st);
 }; //remove
 
+
+
+//////////////////// Self-consistency checking for diagnostis only
+
+
+// Is each statement properly indexed?
+$rdf.IndexedFormula.prototype.checkStatementList = function(sts, from) {
+    var names = ['subject', 'predicate', 'object', 'why'];
+    var origin = " found in " + names[from] + " index.";
+    for (var j=0; j < sts.length; j++) {
+        st = sts[j];
+        var term = [ st.subject, st.predicate, st.object, st.why];
+
+        var arrayContains = function(a, x) {
+            for(var i=0; i<a.length; i++) {
+            if (a[i].subject.sameTerm( x.subject ) && 
+                a[i].predicate.sameTerm( x.predicate ) && 
+                a[i].object.sameTerm( x.object ) &&
+                a[i].why.sameTerm( x.why )) {
+                    return true;
+                }
+            };
+        };
+
+        for (var p=0; p<4; p++) {
+            var c = this.canon(term[p]);
+            var h = c.hashString();
+            if (this.index[p][h] == undefined) {
+                throw new Error("No " + name[p] + " index for statement " + st + "@" + st.why + origin)
+            } else {
+                if (!arrayContains(this.index[p][h], st)) {
+                    throw new Error("Index for " + name[p] + " does not have statement " + st + "@" + st.why + origin)
+                }
+            }
+        };
+        if (!arrayContains(this.statements, st)) {
+            throw new Error("Statement list does not statement " + st + "@" + st.why + origin)
+        
+        }
+    };
+}
+
+$rdf.IndexedFormula.prototype.check = function() {
+    this.checkStatementList(this.statements);
+    for (var p=0; p<4; p++) {
+        var ix = this.index[p];
+        for (var key in ix) {
+            if (ix.hasOwnProperty(key)) {
+                this.checkStatementList(ix[key], p);
+            }
+        };
+    };
+ };   
+
+
+
 /** remove all statements matching args (within limit) **/
 $rdf.IndexedFormula.prototype.removeMany = function (subj, pred, obj, why, limit) {
     //$rdf.log.debug("entering removeMany w/ subj,pred,obj,why,limit = " + subj +", "+ pred+", " + obj+", " + why+", " + limit);
@@ -4079,6 +4206,187 @@ return $rdf.IndexedFormula;
 
 }();
 // ends
+// Parse a simple SPARL-Update subset syntax for patches.
+// 
+//  This parses 
+//   WHERE {xxx} DELETE {yyy} INSERT DATA {zzz} 
+// (not necessarily in that order)
+// as though it were the n3
+//   <#query> patch:where {xxx}; patch:delete {yyy}; patch:insert {zzz}.
+
+$rdf.sparqlUpdateParser = function(str, kb, base) {
+    var i,j,k;
+    var keywords = [ 'INSERT', 'DELETE', 'WHERE' ]
+    var SQNS = $rdf.Namespace('http://www.w3.org/ns/pim/patch#');
+    var p = $rdf.N3Parser(kb, kb, base, base, null, null, "", null);
+    var clauses = {};
+    
+    var badSyntax = function (uri, lines, str, i, why) {
+        return  ("Line " +  ( lines + 1 ) + " of <" + uri + ">: Bad syntax:\n   " +
+                why + "\n   at: \"" + str.slice(i, (i + 30))  + "\"" ) ;
+    };
+    
+    var check = function(next, last, message) {
+        if (next < 0) {
+            throw badSyntax(p._thisDoc, p.lines, str, j, last, message);
+        };
+        return next;
+    };
+ 
+    
+    i = 0;
+    var query = kb.sym(base+ '#query');  // Invent a URI for the query
+    clauses['query'] = query; // A way of accessing it in its N3 model.
+    
+    while (true) {
+        // console.log("A Now at i = " + i)
+        var j = p.skipSpace(str, i);
+        if (j < 0) {
+            return clauses
+        }
+        // console.log("B After space at j= " + j)
+        if (str[j] === ';') {
+            i = p.skipSpace(str, j + 1);
+            if ( i < 0) {
+                return clauses ; // Allow end in a ;
+            }
+            j = i;
+        }
+        var found = false;
+        for (k=0;  k< keywords.length; k++) {
+            var key = keywords[k];
+            if (str.slice(j, j + key.length) === key) {
+                // console.log("C got one " + key);
+                i = p.skipSpace(str, j+ key.length);
+                // console.log("D after space at i= " + i);
+                if (i < 0) {
+                    throw badSyntax(p._thisDoc, p.lines, str, j+ key.length, "found EOF, needed {...} after "+key);
+                };
+                if (((key === 'INSERT') || (key === 'DELETE')) && str.slice(i, i+4) === 'DATA') { // Some wanted 'DATA'. Whatever
+                    j = p.skipSpace(str, i+4);
+                    if (j < 0) {
+                        throw badSyntax(p._thisDoc, p.lines, str, i+4, "needed {...} after INSERT DATA "+key);
+                    };
+                    i = j;
+                }
+                var res2 = [];
+                j = p.node(str, i, res2);
+                // console.log("M Now at j= " + j + " i= " + i)
+                
+                if (j < 0) {
+                    throw badSyntax(p._thisDoc, p.lines, str, i,
+                            "bad syntax or EOF in {...} after " + key);
+                }
+                clauses[key.toLowerCase()] = res2[0];
+                // print("res2[0] for "+key+ " is " + res2[0]);  //   @@ debug @@@@@@
+                kb.add(query, SQNS(key.toLowerCase()), res2[0]);
+                // key is the keyword and res2 has the contents
+                found = true;
+                i = j;
+            }
+        };
+        if (!found  && str.slice(j, j+7) === '@prefix') {
+            var i = p.directive(str, j);
+            if (i < 0) {
+            throw badSyntax(p._thisDoc, p.lines, str, i,
+                    "bad syntax or EOF after @prefix ");
+            }
+            // console.log("P before dot i= " + i)
+            i = p.checkDot(str, i);
+            // console.log("Q after dot i= " + i)
+            found = true;
+        } 
+        if (!found) {
+            // console.log("Bad syntax " + j)
+            throw badSyntax(p._thisDoc, p.lines, str, j,
+                    "Unknown syntax at start of statememt: '" + str.slice(j).slice(0,20) +"'")
+        }
+        
+    } // while
+    //return clauses
+
+
+}; // End of spaqlUpdateParser
+
+
+//////////////// Apply a patch
+
+$rdf.IndexedFormula.prototype.applyPatch = function(patch, target, patchCallback) { // patchCallback(err)
+    var targetKB = this;
+    var doPatch = function(onDonePatch) {
+        // $rdf.log.info("doPatch ...")
+        
+        if (patch['delete']) {
+            // $rdf.log.info("doPatch delete "+patch['delete'])
+            var ds =  patch['delete']
+            if (bindings) ds = ds.substitute(bindings);
+            ds = ds.statements;
+            var bad = [];
+            var ds2 = ds.map(function(st){ // Find the actual statemnts in the store
+                var sts = targetKB.statementsMatching(st.subject, st.predicate, st.object, target);
+                if (sts.length === 0) {
+                    // $rdf.log.info("NOT FOUND deletable " + st);
+                    bad.push(st);
+                    return null;
+                } else {
+                    // $rdf.log.info("Found deletable " + st);
+                    return sts[0]
+                }
+            });
+            if (bad.length) {
+                return patchCallback("Couldn't find to delete: " + bad[0])
+            }
+            ds2.map(function(st){
+                targetKB.remove(st);
+            });
+        };
+        
+        if (patch['insert']) {
+            // $rdf.log.info("doPatch insert "+patch['insert'])
+            var ds =  patch['insert'];
+            if (bindings) ds = ds.substitute(bindings);
+            ds = ds.statements;
+            ds.map(function(st){st.why = target;
+                targetKB.add(st.subject, st.predicate, st.object, st.why);
+            });
+        };
+        onDonePatch();
+    };
+
+    var bindings = null;
+    if (patch.where) {
+        // $rdf.log.info("Processing WHERE: " + patch.where + '\n');
+
+        var query = new $rdf.Query('patch');
+        query.pat = patch.where;
+        query.pat.statements.map(function(st){st.why = target});
+
+        var bindingsFound = [];
+        // $rdf.log.info("Processing WHERE - launching query: " + query.pat);
+
+        targetKB.query(query, function onBinding(binding) {
+            bindingsFound.push(binding)
+        },
+        targetKB.fetcher,
+        function onDone() {
+            if (bindingsFound.length == 0) {
+                return patchCallback("No match found to be patched:" + patch.where);
+            }
+            if (bindingsFound.length > 1) {
+                return patchCallback("Patch ambiguous. No patch done.");
+            }
+            bindings = bindingsFound[0];
+            doPatch(patchCallback);
+        });
+    } else {
+        doPatch(patchCallback)
+    };
+};
+
+
+
+
+// ends
 // Matching a formula against another formula
 // Assync as well as Synchronously
 //
@@ -4111,7 +4419,7 @@ $rdf.Query = function (name, id) {
 //    this.orderBy = []; // Not used yet
     this.name = name;
     this.id = id;
-}
+};
 
 /**The QuerySource object stores a set of listeners and a set of queries.
  * It keeps the listeners aware of those queries that the source currently
@@ -4136,13 +4444,15 @@ $rdf.QuerySource = function() {
      */
     this.addQuery = function(q) {
         var i;
-        if(q.name==null || q.name=="")
+        if(q.name === null || q.name === "") {
 				    q.name="Query #"+(this.queries.length+1);
+        }
         q.id=this.queries.length;
         this.queries.push(q);
         for(i=0; i<this.listeners.length; i++) {
-            if(this.listeners[i]!=null)
+            if(this.listeners[i] !== null) {
                 this.listeners[i].addQuery(q);
+            }
         }
     };
 
@@ -4152,11 +4462,13 @@ $rdf.QuerySource = function() {
     this.removeQuery = function(q) {
         var i;
         for(i=0; i<this.listeners.length; i++) {
-            if(this.listeners[i]!=null)
+            if(this.listeners[i] !== null) {
                 this.listeners[i].removeQuery(q);
+            }
         }
-        if(this.queries[q.id]!=null)
+        if(this.queries[q.id] !== null) {
             delete this.queries[q.id];
+        }
     };
 
     /**adds a "Listener" to this QuerySource - that is, an object
@@ -4168,8 +4480,9 @@ $rdf.QuerySource = function() {
         var i;
         this.listeners.push(listener);
         for(i=0; i<this.queries.length; i++) {
-            if(this.queries[i]!=null)
+            if (this.queries[i] !== null) {
                 listener.addQuery(this.queries[i]);
+            }
         }
     };
     /**removes listener from the array of listeners, if it exists! Also takes
@@ -4178,17 +4491,18 @@ $rdf.QuerySource = function() {
     this.removeListener = function(listener) {
         var i;
         for(i=0; i<this.queries.length; i++) {
-            if(this.queries[i]!=null)
+            if(this.queries[i] !== null) {
                 listener.removeQuery(this.queries[i]);
+            }
         }
 
         for(i=0; i<this.listeners.length; i++) {
-            if(this.listeners[i]===listener) {
+            if(this.listeners[i] === listener) {
                 delete this.listeners[i];
             }
         } 
     };
-}
+};
 
 $rdf.Variable.prototype.isVar = 1;
 $rdf.BlankNode.prototype.isVar = 1;
@@ -4209,35 +4523,34 @@ $rdf.Collection.prototype.isVar = 0;
  * 
  * @param	myQuery,	a knowledgebase containing a pattern to use as query
  * @param	callback, 	whenever the pattern in myQuery is met this is called with 
- * 						the binding as parameter
- * @param	fetcher,	whenever a resource needs to be loaded this gets called
- *                              DO NOT CONFUSE WITH f.sf the source fetcher module! 
+ * 						the new bindings as parameter
+ * @param	fetcher,	whenever a resource needs to be loaded this gets called  IGNORED OBSOLETE
+ *                              f.fetecher is used as a Fetcher instance to do this.
  * @param       onDone          callback when 
  */
 $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDone) {
     var kb = this;
-    $rdf.log.info("Query:"+myQuery.pat+", fetcher="+fetcher+"\n");
-        $rdf.log.error("@@@@ query.js 4: "+$rdf.log.error); // @@ works
-        $rdf.log.error("@@@@ query.js 5");  // @@
 
     ///////////// Debug strings
 
-    function bindingsDebug(nbs) {
+    var bindingDebug = function (b) {
+            var str = "", v;
+            for (v in b) {
+               if (b.hasOwnProperty(v)) {
+                   str += "    "+v+" -> "+b[v];
+                }
+            }
+            return str;
+    };
+
+    var bindingsDebug = function (nbs) {
         var str = "Bindings: ";
         var i, n=nbs.length;
         for (i=0; i<n; i++) {
             str+= bindingDebug(nbs[i][0])+';\n\t';
-        };
+        }
         return str;
-    } //bindingsDebug
-
-    function bindingDebug(b) {
-            var str = "", v;
-            for (v in b) {
-                str += "    "+v+" -> "+b[v];
-            }
-            return str;
-    }
+    }; //bindingsDebug
 
 
 // Unification: see also 
@@ -4250,9 +4563,9 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
 //  mapping variuable to value.
 
 
-    function RDFUnifyTerm(self, other, bindings, formula) {
+    var unifyTerm = function (self, other, bindings, formula) {
         var actual = bindings[self];
-        if (typeof actual == 'undefined') { // Not mapped
+        if (actual === undefined) { // Not mapped
             if (self.isVar) {
                     /*if (self.isBlank)  //bnodes are existential variables
                     {
@@ -4266,46 +4579,73 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
             actual = self;
         }
         if (!actual.complexType) {
-            if (formula.redirections[actual]) actual = formula.redirections[actual];
-            if (formula.redirections[other])  other  = formula.redirections[other];
-            if (actual.sameTerm(other)) return [[ [], null]];
+            if (formula.redirections[actual]) {
+                actual = formula.redirections[actual];
+            }
+            if (formula.redirections[other])  {
+                other  = formula.redirections[other];
+            }
+            if (actual.sameTerm(other)) {
+                return [[ [], null]];
+            }
             return [];
         }
         if (self instanceof Array) {
-            if (!(other instanceof Array)) return [];
-            return RDFArrayUnifyContents(self, other, bindings)
-        };
+            if (!(other instanceof Array)) {
+                return [];
+            }
+            return unifyContents(self, other, bindings);
+        }
         throw("query.js: oops - code not written yet");
-        return undefined;  // for lint 
+        // return undefined;  // for lint - no jslint objects to unreachables
     //    return actual.unifyContents(other, bindings)
-    }; //RDFUnifyTerm
+    }; //unifyTerm
 
 
 
-    function RDFArrayUnifyContents(self, other, bindings, formula) {
-        if (self.length != other.length) return []; // no way
-        if (!self.length) return [[ [], null ]]; // Success
-        var nbs = RDFUnifyTerm(self[0], other[0], bindings, formula);
-        if (nbs == []) return nbs;
+    var unifyContents = function (self, other, bindings, formula) {
+        var nbs2;
+        if (self.length !== other.length) {
+            return []; // no way
+        }
+        if (!self.length) {
+            return [[ [], null ]]; // Success
+        }
+        var nbs = unifyTerm(self[0], other[0], bindings, formula);
+        if (nbs.length === 0) {
+            return nbs;
+        }
         var res = [];
-        var i, n=nbs.length, nb, b2, j, m, v, nb2;
+        var i, n = nbs.length, nb, j, m, v, nb2, bindings2;
         for (i=0; i<n; i++) { // for each possibility from the first term
             nb = nbs[i][0]; // new bindings
-            var bindings2 = [];
+            bindings2 = [];
             for (v in nb) {
-                bindings2[v] = nb[v]; // copy
+                if (nb.hasOwnProperty(v)) {
+                    bindings2[v] = nb[v]; // copy
+                }
             }
-            for (v in bindings) bindings2[v] = bindings[v]; // copy
-            var nbs2 = RDFArrayUnifyContents(self.slice(1), other.slice(1), bindings2, formula);
+            for (v in bindings) {
+                if (bindings.hasOwnProperty(v)) {
+                    bindings2[v] = bindings[v]; // copy
+                }
+            }
+            nbs2 = unifyContents(self.slice(1), other.slice(1), bindings2, formula);
             m = nbs2.length;
             for (j=0; j<m; j++) {
-                var nb2 = nbs2[j][0];   //@@@@ no idea whether this is used or right
-                for (v in nb) nb2[v]=nb[v];
+                nb2 = nbs2[j][0];   //@@@@ no idea whether this is used or right
+                for (v in nb) {
+                    if (nb.hasOwnProperty(v)) {
+                        nb2[v] = nb[v];
+                    }
+                }
                 res.push([nb2, null]);
             }
         }
         return res;
-    } // RDFArrayUnifyContents
+    }; // unifyContents
+
+
 
 
 
@@ -4315,11 +4655,133 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
     // to one term it is equal to the other term.  We only match formulae.
 
     /** if x is not in the bindings array, return the var; otherwise, return the bindings **/
-    function RDFBind(x, binding) {
+    var bind = function (x, binding) {
         var y = binding[x];
-        if (typeof y == 'undefined') return x;
+        if (y === undefined) {
+            return x;
+        }
         return y;
-    }
+    };
+
+
+
+
+
+
+    // When there are OPTIONAL clauses, we must return bindings without them if none of them
+    // succeed. However, if any of them do succeed, we should not.  (This is what branchCount()
+    // tracked. The problem currently is (2011/7) that when several optionals exist, and they
+    // all match, multiple sets of bindings are returned, each with one optional filled in.)
+    
+    var union = function(a,b) {
+       var c= {};
+       var x;
+       for (x in a) {
+            if (a.hasOwnProperty(x)) {
+                c[x] = a[x];
+            }
+        }
+       for (x in b) {
+            if (b.hasOwnProperty(x)) {
+                c[x] = b[x];
+            }
+        }
+        return c;
+    };
+    
+    var OptionalBranchJunction = function(originalCallback, trunkBindings) {
+        this.trunkBindings = trunkBindings;
+        this.originalCallback = originalCallback;
+        this.branches = [];
+        //this.results = []; // result[i] is an array of bindings for branch i
+        //this.done = {};  // done[i] means all/any results are in for branch i
+        //this.count = {};
+        return this;
+    };
+
+    OptionalBranchJunction.prototype.checkAllDone = function() {
+        var i;
+        for (i=0; i<this.branches.length; i++) {
+            if (!this.branches[i].done) {
+                return;
+            }
+        }
+        $rdf.log.debug("OPTIONAL BIDNINGS ALL DONE:");
+        this.doCallBacks(this.branches.length-1, this.trunkBindings);
+    
+    };
+    // Recrursively generate the cross product of the bindings
+    OptionalBranchJunction.prototype.doCallBacks = function(b, bindings) {
+        var j;
+        if (b < 0) {
+            return this.originalCallback(bindings); 
+        }
+        for (j=0; j < this.branches[b].results.length; j++) {
+            this.doCallBacks(b-1, union(bindings, this.branches[b].results[j]));
+        }
+    };
+    
+    // A mandatory branch is the normal one, where callbacks
+    // are made immediately and no junction is needed.
+    // Might be useful for onFinsihed callback for query API.
+    var MandatoryBranch = function (callback, onDone) {
+        this.count = 0;
+        this.success = false;
+        this.done = false;
+        // this.results = [];
+        this.callback = callback;
+        this.onDone = onDone;
+        // this.junction = junction;
+        // junction.branches.push(this);
+        return this;
+    };
+    
+    MandatoryBranch.prototype.reportMatch = function(bindings) {
+        // $rdf.log.error("@@@@ query.js 1"); // @@
+        this.callback(bindings);
+        this.success = true;
+    };
+
+    MandatoryBranch.prototype.reportDone = function() {
+        this.done = true;
+        $rdf.log.info("Mandatory query branch finished.***");
+        if (this.onDone !== undefined) {
+            this.onDone();
+        }
+    };
+
+
+    // An optional branch hoards its results.
+    var OptionalBranch = function (junction) {
+        this.count = 0;
+        this.done = false;
+        this.results = [];
+        this.junction = junction;
+        junction.branches.push(this);
+        return this;
+    };
+    
+    OptionalBranch.prototype.reportMatch = function(bindings) {
+        this.results.push(bindings);
+    };
+
+    OptionalBranch.prototype.reportDone = function() {
+        $rdf.log.debug("Optional branch finished - results.length = "+this.results.length);
+        if (this.results.length === 0) {// This is what optional means: if no hits,
+            this.results.push({});  // mimic success, but with no bindings
+            $rdf.log.debug("Optional branch FAILED - that's OK.");
+        }
+        this.done = true;
+        this.junction.checkAllDone();
+    };
+
+
+
+
+
+
+
+
 
 
 
@@ -4328,43 +4790,50 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
         * @param item - an Statement, possibly w/ vars in it
         * @param bindings - 
     * @returns true if the query fails -- there are no items that match **/
-    function prepare(f, item, bindings) {
+    var prepare = function (f, item, bindings) {
+        var t, terms, termIndex, i, ind;
         item.nvars = 0;
         item.index = null;
         // if (!f.statements) $rdf.log.warn("@@@ prepare: f is "+f);
     //    $rdf.log.debug("Prepare: f has "+ f.statements.length);
         //$rdf.log.debug("Prepare: Kb size "+f.statements.length+" Preparing "+item);
         
-        var t,c,terms = [item.subject,item.predicate,item.object],ind = [f.subjectIndex,f.predicateIndex,f.objectIndex];
-        for (i=0;i<3;i++)
-        {
+        terms = [item.subject,item.predicate,item.object];
+        ind = [f.subjectIndex,f.predicateIndex,f.objectIndex];
+        for (i=0; i<3; i++) {
             //alert("Prepare "+terms[i]+" "+(terms[i] in bindings));
-            if (terms[i].isVar && !(terms[i] in bindings)) {
-                    item.nvars++;
+            if (terms[i].isVar && !(bindings[terms[i]] !== undefined)) {
+                item.nvars++;
             } else {
-                    var t = RDFBind(terms[i], bindings); //returns the RDF binding if bound, otherwise itself
-                    //if (terms[i]!=RDFBind(terms[i],bindings) alert("Term: "+terms[i]+"Binding: "+RDFBind(terms[i], bindings));
-                    if (f.redirections[t.hashString()]) t = f.redirections[t.hashString()]; //redirect
-                    termIndex=ind[i]
-                    item.index = termIndex[t.hashString()];
-                    if (typeof item.index == 'undefined') {
+                t = bind(terms[i], bindings); //returns the RDF binding if bound, otherwise itself
+                //if (terms[i]!=bind(terms[i],bindings) alert("Term: "+terms[i]+"Binding: "+bind(terms[i], bindings));
+                if (f.redirections[t.hashString()]) {
+                    t = f.redirections[t.hashString()]; //redirect
+                }
+                termIndex = ind[i];
+                item.index = termIndex[t.hashString()];
+                if (item.index === undefined) {
                     // $rdf.log.debug("prepare: no occurrence [yet?] of term: "+ t);
                     item.index = [];
-                    }
+                }
             }
         }
             
-        if (item.index == null) item.index = f.statements;
+        if (item.index === null) {
+            item.index = f.statements;
+        }
         // $rdf.log.debug("Prep: index length="+item.index.length+" for "+item)
         // $rdf.log.debug("prepare: index length "+item.index.length +" for "+ item);
         return false;
-    } //prepare
+    }; //prepare
         
     /** sorting function -- negative if self is easier **/
     // We always prefer to start with a URI to be able to browse a graph
     // this is why we put off items with more variables till later.
     function easiestQuery(self, other) {
-        if (self.nvars != other.nvars) return self.nvars - other.nvars;
+        if (self.nvars !== other.nvars) {
+            return self.nvars - other.nvars;
+        }
         return self.index.length - other.index.length;
     }
 
@@ -4379,20 +4848,19 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
     * @param localCallback - function(bindings, pattern, branch) called on sucess
     * @returns nothing 
     *
-    * Will fetch linked data from the web iff the knowledge base an associated source fetcher (f.sf)
+    * Will fetch linked data from the web iff the knowledge base an associated source fetcher (f.fetcher)
     ***/
-    function match(f, g, bindingsSoFar, level, fetcher, localCallback, branch) {
+    var match = function (f, g, bindingsSoFar, level, fetcher, localCallback, branch) {
         $rdf.log.debug("Match begins, Branch count now: "+branch.count+" for "+branch.pattern_debug);
-        var sf = null;
-        if( typeof f.sf != 'undefined' ) {
-            sf = f.sf;
-        }
+        var sf = f.fetcher ? f.fetcher : null;
         //$rdf.log.debug("match: f has "+f.statements.length+", g has "+g.statements.length)
         var pattern = g.statements;
-        if (pattern.length == 0) { //when it's satisfied all the pattern triples
+        if (pattern.length === 0) { //when it's satisfied all the pattern triples
 
             $rdf.log.debug("FOUND MATCH WITH BINDINGS:"+bindingDebug(bindingsSoFar));
-            if (g.optional.length==0) branch.reportMatch(bindingsSoFar);
+            if (g.optional.length === 0) {
+                branch.reportMatch(bindingsSoFar);
+            }
             else {
                 $rdf.log.debug("OPTIONAL: "+g.optional);
                 var junction = new OptionalBranchJunction(callback, bindingsSoFar); // @@ won't work with nested optionals? nest callbacks
@@ -4401,7 +4869,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
                     br[b] = new OptionalBranch(junction); // Allocate branches to prevent premature ending
                     br[b].pattern_debug = g.optional[b]; // for diagnotics only
                 }
-                for (b =0; b < g.optional.length; b++) {
+                for (b = 0; b < g.optional.length; b++) {
                     br[b].count =  br[b].count + 1;  // Count how many matches we have yet to complete
                     match(f, g.optional[b], bindingsSoFar, '', fetcher, callback, br[b]);
                 }
@@ -4415,58 +4883,81 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
         //$rdf.log.debug(level + "Match "+n+" left, bs so far:"+bindingDebug(bindingsSoFar))
 
         // Follow links from variables in query
-        if (fetcher) {   //Fetcher is used to fetch URIs, function first term is a URI term, second is the requester
+        if (sf) {   //Fetcher is used to fetch URIs, function first term is a URI term, second is the requester
             var id = "match" + match_index++;
             var fetchResource = function (requestedTerm, id) {
-                var path = requestedTerm.uri;
-                if(path.indexOf("#")!=-1) {
-                    path=path.split("#")[0];
-                }
+                var docuri = requestedTerm.uri.split("#")[0];
+                sf.nowOrWhenFetched(docuri, undefined, function(err, body, xhr) {
+                    if (err) {
+                        console.log("Error following link to <" + requestedTerm.uri + "> in query: " + body )
+                    }
+                    match(f, g, bindingsSoFar, level, fetcher, // match not match2 to look up any others necessary.
+                        localCallback, branch);
+                });
+                /*
                 if( sf ) {
                     sf.addCallback('done', function(uri) {
-                        if ((kb.canon(kb.sym(uri)).uri != path) && (uri != kb.canon(kb.sym(path)))) {
-                            return true
+                        if ((kb.canon(kb.sym(uri)).uri !== path) && (uri !== kb.canon(kb.sym(path)))) {
+                            return true;
                         }
-
-                        match(f, g, bindingsSoFar, level, fetcher, // match not match2 to look up any others necessary.
-                                          localCallback, branch);
                         return false;
-                    })
+                    });
                 }
-                fetcher(requestedTerm, id)	    
-            }
+                fetcher(requestedTerm, id);
+                */    
+            };
             for (i=0; i<n; i++) {
                 item = pattern[i];  //for each of the triples in the query
-                if (item.subject in bindingsSoFar 
+                if ((bindingsSoFar[item.subject] !== undefined) 
                     && bindingsSoFar[item.subject].uri
-                    && sf && sf.getState($rdf.Util.uri.docpart(bindingsSoFar[item.subject].uri)) == "unrequested") {
+                    && sf && sf.getState($rdf.Util.uri.docpart(bindingsSoFar[item.subject].uri)) === "unrequested") {
                     //fetch the subject info and return to id
-                    fetchResource(bindingsSoFar[item.subject],id)
+                    fetchResource(bindingsSoFar[item.subject],id);
                     return; // only look up one per line this time, but we will come back again though match
-                } else if (item.object in bindingsSoFar
+                }    
+                if (bindingsSoFar[item.object] !== undefined
                            && bindingsSoFar[item.object].uri
-                           && sf && sf.getState($rdf.Util.uri.docpart(bindingsSoFar[item.object].uri)) == "unrequested") {
-                    fetchResource(bindingsSoFar[item.object], id)
+                           && sf && sf.getState($rdf.Util.uri.docpart(bindingsSoFar[item.object].uri)) === "unrequested") {
+                    fetchResource(bindingsSoFar[item.object], id);
                     return;
                 }
             }
-        } // if fetcher
-        match2(f, g, bindingsSoFar, level, fetcher, localCallback, branch)        
+        } // if sf
+        match2(f, g, bindingsSoFar, level, fetcher, localCallback, branch);     
         return;
-    } // match
+    }; // match
+
+
+    var constraintsSatisfied = function (bindings,constraints)
+    {
+        var res = true, x, test;
+        for (x in bindings) {
+            if (bindings.hasOwnProperty(x)) {
+                if (constraints[x]) {
+                    test = constraints[x].test;
+                    if (test && !test(bindings[x])) {
+                            res=false;
+                    }
+                }
+            }
+        }
+        return res;
+    };
+
+
 
     /** match2 -- stuff after the fetch **/
-    function match2(f, g, bindingsSoFar, level, fetcher, callback, branch) //post-fetch
-    {
-        var pattern = g.statements, n = pattern.length, i;
+    var match2 = function (f, g, bindingsSoFar, level, fetcher, callback, branch) { // post fetch
+        var pattern = g.statements, n = pattern.length, i,
+            k, nk, v, bindings2, newBindings1, item;
         for (i=0; i<n; i++) {  //For each statement left in the query, run prepare
             item = pattern[i];
             $rdf.log.info("match2: item=" + item + ", bindingsSoFar=" + bindingDebug(bindingsSoFar));
             prepare(f, item, bindingsSoFar);
         }
         pattern.sort(easiestQuery);
+        item = pattern[0];
         // $rdf.log.debug("Sorted pattern:\n"+pattern)
-        var item = pattern[0];
         var rest = f.formula();
         rest.optional = g.optional;
         rest.constraints = g.constraints;
@@ -4474,168 +4965,74 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
         $rdf.log.debug(level + "match2 searching "+item.index.length+ " for "+item+
                 "; bindings so far="+bindingDebug(bindingsSoFar));
         //var results = [];
-        var c, nc=item.index.length, nbs1;
+        var c, nc=item.index.length, nbs1, st, onward = 0;
         //var x;
         for (c=0; c<nc; c++) {   // For each candidate statement
-            var st = item.index[c]; //for each statement in the item's index, spawn a new match with that binding 
-            nbs1 = RDFArrayUnifyContents(
+            st = item.index[c]; //for each statement in the item's index, spawn a new match with that binding 
+            nbs1 = unifyContents(
                     [item.subject, item.predicate, item.object],
             [st.subject, st.predicate, st.object], bindingsSoFar, f);
-            $rdf.log.info(level+" From first: "+nbs1.length+": "+bindingsDebug(nbs1))
-            var k, nk=nbs1.length, nb1, v;
+            $rdf.log.info(level+" From first: "+nbs1.length+": "+bindingsDebug(nbs1));
+            nk=nbs1.length;
             //branch.count += nk;
             //$rdf.log.debug("Branch count bumped "+nk+" to: "+branch.count);
             for (k=0; k<nk; k++) {  // For each way that statement binds
-                var bindings2 = [];
-                var newBindings1 = nbs1[k][0]; 
+                bindings2 = [];
+                newBindings1 = nbs1[k][0]; 
                 if (!constraintsSatisfied(newBindings1,g.constraints)) {
                     //branch.count--;
                     $rdf.log.debug("Branch count CS: "+branch.count);
-                    continue;}
-                for (var v in newBindings1){
-                    bindings2[v] = newBindings1[v]; // copy
+                } else {
+                    for (v in newBindings1){
+                        if (newBindings1.hasOwnProperty(v)) {
+                            bindings2[v] = newBindings1[v]; // copy
+                        }
+                    }
+                    for (v in bindingsSoFar) {
+                        if (bindingsSoFar.hasOwnProperty(v)) {
+                            bindings2[v] = bindingsSoFar[v]; // copy
+                        }
+                    }
+                    
+                    branch.count++;  // Count how many matches we have yet to complete
+                    onward ++;
+                    match(f, rest, bindings2, level+ '  ', fetcher, callback, branch); //call match
                 }
-                for (var v in bindingsSoFar) {
-                    bindings2[v] = bindingsSoFar[v]; // copy
-                }
-                
-                branch.count++;  // Count how many matches we have yet to complete
-                match(f, rest, bindings2, level+ '  ', fetcher, callback, branch); //call match
             }
         }
         branch.count--;
+        if (onward === 0) {
+            $rdf.log.debug("Match2 fails completely on " + item);
+        }
         $rdf.log.debug("Match2 ends, Branch count: "+branch.count +" for "+branch.pattern_debug);
-        if (branch.count == 0)
-        {
+        if (branch.count === 0) {
             $rdf.log.debug("Branch finished.");
-            branch.reportDone(branch);
+            branch.reportDone();
         }
-    } //match2
-
-    function constraintsSatisfied(bindings,constraints)
-    {
-        var res=true;
-        for (var x in bindings) {
-            if (constraints[x]) {
-                var test = constraints[x].test;
-                if (test && !test(bindings[x]))
-                        res=false;
-            }
-        }
-        return res;
-    }
+    }; //match2
 
     //////////////////////////// Body of query()  ///////////////////////
-    
+    /*
     if(!fetcher) {
         fetcher=function (x, requestedBy) {
-            if (x == null) {
+            if (x === null) {
                 return;
-            } else {
-                $rdf.Util.AJAR_handleNewTerm(kb, x, requestedBy);
             }
+            $rdf.Util.AJAR_handleNewTerm(kb, x, requestedBy);
         };
     } 
+    */
     //prepare, oncallback: match1
     //match1: fetcher, oncallback: match2
     //match2, oncallback: populatetable
     //    $rdf.log.debug("Query F length"+this.statements.length+" G="+myQuery)
     var f = this;
-    $rdf.log.debug("Query on "+this.statements.length)
-//    if (kb != this) alert("@@@@??? this="+ this)
+    $rdf.log.debug("Query on "+this.statements.length);
+    
     
     //kb.remoteQuery(myQuery,'http://jena.hpl.hp.com:3040/backstage',callback);
     //return;
 
-
-    // When there are OPTIONAL clauses, we must return bindings without them if none of them
-    // succeed. However, if any of them do succeed, we should not.  (This is what branchCount()
-    // tracked. The problem currently is (2011/7) that when several optionals exist, and they
-    // all match, multiple sets of bindings are returned, each with one optional filled in.)
-    
-    union = function(a,b) {
-       var c= {};
-       var x;
-       for (x in a) c[x] = a[x];
-       for (x in b) c[x] = b[x];
-       return c
-    }
-    
-    function OptionalBranchJunction(originalCallback, trunkBindings) {
-        this.trunkBindings = trunkBindings;
-        this.originalCallback = originalCallback;
-        this.branches = [];
-        //this.results = []; // result[i] is an array of bindings for branch i
-        //this.done = {};  // done[i] means all/any results are in for branch i
-        //this.count = {};
-        return this;
-    }
-
-    OptionalBranchJunction.prototype.checkAllDone = function() {
-        for (var i=0; i<this.branches.length; i++) if (!this.branches[i].done) return;
-        $rdf.log.debug("OPTIONAL BIDNINGS ALL DONE:");
-        this.doCallBacks(this.branches.length-1, this.trunkBindings);
-    
-    };
-    // Recrursively generate the cross product of the bindings
-    OptionalBranchJunction.prototype.doCallBacks = function(b, bindings) {
-        if (b < 0) return this.originalCallback(bindings); 
-        for (var j=0; j < this.branches[b].results.length; j++) {
-            this.doCallBacks(b-1, union(bindings, this.branches[b].results[j]));
-        }
-    };
-    
-    // A mandatory branch is the normal one, where callbacks
-    // are made immediately and no junction is needed.
-    // Might be useful for onFinsihed callback for query API.
-    function MandatoryBranch(callback, onDone) {
-        this.count = 0;
-        this.success = false;
-        this.done = false;
-        // this.results = [];
-        this.callback = callback;
-        this.onDone = onDone;
-        // this.junction = junction;
-        // junction.branches.push(this);
-        return this;
-    }
-    
-    MandatoryBranch.prototype.reportMatch = function(bindings) {
-        // $rdf.log.error("@@@@ query.js 1"); // @@
-        this.callback(bindings);
-        this.success = true;
-    };
-
-    MandatoryBranch.prototype.reportDone = function(b) {
-        this.done = true;
-        $rdf.log.info("Mandatory query branch finished.***")
-        if (this.onDone != undefined) this.onDone();
-    };
-
-
-    // An optional branch hoards its results.
-    function OptionalBranch(junction) {
-        this.count = 0;
-        this.done = false;
-        this.results = [];
-        this.junction = junction;
-        junction.branches.push(this);
-        return this;
-    }
-    
-    OptionalBranch.prototype.reportMatch = function(bindings) {
-        this.results.push(bindings);
-    };
-
-    OptionalBranch.prototype.reportDone = function() {
-        $rdf.log.debug("Optional branch finished - results.length = "+this.results.length);
-        if (this.results.length == 0) {// This is what optional means: if no hits,
-            this.results.push({});  // mimic success, but with no bindings
-            $rdf.log.debug("Optional branch FAILED - that's OK.");
-        }
-        this.done = true;
-        this.junction.checkAllDone();
-    };
 
     var trunck = new MandatoryBranch(callback, onDone);
     trunck.count++; // count one branch to complete at the moment
@@ -4643,6 +5040,8 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
     
     return; //returns nothing; callback does the work
 }; //query
+
+// ENDS
 //Converting between SPARQL queries and the $rdf query API
 
 /*
@@ -4672,9 +5071,9 @@ $rdf.queryToSPARQL = function(query)
 	{
 		var str = "";
 		var st = pat.statements;
-		for (x in st)
+		for (var x in st)
 		{
-			$rdf.log.debug("Found statement: "+st)
+			$rdf.log.debug("Found statement: "+st);
 			str+=addIndent()+st[x]+"\n";
 		}
 		return str;
@@ -4683,26 +5082,26 @@ $rdf.queryToSPARQL = function(query)
 	function getConstraints (pat)
 	{
 		var str="";
-		for (v in pat.constraints)
+		for (var v in pat.constraints)
 		{
-			var foo = pat.constraints[v]
-			str+=addIndent()+"FILTER ( "+foo.describe(v)+" ) "+"\n"
+			var foo = pat.constraints[v];
+			str+=addIndent()+"FILTER ( "+foo.describe(v)+" ) "+"\n";
 		}
 		return str;
 	}
 	
 	function getOptionals (pat)
 	{
-		var str = ""
+		var str = "";
 		for (var x=0;x<pat.optional.length;x++)
 		{
 			//alert(pat.optional.termType)
-			$rdf.log.debug("Found optional query")
+			$rdf.log.debug("Found optional query");
 			str+= addIndent()+"OPTIONAL { "+"\n";
 			indent++;
-			str+= getPattern (pat.optional[x])
-			str+= getConstraints (pat.optional[x])
-			str+= getOptionals (pat.optional[x])
+			str+= getPattern (pat.optional[x]);
+			str+= getConstraints (pat.optional[x]);
+			str+= getOptionals (pat.optional[x]);
 			indent--;
 			str+=addIndent()+"}"+"\n";
 		}
@@ -4717,7 +5116,7 @@ $rdf.queryToSPARQL = function(query)
 		str+= getConstraints (pat);
 		str+= getOptionals (pat);
 		indent--;
-		str+="}"
+		str+="}";
 		return str;
 	}
 	
@@ -4734,8 +5133,8 @@ $rdf.queryToSPARQL = function(query)
 		return getSelect(query) + getWhere(query.pat);
 	}
 		
-	return getSPARQL (query)
-}
+	return getSPARQL (query);
+};
 
 /**
  * @SPARQL: SPARQL text that is converted to a query object which is returned.
@@ -4745,26 +5144,26 @@ $rdf.queryToSPARQL = function(query)
 $rdf.SPARQLToQuery = function(SPARQL, testMode, kb)
 {
 	//AJAR_ClearTable();
-	var variableHash = []
+	var variableHash = [];
 	function makeVar(name) {
 		if (variableHash[name])
-			return variableHash[name]
+			return variableHash[name];
 		var newVar = kb.variable(name);
 		variableHash[name] = newVar;
-		return newVar
+		return newVar;
 	}
 	
 	//term type functions			
-	function isRealText(term) { return (typeof term == 'string' && term.match(/[^ \n\t]/)) }
-	function isVar(term) { return (typeof term == 'string' && term.match(/^[\?\$]/)) }
-	function fixSymbolBrackets(term) { if (typeof term == 'string') return term.replace(/^&lt;/,"<").replace(/&gt;$/,">"); else return term }
-	function isSymbol(term) { return (typeof term == 'string' && term.match(/^<[^>]*>$/)) }
-	function isBnode(term) { return (typeof term == 'string' && (term.match(/^_:/)||term.match(/^$/))) }
-	function isPrefix(term) { return (typeof term == 'string' && term.match(/:$/)) }
-	function isPrefixedSymbol(term) { return (typeof term == 'string' && term.match(/^:|^[^_][^:]*:/)) } 
-	function getPrefix(term) { var a = term.split(":"); return a[0] }
-	function getSuffix(term) { var a = term.split(":"); return a[1] }
-	function removeBrackets(term) { if (isSymbol(term)) {return term.slice(1,term.length-1)} else return term }	
+	function isRealText(term) { return (typeof term == 'string' && term.match(/[^ \n\t]/)) ;}
+	function isVar(term) { return (typeof term == 'string' && term.match(/^[\?\$]/)); }
+	function fixSymbolBrackets(term) { if (typeof term == 'string') return term.replace(/^&lt;/,"<").replace(/&gt;$/,">"); else return term; }
+	function isSymbol(term) { return (typeof term == 'string' && term.match(/^<[^>]*>$/)); }
+	function isBnode(term) { return (typeof term == 'string' && (term.match(/^_:/)||term.match(/^$/))); }
+	function isPrefix(term) { return (typeof term == 'string' && term.match(/:$/)); }
+	function isPrefixedSymbol(term) { return (typeof term == 'string' && term.match(/^:|^[^_][^:]*:/)); }
+	function getPrefix(term) { var a = term.split(":"); return a[0]; }
+	function getSuffix(term) { var a = term.split(":"); return a[1]; }
+	function removeBrackets(term) { if (isSymbol(term)) {return term.slice(1,term.length-1);} else return term; }
 	//takes a string and returns an array of strings and Literals in the place of literals
 	function parseLiterals (str)
 	{
@@ -4777,40 +5176,39 @@ $rdf.SPARQLToQuery = function(SPARQL, testMode, kb)
 			a[0]=str;
 			return a;
 		}	
-		var res = new Array(2);
-		if (!sin || (doub && doub<sin)) {var br='"'; var ind = doub}
-		else if (!doub || (sin && sin<doub)) {var br="'"; var ind = sin}
-		else {$rdf.log.error ("SQARQL QUERY OOPS!"); return res}
+		var res = new Array(2), br, ind;
+		if (!sin || (doub && doub<sin)) {br='"'; ind = doub;}
+		else if (!doub || (sin && sin<doub)) {br="'"; ind = sin;}
+		else {$rdf.log.error ("SQARQL QUERY OOPS!"); return res;}
 		res[0] = str.slice(0,ind);
 		var end = str.slice(ind+1).indexOf(br);
-		if (end==-1) 
+		if (end === -1) 
 		{
 			$rdf.log.error("SPARQL parsing error: no matching parentheses in literal "+str);
 			return str;
 		}
 		//alert(str.slice(end+ind+2).match(/^\^\^/))
+                var end2;
 		if (str.slice(end+ind+2).match(/^\^\^/))
 		{
-			var end2 = str.slice(end+ind+2).indexOf(" ")
-			//alert(end2)
-			res[1]=kb.literal(str.slice(ind+1,ind+1+end),"",kb.sym(removeBrackets(str.slice(ind+4+end,ind+2+end+end2))))
-			//alert(res[1].datatype.uri)
+			end2 = str.slice(end+ind+2).indexOf(" ");
+			//alert(end2);
+			res[1]=kb.literal(str.slice(ind+1,ind+1+end),"",kb.sym(removeBrackets(str.slice(ind+4+end,ind+2+end+end2))));
+			//alert(res[1].datatype.uri);
 			res = res.concat(parseLiterals(str.slice(end+ind+3+end2)));
 		}
 		else if (str.slice(end+ind+2).match(/^@/))
 		{
-			var end2 = str.slice(end+ind+2).indexOf(" ")
-			//alert(end2)
-			res[1]=kb.literal(str.slice(ind+1,ind+1+end),str.slice(ind+3+end,ind+2+end+end2),null)
-			//alert(res[1].datatype.uri)
-			res = res.concat(parseLiterals(str.slice(end+ind+2+end2)));
-		}
-		
-		else 
-		{
-		res[1]=kb.literal(str.slice(ind+1,ind+1+end),"",null)
-		$rdf.log.info("Literal found: "+res[1]);
-		res = res.concat(parseLiterals(str.slice(end+ind+2))); //finds any other literals
+                    end2 = str.slice(end+ind+2).indexOf(" ");
+                    //alert(end2);
+                    res[1]=kb.literal(str.slice(ind+1,ind+1+end),str.slice(ind+3+end,ind+2+end+end2),null);
+                    //alert(res[1].datatype.uri);
+                    res = res.concat(parseLiterals(str.slice(end+ind+2+end2)));
+		} else {
+                
+                    res[1]=kb.literal(str.slice(ind+1,ind+1+end),"",null);
+                    $rdf.log.info("Literal found: "+res[1]);
+                    res = res.concat(parseLiterals(str.slice(end+ind+2))); //finds any other literals
 		}
 		return res;
 	}
@@ -4818,11 +5216,11 @@ $rdf.SPARQLToQuery = function(SPARQL, testMode, kb)
 	
 	function spaceDelimit (str)
 	{
-		var str = str.replace(/\(/g," ( ").replace(/\)/g," ) ").replace(/</g," <").replace(/>/g,"> ").replace(/{/g," { ").replace(/}/g," } ").replace(/[\t\n\r]/g," ").replace(/; /g," ; ").replace(/\. /g," . ").replace(/, /g," , ");
-		$rdf.log.info("New str into spaceDelimit: \n"+str)
+		str = str.replace(/\(/g," ( ").replace(/\)/g," ) ").replace(/</g," <").replace(/>/g,"> ").replace(/{/g," { ").replace(/}/g," } ").replace(/[\t\n\r]/g," ").replace(/; /g," ; ").replace(/\. /g," . ").replace(/, /g," , ");
+		$rdf.log.info("New str into spaceDelimit: \n"+str);
 		var res=[];
 		var br = str.split(" ");
-		for (x in br)
+		for (var x in br)
 		{
 			if (isRealText(br[x]))
 				res = res.concat(br[x]);
@@ -4849,16 +5247,16 @@ $rdf.SPARQLToQuery = function(SPARQL, testMode, kb)
 	
 	function toTerms (input)
 	{
-		var res = []
+		var res = [];
 		for (var x=0;x<input.length;x++)
 		{
-			if (typeof input[x] != 'string') { res[x]=input[x]; continue }
-			input[x]=fixSymbolBrackets(input[x])
+			if (typeof input[x] != 'string') { res[x]=input[x]; continue ;}
+			input[x] = fixSymbolBrackets(input[x]);
 			if (isVar(input[x]))
 				res[x] = makeVar(input[x].slice(1));
 			else if (isBnode(input[x]))
 			{
-				$rdf.log.info(input[x]+" was identified as a bnode.")
+				$rdf.log.info(input[x]+" was identified as a bnode.");
 				res[x] = kb.bnode();
 			}
 			else if (isSymbol(input[x]))
@@ -4873,8 +5271,8 @@ $rdf.SPARQLToQuery = function(SPARQL, testMode, kb)
 					res[x] = kb.sym(input[x] = prefixes[getPrefix(input[x])]+getSuffix(input[x]));
 				else
 				{
-					$rdf.log.error("SPARQL error: "+input[x]+" with prefix "+getPrefix(input[x])+" does not have a correct prefix entry.")
-					res[x]=input[x]
+					$rdf.log.error("SPARQL error: "+input[x]+" with prefix "+getPrefix(input[x])+" does not have a correct prefix entry.");
+					res[x]=input[x];
 				}
 			}
 			else res[x]=input[x];
@@ -4886,12 +5284,14 @@ $rdf.SPARQLToQuery = function(SPARQL, testMode, kb)
 	{
 		var token1 = parseLiterals(str);
 		var token2=[];
-		for (x in token1)
+		for (var x in token1)
 		{
-			if (typeof token1[x] == 'string')
+			if (typeof token1[x] == 'string') {
 				token2=token2.concat(spaceDelimit(token1[x]));
-			else
-				token2=token2.concat(token1[x])
+                                
+			} else {
+				token2=token2.concat(token1[x]);
+                        }
 		}
 	token2 = replaceKeywords(token2);
 	$rdf.log.info("SPARQL Tokens: "+token2);
@@ -4919,7 +5319,7 @@ $rdf.SPARQLToQuery = function(SPARQL, testMode, kb)
 		{
 			if (typeof arr[i] != 'string') continue;
 			if (arr[i].toLowerCase()==str.toLowerCase())
-				ind.push(i)
+				ind.push(i);
 		}
 		return ind;
 	}
@@ -4928,7 +5328,7 @@ $rdf.SPARQLToQuery = function(SPARQL, testMode, kb)
 	function setVars (input,query)
 	{
 		$rdf.log.info("SPARQL vars: "+input);
-		for (x in input)
+		for (var x in input)
 		{
 			if (isVar(input[x]))
 			{
@@ -4948,7 +5348,7 @@ $rdf.SPARQLToQuery = function(SPARQL, testMode, kb)
 	{
 		
 		var prefInd = arrayIndicesOf ("PREFIX",input), res = [];
-		for (i in prefInd)
+		for (var i in prefInd)
 		{
 			var a = input[prefInd[i]+1], b = input[prefInd[i]+2];
 			if (!isPrefix(a))
@@ -4968,7 +5368,7 @@ $rdf.SPARQLToQuery = function(SPARQL, testMode, kb)
 	function getMatchingBracket(arr,open,close)
 	{
 		$rdf.log.info("Looking for a close bracket of type "+close+" in "+arr);
-		var index = 0
+		var index = 0;
 		for (i=0;i<arr.length;i++)
 		{
 			if (arr[i]==open) index++;
@@ -4983,46 +5383,46 @@ $rdf.SPARQLToQuery = function(SPARQL, testMode, kb)
 	
     function constraintGreaterThan (value)
     {
-        this.describe = function (varstr) { return varstr + " > "+value.toNT() }
+        this.describe = function (varstr) { return varstr + " > "+value.toNT(); };
         this.test = function (term) {
             if (term.value.match(/[0-9]+(\.[0-9]+)?([eE][+-]?[0-9]+)?/))
                 return (parseFloat(term.value) > parseFloat(value)); 
             else return (term.toNT() > value.toNT()); 
-        }
+        };
         return this;
     }
     
     function constraintLessThan (value) //this is not the recommended usage. Should only work on literal, numeric, dateTime
     {
-        this.describe = function (varstr) { return varstr + " < "+value.toNT() }
+        this.describe = function (varstr) { return varstr + " < "+value.toNT(); };
         this.test = function (term) {
             //this.describe = function (varstr) { return varstr + " < "+value }
             if (term.value.match(/[0-9]+(\.[0-9]+)?([eE][+-]?[0-9]+)?/))
                 return (parseFloat(term.value) < parseFloat(value)); 
             else return (term.toNT() < value.toNT()); 
-        }
+        };
         return this;
     }
     
     function constraintEqualTo (value) //This should only work on literals but doesn't.
     {
-        this.describe = function (varstr) { return varstr + " = "+value.toNT() }
+        this.describe = function (varstr) { return varstr + " = "+value.toNT(); };
         this.test = function (term) {
-            return value.sameTerm(term)
-        }
+            return value.sameTerm(term);
+        };
         return this;
     }
     
     function constraintRegexp (value) //value must be a literal
     {
-        this.describe = function (varstr) { return "REGEXP( '"+value+"' , "+varstr+" )"}
-        this.test=function(term) { 
+        this.describe = function (varstr) { return "REGEXP( '"+value+"' , "+varstr+" )";};
+        this.test = function(term) { 
             var str = value;
             //str = str.replace(/^//,"").replace(//$/,"")
             var rg = new RegExp(str); 
             if (term.value) return rg.test(term.value); 
             else return false;
-        }
+        };
     }					
 	
 
@@ -5032,28 +5432,28 @@ $rdf.SPARQLToQuery = function(SPARQL, testMode, kb)
 		{
 			if (input[1]=="=")
 			{
-				$rdf.log.debug("Constraint added: "+input)
-				pat.constraints[input[0]]=new constraintEqualTo(input[2])
+				$rdf.log.debug("Constraint added: "+input);
+				pat.constraints[input[0]]=new constraintEqualTo(input[2]);
 			}
 			else if (input[1]==">")
 			{
-				$rdf.log.debug("Constraint added: "+input)
-				pat.constraints[input[0]]=new constraintGreaterThan(input[2])
+				$rdf.log.debug("Constraint added: "+input);
+				pat.constraints[input[0]]=new constraintGreaterThan(input[2]);
 			}
 			else if (input[1]=="<")
 			{
-				$rdf.log.debug("Constraint added: "+input)
-				pat.constraints[input[0]]=new constraintLessThan(input[2])
+				$rdf.log.debug("Constraint added: "+input);
+				pat.constraints[input[0]]=new constraintLessThan(input[2]);
 			}
 			else
 				$rdf.log.warn("I don't know how to handle the constraint: "+input);
 		}
-		else if (input.length == 6 && typeof input[0] == 'string' && input[0].toLowerCase() == 'regexp' 
-					&& input[1] == '(' && input[5] == ')' && input[3] == ',' && input[4].termType == 'variable'
-					&& input[2].termType == 'literal')
+		else if (input.length == 6 && typeof input[0] == 'string' && input[0].toLowerCase() == 'regexp' &&
+                                        input[1] == '(' && input[5] == ')' && input[3] == ',' && input[4].termType == 'variable' &&
+					input[2].termType == 'literal')
 					{
-						$rdf.log.debug("Constraint added: "+input)
-						pat.constraints[input[4]]=new constraintRegexp(input[2].value)
+						$rdf.log.debug("Constraint added: "+input);
+						pat.constraints[input[4]]=new constraintRegexp(input[2].value);
 					}
 		
 			//$rdf.log.warn("I don't know how to handle the constraint: "+input);
@@ -5067,83 +5467,84 @@ $rdf.SPARQLToQuery = function(SPARQL, testMode, kb)
 	{
 		$rdf.log.debug("Optional query: "+terms+" not yet implemented.");
 		var opt = kb.formula();
-		setWhere (terms, opt)
+		setWhere (terms, opt);
 		pat.optional.push(opt);
 	}
 	
 	function setWhere (input,pat)
 	{
-		var terms = toTerms(input)
-		$rdf.log.debug("WHERE: "+terms)
+		var terms = toTerms(input), end;
+		$rdf.log.debug("WHERE: "+terms);
 		//var opt = arrayIndicesOf("OPTIONAL",terms);
 		while (arrayIndexOf("OPTIONAL",terms))
 		{
-			opt = arrayIndexOf("OPTIONAL",terms)
+			opt = arrayIndexOf("OPTIONAL",terms);
 			$rdf.log.debug("OPT: "+opt+" "+terms[opt]+" in "+terms);
-			if (terms[opt+1]!="{") $rdf.log.warn("Bad optional opening bracket in word "+opt)
-			var end = getMatchingBracket(terms.slice(opt+2),"{","}")
-			if (end == -1) $rdf.log.error("No matching bracket in word "+opt)
-			else
-			{
+			if (terms[opt+1]!="{") $rdf.log.warn("Bad optional opening bracket in word "+opt);
+			end = getMatchingBracket(terms.slice(opt+2),"{","}");
+			if (end == -1) {
+                            $rdf.log.error("No matching bracket in word "+opt);
+			} else {
 				setOptional(terms.slice(opt+2,opt+2+end),pat);
-				//alert(pat.statements[0].toNT())
-				opt = arrayIndexOf("OPTIONAL",terms)
-				end = getMatchingBracket(terms.slice(opt+2),"{","}")
-				terms.splice(opt,end+3)
+				//alert(pat.statements[0].toNT());
+				opt = arrayIndexOf("OPTIONAL",terms);
+				end = getMatchingBracket(terms.slice(opt+2),"{","}");
+				terms.splice(opt,end+3);
 			}
 		}
-		$rdf.log.debug("WHERE after optionals: "+terms)
+		$rdf.log.debug("WHERE after optionals: "+terms);
 		while (arrayIndexOf("FILTER",terms))
 		{
 			var filt = arrayIndexOf("FILTER",terms);
 			if (terms[filt+1]!="(") $rdf.log.warn("Bad filter opening bracket in word "+filt);
-			var end = getMatchingBracket(terms.slice(filt+2),"(",")")
-			if (end == -1) $rdf.log.error("No matching bracket in word "+filt)
-			else
-			{
+			end = getMatchingBracket(terms.slice(filt+2),"(",")");
+			if (end == -1) {
+                            $rdf.log.error("No matching bracket in word "+filt);
+			} else {
 				setConstraint(terms.slice(filt+2,filt+2+end),pat);
-				filt = arrayIndexOf("FILTER",terms)
-				end = getMatchingBracket(terms.slice(filt+2),"(",")")
-				terms.splice(filt,end+3)
+				filt = arrayIndexOf("FILTER",terms);
+				end = getMatchingBracket(terms.slice(filt+2),"(",")");
+				terms.splice(filt,end+3);
 			}
 		}
-		$rdf.log.debug("WHERE after filters and optionals: "+terms)
-		extractStatements (terms,pat)	
+		$rdf.log.debug("WHERE after filters and optionals: "+terms);
+		extractStatements (terms,pat);	
 	}
 	
 	function extractStatements (terms, formula)
 	{
 		var arrayZero = new Array(1); arrayZero[0]=-1;  //this is just to add the beginning of the where to the periods index.
 		var per = arrayZero.concat(arrayIndicesOf(".",terms));
-		var stat = []
-		for (var x=0;x<per.length-1;x++)
-			stat[x]=terms.slice(per[x]+1,per[x+1])
+		var stat = [];
+		for (var x=0;x<per.length-1;x++) {
+			stat[x] = terms.slice(per[x]+1,per[x+1]);
+                }
 		//Now it's in an array of statements
 		for (x in stat)                             //THIS MUST BE CHANGED FOR COMMA, SEMICOLON
 		{
-			$rdf.log.info("s+p+o "+x+" = "+stat[x])
-			var subj = stat[x][0]
-			stat[x].splice(0,1)
-			var sem = arrayZero.concat(arrayIndicesOf(";",stat[x]))
+			$rdf.log.info("s+p+o "+x+" = "+stat[x]);
+			var subj = stat[x][0];
+			stat[x].splice(0,1);
+			var sem = arrayZero.concat(arrayIndicesOf(";",stat[x]));
 			sem.push(stat[x].length);
-			var stat2 = []
+			var stat2 = [];
 			for (y=0;y<sem.length-1;y++)
-				stat2[y]=stat[x].slice(sem[y]+1,sem[y+1])
+				stat2[y]=stat[x].slice(sem[y]+1,sem[y+1]);
 			for (x in stat2)
 			{
-				$rdf.log.info("p+o "+x+" = "+stat[x])
-				var pred = stat2[x][0]
-				stat2[x].splice(0,1)
-				var com = arrayZero.concat(arrayIndicesOf(",",stat2[x]))
+				$rdf.log.info("p+o "+x+" = "+stat[x]);
+				var pred = stat2[x][0];
+				stat2[x].splice(0,1);
+				var com = arrayZero.concat(arrayIndicesOf(",",stat2[x]));
 				com.push(stat2[x].length);
-				var stat3 = []
+				var stat3 = [];
 				for (y=0;y<com.length-1;y++)
-					stat3[y]=stat2[x].slice(com[y]+1,com[y+1])
+					stat3[y]=stat2[x].slice(com[y]+1,com[y+1]);
 				for (x in stat3)
 				{
-					var obj = stat3[x][0]
-					$rdf.log.info("Subj="+subj+" Pred="+pred+" Obj="+obj)
-					formula.add(subj,pred,obj)
+					var obj = stat3[x][0];
+					$rdf.log.info("Subj="+subj+" Pred="+pred+" Obj="+obj);
+					formula.add(subj,pred,obj);
 				}
 			}
 		}
@@ -5154,8 +5555,8 @@ $rdf.SPARQLToQuery = function(SPARQL, testMode, kb)
 	var q = new $rdf.Query();
 	var sp = tokenize (SPARQL); //first tokenize everything
 	var prefixes = getPrefixDeclarations(sp);
-	if (!prefixes["rdf"]) prefixes["rdf"]="http://www.w3.org/1999/02/22-rdf-syntax-ns#";
-	if (!prefixes["rdfs"]) prefixes["rdfs"]="http://www.w3.org/2000/01/rdf-schema#";
+	if (!prefixes.rdf) prefixes.rdf = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+	if (!prefixes.rdfs) prefixes.rdfs = "http://www.w3.org/2000/01/rdf-schema#";
 	var selectLoc = arrayIndexOf("SELECT", sp), whereLoc = arrayIndexOf("WHERE", sp);
 	if (selectLoc<0 || whereLoc<0 || selectLoc>whereLoc)
 	{
@@ -5167,18 +5568,19 @@ $rdf.SPARQLToQuery = function(SPARQL, testMode, kb)
 	setWhere (sp.slice(whereLoc+2,sp.length-1),q.pat);
 	
     if (testMode) return q;
-    for (x in q.pat.statements)
+    
+    for (var x in q.pat.statements)
     {
-	var st = q.pat.statements[x]
+	var st = q.pat.statements[x];
 	if (st.subject.termType == 'symbol'
 	    /*&& sf.isPending(st.subject.uri)*/) { //This doesn't work.
 	    //sf.requestURI(st.subject.uri,"sparql:"+st.subject) Kenny: I remove these two
-	    if($rdf.sf) $rdf.sf.lookUpThing(st.subject,"sparql:"+st.subject);
+	    if($rdf.fetcher) $rdf.fetcher.lookUpThing(st.subject,"sparql:"+st.subject);
 	}
 	if (st.object.termType == 'symbol'
 	    /*&& sf.isPending(st.object.uri)*/) {
 	    //sf.requestURI(st.object.uri,"sparql:"+st.object)
-	    if($rdf.sf) $rdf.sf.lookUpThing(st.object,"sparql:"+st.object);
+	    if($rdf.fetcher) $rdf.fetcher.lookUpThing(st.object,"sparql:"+st.object);
 	}
     }
     //alert(q.pat);
@@ -5186,20 +5588,20 @@ $rdf.SPARQLToQuery = function(SPARQL, testMode, kb)
     //checkVars()
     
     //*******************************************************************//
-}
+};
 
 $rdf.SPARQLResultsInterpreter = function (xml, callback, doneCallback)
 {
 
-	function isVar(term) { return (typeof term == 'string' && term.match(/^[\?\$]/)) }
-	function fixSymbolBrackets(term) { if (typeof term == 'string') return term.replace(/^&lt;/,"<").replace(/&gt;$/,">"); else return term }
-	function isSymbol(term) { return (typeof term == 'string' && term.match(/^<[^>]*>$/)) }
-	function isBnode(term) { return (typeof term == 'string' && (term.match(/^_:/)||term.match(/^$/))) }
-	function isPrefix(term) { return (typeof term == 'string' && term.match(/:$/)) }
-	function isPrefixedSymbol(term) { return (typeof term == 'string' && term.match(/^:|^[^_][^:]*:/)) } 
-	function getPrefix(term) { var a = term.split(":"); return a[0] }
-	function getSuffix(term) { var a = term.split(":"); return a[1] }
-	function removeBrackets(term) { if (isSymbol(term)) {return term.slice(1,term.length-1)} else return term }	
+	function isVar(term) { return (typeof term == 'string' && term.match(/^[\?\$]/)); }
+	function fixSymbolBrackets(term) { if (typeof term == 'string') return term.replace(/^&lt;/,"<").replace(/&gt;$/,">"); else return term ;}
+	function isSymbol(term) { return (typeof term == 'string' && term.match(/^<[^>]*>$/)); }
+	function isBnode(term) { return (typeof term == 'string' && (term.match(/^_:/)||term.match(/^$/))); }
+	function isPrefix(term) { return (typeof term == 'string' && term.match(/:$/)) ;}
+	function isPrefixedSymbol(term) { return (typeof term == 'string' && term.match(/^:|^[^_][^:]*:/)); } 
+	function getPrefix(term) { var a = term.split(":"); return a[0]; }
+	function getSuffix(term) { var a = term.split(":"); return a[1]; }
+	function removeBrackets(term) { if (isSymbol(term)) {return term.slice(1,term.length-1);} else return term; }	
 	
 	function parsePrefix(attribute)
 	{
@@ -5213,10 +5615,14 @@ $rdf.SPARQLResultsInterpreter = function (xml, callback, doneCallback)
 	
 	function handleP (str)  //reconstructs prefixed URIs
 	{
-		if (isPrefixedSymbol(str))
-			var pref = getPrefix(str), suf = getSuffix(str);
-		else
-			var pref = "", suf = str;
+                var pref, suf;
+		if (isPrefixedSymbol(str)) {
+                    pref = getPrefix(str);
+                    suf = getSuffix(str);
+		} else {
+                    pref = "";
+                    suf = str;
+                }
 		if (prefixes[pref])
 			return prefixes[pref]+suf;
 		else
@@ -5226,7 +5632,7 @@ $rdf.SPARQLResultsInterpreter = function (xml, callback, doneCallback)
 	function xmlMakeTerm(node)
 	{
 		//alert("xml Node name: "+node.nodeName+"\nxml Child value: "+node.childNodes[0].nodeValue);
-		var val=node.childNodes[0]
+		var val=node.childNodes[0];
 		for (var x=0; x<node.childNodes.length;x++)
 			if (node.childNodes[x].nodeType==3) { val=node.childNodes[x]; break; }
 		
@@ -5235,10 +5641,10 @@ $rdf.SPARQLResultsInterpreter = function (xml, callback, doneCallback)
 		else if (handleP(node.nodeName) == spns+"literal")
 			return kb.literal(val.nodeValue);
 		else if (handleP(node.nodeName) == spns+"unbound")
-			return 'unbound'
+			return 'unbound';
 		
 		else $rdf.log.warn("Don't know how to handle xml binding term "+node);
-		return false
+		return false;
 	}
 	function handleResult (result)
 	{
@@ -5250,18 +5656,21 @@ $rdf.SPARQLResultsInterpreter = function (xml, callback, doneCallback)
 			if (handleP(result.childNodes[x].nodeName) != spns+"binding") {$rdf.log.warn("Bad binding node inside result"); continue;}
 			var bind = result.childNodes[x];
 			var bindVar = makeVar(bind.getAttribute('name'));
-			var binding = null
+			var binding = null;
 			for (var y=0;y<bind.childNodes.length;y++)
-				if (bind.childNodes[y].nodeType == 1) { binding = xmlMakeTerm(bind.childNodes[y]); break }
-			if (!binding) { $rdf.log.warn("Bad binding"); return false }
+				if (bind.childNodes[y].nodeType == 1) { binding = xmlMakeTerm(bind.childNodes[y]); break; }
+			if (!binding) { $rdf.log.warn("Bad binding"); return false; }
 			$rdf.log.info("var: "+bindVar+" binding: "+binding);
 			bound=true;
-			if (binding != 'unbound')
-			resultBindings[bindVar]=binding;
+			if (binding != 'unbound') {
+                            resultBindings[bindVar]=binding;
+                        }
 		}
 		
 		//alert(callback)
-		if (bound && callback) setTimeout(function(){callback(resultBindings)},0)
+		if (bound && callback) {
+                    setTimeout(function(){callback(resultBindings);},0);
+                }
 		bindingList.push(resultBindings);
 		return;
 	}
@@ -5269,13 +5678,14 @@ $rdf.SPARQLResultsInterpreter = function (xml, callback, doneCallback)
 	//****MAIN CODE**********
 	var prefixes = [], bindingList=[], head, results, sparql = xml.childNodes[0], spns = "http://www.w3.org/2005/sparql-results#";
 	prefixes[""]="";
+	var x;
+        
+	if (sparql.nodeName != 'sparql') { $rdf.log.error("Bad SPARQL results XML"); return; }
 	
-	if (sparql.nodeName != 'sparql') { $rdf.log.error("Bad SPARQL results XML"); return }
-	
-	for (var x=0;x<sparql.attributes.length;x++)  //deals with all the prefixes beforehand
+	for (x=0;x<sparql.attributes.length;x++)  //deals with all the prefixes beforehand
 		parsePrefix(sparql.attributes[x]);
 		
-	for (var x=0;x<sparql.childNodes.length;x++) //looks for the head and results childNodes
+	for (x=0;x<sparql.childNodes.length;x++) //looks for the head and results childNodes
 	{
 		$rdf.log.info("Type: "+sparql.childNodes[x].nodeType+"\nName: "+sparql.childNodes[x].nodeName+"\nValue: "+sparql.childNodes[x].nodeValue);
 		
@@ -5285,15 +5695,15 @@ $rdf.SPARQLResultsInterpreter = function (xml, callback, doneCallback)
 			results = sparql.childNodes[x];
 	}
 	
-	if (!results && !head) { $rdf.log.error("Bad SPARQL results XML"); return }
+	if (!results && !head) { $rdf.log.error("Bad SPARQL results XML"); return; }
 	
-	for (var x=0;x<head.childNodes.length;x++) //@@does anything need to be done with these? Should we check against query vars?
+	for (x=0;x<head.childNodes.length;x++) //@@does anything need to be done with these? Should we check against query vars?
 	{
 		if (head.childNodes[x].nodeType == 1 && handleP(head.childNodes[x].nodeName) == spns+"variable")
-			$rdf.log.info("Var: "+head.childNodes[x].getAttribute('name'))
+			$rdf.log.info("Var: "+head.childNodes[x].getAttribute('name'));
 	}
 	
-	for (var x=0;x<results.childNodes.length;x++)
+	for (x=0; x<results.childNodes.length;x++)
 	{
 		if (handleP(results.childNodes[x].nodeName)==spns+"result")
 		{
@@ -5303,27 +5713,17 @@ $rdf.SPARQLResultsInterpreter = function (xml, callback, doneCallback)
 	}
 	
 	if (doneCallback) doneCallback();
+        
 	return bindingList;
+        
 	//****END OF MAIN CODE*****
-}
+};
 // Joe Presbrey <presbrey@mit.edu>
 // 2007-07-15
 // 2010-08-08 TimBL folded in Kenny's WEBDAV 
 // 2010-12-07 TimBL addred local file write code
 
 $rdf.sparqlUpdate = function() {
-
-    var anonymize = function (obj) {
-        return (obj.toNT().substr(0,2) == "_:")
-        ? "?" + obj.toNT().substr(2)
-        : obj.toNT();
-    }
-
-    var anonymizeNT = function(stmt) {
-        return anonymize(stmt.subject) + " " +
-        anonymize(stmt.predicate) + " " +
-        anonymize(stmt.object) + " .";
-    }
 
     var sparql = function(store) {
         this.store = store;
@@ -5406,10 +5806,27 @@ $rdf.sparqlUpdate = function() {
 
     ///////////  The identification of bnodes
 
+
+    sparql.prototype.anonymize = function (obj) {
+        return (obj.toNT().substr(0,2) == "_:" && this._mentioned(obj))
+        ? "?" + obj.toNT().substr(2)
+        : obj.toNT();
+    }
+
+    sparql.prototype.anonymizeNT = function(stmt) {
+        return this.anonymize(stmt.subject) + " " +
+        this.anonymize(stmt.predicate) + " " +
+        this.anonymize(stmt.object) + " .";
+    }
+
+
+
+    // A list of all bnodes occuring in a statement
     sparql.prototype._statement_bnodes = function(st) {
         return [st.subject, st.predicate, st.object].filter(function(x){return x.isBlank});
     }
 
+    // A list of all bnodes occuring in a list of statements
     sparql.prototype._statement_array_bnodes = function(sts) {
         var bnodes = [];
         for (var i=0; i<sts.length;i++) bnodes = bnodes.concat(this._statement_bnodes(sts[i]));
@@ -5435,6 +5852,7 @@ $rdf.sparqlUpdate = function() {
         }
     }
 
+    // Returns a context to bind a given node, up to a given depth
     sparql.prototype._bnode_context2 = function(x, source, depth) {
         // Return a list of statements which indirectly identify a node
         //  Depth > 1 if try further indirection.
@@ -5468,17 +5886,38 @@ $rdf.sparqlUpdate = function() {
         return null; // Failure
     }
 
-
-    sparql.prototype._bnode_context = function(x, source) {
+    // Returns the smallest context to bind a given single bnode
+    sparql.prototype._bnode_context_1 = function(x, source) {
         // Return a list of statements which indirectly identify a node
         //   Breadth-first
         for (var depth = 0; depth < 3; depth++) { // Try simple first 
             var con = this._bnode_context2(x, source, depth);
-            if (con != null) return con;
+            if (con !== null) return con;
         }
         throw ('Unable to uniquely identify bnode: '+ x.toNT());
     }
+    
+    sparql.prototype._mentioned = function(x) {
+        return (this.store.statementsMatching(x).length !== 0) || // Don't pin fresh bnodes
+                (this.store.statementsMatching(undefined, x).length !== 0) ||
+                (this.store.statementsMatching(undefined, undefined, x).length !== 0);    
+    
+    }
 
+    sparql.prototype._bnode_context = function(bnodes, doc) {
+        var context = [];
+        if (bnodes.length) {
+            this._cache_ifps();
+            for (var i = 0; i < bnodes.length; i++) { // Does this occur in old graph?
+                var bnode = bnodes[i];
+                if (!this._mentioned(bnode)) continue;                   
+                context = context.concat(this._bnode_context_1(bnode, doc));
+            }
+        }
+        return context;
+    }
+    
+/*  Weird code does not make sense -- some code corruption along the line -- st undefined -- weird
     sparql.prototype._bnode_context = function(bnodes) {
         var context = [];
         if (bnodes.length) {
@@ -5490,22 +5929,24 @@ $rdf.sparqlUpdate = function() {
             } else {
                 this._cache_ifps();
                 for (x in bnodes) {
-                    context = context.concat(this._bnode_context(bnodes[x], st.why));
+                    context = context.concat(this._bnode_context_1(bnodes[x], st.why));
                 }
             }
         }
         return context;
     }
-
+*/
+    // Returns the best context for a single statement
     sparql.prototype._statement_context = function(st) {
         var bnodes = this._statement_bnodes(st);
-        return this._bnode_context(bnodes);
+        return this._bnode_context(bnodes, st.why);
     }
 
     sparql.prototype._context_where = function(context) {
+            var sparql = this;
             return (context == undefined || context.length == 0)
             ? ""
-            : "WHERE { " + context.map(anonymizeNT).join("\n") + " }\n";
+            : "WHERE { " + context.map(function(x){ return sparql.anonymizeNT(x)}).join("\n") + " }\n";
     }
 
     sparql.prototype._fire = function(uri, query, callback) {
@@ -5520,7 +5961,7 @@ $rdf.sparqlUpdate = function() {
                 if (!success) tabulator.log.error("sparql: update failed for <"+uri+"> status="+
                     xhr.status+", "+xhr.statusText+", body length="+xhr.responseText.length+"\n   for query: "+query);
                 else  tabulator.log.debug("sparql: update Ok for <"+uri+">");
-                callback(uri, success, xhr.responseText);
+                callback(uri, success, xhr.responseText, xhr);
             }
         }
 
@@ -5549,16 +5990,16 @@ $rdf.sparqlUpdate = function() {
 
         return {
             statement: statement?[statement.subject, statement.predicate, statement.object, statement.why]:undefined,
-            statementNT: statement?anonymizeNT(statement):undefined,
+            statementNT: statement ? this.anonymizeNT(statement):undefined,
             where: sparql._context_where(context),
 
             set_object: function(obj, callback) {
                 query = this.where;
                 query += "DELETE DATA { " + this.statementNT + " } ;\n";
                 query += "INSERT DATA { " +
-                    anonymize(this.statement[0]) + " " +
-                    anonymize(this.statement[1]) + " " +
-                    anonymize(obj) + " " + " . }\n";
+                    this.anonymize(this.statement[0]) + " " +
+                    this.anonymize(this.statement[1]) + " " +
+                    this.anonymize(obj) + " " + " . }\n";
      
                 sparql._fire(this.statement[3].uri, query, callback);
             }
@@ -5575,9 +6016,9 @@ $rdf.sparqlUpdate = function() {
             query += "INSERT DATA { " + stText + " }\n";
         } else {
             query += "INSERT DATA { " +
-                anonymize(st.subject) + " " +
-                anonymize(st.predicate) + " " +
-                anonymize(st.object) + " " + " . }\n";
+                this.anonymize(st.subject) + " " +
+                this.anonymize(st.predicate) + " " +
+                this.anonymize(st.object) + " " + " . }\n";
         }
         
         this._fire(st0.why.uri, query, callback);
@@ -5594,9 +6035,9 @@ $rdf.sparqlUpdate = function() {
             query += "DELETE DATA { " + stText + " }\n";
         } else {
             query += "DELETE DATA { " +
-                anonymize(st.subject) + " " +
-                anonymize(st.predicate) + " " +
-                anonymize(st.object) + " " + " . }\n";
+                this.anonymize(st.subject) + " " +
+                this.anonymize(st.predicate) + " " +
+                this.anonymize(st.object) + " " + " . }\n";
         }
         
         this._fire(st0.why.uri, query, callback);
@@ -5619,6 +6060,9 @@ $rdf.sparqlUpdate = function() {
                     : insertions instanceof Array ? insertions : [ insertions ];
         if (! (ds instanceof Array)) throw "Type Error "+(typeof ds)+": "+ds;
         if (! (is instanceof Array)) throw "Type Error "+(typeof is)+": "+is;
+        if (ds.length === 0 && is.length === 0) {
+            return callback(null, true); // success -- nothing needed to be done.
+        }
         var doc = ds.length ? ds[0].why : is[0].why;
         
         ds.map(function(st){if (!doc.sameTerm(st.why)) throw "sparql update: destination "+doc+" inconsistent with ds "+st.why;});
@@ -5631,36 +6075,36 @@ $rdf.sparqlUpdate = function() {
             var bnodes = []
             if (ds.length) bnodes = this._statement_array_bnodes(ds);
             if (is.length) bnodes = bnodes.concat(this._statement_array_bnodes(is));
-            var context = this._bnode_context(bnodes);
+            var context = this._bnode_context(bnodes, doc);
             var whereClause = this._context_where(context);
             var query = ""
             if (whereClause.length) { // Is there a WHERE clause?
                 if (ds.length) {
                     query += "DELETE { ";
-                    for (var i=0; i<ds.length;i++) query+= anonymizeNT(ds[i])+"\n";
+                    for (var i=0; i<ds.length;i++) query+= this.anonymizeNT(ds[i])+"\n";
                     query += " }\n";
                 }
                 if (is.length) {
                     query += "INSERT { ";
-                    for (var i=0; i<is.length;i++) query+= anonymizeNT(is[i])+"\n";
+                    for (var i=0; i<is.length;i++) query+= this.anonymizeNT(is[i])+"\n";
                     query += " }\n";
                 }
                 query += whereClause;
             } else { // no where clause
                 if (ds.length) {
                     query += "DELETE DATA { ";
-                    for (var i=0; i<ds.length;i++) query+= anonymizeNT(ds[i])+"\n";
+                    for (var i=0; i<ds.length;i++) query+= this.anonymizeNT(ds[i])+"\n";
                     query += " } \n";
                 }
                 if (is.length) {
                     if (ds.length) query += " ; ";
                     query += "INSERT DATA { ";
-                    for (var i=0; i<is.length;i++) query+= anonymizeNT(is[i])+"\n";
+                    for (var i=0; i<is.length;i++) query+= this.anonymizeNT(is[i])+"\n";
                     query += " }\n";
                 }
             }
             this._fire(doc.uri, query,
-                function(uri, success, body) {
+                function(uri, success, body, xhr) {
                     tabulator.log.info("\t sparql: Return success="+success+" for query "+query+"\n");
                     if (success) {
                         for (var i=0; i<ds.length;i++)
@@ -5672,7 +6116,7 @@ $rdf.sparqlUpdate = function() {
                         for (var i=0; i<is.length;i++)
                             kb.add(is[i].subject, is[i].predicate, is[i].object, doc); 
                     }
-                    callback(uri, success, body);
+                    callback(uri, success, body, xhr);
                 });
             
         } else if (protocol.indexOf('DAV') >=0) {
@@ -5803,42 +6247,45 @@ $rdf.sparqlUpdate = function() {
 
     // This suitable for an inital creation of a document
     //
-    sparql.prototype.put = function(doc, newSts, content_type, callback) {
+    // data:    string, or array of statements
+    //
+    sparql.prototype.put = function(doc, data, content_type, callback) {
 
         var documentString;
         var kb = this.store;
        
-        //serialize to te appropriate format
-        var sz = $rdf.Serializer(kb);
-        sz.suggestNamespaces(kb.namespaces);
-        sz.setBase(doc.uri);//?? beware of this - kenny (why? tim)                   
-        switch(content_type){
-            case 'application/rdf+xml': 
-                documentString = sz.statementsToXML(newSts);
-                break;
-            case 'text/n3':
-            case 'text/turtle':
-            case 'application/x-turtle': // Legacy
-            case 'application/n3': // Legacy
-                documentString = sz.statementsToN3(newSts);
-                break;
-            default:
-                throw "Content-type "+content_type +" not supported for data PUT";                                                                            
+        if (typeof data === typeof '') {
+            documentString = data;
+        } else {
+            //serialize to te appropriate format
+            var sz = $rdf.Serializer(kb);
+            sz.suggestNamespaces(kb.namespaces);
+            sz.setBase(doc.uri);//?? beware of this - kenny (why? tim)                   
+            switch(content_type){
+                case 'application/rdf+xml': 
+                    documentString = sz.statementsToXML(data);
+                    break;
+                case 'text/n3':
+                case 'text/turtle':
+                case 'application/x-turtle': // Legacy
+                case 'application/n3': // Legacy
+                    documentString = sz.statementsToN3(data);
+                    break;
+                default:
+                    throw "Content-type "+content_type +" not supported for data PUT";                                                                            
+            }
         }
-        
         var xhr = $rdf.Util.XMLHTTPFactory();
         xhr.onreadystatechange = function (){
             if (xhr.readyState == 4){
                 //formula from sparqlUpdate.js, what about redirects?
                 var success = (!xhr.status || (xhr.status >= 200 && xhr.status < 300));
-                callback(doc.uri, success, xhr.responseText);
+                callback(doc.uri, success, xhr.responseText, xhr);
             }
         };
         xhr.open('PUT', doc.uri, true);
-        //assume the server does PUT content-negotiation.
-        xhr.setRequestHeader('Content-type', content_type);//OK?
+        xhr.setRequestHeader('Content-type', content_type);
         xhr.send(documentString);
-    
     };
     
     
@@ -5982,6 +6429,8 @@ __Serializer.prototype.makeUpPrefix = function(uri) {
     
     function canUse(pp) {
         if (namespaces[pp]) return false; // already used
+        if (! __Serializer.prototype.validPrefix.test(pp)) return false; // bad format
+        if (pp === 'ns') return false; // boring 
         this.prefixes[uri] = pp;
         pok = pp;
         return true
@@ -6003,6 +6452,9 @@ __Serializer.prototype.makeUpPrefix = function(uri) {
     if (canUse(p.slice(0,4))) return pok;
     if (canUse(p.slice(0,1))) return pok;
     if (canUse(p.slice(0,5))) return pok;
+    if (! __Serializer.prototype.validPrefix.test(p)) {
+        p = 'n';  // Otherwise the loop below may never termimnate
+    }
     for (var i=0;; i++) if (canUse(p.slice(0,3)+i)) return pok; 
 }
 
@@ -6192,7 +6644,8 @@ __Serializer.prototype.statementsToN3 = function(sts) {
         for (var i=0; i<tree.length; i++) {
             var branch = tree[i];
             var s2 = (typeof branch == 'string') ? branch : treeToLine(branch);
-            if (i!=0 && s2 != ',' && s2 != ';' && s2 != '.') str += ' ';
+             // Note the space before the dot in case statement ends 123. which is in fact allowed but be conservative.
+            if (i!=0 && s2 != ',' && s2 != ';') str += ' '; // was also:  && s2 != '.'
             str += s2;
         }
         return str;
@@ -6267,9 +6720,9 @@ __Serializer.prototype.statementsToN3 = function(sts) {
     // The tree for a subject
     function subjectTree(subject, stats) {
         if (subject.termType == 'bnode' && !stats.incoming[subject])
-            return objectTree(subject, stats, true).concat(["."]); // Anonymous bnode subject
-        return [ termToN3(subject, stats) ].concat([propertyTree(subject, stats)]).concat(["."]);
-    }
+            return objectTree(subject, stats, true).concat(['.']); // Anonymous bnode subject
+        return [ termToN3(subject, stats) ].concat([propertyTree(subject, stats)]).concat(['.']); 
+    } 
     
 
     // The property tree for a single subject or anonymous node
@@ -6281,7 +6734,12 @@ __Serializer.prototype.statementsToN3 = function(sts) {
         if (typeof sts == 'undefined') {
             throw('Cant find statements for '+subject);
         }
-        sts.sort();
+        
+        var SPO = function(x, y) {
+            return $rdf.Util.heavyCompareSPO(x, y, this.store)
+        }
+        sts.sort(); // 2014-09-30
+//        sts.sort(SPO); // 2014-09-30
         var objects = [];
         for (var i=0; i<sts.length; i++) {
             var st = sts[i];
@@ -6342,7 +6800,8 @@ __Serializer.prototype.statementsToN3 = function(sts) {
         for (var ns in this.prefixes) {
             if (!this.prefixes.hasOwnProperty(ns)) continue;
             if (!this.namespacesUsed[ns]) continue;
-            str += '@prefix ' + this.prefixes[ns] + ': <'+ns+'>.\n';
+            str += '@prefix ' + this.prefixes[ns] + ': <' + 
+                 $rdf.uri.refTo(this.base, ns) + '>.\n';
         }
         return str + '\n';
     }
@@ -6390,6 +6849,8 @@ __Serializer.prototype.atomicTermToN3 = function atomicTermToN3(expr, stats) {
 };
 
     //  stringToN3:  String escaping for N3
+
+__Serializer.prototype.validPrefix = new RegExp(/^[a-zA-Z][a-zA-Z0-9]*$/);
 
 __Serializer.prototype.forbidden1 = new RegExp(/[\\"\b\f\r\v\t\n\u0080-\uffff]/gm);
 __Serializer.prototype.forbidden3 = new RegExp(/[\\"\b\f\r\v\u0080-\uffff]/gm);
@@ -6458,6 +6919,10 @@ __Serializer.prototype.symbolToN3 = function symbolToN3(x) {  // c.f. symbolStri
                 canSplit = false; break;
             }
         }
+
+        if (uri.slice(0, j) == this.base) { // base-relative
+            return '<#' + uri.slice(j+1) + '>';
+        }
         if (canSplit) {
             var localid = uri.slice(j+1);
             var namesp = uri.slice(0,j+1);
@@ -6469,17 +6934,16 @@ __Serializer.prototype.symbolToN3 = function symbolToN3(x) {  // c.f. symbolStri
                 return ':' + localid;
             }
             var prefix = this.prefixes[namesp];
+            if (!prefix) prefix = this.makeUpPrefix(namesp);
             if (prefix) {
                 this.namespacesUsed[namesp] = true;
                 return prefix + ':' + localid;
             }
-            if (uri.slice(0, j) == this.base)
-                return '<#' + localid + '>';
             // Fall though if can't do qname
         }
     }
     if (this.flags.indexOf('r') < 0 && this.base)
-        uri = $rdf.Util.uri.refTo(this.base, uri);
+        uri = $rdf.uri.refTo(this.base, uri);
     else if (this.flags.indexOf('u') >= 0)
         uri = backslashUify(uri);
     else uri = hexify(uri);
@@ -6522,14 +6986,25 @@ __Serializer.prototype.writeStore = function(write) {
     var session = fetcher && fetcher.appNode;
     
     // Everything we know from experience just write out.
-    if (session) write(this.statementsToN3(kb.statementsMatching(
-                                undefined, undefined, undefined, session)));
+    // It is undder the session and the requests.
+    
+    var metaSources = kb.statementsMatching(undefined,
+            kb.sym('http://www.w3.org/2007/ont/link#requestedURI')).map(
+                function(st){return st.subject});
+    if (session) metaSources.push(session);
+    var metadata = [];
+    metaSources.map(function(source){
+        metadata = metadata.concat(kb.statementsMatching(undefined, undefined, undefined, source));
+    });
+    write(this.statementsToN3(metadata));
                                 
     var sources = this.store.index[3];
     for (s in sources) {  // -> assume we can use -> as short for log:semantics
         var source = kb.fromNT(s);
         if (session && source.sameTerm(session)) continue;
-        write('\n'+ this.atomicTermToN3(source)+' -> { '+ this.statementsToN3(kb.statementsMatching(
+        write('\n'+ this.atomicTermToN3(source)+' ' + 
+                this.atomicTermToN3(kb.sym('http://www.w3.org/2000/10/swap/log#'))
+                 + ' { '+ this.statementsToN3(kb.statementsMatching(
                             undefined, undefined, undefined, source)) + ' }.\n');
     }
 }
@@ -6847,9 +7322,8 @@ return Serializer;
 
 }();
 /*
-# Updates-Via
-*/
-
+ * Updates-Via
+ */
 var $rdf, k, v,
   __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
   __hasProp = {}.hasOwnProperty;
@@ -6859,24 +7333,17 @@ if (typeof $rdf === "undefined" || $rdf === null) {
 }
 
 $rdf.UpdatesSocket = (function() {
-
   function UpdatesSocket(parent, via) {
+    var error;
     this.parent = parent;
     this.via = via;
     this.subscribe = __bind(this.subscribe, this);
-
     this.onError = __bind(this.onError, this);
-
     this.onMessage = __bind(this.onMessage, this);
-
     this.onClose = __bind(this.onClose, this);
-
     this.onOpen = __bind(this.onOpen, this);
-
     this._subscribe = __bind(this._subscribe, this);
-
     this._send = __bind(this._send, this);
-
     this.connected = false;
     this.pending = {};
     this.subscribed = {};
@@ -6887,7 +7354,8 @@ $rdf.UpdatesSocket = (function() {
       this.socket.onclose = this.onClose;
       this.socket.onmessage = this.onMessage;
       this.socket.onerror = this.onError;
-    } catch (error) {
+    } catch (_error) {
+      error = _error;
       this.onError(error);
     }
   }
@@ -6958,7 +7426,7 @@ $rdf.UpdatesSocket = (function() {
   };
 
   UpdatesSocket.prototype.onError = function(e) {
-    return console.log([this, 'onError', arguments]);
+    throw 'onError' + e;
   };
 
   UpdatesSocket.prototype.subscribe = function(uri) {
@@ -6974,18 +7442,13 @@ $rdf.UpdatesSocket = (function() {
 })();
 
 $rdf.UpdatesVia = (function() {
-
   function UpdatesVia(fetcher) {
     this.fetcher = fetcher;
     this.onUpdate = __bind(this.onUpdate, this);
-
     this.onHeaders = __bind(this.onHeaders, this);
-
     this.register = __bind(this.register, this);
-
     this.graph = {};
     this.via = {};
-    this.fetcher.addCallback('headers', this.onHeaders);
   }
 
   UpdatesVia.prototype.register = function(via, uri) {
@@ -7115,14 +7578,14 @@ $rdf.Fetcher = function(store, timeout, async) {
 */
                 var root = this.dom.documentElement;
                 if (root.nodeName == 'parsererror') { //@@ Mozilla only See issue/issue110
-                    sf.failFetch(xhr, "Badly formed XML in " + xhr.uri.uri); //have to fail the request
-                    throw new Error("Badly formed XML in " + xhr.uri.uri); //@@ Add details
+                    sf.failFetch(xhr, "Badly formed XML in " + xhr.resource.uri); //have to fail the request
+                    throw new Error("Badly formed XML in " + xhr.resource.uri); //@@ Add details
                 }
                 // Find the last URI we actual URI in a series of redirects
-                // (xhr.uri.uri is the original one)
+                // (xhr.resource.uri is the original one)
                 var lastRequested = kb.any(xhr.req, ns.link('requestedURI'));
                 if (!lastRequested) {
-                    lastRequested = xhr.uri;
+                    lastRequested = xhr.resource;
                 } else {
                     lastRequested = kb.sym(lastRequested.value);
                 }
@@ -7168,8 +7631,8 @@ $rdf.Fetcher = function(store, timeout, async) {
                 // dc:title
                 var title = this.dom.getElementsByTagName('title')
                 if (title.length > 0) {
-                    kb.add(xhr.uri, ns.dc('title'), kb.literal(title[0].textContent), xhr.uri)
-                    // $rdf.log.info("Inferring title of " + xhr.uri)
+                    kb.add(xhr.resource, ns.dc('title'), kb.literal(title[0].textContent), xhr.resource)
+                    // $rdf.log.info("Inferring title of " + xhr.resource)
                 }
 
                 // link rel
@@ -7184,24 +7647,24 @@ $rdf.Fetcher = function(store, timeout, async) {
                     var profile = head.getAttribute('profile');
                     if (profile && $rdf.uri.protocol(profile) == 'http') {
                         // $rdf.log.info("GRDDL: Using generic " + "2003/11/rdf-in-xhtml-processor.");
-                         $rdf.Fetcher.doGRDDL(kb, xhr.uri, "http://www.w3.org/2003/11/rdf-in-xhtml-processor", xhr.uri.uri)
+                         $rdf.Fetcher.doGRDDL(kb, xhr.resource, "http://www.w3.org/2003/11/rdf-in-xhtml-processor", xhr.resource.uri)
 /*			sf.requestURI('http://www.w3.org/2005/08/'
 					  + 'online_xslt/xslt?'
 					  + 'xslfile=http://www.w3.org'
 					  + '/2003/11/'
 					  + 'rdf-in-xhtml-processor'
 					  + '&xmlfile='
-					  + escape(xhr.uri.uri),
-				      xhr.uri)
+					  + escape(xhr.resource.uri),
+				      xhr.resource)
                         */
                     } else {
-                        // $rdf.log.info("GRDDL: No GRDDL profile in " + xhr.uri)
+                        // $rdf.log.info("GRDDL: No GRDDL profile in " + xhr.resource)
                     }
                 }
-                kb.add(xhr.uri, ns.rdf('type'), ns.link('WebPage'), sf.appNode);
+                kb.add(xhr.resource, ns.rdf('type'), ns.link('WebPage'), sf.appNode);
                 // Do RDFa here
                 if ($rdf.rdfa && $rdf.rdfa.parse)
-                    $rdf.rdfa.parse(this.dom, kb, xhr.uri.uri);
+                    $rdf.rdfa.parse(this.dom, kb, xhr.resource.uri);
                 cb(); // Fire done callbacks
             }
         }
@@ -7252,8 +7715,8 @@ $rdf.Fetcher = function(store, timeout, async) {
                         var xforms = kb.each(kb.sym(ns), kb.sym("http://www.w3.org/2003/g/data-view#namespaceTransformation"));
                         for (var i = 0; i < xforms.length; i++) {
                             var xform = xforms[i];
-                            // $rdf.log.info(xhr.uri.uri + " namespace " + ns + " has GRDDL ns transform" + xform.uri);
-                             $rdf.Fetcher.doGRDDL(kb, xhr.uri, xform.uri, xhr.uri.uri);
+                            // $rdf.log.info(xhr.resource.uri + " namespace " + ns + " has GRDDL ns transform" + xform.uri);
+                             $rdf.Fetcher.doGRDDL(kb, xhr.resource, xform.uri, xhr.resource.uri);
                         }
                         break
                     }
@@ -7262,7 +7725,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                 // Or it could be XHTML?
                 // Maybe it has an XHTML DOCTYPE?
                 if (dom.doctype) {
-                    // $rdf.log.info("We found a DOCTYPE in " + xhr.uri)
+                    // $rdf.log.info("We found a DOCTYPE in " + xhr.resource)
                     if (dom.doctype.name == 'html' && dom.doctype.publicId.match(/^-\/\/W3C\/\/DTD XHTML/) && dom.doctype.systemId.match(/http:\/\/www.w3.org\/TR\/xhtml/)) {
                         sf.addStatus(xhr.req,"Has XHTML DOCTYPE. Switching to XHTML Handler.\n")
                         sf.switchHandler('XHTMLHandler', xhr, cb)
@@ -7309,7 +7772,7 @@ $rdf.Fetcher = function(store, timeout, async) {
             xhr.handle = function(cb) {
                 var rt = xhr.responseText
                 // We only handle XHTML so we have to figure out if this is XML
-                // $rdf.log.info("Sniffing HTML " + xhr.uri + " for XHTML.");
+                // $rdf.log.info("Sniffing HTML " + xhr.resource + " for XHTML.");
 
                 if (rt.match(/\s*<\?xml\s+version\s*=[^<>]+\?>/)) {
                     sf.addStatus(xhr.req, "Has an XML declaration. We'll assume " +
@@ -7338,8 +7801,8 @@ $rdf.Fetcher = function(store, timeout, async) {
                 var titleMatch = (new RegExp("<title>([\\s\\S]+?)</title>", 'im')).exec(rt);
                 if (titleMatch) {
                     var kb = sf.store;
-                    kb.add(xhr.uri, ns.dc('title'), kb.literal(titleMatch[1]), xhr.uri); //think about xml:lang later
-                    kb.add(xhr.uri, ns.rdf('type'), ns.link('WebPage'), sf.appNode);
+                    kb.add(xhr.resource, ns.dc('title'), kb.literal(titleMatch[1]), xhr.resource); //think about xml:lang later
+                    kb.add(xhr.resource, ns.rdf('type'), ns.link('WebPage'), sf.appNode);
                     cb(); //doneFetch, not failed
                     return;
                 }
@@ -7369,7 +7832,7 @@ $rdf.Fetcher = function(store, timeout, async) {
 
                 // Look for an XML declaration
                 if (rt.match(/\s*<\?xml\s+version\s*=[^<>]+\?>/)) {
-                    sf.addStatus(xhr.req, "Warning: "+xhr.uri + " has an XML declaration. We'll assume " 
+                    sf.addStatus(xhr.req, "Warning: "+xhr.resource + " has an XML declaration. We'll assume " 
                         + "it's XML but its content-type wasn't XML.\n")
                     sf.switchHandler('XMLHandler', xhr, cb)
                     return
@@ -7385,9 +7848,9 @@ $rdf.Fetcher = function(store, timeout, async) {
 
                 // We give up finding semantics - this is not an error, just no data
                 sf.addStatus(xhr.req, "Plain text document, no known RDF semantics.");
-                sf.doneFetch(xhr, [xhr.uri.uri]);
+                sf.doneFetch(xhr, [xhr.resource.uri]);
 //                sf.failFetch(xhr, "unparseable - text/plain not visibly XML")
-//                dump(xhr.uri + " unparseable - text/plain not visibly XML, starts:\n" + rt.slice(0, 500)+"\n")
+//                dump(xhr.resource + " unparseable - text/plain not visibly XML, starts:\n" + rt.slice(0, 500)+"\n")
 
             }
         }
@@ -7409,24 +7872,24 @@ $rdf.Fetcher = function(store, timeout, async) {
         this.handlerFactory = function(xhr) {
             xhr.handle = function(cb) {
                 // Parse the text of this non-XML file
-                $rdf.log.debug("web.js: Parsing as N3 " + xhr.uri.uri); // @@@@ comment me out 
+                $rdf.log.debug("web.js: Parsing as N3 " + xhr.resource.uri); // @@@@ comment me out 
                 //sf.addStatus(xhr.req, "N3 not parsed yet...")
                 var rt = xhr.responseText
-                var p = $rdf.N3Parser(kb, kb, xhr.uri.uri, xhr.uri.uri, null, null, "", null)
+                var p = $rdf.N3Parser(kb, kb, xhr.resource.uri, xhr.resource.uri, null, null, "", null)
                 //                p.loadBuf(xhr.responseText)
                 try {
                     p.loadBuf(xhr.responseText)
 
                 } catch (e) {
-                    var msg = ("Error trying to parse " + xhr.uri + " as Notation3:\n" + e +':\n'+e.stack)
+                    var msg = ("Error trying to parse " + xhr.resource + " as Notation3:\n" + e +':\n'+e.stack)
                     // dump(msg+"\n")
                     sf.failFetch(xhr, msg)
                     return;
                 }
 
                 sf.addStatus(xhr.req, "N3 parsed: " + p.statementCount + " triples in " + p.lines + " lines.")
-                sf.store.add(xhr.uri, ns.rdf('type'), ns.link('RDFDocument'), sf.appNode);
-                args = [xhr.uri.uri]; // Other args needed ever?
+                sf.store.add(xhr.resource, ns.rdf('type'), ns.link('RDFDocument'), sf.appNode);
+                args = [xhr.resource.uri]; // Other args needed ever?
                 sf.doneFetch(xhr, args)
             }
         }
@@ -7497,10 +7960,10 @@ $rdf.Fetcher = function(store, timeout, async) {
     // Returns xhr so can just do return this.failfetch(...)
     this.failFetch = function(xhr, status) {
         this.addStatus(xhr.req, status)
-        kb.add(xhr.uri, ns.link('error'), status)
-        this.requested[$rdf.uri.docpart(xhr.uri.uri)] = false
+        kb.add(xhr.resource, ns.link('error'), status)
+        this.requested[$rdf.uri.docpart(xhr.resource.uri)] = false
         if (xhr.userCallback) {
-            xhr.userCallback(false, "Fetch of <" + xhr.uri.uri + "> failed: "+status)
+            xhr.userCallback(false, "Fetch of <" + xhr.resource.uri + "> failed: "+status, xhr)
         };
         this.fireCallbacks('fail', [xhr.requestedURI, status])
         xhr.abort()
@@ -7508,25 +7971,25 @@ $rdf.Fetcher = function(store, timeout, async) {
     }
 
     this.linkData = function(xhr, rel, uri) {
-        var x = xhr.uri;
+        var x = xhr.resource;
         if (!uri) return;
         // See http://www.w3.org/TR/powder-dr/#httplink for describedby 2008-12-10
         if (rel == 'alternate' || rel == 'seeAlso' || rel == 'meta' || rel == 'describedby') {
             // var join = $rdf.uri.join2;   // doesn't work, now a method of rdf.uri
-            var obj = kb.sym($rdf.uri.join(uri, xhr.uri.uri))
-            if (obj.uri != xhr.uri) {
-                kb.add(xhr.uri, ns.rdfs('seeAlso'), obj, xhr.uri);
-                // $rdf.log.info("Loading " + obj + " from link rel in " + xhr.uri);
+            var obj = kb.sym($rdf.uri.join(uri, xhr.resource.uri))
+            if (obj.uri != xhr.resource) {
+                kb.add(xhr.resource, ns.rdfs('seeAlso'), obj, xhr.resource);
+                // $rdf.log.info("Loading " + obj + " from link rel in " + xhr.resource);
             }
         }
     };
 
     this.doneFetch = function(xhr, args) {
         this.addStatus(xhr.req, 'Done.')
-        // $rdf.log.info("Done with parse, firing 'done' callbacks for " + xhr.uri)
-        this.requested[xhr.uri.uri] = 'done'; //Kenny
+        // $rdf.log.info("Done with parse, firing 'done' callbacks for " + xhr.resource)
+        this.requested[xhr.resource.uri] = 'done'; //Kenny
         if (xhr.userCallback) {
-            xhr.userCallback(true);
+            xhr.userCallback(true, undefined, xhr);
         };
         this.fireCallbacks('done', args)
     }
@@ -7534,7 +7997,7 @@ $rdf.Fetcher = function(store, timeout, async) {
     this.store.add(this.appNode, ns.rdfs('label'), this.store.literal('This Session'), this.appNode);
 
     ['http', 'https', 'file', 'chrome'].map(this.addProtocol); // ftp? mailto:?
-    [$rdf.Fetcher.RDFXMLHandler, $rdf.Fetcher.XHTMLHandler, $rdf.Fetcher.XMLHandler, $rdf.Fetcher.HTMLHandler, $rdf.Fetcher.TextHandler, $rdf.Fetcher.N3Handler, ].map(this.addHandler)
+    [$rdf.Fetcher.RDFXMLHandler, $rdf.Fetcher.XHTMLHandler, $rdf.Fetcher.XMLHandler, $rdf.Fetcher.HTMLHandler, $rdf.Fetcher.TextHandler, $rdf.Fetcher.N3Handler ].map(this.addHandler)
 
 
  
@@ -7564,7 +8027,7 @@ $rdf.Fetcher = function(store, timeout, async) {
 //  term:       canonical term for the thing whose URI is to be dereferenced
 //  rterm:      the resource which refered to this (for tracking bad links)
 //  force:      Load the data even if loaded before
-//  oneDone:   is called as callback(ok, errorbody) for each one
+//  oneDone:   is called as callback(ok, errorbody, xhr) for each one
 //  allDone:   is called as callback(ok, errorbody) for all of them
 // Returns      the number of things looked up
 //
@@ -7584,7 +8047,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                 var sf = this;
 
                 var requestOne = function requestOne(u1){
-                    sf.requestURI($rdf.uri.docpart(u1), rterm, force, function(ok, body){
+                    sf.requestURI($rdf.uri.docpart(u1), rterm, force, function(ok, body, xhr){
                         if (ok) {
                             if (oneDone) oneDone(true, u1);
                         } else {
@@ -7630,7 +8093,7 @@ $rdf.Fetcher = function(store, timeout, async) {
         var kb = this.store;
         var requests = kb.each(undefined, tabulator.ns.link("requestedURI"), doc.uri);
         for (var r=0; r<requests.length; r++) {
-            request = requests[r];
+            var request = requests[r];
             if (request !== undefined) {
                 var response = kb.any(request, tabulator.ns.link("response"));
                 if (request !== undefined) {
@@ -7645,6 +8108,16 @@ $rdf.Fetcher = function(store, timeout, async) {
         return undefined;
     };
 
+    this.proxyIfNecessary = function(uri) {
+        if (typeof tabulator != 'undefined' && tabulator.isExtension) return uri; // Extenstion does not need proxy
+                        // browser does 2014 on as https browser script not trusted
+        if ($rdf.Fetcher.crossSiteProxyTemplate && document && document.location
+			&& ('' + document.location).slice(0,6) === 'https:'
+                && uri.slice(0,5) === 'http:') {
+              return $rdf.Fetcher.crossSiteProxyTemplate.replace('{uri}', encodeURIComponent(uri));
+        }
+        return uri;
+    };
 
     /** Requests a document URI and arranges to load the document.
      ** Parameters:
@@ -7694,7 +8167,7 @@ $rdf.Fetcher = function(store, timeout, async) {
         if (!useJQuery) {
             var xhr = $rdf.Util.XMLHTTPFactory();
             var req = xhr.req = kb.bnode();
-            xhr.uri = docterm;
+            xhr.resource = docterm;
             xhr.requestedURI = args[0];
         } else {
             var req = kb.bnode(); // @@ Joe, no need for xhr.req?
@@ -7722,7 +8195,7 @@ $rdf.Fetcher = function(store, timeout, async) {
             if ($rdf.Fetcher.crossSiteProxyTemplate && document && document.location && !xhr.proxyUsed) { // In mashup situation
                 var hostpart = $rdf.uri.hostpart;
                 var here = '' + document.location;
-                var uri = xhr.uri.uri
+                var uri = xhr.resource.uri
                 if (hostpart(here) && hostpart(uri) && hostpart(here) != hostpart(uri)) {
                     newURI = $rdf.Fetcher.crossSiteProxy(uri);
                     sf.addStatus(xhr.req, "BLOCKED -> Cross-site Proxy to <" + newURI + ">");
@@ -7755,9 +8228,9 @@ $rdf.Fetcher = function(store, timeout, async) {
                     sf.addStatus(oldreq, 'done - redirected') // why
                     //the callback throws an exception when called from xhr.onerror (so removed)
                     //sf.fireCallbacks('done', args) // Are these args right? @@@   Noit done yet! done means success
-                    sf.requested[xhr.uri.uri] = 'redirected';
+                    sf.requested[xhr.resource.uri] = 'redirected';
 
-                    var xhr2 = sf.requestURI(newURI, xhr.uri, force, userCallback);
+                    var xhr2 = sf.requestURI(newURI, xhr.resource, force, userCallback);
                     xhr2.proxyUsed = true; //only try the proxy once
 
                     if (xhr2 && xhr2.req) {
@@ -7795,7 +8268,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                 kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response)
 
                 xhr.headers = {}
-                if ($rdf.uri.protocol(xhr.uri.uri) == 'http' || $rdf.uri.protocol(xhr.uri.uri) == 'https') {
+                if ($rdf.uri.protocol(xhr.resource.uri) == 'http' || $rdf.uri.protocol(xhr.resource.uri) == 'https') {
                     xhr.headers = $rdf.Util.getHTTPHeaders(xhr)
                     for (var h in xhr.headers) { // trim below for Safari - adds a CR!
                         kb.add(response, ns.httph(h.toLowerCase()), xhr.headers[h].trim(), response)
@@ -7811,7 +8284,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                         kb.add(response, ns.http('content'), kb.literal(xhr.responseText), response);
                         // dump("HTTP >= 400 responseText:\n"+xhr.responseText+"\n"); // @@@@
                     }
-                    sf.failFetch(xhr, "HTTP error for " +xhr.uri + ": "+ xhr.status + ' ' + xhr.statusText);
+                    sf.failFetch(xhr, "HTTP error for " +xhr.resource + ": "+ xhr.status + ' ' + xhr.statusText);
                     return;
                 }
 
@@ -7847,8 +8320,8 @@ $rdf.Fetcher = function(store, timeout, async) {
                     }
                 }
 
-                if ($rdf.uri.protocol(xhr.uri.uri) == 'file' || $rdf.uri.protocol(xhr.uri.uri) == 'chrome') {
-                    switch (xhr.uri.uri.split('.').pop()) {
+                if ($rdf.uri.protocol(xhr.resource.uri) == 'file' || $rdf.uri.protocol(xhr.resource.uri) == 'chrome') {
+                    switch (xhr.resource.uri.split('.').pop()) {
                     case 'rdf':
                     case 'owl':
                         xhr.headers['content-type'] = 'application/rdf+xml';
@@ -7865,10 +8338,10 @@ $rdf.Fetcher = function(store, timeout, async) {
 
                 // If we have alread got the thing at this location, abort
                 if (loc) {
-                    var udoc = $rdf.uri.join(xhr.uri.uri, loc)
-                    if (!force && udoc != xhr.uri.uri && sf.requested[udoc]) {
+                    var udoc = $rdf.uri.join(xhr.resource.uri, loc)
+                    if (!force && udoc != xhr.resource.uri && sf.requested[udoc]) {
                         // should we smush too?
-                        // $rdf.log.info("HTTP headers indicate we have already" + " retrieved " + xhr.uri + " as " + udoc + ". Aborting.")
+                        // $rdf.log.info("HTTP headers indicate we have already" + " retrieved " + xhr.resource + " as " + udoc + ". Aborting.")
                         sf.doneFetch(xhr, args)
                         xhr.abort()
                         return
@@ -7926,11 +8399,11 @@ $rdf.Fetcher = function(store, timeout, async) {
             // OPENED: 1
             // UNSENT: 0
 
-            // $rdf.log.debug("web.js: XHR " + xhr.uri.uri + ' readyState='+xhr.readyState); // @@@@ comment me out 
+            // $rdf.log.debug("web.js: XHR " + xhr.resource.uri + ' readyState='+xhr.readyState); // @@@@ comment me out 
 
             switch (xhr.readyState) {
             case 0:
-                    var uri = xhr.uri.uri, newURI;
+                    var uri = xhr.resource.uri, newURI;
                     if (this.crossSiteProxyTemplate && document && document.location) { // In mashup situation
                         var hostpart = $rdf.uri.hostpart;
                         var here = '' + document.location;
@@ -7967,9 +8440,9 @@ $rdf.Fetcher = function(store, timeout, async) {
                                 xhr.userCallback(true);
                             };
                             sf.fireCallbacks('done', args) // Are these args right? @@@
-                            sf.requested[xhr.uri.uri] = 'redirected';
+                            sf.requested[xhr.resource.uri] = 'redirected';
 
-                            var xhr2 = sf.requestURI(newURI, xhr.uri);
+                            var xhr2 = sf.requestURI(newURI, xhr.resource);
                             if (xhr2 && xhr2.req) kb.add(xhr.req,
                                 kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'),
                                 xhr2.req, sf.appNode);                             return;
@@ -7989,7 +8462,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                 handleResponse();
                 // Now handle
                 if (xhr.handle) {
-                    if (sf.requested[xhr.uri.uri] === 'redirected') {
+                    if (sf.requested[xhr.resource.uri] === 'redirected') {
                         break;
                     }
                     sf.fireCallbacks('load', args)
@@ -8026,54 +8499,79 @@ $rdf.Fetcher = function(store, timeout, async) {
         // XMLHttpRequest cannot load http://www.w3.org/People/Berners-Lee/card. 
         // A wildcard '*' cannot be used in the 'Access-Control-Allow-Origin' header when the credentials flag is true. 
 
+        // @ Many ontology files under http: and need CORS wildcard -> can't have withCredentials
+        var withCredentials = ( uri2.slice(0,6) === 'https:'); // @@ Kludge -- need for webid which typically is served from https
 
-        var withCredentials = ( uri2.slice(0,6) == 'https:'); // @@ Kludge -- need for webid which typically is served from https
-
+        var actualProxyURI = this.proxyIfNecessary(uri2);
         // Setup the request
         if (typeof jQuery !== 'undefined' && jQuery.ajax) {
             var xhr = jQuery.ajax({
-                url: uri2,
+                url: actualProxyURI,
                 accepts: {'*': 'text/turtle,text/n3,application/rdf+xml'},
                 processData: false,
                 xhrFields: {
-                    withCredentials: true
+                    withCredentials: withCredentials
                 },
                 timeout: sf.timeout,
                 error: function(xhr, s, e) {
+
+                    xhr.req = req;   // Add these in case fails before .ajax returns
+                    xhr.userCallback = userCallback;
+                    xhr.resource = docterm;
+                    xhr.requestedURI = uri2;
+
+
                     if (s == 'timeout')
                         sf.failFetch(xhr, "requestTimeout");
                     else
                         onerrorFactory(xhr)(e);
                 },
                 success: function(d, s, xhr) {
+
+                    xhr.req = req;
+                    xhr.userCallback = userCallback;
+                    xhr.resource = docterm;
+                    xhr.requestedURI = uri2;
+
                     onreadystatechangeFactory(xhr)();
                 }
             });
+
+            xhr.req = req;
+            xhr.userCallback = userCallback;
+            xhr.resource = docterm;
+            xhr.requestedURI = uri2;
+            xhr.actualProxyURI = actualProxyURI;
+
+
         } else {
             var xhr = $rdf.Util.XMLHTTPFactory();
             xhr.onerror = onerrorFactory(xhr);
             xhr.onreadystatechange = onreadystatechangeFactory(xhr);
             xhr.timeout = sf.timeout;
-            xhr.withCredentials = true;
+            xhr.withCredentials = withCredentials;
+            xhr.actualProxyURI = actualProxyURI;
+
+            xhr.req = req;
+            xhr.userCallback = userCallback;
+            xhr.resource = docterm;
+            xhr.requestedURI = uri2;
+
             xhr.ontimeout = function () {
                 sf.failFetch(xhr, "requestTimeout");
             }
             try {
-                xhr.open('GET', uri2, this.async);
+                xhr.open('GET', actualProxyURI, this.async);
             } catch (er) {
                 return this.failFetch(xhr, "XHR open for GET failed for <"+uri2+">:\n\t" + er);
             }
         }
-        xhr.req = req;
-        xhr.userCallback = userCallback;
-        xhr.uri = docterm;
-        xhr.requestedURI = uri2;
         
         // Set redirect callback and request headers -- alas Firefox Extension Only
         
         if (typeof tabulator != 'undefined' && tabulator.isExtension && xhr.channel &&
-            ($rdf.uri.protocol(xhr.uri.uri) == 'http' ||
-             $rdf.uri.protocol(xhr.uri.uri) == 'https')) {
+            ($rdf.uri.protocol(xhr.resource.uri) == 'http' ||
+             $rdf.uri.protocol(xhr.resource.uri) == 'https')) {
             try {
                 xhr.channel.notificationCallbacks = {
                     getInterface: function(iid) {
@@ -8092,7 +8590,7 @@ $rdf.Fetcher = function(store, timeout, async) {
 
                                     ////////////// Change the request node to a new one:  @@@@@@@@@@@@ Duplicate?
                                     var newreq = xhr.req = kb.bnode() // Make NEW reqest for everything else
-                                    // xhr.uri = docterm
+                                    // xhr.resource = docterm
                                     // xhr.requestedURI = args[0]
                                     // var requestHandlers = kb.collection()
 
@@ -8116,10 +8614,10 @@ $rdf.Fetcher = function(store, timeout, async) {
                                     kb.add(response, ns.http('status'), kb.literal(xhr.status), response);
                                     if (xhr.statusText) kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response)
 
-                                    if (xhr.status - 0 != 303) kb.HTTPRedirects[xhr.uri.uri] = newURI; // same document as
+                                    if (xhr.status - 0 != 303) kb.HTTPRedirects[xhr.resource.uri] = newURI; // same document as
                                     if (xhr.status - 0 == 301 && rterm) { // 301 Moved
                                         var badDoc = $rdf.uri.docpart(rterm.uri);
-                                        var msg = 'Warning: ' + xhr.uri + ' has moved to <' + newURI + '>.';
+                                        var msg = 'Warning: ' + xhr.resource + ' has moved to <' + newURI + '>.';
                                         if (rterm) {
                                             msg += ' Link in <' + badDoc + ' >should be changed';
                                             kb.add(badDoc, kb.sym('http://www.w3.org/2007/ont/link#warning'), msg, sf.appNode);
@@ -8131,21 +8629,21 @@ $rdf.Fetcher = function(store, timeout, async) {
 
                                     sf.addStatus(oldreq, 'done') // why
                                     sf.fireCallbacks('done', args) // Are these args right? @@@
-                                    sf.requested[xhr.uri.uri] = 'redirected';
+                                    sf.requested[xhr.resource.uri] = 'redirected';
 
                                     var hash = newURI.indexOf('#');
                                     if (hash >= 0) {
-                                        var msg = ('Warning: ' + xhr.uri + ' HTTP redirects to' + newURI + ' which should not contain a "#" sign');
+                                        var msg = ('Warning: ' + xhr.resource + ' HTTP redirects to' + newURI + ' which should not contain a "#" sign');
                                         // dump(msg+"\n");
-                                        kb.add(xhr.uri, kb.sym('http://www.w3.org/2007/ont/link#warning'), msg)
+                                        kb.add(xhr.resource, kb.sym('http://www.w3.org/2007/ont/link#warning'), msg)
                                         newURI = newURI.slice(0, hash);
                                     }
-                                    var xhr2 = sf.requestURI(newURI, xhr.uri);
+                                    var xhr2 = sf.requestURI(newURI, xhr.resource);
                                     if (xhr2 && xhr2.req) kb.add(xhr.req,
                                         kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'),
                                         xhr2.req, sf.appNode); 
         
-                                    // else dump("No xhr.req available for redirect from "+xhr.uri+" to "+newURI+"\n")
+                                    // else dump("No xhr.req available for redirect from "+xhr.resource+" to "+newURI+"\n")
                                 },
                                 
                                 // See https://developer.mozilla.org/en/XPCOM_Interface_Reference/nsIChannelEventSink
@@ -8161,7 +8659,7 @@ $rdf.Fetcher = function(store, timeout, async) {
 
                                     ////////////// Change the request node to a new one:  @@@@@@@@@@@@ Duplicate?
                                     var newreq = xhr.req = kb.bnode() // Make NEW reqest for everything else
-                                    // xhr.uri = docterm
+                                    // xhr.resource = docterm
                                     // xhr.requestedURI = args[0]
                                     // var requestHandlers = kb.collection()
 
@@ -8185,10 +8683,10 @@ $rdf.Fetcher = function(store, timeout, async) {
                                     kb.add(response, ns.http('status'), kb.literal(xhr.status), response);
                                     if (xhr.statusText) kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response)
 
-                                    if (xhr.status - 0 != 303) kb.HTTPRedirects[xhr.uri.uri] = newURI; // same document as
+                                    if (xhr.status - 0 != 303) kb.HTTPRedirects[xhr.resource.uri] = newURI; // same document as
                                     if (xhr.status - 0 == 301 && rterm) { // 301 Moved
                                         var badDoc = $rdf.uri.docpart(rterm.uri);
-                                        var msg = 'Warning: ' + xhr.uri + ' has moved to <' + newURI + '>.';
+                                        var msg = 'Warning: ' + xhr.resource + ' has moved to <' + newURI + '>.';
                                         if (rterm) {
                                             msg += ' Link in <' + badDoc + ' >should be changed';
                                             kb.add(badDoc, kb.sym('http://www.w3.org/2007/ont/link#warning'), msg, sf.appNode);
@@ -8205,21 +8703,21 @@ $rdf.Fetcher = function(store, timeout, async) {
                                         xhr.userCallback(true);
                                     };
                                     sf.fireCallbacks('done', args) // Are these args right? @@@
-                                    sf.requested[xhr.uri.uri] = 'redirected';
+                                    sf.requested[xhr.resource.uri] = 'redirected';
 
                                     var hash = newURI.indexOf('#');
                                     if (hash >= 0) {
-                                        var msg = ('Warning: ' + xhr.uri + ' HTTP redirects to' + newURI + ' which should not contain a "#" sign');
+                                        var msg = ('Warning: ' + xhr.resource + ' HTTP redirects to' + newURI + ' which should not contain a "#" sign');
                                         // dump(msg+"\n");
-                                        kb.add(xhr.uri, kb.sym('http://www.w3.org/2007/ont/link#warning'), msg)
+                                        kb.add(xhr.resource, kb.sym('http://www.w3.org/2007/ont/link#warning'), msg)
                                         newURI = newURI.slice(0, hash);
                                     }
-                                    var xhr2 = sf.requestURI(newURI, xhr.uri);
+                                    var xhr2 = sf.requestURI(newURI, xhr.resource);
                                     if (xhr2 && xhr2.req) kb.add(xhr.req,
                                         kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'),
                                         xhr2.req, sf.appNode); 
         
-                                    // else dump("No xhr.req available for redirect from "+xhr.uri+" to "+newURI+"\n")
+                                    // else dump("No xhr.req available for redirect from "+xhr.resource+" to "+newURI+"\n")
                                 } // asyncOnChannelRedirect
                             }
                         }
@@ -8263,7 +8761,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                 return this.failFetch(xhr, "XHR send failed:" + er);
             }
             setTimeout(function() {
-                if (xhr.readyState != 4 && sf.isPending(xhr.uri.uri)) {
+                if (xhr.readyState != 4 && sf.isPending(xhr.resource.uri)) {
                     sf.failFetch(xhr, "requestTimeout")
                 }
             }, this.timeout);
@@ -8329,7 +8827,7 @@ $rdf.Fetcher = function(store, timeout, async) {
         return this.requested[docuri] == true;
     }
 
-    var updatesVia = new $rdf.UpdatesVia(this);
+    // var updatesVia = new $rdf.UpdatesVia(this);
 };
 
 $rdf.fetcher = function(store, timeout, async) { return new $rdf.Fetcher(store, timeout, async) };
@@ -8369,6 +8867,16 @@ $rdf.parse = function parse(str, kb, base, contentType) {
                 $rdf.rdfa.parse($rdf.Util.parseXML(str), kb, base);
             return;
         }
+        
+        if (contentType == 'application/sparql-update') {  // @@ we handle a subset
+            spaqlUpdateParser(store, str, base)
+
+            if ($rdf.rdfa && $rdf.rdfa.parse)
+                $rdf.rdfa.parse($rdf.Util.parseXML(str), kb, base);
+            return;
+        }
+        
+
     } catch(e) {
         throw "Error trying to parse <"+base+"> as "+contentType+":\n"+e +':\n'+e.stack;
     }
@@ -8378,12 +8886,13 @@ $rdf.parse = function parse(str, kb, base, contentType) {
 
 //   Serialize to the appropriate format
 // 
-$rdf.serialize = function(kb, base, contentType) {
-
+$rdf.serialize = function(target, kb, base, contentType) {
+    var documentString;
     var sz = $rdf.Serializer(kb);
+    var newSts = kb.statementsMatching(undefined, undefined, undefined, target);
     sz.suggestNamespaces(kb.namespaces);
-    sz.setBase(base);//?? beware of this - kenny (why? tim)                   
-    switch(content_type){
+    sz.setBase(base);                   
+    switch(contentType){
         case 'application/rdf+xml': 
             documentString = sz.statementsToXML(newSts);
             break;
@@ -8396,8 +8905,7 @@ $rdf.serialize = function(kb, base, contentType) {
         default:
             throw "serialise: Content-type "+content_type +" not supported for data write";                                                                            
     }
-
-
+    return documentString;
 };
 
 // ends
