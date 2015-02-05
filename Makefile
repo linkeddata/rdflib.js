@@ -37,11 +37,12 @@ dist/rdflib-rdfa.js: $X $R rdfa.js module.js
 	cat $R rdfa.js module.js >> $@
 	echo "})(this);" >> $@
 
-jquery.uri.js:
-	wget http://rdfquery.googlecode.com/svn-history/trunk/jquery.uri.js -O $@
+# This URL rotted and we don't update this anymore 2015-02
+#jquery.uri.js:
+#	wget http://rdfquery.googlecode.com/svn-history/trunk/jquery.uri.js -O $@
 #
-jquery.xmlns.js:
-	wget http://rdfquery.googlecode.com/svn-history/trunk/jquery.xmlns.js -O $@
+#jquery.xmlns.js:
+#	wget http://rdfquery.googlecode.com/svn-history/trunk/jquery.xmlns.js -O $@
 
 upstream: jquery.uri.js jquery.xmlns.js
 
