@@ -80,6 +80,8 @@ __Serializer.prototype.makeUpPrefix = function(uri) {
     
     function canUse(pp) {
         if (namespaces[pp]) return false; // already used
+        if (! __Serializer.prototype.validPrefix.test(pp)) return false; // bad format
+        if (pp === 'ns') return false; // boring 
         this.prefixes[uri] = pp;
         pok = pp;
         return true
@@ -101,6 +103,9 @@ __Serializer.prototype.makeUpPrefix = function(uri) {
     if (canUse(p.slice(0,4))) return pok;
     if (canUse(p.slice(0,1))) return pok;
     if (canUse(p.slice(0,5))) return pok;
+    if (! __Serializer.prototype.validPrefix.test(p)) {
+        p = 'n';  // Otherwise the loop below may never termimnate
+    }
     for (var i=0;; i++) if (canUse(p.slice(0,3)+i)) return pok; 
 }
 
@@ -290,7 +295,8 @@ __Serializer.prototype.statementsToN3 = function(sts) {
         for (var i=0; i<tree.length; i++) {
             var branch = tree[i];
             var s2 = (typeof branch == 'string') ? branch : treeToLine(branch);
-            if (i!=0 && s2 != ',' && s2 != ';' && s2 != '.') str += ' ';
+             // Note the space before the dot in case statement ends 123. which is in fact allowed but be conservative.
+            if (i!=0 && s2 != ',' && s2 != ';') str += ' '; // was also:  && s2 != '.'
             str += s2;
         }
         return str;
@@ -365,9 +371,9 @@ __Serializer.prototype.statementsToN3 = function(sts) {
     // The tree for a subject
     function subjectTree(subject, stats) {
         if (subject.termType == 'bnode' && !stats.incoming[subject])
-            return objectTree(subject, stats, true).concat(["."]); // Anonymous bnode subject
-        return [ termToN3(subject, stats) ].concat([propertyTree(subject, stats)]).concat(["."]);
-    }
+            return objectTree(subject, stats, true).concat(['.']); // Anonymous bnode subject
+        return [ termToN3(subject, stats) ].concat([propertyTree(subject, stats)]).concat(['.']); 
+    } 
     
 
     // The property tree for a single subject or anonymous node
@@ -379,7 +385,12 @@ __Serializer.prototype.statementsToN3 = function(sts) {
         if (typeof sts == 'undefined') {
             throw('Cant find statements for '+subject);
         }
-        sts.sort();
+        
+        var SPO = function(x, y) {
+            return $rdf.Util.heavyCompareSPO(x, y, this.store)
+        }
+        sts.sort(); // 2014-09-30
+//        sts.sort(SPO); // 2014-09-30
         var objects = [];
         for (var i=0; i<sts.length; i++) {
             var st = sts[i];
@@ -440,7 +451,8 @@ __Serializer.prototype.statementsToN3 = function(sts) {
         for (var ns in this.prefixes) {
             if (!this.prefixes.hasOwnProperty(ns)) continue;
             if (!this.namespacesUsed[ns]) continue;
-            str += '@prefix ' + this.prefixes[ns] + ': <'+ns+'>.\n';
+            str += '@prefix ' + this.prefixes[ns] + ': <' + 
+                 $rdf.uri.refTo(this.base, ns) + '>.\n';
         }
         return str + '\n';
     }
@@ -488,6 +500,8 @@ __Serializer.prototype.atomicTermToN3 = function atomicTermToN3(expr, stats) {
 };
 
     //  stringToN3:  String escaping for N3
+
+__Serializer.prototype.validPrefix = new RegExp(/^[a-zA-Z][a-zA-Z0-9]*$/);
 
 __Serializer.prototype.forbidden1 = new RegExp(/[\\"\b\f\r\v\t\n\u0080-\uffff]/gm);
 __Serializer.prototype.forbidden3 = new RegExp(/[\\"\b\f\r\v\u0080-\uffff]/gm);
@@ -556,6 +570,10 @@ __Serializer.prototype.symbolToN3 = function symbolToN3(x) {  // c.f. symbolStri
                 canSplit = false; break;
             }
         }
+
+        if (uri.slice(0, j) == this.base) { // base-relative
+            return '<#' + uri.slice(j+1) + '>';
+        }
         if (canSplit) {
             var localid = uri.slice(j+1);
             var namesp = uri.slice(0,j+1);
@@ -567,17 +585,16 @@ __Serializer.prototype.symbolToN3 = function symbolToN3(x) {  // c.f. symbolStri
                 return ':' + localid;
             }
             var prefix = this.prefixes[namesp];
+            if (!prefix) prefix = this.makeUpPrefix(namesp);
             if (prefix) {
                 this.namespacesUsed[namesp] = true;
                 return prefix + ':' + localid;
             }
-            if (uri.slice(0, j) == this.base)
-                return '<#' + localid + '>';
             // Fall though if can't do qname
         }
     }
     if (this.flags.indexOf('r') < 0 && this.base)
-        uri = $rdf.Util.uri.refTo(this.base, uri);
+        uri = $rdf.uri.refTo(this.base, uri);
     else if (this.flags.indexOf('u') >= 0)
         uri = backslashUify(uri);
     else uri = hexify(uri);
@@ -620,14 +637,25 @@ __Serializer.prototype.writeStore = function(write) {
     var session = fetcher && fetcher.appNode;
     
     // Everything we know from experience just write out.
-    if (session) write(this.statementsToN3(kb.statementsMatching(
-                                undefined, undefined, undefined, session)));
+    // It is undder the session and the requests.
+    
+    var metaSources = kb.statementsMatching(undefined,
+            kb.sym('http://www.w3.org/2007/ont/link#requestedURI')).map(
+                function(st){return st.subject});
+    if (session) metaSources.push(session);
+    var metadata = [];
+    metaSources.map(function(source){
+        metadata = metadata.concat(kb.statementsMatching(undefined, undefined, undefined, source));
+    });
+    write(this.statementsToN3(metadata));
                                 
     var sources = this.store.index[3];
     for (s in sources) {  // -> assume we can use -> as short for log:semantics
         var source = kb.fromNT(s);
         if (session && source.sameTerm(session)) continue;
-        write('\n'+ this.atomicTermToN3(source)+' -> { '+ this.statementsToN3(kb.statementsMatching(
+        write('\n'+ this.atomicTermToN3(source)+' ' + 
+                this.atomicTermToN3(kb.sym('http://www.w3.org/2000/10/swap/log#'))
+                 + ' { '+ this.statementsToN3(kb.statementsMatching(
                             undefined, undefined, undefined, source)) + ' }.\n');
     }
 }

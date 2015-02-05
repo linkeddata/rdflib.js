@@ -5,18 +5,6 @@
 
 $rdf.sparqlUpdate = function() {
 
-    var anonymize = function (obj) {
-        return (obj.toNT().substr(0,2) == "_:")
-        ? "?" + obj.toNT().substr(2)
-        : obj.toNT();
-    }
-
-    var anonymizeNT = function(stmt) {
-        return anonymize(stmt.subject) + " " +
-        anonymize(stmt.predicate) + " " +
-        anonymize(stmt.object) + " .";
-    }
-
     var sparql = function(store) {
         this.store = store;
         this.ifps = {};
@@ -98,10 +86,27 @@ $rdf.sparqlUpdate = function() {
 
     ///////////  The identification of bnodes
 
+
+    sparql.prototype.anonymize = function (obj) {
+        return (obj.toNT().substr(0,2) == "_:" && this._mentioned(obj))
+        ? "?" + obj.toNT().substr(2)
+        : obj.toNT();
+    }
+
+    sparql.prototype.anonymizeNT = function(stmt) {
+        return this.anonymize(stmt.subject) + " " +
+        this.anonymize(stmt.predicate) + " " +
+        this.anonymize(stmt.object) + " .";
+    }
+
+
+
+    // A list of all bnodes occuring in a statement
     sparql.prototype._statement_bnodes = function(st) {
         return [st.subject, st.predicate, st.object].filter(function(x){return x.isBlank});
     }
 
+    // A list of all bnodes occuring in a list of statements
     sparql.prototype._statement_array_bnodes = function(sts) {
         var bnodes = [];
         for (var i=0; i<sts.length;i++) bnodes = bnodes.concat(this._statement_bnodes(sts[i]));
@@ -127,6 +132,7 @@ $rdf.sparqlUpdate = function() {
         }
     }
 
+    // Returns a context to bind a given node, up to a given depth
     sparql.prototype._bnode_context2 = function(x, source, depth) {
         // Return a list of statements which indirectly identify a node
         //  Depth > 1 if try further indirection.
@@ -160,17 +166,38 @@ $rdf.sparqlUpdate = function() {
         return null; // Failure
     }
 
-
-    sparql.prototype._bnode_context = function(x, source) {
+    // Returns the smallest context to bind a given single bnode
+    sparql.prototype._bnode_context_1 = function(x, source) {
         // Return a list of statements which indirectly identify a node
         //   Breadth-first
         for (var depth = 0; depth < 3; depth++) { // Try simple first 
             var con = this._bnode_context2(x, source, depth);
-            if (con != null) return con;
+            if (con !== null) return con;
         }
         throw ('Unable to uniquely identify bnode: '+ x.toNT());
     }
+    
+    sparql.prototype._mentioned = function(x) {
+        return (this.store.statementsMatching(x).length !== 0) || // Don't pin fresh bnodes
+                (this.store.statementsMatching(undefined, x).length !== 0) ||
+                (this.store.statementsMatching(undefined, undefined, x).length !== 0);    
+    
+    }
 
+    sparql.prototype._bnode_context = function(bnodes, doc) {
+        var context = [];
+        if (bnodes.length) {
+            this._cache_ifps();
+            for (var i = 0; i < bnodes.length; i++) { // Does this occur in old graph?
+                var bnode = bnodes[i];
+                if (!this._mentioned(bnode)) continue;                   
+                context = context.concat(this._bnode_context_1(bnode, doc));
+            }
+        }
+        return context;
+    }
+    
+/*  Weird code does not make sense -- some code corruption along the line -- st undefined -- weird
     sparql.prototype._bnode_context = function(bnodes) {
         var context = [];
         if (bnodes.length) {
@@ -182,22 +209,24 @@ $rdf.sparqlUpdate = function() {
             } else {
                 this._cache_ifps();
                 for (x in bnodes) {
-                    context = context.concat(this._bnode_context(bnodes[x], st.why));
+                    context = context.concat(this._bnode_context_1(bnodes[x], st.why));
                 }
             }
         }
         return context;
     }
-
+*/
+    // Returns the best context for a single statement
     sparql.prototype._statement_context = function(st) {
         var bnodes = this._statement_bnodes(st);
-        return this._bnode_context(bnodes);
+        return this._bnode_context(bnodes, st.why);
     }
 
     sparql.prototype._context_where = function(context) {
+            var sparql = this;
             return (context == undefined || context.length == 0)
             ? ""
-            : "WHERE { " + context.map(anonymizeNT).join("\n") + " }\n";
+            : "WHERE { " + context.map(function(x){ return sparql.anonymizeNT(x)}).join("\n") + " }\n";
     }
 
     sparql.prototype._fire = function(uri, query, callback) {
@@ -212,7 +241,7 @@ $rdf.sparqlUpdate = function() {
                 if (!success) tabulator.log.error("sparql: update failed for <"+uri+"> status="+
                     xhr.status+", "+xhr.statusText+", body length="+xhr.responseText.length+"\n   for query: "+query);
                 else  tabulator.log.debug("sparql: update Ok for <"+uri+">");
-                callback(uri, success, xhr.responseText);
+                callback(uri, success, xhr.responseText, xhr);
             }
         }
 
@@ -241,16 +270,16 @@ $rdf.sparqlUpdate = function() {
 
         return {
             statement: statement?[statement.subject, statement.predicate, statement.object, statement.why]:undefined,
-            statementNT: statement?anonymizeNT(statement):undefined,
+            statementNT: statement ? this.anonymizeNT(statement):undefined,
             where: sparql._context_where(context),
 
             set_object: function(obj, callback) {
                 query = this.where;
                 query += "DELETE DATA { " + this.statementNT + " } ;\n";
                 query += "INSERT DATA { " +
-                    anonymize(this.statement[0]) + " " +
-                    anonymize(this.statement[1]) + " " +
-                    anonymize(obj) + " " + " . }\n";
+                    this.anonymize(this.statement[0]) + " " +
+                    this.anonymize(this.statement[1]) + " " +
+                    this.anonymize(obj) + " " + " . }\n";
      
                 sparql._fire(this.statement[3].uri, query, callback);
             }
@@ -267,9 +296,9 @@ $rdf.sparqlUpdate = function() {
             query += "INSERT DATA { " + stText + " }\n";
         } else {
             query += "INSERT DATA { " +
-                anonymize(st.subject) + " " +
-                anonymize(st.predicate) + " " +
-                anonymize(st.object) + " " + " . }\n";
+                this.anonymize(st.subject) + " " +
+                this.anonymize(st.predicate) + " " +
+                this.anonymize(st.object) + " " + " . }\n";
         }
         
         this._fire(st0.why.uri, query, callback);
@@ -286,9 +315,9 @@ $rdf.sparqlUpdate = function() {
             query += "DELETE DATA { " + stText + " }\n";
         } else {
             query += "DELETE DATA { " +
-                anonymize(st.subject) + " " +
-                anonymize(st.predicate) + " " +
-                anonymize(st.object) + " " + " . }\n";
+                this.anonymize(st.subject) + " " +
+                this.anonymize(st.predicate) + " " +
+                this.anonymize(st.object) + " " + " . }\n";
         }
         
         this._fire(st0.why.uri, query, callback);
@@ -311,6 +340,9 @@ $rdf.sparqlUpdate = function() {
                     : insertions instanceof Array ? insertions : [ insertions ];
         if (! (ds instanceof Array)) throw "Type Error "+(typeof ds)+": "+ds;
         if (! (is instanceof Array)) throw "Type Error "+(typeof is)+": "+is;
+        if (ds.length === 0 && is.length === 0) {
+            return callback(null, true); // success -- nothing needed to be done.
+        }
         var doc = ds.length ? ds[0].why : is[0].why;
         
         ds.map(function(st){if (!doc.sameTerm(st.why)) throw "sparql update: destination "+doc+" inconsistent with ds "+st.why;});
@@ -323,36 +355,36 @@ $rdf.sparqlUpdate = function() {
             var bnodes = []
             if (ds.length) bnodes = this._statement_array_bnodes(ds);
             if (is.length) bnodes = bnodes.concat(this._statement_array_bnodes(is));
-            var context = this._bnode_context(bnodes);
+            var context = this._bnode_context(bnodes, doc);
             var whereClause = this._context_where(context);
             var query = ""
             if (whereClause.length) { // Is there a WHERE clause?
                 if (ds.length) {
                     query += "DELETE { ";
-                    for (var i=0; i<ds.length;i++) query+= anonymizeNT(ds[i])+"\n";
+                    for (var i=0; i<ds.length;i++) query+= this.anonymizeNT(ds[i])+"\n";
                     query += " }\n";
                 }
                 if (is.length) {
                     query += "INSERT { ";
-                    for (var i=0; i<is.length;i++) query+= anonymizeNT(is[i])+"\n";
+                    for (var i=0; i<is.length;i++) query+= this.anonymizeNT(is[i])+"\n";
                     query += " }\n";
                 }
                 query += whereClause;
             } else { // no where clause
                 if (ds.length) {
                     query += "DELETE DATA { ";
-                    for (var i=0; i<ds.length;i++) query+= anonymizeNT(ds[i])+"\n";
+                    for (var i=0; i<ds.length;i++) query+= this.anonymizeNT(ds[i])+"\n";
                     query += " } \n";
                 }
                 if (is.length) {
                     if (ds.length) query += " ; ";
                     query += "INSERT DATA { ";
-                    for (var i=0; i<is.length;i++) query+= anonymizeNT(is[i])+"\n";
+                    for (var i=0; i<is.length;i++) query+= this.anonymizeNT(is[i])+"\n";
                     query += " }\n";
                 }
             }
             this._fire(doc.uri, query,
-                function(uri, success, body) {
+                function(uri, success, body, xhr) {
                     tabulator.log.info("\t sparql: Return success="+success+" for query "+query+"\n");
                     if (success) {
                         for (var i=0; i<ds.length;i++)
@@ -364,7 +396,7 @@ $rdf.sparqlUpdate = function() {
                         for (var i=0; i<is.length;i++)
                             kb.add(is[i].subject, is[i].predicate, is[i].object, doc); 
                     }
-                    callback(uri, success, body);
+                    callback(uri, success, body, xhr);
                 });
             
         } else if (protocol.indexOf('DAV') >=0) {
@@ -495,42 +527,45 @@ $rdf.sparqlUpdate = function() {
 
     // This suitable for an inital creation of a document
     //
-    sparql.prototype.put = function(doc, newSts, content_type, callback) {
+    // data:    string, or array of statements
+    //
+    sparql.prototype.put = function(doc, data, content_type, callback) {
 
         var documentString;
         var kb = this.store;
        
-        //serialize to te appropriate format
-        var sz = $rdf.Serializer(kb);
-        sz.suggestNamespaces(kb.namespaces);
-        sz.setBase(doc.uri);//?? beware of this - kenny (why? tim)                   
-        switch(content_type){
-            case 'application/rdf+xml': 
-                documentString = sz.statementsToXML(newSts);
-                break;
-            case 'text/n3':
-            case 'text/turtle':
-            case 'application/x-turtle': // Legacy
-            case 'application/n3': // Legacy
-                documentString = sz.statementsToN3(newSts);
-                break;
-            default:
-                throw "Content-type "+content_type +" not supported for data PUT";                                                                            
+        if (typeof data === typeof '') {
+            documentString = data;
+        } else {
+            //serialize to te appropriate format
+            var sz = $rdf.Serializer(kb);
+            sz.suggestNamespaces(kb.namespaces);
+            sz.setBase(doc.uri);//?? beware of this - kenny (why? tim)                   
+            switch(content_type){
+                case 'application/rdf+xml': 
+                    documentString = sz.statementsToXML(data);
+                    break;
+                case 'text/n3':
+                case 'text/turtle':
+                case 'application/x-turtle': // Legacy
+                case 'application/n3': // Legacy
+                    documentString = sz.statementsToN3(data);
+                    break;
+                default:
+                    throw "Content-type "+content_type +" not supported for data PUT";                                                                            
+            }
         }
-        
         var xhr = $rdf.Util.XMLHTTPFactory();
         xhr.onreadystatechange = function (){
             if (xhr.readyState == 4){
                 //formula from sparqlUpdate.js, what about redirects?
                 var success = (!xhr.status || (xhr.status >= 200 && xhr.status < 300));
-                callback(doc.uri, success, xhr.responseText);
+                callback(doc.uri, success, xhr.responseText, xhr);
             }
         };
         xhr.open('PUT', doc.uri, true);
-        //assume the server does PUT content-negotiation.
-        xhr.setRequestHeader('Content-type', content_type);//OK?
+        xhr.setRequestHeader('Content-type', content_type);
         xhr.send(documentString);
-    
     };
     
     

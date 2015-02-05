@@ -1,6 +1,11 @@
 # rdflib.js Makefile
 
-R=util.js uri.js term.js rdfparser.js n3parser.js identity.js query.js sparql.js sparqlUpdate.js jsonparser.js serialize.js updatesVia.js web.js
+R=util.js uri.js term.js rdfparser.js n3parser.js identity.js \
+	patchParser.js query.js sparql.js sparqlUpdate.js jsonparser.js serialize.js updatesVia.js web.js
+
+A=util.js uri.js term.js rdfparser.js n3parser.js identity.js \
+	green-turtle/src/RDFaProcessor.js rdfa.js \
+	patchParser.js query.js sparql.js sparqlUpdate.js jsonparser.js serialize.js updatesVia.js web.js
 
 targets=$(addprefix dist/, rdflib.js rdflib-rdfa.js)
 coffeejs=$(patsubst %.coffee,%.js,$(wildcard *.coffee))
@@ -9,6 +14,14 @@ all: dist $(targets)
 
 dist:
 	mkdir -p dist
+
+alpha: dist/rdflib-alpha.js
+	echo
+
+dist/rdflib-alpha.js: $R module.js
+	echo "(function(root, undef) {" > $@
+	cat $R module.js >> $@
+	echo "})(this);" >> $@
 
 dist/rdflib.js: $R module.js
 	echo "(function(root, undef) {" > $@
@@ -24,11 +37,12 @@ dist/rdflib-rdfa.js: $X $R rdfa.js module.js
 	cat $R rdfa.js module.js >> $@
 	echo "})(this);" >> $@
 
-jquery.uri.js:
-	wget http://rdfquery.googlecode.com/svn-history/trunk/jquery.uri.js -O $@
+# This URL rotted and we don't update this anymore 2015-02
+#jquery.uri.js:
+#	wget http://rdfquery.googlecode.com/svn-history/trunk/jquery.uri.js -O $@
 #
-jquery.xmlns.js:
-	wget http://rdfquery.googlecode.com/svn-history/trunk/jquery.xmlns.js -O $@
+#jquery.xmlns.js:
+#	wget http://rdfquery.googlecode.com/svn-history/trunk/jquery.xmlns.js -O $@
 
 upstream: jquery.uri.js jquery.xmlns.js
 

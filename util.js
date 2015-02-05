@@ -118,7 +118,7 @@ $rdf.Util = {
      */
 	'XMLHTTPFactory': function () {
         if (typeof module != 'undefined' && module && module.exports) { //Node.js
-            var XMLHttpRequest = require("XMLHttpRequest").XMLHttpRequest;
+            var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
             return new XMLHttpRequest()
         }
         if (typeof tabulator != 'undefined' && tabulator.isExtension) {
@@ -211,7 +211,7 @@ $rdf.Util = {
                 return;
             }
         }
-        throw "RDFArrayRemove: Array did not contain " + x;
+        throw "RDFArrayRemove: Array did not contain " + x + " " +  x.why;
     },
 
     'string_startswith': function(str, pref) { // missing library routines
@@ -220,10 +220,11 @@ $rdf.Util = {
 
     // This is the callback from the kb to the fetcher which is used to 
     // load ontologies of the data we load.
+    
     'AJAR_handleNewTerm': function(kb, p, requestedBy) {
         var sf = null;
-        if( typeof kb.sf != 'undefined' ) {
-            sf = kb.sf;
+        if( typeof kb.fetcher != 'undefined' ) {
+            sf = kb.fetcher;
         } else {
             return;
         }
@@ -274,6 +275,65 @@ $rdf.Util = {
     
 };
 
+
+////////////////// find the variables in a graph
+//  SHALLOW
+//  used?
+//
+$rdf.Util.variablesIn = function(g) {
+    for (var i=0; i<g.statements.length; i++) {
+        var st = g.statatements[i];
+        var vars = {}
+        if (st.subject instanceof $rdf.Variable) {
+            vars[st.subject.toNT()] = true;
+        }
+        if (st.predicate instanceof $rdf.Variable) {
+            vars[st.predicate.toNT()] = true;
+        }
+        if (st.object instanceof $rdf.Variable) {
+            vars[st.object.toNT()] = true;
+        }
+    }
+    return vars;
+};
+
+//   Heavy comparison is for repeatable canonical ordering
+$rdf.Util.heavyCompare = function(x, y, g) {
+    var nonBlank = function(x) {
+        return (x.termType === 'bnode') ?  null : x; 
+    }
+    var signature = function(b) {
+        var lis = g.statementsMatching(x).map(function(st){
+            return ('' + nonBlank(st.subject) + ' ' + nonBlank(st.predicate)
+                + ' ' + nonBlank(st.object));
+        }).concat(g.statementsMatching(undefined, undefined, x).map(function(st){
+            return ('' + nonBlank(st.subject) + ' ' + nonBlank(st.predicate)
+                + ' ' + nonBlank(st.object));
+        }))
+        lis.sort();
+        return lis.join('\n');
+    }
+    if ((x.termType === 'bnode') || (y.termType === 'bnode')) {
+        if (x.compareTerm(y) === 0) return 0; // Same
+        if (signature(x) > signature(y)) return +1; 
+        if (signature(x) < signature(y)) return -1;
+        return x.compareTerm(y); // Too bad -- this order not canonical.
+        //throw "different bnodes indistinquishable for sorting" 
+    } else {
+        return x.compareTerm(y);
+    }
+};
+
+$rdf.Util.heavyCompareSPO = function(x, y, g) {
+    var comp = $rdf.Util.heavyCompare;
+    var d = comp(x.subject, y.subject, g);
+    if (d) return d;
+    d = comp(x.predicate, y.predicate, g);
+    if (d) return d;
+    return comp(x.object, y.object, g);
+};
+
+
 ///////////////////// Parse XML
 //
 // Returns: A DOM
@@ -284,7 +344,7 @@ $rdf.Util.parseXML = function(str) {
     if ((typeof tabulator != 'undefined' && tabulator.isExtension)) {
         dparser = Components.classes["@mozilla.org/xmlextras/domparser;1"].getService(
                     Components.interfaces.nsIDOMParser);
-    } else if (typeof module != 'undefined' ){ // Node.js
+    } else if (typeof module != 'undefined' && module && module.exports){ // Node.js
         //var libxmljs = require('libxmljs'); // Was jsdom before 2012-01 then libxmljs but that nonstandard
         //return libxmljs.parseXmlString(str);
         var jsdom = require('jsdom');

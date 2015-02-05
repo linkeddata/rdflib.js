@@ -51,7 +51,7 @@ var uri = 'http://bblfish.net/people/henry/card#me';
 var person = $rdf.sym(uri);
 var docURI = uri.slice(0, uri.indexOf('#'));
 var fetch = $rdf.fetcher(kb);
-fetch.nowOrWhenFetched(docURI,undefined,function(ok, body){ // @@ check ok
+fetch.nowOrWhenFetched(docURI,undefined,function(ok, body, xhr){ // @@ check ok
     card(person)
 });
 
