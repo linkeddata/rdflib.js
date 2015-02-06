@@ -97,7 +97,7 @@ $rdf.sparqlUpdateParser = function(str, kb, base) {
     } // while
     //return clauses
 
-}; // End of spaqlUpdateParser
+}; // End of sparqlUpdateParser
 
 
 //////////////// Apply a patch
