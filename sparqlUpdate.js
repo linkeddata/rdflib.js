@@ -253,7 +253,7 @@ $rdf.sparqlUpdate = function() {
             }
         }
         
-        xhr.open('POST', uri, true);  // async=true
+        xhr.open('PATCH', uri, true);  // async=true
         xhr.setRequestHeader('Content-type', 'application/sparql-update');
         xhr.send(query);
     }
