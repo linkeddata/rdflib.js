@@ -1335,7 +1335,7 @@ $rdf.Fetcher = function(store, timeout, async) {
         return this.requested[docuri] == true;
     }
 
-    // var updatesVia = new $rdf.UpdatesVia(this);
+    var updatesVia = new $rdf.UpdatesVia(this);
 };
 
 $rdf.fetcher = function(store, timeout, async) { return new $rdf.Fetcher(store, timeout, async) };
