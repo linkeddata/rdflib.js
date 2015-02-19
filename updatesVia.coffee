@@ -69,9 +69,7 @@ class $rdf.UpdatesVia
     constructor: (@fetcher) ->
         @graph = {}
         @via = {}
-        
-        # Don't add the callback -- we can find the headers by looking at stored
-        #        @fetcher.addCallback 'headers', @onHeaders
+        @fetcher.addCallback 'headers', @onHeaders
 
     register: (via, uri) =>
         unless @via[via]?
