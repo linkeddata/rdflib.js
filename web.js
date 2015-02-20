@@ -30,6 +30,7 @@
  */
 
 if (typeof module !== 'undefined' && module.require) { // Node 
+// For non-node, jasonld needs to be inlined in init.js etc
     $rdf.jsonld = require('jsonld');
     N3 = require('n3');
     asyncLib = require('async');
@@ -628,6 +629,40 @@ $rdf.Fetcher = function(store, timeout, async) {
         }
         return uri;
     };
+    
+     
+    this.saveRequestMetadata = function(xhr, kb, docuri) {
+        var request = kb.bnode();
+        var ns = tabulator.ns;
+        xhr.req = request;
+        var now = new Date();
+        var timeNow = "[" + now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds() + "] ";
+        kb.add(request, ns.rdfs("label"), kb.literal(timeNow + ' Request for ' + docuri), this.appNode)
+        kb.add(request, ns.link("requestedURI"), kb.literal(docuri), this.appNode)
+        kb.add(request, ns.link('status'), kb.collection(), this.appNode);
+        return request;
+    };
+       
+    this.saveResponseMetadata = function(xhr, kb) {
+        var response = kb.bnode();
+        var ns = tabulator.ns;
+        kb.add(xhr.req, ns.link('response'), response);
+        kb.add(response, ns.http('status'), kb.literal(xhr.status), response)
+        kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response)
+
+        xhr.headers = {}
+        if ($rdf.uri.protocol(xhr.resource.uri) == 'http' || $rdf.uri.protocol(xhr.resource.uri) == 'https') {
+            xhr.headers = $rdf.Util.getHTTPHeaders(xhr)
+            for (var h in xhr.headers) { // trim below for Safari - adds a CR!
+                kb.add(response, ns.httph(h.toLowerCase()), xhr.headers[h].trim(), response)
+            }
+        }
+        return response;
+    };
+    
+
+    
+    
 
     /** Requests a document URI and arranges to load the document.
      ** Parameters:
@@ -690,7 +725,7 @@ $rdf.Fetcher = function(store, timeout, async) {
 
         kb.add(req, ns.rdfs("label"), kb.literal(timeNow + ' Request for ' + docuri), this.appNode)
         kb.add(req, ns.link("requestedURI"), kb.literal(docuri), this.appNode)
-        kb.add(req, ns.link('status'), kb.collection(), sf.req)
+        kb.add(req, ns.link('status'), kb.collection(), this.appNode)
 
         // This should not be stored in the store, but in the JS data
         /*
@@ -723,7 +758,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                     var now = new Date();
                     var timeNow = "[" + now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds() + "] ";
                     kb.add(newreq, ns.rdfs("label"), kb.literal(timeNow + ' Request for ' + newURI), this.appNode)
-                    kb.add(newreq, ns.link('status'), kb.collection(), sf.req);
+                    kb.add(newreq, ns.link('status'), kb.collection(), this.appNode);
                     kb.add(newreq, ns.link("requestedURI"), kb.literal(newURI), this.appNode);
 
                     var response = kb.bnode();
@@ -772,18 +807,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                 var thisReq = xhr.req // Might have changes by redirect
                 sf.fireCallbacks('recv', args)
                 var kb = sf.store;
-                var response = kb.bnode();
-                kb.add(thisReq, ns.link('response'), response);
-                kb.add(response, ns.http('status'), kb.literal(xhr.status), response)
-                kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response)
-
-                xhr.headers = {}
-                if ($rdf.uri.protocol(xhr.resource.uri) == 'http' || $rdf.uri.protocol(xhr.resource.uri) == 'https') {
-                    xhr.headers = $rdf.Util.getHTTPHeaders(xhr)
-                    for (var h in xhr.headers) { // trim below for Safari - adds a CR!
-                        kb.add(response, ns.httph(h.toLowerCase()), xhr.headers[h].trim(), response)
-                    }
-                }
+                sf.saveResponseMetadata(xhr, kb);
 
                 sf.fireCallbacks('headers', [{uri: docuri, headers: xhr.headers}]);
 
@@ -934,7 +958,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                             var now = new Date();
                             var timeNow = "[" + now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds() + "] ";
                             kb.add(newreq, ns.rdfs("label"), kb.literal(timeNow + ' Request for ' + newURI), this.appNode)
-                            kb.add(newreq, ns.link('status'), kb.collection(), sf.req);
+                            kb.add(newreq, ns.link('status'), kb.collection(), this.appNode);
                             kb.add(newreq, ns.link("requestedURI"), kb.literal(newURI), this.appNode);
 
                             var response = kb.bnode();
@@ -1110,7 +1134,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                                     var now = new Date();
                                     var timeNow = "[" + now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds() + "] ";
                                     kb.add(newreq, ns.rdfs("label"), kb.literal(timeNow + ' Request for ' + newURI), this.appNode)
-                                    kb.add(newreq, ns.link('status'), kb.collection(), sf.req)
+                                    kb.add(newreq, ns.link('status'), kb.collection(), this.appNode)
                                     kb.add(newreq, ns.link("requestedURI"), kb.literal(newURI), this.appNode)
                                     ///////////////
 
@@ -1179,7 +1203,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                                     var now = new Date();
                                     var timeNow = "[" + now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds() + "] ";
                                     kb.add(newreq, ns.rdfs("label"), kb.literal(timeNow + ' Request for ' + newURI), this.appNode)
-                                    kb.add(newreq, ns.link('status'), kb.collection(), sf.req)
+                                    kb.add(newreq, ns.link('status'), kb.collection(), this.appNode)
                                     kb.add(newreq, ns.link("requestedURI"), kb.literal(newURI), this.appNode)
                                     ///////////////
 
