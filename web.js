@@ -530,20 +530,18 @@ $rdf.Fetcher = function(store, timeout, async) {
 
 
 
-// Looks up something.
-//
-// Looks up all the URIs a things has.
-// Parameters:
-//
-//  term:       canonical term for the thing whose URI is to be dereferenced
-//  rterm:      the resource which refered to this (for tracking bad links)
-//  force:      Load the data even if loaded before
-//  oneDone:   is called as callback(ok, errorbody, xhr) for each one
-//  allDone:   is called as callback(ok, errorbody) for all of them
-// Returns      the number of things looked up
-//
-
-
+    // Looks up something.
+    //
+    // Looks up all the URIs a things has.
+    // Parameters:
+    //
+    //  term:       canonical term for the thing whose URI is to be dereferenced
+    //  rterm:      the resource which refered to this (for tracking bad links)
+    //  force:      Load the data even if loaded before
+    //  oneDone:   is called as callback(ok, errorbody, xhr) for each one
+    //  allDone:   is called as callback(ok, errorbody) for all of them
+    // Returns      the number of things looked up
+    //
     this.lookUpThing = function(term, rterm, force, oneDone, allDone) {
         var uris = kb.uris(term) // Get all URIs
         var success = true;
@@ -578,11 +576,11 @@ $rdf.Fetcher = function(store, timeout, async) {
     }
 
 
-/*  Ask for a doc to be loaded if necessary then call back
-**
-** Changed 2013-08-20:  Added (ok, body) params to callback
-**
-**/
+    /*  Ask for a doc to be loaded if necessary then call back
+    **
+    ** Changed 2013-08-20:  Added (ok, body) params to callback
+    **
+    **/
     this.nowOrWhenFetched = function(uri, referringTerm, userCallback) {
         var sta = this.getState(uri);
         if (sta == 'fetched') return userCallback(true);
@@ -633,22 +631,38 @@ $rdf.Fetcher = function(store, timeout, async) {
      
     this.saveRequestMetadata = function(xhr, kb, docuri) {
         var request = kb.bnode();
-        var ns = tabulator.ns;
+        if (typeof tabulator != 'undefined' && tabulator.isExtension) {
+            var ns = tabulator.ns;
+        } else {
+            var ns = {};
+            ns.link = $rdf.Namespace("http://www.w3.org/2007/ont/link#");
+            ns.rdfs = $rdf.Namespace("http://www.w3.org/2000/01/rdf-schema#");
+        }
+
         xhr.req = request;
         var now = new Date();
         var timeNow = "[" + now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds() + "] ";
-        kb.add(request, ns.rdfs("label"), kb.literal(timeNow + ' Request for ' + docuri), this.appNode)
-        kb.add(request, ns.link("requestedURI"), kb.literal(docuri), this.appNode)
+        kb.add(request, ns.rdfs("label"), kb.literal(timeNow + ' Request for ' + docuri), this.appNode);
+        kb.add(request, ns.link("requestedURI"), kb.literal(docuri), this.appNode);
         kb.add(request, ns.link('status'), kb.collection(), this.appNode);
         return request;
     };
        
     this.saveResponseMetadata = function(xhr, kb) {
         var response = kb.bnode();
-        var ns = tabulator.ns;
+        // define the set of namespaces if not using tabulator
+        if (typeof tabulator != 'undefined' && tabulator.isExtension) {
+            var ns = tabulator.ns;
+        } else {
+            var ns = {};
+            ns.link = $rdf.Namespace("http://www.w3.org/2007/ont/link#");
+            ns.http = $rdf.Namespace("http://www.w3.org/2007/ont/http#");
+            ns.httph = $rdf.Namespace("http://www.w3.org/2007/ont/httph#");
+            ns.rdfs = $rdf.Namespace("http://www.w3.org/2000/01/rdf-schema#");
+        }
         kb.add(xhr.req, ns.link('response'), response);
-        kb.add(response, ns.http('status'), kb.literal(xhr.status), response)
-        kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response)
+        kb.add(response, ns.http('status'), kb.literal(xhr.status), response);
+        kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response);
 
         xhr.headers = {}
         if ($rdf.uri.protocol(xhr.resource.uri) == 'http' || $rdf.uri.protocol(xhr.resource.uri) == 'https') {
