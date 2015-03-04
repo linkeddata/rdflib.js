@@ -1417,7 +1417,7 @@ $rdf.parse = function parse(str, kb, base, contentType) {
         }
 
         if (contentType == 'application/sparql-update') {  // @@ we handle a subset
-            spaqlUpdateParser(store, str, base)
+            sparqlUpdateParser(store, str, base)
 
             if ($rdf.rdfa && $rdf.rdfa.parse)
                 $rdf.rdfa.parse($rdf.Util.parseXML(str), kb, base);
