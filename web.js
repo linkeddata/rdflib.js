@@ -1434,7 +1434,7 @@ $rdf.parse = function parse(str, kb, base, contentType) {
 
 //   Serialize to the appropriate format
 //
-$rdf.serialize = function(target, kb, base, contentType) {
+$rdf.serialize = function(target, kb, base, contentType, callback) {
     var documentString;
     var sz = $rdf.Serializer(kb);
     var newSts = kb.statementsMatching(undefined, undefined, undefined, target);
@@ -1452,12 +1452,12 @@ $rdf.serialize = function(target, kb, base, contentType) {
             break;
         case 'application/json+ld':
             var n3String = sz.statementsToN3(newSts);
-            documentString = convertToJson(n3String);
+            convertToJson(n3String, callback);
             break;
         case 'application/n-quads':
         case 'application/nquads': // @@@ just outpout the quads? Does not work for collections
             var n3String = sz.statementsToN3(newSts);
-            documentString = convertToNQuads(n3String); 
+            documentString = convertToNQuads(n3String, callback);
             break;
         default:
             throw "serialise: Content-type "+content_type +" not supported for data write";
@@ -1466,62 +1466,74 @@ $rdf.serialize = function(target, kb, base, contentType) {
 };
 
 ////////////////// JSON-LD code currently requires Node
+if (typeof module !== 'undefined' && module.require) { // Node
+    var asyncLib = require('async');
+    var jsonld = require('jsonld');
+    var N3 = require('n3');
 
-if (typeof module !== 'undefined' && module.require) { // Node 
-
-    var convertToJson = function(n3String) {
+    var convertToJson = function(n3String, jsonCallback) {
+        console.log("json")
         var jsonString = undefined;
         var n3Parser = N3.Parser();
-        var n3Writer = N3.Parser({format: 'N-Quads'});
+        var n3Writer = N3.Writer({
+            format: 'N-Quads'
+        });
         asyncLib.waterfall([
-            function(parseCallback) {
-                n3Parser.parse(n3String, prefixCallback);
+            function(callback) {
+                n3Parser.parse(n3String, callback);
             },
-            function(err, triple, prefix, writeCallback) {
-                if (!err) {
+            function(triple, prefix, callback) {
+                if (triple !== null) {
                     n3Writer.addTriple(triple);
-                    if (typeof writeCallback === 'function') {
-                        writer.end(writeCallback);
-                    }
+                }
+                if (typeof callback === 'function') {
+                    n3Writer.end(callback);
                 }
             },
-            function(err, result) {
-                if (!err) {
-                    $rdf.jsonld.fromRDF(result, {format: 'application/nquads'}, stringCallback);
+            function(result, callback) {
+                try {
+                    jsonld.fromRDF(result, {
+                        format: 'application/nquads'
+                    }, callback);
+                } catch (err) {
+                    callback(err);
                 }
             },
-            function(err, json) {
-                if (!error) {
-                    jsonString = JSON.stringify(json);
-                }
+            function(json, callback) {
+                jsonString = JSON.stringify(json);
+                jsonCallback(null, jsonString);
             }
-        ]);
-        return jsonString;
+        ], function(err, result) {
+            jsonCallback(err, jsonString);
+        });
     }
 
-    var convertToNQuads = function(n3String) {
+    var convertToNQuads = function(n3String, nquadCallback) {
         var nquadString = undefined;
         var n3Parser = N3.Parser();
-        var n3Writer = N3.Parser({format: 'N-Quads'});
+        var n3Writer = N3.Writer({
+            format: 'N-Quads'
+        });
         asyncLib.waterfall([
-            function(parseCallback) {
-                n3Parser.parse(n3String, tripleCallback);
+            function(callback) {
+                n3Parser.parse(n3String, callback);
             },
-            function(err, triple, prefix, writeCallback) {
-                if (!err) {
+            function(triple, prefix, callback) {
+                if (triple !== null) {
                     n3Writer.addTriple(triple);
-                    if (typeof writeCallback === 'function') {
-                        writer.end(writeCallback);
-                    }
+                }
+                if (typeof callback === 'function') {
+                    n3Writer.end(callback);
                 }
             },
-            function(err, result) {
-                if (!err) {
-                    nquadString = result;
-                }
+            function(result, callback) {
+                nquadString = result;
+                nquadCallback(null, nquadString);
             },
-        ]);
-        return nquadString;
-    } // endif Node 
+        ], function(err, result) {
+            nquadCallback(err, nquadString);
+        });
+    }
+
 }
 // ends
