@@ -1472,7 +1472,6 @@ if (typeof module !== 'undefined' && module.require) { // Node
     var N3 = require('n3');
 
     var convertToJson = function(n3String, jsonCallback) {
-        console.log("json")
         var jsonString = undefined;
         var n3Parser = N3.Parser();
         var n3Writer = N3.Writer({
