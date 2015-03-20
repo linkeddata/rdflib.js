@@ -533,20 +533,28 @@ $rdf.Fetcher = function(store, timeout, async) {
     // Looks up something.
     //
     // Looks up all the URIs a things has.
+    //
     // Parameters:
     //
     //  term:       canonical term for the thing whose URI is to be dereferenced
     //  rterm:      the resource which refered to this (for tracking bad links)
-    //  force:      Load the data even if loaded before
+    //  options:    (old: force paraemter) or dictionary of options:
+    //      force:      Load the data even if loaded before
     //  oneDone:   is called as callback(ok, errorbody, xhr) for each one
     //  allDone:   is called as callback(ok, errorbody) for all of them
-    // Returns      the number of things looked up
+    // Returns      the number of URIs fetched
     //
-    this.lookUpThing = function(term, rterm, force, oneDone, allDone) {
+    this.lookUpThing = function(term, rterm, options, oneDone, allDone) {
         var uris = kb.uris(term) // Get all URIs
         var success = true;
         var errors = '';
-        var outstanding = {};
+        var outstanding = {}, force;
+        if (options === false || options === true) { // Old signaure
+            force = options;
+            options = { force: force };
+        } else {
+            force = !!options.force
+        }
 
         if (typeof uris !== 'undefined') {
             for (var i = 0; i < uris.length; i++) {
@@ -556,7 +564,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                 var sf = this;
 
                 var requestOne = function requestOne(u1){
-                    sf.requestURI($rdf.uri.docpart(u1), rterm, force, function(ok, body, xhr){
+                    sf.requestURI($rdf.uri.docpart(u1), rterm, options, function(ok, body, xhr){
                         if (ok) {
                             if (oneDone) oneDone(true, u1);
                         } else {
@@ -587,7 +595,7 @@ $rdf.Fetcher = function(store, timeout, async) {
 
         // If it is 'failed', then shoulkd we try again?  I think so so an old error doens't get stuck
         //if (sta == 'unrequested')
-        this.requestURI(uri, referringTerm, false, userCallback);
+        this.requestURI(uri, referringTerm, {}, userCallback);
     }
 
 
@@ -674,21 +682,23 @@ $rdf.Fetcher = function(store, timeout, async) {
      ** Parameters:
      **	    term:  term for the thing whose URI is to be dereferenced
      **      rterm:  the resource which refered to this (for tracking bad links)
-     **      force:  Load the data even if loaded before
+     **      options:
+     **              force:  Load the data even if loaded before
+     **              withCredentials:   flag for XHR/CORS etc 
      **      userCallback:  Called with (true) or (false, errorbody) after load is done or failed
      ** Return value:
      **	    The xhr object for the HTTP access
      **      null if the protocol is not a look-up protocol,
      **              or URI has already been loaded
      */
-    this.requestURI = function(docuri, rterm, force, userCallback) { //sources_request_new
+    this.requestURI = function(docuri, rterm, options, userCallback) { //sources_request_new
         if (docuri.indexOf('#') >= 0) { // hash
             throw ("requestURI should not be called with fragid: " + docuri);
         }
 
         var pcol = $rdf.uri.protocol(docuri);
         if (pcol == 'tel' || pcol == 'mailto' || pcol == 'urn') return null; // No look-up operation on these, but they are not errors
-        var force = !! force
+        var force = !! options.force
         var kb = this.store
         var args = arguments
         var docterm = kb.sym(docuri)
@@ -756,23 +766,6 @@ $rdf.Fetcher = function(store, timeout, async) {
                     var oldreq = xhr.req;
                     kb.add(oldreq, ns.http('redirectedTo'), kb.sym(newURI), oldreq);
 
-
-                    ////////////// Change the request node to a new one:  @@@@@@@@@@@@ Duplicate of what will be done by requestURI below
-                    /* var newreq = xhr.req = kb.bnode() // Make NEW reqest for everything else
-                    kb.add(oldreq, ns.http('redirectedRequest'), newreq, xhr.req);
-
-                    var now = new Date();
-                    var timeNow = "[" + now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds() + "] ";
-                    kb.add(newreq, ns.rdfs("label"), kb.literal(timeNow + ' Request for ' + newURI), this.appNode)
-                    kb.add(newreq, ns.link('status'), kb.collection(), this.appNode);
-                    kb.add(newreq, ns.link("requestedURI"), kb.literal(newURI), this.appNode);
-
-                    var response = kb.bnode();
-                    kb.add(oldreq, ns.link('response'), response);
-                    */
-                    // kb.add(response, ns.http('status'), kb.literal(xhr.status), response);
-                    // if (xhr.statusText) kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response)
-
                     xhr.abort()
                     xhr.aborted = true
 
@@ -781,7 +774,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                     //sf.fireCallbacks('done', args) // Are these args right? @@@   Noit done yet! done means success
                     sf.requested[xhr.resource.uri] = 'redirected';
 
-                    var xhr2 = sf.requestURI(newURI, xhr.resource, force, userCallback);
+                    var xhr2 = sf.requestURI(newURI, xhr.resource, options, userCallback);
                     xhr2.proxyUsed = true; //only try the proxy once
 
                     if (xhr2 && xhr2.req) {
@@ -797,8 +790,14 @@ $rdf.Fetcher = function(store, timeout, async) {
                     console.log("@@ Retrying with no credentials for " + xhr.resource)
                     xhr.abort();
                     xhr.withCredentials = false;
+                    newopt = {};
+                    for (opt in options) if (options.hasOwnProperty(opt)) {
+                        newopt[opt] = options[opt]
+                    }
+                    newopt.withCredentials = false;
                     sf.addStatus(xhr.req, "Credentials SUPPRESSED to see if that helps");
-                    xhr.send(); // try again
+                     sf.requestURI(docuri, rterm, newopt, userCallback)
+                    // xhr.send(); // try again -- not a function
                 } else {
                     sf.failFetch(xhr, "XHR Error: "+event); // Alas we get no error message
                 }
@@ -1041,18 +1040,20 @@ $rdf.Fetcher = function(store, timeout, async) {
 
         // @ Many ontology files under http: and need CORS wildcard -> can't have withCredentials
         var withCredentials = ( uri2.slice(0,6) === 'https:'); // @@ Kludge -- need for webid which typically is served from https
-
+        if (options.withCredentials !== undefined) {
+            withCredentials = options.withCredentials;
+        }
         var actualProxyURI = this.proxyIfNecessary(uri2);
         // Setup the request
-        if (typeof jQuery !== 'undefined' && jQuery.ajax) {
+        if (false && typeof jQuery !== 'undefined' && jQuery.ajax) {
+            var xhrFields = { withCredentials: withCredentials};
             var xhr = jQuery.ajax({
                 url: actualProxyURI,
                 accepts: {'*': 'text/turtle,text/n3,application/rdf+xml'},
                 processData: false,
-                xhrFields: {
-                    withCredentials: withCredentials
-                },
+                xhrFields: xhrFields,
                 timeout: sf.timeout,
+                headers: force ? { 'cache-control': 'no-cache'} : {};
                 error: function(xhr, s, e) {
 
                     xhr.req = req;   // Add these in case fails before .ajax returns
@@ -1092,6 +1093,9 @@ $rdf.Fetcher = function(store, timeout, async) {
             xhr.timeout = sf.timeout;
             xhr.withCredentials = withCredentials;
             xhr.actualProxyURI = actualProxyURI;
+            if (force) {
+                xhr.setRequestHeader('Cache-control', 'no-cache');
+            }
 
             xhr.req = req;
             xhr.userCallback = userCallback;
@@ -1332,10 +1336,10 @@ $rdf.Fetcher = function(store, timeout, async) {
         delete this.requested[term.uri]; // So it can be loaded again
     }
 
-    this.refresh = function(term) { // sources_refresh
+    this.refresh = function(term, userCallback) { // sources_refresh
         this.unload(term);
         this.fireCallbacks('refresh', arguments)
-        this.requestURI(term.uri, undefined, true)
+        this.requestURI(term.uri, undefined, { force: true}, userCallback)
     }
 
     this.retract = function(term) { // sources_retract
