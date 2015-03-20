@@ -8549,7 +8549,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                 processData: false,
                 xhrFields: xhrFields,
                 timeout: sf.timeout,
-                headers: force ? { 'cache-control': 'no-cache'} : {};
+                headers: force ? { 'cache-control': 'no-cache'} : {},
                 error: function(xhr, s, e) {
 
                     xhr.req = req;   // Add these in case fails before .ajax returns
