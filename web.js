@@ -634,6 +634,7 @@ $rdf.Fetcher = function(store, timeout, async) {
     this.saveRequestMetadata = function(xhr, kb, docuri) {
         var request = kb.bnode();
         var ns = tabulator.ns;
+        xhr.resource = $rdf.sym(docuri);
         xhr.req = request;
         var now = new Date();
         var timeNow = "[" + now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds() + "] ";
@@ -788,6 +789,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                 }
             } else {
                 if (xhr.withCredentials) {
+                    console.log("@@ Retrying with no credentials for " + xhr.resource)
                     xhr.abort();
                     xhr.withCredentials = false;
                     sf.addStatus(xhr.req, "Credentials SUPPRESSED to see if that helps");
@@ -1053,6 +1055,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                     xhr.userCallback = userCallback;
                     xhr.resource = docterm;
                     xhr.requestedURI = uri2;
+                    xhr.withCredentials = withCredentials; // Somehow gets lost by jq
 
 
                     if (s == 'timeout')
