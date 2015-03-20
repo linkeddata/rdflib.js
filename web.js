@@ -530,20 +530,18 @@ $rdf.Fetcher = function(store, timeout, async) {
 
 
 
-// Looks up something.
-//
-// Looks up all the URIs a things has.
-// Parameters:
-//
-//  term:       canonical term for the thing whose URI is to be dereferenced
-//  rterm:      the resource which refered to this (for tracking bad links)
-//  force:      Load the data even if loaded before
-//  oneDone:   is called as callback(ok, errorbody, xhr) for each one
-//  allDone:   is called as callback(ok, errorbody) for all of them
-// Returns      the number of things looked up
-//
-
-
+    // Looks up something.
+    //
+    // Looks up all the URIs a things has.
+    // Parameters:
+    //
+    //  term:       canonical term for the thing whose URI is to be dereferenced
+    //  rterm:      the resource which refered to this (for tracking bad links)
+    //  force:      Load the data even if loaded before
+    //  oneDone:   is called as callback(ok, errorbody, xhr) for each one
+    //  allDone:   is called as callback(ok, errorbody) for all of them
+    // Returns      the number of things looked up
+    //
     this.lookUpThing = function(term, rterm, force, oneDone, allDone) {
         var uris = kb.uris(term) // Get all URIs
         var success = true;
@@ -578,11 +576,11 @@ $rdf.Fetcher = function(store, timeout, async) {
     }
 
 
-/*  Ask for a doc to be loaded if necessary then call back
-**
-** Changed 2013-08-20:  Added (ok, body) params to callback
-**
-**/
+    /*  Ask for a doc to be loaded if necessary then call back
+    **
+    ** Changed 2013-08-20:  Added (ok, body) params to callback
+    **
+    **/
     this.nowOrWhenFetched = function(uri, referringTerm, userCallback) {
         var sta = this.getState(uri);
         if (sta == 'fetched') return userCallback(true);
@@ -633,23 +631,40 @@ $rdf.Fetcher = function(store, timeout, async) {
      
     this.saveRequestMetadata = function(xhr, kb, docuri) {
         var request = kb.bnode();
-        var ns = tabulator.ns;
         xhr.resource = $rdf.sym(docuri);
+
+        if (typeof tabulator != 'undefined' && tabulator.isExtension) {
+            var ns = tabulator.ns;
+        } else {
+            var ns = {};
+            ns.link = $rdf.Namespace("http://www.w3.org/2007/ont/link#");
+            ns.rdfs = $rdf.Namespace("http://www.w3.org/2000/01/rdf-schema#");
+        }
+
         xhr.req = request;
         var now = new Date();
         var timeNow = "[" + now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds() + "] ";
-        kb.add(request, ns.rdfs("label"), kb.literal(timeNow + ' Request for ' + docuri), this.appNode)
-        kb.add(request, ns.link("requestedURI"), kb.literal(docuri), this.appNode)
+        kb.add(request, ns.rdfs("label"), kb.literal(timeNow + ' Request for ' + docuri), this.appNode);
+        kb.add(request, ns.link("requestedURI"), kb.literal(docuri), this.appNode);
         kb.add(request, ns.link('status'), kb.collection(), this.appNode);
         return request;
     };
        
     this.saveResponseMetadata = function(xhr, kb) {
         var response = kb.bnode();
-        var ns = tabulator.ns;
+        // define the set of namespaces if not using tabulator
+        if (typeof tabulator != 'undefined' && tabulator.isExtension) {
+            var ns = tabulator.ns;
+        } else {
+            var ns = {};
+            ns.link = $rdf.Namespace("http://www.w3.org/2007/ont/link#");
+            ns.http = $rdf.Namespace("http://www.w3.org/2007/ont/http#");
+            ns.httph = $rdf.Namespace("http://www.w3.org/2007/ont/httph#");
+            ns.rdfs = $rdf.Namespace("http://www.w3.org/2000/01/rdf-schema#");
+        }
         kb.add(xhr.req, ns.link('response'), response);
-        kb.add(response, ns.http('status'), kb.literal(xhr.status), response)
-        kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response)
+        kb.add(response, ns.http('status'), kb.literal(xhr.status), response);
+        kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response);
 
         xhr.headers = {}
         if ($rdf.uri.protocol(xhr.resource.uri) == 'http' || $rdf.uri.protocol(xhr.resource.uri) == 'https') {
@@ -1423,7 +1438,7 @@ $rdf.parse = function parse(str, kb, base, contentType) {
 
 //   Serialize to the appropriate format
 //
-$rdf.serialize = function(target, kb, base, contentType) {
+$rdf.serialize = function(target, kb, base, contentType, callback) {
     var documentString;
     var sz = $rdf.Serializer(kb);
     var newSts = kb.statementsMatching(undefined, undefined, undefined, target);
@@ -1441,12 +1456,12 @@ $rdf.serialize = function(target, kb, base, contentType) {
             break;
         case 'application/json+ld':
             var n3String = sz.statementsToN3(newSts);
-            documentString = convertToJson(n3String);
+            convertToJson(n3String, callback);
             break;
         case 'application/n-quads':
         case 'application/nquads': // @@@ just outpout the quads? Does not work for collections
             var n3String = sz.statementsToN3(newSts);
-            documentString = convertToNQuads(n3String); 
+            documentString = convertToNQuads(n3String, callback);
             break;
         default:
             throw "serialise: Content-type "+content_type +" not supported for data write";
@@ -1455,62 +1470,73 @@ $rdf.serialize = function(target, kb, base, contentType) {
 };
 
 ////////////////// JSON-LD code currently requires Node
+if (typeof module !== 'undefined' && module.require) { // Node
+    var asyncLib = require('async');
+    var jsonld = require('jsonld');
+    var N3 = require('n3');
 
-if (typeof module !== 'undefined' && module.require) { // Node 
-
-    var convertToJson = function(n3String) {
+    var convertToJson = function(n3String, jsonCallback) {
         var jsonString = undefined;
         var n3Parser = N3.Parser();
-        var n3Writer = N3.Parser({format: 'N-Quads'});
+        var n3Writer = N3.Writer({
+            format: 'N-Quads'
+        });
         asyncLib.waterfall([
-            function(parseCallback) {
-                n3Parser.parse(n3String, prefixCallback);
+            function(callback) {
+                n3Parser.parse(n3String, callback);
             },
-            function(err, triple, prefix, writeCallback) {
-                if (!err) {
+            function(triple, prefix, callback) {
+                if (triple !== null) {
                     n3Writer.addTriple(triple);
-                    if (typeof writeCallback === 'function') {
-                        writer.end(writeCallback);
-                    }
+                }
+                if (typeof callback === 'function') {
+                    n3Writer.end(callback);
                 }
             },
-            function(err, result) {
-                if (!err) {
-                    $rdf.jsonld.fromRDF(result, {format: 'application/nquads'}, stringCallback);
+            function(result, callback) {
+                try {
+                    jsonld.fromRDF(result, {
+                        format: 'application/nquads'
+                    }, callback);
+                } catch (err) {
+                    callback(err);
                 }
             },
-            function(err, json) {
-                if (!error) {
-                    jsonString = JSON.stringify(json);
-                }
+            function(json, callback) {
+                jsonString = JSON.stringify(json);
+                jsonCallback(null, jsonString);
             }
-        ]);
-        return jsonString;
+        ], function(err, result) {
+            jsonCallback(err, jsonString);
+        });
     }
 
-    var convertToNQuads = function(n3String) {
+    var convertToNQuads = function(n3String, nquadCallback) {
         var nquadString = undefined;
         var n3Parser = N3.Parser();
-        var n3Writer = N3.Parser({format: 'N-Quads'});
+        var n3Writer = N3.Writer({
+            format: 'N-Quads'
+        });
         asyncLib.waterfall([
-            function(parseCallback) {
-                n3Parser.parse(n3String, tripleCallback);
+            function(callback) {
+                n3Parser.parse(n3String, callback);
             },
-            function(err, triple, prefix, writeCallback) {
-                if (!err) {
+            function(triple, prefix, callback) {
+                if (triple !== null) {
                     n3Writer.addTriple(triple);
-                    if (typeof writeCallback === 'function') {
-                        writer.end(writeCallback);
-                    }
+                }
+                if (typeof callback === 'function') {
+                    n3Writer.end(callback);
                 }
             },
-            function(err, result) {
-                if (!err) {
-                    nquadString = result;
-                }
+            function(result, callback) {
+                nquadString = result;
+                nquadCallback(null, nquadString);
             },
-        ]);
-        return nquadString;
-    } // endif Node 
+        ], function(err, result) {
+            nquadCallback(err, nquadString);
+        });
+    }
+
 }
 // ends

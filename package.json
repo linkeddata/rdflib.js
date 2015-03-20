@@ -28,7 +28,8 @@
   },
   "scripts": {
     "test": "make test",
-    "prepublish": "make all"
+    "prepublish": "make all",
+    "postinstall": "make all"
   },
   "files": [
     "dist",
