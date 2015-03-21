@@ -553,7 +553,8 @@ $rdf.Fetcher = function(store, timeout, async) {
             force = options;
             options = { force: force };
         } else {
-            force = !!options.force
+            if (option === undefined) options = {};
+            force = !!options.force;
         }
 
         if (typeof uris !== 'undefined') {
@@ -698,6 +699,7 @@ $rdf.Fetcher = function(store, timeout, async) {
 
         var pcol = $rdf.uri.protocol(docuri);
         if (pcol == 'tel' || pcol == 'mailto' || pcol == 'urn') return null; // No look-up operation on these, but they are not errors
+        if (options === undefined) options = {};
         var force = !! options.force
         var kb = this.store
         var args = arguments
@@ -789,13 +791,13 @@ $rdf.Fetcher = function(store, timeout, async) {
                 if (xhr.withCredentials) {
                     console.log("@@ Retrying with no credentials for " + xhr.resource)
                     xhr.abort();
-                    xhr.withCredentials = false;
+                    delete sf.requested[docuri]; // forget the original request happened
                     newopt = {};
                     for (opt in options) if (options.hasOwnProperty(opt)) {
                         newopt[opt] = options[opt]
                     }
                     newopt.withCredentials = false;
-                    sf.addStatus(xhr.req, "Credentials SUPPRESSED to see if that helps");
+                    sf.addStatus(xhr.req, "Abort: Will retry with credentials SUPPRESSED to see if that helps");
                      sf.requestURI(docuri, rterm, newopt, userCallback)
                     // xhr.send(); // try again -- not a function
                 } else {
@@ -1045,7 +1047,7 @@ $rdf.Fetcher = function(store, timeout, async) {
         }
         var actualProxyURI = this.proxyIfNecessary(uri2);
         // Setup the request
-        if (false && typeof jQuery !== 'undefined' && jQuery.ajax) {
+        if (typeof jQuery !== 'undefined' && jQuery.ajax) {
             var xhrFields = { withCredentials: withCredentials};
             var xhr = jQuery.ajax({
                 url: actualProxyURI,
