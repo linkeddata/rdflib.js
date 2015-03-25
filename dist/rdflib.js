@@ -8049,7 +8049,7 @@ $rdf.Fetcher = function(store, timeout, async) {
             force = options;
             options = { force: force };
         } else {
-            if (option === undefined) options = {};
+            if (options === undefined) options = {};
             force = !!options.force;
         }
 
