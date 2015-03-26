@@ -600,13 +600,13 @@ $rdf.Fetcher = function(store, timeout, async) {
     //
     this.getHeader = function(doc, header) {
         var kb = this.store;
-        var requests = kb.each(undefined, tabulator.ns.link("requestedURI"), doc.uri);
+        var requests = kb.each(undefined, ns.link("requestedURI"), doc.uri);
         for (var r=0; r<requests.length; r++) {
             var request = requests[r];
             if (request !== undefined) {
-                var response = kb.any(request, tabulator.ns.link("response"));
+                var response = kb.any(request, ns.link("response"));
                 if (request !== undefined) {
-                    var results = kb.each(response, tabulator.ns.httph(header.toLowerCase()));
+                    var results = kb.each(response, ns.httph(header.toLowerCase()));
                     if (results.length) {
                         return results.map(function(v){return v.value});
                     }
@@ -633,10 +633,6 @@ $rdf.Fetcher = function(store, timeout, async) {
         var request = kb.bnode();
         xhr.resource = $rdf.sym(docuri);
 
-        var ns = {};
-        ns.link = $rdf.Namespace("http://www.w3.org/2007/ont/link#");
-        ns.rdfs = $rdf.Namespace("http://www.w3.org/2000/01/rdf-schema#");
-
         xhr.req = request;
         var now = new Date();
         var timeNow = "[" + now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds() + "] ";
@@ -649,11 +645,6 @@ $rdf.Fetcher = function(store, timeout, async) {
        
     this.saveResponseMetadata = function(xhr, kb) {
         var response = kb.bnode();
-        var ns = {};
-        ns.link = $rdf.Namespace("http://www.w3.org/2007/ont/link#");
-        ns.http = $rdf.Namespace("http://www.w3.org/2007/ont/http#");
-        ns.httph = $rdf.Namespace("http://www.w3.org/2007/ont/httph#");
-        ns.rdfs = $rdf.Namespace("http://www.w3.org/2000/01/rdf-schema#");
 
         kb.add(xhr.req, ns.link('response'), response);
         kb.add(response, ns.http('status'), kb.literal(xhr.status), response);
