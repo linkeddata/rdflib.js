@@ -582,6 +582,8 @@ $rdf.Fetcher = function(store, timeout, async) {
     **
     **/
     this.nowOrWhenFetched = function(uri, referringTerm, userCallback) {
+        // Sanitize URI (remove #fragment)
+        uri = (uri.indexOf('#') >= 0)?uri.slice(0, uri.indexOf('#')):uri;
         var sta = this.getState(uri);
         if (sta == 'fetched') return userCallback(true);
 
@@ -739,48 +741,52 @@ $rdf.Fetcher = function(store, timeout, async) {
                 var here = '' + document.location;
                 var uri = xhr.resource.uri
                 if (hostpart(here) && hostpart(uri) && hostpart(here) != hostpart(uri)) {
-                    newURI = $rdf.Fetcher.crossSiteProxy(uri);
-                    sf.addStatus(xhr.req, "BLOCKED -> Cross-site Proxy to <" + newURI + ">");
-                    if (xhr.aborted) return;
+                    if (xhr.status === 401 || xhr.status === 403) {
+                        onreadystatechangeFactory(xhr)();
+                    } else {
+                        newURI = $rdf.Fetcher.crossSiteProxy(uri);
+                        sf.addStatus(xhr.req, "BLOCKED -> Cross-site Proxy to <" + newURI + ">");
+                        if (xhr.aborted) return;
 
-                    var kb = sf.store;
-                    var oldreq = xhr.req;
-                    kb.add(oldreq, ns.http('redirectedTo'), kb.sym(newURI), oldreq);
+                        var kb = sf.store;
+                        var oldreq = xhr.req;
+                        kb.add(oldreq, ns.http('redirectedTo'), kb.sym(newURI), oldreq);
 
 
-                    ////////////// Change the request node to a new one:  @@@@@@@@@@@@ Duplicate of what will be done by requestURI below
-                    /* var newreq = xhr.req = kb.bnode() // Make NEW reqest for everything else
-                    kb.add(oldreq, ns.http('redirectedRequest'), newreq, xhr.req);
+                        ////////////// Change the request node to a new one:  @@@@@@@@@@@@ Duplicate of what will be done by requestURI below
+                        /* var newreq = xhr.req = kb.bnode() // Make NEW reqest for everything else
+                        kb.add(oldreq, ns.http('redirectedRequest'), newreq, xhr.req);
 
-                    var now = new Date();
-                    var timeNow = "[" + now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds() + "] ";
-                    kb.add(newreq, ns.rdfs("label"), kb.literal(timeNow + ' Request for ' + newURI), this.appNode)
-                    kb.add(newreq, ns.link('status'), kb.collection(), this.appNode);
-                    kb.add(newreq, ns.link("requestedURI"), kb.literal(newURI), this.appNode);
+                        var now = new Date();
+                        var timeNow = "[" + now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds() + "] ";
+                        kb.add(newreq, ns.rdfs("label"), kb.literal(timeNow + ' Request for ' + newURI), this.appNode)
+                        kb.add(newreq, ns.link('status'), kb.collection(), this.appNode);
+                        kb.add(newreq, ns.link("requestedURI"), kb.literal(newURI), this.appNode);
 
-                    var response = kb.bnode();
-                    kb.add(oldreq, ns.link('response'), response);
-                    */
-                    // kb.add(response, ns.http('status'), kb.literal(xhr.status), response);
-                    // if (xhr.statusText) kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response)
+                        var response = kb.bnode();
+                        kb.add(oldreq, ns.link('response'), response);
+                        */
+                        // kb.add(response, ns.http('status'), kb.literal(xhr.status), response);
+                        // if (xhr.statusText) kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response)
 
-                    xhr.abort()
-                    xhr.aborted = true
+                        xhr.abort()
+                        xhr.aborted = true
 
-                    sf.addStatus(oldreq, 'done - redirected') // why
-                    //the callback throws an exception when called from xhr.onerror (so removed)
-                    //sf.fireCallbacks('done', args) // Are these args right? @@@   Noit done yet! done means success
-                    sf.requested[xhr.resource.uri] = 'redirected';
+                        sf.addStatus(oldreq, 'done - redirected') // why
+                        //the callback throws an exception when called from xhr.onerror (so removed)
+                        //sf.fireCallbacks('done', args) // Are these args right? @@@   Noit done yet! done means success
+                        sf.requested[xhr.resource.uri] = 'redirected';
 
-                    var xhr2 = sf.requestURI(newURI, xhr.resource, force, userCallback);
-                    xhr2.proxyUsed = true; //only try the proxy once
+                        var xhr2 = sf.requestURI(newURI, xhr.resource, force, userCallback);
+                        xhr2.proxyUsed = true; //only try the proxy once
 
-                    if (xhr2 && xhr2.req) {
-                        kb.add(xhr.req,
-                            kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'),
-                            xhr2.req,
-                            sf.appNode);
-                        return;
+                        if (xhr2 && xhr2.req) {
+                            kb.add(xhr.req,
+                                kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'),
+                                xhr2.req,
+                                sf.appNode);
+                            return;
+                        }
                     }
                 }
             } else {
@@ -812,7 +818,11 @@ $rdf.Fetcher = function(store, timeout, async) {
                 //  @@@ 401 should cause  a retry with credential son
                 // @@@ cache the credentials flag by host ????
                     if (xhr.responseText.length > 10) {
+                        var response = kb.bnode();
                         kb.add(response, ns.http('content'), kb.literal(xhr.responseText), response);
+                        if (xhr.statusText) {
+                            kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response);
+                        }
                         // dump("HTTP >= 400 responseText:\n"+xhr.responseText+"\n"); // @@@@
                     }
                     sf.failFetch(xhr, "HTTP error for " +xhr.resource + ": "+ xhr.status + ' ' + xhr.statusText);
