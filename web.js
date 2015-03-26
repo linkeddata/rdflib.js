@@ -741,7 +741,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                 var here = '' + document.location;
                 var uri = xhr.resource.uri
                 if (hostpart(here) && hostpart(uri) && hostpart(here) != hostpart(uri)) {
-                    if (xhr.status === 401 || xhr.status === 403) {
+                    if (xhr.status === 401 || xhr.status === 403 || xhr.status === 404) {
                         onreadystatechangeFactory(xhr)();
                     } else {
                         newURI = $rdf.Fetcher.crossSiteProxy(uri);
