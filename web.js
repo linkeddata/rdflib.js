@@ -1434,7 +1434,6 @@ $rdf.serialize = function(target, kb, base, contentType, callback) {
     var newSts = kb.statementsMatching(undefined, undefined, undefined, target);
     sz.suggestNamespaces(kb.namespaces);
     sz.setBase(base);
-    sz.setFlags('r');
     switch(contentType){
         case 'application/rdf+xml':
             documentString = sz.statementsToXML(newSts);
@@ -1528,6 +1527,5 @@ if (typeof module !== 'undefined' && module.require) { // Node
             nquadCallback(err, nquadString);
         });
     }
-
 }
 // ends
