@@ -28,8 +28,8 @@
   },
   "scripts": {
     "test": "make test",
-    "prepublish": "make all",
-    "postinstall": "make all"
+    "prepublish": "make clean all",
+    "postinstall": "make clean all"
   },
   "files": [
     "dist",
