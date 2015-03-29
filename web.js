@@ -582,6 +582,8 @@ $rdf.Fetcher = function(store, timeout, async) {
     **
     **/
     this.nowOrWhenFetched = function(uri, referringTerm, userCallback) {
+        // Sanitize URI (remove #fragment)
+        uri = (uri.indexOf('#') >= 0)?uri.slice(0, uri.indexOf('#')):uri;
         var sta = this.getState(uri);
         if (sta == 'fetched') return userCallback(true);
 
@@ -600,13 +602,13 @@ $rdf.Fetcher = function(store, timeout, async) {
     //
     this.getHeader = function(doc, header) {
         var kb = this.store;
-        var requests = kb.each(undefined, tabulator.ns.link("requestedURI"), doc.uri);
+        var requests = kb.each(undefined, ns.link("requestedURI"), doc.uri);
         for (var r=0; r<requests.length; r++) {
             var request = requests[r];
             if (request !== undefined) {
-                var response = kb.any(request, tabulator.ns.link("response"));
+                var response = kb.any(request, ns.link("response"));
                 if (request !== undefined) {
-                    var results = kb.each(response, tabulator.ns.httph(header.toLowerCase()));
+                    var results = kb.each(response, ns.httph(header.toLowerCase()));
                     if (results.length) {
                         return results.map(function(v){return v.value});
                     }
@@ -631,35 +633,21 @@ $rdf.Fetcher = function(store, timeout, async) {
      
     this.saveRequestMetadata = function(xhr, kb, docuri) {
         var request = kb.bnode();
-        if (typeof tabulator != 'undefined' && tabulator.isExtension) {
-            var ns = tabulator.ns;
-        } else {
-            var ns = {};
-            ns.link = $rdf.Namespace("http://www.w3.org/2007/ont/link#");
-            ns.rdfs = $rdf.Namespace("http://www.w3.org/2000/01/rdf-schema#");
-        }
+        xhr.resource = $rdf.sym(docuri);
 
         xhr.req = request;
         var now = new Date();
         var timeNow = "[" + now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds() + "] ";
         kb.add(request, ns.rdfs("label"), kb.literal(timeNow + ' Request for ' + docuri), this.appNode);
         kb.add(request, ns.link("requestedURI"), kb.literal(docuri), this.appNode);
+
         kb.add(request, ns.link('status'), kb.collection(), this.appNode);
         return request;
     };
        
     this.saveResponseMetadata = function(xhr, kb) {
         var response = kb.bnode();
-        // define the set of namespaces if not using tabulator
-        if (typeof tabulator != 'undefined' && tabulator.isExtension) {
-            var ns = tabulator.ns;
-        } else {
-            var ns = {};
-            ns.link = $rdf.Namespace("http://www.w3.org/2007/ont/link#");
-            ns.http = $rdf.Namespace("http://www.w3.org/2007/ont/http#");
-            ns.httph = $rdf.Namespace("http://www.w3.org/2007/ont/httph#");
-            ns.rdfs = $rdf.Namespace("http://www.w3.org/2000/01/rdf-schema#");
-        }
+
         kb.add(xhr.req, ns.link('response'), response);
         kb.add(response, ns.http('status'), kb.literal(xhr.status), response);
         kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response);
@@ -673,9 +661,6 @@ $rdf.Fetcher = function(store, timeout, async) {
         }
         return response;
     };
-    
-
-    
     
 
     /** Requests a document URI and arranges to load the document.
@@ -729,7 +714,7 @@ $rdf.Fetcher = function(store, timeout, async) {
             xhr.resource = docterm;
             xhr.requestedURI = args[0];
         } else {
-            var req = kb.bnode(); // @@ Joe, no need for xhr.req?
+            var req = kb.bnode(); 
         }
         var requestHandlers = kb.collection();
         var sf = this;
@@ -756,52 +741,57 @@ $rdf.Fetcher = function(store, timeout, async) {
                 var here = '' + document.location;
                 var uri = xhr.resource.uri
                 if (hostpart(here) && hostpart(uri) && hostpart(here) != hostpart(uri)) {
-                    newURI = $rdf.Fetcher.crossSiteProxy(uri);
-                    sf.addStatus(xhr.req, "BLOCKED -> Cross-site Proxy to <" + newURI + ">");
-                    if (xhr.aborted) return;
+                    if (xhr.status === 401 || xhr.status === 403 || xhr.status === 404) {
+                        onreadystatechangeFactory(xhr)();
+                    } else {
+                        newURI = $rdf.Fetcher.crossSiteProxy(uri);
+                        sf.addStatus(xhr.req, "BLOCKED -> Cross-site Proxy to <" + newURI + ">");
+                        if (xhr.aborted) return;
 
-                    var kb = sf.store;
-                    var oldreq = xhr.req;
-                    kb.add(oldreq, ns.http('redirectedTo'), kb.sym(newURI), oldreq);
+                        var kb = sf.store;
+                        var oldreq = xhr.req;
+                        kb.add(oldreq, ns.http('redirectedTo'), kb.sym(newURI), oldreq);
 
 
-                    ////////////// Change the request node to a new one:  @@@@@@@@@@@@ Duplicate of what will be done by requestURI below
-                    /* var newreq = xhr.req = kb.bnode() // Make NEW reqest for everything else
-                    kb.add(oldreq, ns.http('redirectedRequest'), newreq, xhr.req);
+                        ////////////// Change the request node to a new one:  @@@@@@@@@@@@ Duplicate of what will be done by requestURI below
+                        /* var newreq = xhr.req = kb.bnode() // Make NEW reqest for everything else
+                        kb.add(oldreq, ns.http('redirectedRequest'), newreq, xhr.req);
 
-                    var now = new Date();
-                    var timeNow = "[" + now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds() + "] ";
-                    kb.add(newreq, ns.rdfs("label"), kb.literal(timeNow + ' Request for ' + newURI), this.appNode)
-                    kb.add(newreq, ns.link('status'), kb.collection(), this.appNode);
-                    kb.add(newreq, ns.link("requestedURI"), kb.literal(newURI), this.appNode);
+                        var now = new Date();
+                        var timeNow = "[" + now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds() + "] ";
+                        kb.add(newreq, ns.rdfs("label"), kb.literal(timeNow + ' Request for ' + newURI), this.appNode)
+                        kb.add(newreq, ns.link('status'), kb.collection(), this.appNode);
+                        kb.add(newreq, ns.link("requestedURI"), kb.literal(newURI), this.appNode);
 
-                    var response = kb.bnode();
-                    kb.add(oldreq, ns.link('response'), response);
-                    */
-                    // kb.add(response, ns.http('status'), kb.literal(xhr.status), response);
-                    // if (xhr.statusText) kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response)
+                        var response = kb.bnode();
+                        kb.add(oldreq, ns.link('response'), response);
+                        */
+                        // kb.add(response, ns.http('status'), kb.literal(xhr.status), response);
+                        // if (xhr.statusText) kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response)
 
-                    xhr.abort()
-                    xhr.aborted = true
+                        xhr.abort()
+                        xhr.aborted = true
 
-                    sf.addStatus(oldreq, 'done - redirected') // why
-                    //the callback throws an exception when called from xhr.onerror (so removed)
-                    //sf.fireCallbacks('done', args) // Are these args right? @@@   Noit done yet! done means success
-                    sf.requested[xhr.resource.uri] = 'redirected';
+                        sf.addStatus(oldreq, 'done - redirected') // why
+                        //the callback throws an exception when called from xhr.onerror (so removed)
+                        //sf.fireCallbacks('done', args) // Are these args right? @@@   Noit done yet! done means success
+                        sf.requested[xhr.resource.uri] = 'redirected';
 
-                    var xhr2 = sf.requestURI(newURI, xhr.resource, force, userCallback);
-                    xhr2.proxyUsed = true; //only try the proxy once
+                        var xhr2 = sf.requestURI(newURI, xhr.resource, force, userCallback);
+                        xhr2.proxyUsed = true; //only try the proxy once
 
-                    if (xhr2 && xhr2.req) {
-                        kb.add(xhr.req,
-                            kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'),
-                            xhr2.req,
-                            sf.appNode);
-                        return;
+                        if (xhr2 && xhr2.req) {
+                            kb.add(xhr.req,
+                                kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'),
+                                xhr2.req,
+                                sf.appNode);
+                            return;
+                        }
                     }
                 }
             } else {
                 if (xhr.withCredentials) {
+                    console.log("@@ Retrying with no credentials for " + xhr.resource)
                     xhr.abort();
                     xhr.withCredentials = false;
                     sf.addStatus(xhr.req, "Credentials SUPPRESSED to see if that helps");
@@ -822,14 +812,17 @@ $rdf.Fetcher = function(store, timeout, async) {
                 sf.fireCallbacks('recv', args)
                 var kb = sf.store;
                 sf.saveResponseMetadata(xhr, kb);
-
                 sf.fireCallbacks('headers', [{uri: docuri, headers: xhr.headers}]);
 
                 if (xhr.status >= 400) { // For extra dignostics, keep the reply
                 //  @@@ 401 should cause  a retry with credential son
                 // @@@ cache the credentials flag by host ????
                     if (xhr.responseText.length > 10) {
+                        var response = kb.bnode();
                         kb.add(response, ns.http('content'), kb.literal(xhr.responseText), response);
+                        if (xhr.statusText) {
+                            kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response);
+                        }
                         // dump("HTTP >= 400 responseText:\n"+xhr.responseText+"\n"); // @@@@
                     }
                     sf.failFetch(xhr, "HTTP error for " +xhr.resource + ": "+ xhr.status + ' ' + xhr.statusText);
@@ -1067,6 +1060,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                     xhr.userCallback = userCallback;
                     xhr.resource = docterm;
                     xhr.requestedURI = uri2;
+                    xhr.withCredentials = withCredentials; // Somehow gets lost by jq
 
 
                     if (s == 'timeout')
@@ -1143,7 +1137,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                                     // var requestHandlers = kb.collection()
 
                                     // kb.add(kb.sym(newURI), ns.link("request"), req, this.appNode)
-                                    kb.add(oldreq, ns.http('redirectedRequest'), newreq, xhr.req);
+                                    kb.add(oldreq, ns.http('redirectedRequest'), newreq, this.appNode);
 
                                     var now = new Date();
                                     var timeNow = "[" + now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds() + "] ";

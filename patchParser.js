@@ -97,6 +97,7 @@ $rdf.sparqlUpdateParser = function(str, kb, base) {
     } // while
     //return clauses
 
+
 }; // End of spaqlUpdateParser
 
 
@@ -173,6 +174,7 @@ $rdf.IndexedFormula.prototype.applyPatch = function(patch, target, patchCallback
         doPatch(patchCallback)
     };
 };
+
 
 
 
