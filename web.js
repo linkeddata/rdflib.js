@@ -1454,7 +1454,7 @@ $rdf.serialize = function(target, kb, base, contentType, callback) {
             documentString = convertToNQuads(n3String, callback);
             break;
         default:
-            throw "serialise: Content-type "+content_type +" not supported for data write";
+            throw "serialise: Content-type "+ contentType +" not supported for data write";
     }
     return documentString;
 };
