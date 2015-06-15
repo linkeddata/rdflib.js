@@ -80,7 +80,7 @@ SRC=$(wildcard *.coffee */*.coffee)
 LIB=$(SRC:%.coffee=%.js)
 
 %.js: %.coffee
-	coffee -bp $< > $@
+	./node_modules/coffee-script/bin/coffee -bp $< > $@
 
 .PHONY: coffee
 coffee: $(LIB)
