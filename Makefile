@@ -13,8 +13,7 @@ coffeejs=$(patsubst %.coffee,%.js,$(wildcard *.coffee))
 all: browserify dist $(targets)
 
 browserify:
-	pwd
-	browserify web.js -o web_browserify.js
+	./node_modules/browserify/cmd.js web.js -o web_browserify.js
 
 dist:
 	mkdir -p dist
@@ -84,7 +83,7 @@ SRC=$(wildcard *.coffee */*.coffee)
 LIB=$(SRC:%.coffee=%.js)
 
 %.js: %.coffee
-	./node_modules/.bin/coffee -bp $< > $@
+	./node_modules/coffee/bin/coffee -bp $< > $@
 
 .PHONY: coffee
 coffee: $(LIB)
