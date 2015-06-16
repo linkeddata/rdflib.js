@@ -13,6 +13,7 @@ coffeejs=$(patsubst %.coffee,%.js,$(wildcard *.coffee))
 all: browserify dist $(targets)
 
 browserify:
+	pwd
 	browserify web.js -o web_browserify.js
 
 dist:
