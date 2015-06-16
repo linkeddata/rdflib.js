@@ -1,16 +1,19 @@
 # rdflib.js Makefile
 
 R=util.js uri.js term.js rdfparser.js n3parser.js identity.js \
-	patchParser.js query.js sparql.js sparqlUpdate.js jsonparser.js serialize.js updatesVia.js web.js
+	patchParser.js query.js sparql.js sparqlUpdate.js jsonparser.js serialize.js updatesVia.js web_browserify.js
 
 A=util.js uri.js term.js rdfparser.js n3parser.js identity.js \
 	green-turtle/src/RDFaProcessor.js rdfa.js \
-	patchParser.js query.js sparql.js sparqlUpdate.js jsonparser.js serialize.js updatesVia.js web.js
+	patchParser.js query.js sparql.js sparqlUpdate.js jsonparser.js serialize.js updatesVia.js web_browserify.js
 
 targets=$(addprefix dist/, rdflib.js rdflib-rdfa.js)
 coffeejs=$(patsubst %.coffee,%.js,$(wildcard *.coffee))
 
-all: dist $(targets)
+all: browserify dist $(targets)
+
+browserify:
+	./node_modules/.bin/browserify web.js -o web_browserify.js
 
 dist:
 	mkdir -p dist
@@ -80,7 +83,7 @@ SRC=$(wildcard *.coffee */*.coffee)
 LIB=$(SRC:%.coffee=%.js)
 
 %.js: %.coffee
-	coffee -bp $< > $@
+	./node_modules/.bin/coffee -bp $< > $@
 
 .PHONY: coffee
 coffee: $(LIB)

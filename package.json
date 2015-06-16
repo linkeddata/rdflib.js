@@ -24,7 +24,8 @@
   },
   "devDependencies": {
     "coffee-script": "*",
-    "nodeunit": "*"
+    "nodeunit": "*",
+    "browserify": "*"
   },
   "scripts": {
     "test": "make test",

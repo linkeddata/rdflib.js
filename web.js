@@ -29,12 +29,9 @@
  * Firing up a mail client for mid:  (message:) URLs
  */
 
-if (typeof module !== 'undefined' && module.require) { // Node 
-// For non-node, jasonld needs to be inlined in init.js etc
-    $rdf.jsonld = require('jsonld');
-    N3 = require('n3');
-    asyncLib = require('async');
-}
+var asyncLib = require('async');
+var jsonld = require('jsonld');
+var N3 = require('n3');
 
 $rdf.Fetcher = function(store, timeout, async) {
     this.store = store
@@ -1460,18 +1457,14 @@ $rdf.serialize = function(target, kb, base, contentType, callback) {
 };
 
 ////////////////// JSON-LD code currently requires Node
-if (typeof module !== 'undefined' && module.require) { // Node
-    var asyncLib = require('async');
-    var jsonld = require('jsonld');
-    var N3 = require('n3');
 
-    var convertToJson = function(n3String, jsonCallback) {
-        var jsonString = undefined;
-        var n3Parser = N3.Parser();
-        var n3Writer = N3.Writer({
+var convertToJson = function(n3String, jsonCallback) {
+    var jsonString = undefined;
+    var n3Parser = N3.Parser();
+    var n3Writer = N3.Writer({
             format: 'N-Quads'
-        });
-        asyncLib.waterfall([
+    });
+    asyncLib.waterfall([
             function(callback) {
                 n3Parser.parse(n3String, callback);
             },
@@ -1486,7 +1479,7 @@ if (typeof module !== 'undefined' && module.require) { // Node
             function(result, callback) {
                 try {
                     jsonld.fromRDF(result, {
-                        format: 'application/nquads'
+                            format: 'application/nquads'
                     }, callback);
                 } catch (err) {
                     callback(err);
@@ -1498,16 +1491,16 @@ if (typeof module !== 'undefined' && module.require) { // Node
             }
         ], function(err, result) {
             jsonCallback(err, jsonString);
-        });
-    }
+    });
+}
 
-    var convertToNQuads = function(n3String, nquadCallback) {
-        var nquadString = undefined;
-        var n3Parser = N3.Parser();
-        var n3Writer = N3.Writer({
+var convertToNQuads = function(n3String, nquadCallback) {
+    var nquadString = undefined;
+    var n3Parser = N3.Parser();
+    var n3Writer = N3.Writer({
             format: 'N-Quads'
-        });
-        asyncLib.waterfall([
+    });
+    asyncLib.waterfall([
             function(callback) {
                 n3Parser.parse(n3String, callback);
             },
@@ -1525,7 +1518,6 @@ if (typeof module !== 'undefined' && module.require) { // Node
             },
         ], function(err, result) {
             nquadCallback(err, nquadString);
-        });
-    }
+    });
 }
 // ends
