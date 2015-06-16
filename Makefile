@@ -13,7 +13,7 @@ coffeejs=$(patsubst %.coffee,%.js,$(wildcard *.coffee))
 all: browserify dist $(targets)
 
 browserify:
-	./node_modules/.bin/browserify web.js -o web_browserify.js
+	browserify web.js -o web_browserify.js
 
 dist:
 	mkdir -p dist
