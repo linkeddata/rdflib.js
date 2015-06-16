@@ -29,7 +29,8 @@
   },
   "scripts": {
     "test": "make test",
-    "prepublish": "make clean all"
+    "prepublish": "make clean all",
+    "postinstall": "make clean all"
   },
   "files": [
     "dist",
