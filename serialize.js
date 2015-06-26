@@ -488,8 +488,11 @@ __Serializer.prototype.atomicTermToN3 = function atomicTermToN3(expr, stats) {
                 }
             }
             var str = this.stringToN3(expr.value);
-            if (expr.lang) str+= '@' + expr.lang;
-            if (expr.datatype) str+= '^^' + this.termToN3(expr.datatype, stats);
+            if (expr.lang){
+                str+= '@' + expr.lang;
+            } else if (expr.datatype) {
+                str+= '^^' + this.termToN3(expr.datatype, stats);
+            }
             return str;
         case 'symbol':
             return this.symbolToN3(expr);
