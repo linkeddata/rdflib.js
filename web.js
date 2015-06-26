@@ -626,8 +626,8 @@ $rdf.Fetcher = function(store, timeout, async) {
         }
         return uri;
     };
-    
-     
+
+
     this.saveRequestMetadata = function(xhr, kb, docuri) {
         var request = kb.bnode();
         xhr.resource = $rdf.sym(docuri);
@@ -641,7 +641,7 @@ $rdf.Fetcher = function(store, timeout, async) {
         kb.add(request, ns.link('status'), kb.collection(), this.appNode);
         return request;
     };
-       
+
     this.saveResponseMetadata = function(xhr, kb) {
         var response = kb.bnode();
 
@@ -658,7 +658,7 @@ $rdf.Fetcher = function(store, timeout, async) {
         }
         return response;
     };
-    
+
 
     /** Requests a document URI and arranges to load the document.
      ** Parameters:
@@ -711,7 +711,7 @@ $rdf.Fetcher = function(store, timeout, async) {
             xhr.resource = docterm;
             xhr.requestedURI = args[0];
         } else {
-            var req = kb.bnode(); 
+            var req = kb.bnode();
         }
         var requestHandlers = kb.collection();
         var sf = this;
@@ -1372,7 +1372,7 @@ $rdf.Fetcher = function(store, timeout, async) {
 $rdf.fetcher = function(store, timeout, async) { return new $rdf.Fetcher(store, timeout, async) };
 
 // Parse a string and put the result into the graph kb
-$rdf.parse = function parse(str, kb, base, contentType) {
+$rdf.parse = function parse(str, kb, base, contentType, callback) {
     try {
     /*
         parseXML = function(str) {
@@ -1392,46 +1392,138 @@ $rdf.parse = function parse(str, kb, base, contentType) {
         if (contentType == 'text/n3' || contentType == 'text/turtle') {
             var p = $rdf.N3Parser(kb, kb, base, base, null, null, "", null)
             p.loadBuf(str)
-            return;
-        }
-
-        if (contentType == 'application/rdf+xml') {
+            executeCallback();
+        } else if (contentType == 'application/rdf+xml') {
             var parser = new $rdf.RDFParser(kb);
             parser.parse($rdf.Util.parseXML(str), base, kb.sym(base));
-            return;
-        }
-
-        if (contentType == 'application/rdfa') {  // @@ not really a valid mime type
+            executeCallback();
+        } else if (contentType == 'application/rdfa') {  // @@ not really a valid mime type
             if ($rdf.rdfa && $rdf.rdfa.parse)
                 $rdf.rdfa.parse($rdf.Util.parseXML(str), kb, base);
-            return;
-        }
-
-        if (contentType == 'application/sparql-update') {  // @@ we handle a subset
+            executeCallback();
+        } else if (contentType == 'application/sparql-update') {  // @@ we handle a subset
             spaqlUpdateParser(store, str, base)
 
             if ($rdf.rdfa && $rdf.rdfa.parse)
                 $rdf.rdfa.parse($rdf.Util.parseXML(str), kb, base);
+            executeCallback();
+        } else if (contentType == 'application/json+ld' ||
+            contentType == 'application/nquads' ||
+            contentType == 'application/n-quads') {
+            var n3Parser = N3.Parser();
+            var N3Util = N3.Util;
+            var triples = []
+            var prefixes = {};
+            if (contentType == 'application/json+ld') {
+                var jsonDocument;
+                try {
+                    jsonDocument = JSON.parse(str);
+                    setJsonLdBase(jsonDocument, base);
+                } catch(parseErr) {
+                    callback(err, null);
+                }
+                jsonld.toRDF(jsonDocument,
+                    {format: 'application/nquads'},
+                    nquadCallback);
+            } else {
+                nquadCallback(null, str);
+            }
+        } else {
+            throw "Don't know how to parse "+contentType+" yet";
+        }
+    } catch(e) {
+        executeErrorCallback(e);
+    }
+
+    function executeCallback() {
+        if (callback) {
+            callback(null, kb);
+        } else {
             return;
         }
-
-
-    } catch(e) {
-        throw "Error trying to parse <"+base+"> as "+contentType+":\n"+e +':\n'+e.stack;
     }
-    throw "Don't know how to parse "+contentType+" yet";
 
+    function executeErrorCallback(e) {
+        if (callback) {
+            callback(e, kb);
+        } else {
+            throw "Error trying to parse <"+base+"> as "+contentType+":\n"+e +':\n'+e.stack;
+        }
+    }
+
+    function setJsonLdBase(doc, base) {
+        if (doc instanceof Array) {
+            return;
+        }
+        if (!('@context' in doc)) {
+            doc['@context'] = {};
+        }
+        doc['@context']['@base'] = base;
+    }
+
+    function nquadCallback(err, nquads) {
+        if (err) {
+            callback(err, kb);
+        }
+        try {
+            n3Parser.parse(nquads, tripleCallback);
+        } catch (err) {
+            callback(err, kb);
+        }
+    }
+
+    function tripleCallback(err, triple, prefixes) {
+        if (err) {
+            callback(err, kb);
+        }
+        if (triple) {
+            triples.push(triple);
+        } else {
+            for (var i = 0; i < triples.length; i++) {
+                addTriple(kb, triples[i]);
+            }
+            callback(null, kb);
+        }
+    }
+
+    function addTriple(kb, triple) {
+        var subject = createTerm(triple.subject);
+        var predicate = createTerm(triple.predicate);
+        var object = createTerm(triple.object);
+        var why = null;
+        if (triple.graph) {
+            why = createTerm(triple.graph)
+        }
+        kb.add(subject, predicate, object, why);
+    }
+
+    function createTerm(termString) {
+        if (N3Util.isLiteral(termString)) {
+            var value = N3Util.getLiteralValue(termString);
+            var language = N3Util.getLiteralLanguage(termString);
+            var datatype = new $rdf.Symbol(N3Util.getLiteralType(termString));
+            return new $rdf.Literal(value, language, datatype);
+        } else if (N3Util.isIRI(termString)) {
+            return new $rdf.Symbol(termString);
+        } else if (N3Util.isBlank(termString)) {
+            var value = termString.substring(2, termString.length);
+            return new $rdf.BlankNode(value);
+        } else {
+            return null;
+        }
+    }
 };
 
 //   Serialize to the appropriate format
 //
 $rdf.serialize = function(target, kb, base, contentType, callback) {
     var documentString;
-    var sz = $rdf.Serializer(kb);
-    var newSts = kb.statementsMatching(undefined, undefined, undefined, target);
-    sz.suggestNamespaces(kb.namespaces);
-    sz.setBase(base);
-    switch(contentType){
+    try {
+        var sz = $rdf.Serializer(kb);
+        var newSts = kb.statementsMatching(undefined, undefined, undefined, target);
+        sz.suggestNamespaces(kb.namespaces);
+        sz.setBase(base);
+        switch(contentType){
         case 'application/rdf+xml':
             documentString = sz.statementsToXML(newSts);
             break;
@@ -1449,11 +1541,22 @@ $rdf.serialize = function(target, kb, base, contentType, callback) {
         case 'application/nquads': // @@@ just outpout the quads? Does not work for collections
             var n3String = sz.statementsToN3(newSts);
             documentString = convertToNQuads(n3String, callback);
-            break;
+            return;
         default:
             throw "serialise: Content-type "+ contentType +" not supported for data write";
+        }
+        executeCallback(null);
+    } catch(err) {
+        executeCallback(err);
     }
-    return documentString;
+
+    function executeCallback(err) {
+        if(callback) {
+            callback(err, documentString);
+        } else {
+            return documentString;
+        }
+    }
 };
 
 ////////////////// JSON-LD code currently requires Node
