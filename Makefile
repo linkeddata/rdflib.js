@@ -86,8 +86,6 @@ SRC=$(wildcard *.coffee */*.coffee)
 LIB=$(SRC:%.coffee=%.js)
 
 %.js: %.coffee
-	echo ${PATH}
-	pwd
 	coffee -bp $< > $@
 
 .PHONY: coffee
