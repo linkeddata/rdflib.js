@@ -10,6 +10,8 @@ A=util.js uri.js term.js rdfparser.js n3parser.js identity.js \
 targets=$(addprefix dist/, rdflib.js rdflib-rdfa.js)
 coffeejs=$(patsubst %.coffee,%.js,$(wildcard *.coffee))
 
+PATH:=./node_modules/.bin:${PATH}
+
 all: browserify dist $(targets)
 
 browserify:
