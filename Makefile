@@ -68,7 +68,7 @@ gh-pages: detach
 
 clean:
 	rm -f $(targets) $(coffeejs)
-	rm web_browserify.js
+	rm -f web_browserify.js
 
 status:
 	@pwd
