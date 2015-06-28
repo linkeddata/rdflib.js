@@ -13,7 +13,6 @@ coffeejs=$(patsubst %.coffee,%.js,$(wildcard *.coffee))
 all: browserify dist $(targets)
 
 browserify:
-	rm web_browserify.js
 	browserify web.js -o web_browserify.js
 
 dist:
@@ -69,6 +68,7 @@ gh-pages: detach
 
 clean:
 	rm -f $(targets) $(coffeejs)
+	rm web_browserify.js
 
 status:
 	@pwd
