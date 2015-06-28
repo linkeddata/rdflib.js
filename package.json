@@ -20,7 +20,7 @@
     "n3": "^0.4.1",
     "jsonld": "^0.3.20",
     "async": "^0.9.x",
-    "browserify": "*"
+    "browserify": "*",
     "coffee-script": "*"
   },
   "devDependencies": {
