@@ -25,7 +25,7 @@ $ npm install -g coffee-script nodeunit
 Generate the dist directory
 
 ```bash
-$ make
+$ npm install
 ```
 
 #### NodeJS
