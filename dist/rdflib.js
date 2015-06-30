@@ -25456,10 +25456,15 @@ $rdf.parse = function parse(str, kb, base, contentType, callback) {
     }
 
     function executeErrorCallback(e) {
-        if (callback) {
-            callback(e, kb);
-        } else {
-            throw "Error trying to parse <"+base+"> as "+contentType+":\n"+e +':\n'+e.stack;
+        if(contentType != 'application/json+ld' ||
+           contentType != 'application/nquads' ||
+           contentType != 'application/n-quads') {
+            if (callback) {
+                callback(e, kb);
+            } else {
+                throw "Error trying to parse <"+base+"> as " +
+                    contentType+":\n"+e +':\n'+e.stack;
+            }
         }
     }
 
@@ -25504,7 +25509,7 @@ $rdf.parse = function parse(str, kb, base, contentType, callback) {
         var object = createTerm(triple.object);
         var why = null;
         if (triple.graph) {
-            why = createTerm(triple.graph)
+            why = createTerm(triple.graph);
         }
         kb.add(subject, predicate, object, why);
     }
@@ -25538,12 +25543,14 @@ $rdf.serialize = function(target, kb, base, contentType, callback) {
         switch(contentType){
         case 'application/rdf+xml':
             documentString = sz.statementsToXML(newSts);
+            executeCallback(null);
             break;
         case 'text/n3':
         case 'text/turtle':
         case 'application/x-turtle': // Legacy
         case 'application/n3': // Legacy
             documentString = sz.statementsToN3(newSts);
+            executeCallback(null);
             break;
         case 'application/json+ld':
             var n3String = sz.statementsToN3(newSts);
@@ -25557,9 +25564,8 @@ $rdf.serialize = function(target, kb, base, contentType, callback) {
         default:
             throw "serialise: Content-type "+ contentType +" not supported for data write";
         }
-        executeCallback(null);
     } catch(err) {
-        executeCallback(err);
+        executeErrorCallback(err);
     }
 
     function executeCallback(err) {
@@ -25569,6 +25575,19 @@ $rdf.serialize = function(target, kb, base, contentType, callback) {
             return documentString;
         }
     }
+
+    function executeErrorCallback(err) {
+        if(contentType != 'application/json+ld' ||
+           contentType != 'application/nquads' ||
+           contentType != 'application/n-quads') {
+            if(callback) {
+                callback(err, documentString);
+            } else {
+                return documentString;
+            }
+        }
+    }
+
 };
 
 ////////////////// JSON-LD code currently requires Node
