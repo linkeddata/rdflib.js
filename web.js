@@ -1557,12 +1557,9 @@ $rdf.serialize = function(target, kb, base, contentType, callback) {
     }
 
     function executeCallback(err, result) {
-        console.log("result: " + result);
-        console.log("callback: " + callback);
         if(callback) {
             callback(err, result);
         } else {
-            console.log("returning: " + result);
             return result;
         }
     }
