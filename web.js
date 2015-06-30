@@ -1526,41 +1526,44 @@ $rdf.serialize = function(target, kb, base, contentType, callback) {
     try {
         var sz = $rdf.Serializer(kb);
         var newSts = kb.statementsMatching(undefined, undefined, undefined, target);
+        var n3String;
         sz.suggestNamespaces(kb.namespaces);
         sz.setBase(base);
         switch(contentType){
         case 'application/rdf+xml':
             documentString = sz.statementsToXML(newSts);
-            executeCallback(null);
+            return executeCallback(null, documentString);
             break;
         case 'text/n3':
         case 'text/turtle':
         case 'application/x-turtle': // Legacy
         case 'application/n3': // Legacy
             documentString = sz.statementsToN3(newSts);
-            executeCallback(null);
-            break;
+            return executeCallback(null, documentString);
         case 'application/json+ld':
-            var n3String = sz.statementsToN3(newSts);
+            n3String = sz.statementsToN3(newSts);
             convertToJson(n3String, callback);
             break;
         case 'application/n-quads':
         case 'application/nquads': // @@@ just outpout the quads? Does not work for collections
-            var n3String = sz.statementsToN3(newSts);
+            n3String = sz.statementsToN3(newSts);
             documentString = convertToNQuads(n3String, callback);
-            return;
+            break;
         default:
             throw "serialise: Content-type "+ contentType +" not supported for data write";
         }
     } catch(err) {
-        executeErrorCallback(err);
+        return executeErrorCallback(err);
     }
 
-    function executeCallback(err) {
+    function executeCallback(err, result) {
+        console.log("result: " + result);
+        console.log("callback: " + callback);
         if(callback) {
-            callback(err, documentString);
+            callback(err, result);
         } else {
-            return documentString;
+            console.log("returning: " + result);
+            return result;
         }
     }
 
@@ -1569,9 +1572,9 @@ $rdf.serialize = function(target, kb, base, contentType, callback) {
            contentType != 'application/nquads' ||
            contentType != 'application/n-quads') {
             if(callback) {
-                callback(err, documentString);
+                callback(err, undefined);
             } else {
-                return documentString;
+                return undefined;
             }
         }
     }
