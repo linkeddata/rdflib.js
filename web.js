@@ -1407,14 +1407,14 @@ $rdf.parse = function parse(str, kb, base, contentType, callback) {
             if ($rdf.rdfa && $rdf.rdfa.parse)
                 $rdf.rdfa.parse($rdf.Util.parseXML(str), kb, base);
             executeCallback();
-        } else if (contentType == 'application/json+ld' ||
+        } else if (contentType == 'application/ld+json' ||
             contentType == 'application/nquads' ||
             contentType == 'application/n-quads') {
             var n3Parser = N3.Parser();
             var N3Util = N3.Util;
             var triples = []
             var prefixes = {};
-            if (contentType == 'application/json+ld') {
+            if (contentType == 'application/ld+json') {
                 var jsonDocument;
                 try {
                     jsonDocument = JSON.parse(str);
@@ -1444,7 +1444,7 @@ $rdf.parse = function parse(str, kb, base, contentType, callback) {
     }
 
     function executeErrorCallback(e) {
-        if(contentType != 'application/json+ld' ||
+        if(contentType != 'application/ld+json' ||
            contentType != 'application/nquads' ||
            contentType != 'application/n-quads') {
             if (callback) {
@@ -1540,7 +1540,7 @@ $rdf.serialize = function(target, kb, base, contentType, callback) {
         case 'application/n3': // Legacy
             documentString = sz.statementsToN3(newSts);
             return executeCallback(null, documentString);
-        case 'application/json+ld':
+        case 'application/ld+json':
             n3String = sz.statementsToN3(newSts);
             convertToJson(n3String, callback);
             break;
@@ -1565,7 +1565,7 @@ $rdf.serialize = function(target, kb, base, contentType, callback) {
     }
 
     function executeErrorCallback(err) {
-        if(contentType != 'application/json+ld' ||
+        if(contentType != 'application/ld+json' ||
            contentType != 'application/nquads' ||
            contentType != 'application/n-quads') {
             if(callback) {
