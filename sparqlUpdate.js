@@ -48,16 +48,19 @@ $rdf.sparqlUpdate = function() {
             if (request !== undefined) {
                 var response = kb.any(request, this.ns.link("response"));
                 if (request !== undefined) {
+                    var acceptPatch = kb.each(response, this.ns.httph("accept-patch"));
+                    if (acceptPatch.length) {
+                        for (var i = 0; i < acceptPatch.length; i++) {
+                            var method = acceptPatch[i].value.trim();
+                            if (method.indexOf('application/sparql-update') >=0 ) return 'SPARQL';
+                        }
+                    }
                     var author_via = kb.each(response, this.ns.httph("ms-author-via"));
                     if (author_via.length) {
                         for (var i = 0; i < author_via.length; i++) {
                             var method = author_via[i].value.trim();
                             if (method.indexOf('SPARQL') >=0 ) return 'SPARQL';
                             if (method.indexOf('DAV') >=0 ) return 'DAV';
-//                            if (author_via[i].value == "SPARQL" || author_via[i].value == "DAV")
-                                // dump("sparql.editable: Success for "+uri+": "+author_via[i] +"\n");
-                                //return author_via[i].value;
-                                
                         }
                     }
                     var status = kb.each(response, this.ns.http("status"));
