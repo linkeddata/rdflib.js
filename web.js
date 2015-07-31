@@ -619,7 +619,7 @@ $rdf.Fetcher = function(store, timeout, async) {
     this.proxyIfNecessary = function(uri) {
         if (typeof tabulator != 'undefined' && tabulator.isExtension) return uri; // Extenstion does not need proxy
                         // browser does 2014 on as https browser script not trusted
-        if ($rdf.Fetcher.crossSiteProxyTemplate && document && document.location
+        if (document && document.location && $rdf.Fetcher.crossSiteProxyTemplate
 			&& (('' + document.location).slice(0,6) === 'https:'
                 || uri.slice(0,5) === 'http:')) {
               return $rdf.Fetcher.crossSiteProxyTemplate.replace('{uri}', encodeURIComponent(uri));
