@@ -481,7 +481,7 @@ $rdf.Fetcher = function(store, timeout, async) {
         return xhr
     }
 
-    // in the why part of the quad sistinguish between HTML and HTTP header
+    // in the why part of the quad distinguish between HTML and HTTP header
     this.linkData = function(xhr, rel, uri, why) {
         var x = xhr.resource;
         if (!uri) return;
@@ -494,11 +494,39 @@ $rdf.Fetcher = function(store, timeout, async) {
             }
         } else {
         // See https://www.iana.org/assignments/link-relations/link-relations.xml
-        // Alas not yet in RDF fro each predicate
-            pred = kb.sym($rdf.uri.join(rel, 'http://www.iana.org/assignments/link-relations/'));
+        // Alas not yet in RDF yet for each predicate
+            predicate = kb.sym($rdf.uri.join(rel, 'http://www.iana.org/assignments/link-relations/'));
             kb.add(xhr.resource, predicate, obj, why);
         }
     };
+
+    this.parseLinkHeader = function(xhr, thisReq) {
+        var link;
+        try {
+            link = xhr.getResponseHeader('link'); // May crash from CORS error
+        }catch(e){}
+        if (link) {
+            var rel;
+            var lines = link.replace(/ /g, '').split(',');
+            for (var k=0; k < lines.length; k++) {
+                rel = null;
+                var arg = lines[k].split(';');
+                for (var i = 1; i < arg.length; i++) {
+                    lr = arg[i].split('=');
+                    if (lr[0] == 'rel') rel = lr[1].replace(/"/g, '').replace(/'/g, ''); // '"remove quotes
+                }
+                var v = arg[0];
+                // eg. Link: <.meta>; rel=meta, <.acl>; rel=acl
+                if (v.length && v[0] == '<' && v[v.length-1] == '>' && v.slice)
+                    v = v.slice(1, -1);
+                if (rel) { // Treat just like HTML link element
+                    this.linkData(xhr, rel, v, thisReq);
+                }
+            }
+        }
+    };
+
+
 
     this.doneFetch = function(xhr, args) {
         this.addStatus(xhr.req, 'Done.')
@@ -596,6 +624,7 @@ $rdf.Fetcher = function(store, timeout, async) {
     **
     **/
     this.nowOrWhenFetched = function(uri, referringTerm, userCallback) {
+        uri = uri.uri || uri; // allow symbol object or string to be passed
         var sta = this.getState(uri);
         if (sta == 'fetched') return userCallback(true);
 
@@ -698,6 +727,7 @@ $rdf.Fetcher = function(store, timeout, async) {
      **              or URI has already been loaded
      */
     this.requestURI = function(docuri, rterm, options, userCallback) { //sources_request_new
+        docuri = docuri.uri || docuri; // Symbol or string
         if (docuri.indexOf('#') >= 0) { // hash
             throw ("requestURI should not be called with fragid: " + docuri);
         }
@@ -820,7 +850,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                 var thisReq = xhr.req // Might have changes by redirect
                 sf.fireCallbacks('recv', args)
                 var kb = sf.store;
-                sf.saveResponseMetadata(xhr, kb);
+                var response = sf.saveResponseMetadata(xhr, kb);
                 sf.fireCallbacks('headers', [{uri: docuri, headers: xhr.headers}]);
 
                 if (xhr.status >= 400) { // For extra dignostics, keep the reply
@@ -903,25 +933,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                     }
                 }
 
-                var link;
-                try {
-                    link = xhr.getResponseHeader('link');
-                }catch(e){}
-                if (link) {
-                    var rel = null;
-                    var arg = link.replace(/ /g, '').split(';');
-                    for (var i = 1; i < arg.length; i++) {
-                        lr = arg[i].split('=');
-                        if (lr[0] == 'rel') rel = lr[1];
-                    }
-                    var v = arg[0];
-                    // eg. Link: <.meta>, rel=meta
-                    if (v.length && v[0] == '<' && v[v.length-1] == '>' && v.slice)
-                        v = v.slice(1, -1);
-                    if (rel) // Treat just like HTML link element
-                        sf.linkData(xhr, rel, v, thisReq);
-                }
-
+                sf.parseLinkHeader(xhr, thisReq); // sf.?
 
                 if (handler) {
                     try {
