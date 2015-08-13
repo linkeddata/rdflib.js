@@ -31,7 +31,7 @@ class $rdf.Empty extends $rdf.Node
 ###
 class $rdf.Symbol extends $rdf.Node
     constructor: (@uri) ->
-        @value = @uri   # why?
+        # @value = @uri   # why? remove not used and wastefull
     termType: 'symbol'
     toString: -> "<#{@uri}>"
     toNT: @::toString
