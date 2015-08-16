@@ -663,7 +663,7 @@ $rdf.Fetcher = function(store, timeout, async) {
     this.proxyIfNecessary = function(uri) {
         if (typeof tabulator != 'undefined' && tabulator.isExtension) return uri; // Extenstion does not need proxy
                         // browser does 2014 on as https browser script not trusted
-        if ($rdf.Fetcher.crossSiteProxyTemplate && document && document.location
+        if ($rdf.Fetcher.crossSiteProxyTemplate && (typeof document !== 'undefined') &&document.location
 			&& ('' + document.location).slice(0,6) === 'https:'
                 && uri.slice(0,5) === 'http:') {
               return $rdf.Fetcher.crossSiteProxyTemplate.replace('{uri}', encodeURIComponent(uri));
@@ -790,7 +790,7 @@ $rdf.Fetcher = function(store, timeout, async) {
         */
 
         var onerrorFactory = function(xhr) { return function(event) {
-            if ($rdf.Fetcher.crossSiteProxyTemplate && document && document.location && !xhr.proxyUsed) { // In mashup situation
+            if ($rdf.Fetcher.crossSiteProxyTemplate && (typeof document !== 'undefined') &&document.location && !xhr.proxyUsed) { // In mashup situation
                 var hostpart = $rdf.uri.hostpart;
                 var here = '' + document.location;
                 var uri = xhr.resource.uri
@@ -962,7 +962,7 @@ $rdf.Fetcher = function(store, timeout, async) {
             switch (xhr.readyState) {
             case 0:
                     var uri = xhr.resource.uri, newURI;
-                    if (this.crossSiteProxyTemplate && document && document.location) { // In mashup situation
+                    if (this.crossSiteProxyTemplate && (typeof document !== 'undefined') &&document.location) { // In mashup situation
                         var hostpart = $rdf.uri.hostpart;
                         var here = '' + document.location;
                         if (hostpart(here) && hostpart(uri) && hostpart(here) != hostpart(uri)) {
