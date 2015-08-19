@@ -7916,10 +7916,6 @@ $rdf.Fetcher = function(store, timeout, async) {
 
     $rdf.Util.callbackify(this, ['request', 'recv', 'headers', 'load', 'fail', 'refresh', 'retract', 'done']);
 
-    this.addProtocol = function(proto) {
-        sf.store.add(sf.appNode, ns.link("protocol"), sf.store.literal(proto), this.appNode)
-    }
-
     this.addHandler = function(handler) {
         sf.handlers.push(handler)
         handler.register(sf)
@@ -8026,12 +8022,12 @@ $rdf.Fetcher = function(store, timeout, async) {
             xhr.userCallback(true, undefined, xhr);
         };
         this.fireCallbacks('done', args)
-    }
+    };
 
-    this.store.add(this.appNode, ns.rdfs('label'), this.store.literal('This Session'), this.appNode);
-
-    ['http', 'https', 'file', 'chrome'].map(this.addProtocol); // ftp? mailto:?
-    [$rdf.Fetcher.RDFXMLHandler, $rdf.Fetcher.XHTMLHandler, $rdf.Fetcher.XMLHandler, $rdf.Fetcher.HTMLHandler, $rdf.Fetcher.TextHandler, $rdf.Fetcher.N3Handler ].map(this.addHandler)
+    
+    [$rdf.Fetcher.RDFXMLHandler, $rdf.Fetcher.XHTMLHandler,
+     $rdf.Fetcher.XMLHandler, $rdf.Fetcher.HTMLHandler,
+     $rdf.Fetcher.TextHandler, $rdf.Fetcher.N3Handler ].map(this.addHandler);
 
 
 
@@ -8113,14 +8109,14 @@ $rdf.Fetcher = function(store, timeout, async) {
     ** Changed 2013-08-20:  Added (ok, body) params to callback
     **
     **/
-    this.nowOrWhenFetched = function(uri, referringTerm, userCallback) {
+    this.nowOrWhenFetched = function(uri, referringTerm, userCallback, options) {
         uri = uri.uri || uri; // allow symbol object or string to be passed
         var sta = this.getState(uri);
         if (sta == 'fetched') return userCallback(true);
 
         // If it is 'failed', then shoulkd we try again?  I think so so an old error doens't get stuck
         //if (sta == 'unrequested')
-        this.requestURI(uri, referringTerm, {}, userCallback);
+        this.requestURI(uri, referringTerm, options || {}, userCallback);
     }
 
 
@@ -8296,7 +8292,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                     xhr.abort()
                     xhr.aborted = true
 
-                    sf.addStatus(oldreq, 'done - redirected') // why
+                    sf.addStatus(oldreq, 'redirected to new request') // why
                     //the callback throws an exception when called from xhr.onerror (so removed)
                     //sf.fireCallbacks('done', args) // Are these args right? @@@   Noit done yet! done means success
                     sf.requested[xhr.resource.uri] = 'redirected';
@@ -8326,7 +8322,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                      sf.requestURI(docuri, rterm, newopt, userCallback)
                     // xhr.send(); // try again -- not a function
                 } else {
-                    sf.failFetch(xhr, "XHR Error: "+event); // Alas we get no error message
+                    sf.failFetch(xhr, "XHR Error not from Credentials or cross-site: "+event); // Alas we get no error message
                 }
             }
         }; }
@@ -8384,6 +8380,9 @@ $rdf.Fetcher = function(store, timeout, async) {
                     if (ct) {
                         if (ct.indexOf('image/') == 0 || ct.indexOf('application/pdf') == 0) addType(kb.sym('http://purl.org/dc/terms/Image'));
                     }
+                    if (options.forceContentType) {
+                        xhr.headers['content-type'] = options.forceContentType;
+                    };
                 }
 
                 if ($rdf.uri.protocol(xhr.resource.uri) == 'file' || $rdf.uri.protocol(xhr.resource.uri) == 'chrome') {
@@ -8400,6 +8399,10 @@ $rdf.Fetcher = function(store, timeout, async) {
                     default:
                         xhr.headers['content-type'] = 'text/xml';
                     }
+                    if (options.forceContentType) {
+                        xhr.headers['content-type'] = options.forceContentType;
+                    };
+
                 }
 
                 // If we have alread got the thing at this location, abort
@@ -8481,13 +8484,14 @@ $rdf.Fetcher = function(store, timeout, async) {
                             // if (xhr.statusText) kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response)
 
                             xhr.abort()
-                            xhr.aborted = true
+                            xhr.aborted = true;
+                            xhr.redirected = true;
 
-                            sf.addStatus(oldreq, 'done') // why
+                            sf.addStatus(oldreq, 'redirected XHR') // why
                             if (xhr.userCallback) {
                                 xhr.userCallback(true);
                             };
-                            sf.fireCallbacks('done', args) // Are these args right? @@@
+                            sf.fireCallbacks('redirected', args) // Are these args right? @@@
                             sf.requested[xhr.resource.uri] = 'redirected';
 
                             var xhr2 = sf.requestURI(newURI, xhr.resource);
@@ -8506,10 +8510,10 @@ $rdf.Fetcher = function(store, timeout, async) {
                 // handleResponse();   // In general it you can't do it yet as the headers are in but not the data
                 break
             case 4:
-                // Final state
+                // Final state for this XHR but may be redirected
                 handleResponse();
                 // Now handle
-                if (xhr.handle) {
+                if (xhr.handle && xhr.responseText) {
                     if (sf.requested[xhr.resource.uri] === 'redirected') {
                         break;
                     }
@@ -8518,8 +8522,11 @@ $rdf.Fetcher = function(store, timeout, async) {
                         sf.doneFetch(xhr, args)
                     })
                 } else {
-                    sf.addStatus(xhr.req, "Fetch OK. No known semantics.");
-                    sf.doneFetch(xhr, args);
+                    if (xhr.redirected) {
+                        sf.addStatus(xhr.req, "Aborted and redirected to new request.");
+                    } else {
+                        sf.addStatus(xhr.req, "Fetch over. No data handled. Aborted = " + xhr.aborted);
+                    }
                     //sf.failFetch(xhr, "HTTP failed unusually. (no handler set) (x-site violation? no net?) for <"+
                     //    docuri+">");
                 }
