@@ -375,8 +375,10 @@ $rdf.Util.string = {
     }
 };
 
+// Reomved 2015-08-05 timbl - unused and depended on jQuery!
 // from http://dev.jquery.com/browser/trunk/jquery/src/core.js
-// Overlap with JQuery -- we try to keep the rdflib.js and jquery libraries separate at the moment.
+// Dependency with JQuery -- we try to keep the rdflib.js and jquery libraries separate at the moment.
+/*
 $rdf.Util.extend = function () {
     // copy reference to target object
     var target = arguments[0] || {},
@@ -445,7 +447,7 @@ $rdf.Util.extend = function () {
     // Return the modified object
     return target;
 };
-
+*/
 
 
 
@@ -691,8 +693,13 @@ $rdf.Node = (function() {
 
 })();
 
+<<<<<<< HEAD
 $rdf.Empty = (function(superClass) {
   extend(Empty, superClass);
+=======
+$rdf.Empty = (function(_super) {
+  __extends(Empty, _super);
+>>>>>>> gh-pages
 
   function Empty() {
     return Empty.__super__.constructor.apply(this, arguments);
@@ -719,12 +726,20 @@ $rdf.Empty = (function(superClass) {
     @param uri the uri as string
  */
 
+<<<<<<< HEAD
 $rdf.Symbol = (function(superClass) {
   extend(Symbol, superClass);
 
   function Symbol(uri1) {
     this.uri = uri1;
     this.value = this.uri;
+=======
+$rdf.Symbol = (function(_super) {
+  __extends(Symbol, _super);
+
+  function Symbol(uri) {
+    this.uri = uri;
+>>>>>>> gh-pages
   }
 
   Symbol.prototype.termType = 'symbol';
@@ -782,8 +797,13 @@ if ($rdf.NextId != null) {
 
 $rdf.NTAnonymousNodePrefix = "_:n";
 
+<<<<<<< HEAD
 $rdf.BlankNode = (function(superClass) {
   extend(BlankNode, superClass);
+=======
+$rdf.BlankNode = (function(_super) {
+  __extends(BlankNode, _super);
+>>>>>>> gh-pages
 
   function BlankNode(id) {
     this.id = $rdf.NextId++;
@@ -825,12 +845,21 @@ $rdf.BlankNode = (function(superClass) {
 
 })($rdf.Node);
 
+<<<<<<< HEAD
 $rdf.Literal = (function(superClass) {
   extend(Literal, superClass);
 
   function Literal(value1, lang1, datatype) {
     this.value = value1;
     this.lang = lang1;
+=======
+$rdf.Literal = (function(_super) {
+  __extends(Literal, _super);
+
+  function Literal(value, lang, datatype) {
+    this.value = value;
+    this.lang = lang;
+>>>>>>> gh-pages
     this.datatype = datatype;
     if (this.lang == null) {
       this.lang = void 0;
@@ -895,8 +924,13 @@ $rdf.Literal = (function(superClass) {
 
 })($rdf.Node);
 
+<<<<<<< HEAD
 $rdf.Collection = (function(superClass) {
   extend(Collection, superClass);
+=======
+$rdf.Collection = (function(_super) {
+  __extends(Collection, _super);
+>>>>>>> gh-pages
 
   function Collection(initial) {
     var i, len, s;
@@ -1032,8 +1066,13 @@ $rdf.st = function(subject, predicate, object, why) {
   return new $rdf.Statement(subject, predicate, object, why);
 };
 
+<<<<<<< HEAD
 $rdf.Formula = (function(superClass) {
   extend(Formula, superClass);
+=======
+$rdf.Formula = (function(_super) {
+  __extends(Formula, _super);
+>>>>>>> gh-pages
 
   function Formula() {
     this.statements = [];
@@ -1172,6 +1211,7 @@ $rdf.Formula = (function(superClass) {
     results = [];
     sts = this.statementsMatching(s, p, o, w, false);
     if (s == null) {
+<<<<<<< HEAD
       for (i = 0, len = sts.length; i < len; i++) {
         elt = sts[i];
         results.push(elt.subject);
@@ -1189,6 +1229,25 @@ $rdf.Formula = (function(superClass) {
     } else if (w == null) {
       for (q = 0, len3 = sts.length; q < len3; q++) {
         elt = sts[q];
+=======
+      for (_i = 0, _len = sts.length; _i < _len; _i++) {
+        elt = sts[_i];
+        results.push(elt.subject);
+      }
+    } else if (p == null) {
+      for (_j = 0, _len1 = sts.length; _j < _len1; _j++) {
+        elt = sts[_j];
+        results.push(elt.predicate);
+      }
+    } else if (o == null) {
+      for (_k = 0, _len2 = sts.length; _k < _len2; _k++) {
+        elt = sts[_k];
+        results.push(elt.object);
+      }
+    } else if (w == null) {
+      for (_l = 0, _len3 = sts.length; _l < _len3; _l++) {
+        elt = sts[_l];
+>>>>>>> gh-pages
         results.push(elt.why);
       }
     }
@@ -1514,6 +1573,7 @@ $rdf.Namespace = $rdf.Formula.prototype.ns;
 
 $rdf.variable = $rdf.Formula.prototype.variable;
 
+<<<<<<< HEAD
 
 /*
  * Variable
@@ -1527,6 +1587,21 @@ $rdf.variable = $rdf.Formula.prototype.variable;
 
 $rdf.Variable = (function(superClass) {
   extend(Variable, superClass);
+=======
+
+/*
+ * Variable
+ *
+ * Variables are placeholders used in patterns to be matched.
+ * In cwm they are symbols which are the formula's list of quantified variables.
+ * In sparl they are not visibily URIs.  Here we compromise, by having
+ * a common special base URI for variables. Their names are uris,
+ * but the ? nottaion has an implicit base uri of 'varid:'
+ */
+
+$rdf.Variable = (function(_super) {
+  __extends(Variable, _super);
+>>>>>>> gh-pages
 
   function Variable(rel) {
     this.base = 'varid:';
@@ -5755,16 +5830,19 @@ $rdf.sparqlUpdate = function() {
             if (request !== undefined) {
                 var response = kb.any(request, this.ns.link("response"));
                 if (request !== undefined) {
+                    var acceptPatch = kb.each(response, this.ns.httph("accept-patch"));
+                    if (acceptPatch.length) {
+                        for (var i = 0; i < acceptPatch.length; i++) {
+                            var method = acceptPatch[i].value.trim();
+                            if (method.indexOf('application/sparql-update') >=0 ) return 'SPARQL';
+                        }
+                    }
                     var author_via = kb.each(response, this.ns.httph("ms-author-via"));
                     if (author_via.length) {
                         for (var i = 0; i < author_via.length; i++) {
                             var method = author_via[i].value.trim();
                             if (method.indexOf('SPARQL') >=0 ) return 'SPARQL';
                             if (method.indexOf('DAV') >=0 ) return 'DAV';
-//                            if (author_via[i].value == "SPARQL" || author_via[i].value == "DAV")
-                                // dump("sparql.editable: Success for "+uri+": "+author_via[i] +"\n");
-                                //return author_via[i].value;
-                                
                         }
                     }
                     var status = kb.each(response, this.ns.http("status"));
@@ -6212,7 +6290,8 @@ $rdf.sparqlUpdate = function() {
                 var stream = Components.classes["@mozilla.org/network/file-output-stream;1"]
                 .createInstance(Components.interfaces.nsIFileOutputStream);
 
-                stream.init(file, 0x02 | 0x08 | 0x20, 0666, 0);
+                // Various JS systems object to 0666 in struct mode as dangerous
+                stream.init(file, 0x02 | 0x08 | 0x20, parseInt('0666',8), 0);
 
                 //write data to file then close output stream
                 stream.write(documentString, documentString.length);
@@ -7485,6 +7564,7 @@ if ((typeof module !== "undefined" && module !== null ? module.exports : void 0)
     module.exports[k] = v;
   }
 }
+<<<<<<< HEAD
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 (function (process){
 /*!
@@ -7493,11 +7573,43 @@ if ((typeof module !== "undefined" && module !== null ? module.exports : void 0)
  *
  * Copyright 2010-2014 Caolan McMahon
  * Released under the MIT license
+=======
+/************************************************************
+ *
+ * Project: rdflib.js, originally part of Tabulator project
+ *
+ * File: web.js
+ *
+ * Description: contains functions for requesting/fetching/retracting
+ *  This implements quite a lot of the web architecture.
+ * A fetcher is bound to a specific knowledge base graph, into which
+ * it loads stuff and into which it writes its metadata
+ * @@ The metadata should be optionally a separate graph
+ *
+ * - implements semantics of HTTP headers, Internet Content Types
+ * - selects parsers for rdf/xml, n3, rdfa, grddl
+ *
+ * Dependencies:
+ *
+ * needs: util.js uri.js term.js rdfparser.js rdfa.js n3parser.js
+ *      identity.js sparql.js jsonparser.js
+ *
+ * If jQuery is defined, it uses jQuery.ajax, else is independent of jQuery
+ *
+ ************************************************************/
+
+/**
+ * Things to test: callbacks on request, refresh, retract
+ *   loading from HTTP, HTTPS, FTP, FILE, others?
+ * To do:
+ * Firing up a mail client for mid:  (message:) URLs
+>>>>>>> gh-pages
  */
 /*jshint onevar: false, indent:4 */
 /*global setImmediate: false, setTimeout: false, console: false */
 (function () {
 
+<<<<<<< HEAD
     var async = {};
 
     // global on the server, window in the browser
@@ -7511,6 +7623,45 @@ if ((typeof module !== "undefined" && module !== null ? module.exports : void 0)
     async.noConflict = function () {
         root.async = previous_async;
         return async;
+=======
+if (typeof module !== 'undefined' && module.require) { // Node 
+// For non-node, jasonld needs to be inlined in init.js etc
+    $rdf.jsonld = require('jsonld');
+    N3 = require('n3');
+    asyncLib = require('async');
+}
+
+$rdf.Fetcher = function(store, timeout, async) {
+    this.store = store
+    this.thisURI = "http://dig.csail.mit.edu/2005/ajar/ajaw/rdf/sources.js" + "#SourceFetcher" // -- Kenny
+    this.timeout = timeout ? timeout : 30000
+    this.async = async != null ? async : true
+    this.appNode = this.store.bnode(); // Denoting this session
+    this.store.fetcher = this; //Bi-linked
+    this.requested = {}
+    this.lookedUp = {}
+    this.handlers = []
+    this.mediatypes = {}
+    var sf = this
+    var kb = this.store;
+    var ns = {} // Convenience namespaces needed in this module:
+    // These are delibertely not exported as the user application should
+    // make its own list and not rely on the prefixes used here,
+    // and not be tempted to add to them, and them clash with those of another
+    // application.
+    ns.link = $rdf.Namespace("http://www.w3.org/2007/ont/link#");
+    ns.http = $rdf.Namespace("http://www.w3.org/2007/ont/http#");
+    ns.httph = $rdf.Namespace("http://www.w3.org/2007/ont/httph#");
+    ns.rdf = $rdf.Namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#");
+    ns.rdfs = $rdf.Namespace("http://www.w3.org/2000/01/rdf-schema#");
+    ns.dc = $rdf.Namespace("http://purl.org/dc/elements/1.1/");
+
+
+    $rdf.Fetcher.crossSiteProxy = function(uri) {
+        if ($rdf.Fetcher.crossSiteProxyTemplate)
+          return $rdf.Fetcher.crossSiteProxyTemplate.replace('{uri}', encodeURIComponent(uri));
+        else return undefined;
+>>>>>>> gh-pages
     };
 
     function only_once(fn) {
@@ -7658,6 +7809,7 @@ if ((typeof module !== "undefined" && module !== null ? module.exports : void 0)
     };
     async.forEachLimit = async.eachLimit;
 
+<<<<<<< HEAD
     var _eachLimit = function (limit) {
 
         return function (arr, iterator, callback) {
@@ -7672,6 +7824,12 @@ if ((typeof module !== "undefined" && module !== null ? module.exports : void 0)
             (function replenish () {
                 if (completed >= arr.length) {
                     return callback();
+=======
+                // link rel
+                var links = this.dom.getElementsByTagName('link');
+                for (var x = links.length - 1; x >= 0; x--) {
+                    sf.linkData(xhr, links[x].getAttribute('rel'), links[x].getAttribute('href'), xhr.resource);
+>>>>>>> gh-pages
                 }
 
                 while (running < limit && started < arr.length) {
@@ -7941,12 +8099,21 @@ if ((typeof module !== "undefined" && module !== null ? module.exports : void 0)
             }
         });
 
+<<<<<<< HEAD
         _each(keys, function (k) {
             var task = _isArray(tasks[k]) ? tasks[k]: [tasks[k]];
             var taskCallback = function (err) {
                 var args = Array.prototype.slice.call(arguments, 1);
                 if (args.length <= 1) {
                     args = args[0];
+=======
+                // Look for an XML declaration
+                if (rt.match(/\s*<\?xml\s+version\s*=[^<>]+\?>/)) {
+                    sf.addStatus(xhr.req, "Warning: "+xhr.resource + " has an XML declaration. We'll assume "
+                        + "it's XML but its content-type wasn't XML.\n")
+                    sf.switchHandler('XMLHandler', xhr, cb)
+                    return
+>>>>>>> gh-pages
                 }
                 if (err) {
                     var safeResults = {};
@@ -8084,9 +8251,23 @@ if ((typeof module !== "undefined" && module !== null ? module.exports : void 0)
         _parallel({ map: async.map, each: async.each }, tasks, callback);
     };
 
+<<<<<<< HEAD
     async.parallelLimit = function(tasks, limit, callback) {
         _parallel({ map: _mapLimit(limit), each: _eachLimit(limit) }, tasks, callback);
     };
+=======
+    $rdf.Fetcher.N3Handler = function() {
+        this.handlerFactory = function(xhr) {
+            xhr.handle = function(cb) {
+                // Parse the text of this non-XML file
+                $rdf.log.debug("web.js: Parsing as N3 " + xhr.resource.uri); // @@@@ comment me out
+                //sf.addStatus(xhr.req, "N3 not parsed yet...")
+                var rt = xhr.responseText
+                var p = $rdf.N3Parser(kb, kb, xhr.resource.uri, xhr.resource.uri, null, null, "", null)
+                //                p.loadBuf(xhr.responseText)
+                try {
+                    p.loadBuf(xhr.responseText)
+>>>>>>> gh-pages
 
     async.series = function (tasks, callback) {
         callback = callback || function () {};
@@ -8120,6 +8301,7 @@ if ((typeof module !== "undefined" && module !== null ? module.exports : void 0)
         }
     };
 
+<<<<<<< HEAD
     async.iterator = function (tasks) {
         var makeCallback = function (index) {
             var fn = function () {
@@ -8144,6 +8326,12 @@ if ((typeof module !== "undefined" && module !== null ? module.exports : void 0)
             );
         };
     };
+=======
+    this.addHandler = function(handler) {
+        sf.handlers.push(handler)
+        handler.register(sf)
+    }
+>>>>>>> gh-pages
 
     var _concat = function (eachfn, arr, fn, callback) {
         var r = [];
@@ -8202,6 +8390,7 @@ if ((typeof module !== "undefined" && module !== null ? module.exports : void 0)
         }
     };
 
+<<<<<<< HEAD
     async.doUntil = function (iterator, test, callback) {
         iterator(function (err) {
             if (err) {
@@ -8220,6 +8409,24 @@ if ((typeof module !== "undefined" && module !== null ? module.exports : void 0)
     async.queue = function (worker, concurrency) {
         if (concurrency === undefined) {
             concurrency = 1;
+=======
+    // in the why part of the quad distinguish between HTML and HTTP header
+    this.linkData = function(xhr, rel, uri, why) {
+        var x = xhr.resource;
+        if (!uri) return;
+        var predicate =  ns.rdfs('seeAlso');
+        // See http://www.w3.org/TR/powder-dr/#httplink for describedby 2008-12-10
+        var obj = kb.sym($rdf.uri.join(uri, xhr.resource.uri));
+        if (rel == 'alternate' || rel == 'seeAlso' || rel == 'meta' || rel == 'describedby') {
+            if (obj.uri != xhr.resource.uri) {
+                kb.add(xhr.resource, predicate, obj, why);
+            }
+        } else {
+        // See https://www.iana.org/assignments/link-relations/link-relations.xml
+        // Alas not yet in RDF yet for each predicate
+            predicate = kb.sym($rdf.uri.join(rel, 'http://www.iana.org/assignments/link-relations/'));
+            kb.add(xhr.resource, predicate, obj, why);
+>>>>>>> gh-pages
         }
         function _insert(q, data, pos, callback) {
           if (!q.started){
@@ -8321,6 +8528,7 @@ if ((typeof module !== "undefined" && module !== null ? module.exports : void 0)
         return q;
     };
 
+<<<<<<< HEAD
     async.priorityQueue = function (worker, concurrency) {
 
         function _compareTasks(a, b){
@@ -8362,14 +8570,73 @@ if ((typeof module !== "undefined" && module !== null ? module.exports : void 0)
                   priority: priority,
                   callback: typeof callback === 'function' ? callback : null
               };
+=======
+    this.parseLinkHeader = function(xhr, thisReq) {
+        var link;
+        try {
+            link = xhr.getResponseHeader('link'); // May crash from CORS error
+        }catch(e){}
+        if (link) {
+            var rel;
+            var lines = link.replace(/ /g, '').split(',');
+            for (var k=0; k < lines.length; k++) {
+                rel = null;
+                var arg = lines[k].split(';');
+                for (var i = 1; i < arg.length; i++) {
+                    lr = arg[i].split('=');
+                    if (lr[0] == 'rel') rel = lr[1].replace(/"/g, '').replace(/'/g, ''); // '"remove quotes
+                }
+                var v = arg[0];
+                // eg. Link: <.meta>; rel=meta, <.acl>; rel=acl
+                if (v.length && v[0] == '<' && v[v.length-1] == '>' && v.slice)
+                    v = v.slice(1, -1);
+                if (rel) { // Treat just like HTML link element
+                    this.linkData(xhr, rel, v, thisReq);
+                }
+            }
+        }
+    };
+
+
+
+    this.doneFetch = function(xhr, args) {
+        this.addStatus(xhr.req, 'Done.')
+        // $rdf.log.info("Done with parse, firing 'done' callbacks for " + xhr.resource)
+        this.requested[xhr.resource.uri] = 'done'; //Kenny
+        if (xhr.userCallback) {
+            xhr.userCallback(true, undefined, xhr);
+        };
+        this.fireCallbacks('done', args)
+    };
+
+    
+    [$rdf.Fetcher.RDFXMLHandler, $rdf.Fetcher.XHTMLHandler,
+     $rdf.Fetcher.XMLHandler, $rdf.Fetcher.HTMLHandler,
+     $rdf.Fetcher.TextHandler, $rdf.Fetcher.N3Handler ].map(this.addHandler);
+
+>>>>>>> gh-pages
 
               q.tasks.splice(_binarySearch(q.tasks, item, _compareTasks) + 1, 0, item);
 
+<<<<<<< HEAD
               if (q.saturated && q.tasks.length === q.concurrency) {
                   q.saturated();
               }
               async.setImmediate(q.process);
           });
+=======
+    /** Note two nodes are now smushed
+     **
+     ** If only one was flagged as looked up, then
+     ** the new node is looked up again, which
+     ** will make sure all the URIs are dereferenced
+     */
+    this.nowKnownAs = function(was, now) {
+        if (this.lookedUp[was.uri]) {
+            if (!this.lookedUp[now.uri]) this.lookUpThing(now, was) //  @@@@  Transfer userCallback
+        } else if (this.lookedUp[now.uri]) {
+            if (!this.lookedUp[was.uri]) this.lookUpThing(was, now)
+>>>>>>> gh-pages
         }
 
         // Start with a normal queue
@@ -8386,6 +8653,7 @@ if ((typeof module !== "undefined" && module !== null ? module.exports : void 0)
         return q;
     };
 
+<<<<<<< HEAD
     async.cargo = function (worker, payload) {
         var working     = false,
             tasks       = [];
@@ -8439,6 +8707,54 @@ if ((typeof module !== "undefined" && module !== null ? module.exports : void 0)
                         if (data.callback) {
                             data.callback.apply(null, args);
                         }
+=======
+    // Looks up something.
+    //
+    // Looks up all the URIs a things has.
+    //
+    // Parameters:
+    //
+    //  term:       canonical term for the thing whose URI is to be dereferenced
+    //  rterm:      the resource which refered to this (for tracking bad links)
+    //  options:    (old: force paraemter) or dictionary of options:
+    //      force:      Load the data even if loaded before
+    //  oneDone:   is called as callback(ok, errorbody, xhr) for each one
+    //  allDone:   is called as callback(ok, errorbody) for all of them
+    // Returns      the number of URIs fetched
+    //
+    this.lookUpThing = function(term, rterm, options, oneDone, allDone) {
+        var uris = kb.uris(term) // Get all URIs
+        var success = true;
+        var errors = '';
+        var outstanding = {}, force;
+        if (options === false || options === true) { // Old signaure
+            force = options;
+            options = { force: force };
+        } else {
+            if (options === undefined) options = {};
+            force = !!options.force;
+        }
+
+        if (typeof uris !== 'undefined') {
+            for (var i = 0; i < uris.length; i++) {
+                var u = uris[i];
+                outstanding[u] = true;
+                this.lookedUp[u] = true;
+                var sf = this;
+
+                var requestOne = function requestOne(u1){
+                    sf.requestURI($rdf.uri.docpart(u1), rterm, options, function(ok, body, xhr){
+                        if (ok) {
+                            if (oneDone) oneDone(true, u1);
+                        } else {
+                            if (oneDone) oneDone(false, body);
+                            success = false;
+                            errors += body + '\n';
+                        };
+                        delete outstanding[u];
+                        for (x in outstanding) return;
+                        if (allDone) allDone(success, errors);
+>>>>>>> gh-pages
                     });
 
                     process();
@@ -8450,6 +8766,7 @@ if ((typeof module !== "undefined" && module !== null ? module.exports : void 0)
             running: function () {
                 return working;
             }
+<<<<<<< HEAD
         };
         return cargo;
     };
@@ -8469,6 +8786,47 @@ if ((typeof module !== "undefined" && module !== null ? module.exports : void 0)
                         _each(args, function (x) {
                             console[name](x);
                         });
+=======
+        }
+        return uris.length
+    }
+
+
+    /*  Ask for a doc to be loaded if necessary then call back
+    **
+    ** Changed 2013-08-20:  Added (ok, body) params to callback
+    **
+    **/
+    this.nowOrWhenFetched = function(uri, referringTerm, userCallback, options) {
+        uri = uri.uri || uri; // allow symbol object or string to be passed
+        var sta = this.getState(uri);
+        if (sta == 'fetched') return userCallback(true);
+
+        // If it is 'failed', then shoulkd we try again?  I think so so an old error doens't get stuck
+        //if (sta == 'unrequested')
+        this.requestURI(uri, referringTerm, options || {}, userCallback);
+    }
+
+
+
+    // Look up response header
+    //
+    // Returns: a list of header values found in a stored HTTP response
+    //      or [] if response was found but no header found
+    //      or undefined if no response is available.
+    //
+    this.getHeader = function(doc, header) {
+        var kb = this.store;
+        var requests = kb.each(undefined, tabulator.ns.link("requestedURI"), doc.uri);
+        for (var r=0; r<requests.length; r++) {
+            var request = requests[r];
+            if (request !== undefined) {
+                var response = kb.any(request, tabulator.ns.link("response"));
+                if (request !== undefined) {
+                    var results = kb.each(response, tabulator.ns.httph(header.toLowerCase()));
+                    if (results.length) {
+                        return results.map(function(v){return v.value});
+>>>>>>> gh-pages
                     }
                 }
             }]));
@@ -8529,13 +8887,24 @@ if ((typeof module !== "undefined" && module !== null ? module.exports : void 0)
         return async.map(counter, iterator, callback);
     };
 
+<<<<<<< HEAD
     async.timesSeries = function (count, iterator, callback) {
         var counter = [];
         for (var i = 0; i < count; i++) {
             counter.push(i);
+=======
+    this.proxyIfNecessary = function(uri) {
+        if (typeof tabulator != 'undefined' && tabulator.isExtension) return uri; // Extenstion does not need proxy
+                        // browser does 2014 on as https browser script not trusted
+        if ($rdf.Fetcher.crossSiteProxyTemplate && (typeof document !== 'undefined') &&document.location
+			&& ('' + document.location).slice(0,6) === 'https:'
+                && uri.slice(0,5) === 'http:') {
+              return $rdf.Fetcher.crossSiteProxyTemplate.replace('{uri}', encodeURIComponent(uri));
+>>>>>>> gh-pages
         }
         return async.mapSeries(counter, iterator, callback);
     };
+<<<<<<< HEAD
 
     async.seq = function (/* functions... */) {
         var fns = arguments;
@@ -8555,6 +8924,39 @@ if ((typeof module !== "undefined" && module !== null ? module.exports : void 0)
             });
         };
     };
+=======
+    
+     
+    this.saveRequestMetadata = function(xhr, kb, docuri) {
+        var request = kb.bnode();
+        xhr.resource = $rdf.sym(docuri);
+
+        var ns = {};
+        ns.link = $rdf.Namespace("http://www.w3.org/2007/ont/link#");
+        ns.rdfs = $rdf.Namespace("http://www.w3.org/2000/01/rdf-schema#");
+
+        xhr.req = request;
+        var now = new Date();
+        var timeNow = "[" + now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds() + "] ";
+        kb.add(request, ns.rdfs("label"), kb.literal(timeNow + ' Request for ' + docuri), this.appNode);
+        kb.add(request, ns.link("requestedURI"), kb.literal(docuri), this.appNode);
+
+        kb.add(request, ns.link('status'), kb.collection(), this.appNode);
+        return request;
+    };
+       
+    this.saveResponseMetadata = function(xhr, kb) {
+        var response = kb.bnode();
+        var ns = {};
+        ns.link = $rdf.Namespace("http://www.w3.org/2007/ont/link#");
+        ns.http = $rdf.Namespace("http://www.w3.org/2007/ont/http#");
+        ns.httph = $rdf.Namespace("http://www.w3.org/2007/ont/httph#");
+        ns.rdfs = $rdf.Namespace("http://www.w3.org/2000/01/rdf-schema#");
+
+        kb.add(xhr.req, ns.link('response'), response);
+        kb.add(response, ns.http('status'), kb.literal(xhr.status), response);
+        kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response);
+>>>>>>> gh-pages
 
     async.compose = function (/* functions... */) {
       return async.seq.apply(null, Array.prototype.reverse.call(arguments));
@@ -8594,6 +8996,7 @@ if ((typeof module !== "undefined" && module !== null ? module.exports : void 0)
         next();
     };
 
+<<<<<<< HEAD
     // Node.js
     if (typeof module !== 'undefined' && module.exports) {
         module.exports = async;
@@ -8610,6 +9013,37 @@ if ((typeof module !== "undefined" && module !== null ? module.exports : void 0)
     }
 
 }());
+=======
+    /** Requests a document URI and arranges to load the document.
+     ** Parameters:
+     **	    term:  term for the thing whose URI is to be dereferenced
+     **      rterm:  the resource which refered to this (for tracking bad links)
+     **      options:
+     **              force:  Load the data even if loaded before
+     **              withCredentials:   flag for XHR/CORS etc 
+     **      userCallback:  Called with (true) or (false, errorbody) after load is done or failed
+     ** Return value:
+     **	    The xhr object for the HTTP access
+     **      null if the protocol is not a look-up protocol,
+     **              or URI has already been loaded
+     */
+    this.requestURI = function(docuri, rterm, options, userCallback) { //sources_request_new
+        docuri = docuri.uri || docuri; // Symbol or string
+        if (docuri.indexOf('#') >= 0) { // hash
+            throw ("requestURI should not be called with fragid: " + docuri);
+        }
+
+        var pcol = $rdf.uri.protocol(docuri);
+        if (pcol == 'tel' || pcol == 'mailto' || pcol == 'urn') return null; // No look-up operation on these, but they are not errors
+        if (options === undefined) options = {};
+        var force = !! options.force
+        var kb = this.store
+        var args = arguments
+        var docterm = kb.sym(docuri)
+        if (!force && typeof(this.requested[docuri]) != "undefined") {
+            return null
+        }
+>>>>>>> gh-pages
 
 }).call(this,require('_process'))
 },{"_process":25}],2:[function(require,module,exports){
@@ -8670,8 +9104,23 @@ if(_browser) {
   }
 }
 
+<<<<<<< HEAD
 // attaches jsonld API to the given object
 var wrapper = function(jsonld) {
+=======
+        if (rterm) {
+            if (rterm.uri) { // A link betwen URIs not terms
+                kb.add(docterm.uri, ns.link("requestedBy"), rterm.uri, this.appNode)
+            }
+        }
+
+        if (rterm) {
+            // $rdf.log.info('SF.request: ' + docuri + ' refd by ' + rterm.uri)
+        }
+        else {
+            // $rdf.log.info('SF.request: ' + docuri + ' no referring doc')
+        };
+>>>>>>> gh-pages
 
 /* Core API */
 
@@ -8720,6 +9169,7 @@ jsonld.compact = function(input, ctx, options, callback) {
     });
   }
 
+<<<<<<< HEAD
   // set default options
   if(!('base' in options)) {
     options.base = (typeof input === 'string') ? input : '';
@@ -8744,6 +9194,17 @@ jsonld.compact = function(input, ctx, options, callback) {
     // API, it should only be called from framing
     options.skipExpansion = true;
   }
+=======
+        var onerrorFactory = function(xhr) { return function(event) {
+            if ($rdf.Fetcher.crossSiteProxyTemplate && (typeof document !== 'undefined') &&document.location && !xhr.proxyUsed) { // In mashup situation
+                var hostpart = $rdf.uri.hostpart;
+                var here = '' + document.location;
+                var uri = xhr.resource.uri
+                if (hostpart(here) && hostpart(uri) && hostpart(here) != hostpart(uri)) {
+                    newURI = $rdf.Fetcher.crossSiteProxy(uri);
+                    sf.addStatus(xhr.req, "BLOCKED -> Cross-site Proxy to <" + newURI + ">");
+                    if (xhr.aborted) return;
+>>>>>>> gh-pages
 
   var expand = function(input, options, callback) {
     jsonld.nextTick(function() {
@@ -8754,6 +9215,7 @@ jsonld.compact = function(input, ctx, options, callback) {
     });
   };
 
+<<<<<<< HEAD
   // expand input then do compaction
   expand(input, options, function(err, expanded) {
     if(err) {
@@ -8806,6 +9268,68 @@ jsonld.compact = function(input, ctx, options, callback) {
     if(_isObject(ctx) && '@context' in ctx) {
       ctx = ctx['@context'];
     }
+=======
+                    xhr.abort()
+                    xhr.aborted = true
+
+                    sf.addStatus(oldreq, 'redirected to new request') // why
+                    //the callback throws an exception when called from xhr.onerror (so removed)
+                    //sf.fireCallbacks('done', args) // Are these args right? @@@   Noit done yet! done means success
+                    sf.requested[xhr.resource.uri] = 'redirected';
+
+                    var xhr2 = sf.requestURI(newURI, xhr.resource, options, userCallback);
+                    xhr2.proxyUsed = true; //only try the proxy once
+
+                    if (xhr2 && xhr2.req) {
+                        kb.add(xhr.req,
+                            kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'),
+                            xhr2.req,
+                            sf.appNode);
+                        return;
+                    }
+                }
+            } else {
+                if (xhr.withCredentials) {
+                    console.log("@@ Retrying with no credentials for " + xhr.resource)
+                    xhr.abort();
+                    delete sf.requested[docuri]; // forget the original request happened
+                    newopt = {};
+                    for (opt in options) if (options.hasOwnProperty(opt)) {
+                        newopt[opt] = options[opt]
+                    }
+                    newopt.withCredentials = false;
+                    sf.addStatus(xhr.req, "Abort: Will retry with credentials SUPPRESSED to see if that helps");
+                     sf.requestURI(docuri, rterm, newopt, userCallback)
+                    // xhr.send(); // try again -- not a function
+                } else {
+                    sf.failFetch(xhr, "XHR Error not from Credentials or cross-site: "+event); // Alas we get no error message
+                }
+            }
+        }; }
+
+        // Set up callbacks
+        var onreadystatechangeFactory = function(xhr) { return function() {
+            var handleResponse = function() {
+                if (xhr.handleResponseDone) return;
+                xhr.handleResponseDone = true;
+                var handler = null;
+                var thisReq = xhr.req // Might have changes by redirect
+                sf.fireCallbacks('recv', args)
+                var kb = sf.store;
+                var response = sf.saveResponseMetadata(xhr, kb);
+                sf.fireCallbacks('headers', [{uri: docuri, headers: xhr.headers}]);
+
+                if (xhr.status >= 400) { // For extra dignostics, keep the reply
+                //  @@@ 401 should cause  a retry with credential son
+                // @@@ cache the credentials flag by host ????
+                    if (xhr.responseText.length > 10) {
+                        kb.add(response, ns.http('content'), kb.literal(xhr.responseText), response);
+                        // dump("HTTP >= 400 responseText:\n"+xhr.responseText+"\n"); // @@@@
+                    }
+                    sf.failFetch(xhr, "HTTP error for " +xhr.resource + ": "+ xhr.status + ' ' + xhr.statusText);
+                    return;
+                }
+>>>>>>> gh-pages
 
     // build output context
     ctx = _clone(ctx);
@@ -19738,6 +20262,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                     if (ct) {
                         if (ct.indexOf('image/') == 0 || ct.indexOf('application/pdf') == 0) addType(kb.sym('http://purl.org/dc/terms/Image'));
                     }
+<<<<<<< HEAD
                 }
 
                 if ($rdf.uri.protocol(xhr.resource.uri) == 'file' || $rdf.uri.protocol(xhr.resource.uri) == 'chrome') {
@@ -20514,6 +21039,11 @@ var convertToNQuads = function(n3String, nquadCallback) {
                 }
                 if (typeof callback === 'function') {
                     n3Writer.end(callback);
+=======
+                    if (options.forceContentType) {
+                        xhr.headers['content-type'] = options.forceContentType;
+                    };
+>>>>>>> gh-pages
                 }
             },
             function(result, callback) {
@@ -24669,6 +25199,7 @@ function endWritable(stream, state, cb) {
   state.ended = true;
 }
 
+<<<<<<< HEAD
 },{"./_stream_duplex":27,"buffer":17,"core-util-is":32,"events":21,"inherits":22,"process-nextick-args":33,"util-deprecate":34}],32:[function(require,module,exports){
 (function (Buffer){
 // Copyright Joyent, Inc. and other Node contributors.
@@ -24698,6 +25229,27 @@ function isArray(ar) {
   return Array.isArray(ar);
 }
 exports.isArray = isArray;
+=======
+                if ($rdf.uri.protocol(xhr.resource.uri) == 'file' || $rdf.uri.protocol(xhr.resource.uri) == 'chrome') {
+                    switch (xhr.resource.uri.split('.').pop()) {
+                    case 'rdf':
+                    case 'owl':
+                        xhr.headers['content-type'] = 'application/rdf+xml';
+                        break;
+                    case 'n3':
+                    case 'nt':
+                    case 'ttl':
+                        xhr.headers['content-type'] = 'text/n3';
+                        break;
+                    default:
+                        xhr.headers['content-type'] = 'text/xml';
+                    }
+                    if (options.forceContentType) {
+                        xhr.headers['content-type'] = options.forceContentType;
+                    };
+
+                }
+>>>>>>> gh-pages
 
 function isBoolean(arg) {
   return typeof arg === 'boolean';
@@ -24709,6 +25261,7 @@ function isNull(arg) {
 }
 exports.isNull = isNull;
 
+<<<<<<< HEAD
 function isNullOrUndefined(arg) {
   return arg == null;
 }
@@ -25339,8 +25892,28 @@ exports.deprecate = function(fn, msg) {
 
   return deprecated;
 };
+=======
+                sf.parseLinkHeader(xhr, thisReq); // sf.?
+
+                if (handler) {
+                    try {
+                        handler.handlerFactory(xhr);
+                    } catch(e) { // Try to avoid silent errors
+                        sf.failFetch(xhr, "Exception handling content-type " + xhr.headers['content-type'] + ' was: '+e);
+                    };
+                } else {
+                    sf.doneFetch(xhr, args); //  Not a problem, we just don't extract data.
+                    /*
+                    // sf.failFetch(xhr, "Unhandled content type: " + xhr.headers['content-type']+
+                    //        ", readyState = "+xhr.readyState);
+                    */
+                    return;
+                }
+            };
+>>>>>>> gh-pages
 
 
+<<<<<<< HEAD
 var debugs = {};
 var debugEnviron;
 exports.debuglog = function(set) {
@@ -25361,6 +25934,24 @@ exports.debuglog = function(set) {
   return debugs[set];
 };
 
+=======
+            // $rdf.log.debug("web.js: XHR " + xhr.resource.uri + ' readyState='+xhr.readyState); // @@@@ comment me out
+
+            switch (xhr.readyState) {
+            case 0:
+                    var uri = xhr.resource.uri, newURI;
+                    if (this.crossSiteProxyTemplate && (typeof document !== 'undefined') &&document.location) { // In mashup situation
+                        var hostpart = $rdf.uri.hostpart;
+                        var here = '' + document.location;
+                        if (hostpart(here) && hostpart(uri) && hostpart(here) != hostpart(uri)) {
+                            newURI = this.crossSiteProxyTemplate.replace('{uri}', encodeURIComponent(uri));
+                            sf.addStatus(xhr.req, "BLOCKED -> Cross-site Proxy to <" + newURI + ">");
+                            if (xhr.aborted) return;
+
+                            var kb = sf.store;
+                            var oldreq = xhr.req;
+                            kb.add(oldreq, ns.http('redirectedTo'), kb.sym(newURI), oldreq);
+>>>>>>> gh-pages
 
 /**
  * Echos the value of a value. Trys to print the value out
@@ -25427,10 +26018,19 @@ inspect.styles = {
   'regexp': 'red'
 };
 
+<<<<<<< HEAD
+=======
+                            var now = new Date();
+                            var timeNow = "[" + now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds() + "] ";
+                            kb.add(newreq, ns.rdfs("label"), kb.literal(timeNow + ' Request for ' + newURI), this.appNode)
+                            kb.add(newreq, ns.link('status'), kb.collection(), this.appNode);
+                            kb.add(newreq, ns.link("requestedURI"), kb.literal(newURI), this.appNode);
+>>>>>>> gh-pages
 
 function stylizeWithColor(str, styleType) {
   var style = inspect.styles[styleType];
 
+<<<<<<< HEAD
   if (style) {
     return '\u001b[' + inspect.colors[style][0] + 'm' + str +
            '\u001b[' + inspect.colors[style][1] + 'm';
@@ -25439,15 +26039,61 @@ function stylizeWithColor(str, styleType) {
   }
 }
 
+=======
+                            xhr.abort()
+                            xhr.aborted = true;
+                            xhr.redirected = true;
+
+                            sf.addStatus(oldreq, 'redirected XHR') // why
+                            if (xhr.userCallback) {
+                                xhr.userCallback(true);
+                            };
+                            sf.fireCallbacks('redirected', args) // Are these args right? @@@
+                            sf.requested[xhr.resource.uri] = 'redirected';
+>>>>>>> gh-pages
 
 function stylizeNoColor(str, styleType) {
   return str;
 }
 
+<<<<<<< HEAD
+=======
+                    break;
+
+            case 3:
+                // Intermediate state -- 3 may OR MAY NOT be called, selon browser.
+                // handleResponse();   // In general it you can't do it yet as the headers are in but not the data
+                break
+            case 4:
+                // Final state for this XHR but may be redirected
+                handleResponse();
+                // Now handle
+                if (xhr.handle && xhr.responseText) {
+                    if (sf.requested[xhr.resource.uri] === 'redirected') {
+                        break;
+                    }
+                    sf.fireCallbacks('load', args)
+                    xhr.handle(function() {
+                        sf.doneFetch(xhr, args)
+                    })
+                } else {
+                    if (xhr.redirected) {
+                        sf.addStatus(xhr.req, "Aborted and redirected to new request.");
+                    } else {
+                        sf.addStatus(xhr.req, "Fetch over. No data handled. Aborted = " + xhr.aborted);
+                    }
+                    //sf.failFetch(xhr, "HTTP failed unusually. (no handler set) (x-site violation? no net?) for <"+
+                    //    docuri+">");
+                }
+                break
+            } // switch
+        }; }
+>>>>>>> gh-pages
 
 function arrayToHash(array) {
   var hash = {};
 
+<<<<<<< HEAD
   array.forEach(function(val, idx) {
     hash[val] = true;
   });
@@ -25472,6 +26118,50 @@ function formatValue(ctx, value, recurseTimes) {
     }
     return ret;
   }
+=======
+        // Map the URI to a localhost proxy if we are running on localhost
+        // This is used for working offline, e.g. on planes.
+        // Is the script istelf is running in localhost, then access all data in a localhost mirror.
+        // Do not remove without checking with TimBL :)
+        var uri2 = docuri;
+        if (typeof tabulator != 'undefined' && tabulator.preferences.get('offlineModeUsingLocalhost')) {
+            if (uri2.slice(0,7) == 'http://'  && uri2.slice(7,17) != 'localhost/') {
+                uri2 = 'http://localhost/' + uri2.slice(7);
+                $rdf.log.warn("Localhost kludge for offline use: actually getting <" + uri2 + ">");
+            } else {
+                // $rdf.log.warn("Localhost kludge NOT USED <" + uri2 + ">");
+            };
+        } else {
+            // $rdf.log.warn("Localhost kludge OFF offline use: actually getting <" + uri2 + ">");
+        }
+        // 2014 probelm:
+        // XMLHttpRequest cannot load http://www.w3.org/People/Berners-Lee/card.
+        // A wildcard '*' cannot be used in the 'Access-Control-Allow-Origin' header when the credentials flag is true.
+
+        // @ Many ontology files under http: and need CORS wildcard -> can't have withCredentials
+        var withCredentials = ( uri2.slice(0,6) === 'https:'); // @@ Kludge -- need for webid which typically is served from https
+        if (options.withCredentials !== undefined) {
+            withCredentials = options.withCredentials;
+        }
+        var actualProxyURI = this.proxyIfNecessary(uri2);
+        // Setup the request
+        if (typeof jQuery !== 'undefined' && jQuery.ajax) {
+            var xhrFields = { withCredentials: withCredentials};
+            var xhr = jQuery.ajax({
+                url: actualProxyURI,
+                accepts: {'*': 'text/turtle,text/n3,application/rdf+xml'},
+                processData: false,
+                xhrFields: xhrFields,
+                timeout: sf.timeout,
+                headers: force ? { 'cache-control': 'no-cache'} : {},
+                error: function(xhr, s, e) {
+
+                    xhr.req = req;   // Add these in case fails before .ajax returns
+                    xhr.userCallback = userCallback;
+                    xhr.resource = docterm;
+                    xhr.requestedURI = uri2;
+                    xhr.withCredentials = withCredentials; // Somehow gets lost by jq
+>>>>>>> gh-pages
 
   // Primitive types cannot have properties
   var primitive = formatPrimitive(ctx, value);
@@ -25513,11 +26203,24 @@ function formatValue(ctx, value, recurseTimes) {
 
   var base = '', array = false, braces = ['{', '}'];
 
+<<<<<<< HEAD
   // Make Array say that they are Array
   if (isArray(value)) {
     array = true;
     braces = ['[', ']'];
   }
+=======
+        } else {
+            var xhr = $rdf.Util.XMLHTTPFactory();
+            xhr.onerror = onerrorFactory(xhr);
+            xhr.onreadystatechange = onreadystatechangeFactory(xhr);
+            xhr.timeout = sf.timeout;
+            xhr.withCredentials = withCredentials;
+            xhr.actualProxyURI = actualProxyURI;
+            if (force) {
+                xhr.setRequestHeader('Cache-control', 'no-cache');
+            }
+>>>>>>> gh-pages
 
   // Make functions say that they are functions
   if (isFunction(value)) {
@@ -25525,10 +26228,33 @@ function formatValue(ctx, value, recurseTimes) {
     base = ' [Function' + n + ']';
   }
 
+<<<<<<< HEAD
   // Make RegExps say that they are RegExps
   if (isRegExp(value)) {
     base = ' ' + RegExp.prototype.toString.call(value);
   }
+=======
+            xhr.ontimeout = function () {
+                sf.failFetch(xhr, "requestTimeout");
+            }
+            try {
+                xhr.open('GET', actualProxyURI, this.async);
+            } catch (er) {
+                return this.failFetch(xhr, "XHR open for GET failed for <"+uri2+">:\n\t" + er);
+            }
+        }
+
+        // Set redirect callback and request headers -- alas Firefox Extension Only
+
+        if (typeof tabulator != 'undefined' && tabulator.isExtension && xhr.channel &&
+            ($rdf.uri.protocol(xhr.resource.uri) == 'http' ||
+             $rdf.uri.protocol(xhr.resource.uri) == 'https')) {
+            try {
+                xhr.channel.notificationCallbacks = {
+                    getInterface: function(iid) {
+                        if (iid.equals(Components.interfaces.nsIChannelEventSink)) {
+                            return {
+>>>>>>> gh-pages
 
   // Make dates with properties first say the date
   if (isDate(value)) {
@@ -25554,6 +26280,7 @@ function formatValue(ctx, value, recurseTimes) {
 
   ctx.seen.push(value);
 
+<<<<<<< HEAD
   var output;
   if (array) {
     output = formatArray(ctx, value, recurseTimes, visibleKeys, keys);
@@ -25564,11 +26291,30 @@ function formatValue(ctx, value, recurseTimes) {
   }
 
   ctx.seen.pop();
+=======
+                                    var now = new Date();
+                                    var timeNow = "[" + now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds() + "] ";
+                                    kb.add(newreq, ns.rdfs("label"), kb.literal(timeNow + ' Request for ' + newURI), this.appNode)
+                                    kb.add(newreq, ns.link('status'), kb.collection(), this.appNode)
+                                    kb.add(newreq, ns.link("requestedURI"), kb.literal(newURI), this.appNode)
+                                    ///////////////
+
+
+                                    //// $rdf.log.info('@@ sources onChannelRedirect'+
+                                    //               "Redirected: "+
+                                    //               xhr.status + " to <" + newURI + ">"); //@@
+                                    var response = kb.bnode();
+                                    // kb.add(response, ns.http('location'), newURI, response); Not on this response
+                                    kb.add(oldreq, ns.link('response'), response);
+                                    kb.add(response, ns.http('status'), kb.literal(xhr.status), response);
+                                    if (xhr.statusText) kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response)
+>>>>>>> gh-pages
 
   return reduceToSingleString(output, base, braces);
 }
 
 
+<<<<<<< HEAD
 function formatPrimitive(ctx, value) {
   if (isUndefined(value))
     return ctx.stylize('undefined', 'undefined');
@@ -25587,6 +26333,31 @@ function formatPrimitive(ctx, value) {
     return ctx.stylize('null', 'null');
 }
 
+=======
+                                    var hash = newURI.indexOf('#');
+                                    if (hash >= 0) {
+                                        var msg = ('Warning: ' + xhr.resource + ' HTTP redirects to' + newURI + ' which should not contain a "#" sign');
+                                        // dump(msg+"\n");
+                                        kb.add(xhr.resource, kb.sym('http://www.w3.org/2007/ont/link#warning'), msg)
+                                        newURI = newURI.slice(0, hash);
+                                    }
+                                    var xhr2 = sf.requestURI(newURI, xhr.resource);
+                                    if (xhr2 && xhr2.req) kb.add(xhr.req,
+                                        kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'),
+                                        xhr2.req, sf.appNode);
+
+                                    // else dump("No xhr.req available for redirect from "+xhr.resource+" to "+newURI+"\n")
+                                },
+
+                                // See https://developer.mozilla.org/en/XPCOM_Interface_Reference/nsIChannelEventSink
+                                asyncOnChannelRedirect: function(oldC, newC, flags, callback) {
+                                    if (xhr.aborted) return;
+                                    var kb = sf.store;
+                                    var newURI = newC.URI.spec;
+                                    var oldreq = xhr.req;
+                                    sf.addStatus(xhr.req, "Redirected: " + xhr.status + " to <" + newURI + ">");
+                                    kb.add(oldreq, ns.http('redirectedTo'), kb.sym(newURI), xhr.req);
+>>>>>>> gh-pages
 
 function formatError(value) {
   return '[' + Error.prototype.toString.call(value) + ']';
@@ -25613,6 +26384,7 @@ function formatArray(ctx, value, recurseTimes, visibleKeys, keys) {
 }
 
 
+<<<<<<< HEAD
 function formatProperty(ctx, value, recurseTimes, visibleKeys, key, array) {
   var name, str, desc;
   desc = Object.getOwnPropertyDescriptor(value, key) || { value: value[key] };
@@ -25670,6 +26442,24 @@ function formatProperty(ctx, value, recurseTimes, visibleKeys, key, array) {
 
   return name + ': ' + str;
 }
+=======
+                                    var now = new Date();
+                                    var timeNow = "[" + now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds() + "] ";
+                                    kb.add(newreq, ns.rdfs("label"), kb.literal(timeNow + ' Request for ' + newURI), this.appNode)
+                                    kb.add(newreq, ns.link('status'), kb.collection(), this.appNode)
+                                    kb.add(newreq, ns.link("requestedURI"), kb.literal(newURI), this.appNode)
+                                    ///////////////
+
+
+                                    //// $rdf.log.info('@@ sources onChannelRedirect'+
+                                    //               "Redirected: "+
+                                    //               xhr.status + " to <" + newURI + ">"); //@@
+                                    var response = kb.bnode();
+                                    // kb.add(response, ns.http('location'), newURI, response); Not on this response
+                                    kb.add(oldreq, ns.link('response'), response);
+                                    kb.add(response, ns.http('status'), kb.literal(xhr.status), response);
+                                    if (xhr.statusText) kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response)
+>>>>>>> gh-pages
 
 
 function reduceToSingleString(output, base, braces) {
@@ -25693,12 +26483,38 @@ function reduceToSingleString(output, base, braces) {
 }
 
 
+<<<<<<< HEAD
 // NOTE: These type checking functions intentionally don't use `instanceof`
 // because it is fragile and can be easily faked with `Object.create()`.
 function isArray(ar) {
   return Array.isArray(ar);
 }
 exports.isArray = isArray;
+=======
+                                    var hash = newURI.indexOf('#');
+                                    if (hash >= 0) {
+                                        var msg = ('Warning: ' + xhr.resource + ' HTTP redirects to' + newURI + ' which should not contain a "#" sign');
+                                        // dump(msg+"\n");
+                                        kb.add(xhr.resource, kb.sym('http://www.w3.org/2007/ont/link#warning'), msg)
+                                        newURI = newURI.slice(0, hash);
+                                    }
+                                    var xhr2 = sf.requestURI(newURI, xhr.resource);
+                                    if (xhr2 && xhr2.req) kb.add(xhr.req,
+                                        kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'),
+                                        xhr2.req, sf.appNode);
+
+                                    // else dump("No xhr.req available for redirect from "+xhr.resource+" to "+newURI+"\n")
+                                } // asyncOnChannelRedirect
+                            }
+                        }
+                        return Components.results.NS_NOINTERFACE
+                    }
+                }
+            } catch (err) {
+                 return sf.failFetch(xhr,
+                        "@@ Couldn't set callback for redirects: " + err);
+            }
+>>>>>>> gh-pages
 
 function isBoolean(arg) {
   return typeof arg === 'boolean';
@@ -25725,10 +26541,19 @@ function isString(arg) {
 }
 exports.isString = isString;
 
+<<<<<<< HEAD
 function isSymbol(arg) {
   return typeof arg === 'symbol';
 }
 exports.isSymbol = isSymbol;
+=======
+        } else {
+            this.addStatus(xhr.req, "HTTP Request sent (using jQuery)");
+        }
+
+        return xhr
+    }
+>>>>>>> gh-pages
 
 function isUndefined(arg) {
   return arg === void 0;
@@ -25740,10 +26565,23 @@ function isRegExp(re) {
 }
 exports.isRegExp = isRegExp;
 
+<<<<<<< HEAD
 function isObject(arg) {
   return typeof arg === 'object' && arg !== null;
 }
 exports.isObject = isObject;
+=======
+    this.unload = function(term) {
+        this.store.removeMany(undefined, undefined, undefined, term)
+        delete this.requested[term.uri]; // So it can be loaded again
+    }
+
+    this.refresh = function(term, userCallback) { // sources_refresh
+        this.unload(term);
+        this.fireCallbacks('refresh', arguments)
+        this.requestURI(term.uri, undefined, { force: true}, userCallback)
+    }
+>>>>>>> gh-pages
 
 function isDate(d) {
   return isObject(d) && objectToString(d) === '[object Date]';
@@ -25771,17 +26609,45 @@ function isPrimitive(arg) {
 }
 exports.isPrimitive = isPrimitive;
 
+<<<<<<< HEAD
 exports.isBuffer = require('./support/isBuffer');
+=======
+    var updatesVia = new $rdf.UpdatesVia(this);
+};
+>>>>>>> gh-pages
 
 function objectToString(o) {
   return Object.prototype.toString.call(o);
 }
 
 
+<<<<<<< HEAD
 function pad(n) {
   return n < 10 ? '0' + n.toString(10) : n.toString(10);
 }
 
+=======
+        if (contentType == 'application/rdf+xml') {
+            var parser = new $rdf.RDFParser(kb);
+            parser.parse($rdf.Util.parseXML(str), base, kb.sym(base));
+            return;
+        }
+
+        if (contentType == 'application/rdfa') {  // @@ not really a valid mime type
+            if ($rdf.rdfa && $rdf.rdfa.parse)
+                $rdf.rdfa.parse($rdf.Util.parseXML(str), kb, base);
+            return;
+        }
+
+        if (contentType == 'application/sparql-update') {  // @@ we handle a subset
+            spaqlUpdateParser(store, str, base)
+
+            if ($rdf.rdfa && $rdf.rdfa.parse)
+                $rdf.rdfa.parse($rdf.Util.parseXML(str), kb, base);
+            return;
+        }
+
+>>>>>>> gh-pages
 
 var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep',
               'Oct', 'Nov', 'Dec'];
@@ -25801,6 +26667,7 @@ exports.log = function() {
   console.log('%s - %s', timestamp(), exports.format.apply(exports, arguments));
 };
 
+<<<<<<< HEAD
 
 /**
  * Inherit the prototype methods from one constructor into another.
@@ -25835,6 +26702,112 @@ function hasOwnProperty(obj, prop) {
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"./support/isBuffer":41,"_process":25,"inherits":22}]},{},[14]);
+=======
+//   Serialize to the appropriate format
+//
+$rdf.serialize = function(target, kb, base, contentType, callback) {
+    var documentString;
+    var sz = $rdf.Serializer(kb);
+    var newSts = kb.statementsMatching(undefined, undefined, undefined, target);
+    sz.suggestNamespaces(kb.namespaces);
+    sz.setBase(base);
+    switch(contentType){
+        case 'application/rdf+xml':
+            documentString = sz.statementsToXML(newSts);
+            break;
+        case 'text/n3':
+        case 'text/turtle':
+        case 'application/x-turtle': // Legacy
+        case 'application/n3': // Legacy
+            documentString = sz.statementsToN3(newSts);
+            break;
+        case 'application/json+ld':
+            var n3String = sz.statementsToN3(newSts);
+            convertToJson(n3String, callback);
+            break;
+        case 'application/n-quads':
+        case 'application/nquads': // @@@ just outpout the quads? Does not work for collections
+            var n3String = sz.statementsToN3(newSts);
+            documentString = convertToNQuads(n3String, callback);
+            break;
+        default:
+            throw "serialise: Content-type "+content_type +" not supported for data write";
+    }
+    return documentString;
+};
+
+////////////////// JSON-LD code currently requires Node
+if (typeof module !== 'undefined' && module.require) { // Node
+    var asyncLib = require('async');
+    var jsonld = require('jsonld');
+    var N3 = require('n3');
+
+    var convertToJson = function(n3String, jsonCallback) {
+        var jsonString = undefined;
+        var n3Parser = N3.Parser();
+        var n3Writer = N3.Writer({
+            format: 'N-Quads'
+        });
+        asyncLib.waterfall([
+            function(callback) {
+                n3Parser.parse(n3String, callback);
+            },
+            function(triple, prefix, callback) {
+                if (triple !== null) {
+                    n3Writer.addTriple(triple);
+                }
+                if (typeof callback === 'function') {
+                    n3Writer.end(callback);
+                }
+            },
+            function(result, callback) {
+                try {
+                    jsonld.fromRDF(result, {
+                        format: 'application/nquads'
+                    }, callback);
+                } catch (err) {
+                    callback(err);
+                }
+            },
+            function(json, callback) {
+                jsonString = JSON.stringify(json);
+                jsonCallback(null, jsonString);
+            }
+        ], function(err, result) {
+            jsonCallback(err, jsonString);
+        });
+    }
+
+    var convertToNQuads = function(n3String, nquadCallback) {
+        var nquadString = undefined;
+        var n3Parser = N3.Parser();
+        var n3Writer = N3.Writer({
+            format: 'N-Quads'
+        });
+        asyncLib.waterfall([
+            function(callback) {
+                n3Parser.parse(n3String, callback);
+            },
+            function(triple, prefix, callback) {
+                if (triple !== null) {
+                    n3Writer.addTriple(triple);
+                }
+                if (typeof callback === 'function') {
+                    n3Writer.end(callback);
+                }
+            },
+            function(result, callback) {
+                nquadString = result;
+                nquadCallback(null, nquadString);
+            },
+        ], function(err, result) {
+            nquadCallback(err, nquadString);
+        });
+    }
+
+}
+// ends
+>>>>>>> gh-pages
 
 // Handle node, amd, and global systems
 if (typeof exports !== 'undefined') {
