@@ -639,12 +639,32 @@ __Serializer.prototype.writeStore = function(write) {
     var fetcher = kb.fetcher;
     var session = fetcher && fetcher.appNode;
 
-    // Everything we know from experience just write out.
-    // It is undder the session and the requests.
+    // The core data 
+    
+    var sources = this.store.index[3];
+    for (s in sources) {  // -> assume we can use -> as short for log:semantics
+        var source = kb.fromNT(s);
+        if (session && source.sameTerm(session)) continue;
+        write('\n'+ this.atomicTermToN3(source)+' ' +
+                this.atomicTermToN3(kb.sym('http://www.w3.org/2000/10/swap/log#semantics'))
+                 + ' { '+ this.statementsToN3(kb.statementsMatching(
+                            undefined, undefined, undefined, source)) + ' }.\n');
+    }
 
-    var metaSources = kb.statementsMatching(undefined,
+
+    // The metadata from HTTP interactions:
+
+    kb.statementsMatching(undefined,
             kb.sym('http://www.w3.org/2007/ont/link#requestedURI')).map(
-                function(st){return st.subject});
+                function(st){
+                    write('\n<' + st.object.value + '> log:metadata {\n'); 
+                    var sts = kb.statementsMatching(undefined, undefined, undefined,  st.subject);
+                    write(this.statementsToN3(this.statementsToN3(sts)));
+                    write('}.\n'); 
+                });
+                
+    // Inferences we have made ourselves not attributable to anyone else
+    
     if (session) metaSources.push(session);
     var metadata = [];
     metaSources.map(function(source){
@@ -652,15 +672,6 @@ __Serializer.prototype.writeStore = function(write) {
     });
     write(this.statementsToN3(metadata));
 
-    var sources = this.store.index[3];
-    for (s in sources) {  // -> assume we can use -> as short for log:semantics
-        var source = kb.fromNT(s);
-        if (session && source.sameTerm(session)) continue;
-        write('\n'+ this.atomicTermToN3(source)+' ' +
-                this.atomicTermToN3(kb.sym('http://www.w3.org/2000/10/swap/log#'))
-                 + ' { '+ this.statementsToN3(kb.statementsMatching(
-                            undefined, undefined, undefined, source)) + ' }.\n');
-    }
 }
 
 

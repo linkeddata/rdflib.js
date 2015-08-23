@@ -1,27 +1,25 @@
 /*
-# Implements URI-specific functions
-#
-# See RFC 2386
-#
-# See also:
-#   http://www.w3.org/2005/10/ajaw/uri.js
-#   http://www.w3.org/2000/10/swap/uripath.py
-#
-*/
-
-var $rdf, k, v, _base, _ref, _ref1, _ref2,
-  __hasProp = {}.hasOwnProperty;
+ * Implements URI-specific functions
+ *
+ * See RFC 2386
+ *
+ * See also:
+ *   http://www.w3.org/2005/10/ajaw/uri.js
+ *   http://www.w3.org/2000/10/swap/uripath.py
+ *
+ */
+var $rdf, base1, k, ref, v,
+  hasProp = {}.hasOwnProperty;
 
 if (typeof $rdf === "undefined" || $rdf === null) {
   $rdf = {};
 }
 
-if ((_ref = $rdf.Util) == null) {
+if ($rdf.Util == null) {
   $rdf.Util = {};
 }
 
 $rdf.uri = (function() {
-
   function uri() {}
 
   uri.join = function(given, base) {
@@ -48,7 +46,7 @@ $rdf.uri = (function() {
       alert("Invalid base: " + base + " in join with given: " + given);
       return given;
     }
-    baseScheme = base.slice(0, baseColon + 1 || 9e9);
+    baseScheme = base.slice(0, +baseColon + 1 || 9e9);
     if (given.indexOf('//') === 0) {
       return baseScheme + given;
     }
@@ -80,7 +78,7 @@ $rdf.uri = (function() {
       return baseScheme + given;
     }
     if (lastSlash >= 0 && lastSlash < path.length - 1) {
-      path = path.slice(0, lastSlash + 1 || 9e9);
+      path = path.slice(0, +lastSlash + 1 || 9e9);
     }
     path += given;
     while (path.match(/[^\/]*\/\.\.\//)) {
@@ -104,14 +102,14 @@ $rdf.uri = (function() {
   };
 
   uri.refTo = function(base, uri) {
-    var c, i, j, k, l, n, s, _i, _j, _k, _len, _len1, _ref1;
+    var c, i, j, k, l, len, len1, n, o, p, q, ref, ref1, s;
     if (!base) {
       return uri;
     }
     if (base === uri) {
       return '';
     }
-    for (i = _i = 0, _len = uri.length; _i < _len; i = ++_i) {
+    for (i = o = 0, len = uri.length; o < len; i = ++o) {
       c = uri[i];
       if (c !== base[i]) {
         break;
@@ -143,9 +141,9 @@ $rdf.uri = (function() {
       return uri;
     }
     n = 0;
-    _ref1 = base.slice(i);
-    for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-      c = _ref1[_j];
+    ref = base.slice(i);
+    for (p = 0, len1 = ref.length; p < len1; p++) {
+      c = ref[p];
       if (c === '/') {
         n++;
       }
@@ -158,7 +156,7 @@ $rdf.uri = (function() {
     }
     s = '';
     if (n > 0) {
-      for (j = _k = 1; 1 <= n ? _k <= n : _k >= n; j = 1 <= n ? ++_k : --_k) {
+      for (j = q = 1, ref1 = n; 1 <= ref1 ? q <= ref1 : q >= ref1; j = 1 <= ref1 ? ++q : --q) {
         s += '../';
       }
     }
@@ -191,18 +189,18 @@ $rdf.uri = (function() {
 
   return uri;
 
-}).call(this);
+})();
 
 $rdf.Util.uri = $rdf.uri;
 
 if ((typeof module !== "undefined" && module !== null ? module.exports : void 0) != null) {
-  if ((_ref1 = (_base = module.exports).Util) == null) {
-    _base.Util = {};
+  if ((base1 = module.exports).Util == null) {
+    base1.Util = {};
   }
-  _ref2 = $rdf.Util;
-  for (k in _ref2) {
-    if (!__hasProp.call(_ref2, k)) continue;
-    v = _ref2[k];
+  ref = $rdf.Util;
+  for (k in ref) {
+    if (!hasProp.call(ref, k)) continue;
+    v = ref[k];
     module.exports.Util[k] = v;
   }
   module.exports.uri = $rdf.uri;

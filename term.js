@@ -6,9 +6,9 @@
  * This is coffee see http://coffeescript.org
  */
 var $rdf, k, v,
-  __hasProp = {}.hasOwnProperty,
-  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-  __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+  extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  hasProp = {}.hasOwnProperty,
+  indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
 if (typeof $rdf === "undefined" || $rdf === null) {
   $rdf = {};
@@ -32,8 +32,8 @@ $rdf.Node = (function() {
 
 })();
 
-$rdf.Empty = (function(_super) {
-  __extends(Empty, _super);
+$rdf.Empty = (function(superClass) {
+  extend(Empty, superClass);
 
   function Empty() {
     return Empty.__super__.constructor.apply(this, arguments);
@@ -60,11 +60,11 @@ $rdf.Empty = (function(_super) {
     @param uri the uri as string
  */
 
-$rdf.Symbol = (function(_super) {
-  __extends(Symbol, _super);
+$rdf.Symbol = (function(superClass) {
+  extend(Symbol, superClass);
 
-  function Symbol(uri) {
-    this.uri = uri;
+  function Symbol(uri1) {
+    this.uri = uri1;
   }
 
   Symbol.prototype.termType = 'symbol';
@@ -122,8 +122,8 @@ if ($rdf.NextId != null) {
 
 $rdf.NTAnonymousNodePrefix = "_:n";
 
-$rdf.BlankNode = (function(_super) {
-  __extends(BlankNode, _super);
+$rdf.BlankNode = (function(superClass) {
+  extend(BlankNode, superClass);
 
   function BlankNode(id) {
     this.id = $rdf.NextId++;
@@ -165,12 +165,12 @@ $rdf.BlankNode = (function(_super) {
 
 })($rdf.Node);
 
-$rdf.Literal = (function(_super) {
-  __extends(Literal, _super);
+$rdf.Literal = (function(superClass) {
+  extend(Literal, superClass);
 
-  function Literal(value, lang, datatype) {
-    this.value = value;
-    this.lang = lang;
+  function Literal(value1, lang1, datatype) {
+    this.value = value1;
+    this.lang = lang1;
     this.datatype = datatype;
     if (this.lang == null) {
       this.lang = void 0;
@@ -235,17 +235,17 @@ $rdf.Literal = (function(_super) {
 
 })($rdf.Node);
 
-$rdf.Collection = (function(_super) {
-  __extends(Collection, _super);
+$rdf.Collection = (function(superClass) {
+  extend(Collection, superClass);
 
   function Collection(initial) {
-    var s, _i, _len;
+    var i, len, s;
     this.id = $rdf.NextId++;
     this.elements = [];
     this.closed = false;
     if (typeof initial !== 'undefined') {
-      for (_i = 0, _len = initial.length; _i < _len; _i++) {
-        s = initial[_i];
+      for (i = 0, len = initial.length; i < len; i++) {
+        s = initial[i];
         this.elements.push($rdf.term(s));
       }
     }
@@ -264,14 +264,14 @@ $rdf.Collection = (function(_super) {
   Collection.prototype.substitute = function(bindings) {
     var s;
     return new $rdf.Collection((function() {
-      var _i, _len, _ref, _results;
-      _ref = this.elements;
-      _results = [];
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        s = _ref[_i];
-        _results.push(s.substitute(bindings));
+      var i, len, ref, results1;
+      ref = this.elements;
+      results1 = [];
+      for (i = 0, len = ref.length; i < len; i++) {
+        s = ref[i];
+        results1.push(s.substitute(bindings));
       }
-      return _results;
+      return results1;
     }).call(this));
   };
 
@@ -307,7 +307,7 @@ $rdf.Collection.prototype.compareTerm = $rdf.BlankNode.prototype.compareTerm;
  */
 
 $rdf.term = function(val) {
-  var d2, dt, elt, value, x, _i, _len;
+  var d2, dt, elt, i, len, value, x;
   switch (typeof val) {
     case 'object':
       if (val instanceof Date) {
@@ -318,8 +318,8 @@ $rdf.term = function(val) {
         return new $rdf.Literal(value, void 0, $rdf.Symbol.prototype.XSDdateTime);
       } else if (val instanceof Array) {
         x = new $rdf.Collection;
-        for (_i = 0, _len = val.length; _i < _len; _i++) {
-          elt = val[_i];
+        for (i = 0, len = val.length; i < len; i++) {
+          elt = val[i];
           x.append($rdf.term(elt));
         }
         return x;
@@ -372,8 +372,8 @@ $rdf.st = function(subject, predicate, object, why) {
   return new $rdf.Statement(subject, predicate, object, why);
 };
 
-$rdf.Formula = (function(_super) {
-  __extends(Formula, _super);
+$rdf.Formula = (function(superClass) {
+  extend(Formula, superClass);
 
   function Formula() {
     this.statements = [];
@@ -399,11 +399,11 @@ $rdf.Formula = (function(_super) {
   };
 
   Formula.prototype.substitute = function(bindings) {
-    var g, s, _i, _len, _ref;
+    var g, i, len, ref, s;
     g = new $rdf.Formula;
-    _ref = this.statements;
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      s = _ref[_i];
+    ref = this.statements;
+    for (i = 0, len = ref.length; i < len; i++) {
+      s = ref[i];
       g.addStatement(s.substitute(bindings));
     }
     return g;
@@ -437,11 +437,11 @@ $rdf.Formula = (function(_super) {
   };
 
   Formula.prototype.list = function(values) {
-    var elt, r, _i, _len;
+    var elt, i, len, r;
     r = new $rdf.Collection;
     if (values) {
-      for (_i = 0, _len = values.length; _i < _len; _i++) {
-        elt = values[_i];
+      for (i = 0, len = values.length; i < len; i++) {
+        elt = values[i];
         r.append(elt);
       }
     }
@@ -508,27 +508,27 @@ $rdf.Formula = (function(_super) {
   };
 
   Formula.prototype.each = function(s, p, o, w) {
-    var elt, results, sts, _i, _j, _k, _l, _len, _len1, _len2, _len3;
+    var elt, i, l, len, len1, len2, len3, m, q, results, sts;
     results = [];
     sts = this.statementsMatching(s, p, o, w, false);
     if (s == null) {
-      for (_i = 0, _len = sts.length; _i < _len; _i++) {
-        elt = sts[_i];
+      for (i = 0, len = sts.length; i < len; i++) {
+        elt = sts[i];
         results.push(elt.subject);
       }
     } else if (p == null) {
-      for (_j = 0, _len1 = sts.length; _j < _len1; _j++) {
-        elt = sts[_j];
+      for (l = 0, len1 = sts.length; l < len1; l++) {
+        elt = sts[l];
         results.push(elt.predicate);
       }
     } else if (o == null) {
-      for (_k = 0, _len2 = sts.length; _k < _len2; _k++) {
-        elt = sts[_k];
+      for (m = 0, len2 = sts.length; m < len2; m++) {
+        elt = sts[m];
         results.push(elt.object);
       }
     } else if (w == null) {
-      for (_l = 0, _len3 = sts.length; _l < _len3; _l++) {
-        elt = sts[_l];
+      for (q = 0, len3 = sts.length; q < len3; q++) {
+        elt = sts[q];
         results.push(elt.why);
       }
     }
@@ -574,11 +574,11 @@ $rdf.Formula = (function(_super) {
   };
 
   Formula.prototype.transitiveClosure = function(seeds, predicate, inverse) {
-    var agenda, done, elt, k, s, sups, t, v, _i, _len;
+    var agenda, done, elt, i, k, len, s, sups, t, v;
     done = {};
     agenda = {};
     for (k in seeds) {
-      if (!__hasProp.call(seeds, k)) continue;
+      if (!hasProp.call(seeds, k)) continue;
       v = seeds[k];
       agenda[k] = v;
     }
@@ -586,7 +586,7 @@ $rdf.Formula = (function(_super) {
       t = (function() {
         var p;
         for (p in agenda) {
-          if (!__hasProp.call(agenda, p)) continue;
+          if (!hasProp.call(agenda, p)) continue;
           return p;
         }
       })();
@@ -594,8 +594,8 @@ $rdf.Formula = (function(_super) {
         return done;
       }
       sups = inverse ? this.each(void 0, predicate, this.fromNT(t)) : this.each(this.fromNT(t), predicate);
-      for (_i = 0, _len = sups.length; _i < _len; _i++) {
-        elt = sups[_i];
+      for (i = 0, len = sups.length; i < len; i++) {
+        elt = sups[i];
         s = elt.toNT();
         if (s in done) {
           continue;
@@ -621,33 +621,33 @@ $rdf.Formula = (function(_super) {
    */
 
   Formula.prototype.findMembersNT = function(thisClass) {
-    var members, pred, seeds, st, t, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _m, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
+    var i, l, len, len1, len2, len3, len4, m, members, pred, q, ref, ref1, ref2, ref3, ref4, ref5, seeds, st, t, u;
     seeds = {};
     seeds[thisClass.toNT()] = true;
     members = {};
-    _ref = this.transitiveClosure(seeds, this.sym('http://www.w3.org/2000/01/rdf-schema#subClassOf'), true);
-    for (t in _ref) {
-      if (!__hasProp.call(_ref, t)) continue;
-      _ref1 = this.statementsMatching(void 0, this.sym('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'), this.fromNT(t));
-      for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-        st = _ref1[_i];
+    ref = this.transitiveClosure(seeds, this.sym('http://www.w3.org/2000/01/rdf-schema#subClassOf'), true);
+    for (t in ref) {
+      if (!hasProp.call(ref, t)) continue;
+      ref1 = this.statementsMatching(void 0, this.sym('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'), this.fromNT(t));
+      for (i = 0, len = ref1.length; i < len; i++) {
+        st = ref1[i];
         members[st.subject.toNT()] = st;
       }
-      _ref2 = this.each(void 0, this.sym('http://www.w3.org/2000/01/rdf-schema#domain'), this.fromNT(t));
-      for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
-        pred = _ref2[_j];
-        _ref3 = this.statementsMatching(void 0, pred);
-        for (_k = 0, _len2 = _ref3.length; _k < _len2; _k++) {
-          st = _ref3[_k];
+      ref2 = this.each(void 0, this.sym('http://www.w3.org/2000/01/rdf-schema#domain'), this.fromNT(t));
+      for (l = 0, len1 = ref2.length; l < len1; l++) {
+        pred = ref2[l];
+        ref3 = this.statementsMatching(void 0, pred);
+        for (m = 0, len2 = ref3.length; m < len2; m++) {
+          st = ref3[m];
           members[st.subject.toNT()] = st;
         }
       }
-      _ref4 = this.each(void 0, this.sym('http://www.w3.org/2000/01/rdf-schema#range'), this.fromNT(t));
-      for (_l = 0, _len3 = _ref4.length; _l < _len3; _l++) {
-        pred = _ref4[_l];
-        _ref5 = this.statementsMatching(void 0, pred);
-        for (_m = 0, _len4 = _ref5.length; _m < _len4; _m++) {
-          st = _ref5[_m];
+      ref4 = this.each(void 0, this.sym('http://www.w3.org/2000/01/rdf-schema#range'), this.fromNT(t));
+      for (q = 0, len3 = ref4.length; q < len3; q++) {
+        pred = ref4[q];
+        ref5 = this.statementsMatching(void 0, pred);
+        for (u = 0, len4 = ref5.length; u < len4; u++) {
+          st = ref5[u];
           members[st.object.toNT()] = st;
         }
       }
@@ -667,7 +667,7 @@ $rdf.Formula = (function(_super) {
     var k, uris, v;
     uris = {};
     for (k in t) {
-      if (!__hasProp.call(t, k)) continue;
+      if (!hasProp.call(t, k)) continue;
       v = t[k];
       if (k[0] === '<') {
         uris[k.slice(1, -1)] = v;
@@ -694,28 +694,28 @@ $rdf.Formula = (function(_super) {
    */
 
   Formula.prototype.findTypesNT = function(subject) {
-    var domain, range, rdftype, st, types, _i, _j, _k, _l, _len, _len1, _len2, _len3, _ref, _ref1, _ref2, _ref3;
+    var domain, i, l, len, len1, len2, len3, m, q, range, rdftype, ref, ref1, ref2, ref3, st, types;
     rdftype = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type';
     types = [];
-    _ref = this.statementsMatching(subject, void 0, void 0);
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      st = _ref[_i];
+    ref = this.statementsMatching(subject, void 0, void 0);
+    for (i = 0, len = ref.length; i < len; i++) {
+      st = ref[i];
       if (st.predicate.uri === rdftype) {
         types[st.object.toNT()] = st;
       } else {
-        _ref1 = this.each(st.predicate, this.sym('http://www.w3.org/2000/01/rdf-schema#domain'));
-        for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-          range = _ref1[_j];
+        ref1 = this.each(st.predicate, this.sym('http://www.w3.org/2000/01/rdf-schema#domain'));
+        for (l = 0, len1 = ref1.length; l < len1; l++) {
+          range = ref1[l];
           types[range.toNT()] = st;
         }
       }
     }
-    _ref2 = this.statementsMatching(void 0, void 0, subject);
-    for (_k = 0, _len2 = _ref2.length; _k < _len2; _k++) {
-      st = _ref2[_k];
-      _ref3 = this.each(st.predicate, this.sym('http://www.w3.org/2000/01/rdf-schema#range'));
-      for (_l = 0, _len3 = _ref3.length; _l < _len3; _l++) {
-        domain = _ref3[_l];
+    ref2 = this.statementsMatching(void 0, void 0, subject);
+    for (m = 0, len2 = ref2.length; m < len2; m++) {
+      st = ref2[m];
+      ref3 = this.each(st.predicate, this.sym('http://www.w3.org/2000/01/rdf-schema#range'));
+      for (q = 0, len3 = ref3.length; q < len3; q++) {
+        domain = ref3[q];
         types[domain.toNT()] = st;
       }
     }
@@ -759,15 +759,15 @@ $rdf.Formula = (function(_super) {
    */
 
   Formula.prototype.topTypeURIs = function(types) {
-    var j, k, n, tops, v, _i, _len, _ref;
+    var i, j, k, len, n, ref, tops, v;
     tops = [];
     for (k in types) {
-      if (!__hasProp.call(types, k)) continue;
+      if (!hasProp.call(types, k)) continue;
       v = types[k];
       n = 0;
-      _ref = this.each(this.sym(k), this.sym('http://www.w3.org/2000/01/rdf-schema#subClassOf'));
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        j = _ref[_i];
+      ref = this.each(this.sym(k), this.sym('http://www.w3.org/2000/01/rdf-schema#subClassOf'));
+      for (i = 0, len = ref.length; i < len; i++) {
+        j = ref[i];
         if (j.uri !== 'http://www.w3.org/2000/01/rdf-schema#Resource') {
           n++;
           break;
@@ -795,16 +795,16 @@ $rdf.Formula = (function(_super) {
    */
 
   Formula.prototype.bottomTypeURIs = function(types) {
-    var bots, bottom, elt, k, subs, v, _i, _len, _ref;
+    var bots, bottom, elt, i, k, len, ref, subs, v;
     bots = [];
     for (k in types) {
-      if (!__hasProp.call(types, k)) continue;
+      if (!hasProp.call(types, k)) continue;
       v = types[k];
       subs = this.each(void 0, this.sym('http://www.w3.org/2000/01/rdf-schema#subClassOf'), this.sym(k));
       bottom = true;
-      for (_i = 0, _len = subs.length; _i < _len; _i++) {
-        elt = subs[_i];
-        if (_ref = elt.uri, __indexOf.call(types, _ref) >= 0) {
+      for (i = 0, len = subs.length; i < len; i++) {
+        elt = subs[i];
+        if (ref = elt.uri, indexOf.call(types, ref) >= 0) {
           bottom = false;
           break;
         }
@@ -865,8 +865,8 @@ $rdf.variable = $rdf.Formula.prototype.variable;
  * but the ? nottaion has an implicit base uri of 'varid:'
  */
 
-$rdf.Variable = (function(_super) {
-  __extends(Variable, _super);
+$rdf.Variable = (function(superClass) {
+  extend(Variable, superClass);
 
   function Variable(rel) {
     this.base = 'varid:';
@@ -887,8 +887,8 @@ $rdf.Variable = (function(_super) {
   Variable.prototype.hashString = Variable.prototype.toNT;
 
   Variable.prototype.substitute = function(bindings) {
-    var _ref;
-    return (_ref = bindings[this.toNT()]) != null ? _ref : this;
+    var ref;
+    return (ref = bindings[this.toNT()]) != null ? ref : this;
   };
 
   Variable.prototype.sameTerm = function(other) {
@@ -922,7 +922,7 @@ $rdf.graph = function() {
 
 if ((typeof module !== "undefined" && module !== null ? module.exports : void 0) != null) {
   for (k in $rdf) {
-    if (!__hasProp.call($rdf, k)) continue;
+    if (!hasProp.call($rdf, k)) continue;
     v = $rdf[k];
     module.exports[k] = v;
   }

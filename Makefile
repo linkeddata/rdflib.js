@@ -14,7 +14,7 @@ PATH:=./node_modules/.bin:${PATH}
 
 all: browserify dist $(targets)
 
-browserify:
+web_browserify.js:
 	browserify web.js -o web_browserify.js
 
 dist:
