@@ -73,17 +73,6 @@ $rdf.Fetcher = function(store, timeout, async) {
                 //sf.addStatus(xhr.req, 'parsing soon as RDF/XML...');
                 var kb = sf.store;
                 if (!this.dom) this.dom = $rdf.Util.parseXML(xhr.responseText);
-/*                {
-                    var dparser;
-                    if ((typeof tabulator != 'undefined' && tabulator.isExtension)) {
-                        dparser = Components.classes["@mozilla.org/xmlextras/domparser;1"].getService(Components.interfaces.nsIDOMParser);
-                    } else {
-                        dparser = new DOMParser()
-                    }
-                    //strange things happen when responseText is empty
-                    this.dom = dparser.parseFromString(xhr.responseText, 'application/xml')
-                }
-*/
                 var root = this.dom.documentElement;
                 if (root.nodeName == 'parsererror') { //@@ Mozilla only See issue/issue110
                     sf.failFetch(xhr, "Badly formed XML in " + xhr.resource.uri); //have to fail the request
@@ -126,13 +115,7 @@ $rdf.Fetcher = function(store, timeout, async) {
         this.handlerFactory = function(xhr) {
             xhr.handle = function(cb) {
                 if (!this.dom) {
-                    var dparser;
-                    if (typeof tabulator != 'undefined' && tabulator.isExtension) {
-                        dparser = Components.classes["@mozilla.org/xmlextras/domparser;1"].getService(Components.interfaces.nsIDOMParser);
-                    } else {
-                        dparser = new DOMParser()
-                    }
-                    this.dom = dparser.parseFromString(xhr.responseText, 'application/xml')
+                    this.dom = $rdf.Util.parseXML(xhr.responseText)
                 }
                 var kb = sf.store;
 
@@ -171,8 +154,10 @@ $rdf.Fetcher = function(store, timeout, async) {
                 }
                 kb.add(xhr.resource, ns.rdf('type'), ns.link('WebPage'), sf.appNode);
                 // Do RDFa here
-                if ($rdf.rdfa && $rdf.rdfa.parse)
-                    $rdf.rdfa.parse(this.dom, kb, xhr.resource.uri);
+                
+                if ($rdf.parseDOM_RDFa) {
+                    $rdf.parseDOM_RDFa(this.dom, kb, xhr.resource.uri);
+                }
                 cb(); // Fire done callbacks
             }
         }
@@ -195,13 +180,7 @@ $rdf.Fetcher = function(store, timeout, async) {
         this.handlerFactory = function(xhr) {
             xhr.handle = function(cb) {
                 var kb = sf.store
-                var dparser;
-                if (typeof tabulator != 'undefined' && tabulator.isExtension) {
-                    dparser = Components.classes["@mozilla.org/xmlextras/domparser;1"].getService(Components.interfaces.nsIDOMParser);
-                } else {
-                    dparser = new DOMParser()
-                }
-                var dom = dparser.parseFromString(xhr.responseText, 'application/xml')
+                var dom = $rdf.Util.parseXML(xhr.responseText)
 
                 // XML Semantics defined by root element namespace
                 // figure out the root element
@@ -575,7 +554,7 @@ $rdf.Fetcher = function(store, timeout, async) {
         var success = true;
         var errors = '';
         var outstanding = {}, force;
-        if (options === false || options === true) { // Old signaure
+        if (options === false || options === true) { // Old signature
             force = options;
             options = { force: force };
         } else {
@@ -1415,21 +1394,6 @@ $rdf.fetcher = function(store, timeout, async) { return new $rdf.Fetcher(store, 
 // Parse a string and put the result into the graph kb
 $rdf.parse = function parse(str, kb, base, contentType, callback) {
     try {
-    /*
-        parseXML = function(str) {
-            var dparser;
-            if ((typeof tabulator != 'undefined' && tabulator.isExtension)) {
-                dparser = Components.classes["@mozilla.org/xmlextras/domparser;1"].getService(
-                            Components.interfaces.nsIDOMParser);
-            } else if (typeof module != 'undefined' ){ // Node.js
-                var jsdom = require('jsdom');
-                return jsdom.jsdom(str, undefined, {} );// html, level, options
-            } else {
-                dparser = new DOMParser()
-            }
-            return dparser.parseFromString(str, 'application/xml');
-        }
-        */
         if (contentType == 'text/n3' || contentType == 'text/turtle') {
             var p = $rdf.N3Parser(kb, kb, base, base, null, null, "", null)
             p.loadBuf(str)

@@ -339,17 +339,23 @@ $rdf.Util.heavyCompareSPO = function(x, y, g) {
 // Returns: A DOM
 //
 
-$rdf.Util.parseXML = function(str) {
+$rdf.Util.parseXML = function(str, options) {
     var dparser;
+    options = options || {};
     if ((typeof tabulator != 'undefined' && tabulator.isExtension)) {
         dparser = Components.classes["@mozilla.org/xmlextras/domparser;1"].getService(
                     Components.interfaces.nsIDOMParser);
     } else if (typeof module != 'undefined' && module && module.exports){ // Node.js
         //var libxmljs = require('libxmljs'); // Was jsdom before 2012-01 then libxmljs but that nonstandard
         //return libxmljs.parseXmlString(str);
-        var jsdom = require('jsdom');
-        var dom = jsdom.jsdom(str, undefined, {} );// html, level, options
-        return dom
+        
+        // var jsdom = require('jsdom');   2012-01 though 2015-08 no worky with new Node
+        // var dom = jsdom.jsdom(str, undefined, {} );// html, level, options
+        
+        var DOMParser = require('xmldom').DOMParser; // 2015-08 on https://github.com/jindw/xmldom
+        var dom = new DOMParser().parseFromString(str, options.contentType || 'text/html') // text/xml
+        return dom;
+
     } else {
         dparser = new DOMParser();
     }

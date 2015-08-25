@@ -4,7 +4,7 @@ R=util.js uri.js term.js rdfparser.js n3parser.js identity.js \
 	patchParser.js query.js sparql.js sparqlUpdate.js jsonparser.js serialize.js updatesVia.js web_browserify.js
 
 A=util.js uri.js term.js rdfparser.js n3parser.js identity.js \
-	green-turtle/src/RDFaProcessor.js rdfa.js \
+	parseRDFa.js  \
 	patchParser.js query.js sparql.js sparqlUpdate.js jsonparser.js serialize.js updatesVia.js web_browserify.js
 
 targets=$(addprefix dist/, rdflib.js rdflib-rdfa.js)
@@ -12,9 +12,9 @@ coffeejs=$(patsubst %.coffee,%.js,$(wildcard *.coffee))
 
 PATH:=./node_modules/.bin:${PATH}
 
-all: browserify dist $(targets)
+all: web_browserify.js dist $(targets)
 
-web_browserify.js:
+web_browserify.js: web.js
 	browserify web.js -o web_browserify.js
 
 dist:
@@ -34,12 +34,11 @@ dist/rdflib.js: $R module.js
 	echo "})(this);" >> $@
 
 J=dist
-X=jquery.uri.js jquery.xmlns.js
+# X=jquery.uri.js jquery.xmlns.js
 
-dist/rdflib-rdfa.js: $X $R rdfa.js module.js
-	cat $X > $@
+dist/rdflib-rdfa.js: $X $A module.js
 	echo "(function(root, undef) {" > $@
-	cat $R rdfa.js module.js >> $@
+	cat $A module.js >> $@
 	echo "})(this);" >> $@
 
 # This URL rotted and we don't update this anymore 2015-02
