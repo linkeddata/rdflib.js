@@ -1385,7 +1385,10 @@ $rdf.Fetcher = function(store, timeout, async) {
         return this.requested[docuri] == true;
     }
 
-    var updatesVia = new $rdf.UpdatesVia(this); // Subscribe to headers
+    // var updatesVia = new $rdf.UpdatesVia(this); // Subscribe to headers
+    
+    // @@@@@@@@ This is turned off because it causes a websocket to be set up for ANY fetch
+    // whether we want to track it ot not. including ontologies loaed though the XSSproxy
     
 }; // End of fetcher
 
@@ -1488,7 +1491,7 @@ $rdf.parse = function parse(str, kb, base, contentType, callback) {
         }
         if (triple) { 
             triples.push(triple);
-        } else { // @@@@@@@@@@@@ Eh? timbl 
+        } else { 
             for (var i = 0; i < triples.length; i++) {
                 addTriple(kb, triples[i]);
             }
