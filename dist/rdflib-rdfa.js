@@ -358,7 +358,11 @@ $rdf.Util.parseXML = function(str, options) {
         return dom;
 
     } else {
-        dparser = new DOMParser();
+        if (typeof window !== 'undefined' && window.DOMParser ) {
+            dparser = new window.DOMParser(); // seems to actually work
+        } else {
+            dparser = new DOMParser(); // Doc says this works 
+        }
     }
     return dparser.parseFromString(str, 'application/xml');
 };
@@ -4200,8 +4204,14 @@ return $rdf.IndexedFormula;
 
 }();
 // ends
+//  RDF/A Parser for rdflib.js
 
+// Originally by: Alex Milowski
+// Converted: timbl 2015-08-25 not yet working
 // Was taken from:  https://github.com/alexmilowski/green-turtle
+
+
+// See http://www.w3.org/TR/rdfa-syntax/  etc
 
 // $rdf.RDFaProcessor.prototype = new Object(); // Was URIResolver
 
@@ -4212,7 +4222,7 @@ return $rdf.IndexedFormula;
 
 
 
-if(typeof Node === 'undefined') { //  @@@@@@ Global
+if(typeof Node === 'undefined') { //  @@@@@@ Global. Interface to xmldom.
     var Node = {
       ELEMENT_NODE: 1,
       ATTRIBUTE_NODE: 2,
@@ -8286,7 +8296,7 @@ $rdf.UpdatesSocket = (function() {
     this.subscribed = {};
     this.socket = {};
     try {
-      this.socket = new WebSocket(via);
+      this.socket = new WebSocket(this.via);
       this.socket.onopen = this.onOpen;
       this.socket.onclose = this.onClose;
       this.socket.onmessage = this.onMessage;
@@ -21214,7 +21224,10 @@ $rdf.Fetcher = function(store, timeout, async) {
         return this.requested[docuri] == true;
     }
 
-    var updatesVia = new $rdf.UpdatesVia(this); // Subscribe to headers
+    // var updatesVia = new $rdf.UpdatesVia(this); // Subscribe to headers
+    
+    // @@@@@@@@ This is turned off because it causes a websocket to be set up for ANY fetch
+    // whether we want to track it ot not. including ontologies loaed though the XSSproxy
     
 }; // End of fetcher
 

@@ -357,7 +357,11 @@ $rdf.Util.parseXML = function(str, options) {
         return dom;
 
     } else {
-        dparser = new DOMParser();
+        if (typeof window !== 'undefined' && window.DOMParser ) {
+            dparser = new window.DOMParser(); // seems to actually work
+        } else {
+            dparser = new DOMParser(); // Doc says this works 
+        }
     }
     return dparser.parseFromString(str, 'application/xml');
 };

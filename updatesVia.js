@@ -26,7 +26,7 @@ $rdf.UpdatesSocket = (function() {
     this.subscribed = {};
     this.socket = {};
     try {
-      this.socket = new WebSocket(via);
+      this.socket = new WebSocket(this.via);
       this.socket.onopen = this.onOpen;
       this.socket.onclose = this.onClose;
       this.socket.onmessage = this.onMessage;

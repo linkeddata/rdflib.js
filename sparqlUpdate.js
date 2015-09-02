@@ -564,6 +564,17 @@ $rdf.sparqlUpdate = function() {
             if (xhr.readyState == 4){
                 //formula from sparqlUpdate.js, what about redirects?
                 var success = (!xhr.status || (xhr.status >= 200 && xhr.status < 300));
+                if (success && typeof data !== 'string') {
+                    data.map(function(st){
+                        kb.addStatement(st);
+                    });
+                    // kb.fetcher.requested[doc.uri] = true; // as though fetched
+                }
+                if (success) {
+                    delete kb.fetcher.nonexistant[doc.uri];
+                    delete kb.fetcher.requested[doc.uri];
+                    // @@ later we can fake it has been requestd if put gives us the header sand we save them.
+                }
                 callback(doc.uri, success, xhr.responseText, xhr);
             }
         };

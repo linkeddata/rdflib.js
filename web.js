@@ -40,7 +40,17 @@ $rdf.Fetcher = function(store, timeout, async) {
     this.async = async != null ? async : true
     this.appNode = this.store.bnode(); // Denoting this session
     this.store.fetcher = this; //Bi-linked
-    this.requested = {}
+    this.requested = {}  
+    // this.requested[uri] states:
+    //   undefined     no record of web access or records reset
+    //   true          has been requested, XHR in progress
+    //   'done'        received, Ok
+    //   403           HTTP status unauthorized
+    //   404           Ressource does not exist. Can be created etc.
+    //   'redirected'  In attempt to counter CORS problems retried.
+    //   other strings mean various other erros, such as parse errros.
+    // 
+    this.nonexistant = {}; // keep track of explict 404s -> we can overwrite etc
     this.lookedUp = {}
     this.handlers = []
     this.mediatypes = {}
@@ -444,7 +454,7 @@ $rdf.Fetcher = function(store, timeout, async) {
     this.failFetch = function(xhr, status) {
         this.addStatus(xhr.req, status)
         kb.add(xhr.resource, ns.link('error'), status)
-        this.requested[$rdf.uri.docpart(xhr.resource.uri)] = false
+        this.requested[$rdf.uri.docpart(xhr.resource.uri)] = xhr.status; // changed 2015 was false
         if (xhr.userCallback) {
             xhr.userCallback(false, "Fetch of <" + xhr.resource.uri + "> failed: "+status, xhr)
         };
@@ -594,22 +604,48 @@ $rdf.Fetcher = function(store, timeout, async) {
 
     /*  Ask for a doc to be loaded if necessary then call back
     **
-    ** Changed 2013-08-20:  Added (ok, body) params to callback
+    ** Changed 2013-08-20:  Added (ok, errormessage) params to callback
     **
+    ** Calling methods:
+    **   nowOrWhenFetched (uri, userCallback) 
+    **   nowOrWhenFetched (uri, options, userCallback) 
+    **   nowOrWhenFetched (uri, referringTerm, userCallback, options)  <-- old
+    **   nowOrWhenFetched (uri, referringTerm, userCallback) <-- old
+    **
+    **  Options include:
+    **   referringTerm    The docuemnt in which this link was found.
+    **                    this is valuable when finding the source of bad URIs
+    **   force            boolean.  Never mind whether you have tried before,
+    **                    load this from scratch.
+    **   forceContentType Override the incoming header to force the data to be
+    **                    treaed as this content-type. 
     **/
-    this.nowOrWhenFetched = function(uri, referringTerm, userCallback, options) {
+    this.nowOrWhenFetched = function(uri, p2, userCallback, options) {
         uri = uri.uri || uri; // allow symbol object or string to be passed
-        // Sanitize URI (remove #localid) 
+        if (typeof p2 == 'function') {
+            options = {};
+            userCallback = p2;
+        } else if (typeof p2 == 'undefined') { // original calling signature
+            referingTerm = undefined;
+        } else if (p2 instanceof $rdf.Symbol) {
+            referingTerm = p2;
+        } else {
+            options = p2;
+        }
+        
+        // Remove #localid 
+        /* moved to this.requestURI 
         uri = uri.split('#')[0];
         var sta = this.getState(uri);
         if (sta == 'fetched') return userCallback(true);
-
+        if (sta == 'failed') return userCallback(false);
+*/   
         // If it is 'failed', then shoulkd we try again?  I think so so an old error doens't get stuck
         //if (sta == 'unrequested')
-        this.requestURI(uri, referringTerm, options || {}, userCallback);
+        this.requestURI(uri, p2, options || {}, userCallback);
     }
 
-
+    this.get = this.nowOrWhenFetched;
 
     // Look up response header
     //
@@ -667,7 +703,7 @@ $rdf.Fetcher = function(store, timeout, async) {
     this.saveResponseMetadata = function(xhr, kb) {
         var response = kb.bnode();
 
-        kb.add(xhr.req, ns.link('response'), response);
+        if (xhr.req) kb.add(xhr.req, ns.link('response'), response);
         kb.add(response, ns.http('status'), kb.literal(xhr.status), response);
         kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response);
 
@@ -697,20 +733,36 @@ $rdf.Fetcher = function(store, timeout, async) {
      */
     this.requestURI = function(docuri, rterm, options, userCallback) { //sources_request_new
         docuri = docuri.uri || docuri; // Symbol or string
-        if (docuri.indexOf('#') >= 0) { // hash
-            throw ("requestURI should not be called with fragid: " + docuri);
+        // Remove #localid 
+        docuri = docuri.split('#')[0];
+
+        if (typeof options === 'boolean') options = { 'force': options}; // Ols dignature
+        if (typeof options === 'undefined') options = {};
+        var force = !! options.force
+        var kb = this.store;
+        var args = arguments;
+
+
+        var sta = this.getState(docuri);
+        if (!force) {
+            if (sta == 'fetched') return userCallback(true);
+            if (sta == 'failed') return userCallback(false, "Previously failed. " + this.requested[docuri],
+                {'status': this.requested[docuri]}); // An xhr standin
+            if (sta == 'requested') return userCallback(false, "Sorry already requested - pending already.");
+        } else {
+            delete this.nonexistant[docuri];        
         }
+        // @@ Should allow concurrent requests
+
+        // If it is 'failed', then shoulkd we try again?  I think so so an old error doens't get stuck
+        //if (sta == 'unrequested')
+
 
         var pcol = $rdf.uri.protocol(docuri);
-        if (pcol == 'tel' || pcol == 'mailto' || pcol == 'urn') return null; // No look-up operation on these, but they are not errors
-        if (options === undefined) options = {};
-        var force = !! options.force
-        var kb = this.store
-        var args = arguments
-        var docterm = kb.sym(docuri)
-        if (!force && typeof(this.requested[docuri]) != "undefined") {
-            return null
+        if (pcol == 'tel' || pcol == 'mailto' || pcol == 'urn') {
+            return userCallback(false, "Unsupported protocol"); //"No look-up operation on these, but they are not errors?"
         }
+        var docterm = kb.sym(docuri);
 
         this.fireCallbacks('request', args); //Kenny: fire 'request' callbacks here
         // dump( "web.js: Requesting uri: " + docuri + "\n" );
@@ -721,14 +773,6 @@ $rdf.Fetcher = function(store, timeout, async) {
                 kb.add(docterm.uri, ns.link("requestedBy"), rterm.uri, this.appNode)
             }
         }
-
-        if (rterm) {
-            // $rdf.log.info('SF.request: ' + docuri + ' refd by ' + rterm.uri)
-        }
-        else {
-            // $rdf.log.info('SF.request: ' + docuri + ' no referring doc')
-        };
-
 
         var useJQuery = typeof jQuery != 'undefined';
         if (!useJQuery) {
@@ -781,7 +825,7 @@ $rdf.Fetcher = function(store, timeout, async) {
 
                             sf.addStatus(oldreq, 'redirected to new request') // why
                             //the callback throws an exception when called from xhr.onerror (so removed)
-                            //sf.fireCallbacks('done', args) // Are these args right? @@@   Noit done yet! done means success
+                            //sf.fireCallbacks('done', args) // Are these args right? @@@   Not done yet! done means success
                             sf.requested[xhr.resource.uri] = 'redirected';
 
                             var xhr2 = sf.requestURI(newURI, xhr.resource, options, userCallback);
@@ -832,6 +876,9 @@ $rdf.Fetcher = function(store, timeout, async) {
                     if (xhr.status >= 400) { // For extra dignostics, keep the reply
                     //  @@@ 401 should cause  a retry with credential son
                     // @@@ cache the credentials flag by host ????
+                        if (xhr.status === 404) {
+                            kb.fetcher.nonexistant[xhr.resource.uri] = true;
+                        }
                         if (xhr.responseText.length > 10) {
                             var response = kb.bnode();
                             kb.add(response, ns.http('content'), kb.literal(xhr.responseText), response);
@@ -868,41 +915,52 @@ $rdf.Fetcher = function(store, timeout, async) {
                             if (redirection != '301' && redirection != '302') break;
                         }
                     }
+                    // This is a minimal set to allow the use of damaged servers if necessary
+                    var extensionToContentType = {
+                        'rdf': 'application/rdf+xml', 'owl': 'application/rdf+xml',
+                        'n3': 'text/n3', 'ttl': 'text/turtle', 'nt': 'text/n3', 'acl': 'text/n3',
+                        'html': 'text/html', 'html': 'text/htm', 
+                        'xml': 'text/xml' 
+                    };
+                    
                     if (xhr.status == 200) {
                         addType(ns.link('Document'));
                         var ct = xhr.headers['content-type'];
+                        if (options.forceContentType) {
+                            xhr.headers['content-type'] = options.forceContentType;
+                        };
+                        if (ct.indexOf('application/octet-stream') >=0 ) {
+                            var guess = extensionToContentType[xhr.resource.uri.split('.').pop()];
+                            if (guess) {
+                                xhr.headers['content-type'] = guess;
+                            }
+                        } 
                         if (ct) {
                             if (ct.indexOf('image/') == 0 || ct.indexOf('application/pdf') == 0) addType(kb.sym('http://purl.org/dc/terms/Image'));
                         }
-                        if (options.forceContentType) {
-                            xhr.headers['content-type'] = options.forceContentType;
-                        };
                     }
+                    // application/octet-stream; charset=utf-8
+
+                    
 
                     if ($rdf.uri.protocol(xhr.resource.uri) == 'file' || $rdf.uri.protocol(xhr.resource.uri) == 'chrome') {
-                        switch (xhr.resource.uri.split('.').pop()) {
-                        case 'rdf':
-                        case 'owl':
-                            xhr.headers['content-type'] = 'application/rdf+xml';
-                            break;
-                        case 'n3':
-                        case 'nt':
-                        case 'ttl':
-                            xhr.headers['content-type'] = 'text/n3';
-                            break;
-                        default:
-                            xhr.headers['content-type'] = 'text/xml';
-                        }
                         if (options.forceContentType) {
                             xhr.headers['content-type'] = options.forceContentType;
-                        };
-
+                        } else {
+                            var guess = extensionToContentType[xhr.resource.uri.split('.').pop()];
+                            if (guess) {
+                                xhr.headers['content-type'] = guess;
+                            } else {
+                                xhr.headers['content-type'] = 'text/xml';
+                            }
+                        }
                     }
 
                     // If we have alread got the thing at this location, abort
                     if (loc) {
                         var udoc = $rdf.uri.join(xhr.resource.uri, loc)
-                        if (!force && udoc != xhr.resource.uri && sf.requested[udoc]) {
+                        if (!force && udoc != xhr.resource.uri && sf.requested[udoc]
+                            && sf.requested[udoc] == 'done') { // we have already fetched this in fact.
                             // should we smush too?
                             // $rdf.log.info("HTTP headers indicate we have already" + " retrieved " + xhr.resource + " as " + udoc + ". Aborting.")
                             sf.doneFetch(xhr, args)
@@ -920,7 +978,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                         }
                     }
 
-                    sf.parseLinkHeader(xhr, thisReq); // sf.?
+                    sf.parseLinkHeader(xhr, thisReq);
 
                     if (handler) {
                         try {
@@ -1332,7 +1390,6 @@ $rdf.Fetcher = function(store, timeout, async) {
         
     } // this.requestURI()
 
-// this.requested[docuri]) != "undefined"
 
     this.objectRefresh = function(term) {
         var uris = kb.uris(term) // Get all URIs
@@ -1363,26 +1420,22 @@ $rdf.Fetcher = function(store, timeout, async) {
         this.fireCallbacks('retract', arguments)
     }
 
-    this.getState = function(docuri) { // docState
-        if (typeof this.requested[docuri] != "undefined") {
-            if (this.requested[docuri]) {
-                if (this.isPending(docuri)) {
-                    return "requested"
-                } else {
-                    return "fetched"
-                }
-            } else {
-                return "failed"
-            }
-        } else {
+    this.getState = function(docuri) {
+        if (typeof this.requested[docuri] == "undefined") {
             return "unrequested"
+        } else if (this.requested[docuri] === true) {
+            return "requested"
+        } else if (this.requested[docuri] === 'done') {
+            return "fetched"
+        } else  { // An non-200 HTTP error status
+            return "failed"
         }
     }
 
     //doing anyStatementMatching is wasting time
     this.isPending = function(docuri) { // sources_pending
         //if it's not pending: false -> flailed 'done' -> done 'redirected' -> redirected
-        return this.requested[docuri] == true;
+        return this.requested[docuri] === true;
     }
 
     // var updatesVia = new $rdf.UpdatesVia(this); // Subscribe to headers
