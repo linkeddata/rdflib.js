@@ -20378,14 +20378,10 @@ $rdf.parse = function parse(str, kb, base, contentType, callback) {
             parser.parse($rdf.Util.parseXML(str), base, kb.sym(base));
             executeCallback();
         } else if (contentType == 'application/rdfa') {  // @@ not really a valid mime type
-            if ($rdf.rdfa && $rdf.rdfa.parse)
-                $rdf.rdfa.parse($rdf.Util.parseXML(str), kb, base);
+            $rdf.parseDOM_RDFa($rdf.Util.parseXML(str), kb, base);
             executeCallback();
         } else if (contentType == 'application/sparql-update') {  // @@ we handle a subset
             spaqlUpdateParser(store, str, base)
-
-            if ($rdf.rdfa && $rdf.rdfa.parse)
-                $rdf.rdfa.parse($rdf.Util.parseXML(str), kb, base);
             executeCallback();
         } else if (contentType == 'application/ld+json' ||
             contentType == 'application/nquads' ||
