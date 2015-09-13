@@ -35,6 +35,7 @@ class $rdf.Symbol extends $rdf.Node
     termType: 'symbol'
     toString: -> "<#{@uri}>"
     toNT: @::toString
+    doc: -> if @uri.indexOf('#') < 0 then @ else new $rdf.Symbol(@uri.split('#')[0])
 
     sameTerm: (other) ->
         unless other

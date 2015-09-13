@@ -75,6 +75,14 @@ $rdf.Symbol = (function(superClass) {
 
   Symbol.prototype.toNT = Symbol.prototype.toString;
 
+  Symbol.prototype.doc = function() {
+    if (this.uri.indexOf('#') < 0) {
+      return this;
+    } else {
+      return new $rdf.Symbol(this.uri.split('#')[0]);
+    }
+  };
+
   Symbol.prototype.sameTerm = function(other) {
     if (!other) {
       return false;

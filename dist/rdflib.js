@@ -746,6 +746,14 @@ $rdf.Symbol = (function(superClass) {
 
   Symbol.prototype.toNT = Symbol.prototype.toString;
 
+  Symbol.prototype.doc = function() {
+    if (this.uri.indexOf('#') < 0) {
+      return this;
+    } else {
+      return new $rdf.Symbol(this.uri.split('#')[0]);
+    }
+  };
+
   Symbol.prototype.sameTerm = function(other) {
     if (!other) {
       return false;
@@ -19552,15 +19560,6 @@ $rdf.Fetcher = function(store, timeout, async) {
             options = p2;
         }
         
-        // Remove #localid 
-        /* moved to this.requestURI 
-        uri = uri.split('#')[0];
-        var sta = this.getState(uri);
-        if (sta == 'fetched') return userCallback(true);
-        if (sta == 'failed') return userCallback(false);
-*/   
-        // If it is 'failed', then shoulkd we try again?  I think so so an old error doens't get stuck
-        //if (sta == 'unrequested')
         this.requestURI(uri, p2, options || {}, userCallback);
     }
 
@@ -19644,7 +19643,7 @@ $rdf.Fetcher = function(store, timeout, async) {
      **      options:
      **              force:  Load the data even if loaded before
      **              withCredentials:   flag for XHR/CORS etc 
-     **      userCallback:  Called with (true) or (false, errorbody) after load is done or failed
+     **      userCallback:  Called with (true) or (false, errorbody, {status: 400}) after load is done or failed
      ** Return value:
      **	    The xhr object for the HTTP access
      **      null if the protocol is not a look-up protocol,
@@ -19664,10 +19663,11 @@ $rdf.Fetcher = function(store, timeout, async) {
 
         var sta = this.getState(docuri);
         if (!force) {
-            if (sta == 'fetched') return userCallback(true);
-            if (sta == 'failed') return userCallback(false, "Previously failed. " + this.requested[docuri],
-                {'status': this.requested[docuri]}); // An xhr standin
-            if (sta == 'requested') return userCallback(false, "Sorry already requested - pending already.");
+            if (sta == 'fetched') return userCallback ? userCallback(true) : undefined;
+            if (sta == 'failed') return userCallback ? 
+                userCallback(false, "Previously failed. " + this.requested[docuri],
+                    {'status': this.requested[docuri]}) : undefined; // An xhr standin
+            if (sta == 'requested') return userCallback? userCallback(false, "Sorry already requested - pending already.") : undefined;
         } else {
             delete this.nonexistant[docuri];        
         }
@@ -19679,7 +19679,7 @@ $rdf.Fetcher = function(store, timeout, async) {
 
         var pcol = $rdf.uri.protocol(docuri);
         if (pcol == 'tel' || pcol == 'mailto' || pcol == 'urn') {
-            return userCallback(false, "Unsupported protocol"); //"No look-up operation on these, but they are not errors?"
+            return userCallback? userCallback(false, "Unsupported protocol") : undefined; //"No look-up operation on these, but they are not errors?"
         }
         var docterm = kb.sym(docuri);
 
@@ -19848,7 +19848,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                         if (options.forceContentType) {
                             xhr.headers['content-type'] = options.forceContentType;
                         };
-                        if (ct.indexOf('application/octet-stream') >=0 ) {
+                        if (!ct || ct.indexOf('application/octet-stream') >=0 ) {
                             var guess = extensionToContentType[xhr.resource.uri.split('.').pop()];
                             if (guess) {
                                 xhr.headers['content-type'] = guess;
@@ -19959,13 +19959,13 @@ $rdf.Fetcher = function(store, timeout, async) {
                             xhr.redirected = true;
 
                             sf.addStatus(oldreq, 'redirected XHR') // why
-                            if (xhr.userCallback) {
+                            if (xhr.userCallback) { // @@@ Should we call back at this poiint o tjust leave it
                                 xhr.userCallback(true);
                             };
                             sf.fireCallbacks('redirected', args) // Are these args right? @@@
                             sf.requested[xhr.resource.uri] = 'redirected';
 
-                            var xhr2 = sf.requestURI(newURI, xhr.resource);
+                            var xhr2 = sf.requestURI(newURI, xhr.resource, xhr.options || {} , xhr.userCallback);
                             if (xhr2 && xhr2.req) kb.add(xhr.req,
                                 kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'),
                                 xhr2.req, sf.appNode);                             return;
@@ -20049,6 +20049,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                     xhr.req = req;   // Add these in case fails before .ajax returns
                     xhr.userCallback = userCallback;
                     xhr.resource = docterm;
+                    xhr.options = options;
                     xhr.requestedURI = uri2;
                     xhr.withCredentials = withCredentials; // Somehow gets lost by jq
 
@@ -20063,6 +20064,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                     xhr.req = req;
                     xhr.userCallback = userCallback;
                     xhr.resource = docterm;
+                    xhr.resource = docterm;
                     xhr.requestedURI = uri2;
 
                     onreadystatechangeFactory(xhr)();
@@ -20072,6 +20074,7 @@ $rdf.Fetcher = function(store, timeout, async) {
             xhr.req = req;
             xhr.userCallback = userCallback;
             xhr.resource = docterm;
+            xhr.options = options;
             xhr.requestedURI = uri2;
             xhr.actualProxyURI = actualProxyURI;
 
@@ -20089,6 +20092,7 @@ $rdf.Fetcher = function(store, timeout, async) {
 
             xhr.req = req;
             xhr.userCallback = userCallback;
+            xhr.options = options;
             xhr.resource = docterm;
             xhr.requestedURI = uri2;
 
