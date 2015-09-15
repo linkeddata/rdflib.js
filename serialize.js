@@ -73,9 +73,8 @@ __Serializer.prototype.suggestNamespaces = function(namespaces) {
 }
 
 // Make up an unused prefix for a random namespace
-__Serializer.prototype.makeUpPrefix = function(uri) {
+__Serializer.prototype.makeUpPrefix = function(namespaces, uri) {
     var p = uri;
-    var namespaces = [];
     var pok;
 
     function canUse(pp) {
@@ -84,6 +83,7 @@ __Serializer.prototype.makeUpPrefix = function(uri) {
         if (pp === 'ns') return false; // boring
         this.prefixes[uri] = pp;
         pok = pp;
+        namespaces[pp] = true;
         return true
     }
     canUse = canUse.bind(this);
@@ -272,6 +272,8 @@ __Serializer.prototype._notNameChars =
 __Serializer.prototype.statementsToN3 = function(sts) {
     var indent = 4;
     var width = 80;
+
+    var prefixesUsed = [];
 
     var predMap = {
         'http://www.w3.org/2002/07/owl#sameAs': '=',
@@ -588,7 +590,7 @@ __Serializer.prototype.symbolToN3 = function symbolToN3(x) {  // c.f. symbolStri
                 return ':' + localid;
             }
             var prefix = this.prefixes[namesp];
-            if (!prefix) prefix = this.makeUpPrefix(namesp);
+            if (!prefix) prefix = this.makeUpPrefix(prefixesUsed, namesp);
             if (prefix) {
                 this.namespacesUsed[namesp] = true;
                 return prefix + ':' + localid;
@@ -686,6 +688,7 @@ __Serializer.prototype.statementsToXML = function(sts) {
 
     var namespaceCounts = []; // which have been used
     namespaceCounts['http://www.w3.org/1999/02/22-rdf-syntax-ns#'] = true;
+    var prefixesUsed = [];
 
     var liPrefix = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#_';	//prefix for ordered list items
 
@@ -957,7 +960,7 @@ __Serializer.prototype.statementsToXML = function(sts) {
             return localid;
         }
         var prefix = this.prefixes[namesp];
-        if (!prefix) prefix = this.makeUpPrefix(namesp);
+        if (!prefix) prefix = this.makeUpPrefix(prefixesUsed, namesp);
         namespaceCounts[namesp] = true;
         return prefix + ':' + localid;
 //        throw ('No prefix for namespace "'+namesp +'" for XML qname for '+uri+', namespaces: '+sz.prefixes+' sz='+sz);

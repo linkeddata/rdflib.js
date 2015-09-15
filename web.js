@@ -40,7 +40,7 @@ $rdf.Fetcher = function(store, timeout, async) {
     this.async = async != null ? async : true
     this.appNode = this.store.bnode(); // Denoting this session
     this.store.fetcher = this; //Bi-linked
-    this.requested = {}  
+    this.requested = {} ; 
     // this.requested[uri] states:
     //   undefined     no record of web access or records reset
     //   true          has been requested, XHR in progress
@@ -50,6 +50,9 @@ $rdf.Fetcher = function(store, timeout, async) {
     //   'redirected'  In attempt to counter CORS problems retried.
     //   other strings mean various other erros, such as parse errros.
     // 
+    
+    this.fetchCallbacks = {}; // fetchCallbacks[uri].push(callback)
+    
     this.nonexistant = {}; // keep track of explict 404s -> we can overwrite etc
     this.lookedUp = {}
     this.handlers = []
@@ -455,9 +458,10 @@ $rdf.Fetcher = function(store, timeout, async) {
         this.addStatus(xhr.req, status)
         kb.add(xhr.resource, ns.link('error'), status)
         this.requested[$rdf.uri.docpart(xhr.resource.uri)] = xhr.status; // changed 2015 was false
-        if (xhr.userCallback) {
-            xhr.userCallback(false, "Fetch of <" + xhr.resource.uri + "> failed: "+status, xhr)
-        };
+        while (this.fetchCallbacks[xhr.resource.uri] && this.fetchCallbacks[xhr.resource.uri].length) {
+            this.fetchCallbacks[xhr.resource.uri].shift()(false, "Fetch of <" + xhr.resource.uri + "> failed: "+status, xhr);
+        }
+        delete this.fetchCallbacks[xhr.resource.uri];
         this.fireCallbacks('fail', [xhr.requestedURI, status])
         xhr.abort()
         return xhr
@@ -514,9 +518,10 @@ $rdf.Fetcher = function(store, timeout, async) {
         this.addStatus(xhr.req, 'Done.')
         // $rdf.log.info("Done with parse, firing 'done' callbacks for " + xhr.resource)
         this.requested[xhr.resource.uri] = 'done'; //Kenny
-        if (xhr.userCallback) {
-            xhr.userCallback(true, undefined, xhr);
-        };
+        while (this.fetchCallbacks[xhr.resource.uri] && this.fetchCallbacks[xhr.resource.uri].length) {
+            this.fetchCallbacks[xhr.resource.uri].shift()(true, undefined, xhr);
+        }
+        delete this.fetchCallbacks[xhr.resource.uri];
         this.fireCallbacks('done', args)
     };
 
@@ -734,13 +739,19 @@ $rdf.Fetcher = function(store, timeout, async) {
         var args = arguments;
 
 
+        var pcol = $rdf.uri.protocol(docuri);
+        if (pcol == 'tel' || pcol == 'mailto' || pcol == 'urn') {
+            return userCallback? userCallback(false, "Unsupported protocol", {'status':  900 }) : undefined; //"No look-up operation on these, but they are not errors?"
+        }
+        var docterm = kb.sym(docuri);
+
         var sta = this.getState(docuri);
         if (!force) {
             if (sta == 'fetched') return userCallback ? userCallback(true) : undefined;
             if (sta == 'failed') return userCallback ? 
                 userCallback(false, "Previously failed. " + this.requested[docuri],
                     {'status': this.requested[docuri]}) : undefined; // An xhr standin
-            if (sta == 'requested') return userCallback? userCallback(false, "Sorry already requested - pending already.") : undefined;
+            //if (sta == 'requested') return userCallback? userCallback(false, "Sorry already requested - pending already.", {'status': 999 }) : undefined;
         } else {
             delete this.nonexistant[docuri];        
         }
@@ -750,15 +761,25 @@ $rdf.Fetcher = function(store, timeout, async) {
         //if (sta == 'unrequested')
 
 
-        var pcol = $rdf.uri.protocol(docuri);
-        if (pcol == 'tel' || pcol == 'mailto' || pcol == 'urn') {
-            return userCallback? userCallback(false, "Unsupported protocol") : undefined; //"No look-up operation on these, but they are not errors?"
-        }
-        var docterm = kb.sym(docuri);
 
         this.fireCallbacks('request', args); //Kenny: fire 'request' callbacks here
         // dump( "web.js: Requesting uri: " + docuri + "\n" );
-        this.requested[docuri] = true
+        
+
+        if (userCallback) {
+            if (!this.fetchCallbacks[docuri]) {
+                this.fetchCallbacks[docuri] = [ userCallback ];
+            } else {
+                this.fetchCallbacks[docuri].push(userCallback);
+            }
+        }
+
+        if (this.requested[docuri] === true) {
+            return; // Don't ask again - wait for existing call
+        } else {
+            this.requested[docuri] = true;        
+        }
+
 
         if (rterm) {
             if (rterm.uri) { // A link betwen URIs not terms
@@ -819,8 +840,16 @@ $rdf.Fetcher = function(store, timeout, async) {
                             //the callback throws an exception when called from xhr.onerror (so removed)
                             //sf.fireCallbacks('done', args) // Are these args right? @@@   Not done yet! done means success
                             sf.requested[xhr.resource.uri] = 'redirected';
+                            
+                            if (sf.fetchCallbacks[xhr.resource.uri]) {
+                                if (!sf.fetchCallbacks[newURI]) {
+                                    sf.fetchCallbacks[newURI] = [];
+                                }
+                                sf.fetchCallbacks[newURI] == sf.fetchCallbacks[newURI].concat(sf.fetchCallbacks[xhr.resource.uri]);
+                                delete sf.fetchCallbacks[xhr.resource.uri];
+                            }
 
-                            var xhr2 = sf.requestURI(newURI, xhr.resource, options, userCallback);
+                            var xhr2 = sf.requestURI(newURI, xhr.resource, options);
                             xhr2.proxyUsed = true; //only try the proxy once
 
                             if (xhr2 && xhr2.req) {
@@ -842,10 +871,10 @@ $rdf.Fetcher = function(store, timeout, async) {
                             }
                             newopt.withCredentials = false;
                             sf.addStatus(xhr.req, "Abort: Will retry with credentials SUPPRESSED to see if that helps");
-                             sf.requestURI(docuri, rterm, newopt, userCallback)
+                             sf.requestURI(docuri, rterm, newopt); // usercallback already registered
                             // xhr.send(); // try again -- not a function
                         } else {
-                            sf.failFetch(xhr, "XHR Error not from Credentials or cross-site: "+event); // Alas we get no error message
+                            //sf.failFetch(xhr, "XHR Error not from Credentials or cross-site: "+event); // Alas we get no error message
                         }
                     }
                 }; 
@@ -1032,13 +1061,20 @@ $rdf.Fetcher = function(store, timeout, async) {
                             xhr.redirected = true;
 
                             sf.addStatus(oldreq, 'redirected XHR') // why
-                            if (xhr.userCallback) { // @@@ Should we call back at this poiint o tjust leave it
-                                xhr.userCallback(true);
-                            };
+
+                            if (sf.fetchCallbacks[xhr.resource.uri]) {
+                                if (!sf.fetchCallbacks[newURI]) {
+                                    sf.fetchCallbacks[newURI] = [];
+                                }
+                                sf.fetchCallbacks[newURI] == sf.fetchCallbacks[newURI].concat(sf.fetchCallbacks[xhr.resource.uri]);
+                                delete sf.fetchCallbacks[xhr.resource.uri];
+                            }
+
+
                             sf.fireCallbacks('redirected', args) // Are these args right? @@@
                             sf.requested[xhr.resource.uri] = 'redirected';
 
-                            var xhr2 = sf.requestURI(newURI, xhr.resource, xhr.options || {} , xhr.userCallback);
+                            var xhr2 = sf.requestURI(newURI, xhr.resource, xhr.options || {} );
                             if (xhr2 && xhr2.req) kb.add(xhr.req,
                                 kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'),
                                 xhr2.req, sf.appNode);                             return;
@@ -1120,7 +1156,6 @@ $rdf.Fetcher = function(store, timeout, async) {
                 error: function(xhr, s, e) {
 
                     xhr.req = req;   // Add these in case fails before .ajax returns
-                    xhr.userCallback = userCallback;
                     xhr.resource = docterm;
                     xhr.options = options;
                     xhr.requestedURI = uri2;
@@ -1135,7 +1170,6 @@ $rdf.Fetcher = function(store, timeout, async) {
                 success: function(d, s, xhr) {
 
                     xhr.req = req;
-                    xhr.userCallback = userCallback;
                     xhr.resource = docterm;
                     xhr.resource = docterm;
                     xhr.requestedURI = uri2;
@@ -1145,7 +1179,7 @@ $rdf.Fetcher = function(store, timeout, async) {
             });
 
             xhr.req = req;
-            xhr.userCallback = userCallback;
+
             xhr.resource = docterm;
             xhr.options = options;
             xhr.requestedURI = uri2;
@@ -1164,7 +1198,6 @@ $rdf.Fetcher = function(store, timeout, async) {
             }
 
             xhr.req = req;
-            xhr.userCallback = userCallback;
             xhr.options = options;
             xhr.resource = docterm;
             xhr.requestedURI = uri2;
@@ -1239,8 +1272,16 @@ $rdf.Fetcher = function(store, timeout, async) {
                                     xhr.abort()
                                     xhr.aborted = true
 
-                                    sf.addStatus(oldreq, 'done') // why
-                                    sf.fireCallbacks('done', args) // Are these args right? @@@
+                                    if (sf.fetchCallbacks[xhr.resource.uri]) {
+                                        if (!sf.fetchCallbacks[newURI]) {
+                                            sf.fetchCallbacks[newURI] = [];
+                                        }
+                                        sf.fetchCallbacks[newURI] == sf.fetchCallbacks[newURI].concat(sf.fetchCallbacks[xhr.resource.uri]);
+                                        delete sf.fetchCallbacks[xhr.resource.uri];
+                                    }
+
+                                    sf.addStatus(oldreq, 'redirected') // why
+                                    sf.fireCallbacks('redirected', args) // Are these args right? @@@
                                     sf.requested[xhr.resource.uri] = 'redirected';
 
                                     var hash = newURI.indexOf('#');
@@ -1308,15 +1349,6 @@ $rdf.Fetcher = function(store, timeout, async) {
                                     xhr.abort()
                                     xhr.aborted = true
 
-
-                                    sf.addStatus(oldreq, 'done') // why
-
-                                    if (xhr.userCallback) {
-                                        xhr.userCallback(true);
-                                    };
-                                    sf.fireCallbacks('done', args) // Are these args right? @@@
-                                    sf.requested[xhr.resource.uri] = 'redirected';
-
                                     var hash = newURI.indexOf('#');
                                     if (hash >= 0) {
                                         var msg = ('Warning: ' + xhr.resource + ' HTTP redirects to' + newURI + ' which should not contain a "#" sign');
@@ -1324,6 +1356,17 @@ $rdf.Fetcher = function(store, timeout, async) {
                                         kb.add(xhr.resource, kb.sym('http://www.w3.org/2007/ont/link#warning'), msg)
                                         newURI = newURI.slice(0, hash);
                                     }
+
+                                    if (sf.fetchCallbacks[xhr.resource.uri]) {
+                                        if (!sf.fetchCallbacks[newURI]) {
+                                            sf.fetchCallbacks[newURI] = [];
+                                        }
+                                        sf.fetchCallbacks[newURI] == sf.fetchCallbacks[newURI].concat(sf.fetchCallbacks[xhr.resource.uri]);
+                                        delete sf.fetchCallbacks[xhr.resource.uri];
+                                    }
+
+                                    sf.requested[xhr.resource.uri] = 'redirected';
+
                                     var xhr2 = sf.requestURI(newURI, xhr.resource);
                                     if (xhr2 && xhr2.req) kb.add(xhr.req,
                                         kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'),

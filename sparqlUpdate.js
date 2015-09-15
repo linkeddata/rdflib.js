@@ -544,7 +544,7 @@ $rdf.sparqlUpdate = function() {
             //serialize to te appropriate format
             var sz = $rdf.Serializer(kb);
             sz.suggestNamespaces(kb.namespaces);
-            sz.setBase(doc.uri);//?? beware of this - kenny (why? tim)                   
+            sz.setBase(doc.uri);                   
             switch(content_type){
                 case 'application/rdf+xml': 
                     documentString = sz.statementsToXML(data);
