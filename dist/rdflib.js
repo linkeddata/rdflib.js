@@ -6384,8 +6384,11 @@ $rdf.Serializer = function() {
 var __Serializer = function( store ){
     this.flags = "";
     this.base = null;
-    this.prefixes = [];
-    this.namespacesUsed = [];
+    
+    this.prefixes = [];    // suggested prefixes
+    this.namespaces = []; // complementary indexes
+    
+    this.namespacesUsed = []; // Count actually used and so needed in @prefixes
     this.keywords = ['a']; // The only one we generate at the moment
     this.prefixchars = "abcdefghijklmnopqustuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
     this.incoming = null;  // Array not calculated yet
@@ -6432,7 +6435,9 @@ __Serializer.prototype.fromStr = function(s) {
 __Serializer.prototype.suggestPrefix = function(prefix, uri) {
     if (prefix.slice(0,7) === 'default') return; // Try to weed these out
     if (prefix.slice(0,2) === 'ns') return; //  From others inferior algos
+    if (this.namespaces[prefix] || this.prefixes[uri]) return; // already used 
     this.prefixes[uri] = prefix;
+    this.namespaces[prefix] = uri;
 }
 
 // Takes a namespace -> prefix map
@@ -6443,23 +6448,22 @@ __Serializer.prototype.suggestNamespaces = function(namespaces) {
 }
 
 // Make up an unused prefix for a random namespace
-__Serializer.prototype.makeUpPrefix = function(namespaces, uri) {
+__Serializer.prototype.makeUpPrefix = function(uri) {
     var p = uri;
     var pok;
 
     function canUse(pp) {
-        if (namespaces[pp]) return false; // already used
         if (! __Serializer.prototype.validPrefix.test(pp)) return false; // bad format
         if (pp === 'ns') return false; // boring
         this.prefixes[uri] = pp;
         pok = pp;
-        namespaces[pp] = true;
         return true
     }
     canUse = canUse.bind(this);
-    for (var ns in this.prefixes) {
-        namespaces[this.prefixes[ns]] = ns; // reverse index
+/*    for (var ns in this.prefixes) {
+        namespaces[this.prefixes[ns]] = ns; // reverse index foo
     }
+    */
     if ('#/'.indexOf(p[p.length-1]) >= 0) p = p.slice(0, -1);
     var slash = p.lastIndexOf('/');
     if (slash >= 0) p = p.slice(slash+1);
@@ -6642,8 +6646,6 @@ __Serializer.prototype._notNameChars =
 __Serializer.prototype.statementsToN3 = function(sts) {
     var indent = 4;
     var width = 80;
-
-    var prefixesUsed = [];
 
     var predMap = {
         'http://www.w3.org/2002/07/owl#sameAs': '=',
@@ -6960,7 +6962,7 @@ __Serializer.prototype.symbolToN3 = function symbolToN3(x) {  // c.f. symbolStri
                 return ':' + localid;
             }
             var prefix = this.prefixes[namesp];
-            if (!prefix) prefix = this.makeUpPrefix(prefixesUsed, namesp);
+            if (!prefix) prefix = this.makeUpPrefix(namesp);
             if (prefix) {
                 this.namespacesUsed[namesp] = true;
                 return prefix + ':' + localid;
@@ -7058,7 +7060,6 @@ __Serializer.prototype.statementsToXML = function(sts) {
 
     var namespaceCounts = []; // which have been used
     namespaceCounts['http://www.w3.org/1999/02/22-rdf-syntax-ns#'] = true;
-    var prefixesUsed = [];
 
     var liPrefix = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#_';	//prefix for ordered list items
 
@@ -7330,7 +7331,7 @@ __Serializer.prototype.statementsToXML = function(sts) {
             return localid;
         }
         var prefix = this.prefixes[namesp];
-        if (!prefix) prefix = this.makeUpPrefix(prefixesUsed, namesp);
+        if (!prefix) prefix = this.makeUpPrefix(namesp);
         namespaceCounts[namesp] = true;
         return prefix + ':' + localid;
 //        throw ('No prefix for namespace "'+namesp +'" for XML qname for '+uri+', namespaces: '+sz.prefixes+' sz='+sz);
