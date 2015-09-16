@@ -1618,11 +1618,13 @@ $rdf.parse = function parse(str, kb, base, contentType, callback) {
 
 //   Serialize to the appropriate format
 //
+// Either 
+//
 // @@ Currently NQuads and JSON/LD are deal with extrelemently inefficiently
 // through mutiple conversions.
 // 
 $rdf.serialize = function(target, kb, base, contentType, callback) {
-    var documentString;
+    var documentString = null;
     try {
         var sz = $rdf.Serializer(kb);
         var newSts = kb.statementsMatching(undefined, undefined, undefined, target);
@@ -1650,29 +1652,21 @@ $rdf.serialize = function(target, kb, base, contentType, callback) {
             documentString = $rdf.convert.convertToNQuads(n3String, callback);
             break;
         default:
-            throw "serialise: Content-type "+ contentType +" not supported for data write";
+            throw "Serialize: Content-type "+ contentType +" not supported for data write.";
         }
     } catch(err) {
-        return executeErrorCallback(err);
+        if (callback) {
+            return (err);
+        }
+        throw err; // Don't hide problems from caller in sync mode
     }
 
     function executeCallback(err, result) {
         if(callback) {
             callback(err, result);
+            return;
         } else {
             return result;
-        }
-    }
-
-    function executeErrorCallback(err) {
-        if(contentType != 'application/ld+json' ||
-           contentType != 'application/nquads' ||
-           contentType != 'application/n-quads') {
-            if(callback) {
-                callback(err, undefined);
-            } else {
-                return undefined;
-            }
         }
     }
 };

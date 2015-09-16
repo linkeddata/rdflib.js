@@ -25,11 +25,13 @@ alpha: dist/rdflib-alpha.js
 
 dist/rdflib-alpha.js: $R module.js
 	echo "(function(root, undef) {" > $@
+	date '+$$rdf.buildTime = "%Y-%m-%dT%H:%M:%S";'  >> $@
 	cat $R module.js >> $@
 	echo "})(this);" >> $@
 
 dist/rdflib.js: $R module.js
 	echo "(function(root, undef) {" > $@
+	date '+$$rdf.buildTime = "%Y-%m-%dT%H:%M:%S";'  >> $@
 	cat $R module.js >> $@
 	echo "})(this);" >> $@
 
@@ -38,6 +40,7 @@ J=dist
 
 dist/rdflib-rdfa.js: $X $A module.js
 	echo "(function(root, undef) {" > $@
+	date '+$$rdf.buildTime = "%Y-%m-%dT%H:%M:%S";'  >> $@
 	cat $A module.js >> $@
 	echo "})(this);" >> $@
 
