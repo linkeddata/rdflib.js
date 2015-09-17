@@ -1,5 +1,4 @@
 (function(root, undef) {
-$rdf.buildTime = "2015-09-16T16:47:34";
 /**
 * Utility functions for $rdf and the $rdf object itself
  */
@@ -26102,4 +26101,5 @@ else {
     // Leak a global regardless of module system
     root['$rdf'] = $rdf;
 }
+$rdf.buildTime = "2015-09-16T20:33:49";
 })(this);
