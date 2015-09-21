@@ -396,6 +396,12 @@ $rdf.IndexedFormula.prototype.statementsMatching = function(subj,pred,obj,why,ju
     return results;
 }; // statementsMatching
 
+/** Find a statement object and remove it **/
+$rdf.IndexedFormula.prototype.removeMatch = function (st) {
+    this.remove(
+        this.statementsMatching(st.subject, st.predicate, st.object, st.why)[0])
+}
+
 /** remove a particular statement from the bank **/
 $rdf.IndexedFormula.prototype.remove = function (st) {
     //$rdf.log.debug("entering remove w/ st=" + st);
