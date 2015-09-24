@@ -856,7 +856,7 @@ __Serializer.prototype.statementsToXML = function(sts) {
           break;
           case 'literal':
             results = results.concat(['<'+ t
-              + (st.object.dt ? ' rdf:datatype="'+escapeForXML(st.object.dt.uri)+'"' : '')
+              + (st.object.datatype ? ' rdf:datatype="'+escapeForXML(st.object.datatype.uri)+'"' : '')
               + (st.object.lang ? ' xml:lang="'+st.object.lang+'"' : '')
               + '>' + escapeForXML(st.object.value)
               + '</'+ t +'>']);
