@@ -245,7 +245,7 @@
         var f = this.frameFactory(this);
         this.base = base;
         f.base = base;
-        f.lang = '';
+        f.lang = null; // was '' but can't have langs like that 2015 (!)
         this.parseDOM(this.buildFrame(f, root));
         return true;
     };

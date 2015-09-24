@@ -183,6 +183,9 @@ $rdf.Literal = (function(superClass) {
     if (this.lang == null) {
       this.lang = void 0;
     }
+    if (this.lang === '') {
+      this.lang = void 0;
+    }
     if (this.datatype == null) {
       this.datatype = void 0;
     }

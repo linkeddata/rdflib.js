@@ -87,6 +87,8 @@ class $rdf.BlankNode extends $rdf.Node
 class $rdf.Literal extends $rdf.Node
     constructor: (@value, @lang, @datatype) ->
         @lang ?= undefined
+        if @lang == ''
+            @lang = undefined
         @datatype ?= undefined
     termType: 'literal'
     toString: -> "#{@value}"
