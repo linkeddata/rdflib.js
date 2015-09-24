@@ -397,13 +397,29 @@ $rdf.IndexedFormula.prototype.statementsMatching = function(subj,pred,obj,why,ju
 }; // statementsMatching
 
 /** Find a statement object and remove it **/
-$rdf.IndexedFormula.prototype.removeMatch = function (st) {
-    this.remove(
-        this.statementsMatching(st.subject, st.predicate, st.object, st.why)[0])
+$rdf.IndexedFormula.prototype.remove = function (st) {
+    if (st instanceof Array) {
+        for (var i=0; i< st.length; i++) {
+            this.remove(st[i]);
+        }
+        return;
+    }
+    if (st instanceof $rdf.IndexedFormula) {
+        return this.remove(st.statements);
+    }
+    var sts = this.statementsMatching(st.subject, st.predicate, st.object, st.why);
+    if (!sts.length) {
+        throw "Statement to be removed is not on store: " + st;
+    }
+    this.removeStatement(sts[0]);
 }
 
-/** remove a particular statement from the bank **/
-$rdf.IndexedFormula.prototype.remove = function (st) {
+/** Remove a particular statement object from the store
+**
+** st    a statement which is already in the store and indexed.
+**      Make sure you only use this for these.
+**/
+$rdf.IndexedFormula.prototype.removeStatement = function (st) {
     //$rdf.log.debug("entering remove w/ st=" + st);
     var term = [ st.subject, st.predicate, st.object, st.why];
     for (var p=0; p<4; p++) {

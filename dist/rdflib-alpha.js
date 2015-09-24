@@ -1,5 +1,4 @@
 (function(root, undef) {
-$rdf.buildTime = "2015-09-16T16:40:01";
 /**
 * Utility functions for $rdf and the $rdf object itself
  */
@@ -4058,6 +4057,12 @@ $rdf.IndexedFormula.prototype.statementsMatching = function(subj,pred,obj,why,ju
     return results;
 }; // statementsMatching
 
+/** Find a statement object and remove it **/
+$rdf.IndexedFormula.prototype.removeMatch = function (st) {
+    this.remove(
+        this.statementsMatching(st.subject, st.predicate, st.object, st.why)[0])
+}
+
 /** remove a particular statement from the bank **/
 $rdf.IndexedFormula.prototype.remove = function (st) {
     //$rdf.log.debug("entering remove w/ st=" + st);
@@ -6118,7 +6123,8 @@ $rdf.sparqlUpdate = function() {
                     tabulator.log.info("\t sparql: Return success="+success+" for query "+query+"\n");
                     if (success) {
                         for (var i=0; i<ds.length;i++)
-                            try { kb.remove(ds[i]) } catch(e) {
+                            if (1) { kb.removeMatch(ds[i]) } else { // disable try for testing @@@
+                            // try { kb.removeMatch(ds[i]) } catch(e) {
                                 callback(uri, false,
                                 "sparqlUpdate: Remote OK but error deleting statemmnt "+
                                     ds[i] + " from local store:\n" + e)
@@ -6172,7 +6178,7 @@ $rdf.sparqlUpdate = function() {
                     //formula from sparqlUpdate.js, what about redirects?
                     var success = (!xhr.status || (xhr.status >= 200 && xhr.status < 300));
                     if (success) {
-                        for (var i=0; i<ds.length;i++) kb.remove(ds[i]);
+                        for (var i=0; i<ds.length;i++) kb.removeMatch(ds[i]);
                         for (var i=0; i<is.length;i++)
                             kb.add(is[i].subject, is[i].predicate, is[i].object, doc);                
                     }
@@ -6242,7 +6248,7 @@ $rdf.sparqlUpdate = function() {
                 stream.write(documentString, documentString.length);
                 stream.close();
 
-                for (var i=0; i<ds.length;i++) kb.remove(ds[i]);
+                for (var i=0; i<ds.length;i++) kb.removeMatch(ds[i]);
                 for (var i=0; i<is.length;i++)
                     kb.add(is[i].subject, is[i].predicate, is[i].object, doc); 
                                 
@@ -26102,4 +26108,5 @@ else {
     // Leak a global regardless of module system
     root['$rdf'] = $rdf;
 }
+$rdf.buildTime = "2015-09-23T12:43:11";
 })(this);

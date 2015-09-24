@@ -1,0 +1,71 @@
+<rdf:RDF
+ xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+ xmlns:dc="http://purl.org/dc/elements/1.1/"
+ xmlns:sp="http://www.w3.org/ns/pim/space#"
+ xmlns:sched="http://www.w3.org/ns/pim/schedule#"
+ xmlns:rdf="http://www.w3.org/2000/01/rdf-schema#"
+ xmlns:ic="http://www.w3.org/2002/12/cal/ical#"
+ xmlns:n0="http://xmlns.com/foaf/0.1/">
+    <sched:SchedulableEvent rdf:about="https://timbl.com/2015/09/tagpoll/details.ttl#event">
+        <dc:author rdf:resource="https://www.w3.org/People/Berners-Lee/card#i"/>
+        <dc:created>2015-09-15T11:20:05Z</dc:created>
+        <sp:inspiration rdf:resource="http://linkeddata.github.io/app-schedule/details.ttl#event1"/>
+    </sched:SchedulableEvent>
+    <rdf:Description rdf:about="https://timbl.com/2015/09/tagpoll/details.ttl#event1">
+        <dc:author rdf:resource="https://timbl.com/2015/09/tagpoll/details.ttl#id1442316021316"/>
+        <dc:title>TAG 2016 Q1 Meeting </dc:title>
+        <rdf:comment>Three day meeting, starting date:</rdf:comment>
+        <ic:location>Melbourne Australia</ic:location>
+        <sched:availabilityOptions rdf:resource="http://www.w3.org/ns/pim/schedule#YesNoMaybe"/>
+        <sched:invitee rdf:resource="https://timbl.com/2015/09/tagpoll/details.ttl#id1442316021320"/>
+        <sched:invitee rdf:resource="https://timbl.com/2015/09/tagpoll/details.ttl#id1442316359855"/>
+        <sched:invitee rdf:resource="https://timbl.com/2015/09/tagpoll/details.ttl#id1442316381050"/>
+        <sched:invitee rdf:resource="https://timbl.com/2015/09/tagpoll/details.ttl#id1442316382860"/>
+        <sched:invitee rdf:resource="https://timbl.com/2015/09/tagpoll/details.ttl#id1442316551915"/>
+        <sched:invitee rdf:resource="https://timbl.com/2015/09/tagpoll/details.ttl#id1442316616585"/>
+        <sched:invitee rdf:resource="https://timbl.com/2015/09/tagpoll/details.ttl#id1442316618393"/>
+        <sched:invitee rdf:resource="https://timbl.com/2015/09/tagpoll/details.ttl#id1442316627647"/>
+        <sched:invitee rdf:resource="https://timbl.com/2015/09/tagpoll/details.ttl#id1442316628781"/>
+        <sched:option rdf:resource="https://timbl.com/2015/09/tagpoll/details.ttl#id1442316021318"/>
+        <sched:option rdf:resource="https://timbl.com/2015/09/tagpoll/details.ttl#id1442316021319"/>
+        <sched:ready>2015-09-15T11:20:21Z</sched:ready>
+        <sched:results rdf:resource="https://timbl.com/2015/09/tagpoll/results.ttl"/>
+    </rdf:Description>
+    <rdf:Description rdf:about="https://timbl.com/2015/09/tagpoll/details.ttl#id1442316021316">
+       <n0:mbox>timbl@w3.org</n0:mbox><n0:name>Tim BL</n0:name>
+    </rdf:Description>
+    <rdf:Description rdf:about="https://timbl.com/2015/09/tagpoll/details.ttl#id1442316021318">
+       <ic:dtstart>2016-01-13</ic:dtstart>
+    </rdf:Description>
+    <rdf:Description rdf:about="https://timbl.com/2015/09/tagpoll/details.ttl#id1442316021319">
+       <ic:dtstart>2016-01-20</ic:dtstart>
+    </rdf:Description>
+    <rdf:Description rdf:about="https://timbl.com/2015/09/tagpoll/details.ttl#id1442316021320">
+       <n0:mbox>peter.linss@hp.com</n0:mbox>
+    </rdf:Description>
+    <rdf:Description rdf:about="https://timbl.com/2015/09/tagpoll/details.ttl#id1442316359855">
+       <n0:mbox>appelquist@gmail.com</n0:mbox>
+    </rdf:Description>
+    <rdf:Description rdf:about="https://timbl.com/2015/09/tagpoll/details.ttl#id1442316382860">
+       <n0:mbox>hadley@linkedgov.org</n0:mbox>
+    </rdf:Description>
+    <rdf:Description rdf:about="https://timbl.com/2015/09/tagpoll/details.ttl#id1442316381050">
+       <n0:mbox>mnot@mnot.net</n0:mbox>
+    </rdf:Description>
+    <rdf:Description rdf:about="https://timbl.com/2015/09/tagpoll/details.ttl#id1442316551915">
+       <n0:mbox>yzhu@yahoo-inc.com</n0:mbox>
+    </rdf:Description>
+    <rdf:Description rdf:about="https://timbl.com/2015/09/tagpoll/details.ttl#id1442316616585">
+       <n0:mbox>ylafon@w3.org</n0:mbox>
+    </rdf:Description>
+    <rdf:Description rdf:about="https://timbl.com/2015/09/tagpoll/details.ttl#id1442316618393">
+       <n0:mbox>slightlyoff@google.com</n0:mbox>
+    </rdf:Description>
+    <rdf:Description rdf:about="https://timbl.com/2015/09/tagpoll/details.ttl#id1442316627647">
+       <n0:mbox>travis.leithead@microsoft.com</n0:mbox>
+    </rdf:Description>
+    <rdf:Description rdf:about="https://timbl.com/2015/09/tagpoll/details.ttl#id1442316628781">
+       <n0:mbox>timbl@w3.org</n0:mbox>
+    </rdf:Description>
+</rdf:RDF>
+"

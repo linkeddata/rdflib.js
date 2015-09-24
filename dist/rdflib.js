@@ -854,6 +854,9 @@ $rdf.Literal = (function(superClass) {
     if (this.lang == null) {
       this.lang = void 0;
     }
+    if (this.lang === '') {
+      this.lang = void 0;
+    }
     if (this.datatype == null) {
       this.datatype = void 0;
     }
@@ -1853,7 +1856,7 @@ if ((typeof module !== "undefined" && module !== null ? module.exports : void 0)
         var f = this.frameFactory(this);
         this.base = base;
         f.base = base;
-        f.lang = '';
+        f.lang = null; // was '' but can't have langs like that 2015 (!)
         this.parseDOM(this.buildFrame(f, root));
         return true;
     };
@@ -4058,13 +4061,29 @@ $rdf.IndexedFormula.prototype.statementsMatching = function(subj,pred,obj,why,ju
 }; // statementsMatching
 
 /** Find a statement object and remove it **/
-$rdf.IndexedFormula.prototype.removeMatch = function (st) {
-    this.remove(
-        this.statementsMatching(st.subject, st.predicate, st.object, st.why)[0])
+$rdf.IndexedFormula.prototype.remove = function (st) {
+    if (st instanceof Array) {
+        for (var i=0; i< st.length; i++) {
+            this.remove(st[i]);
+        }
+        return;
+    }
+    if (st instanceof $rdf.IndexedFormula) {
+        return this.remove(st.statements);
+    }
+    var sts = this.statementsMatching(st.subject, st.predicate, st.object, st.why);
+    if (!sts.length) {
+        throw "Statement to be removed is not on store: " + st;
+    }
+    this.removeStatement(sts[0]);
 }
 
-/** remove a particular statement from the bank **/
-$rdf.IndexedFormula.prototype.remove = function (st) {
+/** Remove a particular statement object from the store
+**
+** st    a statement which is already in the store and indexed.
+**      Make sure you only use this for these.
+**/
+$rdf.IndexedFormula.prototype.removeStatement = function (st) {
     //$rdf.log.debug("entering remove w/ st=" + st);
     var term = [ st.subject, st.predicate, st.object, st.why];
     for (var p=0; p<4; p++) {
@@ -6122,12 +6141,15 @@ $rdf.sparqlUpdate = function() {
                 function(uri, success, body, xhr) {
                     tabulator.log.info("\t sparql: Return success="+success+" for query "+query+"\n");
                     if (success) {
-                        for (var i=0; i<ds.length;i++)
-                            try { kb.removeMatch(ds[i]) } catch(e) {
+                        kb.remove(ds);
+                            
+/*                            catch { // disable try for testing @@@
+                            // try { kb.remove(ds[i]) } catch(e) {
                                 callback(uri, false,
                                 "sparqlUpdate: Remote OK but error deleting statemmnt "+
                                     ds[i] + " from local store:\n" + e)
                             }
+*/
                         for (var i=0; i<is.length;i++)
                             kb.add(is[i].subject, is[i].predicate, is[i].object, doc); 
                     }
@@ -6177,7 +6199,7 @@ $rdf.sparqlUpdate = function() {
                     //formula from sparqlUpdate.js, what about redirects?
                     var success = (!xhr.status || (xhr.status >= 200 && xhr.status < 300));
                     if (success) {
-                        for (var i=0; i<ds.length;i++) kb.removeMatch(ds[i]);
+                        for (var i=0; i<ds.length;i++) kb.remove(ds[i]);
                         for (var i=0; i<is.length;i++)
                             kb.add(is[i].subject, is[i].predicate, is[i].object, doc);                
                     }
@@ -6247,7 +6269,7 @@ $rdf.sparqlUpdate = function() {
                 stream.write(documentString, documentString.length);
                 stream.close();
 
-                for (var i=0; i<ds.length;i++) kb.removeMatch(ds[i]);
+                for (var i=0; i<ds.length;i++) kb.remove(ds[i]);
                 for (var i=0; i<is.length;i++)
                     kb.add(is[i].subject, is[i].predicate, is[i].object, doc); 
                                 
@@ -7232,7 +7254,7 @@ __Serializer.prototype.statementsToXML = function(sts) {
           break;
           case 'literal':
             results = results.concat(['<'+ t
-              + (st.object.dt ? ' rdf:datatype="'+escapeForXML(st.object.dt.uri)+'"' : '')
+              + (st.object.datatype ? ' rdf:datatype="'+escapeForXML(st.object.datatype.uri)+'"' : '')
               + (st.object.lang ? ' xml:lang="'+st.object.lang+'"' : '')
               + '>' + escapeForXML(st.object.value)
               + '</'+ t +'>']);
@@ -26107,5 +26129,5 @@ else {
     // Leak a global regardless of module system
     root['$rdf'] = $rdf;
 }
-$rdf.buildTime = "2015-09-21T14:43:51";
+$rdf.buildTime = "2015-09-24T18:34:05";
 })(this);
