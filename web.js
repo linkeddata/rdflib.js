@@ -102,7 +102,9 @@ $rdf.Fetcher = function(store, timeout, async) {
                 var parser = new $rdf.RDFParser(kb);
                 // sf.addStatus(xhr.req, 'parsing as RDF/XML...');
                 parser.parse(this.dom, lastRequested.uri, lastRequested);
-                kb.add(lastRequested, ns.rdf('type'), ns.link('RDFDocument'), sf.appNode);
+                if (!xhr.options.noMeta) {
+                    kb.add(lastRequested, ns.rdf('type'), ns.link('RDFDocument'), sf.appNode);
+                }
                 cb();
             }
         }
@@ -165,7 +167,9 @@ $rdf.Fetcher = function(store, timeout, async) {
                         // $rdf.log.info("GRDDL: No GRDDL profile in " + xhr.resource)
                     }
                 }
-                kb.add(xhr.resource, ns.rdf('type'), ns.link('WebPage'), sf.appNode);
+                if (!xhr.options.noMeta) {
+                    kb.add(xhr.resource, ns.rdf('type'), ns.link('WebPage'), sf.appNode);
+                }
                 // Do RDFa here
                 
                 if ($rdf.parseDOM_RDFa) {
@@ -456,7 +460,9 @@ $rdf.Fetcher = function(store, timeout, async) {
     // Returns xhr so can just do return this.failfetch(...)
     this.failFetch = function(xhr, status) {
         this.addStatus(xhr.req, status)
-        kb.add(xhr.resource, ns.link('error'), status)
+        if (!xhr.options.noMeta) {
+            kb.add(xhr.resource, ns.link('error'), status)
+        }
         this.requested[$rdf.uri.docpart(xhr.resource.uri)] = xhr.status; // changed 2015 was false
         while (this.fetchCallbacks[xhr.resource.uri] && this.fetchCallbacks[xhr.resource.uri].length) {
             this.fetchCallbacks[xhr.resource.uri].shift()(false, "Fetch of <" + xhr.resource.uri + "> failed: "+status, xhr);
@@ -687,12 +693,14 @@ $rdf.Fetcher = function(store, timeout, async) {
         xhr.resource = $rdf.sym(docuri);
 
         xhr.req = request;
-        var now = new Date();
-        var timeNow = "[" + now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds() + "] ";
-        kb.add(request, ns.rdfs("label"), kb.literal(timeNow + ' Request for ' + docuri), this.appNode);
-        kb.add(request, ns.link("requestedURI"), kb.literal(docuri), this.appNode);
+        if (!xhr.options.noMeta) { // Store no triples but do mind the bnode for req
+            var now = new Date();
+            var timeNow = "[" + now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds() + "] ";
+            kb.add(request, ns.rdfs("label"), kb.literal(timeNow + ' Request for ' + docuri), this.appNode);
+            kb.add(request, ns.link("requestedURI"), kb.literal(docuri), this.appNode);
 
-        kb.add(request, ns.link('status'), kb.collection(), this.appNode);
+            kb.add(request, ns.link('status'), kb.collection(), this.appNode);
+        }
         return request;
     };
 
@@ -1193,9 +1201,6 @@ $rdf.Fetcher = function(store, timeout, async) {
             xhr.timeout = sf.timeout;
             xhr.withCredentials = withCredentials;
             xhr.actualProxyURI = actualProxyURI;
-            if (force) {
-                xhr.setRequestHeader('Cache-control', 'no-cache');
-            }
 
             xhr.req = req;
             xhr.options = options;
@@ -1210,6 +1215,10 @@ $rdf.Fetcher = function(store, timeout, async) {
             } catch (er) {
                 return this.failFetch(xhr, "XHR open for GET failed for <"+uri2+">:\n\t" + er);
             }
+            if (force) { // must happen after open 
+                xhr.setRequestHeader('Cache-control', 'no-cache');
+            }
+
         } // if not jQuery
 
         // Set redirect callback and request headers -- alas Firefox Extension Only
@@ -1228,37 +1237,32 @@ $rdf.Fetcher = function(store, timeout, async) {
                                     var kb = sf.store;
                                     var newURI = newC.URI.spec;
                                     var oldreq = xhr.req;
-                                    sf.addStatus(xhr.req, "Redirected: " + xhr.status + " to <" + newURI + ">");
-                                    kb.add(oldreq, ns.http('redirectedTo'), kb.sym(newURI), xhr.req);
+                                    if (!xhr.options.noMeta) {
+
+                                        sf.addStatus(xhr.req, "Redirected: " + xhr.status + " to <" + newURI + ">");
+                                        kb.add(oldreq, ns.http('redirectedTo'), kb.sym(newURI), xhr.req);
+
+                                    ////////////// Change the request node to a new one:  @@@@@@@@@@@@ Duplicate code?
+                                        var newreq = xhr.req = kb.bnode() // Make NEW reqest for everything else
+                                        kb.add(oldreq, ns.http('redirectedRequest'), newreq, this.appNode);
+
+                                        var now = new Date();
+                                        var timeNow = "[" + now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds() + "] ";
+                                        kb.add(newreq, ns.rdfs("label"), kb.literal(timeNow + ' Request for ' + newURI), this.appNode)
+                                        kb.add(newreq, ns.link('status'), kb.collection(), this.appNode)
+                                        kb.add(newreq, ns.link("requestedURI"), kb.literal(newURI), this.appNode)
+                                        ///////////////
 
 
-
-                                    ////////////// Change the request node to a new one:  @@@@@@@@@@@@ Duplicate?
-                                    var newreq = xhr.req = kb.bnode() // Make NEW reqest for everything else
-                                    // xhr.resource = docterm
-                                    // xhr.requestedURI = args[0]
-                                    // var requestHandlers = kb.collection()
-
-                                    // kb.add(kb.sym(newURI), ns.link("request"), req, this.appNode)
-                                    kb.add(oldreq, ns.http('redirectedRequest'), newreq, this.appNode);
-
-                                    var now = new Date();
-                                    var timeNow = "[" + now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds() + "] ";
-                                    kb.add(newreq, ns.rdfs("label"), kb.literal(timeNow + ' Request for ' + newURI), this.appNode)
-                                    kb.add(newreq, ns.link('status'), kb.collection(), this.appNode)
-                                    kb.add(newreq, ns.link("requestedURI"), kb.literal(newURI), this.appNode)
-                                    ///////////////
-
-
-                                    //// $rdf.log.info('@@ sources onChannelRedirect'+
-                                    //               "Redirected: "+
-                                    //               xhr.status + " to <" + newURI + ">"); //@@
-                                    var response = kb.bnode();
-                                    // kb.add(response, ns.http('location'), newURI, response); Not on this response
-                                    kb.add(oldreq, ns.link('response'), response);
-                                    kb.add(response, ns.http('status'), kb.literal(xhr.status), response);
-                                    if (xhr.statusText) kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response)
-
+                                        //// $rdf.log.info('@@ sources onChannelRedirect'+
+                                        //               "Redirected: "+
+                                        //               xhr.status + " to <" + newURI + ">"); //@@
+                                        var response = kb.bnode();
+                                        // kb.add(response, ns.http('location'), newURI, response); Not on this response
+                                        kb.add(oldreq, ns.link('response'), response);
+                                        kb.add(response, ns.http('status'), kb.literal(xhr.status), response);
+                                        if (xhr.statusText) kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response)
+                                    }
                                     if (xhr.status - 0 != 303) kb.HTTPRedirects[xhr.resource.uri] = newURI; // same document as
                                     if (xhr.status - 0 == 301 && rterm) { // 301 Moved
                                         var badDoc = $rdf.uri.docpart(rterm.uri);
@@ -1287,12 +1291,13 @@ $rdf.Fetcher = function(store, timeout, async) {
                                     var hash = newURI.indexOf('#');
                                     if (hash >= 0) {
                                         var msg = ('Warning: ' + xhr.resource + ' HTTP redirects to' + newURI + ' which should not contain a "#" sign');
-                                        // dump(msg+"\n");
-                                        kb.add(xhr.resource, kb.sym('http://www.w3.org/2007/ont/link#warning'), msg)
+                                        if (!xhr.options.noMeta) {
+                                            kb.add(xhr.resource, kb.sym('http://www.w3.org/2007/ont/link#warning'), msg)
+                                        }
                                         newURI = newURI.slice(0, hash);
                                     }
                                     var xhr2 = sf.requestURI(newURI, xhr.resource);
-                                    if (xhr2 && xhr2.req) kb.add(xhr.req,
+                                    if (xhr2 && xhr2.req && !noMeta) kb.add(xhr.req,
                                         kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'),
                                         xhr2.req, sf.appNode);
 

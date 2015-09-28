@@ -3923,6 +3923,18 @@ $rdf.IndexedFormula.prototype.uris = function(term) {
 // (would it be better to return the original formula for chaining?)
 //
 $rdf.IndexedFormula.prototype.add = function(subj, pred, obj, why) {
+    if (arguments.length === 1) {
+        if (subj instanceof Array) {
+            for (var i=0; i < subj.length; i++) {
+                this.add(subj[i]);
+            }
+        } else if (subj instanceof $rdf.Statement) {
+            this.add(subj.subject, subj.predicate, subj.object, subj.why);
+        } else if (subj instanceof $rdf.IndexedFormula) {
+            this.add(subj.statements)
+        }
+        return this;
+    }
     var actions, st;
     if (why == undefined) why = this.fetcher ? this.fetcher.appNode: this.sym("chrome:theSession"); //system generated
                 //defined in source.js, is this OK with identity.js only user?
@@ -4060,13 +4072,17 @@ $rdf.IndexedFormula.prototype.statementsMatching = function(subj,pred,obj,why,ju
     return results;
 }; // statementsMatching
 
-/** Find a statement object and remove it **/
+
+/** Find a statement object and remove it 
+**
+** Or array of statements or graph
+**/
 $rdf.IndexedFormula.prototype.remove = function (st) {
     if (st instanceof Array) {
         for (var i=0; i< st.length; i++) {
             this.remove(st[i]);
         }
-        return;
+        return this;
     }
     if (st instanceof $rdf.IndexedFormula) {
         return this.remove(st.statements);
@@ -4076,12 +4092,28 @@ $rdf.IndexedFormula.prototype.remove = function (st) {
         throw "Statement to be removed is not on store: " + st;
     }
     this.removeStatement(sts[0]);
+    return this;
 }
+
+
+$rdf.IndexedFormula.prototype.removeMatches = function (subject, predicate, object, why) {
+    this.removeStatements(this.staementsMatching(subject, predicate, object, why));
+    return this;
+}
+
+$rdf.IndexedFormula.prototype.removeStatements = function (sts) {
+    for (var i=0; i < sts.length; i++) {
+        this.remove(sts[i]);
+    }
+    return this;
+}
+
 
 /** Remove a particular statement object from the store
 **
 ** st    a statement which is already in the store and indexed.
 **      Make sure you only use this for these.
+**    Otherwise, you should use remove() above.
 **/
 $rdf.IndexedFormula.prototype.removeStatement = function (st) {
     //$rdf.log.debug("entering remove w/ st=" + st);
@@ -4096,6 +4128,7 @@ $rdf.IndexedFormula.prototype.removeStatement = function (st) {
         }
     }
     $rdf.Util.RDFArrayRemove(this.statements, st);
+    return this;
 }; //remove
 
 
@@ -5785,8 +5818,8 @@ $rdf.sparqlUpdate = function() {
                 return 'LOCALFILE';
             var sts = kb.statementsMatching(kb.sym(uri),undefined,undefined);
             
-            tabulator.log.warn("sparql.editable: Not MachineEditableDocument file "+uri+"\n");
-            tabulator.log.warn(sts.map(function(x){return x.toNT();}).join('\n'))
+            console.log("sparql.editable: Not MachineEditableDocument file "+uri+"\n");
+            console.log(sts.map(function(x){return x.toNT();}).join('\n'))
             return false;
         //@@ Would be nifty of course to see whether we actually have write acess first.
         }
@@ -5824,17 +5857,17 @@ $rdf.sparqlUpdate = function() {
                         }
                     }
                 } else {
-                    tabulator.log.warn("sparql.editable: No response for "+uri+"\n");
+                    console.log("sparql.editable: No response for "+uri+"\n");
                 }
             }
         }
         if (requests.length == 0) {
-            tabulator.log.warn("sparql.editable: No request for "+uri+"\n");
+            console.log("sparql.editable: No request for "+uri+"\n");
         } else {
             if (definitive) return false;  // We have got a request and it did NOT say editable => not editable
         };
 
-        tabulator.log.warn("sparql.editable: inconclusive for "+uri+"\n");
+        console.log("sparql.editable: inconclusive for "+uri+"\n");
         return undefined; // We don't know (yet) as we haven't had a response (yet)
     }
 
@@ -5985,7 +6018,7 @@ $rdf.sparqlUpdate = function() {
 
     sparql.prototype._fire = function(uri, query, callback) {
         if (!uri) throw "No URI given for remote editing operation: "+query;
-        tabulator.log.info("sparql: sending update to <"+uri+">\n   query="+query+"\n");
+        console.log("sparql: sending update to <"+uri+">\n   query="+query+"\n");
         var xhr = $rdf.Util.XMLHTTPFactory();
 
         xhr.onreadystatechange = function() {
@@ -5999,6 +6032,7 @@ $rdf.sparqlUpdate = function() {
             }
         }
 
+/*  Out of date protcol - CORS replaces this
         if(!tabulator.isExtension) {
             try {
                 $rdf.Util.enablePrivilege("UniversalBrowserRead")
@@ -6006,7 +6040,7 @@ $rdf.sparqlUpdate = function() {
                 alert("Failed to get privileges: " + e)
             }
         }
-        
+  */      
         xhr.open('PATCH', uri, true);  // async=true
         xhr.setRequestHeader('Content-type', 'application/sparql-update');
         xhr.send(query);
@@ -6077,6 +6111,29 @@ $rdf.sparqlUpdate = function() {
         this._fire(st0.why.uri, query, callback);
     }
 
+
+    //  Request a now or future action to refresh changes coming downstream
+    //
+    // This is designed to allow the system to re-request the server version,
+    // when a websocket has pinged to say there are changes.
+    // If thewebsocket, by contrast, has sent a patch, then this may not be necessary.
+
+    sparql.prototype.requestDownstreamAction = function(doc, action) {
+        if (!doc.pendingUpstream) {
+            action();
+        } else {
+            if (doc.downstreamAction) {
+                if (doc.downstreamAction === action) {
+                    return this;
+                } else {
+                    throw "Can't wait for > 1 differnt downstream actions";
+                }
+            } else {
+                doc.downstreamAction = action;
+            }
+        }
+    }
+
     // This high-level function updates the local store iff the web is changed successfully. 
     //
     //  - deletions, insertions may be undefined or single statements or lists or formulae.
@@ -6085,7 +6142,6 @@ $rdf.sparqlUpdate = function() {
     //
     sparql.prototype.update = function(deletions, insertions, callback) {
         var kb = this.store;
-        tabulator.log.info("update called")
         var ds =  deletions == undefined ? []
                     : deletions instanceof $rdf.IndexedFormula ? deletions.statements
                     : deletions instanceof Array ? deletions : [ deletions ];
@@ -6098,10 +6154,46 @@ $rdf.sparqlUpdate = function() {
             return callback(null, true); // success -- nothing needed to be done.
         }
         var doc = ds.length ? ds[0].why : is[0].why;
+        var startTime = Date.now();
         
-        ds.map(function(st){if (!doc.sameTerm(st.why)) throw "sparql update: destination "+doc+" inconsistent with ds "+st.why;});
-        is.map(function(st){if (!doc.sameTerm(st.why)) throw "sparql update: destination = "+doc+" inconsistent with st.why ="+st.why;});
+        var props = ['subject', 'predicate', 'object', 'why'];
+        var verbs = ['insert', 'delete'];
+        var clauses = { 'delete': ds, 'insert': is};
+        verbs.map(function(verb){
+            clauses[verb].map(function(st){
+                if (!doc.sameTerm(st.why)) {
+                    throw "update: destination "+doc+" inconsistent with delete quad "+st.why;
+                }
+                props.map(function(prop){
+                    if (typeof st[prop] === 'undefined') {
+                        throw "update: undefined "+prop+" of statement."
+                    }
+                })
+                
+            });
+        });
 
+        /*
+        });
+        
+        ds.map(function(st){
+            if (!doc.sameTerm(st.why)) {
+                throw "Update: destination "+doc+" inconsistent with delete quad "+st.why;
+            }
+            props.map(function(prop){
+                if (typeof ds[prop] === 'undefined') {
+                    throw "Update: undefined "+prop+" of statement."
+                }
+            })
+            
+        });
+        is.map(function(st){i
+            f (!doc.sameTerm(st.why))
+                throw "sparql update: destination = "+doc+" inconsistent with insert st.why ="+st.why;
+            }
+        });
+        */
+        
         var protocol = this.editable(doc.uri, kb);
         if (!protocol) throw "Can't make changes in uneditable "+doc;
 
@@ -6137,23 +6229,37 @@ $rdf.sparqlUpdate = function() {
                     query += " }\n";
                 }
             }
+            // Track pending upstream patches until they have fnished their callback
+            doc.pendingUpstream = doc.pendingUpstream ? doc.pendingUpstream + 1 : 1;
+            if (typeof doc.upstreamCount !== 'undefined') {
+                doc.upstreamCount += 1; // count changes we originated ourselves
+            }
+
             this._fire(doc.uri, query,
                 function(uri, success, body, xhr) {
-                    tabulator.log.info("\t sparql: Return success="+success+" for query "+query+"\n");
+                    console.log("\t sparql: Return success="+success+" for query "+query+"\n");
                     if (success) {
-                        kb.remove(ds);
-                            
-/*                            catch { // disable try for testing @@@
-                            // try { kb.remove(ds[i]) } catch(e) {
-                                callback(uri, false,
-                                "sparqlUpdate: Remote OK but error deleting statemmnt "+
-                                    ds[i] + " from local store:\n" + e)
-                            }
-*/
-                        for (var i=0; i<is.length;i++)
+                        try {
+                            kb.remove(ds);
+                        } catch(e) {
+                            success = false;
+                            body = "Remote Ok BUT error deleting "+ds.length+" from store!!! " + e;
+                        } // Add in any case -- help recover from weirdness?? 
+                        for (var i=0; i<is.length;i++) {
                             kb.add(is[i].subject, is[i].predicate, is[i].object, doc); 
+                        }
                     }
+                    
+                    xhr.elapsedTime_ms =  Date.now() - startTime;
+
                     callback(uri, success, body, xhr);
+                    doc.pendingUpstream = doc.pendingUpstream - 1;
+                    // When upstream patches have been sent, reload state if downstream waiting 
+                    if (doc.pendingUpstream  === 0 && doc.downstreamAction) {
+                        var downstreamAction = doc.downstreamAction;
+                        delete  doc.downstreamListener;
+                        downstreamAction();
+                    }
                 });
             
         } else if (protocol.indexOf('DAV') >=0) {
@@ -6213,7 +6319,7 @@ $rdf.sparqlUpdate = function() {
 
         } else if (protocol.indexOf('LOCALFILE') >=0) {
             try {
-                tabulator.log.info("Writing back to local file\n");
+                console.log("Writing back to local file\n");
                 // See http://simon-jung.blogspot.com/2007/10/firefox-extension-file-io.html
                 //prepare contents of revised document
                 var newSts = kb.statementsMatching(undefined, undefined, undefined, doc).slice(); // copy!
@@ -6248,7 +6354,7 @@ $rdf.sparqlUpdate = function() {
                 //create component for file writing
                 dump("Writing back: <<<"+documentString+">>>\n")
                 var filename = doc.uri.slice(7); // chop off   file://  leaving /path
-                //tabulator.log.warn("Writeback: Filename: "+filename+"\n")
+                //console.log("Writeback: Filename: "+filename+"\n")
                 var file = Components.classes["@mozilla.org/file/local;1"]
                     .createInstance(Components.interfaces.nsILocalFile);
                 file.initWithPath(filename);
@@ -6337,6 +6443,42 @@ $rdf.sparqlUpdate = function() {
         xhr.send(documentString);
     };
     
+
+    // Reload a document.
+    //
+    // Fast and cheap, no metaata
+    // Measure times for the document 
+    // Recover data if fetch fails.
+    
+    sparql.prototype.reload = function(kb, doc, callback) {
+        var saved = kb.statementsMatching(undefined, undefined, undefined, doc);
+        console.log("Reload resource: Unloading statements " + saved.length
+            + " out of " + kb.statements.length)
+        kb.fetcher.unload(doc);
+        var startTime = Date.now();
+        // force sets no-cache and 
+        kb.fetcher.nowOrWhenFetched(doc.uri, {force: true, noMeta: true}, function(ok, body){
+            if (!ok) {
+                console.log("ERROR reloading data! -- restoring original " + saved.length + " statements. Error: " + body);
+                kb.add(saved);
+                callback(false, "Error reloading data: " + body)
+            } else {
+                console.log("Reloaded " + kb.statementsMatching(undefined, undefined, undefined, doc).length
+                    + " out of " + kb.statements.length)
+                elapsedTime_ms = Date.now() - startTime;
+                console.log("fetch took "+elapsedTime_ms+"ms. Now sync the DOM.");
+                if (!doc.reloadTime_total) doc.reloadTime_total = 0;
+                if (!doc.reloadTime_count) doc.reloadTime_count = 0;
+                doc.reloadTime_total += elapsedTime_ms;
+                doc.reloadTime_count += 1;
+                callback(true);
+            };
+        });
+    };
+
+
+
+
     
 
     return sparql;
@@ -6483,7 +6625,9 @@ __Serializer.prototype.makeUpPrefix = function(uri) {
     function canUse(pp) {
         if (! __Serializer.prototype.validPrefix.test(pp)) return false; // bad format
         if (pp === 'ns') return false; // boring
+        if (this.namespaces[pp]) return false; // already used
         this.prefixes[uri] = pp;
+        this.namespaces[pp] = uri; 
         pok = pp;
         return true
     }
@@ -19061,7 +19205,9 @@ $rdf.Fetcher = function(store, timeout, async) {
                 var parser = new $rdf.RDFParser(kb);
                 // sf.addStatus(xhr.req, 'parsing as RDF/XML...');
                 parser.parse(this.dom, lastRequested.uri, lastRequested);
-                kb.add(lastRequested, ns.rdf('type'), ns.link('RDFDocument'), sf.appNode);
+                if (!xhr.options.noMeta) {
+                    kb.add(lastRequested, ns.rdf('type'), ns.link('RDFDocument'), sf.appNode);
+                }
                 cb();
             }
         }
@@ -19124,7 +19270,9 @@ $rdf.Fetcher = function(store, timeout, async) {
                         // $rdf.log.info("GRDDL: No GRDDL profile in " + xhr.resource)
                     }
                 }
-                kb.add(xhr.resource, ns.rdf('type'), ns.link('WebPage'), sf.appNode);
+                if (!xhr.options.noMeta) {
+                    kb.add(xhr.resource, ns.rdf('type'), ns.link('WebPage'), sf.appNode);
+                }
                 // Do RDFa here
                 
                 if ($rdf.parseDOM_RDFa) {
@@ -19415,7 +19563,9 @@ $rdf.Fetcher = function(store, timeout, async) {
     // Returns xhr so can just do return this.failfetch(...)
     this.failFetch = function(xhr, status) {
         this.addStatus(xhr.req, status)
-        kb.add(xhr.resource, ns.link('error'), status)
+        if (!xhr.options.noMeta) {
+            kb.add(xhr.resource, ns.link('error'), status)
+        }
         this.requested[$rdf.uri.docpart(xhr.resource.uri)] = xhr.status; // changed 2015 was false
         while (this.fetchCallbacks[xhr.resource.uri] && this.fetchCallbacks[xhr.resource.uri].length) {
             this.fetchCallbacks[xhr.resource.uri].shift()(false, "Fetch of <" + xhr.resource.uri + "> failed: "+status, xhr);
@@ -19646,12 +19796,14 @@ $rdf.Fetcher = function(store, timeout, async) {
         xhr.resource = $rdf.sym(docuri);
 
         xhr.req = request;
-        var now = new Date();
-        var timeNow = "[" + now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds() + "] ";
-        kb.add(request, ns.rdfs("label"), kb.literal(timeNow + ' Request for ' + docuri), this.appNode);
-        kb.add(request, ns.link("requestedURI"), kb.literal(docuri), this.appNode);
+        if (!xhr.options.noMeta) { // Store no triples but do mind the bnode for req
+            var now = new Date();
+            var timeNow = "[" + now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds() + "] ";
+            kb.add(request, ns.rdfs("label"), kb.literal(timeNow + ' Request for ' + docuri), this.appNode);
+            kb.add(request, ns.link("requestedURI"), kb.literal(docuri), this.appNode);
 
-        kb.add(request, ns.link('status'), kb.collection(), this.appNode);
+            kb.add(request, ns.link('status'), kb.collection(), this.appNode);
+        }
         return request;
     };
 
@@ -20152,9 +20304,6 @@ $rdf.Fetcher = function(store, timeout, async) {
             xhr.timeout = sf.timeout;
             xhr.withCredentials = withCredentials;
             xhr.actualProxyURI = actualProxyURI;
-            if (force) {
-                xhr.setRequestHeader('Cache-control', 'no-cache');
-            }
 
             xhr.req = req;
             xhr.options = options;
@@ -20169,6 +20318,10 @@ $rdf.Fetcher = function(store, timeout, async) {
             } catch (er) {
                 return this.failFetch(xhr, "XHR open for GET failed for <"+uri2+">:\n\t" + er);
             }
+            if (force) { // must happen after open 
+                xhr.setRequestHeader('Cache-control', 'no-cache');
+            }
+
         } // if not jQuery
 
         // Set redirect callback and request headers -- alas Firefox Extension Only
@@ -20187,37 +20340,32 @@ $rdf.Fetcher = function(store, timeout, async) {
                                     var kb = sf.store;
                                     var newURI = newC.URI.spec;
                                     var oldreq = xhr.req;
-                                    sf.addStatus(xhr.req, "Redirected: " + xhr.status + " to <" + newURI + ">");
-                                    kb.add(oldreq, ns.http('redirectedTo'), kb.sym(newURI), xhr.req);
+                                    if (!xhr.options.noMeta) {
+
+                                        sf.addStatus(xhr.req, "Redirected: " + xhr.status + " to <" + newURI + ">");
+                                        kb.add(oldreq, ns.http('redirectedTo'), kb.sym(newURI), xhr.req);
+
+                                    ////////////// Change the request node to a new one:  @@@@@@@@@@@@ Duplicate code?
+                                        var newreq = xhr.req = kb.bnode() // Make NEW reqest for everything else
+                                        kb.add(oldreq, ns.http('redirectedRequest'), newreq, this.appNode);
+
+                                        var now = new Date();
+                                        var timeNow = "[" + now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds() + "] ";
+                                        kb.add(newreq, ns.rdfs("label"), kb.literal(timeNow + ' Request for ' + newURI), this.appNode)
+                                        kb.add(newreq, ns.link('status'), kb.collection(), this.appNode)
+                                        kb.add(newreq, ns.link("requestedURI"), kb.literal(newURI), this.appNode)
+                                        ///////////////
 
 
-
-                                    ////////////// Change the request node to a new one:  @@@@@@@@@@@@ Duplicate?
-                                    var newreq = xhr.req = kb.bnode() // Make NEW reqest for everything else
-                                    // xhr.resource = docterm
-                                    // xhr.requestedURI = args[0]
-                                    // var requestHandlers = kb.collection()
-
-                                    // kb.add(kb.sym(newURI), ns.link("request"), req, this.appNode)
-                                    kb.add(oldreq, ns.http('redirectedRequest'), newreq, this.appNode);
-
-                                    var now = new Date();
-                                    var timeNow = "[" + now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds() + "] ";
-                                    kb.add(newreq, ns.rdfs("label"), kb.literal(timeNow + ' Request for ' + newURI), this.appNode)
-                                    kb.add(newreq, ns.link('status'), kb.collection(), this.appNode)
-                                    kb.add(newreq, ns.link("requestedURI"), kb.literal(newURI), this.appNode)
-                                    ///////////////
-
-
-                                    //// $rdf.log.info('@@ sources onChannelRedirect'+
-                                    //               "Redirected: "+
-                                    //               xhr.status + " to <" + newURI + ">"); //@@
-                                    var response = kb.bnode();
-                                    // kb.add(response, ns.http('location'), newURI, response); Not on this response
-                                    kb.add(oldreq, ns.link('response'), response);
-                                    kb.add(response, ns.http('status'), kb.literal(xhr.status), response);
-                                    if (xhr.statusText) kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response)
-
+                                        //// $rdf.log.info('@@ sources onChannelRedirect'+
+                                        //               "Redirected: "+
+                                        //               xhr.status + " to <" + newURI + ">"); //@@
+                                        var response = kb.bnode();
+                                        // kb.add(response, ns.http('location'), newURI, response); Not on this response
+                                        kb.add(oldreq, ns.link('response'), response);
+                                        kb.add(response, ns.http('status'), kb.literal(xhr.status), response);
+                                        if (xhr.statusText) kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response)
+                                    }
                                     if (xhr.status - 0 != 303) kb.HTTPRedirects[xhr.resource.uri] = newURI; // same document as
                                     if (xhr.status - 0 == 301 && rterm) { // 301 Moved
                                         var badDoc = $rdf.uri.docpart(rterm.uri);
@@ -20246,12 +20394,13 @@ $rdf.Fetcher = function(store, timeout, async) {
                                     var hash = newURI.indexOf('#');
                                     if (hash >= 0) {
                                         var msg = ('Warning: ' + xhr.resource + ' HTTP redirects to' + newURI + ' which should not contain a "#" sign');
-                                        // dump(msg+"\n");
-                                        kb.add(xhr.resource, kb.sym('http://www.w3.org/2007/ont/link#warning'), msg)
+                                        if (!xhr.options.noMeta) {
+                                            kb.add(xhr.resource, kb.sym('http://www.w3.org/2007/ont/link#warning'), msg)
+                                        }
                                         newURI = newURI.slice(0, hash);
                                     }
                                     var xhr2 = sf.requestURI(newURI, xhr.resource);
-                                    if (xhr2 && xhr2.req) kb.add(xhr.req,
+                                    if (xhr2 && xhr2.req && !noMeta) kb.add(xhr.req,
                                         kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'),
                                         xhr2.req, sf.appNode);
 
@@ -26129,5 +26278,5 @@ else {
     // Leak a global regardless of module system
     root['$rdf'] = $rdf;
 }
-$rdf.buildTime = "2015-09-24T18:34:05";
+$rdf.buildTime = "2015-09-28T17:06:22";
 })(this);

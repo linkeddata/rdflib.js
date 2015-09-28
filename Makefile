@@ -1,11 +1,11 @@
 # rdflib.js Makefile
 
 R=util.js uri.js term.js rdfparser.js n3parser.js identity.js \
-	patchParser.js query.js sparql.js sparqlUpdate.js jsonparser.js serialize.js updatesVia.js web_browserify.js
+	patchParser.js query.js sparql.js update.js jsonparser.js serialize.js updatesVia.js web_browserify.js
 
 A=util.js uri.js term.js rdfparser.js n3parser.js identity.js \
 	parseRDFa.js  \
-	patchParser.js query.js sparql.js sparqlUpdate.js jsonparser.js serialize.js updatesVia.js web_browserify.js
+	patchParser.js query.js sparql.js update.js jsonparser.js serialize.js updatesVia.js web_browserify.js
 
 targets=$(addprefix dist/, rdflib.js rdflib-rdfa.js)
 coffeejs=$(patsubst %.coffee,%.js,$(wildcard *.coffee))

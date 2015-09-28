@@ -85,7 +85,9 @@ __Serializer.prototype.makeUpPrefix = function(uri) {
     function canUse(pp) {
         if (! __Serializer.prototype.validPrefix.test(pp)) return false; // bad format
         if (pp === 'ns') return false; // boring
+        if (this.namespaces[pp]) return false; // already used
         this.prefixes[uri] = pp;
+        this.namespaces[pp] = uri; 
         pok = pp;
         return true
     }

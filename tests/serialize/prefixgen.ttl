@@ -1,0 +1,19 @@
+
+@prefix n1: <http://csarven.ca/#>.
+@prefix n0: <http://purl.org/dc/elements/1.1/>.
+@prefix c: <https://www.w3.org/People/Berners-Lee/card#>.
+@prefix det: <details.ttl#>.
+@prefix XML: <http://www.w3.org/2001/XMLSchema#>.
+@prefix p: <http://www.w3.org/ns/pim/pad#>.
+@prefix n: <http://rdfs.org/sioc/ns#>.
+@prefix pro: <https://deiu.me/profile#>.
+
+
+
+<>  n0:author  n1: .
+
+<>  n:content  "foo".
+
+
+
+

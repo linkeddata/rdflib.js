@@ -259,6 +259,18 @@ $rdf.IndexedFormula.prototype.uris = function(term) {
 // (would it be better to return the original formula for chaining?)
 //
 $rdf.IndexedFormula.prototype.add = function(subj, pred, obj, why) {
+    if (arguments.length === 1) {
+        if (subj instanceof Array) {
+            for (var i=0; i < subj.length; i++) {
+                this.add(subj[i]);
+            }
+        } else if (subj instanceof $rdf.Statement) {
+            this.add(subj.subject, subj.predicate, subj.object, subj.why);
+        } else if (subj instanceof $rdf.IndexedFormula) {
+            this.add(subj.statements)
+        }
+        return this;
+    }
     var actions, st;
     if (why == undefined) why = this.fetcher ? this.fetcher.appNode: this.sym("chrome:theSession"); //system generated
                 //defined in source.js, is this OK with identity.js only user?
@@ -396,13 +408,17 @@ $rdf.IndexedFormula.prototype.statementsMatching = function(subj,pred,obj,why,ju
     return results;
 }; // statementsMatching
 
-/** Find a statement object and remove it **/
+
+/** Find a statement object and remove it 
+**
+** Or array of statements or graph
+**/
 $rdf.IndexedFormula.prototype.remove = function (st) {
     if (st instanceof Array) {
         for (var i=0; i< st.length; i++) {
             this.remove(st[i]);
         }
-        return;
+        return this;
     }
     if (st instanceof $rdf.IndexedFormula) {
         return this.remove(st.statements);
@@ -412,12 +428,28 @@ $rdf.IndexedFormula.prototype.remove = function (st) {
         throw "Statement to be removed is not on store: " + st;
     }
     this.removeStatement(sts[0]);
+    return this;
 }
+
+
+$rdf.IndexedFormula.prototype.removeMatches = function (subject, predicate, object, why) {
+    this.removeStatements(this.staementsMatching(subject, predicate, object, why));
+    return this;
+}
+
+$rdf.IndexedFormula.prototype.removeStatements = function (sts) {
+    for (var i=0; i < sts.length; i++) {
+        this.remove(sts[i]);
+    }
+    return this;
+}
+
 
 /** Remove a particular statement object from the store
 **
 ** st    a statement which is already in the store and indexed.
 **      Make sure you only use this for these.
+**    Otherwise, you should use remove() above.
 **/
 $rdf.IndexedFormula.prototype.removeStatement = function (st) {
     //$rdf.log.debug("entering remove w/ st=" + st);
@@ -432,6 +464,7 @@ $rdf.IndexedFormula.prototype.removeStatement = function (st) {
         }
     }
     $rdf.Util.RDFArrayRemove(this.statements, st);
+    return this;
 }; //remove
 
 
