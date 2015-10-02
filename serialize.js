@@ -14,8 +14,11 @@ $rdf.Serializer = function() {
 var __Serializer = function( store ){
     this.flags = "";
     this.base = null;
-    this.prefixes = [];
-    this.namespacesUsed = [];
+    
+    this.prefixes = [];    // suggested prefixes
+    this.namespaces = []; // complementary indexes
+    
+    this.namespacesUsed = []; // Count actually used and so needed in @prefixes
     this.keywords = ['a']; // The only one we generate at the moment
     this.prefixchars = "abcdefghijklmnopqustuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
     this.incoming = null;  // Array not calculated yet
@@ -62,7 +65,9 @@ __Serializer.prototype.fromStr = function(s) {
 __Serializer.prototype.suggestPrefix = function(prefix, uri) {
     if (prefix.slice(0,7) === 'default') return; // Try to weed these out
     if (prefix.slice(0,2) === 'ns') return; //  From others inferior algos
+    if (this.namespaces[prefix] || this.prefixes[uri]) return; // already used 
     this.prefixes[uri] = prefix;
+    this.namespaces[prefix] = uri;
 }
 
 // Takes a namespace -> prefix map
@@ -75,21 +80,22 @@ __Serializer.prototype.suggestNamespaces = function(namespaces) {
 // Make up an unused prefix for a random namespace
 __Serializer.prototype.makeUpPrefix = function(uri) {
     var p = uri;
-    var namespaces = [];
     var pok;
 
     function canUse(pp) {
-        if (namespaces[pp]) return false; // already used
         if (! __Serializer.prototype.validPrefix.test(pp)) return false; // bad format
         if (pp === 'ns') return false; // boring
+        if (this.namespaces[pp]) return false; // already used
         this.prefixes[uri] = pp;
+        this.namespaces[pp] = uri; 
         pok = pp;
         return true
     }
     canUse = canUse.bind(this);
-    for (var ns in this.prefixes) {
-        namespaces[this.prefixes[ns]] = ns; // reverse index
+/*    for (var ns in this.prefixes) {
+        namespaces[this.prefixes[ns]] = ns; // reverse index foo
     }
+    */
     if ('#/'.indexOf(p[p.length-1]) >= 0) p = p.slice(0, -1);
     var slash = p.lastIndexOf('/');
     if (slash >= 0) p = p.slice(slash+1);
@@ -639,12 +645,32 @@ __Serializer.prototype.writeStore = function(write) {
     var fetcher = kb.fetcher;
     var session = fetcher && fetcher.appNode;
 
-    // Everything we know from experience just write out.
-    // It is undder the session and the requests.
+    // The core data 
+    
+    var sources = this.store.index[3];
+    for (s in sources) {  // -> assume we can use -> as short for log:semantics
+        var source = kb.fromNT(s);
+        if (session && source.sameTerm(session)) continue;
+        write('\n'+ this.atomicTermToN3(source)+' ' +
+                this.atomicTermToN3(kb.sym('http://www.w3.org/2000/10/swap/log#semantics'))
+                 + ' { '+ this.statementsToN3(kb.statementsMatching(
+                            undefined, undefined, undefined, source)) + ' }.\n');
+    }
 
-    var metaSources = kb.statementsMatching(undefined,
+
+    // The metadata from HTTP interactions:
+
+    kb.statementsMatching(undefined,
             kb.sym('http://www.w3.org/2007/ont/link#requestedURI')).map(
-                function(st){return st.subject});
+                function(st){
+                    write('\n<' + st.object.value + '> log:metadata {\n'); 
+                    var sts = kb.statementsMatching(undefined, undefined, undefined,  st.subject);
+                    write(this.statementsToN3(this.statementsToN3(sts)));
+                    write('}.\n'); 
+                });
+                
+    // Inferences we have made ourselves not attributable to anyone else
+    
     if (session) metaSources.push(session);
     var metadata = [];
     metaSources.map(function(source){
@@ -652,15 +678,6 @@ __Serializer.prototype.writeStore = function(write) {
     });
     write(this.statementsToN3(metadata));
 
-    var sources = this.store.index[3];
-    for (s in sources) {  // -> assume we can use -> as short for log:semantics
-        var source = kb.fromNT(s);
-        if (session && source.sameTerm(session)) continue;
-        write('\n'+ this.atomicTermToN3(source)+' ' +
-                this.atomicTermToN3(kb.sym('http://www.w3.org/2000/10/swap/log#'))
-                 + ' { '+ this.statementsToN3(kb.statementsMatching(
-                            undefined, undefined, undefined, source)) + ' }.\n');
-    }
 }
 
 
@@ -841,7 +858,7 @@ __Serializer.prototype.statementsToXML = function(sts) {
           break;
           case 'literal':
             results = results.concat(['<'+ t
-              + (st.object.dt ? ' rdf:datatype="'+escapeForXML(st.object.dt.uri)+'"' : '')
+              + (st.object.datatype ? ' rdf:datatype="'+escapeForXML(st.object.datatype.uri)+'"' : '')
               + (st.object.lang ? ' xml:lang="'+st.object.lang+'"' : '')
               + '>' + escapeForXML(st.object.value)
               + '</'+ t +'>']);

@@ -15,7 +15,7 @@
   "homepage": "http://github.com/linkeddata/rdflib.js",
   "bugs": "http://github.com/linkeddata/rdflib.js/issues",
   "dependencies": {
-    "jsdom": "*",
+    "xmldom": "*",
     "xmlhttprequest": "^1.7.0",
     "n3": "^0.4.1",
     "jsonld": "^0.3.22",

@@ -31,10 +31,11 @@ class $rdf.Empty extends $rdf.Node
 ###
 class $rdf.Symbol extends $rdf.Node
     constructor: (@uri) ->
-        @value = @uri   # why?
+        # @value = @uri   # why? remove not used and wastefull
     termType: 'symbol'
     toString: -> "<#{@uri}>"
     toNT: @::toString
+    doc: -> if @uri.indexOf('#') < 0 then @ else new $rdf.Symbol(@uri.split('#')[0])
 
     sameTerm: (other) ->
         unless other
@@ -86,6 +87,8 @@ class $rdf.BlankNode extends $rdf.Node
 class $rdf.Literal extends $rdf.Node
     constructor: (@value, @lang, @datatype) ->
         @lang ?= undefined
+        if @lang == ''
+            @lang = undefined
         @datatype ?= undefined
     termType: 'literal'
     toString: -> "#{@value}"

@@ -1,0 +1,57 @@
+@prefix dc: <http://purl.org/dc/elements/1.1/>.
+@prefix sched: <http://www.w3.org/ns/pim/schedule#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix c: <https://www.w3.org/People/Berners-Lee/card#>.
+@prefix sp: <http://www.w3.org/ns/pim/space#>.
+@prefix det: <http://linkeddata.github.io/app-schedule/details.ttl#>.
+@prefix ic: <http://www.w3.org/2002/12/cal/ical#>.
+@prefix n0: <http://xmlns.com/foaf/0.1/>.
+@prefix rdf: <http://www.w3.org/2000/01/rdf-schema#>.
+
+<#event>
+    dc:author
+       c:i;
+    dc:created
+       "2015-09-15T11:20:05Z"^^xsd:dateTime;
+    a    sched:SchedulableEvent;
+    sp:inspiration
+       det:event1.
+<#event1>
+    dc:author
+       <#id1442316021316>;
+    dc:title
+       "TAG 2016 Q1 Meeting ";
+    rdf:comment
+       "Three day meeting, starting date:";
+    ic:location
+       "Melbourne Australia";
+    sched:availabilityOptions
+       sched:YesNoMaybe;
+    sched:invitee
+        <#id1442316021320>,
+        <#id1442316359855>,
+        <#id1442316381050>,
+        <#id1442316382860>,
+        <#id1442316551915>,
+        <#id1442316616585>,
+        <#id1442316618393>,
+        <#id1442316627647>,
+        <#id1442316628781>;
+    sched:option
+       <#id1442316021318>, <#id1442316021319>;
+    sched:ready
+       "2015-09-15T11:20:21Z"^^xsd:dateTime;
+    sched:results
+       <results.ttl>.
+   <#id1442316021316> n0:mbox "timbl@w3.org"; n0:name "Tim BL" .
+   <#id1442316021318> ic:dtstart "2016-01-13" .
+   <#id1442316021319> ic:dtstart "2016-01-20" .
+   <#id1442316021320> n0:mbox "peter.linss@hp.com" .
+   <#id1442316359855> n0:mbox "appelquist@gmail.com" .
+   <#id1442316382860> n0:mbox "hadley@linkedgov.org" .
+   <#id1442316381050> n0:mbox "mnot@mnot.net" .
+   <#id1442316551915> n0:mbox "yzhu@yahoo-inc.com" .
+   <#id1442316616585> n0:mbox "ylafon@w3.org" .
+   <#id1442316618393> n0:mbox "slightlyoff@google.com" .
+   <#id1442316627647> n0:mbox "travis.leithead@microsoft.com" .
+   <#id1442316628781> n0:mbox "timbl@w3.org" .

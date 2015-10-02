@@ -34,8 +34,8 @@ $rdf.sparqlUpdate = function() {
                 return 'LOCALFILE';
             var sts = kb.statementsMatching(kb.sym(uri),undefined,undefined);
             
-            tabulator.log.warn("sparql.editable: Not MachineEditableDocument file "+uri+"\n");
-            tabulator.log.warn(sts.map(function(x){return x.toNT();}).join('\n'))
+            console.log("sparql.editable: Not MachineEditableDocument file "+uri+"\n");
+            console.log(sts.map(function(x){return x.toNT();}).join('\n'))
             return false;
         //@@ Would be nifty of course to see whether we actually have write acess first.
         }
@@ -48,16 +48,19 @@ $rdf.sparqlUpdate = function() {
             if (request !== undefined) {
                 var response = kb.any(request, this.ns.link("response"));
                 if (request !== undefined) {
+                    var acceptPatch = kb.each(response, this.ns.httph("accept-patch"));
+                    if (acceptPatch.length) {
+                        for (var i = 0; i < acceptPatch.length; i++) {
+                            var method = acceptPatch[i].value.trim();
+                            if (method.indexOf('application/sparql-update') >=0 ) return 'SPARQL';
+                        }
+                    }
                     var author_via = kb.each(response, this.ns.httph("ms-author-via"));
                     if (author_via.length) {
                         for (var i = 0; i < author_via.length; i++) {
                             var method = author_via[i].value.trim();
                             if (method.indexOf('SPARQL') >=0 ) return 'SPARQL';
                             if (method.indexOf('DAV') >=0 ) return 'DAV';
-//                            if (author_via[i].value == "SPARQL" || author_via[i].value == "DAV")
-                                // dump("sparql.editable: Success for "+uri+": "+author_via[i] +"\n");
-                                //return author_via[i].value;
-                                
                         }
                     }
                     var status = kb.each(response, this.ns.http("status"));
@@ -70,17 +73,17 @@ $rdf.sparqlUpdate = function() {
                         }
                     }
                 } else {
-                    tabulator.log.warn("sparql.editable: No response for "+uri+"\n");
+                    console.log("sparql.editable: No response for "+uri+"\n");
                 }
             }
         }
         if (requests.length == 0) {
-            tabulator.log.warn("sparql.editable: No request for "+uri+"\n");
+            console.log("sparql.editable: No request for "+uri+"\n");
         } else {
             if (definitive) return false;  // We have got a request and it did NOT say editable => not editable
         };
 
-        tabulator.log.warn("sparql.editable: inconclusive for "+uri+"\n");
+        console.log("sparql.editable: inconclusive for "+uri+"\n");
         return undefined; // We don't know (yet) as we haven't had a response (yet)
     }
 
@@ -231,7 +234,7 @@ $rdf.sparqlUpdate = function() {
 
     sparql.prototype._fire = function(uri, query, callback) {
         if (!uri) throw "No URI given for remote editing operation: "+query;
-        tabulator.log.info("sparql: sending update to <"+uri+">\n   query="+query+"\n");
+        console.log("sparql: sending update to <"+uri+">\n   query="+query+"\n");
         var xhr = $rdf.Util.XMLHTTPFactory();
 
         xhr.onreadystatechange = function() {
@@ -245,6 +248,7 @@ $rdf.sparqlUpdate = function() {
             }
         }
 
+/*  Out of date protcol - CORS replaces this
         if(!tabulator.isExtension) {
             try {
                 $rdf.Util.enablePrivilege("UniversalBrowserRead")
@@ -252,7 +256,7 @@ $rdf.sparqlUpdate = function() {
                 alert("Failed to get privileges: " + e)
             }
         }
-        
+  */      
         xhr.open('PATCH', uri, true);  // async=true
         xhr.setRequestHeader('Content-type', 'application/sparql-update');
         xhr.send(query);
@@ -323,6 +327,29 @@ $rdf.sparqlUpdate = function() {
         this._fire(st0.why.uri, query, callback);
     }
 
+
+    //  Request a now or future action to refresh changes coming downstream
+    //
+    // This is designed to allow the system to re-request the server version,
+    // when a websocket has pinged to say there are changes.
+    // If thewebsocket, by contrast, has sent a patch, then this may not be necessary.
+
+    sparql.prototype.requestDownstreamAction = function(doc, action) {
+        if (!doc.pendingUpstream) {
+            action();
+        } else {
+            if (doc.downstreamAction) {
+                if (doc.downstreamAction === action) {
+                    return this;
+                } else {
+                    throw "Can't wait for > 1 differnt downstream actions";
+                }
+            } else {
+                doc.downstreamAction = action;
+            }
+        }
+    }
+
     // This high-level function updates the local store iff the web is changed successfully. 
     //
     //  - deletions, insertions may be undefined or single statements or lists or formulae.
@@ -331,7 +358,6 @@ $rdf.sparqlUpdate = function() {
     //
     sparql.prototype.update = function(deletions, insertions, callback) {
         var kb = this.store;
-        tabulator.log.info("update called")
         var ds =  deletions == undefined ? []
                     : deletions instanceof $rdf.IndexedFormula ? deletions.statements
                     : deletions instanceof Array ? deletions : [ deletions ];
@@ -344,10 +370,46 @@ $rdf.sparqlUpdate = function() {
             return callback(null, true); // success -- nothing needed to be done.
         }
         var doc = ds.length ? ds[0].why : is[0].why;
+        var startTime = Date.now();
         
-        ds.map(function(st){if (!doc.sameTerm(st.why)) throw "sparql update: destination "+doc+" inconsistent with ds "+st.why;});
-        is.map(function(st){if (!doc.sameTerm(st.why)) throw "sparql update: destination = "+doc+" inconsistent with st.why ="+st.why;});
+        var props = ['subject', 'predicate', 'object', 'why'];
+        var verbs = ['insert', 'delete'];
+        var clauses = { 'delete': ds, 'insert': is};
+        verbs.map(function(verb){
+            clauses[verb].map(function(st){
+                if (!doc.sameTerm(st.why)) {
+                    throw "update: destination "+doc+" inconsistent with delete quad "+st.why;
+                }
+                props.map(function(prop){
+                    if (typeof st[prop] === 'undefined') {
+                        throw "update: undefined "+prop+" of statement."
+                    }
+                })
+                
+            });
+        });
 
+        /*
+        });
+        
+        ds.map(function(st){
+            if (!doc.sameTerm(st.why)) {
+                throw "Update: destination "+doc+" inconsistent with delete quad "+st.why;
+            }
+            props.map(function(prop){
+                if (typeof ds[prop] === 'undefined') {
+                    throw "Update: undefined "+prop+" of statement."
+                }
+            })
+            
+        });
+        is.map(function(st){i
+            f (!doc.sameTerm(st.why))
+                throw "sparql update: destination = "+doc+" inconsistent with insert st.why ="+st.why;
+            }
+        });
+        */
+        
         var protocol = this.editable(doc.uri, kb);
         if (!protocol) throw "Can't make changes in uneditable "+doc;
 
@@ -383,20 +445,37 @@ $rdf.sparqlUpdate = function() {
                     query += " }\n";
                 }
             }
+            // Track pending upstream patches until they have fnished their callback
+            doc.pendingUpstream = doc.pendingUpstream ? doc.pendingUpstream + 1 : 1;
+            if (typeof doc.upstreamCount !== 'undefined') {
+                doc.upstreamCount += 1; // count changes we originated ourselves
+            }
+
             this._fire(doc.uri, query,
                 function(uri, success, body, xhr) {
-                    tabulator.log.info("\t sparql: Return success="+success+" for query "+query+"\n");
+                    console.log("\t sparql: Return success="+success+" for query "+query+"\n");
                     if (success) {
-                        for (var i=0; i<ds.length;i++)
-                            try { kb.remove(ds[i]) } catch(e) {
-                                callback(uri, false,
-                                "sparqlUpdate: Remote OK but error deleting statemmnt "+
-                                    ds[i] + " from local store:\n" + e)
-                            }
-                        for (var i=0; i<is.length;i++)
+                        try {
+                            kb.remove(ds);
+                        } catch(e) {
+                            success = false;
+                            body = "Remote Ok BUT error deleting "+ds.length+" from store!!! " + e;
+                        } // Add in any case -- help recover from weirdness?? 
+                        for (var i=0; i<is.length;i++) {
                             kb.add(is[i].subject, is[i].predicate, is[i].object, doc); 
+                        }
                     }
+                    
+                    xhr.elapsedTime_ms =  Date.now() - startTime;
+
                     callback(uri, success, body, xhr);
+                    doc.pendingUpstream = doc.pendingUpstream - 1;
+                    // When upstream patches have been sent, reload state if downstream waiting 
+                    if (doc.pendingUpstream  === 0 && doc.downstreamAction) {
+                        var downstreamAction = doc.downstreamAction;
+                        delete  doc.downstreamListener;
+                        downstreamAction();
+                    }
                 });
             
         } else if (protocol.indexOf('DAV') >=0) {
@@ -456,7 +535,7 @@ $rdf.sparqlUpdate = function() {
 
         } else if (protocol.indexOf('LOCALFILE') >=0) {
             try {
-                tabulator.log.info("Writing back to local file\n");
+                console.log("Writing back to local file\n");
                 // See http://simon-jung.blogspot.com/2007/10/firefox-extension-file-io.html
                 //prepare contents of revised document
                 var newSts = kb.statementsMatching(undefined, undefined, undefined, doc).slice(); // copy!
@@ -491,7 +570,7 @@ $rdf.sparqlUpdate = function() {
                 //create component for file writing
                 dump("Writing back: <<<"+documentString+">>>\n")
                 var filename = doc.uri.slice(7); // chop off   file://  leaving /path
-                //tabulator.log.warn("Writeback: Filename: "+filename+"\n")
+                //console.log("Writeback: Filename: "+filename+"\n")
                 var file = Components.classes["@mozilla.org/file/local;1"]
                     .createInstance(Components.interfaces.nsILocalFile);
                 file.initWithPath(filename);
@@ -505,7 +584,8 @@ $rdf.sparqlUpdate = function() {
                 var stream = Components.classes["@mozilla.org/network/file-output-stream;1"]
                 .createInstance(Components.interfaces.nsIFileOutputStream);
 
-                stream.init(file, 0x02 | 0x08 | 0x20, 0666, 0);
+                // Various JS systems object to 0666 in struct mode as dangerous
+                stream.init(file, 0x02 | 0x08 | 0x20, parseInt('0666',8), 0);
 
                 //write data to file then close output stream
                 stream.write(documentString, documentString.length);
@@ -540,7 +620,7 @@ $rdf.sparqlUpdate = function() {
             //serialize to te appropriate format
             var sz = $rdf.Serializer(kb);
             sz.suggestNamespaces(kb.namespaces);
-            sz.setBase(doc.uri);//?? beware of this - kenny (why? tim)                   
+            sz.setBase(doc.uri);                   
             switch(content_type){
                 case 'application/rdf+xml': 
                     documentString = sz.statementsToXML(data);
@@ -560,6 +640,17 @@ $rdf.sparqlUpdate = function() {
             if (xhr.readyState == 4){
                 //formula from sparqlUpdate.js, what about redirects?
                 var success = (!xhr.status || (xhr.status >= 200 && xhr.status < 300));
+                if (success && typeof data !== 'string') {
+                    data.map(function(st){
+                        kb.addStatement(st);
+                    });
+                    // kb.fetcher.requested[doc.uri] = true; // as though fetched
+                }
+                if (success) {
+                    delete kb.fetcher.nonexistant[doc.uri];
+                    delete kb.fetcher.requested[doc.uri];
+                    // @@ later we can fake it has been requestd if put gives us the header sand we save them.
+                }
                 callback(doc.uri, success, xhr.responseText, xhr);
             }
         };
@@ -568,6 +659,42 @@ $rdf.sparqlUpdate = function() {
         xhr.send(documentString);
     };
     
+
+    // Reload a document.
+    //
+    // Fast and cheap, no metaata
+    // Measure times for the document 
+    // Recover data if fetch fails.
+    
+    sparql.prototype.reload = function(kb, doc, callback) {
+        var saved = kb.statementsMatching(undefined, undefined, undefined, doc);
+        console.log("Reload resource: Unloading statements " + saved.length
+            + " out of " + kb.statements.length)
+        kb.fetcher.unload(doc);
+        var startTime = Date.now();
+        // force sets no-cache and 
+        kb.fetcher.nowOrWhenFetched(doc.uri, {force: true, noMeta: true}, function(ok, body){
+            if (!ok) {
+                console.log("ERROR reloading data! -- restoring original " + saved.length + " statements. Error: " + body);
+                kb.add(saved);
+                callback(false, "Error reloading data: " + body)
+            } else {
+                console.log("Reloaded " + kb.statementsMatching(undefined, undefined, undefined, doc).length
+                    + " out of " + kb.statements.length)
+                elapsedTime_ms = Date.now() - startTime;
+                console.log("fetch took "+elapsedTime_ms+"ms. Now sync the DOM.");
+                if (!doc.reloadTime_total) doc.reloadTime_total = 0;
+                if (!doc.reloadTime_count) doc.reloadTime_count = 0;
+                doc.reloadTime_total += elapsedTime_ms;
+                doc.reloadTime_count += 1;
+                callback(true);
+            };
+        });
+    };
+
+
+
+
     
 
     return sparql;

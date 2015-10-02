@@ -339,19 +339,29 @@ $rdf.Util.heavyCompareSPO = function(x, y, g) {
 // Returns: A DOM
 //
 
-$rdf.Util.parseXML = function(str) {
+$rdf.Util.parseXML = function(str, options) {
     var dparser;
+    options = options || {};
     if ((typeof tabulator != 'undefined' && tabulator.isExtension)) {
         dparser = Components.classes["@mozilla.org/xmlextras/domparser;1"].getService(
                     Components.interfaces.nsIDOMParser);
     } else if (typeof module != 'undefined' && module && module.exports){ // Node.js
         //var libxmljs = require('libxmljs'); // Was jsdom before 2012-01 then libxmljs but that nonstandard
         //return libxmljs.parseXmlString(str);
-        var jsdom = require('jsdom');
-        var dom = jsdom.jsdom(str, undefined, {} );// html, level, options
-        return dom
+        
+        // var jsdom = require('jsdom');   2012-01 though 2015-08 no worky with new Node
+        // var dom = jsdom.jsdom(str, undefined, {} );// html, level, options
+        
+        var DOMParser = require('xmldom').DOMParser; // 2015-08 on https://github.com/jindw/xmldom
+        var dom = new DOMParser().parseFromString(str, options.contentType || 'text/html') // text/xml
+        return dom;
+
     } else {
-        dparser = new DOMParser();
+        if (typeof window !== 'undefined' && window.DOMParser ) {
+            dparser = new window.DOMParser(); // seems to actually work
+        } else {
+            dparser = new DOMParser(); // Doc says this works 
+        }
     }
     return dparser.parseFromString(str, 'application/xml');
 };
@@ -374,8 +384,10 @@ $rdf.Util.string = {
     }
 };
 
+// Reomved 2015-08-05 timbl - unused and depended on jQuery!
 // from http://dev.jquery.com/browser/trunk/jquery/src/core.js
-// Overlap with JQuery -- we try to keep the rdflib.js and jquery libraries separate at the moment.
+// Dependency with JQuery -- we try to keep the rdflib.js and jquery libraries separate at the moment.
+/*
 $rdf.Util.extend = function () {
     // copy reference to target object
     var target = arguments[0] || {},
@@ -444,7 +456,7 @@ $rdf.Util.extend = function () {
     // Return the modified object
     return target;
 };
-
+*/
 
 
 

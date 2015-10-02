@@ -1,0 +1,301 @@
+@prefix ns1: <http://schema.org/> .
+@prefix ns2: <http://www.w3.org/ns/rdfa#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+ns1:Person a rdfs:Class;
+    rdfs:comment "A person (alive, dead, undead, or fictional)."@en;
+    rdfs:subClassOf ns1:Person;
+    owl:equivalentClass <http://xmlns.com/foaf/0.1/Person>;
+    ns2:usesVocabulary ns1: .
+
+ns1:additionalName a rdfs:Property;
+    rdfs:label "additionalName"@en;
+    ns1:rangeIncludes ns1:Text;
+    rdfs:comment "An additional name for a Person, can be used for a middle name."@en .
+
+ns1:additionalType a rdfs:Property;
+    rdfs:label "additionalType"@en;
+    ns1:rangeIncludes ns1:URL;
+    rdfs:comment "An additional type for the item, typically used for adding more specific types from external vocabularies in microdata syntax. This is a relationship between something and a class that the thing is in. In RDFa syntax, it is better to use the native RDFa syntax - the 'typeof' attribute - for multiple types. Schema.org tools may have only weaker understanding of extra types, in particular those defined externally."@en .
+
+ns1:address a rdfs:Property;
+    rdfs:label "address"@en;
+    ns1:rangeIncludes ns1:PostalAddress;
+    rdfs:comment "Physical address of the item."@en .
+
+ns1:affiliation a rdfs:Property;
+    rdfs:label "affiliation"@en;
+    ns1:rangeIncludes ns1:Organization;
+    rdfs:comment "An organization that this person is affiliated with. For example, a school/university, a club, or a team."@en .
+
+ns1:alternateName a rdfs:Property;
+    rdfs:label "alternateName"@en;
+    ns1:rangeIncludes ns1:Text;
+    rdfs:comment "An alias for the item."@en .
+
+ns1:alumniOf a rdfs:Property;
+    rdfs:label "alumniOf"@en;
+    ns1:rangeIncludes ns1:EducationalOrganization;
+    rdfs:comment "An educational organizations that the person is an alumni of. Inverse property: alumni."@en .
+
+ns1:award a rdfs:Property;
+    rdfs:label "award"@en;
+    ns1:rangeIncludes ns1:Text;
+    rdfs:comment "An award won by or for this item. Supersedes awards."@en .
+
+ns1:birthDate a rdfs:Property;
+    rdfs:label "birthDate"@en;
+    ns1:rangeIncludes ns1:Date;
+    rdfs:comment "Date of birth."@en .
+
+ns1:birthPlace a rdfs:Property;
+    rdfs:label "birthPlace"@en;
+    ns1:rangeIncludes ns1:Place;
+    rdfs:comment "The place where the person was born."@en .
+
+ns1:brand a rdfs:Property;
+    rdfs:label "brand"@en;
+    ns1:rangeIncludes ns1:Brand,
+        ns1:Organization;
+    rdfs:comment "The brand(s) associated with a product or service, or the brand(s) maintained by an organization or business person."@en .
+
+ns1:children a rdfs:Property;
+    rdfs:label "children"@en;
+    ns1:rangeIncludes ns1:Person;
+    rdfs:comment "A child of the person."@en .
+
+ns1:colleague a rdfs:Property;
+    rdfs:label "colleague"@en;
+    ns1:rangeIncludes ns1:Person;
+    rdfs:comment "A colleague of the person. Supersedes colleagues."@en .
+
+ns1:contactPoint a rdfs:Property;
+    rdfs:label "contactPoint"@en;
+    ns1:rangeIncludes ns1:ContactPoint;
+    rdfs:comment "A contact point for a person or organization. Supersedes contactPoints."@en .
+
+ns1:deathDate a rdfs:Property;
+    rdfs:label "deathDate"@en;
+    ns1:rangeIncludes ns1:Date;
+    rdfs:comment "Date of death."@en .
+
+ns1:deathPlace a rdfs:Property;
+    rdfs:label "deathPlace"@en;
+    ns1:rangeIncludes ns1:Place;
+    rdfs:comment "The place where the person died."@en .
+
+ns1:description a rdfs:Property;
+    rdfs:label "description"@en;
+    ns1:rangeIncludes ns1:Text;
+    rdfs:comment "A short description of the item."@en .
+
+ns1:duns a rdfs:Property;
+    rdfs:label "duns"@en;
+    ns1:rangeIncludes ns1:Text;
+    rdfs:comment "The Dun & Bradstreet DUNS number for identifying an organization or business person."@en .
+
+ns1:email a rdfs:Property;
+    rdfs:label "email"@en;
+    ns1:rangeIncludes ns1:Text;
+    rdfs:comment "Email address."@en .
+
+ns1:familyName a rdfs:Property;
+    rdfs:label "familyName"@en;
+    ns1:rangeIncludes ns1:Text;
+    rdfs:comment "Family name. In the U.S., the last name of an Person. This can be used along with givenName instead of the name property."@en .
+
+ns1:faxNumber a rdfs:Property;
+    rdfs:label "faxNumber"@en;
+    ns1:rangeIncludes ns1:Text;
+    rdfs:comment "The fax number."@en .
+
+ns1:follows a rdfs:Property;
+    rdfs:label "follows"@en;
+    ns1:rangeIncludes ns1:Person;
+    rdfs:comment "The most generic uni-directional social relation."@en .
+
+ns1:gender a rdfs:Property;
+    rdfs:label "gender"@en;
+    ns1:rangeIncludes ns1:Text;
+    rdfs:comment "Gender of the person."@en .
+
+ns1:givenName a rdfs:Property;
+    rdfs:label "givenName"@en;
+    ns1:rangeIncludes ns1:Text;
+    rdfs:comment "Given name. In the U.S., the first name of a Person. This can be used along with familyName instead of the name property."@en .
+
+ns1:globalLocationNumber a rdfs:Property;
+    rdfs:label "globalLocationNumber"@en;
+    ns1:rangeIncludes ns1:Text;
+    rdfs:comment "The Global Location Number (GLN, sometimes also referred to as International Location Number or ILN) of the respective organization, person, or place. The GLN is a 13-digit number used to identify parties and physical locations."@en .
+
+ns1:hasPOS a rdfs:Property;
+    rdfs:label "hasPOS"@en;
+    ns1:rangeIncludes ns1:Place;
+    rdfs:comment "Points-of-Sales operated by the organization or person."@en .
+
+ns1:height a rdfs:Property;
+    rdfs:label "height"@en;
+    ns1:rangeIncludes ns1:Distance,
+        ns1:QuantitativeValue;
+    rdfs:comment "The height of the item."@en .
+
+ns1:homeLocation a rdfs:Property;
+    rdfs:label "homeLocation"@en;
+    ns1:rangeIncludes ns1:ContactPoint,
+        ns1:Place;
+    rdfs:comment "A contact location for a person's residence."@en .
+
+ns1:honorificPrefix a rdfs:Property;
+    rdfs:label "honorificPrefix"@en;
+    ns1:rangeIncludes ns1:Text;
+    rdfs:comment "An honorific prefix preceding a Person's name such as Dr/Mrs/Mr."@en .
+
+ns1:honorificSuffix a rdfs:Property;
+    rdfs:label "honorificSuffix"@en;
+    ns1:rangeIncludes ns1:Text;
+    rdfs:comment "An honorific suffix preceding a Person's name such as M.D. /PhD/MSCSW."@en .
+
+ns1:image a rdfs:Property;
+    rdfs:label "image"@en;
+    ns1:rangeIncludes ns1:ImageObject,
+        ns1:URL;
+    rdfs:comment "An image of the item. This can be a URL or a fully described ImageObject."@en .
+
+ns1:isicV4 a rdfs:Property;
+    rdfs:label "isicV4"@en;
+    ns1:rangeIncludes ns1:Text;
+    rdfs:comment "The International Standard of Industrial Classification of All Economic Activities (ISIC), Revision 4 code for a particular organization, business person, or place."@en .
+
+ns1:jobTitle a rdfs:Property;
+    rdfs:label "jobTitle"@en;
+    ns1:rangeIncludes ns1:Text;
+    rdfs:comment "The job title of the person (for example, Financial Manager)."@en .
+
+ns1:knows a rdfs:Property;
+    rdfs:label "knows"@en;
+    ns1:rangeIncludes ns1:Person;
+    rdfs:comment "The most generic bi-directional social/work relation."@en .
+
+ns1:mainEntityOfPage a rdfs:Property;
+    rdfs:label "mainEntityOfPage"@en;
+    ns1:rangeIncludes ns1:CreativeWork,
+        ns1:URL;
+    rdfs:comment """Indicates a page (or other CreativeWork) for which this thing is the main entity being described.
+      
+      See background notes for details.
+       Inverse property: mainEntity."""@en .
+
+ns1:makesOffer a rdfs:Property;
+    rdfs:label "makesOffer"@en;
+    ns1:rangeIncludes ns1:Offer;
+    rdfs:comment "A pointer to products or services offered by the organization or person."@en .
+
+ns1:memberOf a rdfs:Property;
+    rdfs:label "memberOf"@en;
+    ns1:rangeIncludes ns1:Organization,
+        ns1:ProgramMembership;
+    rdfs:comment "An Organization (or ProgramMembership) to which this Person or Organization belongs. Inverse property: member."@en .
+
+ns1:naics a rdfs:Property;
+    rdfs:label "naics"@en;
+    ns1:rangeIncludes ns1:Text;
+    rdfs:comment "The North American Industry Classification System (NAICS) code for a particular organization or business person."@en .
+
+ns1:name a rdfs:Property;
+    rdfs:label "name"@en;
+    ns1:rangeIncludes ns1:Text;
+    rdfs:comment "The name of the item."@en .
+
+ns1:nationality a rdfs:Property;
+    rdfs:label "nationality"@en;
+    ns1:rangeIncludes ns1:Country;
+    rdfs:comment "Nationality of the person."@en .
+
+ns1:netWorth a rdfs:Property;
+    rdfs:label "netWorth"@en;
+    ns1:rangeIncludes ns1:PriceSpecification;
+    rdfs:comment "The total financial value of the person as calculated by subtracting assets from liabilities."@en .
+
+ns1:owns a rdfs:Property;
+    rdfs:label "owns"@en;
+    ns1:rangeIncludes ns1:OwnershipInfo,
+        ns1:Product;
+    rdfs:comment "Products owned by the organization or person."@en .
+
+ns1:parent a rdfs:Property;
+    rdfs:label "parent"@en;
+    ns1:rangeIncludes ns1:Person;
+    rdfs:comment "A parent of this person. Supersedes parents."@en .
+
+ns1:performerIn a rdfs:Property;
+    rdfs:label "performerIn"@en;
+    ns1:rangeIncludes ns1:Event;
+    rdfs:comment "Event that this person is a performer or participant in."@en .
+
+ns1:potentialAction a rdfs:Property;
+    rdfs:label "potentialAction"@en;
+    ns1:rangeIncludes ns1:Action;
+    rdfs:comment "Indicates a potential Action, which describes an idealized action in which this thing would play an 'object' role."@en .
+
+ns1:relatedTo a rdfs:Property;
+    rdfs:label "relatedTo"@en;
+    ns1:rangeIncludes ns1:Person;
+    rdfs:comment "The most generic familial relation."@en .
+
+ns1:sameAs a rdfs:Property;
+    rdfs:label "sameAs"@en;
+    ns1:rangeIncludes ns1:URL;
+    rdfs:comment "URL of a reference Web page that unambiguously indicates the item's identity. E.g. the URL of the item's Wikipedia page, Freebase page, or official website."@en .
+
+ns1:seeks a rdfs:Property;
+    rdfs:label "seeks"@en;
+    ns1:rangeIncludes ns1:Demand;
+    rdfs:comment "A pointer to products or services sought by the organization or person (demand)."@en .
+
+ns1:sibling a rdfs:Property;
+    rdfs:label "sibling"@en;
+    ns1:rangeIncludes ns1:Person;
+    rdfs:comment "A sibling of the person. Supersedes siblings."@en .
+
+ns1:spouse a rdfs:Property;
+    rdfs:label "spouse"@en;
+    ns1:rangeIncludes ns1:Person;
+    rdfs:comment "The person's spouse."@en .
+
+ns1:taxID a rdfs:Property;
+    rdfs:label "taxID"@en;
+    ns1:rangeIncludes ns1:Text;
+    rdfs:comment "The Tax / Fiscal ID of the organization or person, e.g. the TIN in the US or the CIF/NIF in Spain."@en .
+
+ns1:telephone a rdfs:Property;
+    rdfs:label "telephone"@en;
+    ns1:rangeIncludes ns1:Text;
+    rdfs:comment "The telephone number."@en .
+
+ns1:url a rdfs:Property;
+    rdfs:label "url"@en;
+    ns1:rangeIncludes ns1:URL;
+    rdfs:comment "URL of the item."@en .
+
+ns1:vatID a rdfs:Property;
+    rdfs:label "vatID"@en;
+    ns1:rangeIncludes ns1:Text;
+    rdfs:comment "The Value-added Tax ID of the organization or person."@en .
+
+ns1:weight a rdfs:Property;
+    rdfs:label "weight"@en;
+    ns1:rangeIncludes ns1:QuantitativeValue;
+    rdfs:comment "The weight of the product or person."@en .
+
+ns1:workLocation a rdfs:Property;
+    rdfs:label "workLocation"@en;
+    ns1:rangeIncludes ns1:ContactPoint,
+        ns1:Place;
+    rdfs:comment "A contact location for a person's place of work."@en .
+
+ns1:worksFor a rdfs:Property;
+    rdfs:label "worksFor"@en;
+    ns1:rangeIncludes ns1:Organization;
+    rdfs:comment "Organizations that the person works for."@en .
