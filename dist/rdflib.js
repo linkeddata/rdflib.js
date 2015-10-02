@@ -5801,8 +5801,16 @@ $rdf.sparqlUpdate = function() {
         this.ns.rdfs = $rdf.Namespace("http://www.w3.org/2000/01/rdf-schema#");
         this.ns.rdf = $rdf.Namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#");
         this.ns.owl = $rdf.Namespace("http://www.w3.org/2002/07/owl#");
+        
+        this.patchControl = []; // index of objects fro coordinating incomng and outgoing patches
     }
 
+    sparql.prototype.patchControlFor = function(doc) {
+        if (!this.patchControl[doc.uri]) {
+            this.patchControl[doc.uri] = [];
+        }
+        return this.patchControl[doc.uri];
+    }
 
     // Returns The method string SPARQL or DAV or LOCALFILE or false if known, undefined if not known.
     //
@@ -6018,8 +6026,9 @@ $rdf.sparqlUpdate = function() {
 
     sparql.prototype._fire = function(uri, query, callback) {
         if (!uri) throw "No URI given for remote editing operation: "+query;
-        console.log("sparql: sending update to <"+uri+">\n   query="+query+"\n");
+        console.log("sparql: sending update to <"+uri+">");
         var xhr = $rdf.Util.XMLHTTPFactory();
+        xhr.options = {};
 
         xhr.onreadystatechange = function() {
             //dump("SPARQL update ready state for <"+uri+"> readyState="+xhr.readyState+"\n"+query+"\n");
@@ -6119,20 +6128,150 @@ $rdf.sparqlUpdate = function() {
     // If thewebsocket, by contrast, has sent a patch, then this may not be necessary.
 
     sparql.prototype.requestDownstreamAction = function(doc, action) {
-        if (!doc.pendingUpstream) {
+        var control = this.patchControlFor(doc);
+        if (!control.pendingUpstream) {
             action();
         } else {
-            if (doc.downstreamAction) {
-                if (doc.downstreamAction === action) {
+            if (control.downstreamAction) {
+                if (control.downstreamAction === action) {
                     return this;
                 } else {
                     throw "Can't wait for > 1 differnt downstream actions";
                 }
             } else {
-                doc.downstreamAction = action;
+                control.downstreamAction = action;
             }
         }
     }
+    
+    // We want to start counting websockt notifications
+    // to distinguish the ones from others from our own.
+    sparql.prototype.clearUpstreamCount = function(doc) {
+        var control = this.patchControlFor(doc);
+        control.upstreamCount = 0;
+    }
+
+
+
+
+    
+    //  for all Link: uuu; rel=rrr  --->  { rrr: uuu }
+    sparql.prototype.linkRels = function(doc) {
+        var links = {}; // map relationship to uri
+        var linkHeaders = tabulator.fetcher.getHeader(doc, 'link');
+        if (!linkHeaders) return null;
+        linkHeaders.map(function(headerLine){
+            headerLine.split(',').map(function(headerValue) {
+                var arg = headerValue.trim().split(';');
+                var uri = arg[0];
+                arg.slice(1).map(function(a){
+                    var key = a.split('=')[0].trim();
+                    var val = a.split('=')[1].trim().replace(/["']/g, ''); // '"
+                    if (key ==='rel') {
+                        uri = uri.trim();
+                        if (uri.slice(0,1) === '<') { // strip < >
+                            uri = uri.slice(1, uri.length-1)
+                        }
+                        links[val] = uri;
+                    }
+                });
+            });
+        });
+        return links;
+    };
+
+    //  for all Link: uuu; rel=rrr  --->  { rrr: uuu }
+    sparql.prototype.getUpdatesVia = function(doc) {
+        var linkHeaders = tabulator.fetcher.getHeader(doc, 'updates-via');
+        if (!linkHeaders) return null;
+        return linkHeaders[0].trim();
+    };
+
+
+
+    // Set up websock listen on 
+    //
+    // There is coordination between upstream changes and downstream ones
+    // so that a reload is not done in the middle of an upsteeam patch.
+    //
+    sparql.prototype.setRefreshHandler = function(doc, handler) {
+
+        var wssURI = this.getUpdatesVia(doc); // relative
+        var theHandler = handler;
+        var self = this;
+        var updater = this;
+        var retryTimeout = 1500; // *2 will be 3 Seconds, 6, 12, etc
+        var retries = 0;
+
+        if (!wssURI) {
+            console.log("Server doies not support live updates thoughUpdates-Via :-(")
+            return false;
+        }
+
+        wssURI = $rdf.uri.join(wssURI, doc.uri); 
+        wssURI = wssURI.replace(/^http:/, 'ws:').replace(/^https:/, 'wss:');
+        console.log("Web socket URI " + wssURI);
+        
+        var openWebsocket = function() {
+        
+            // From https://github.com/solid/solid-spec#live-updates
+            var socket = new WebSocket(wssURI);
+            socket.onopen = function() {
+                console.log("    websocket open");
+                retryTimeout = 1500; // reset timeout to fast on success
+                this.send('sub ' + doc.uri);
+                if (retries) {
+                    console.log("Web socket has been down, better check for any news.");
+                    updater.requestDownstreamAction(doc, theHandler);
+                }
+            };
+            var control = self.patchControlFor(doc);
+            control.upstreamCount = 0;
+            
+            // https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent
+            //
+            // 1000	CLOSE_NORMAL	Normal closure; the connection successfully completed whatever purpose for which it was created.
+            // 1001	CLOSE_GOING_AWAY	The endpoint is going away, either
+            //                                  because of a server failure or because the browser is navigating away from the page that opened the connection.
+            // 1002	CLOSE_PROTOCOL_ERROR	The endpoint is terminating the connection due to a protocol error.
+            // 1003	CLOSE_UNSUPPORTED	The connection is being terminated because the endpoint
+            //                                  received data of a type it cannot accept (for example, a text-only endpoint received binary data).
+            // 1004                             Reserved. A meaning might be defined in the future.
+            // 1005	CLOSE_NO_STATUS	Reserved.  Indicates that no status code was provided even though one was expected.
+            // 1006	CLOSE_ABNORMAL	Reserved. Used to indicate that a connection was closed abnormally (
+            //
+            //
+            socket.onclose = function(event) { 
+                console.log("*** Websocket closed with code " + event.code + 
+                    ", reason '" + event.reason + "' clean = " + event.clean);
+                retryTimeout *= 2;
+                retries += 1;
+                console.log("Retrying in " + retryTimeout + "ms"); //(ask user?)
+                setTimeout(function(){
+                    console.log("Trying websocket again");
+                    openWebsocket();
+                }, retryTimeout);
+            }
+            socket.onmessage = function(msg) {
+                if (msg.data && msg.data.slice(0, 3) === 'pub') {
+                    if (control.upstreamCount) {
+                        control.upstreamCount -= 1;
+                        if (control.upstreamCount >= 0) {
+                            console.log("just an echo");
+                            return; // Just an echo
+                         }
+                    }
+                    control.upstreamCount = 0;
+                    console.log("Assume a real downstream change");
+                    self.requestDownstreamAction(doc, theHandler);
+                }
+            };
+        }; // openWebsocket
+        openWebsocket();
+        
+        return true;
+    };
+
 
     // This high-level function updates the local store iff the web is changed successfully. 
     //
@@ -6154,6 +6293,7 @@ $rdf.sparqlUpdate = function() {
             return callback(null, true); // success -- nothing needed to be done.
         }
         var doc = ds.length ? ds[0].why : is[0].why;
+        var control = this.patchControlFor(doc);
         var startTime = Date.now();
         
         var props = ['subject', 'predicate', 'object', 'why'];
@@ -6230,14 +6370,16 @@ $rdf.sparqlUpdate = function() {
                 }
             }
             // Track pending upstream patches until they have fnished their callback
-            doc.pendingUpstream = doc.pendingUpstream ? doc.pendingUpstream + 1 : 1;
-            if (typeof doc.upstreamCount !== 'undefined') {
-                doc.upstreamCount += 1; // count changes we originated ourselves
+            control.pendingUpstream = control.pendingUpstream ? control.pendingUpstream + 1 : 1;
+            if (typeof control.upstreamCount !== 'undefined') {
+                control.upstreamCount += 1; // count changes we originated ourselves
             }
 
             this._fire(doc.uri, query,
                 function(uri, success, body, xhr) {
-                    console.log("\t sparql: Return success="+success+" for query "+query+"\n");
+                    xhr.elapsedTime_ms =  Date.now() - startTime;
+                    console.log("    sparql: Return " + (success? "success" : "FAILURE " + xhr.status ) +
+                        " elapsed " + xhr.elapsedTime_ms + "ms");
                     if (success) {
                         try {
                             kb.remove(ds);
@@ -6250,14 +6392,13 @@ $rdf.sparqlUpdate = function() {
                         }
                     }
                     
-                    xhr.elapsedTime_ms =  Date.now() - startTime;
 
                     callback(uri, success, body, xhr);
-                    doc.pendingUpstream = doc.pendingUpstream - 1;
+                    control.pendingUpstream -= 1;
                     // When upstream patches have been sent, reload state if downstream waiting 
-                    if (doc.pendingUpstream  === 0 && doc.downstreamAction) {
-                        var downstreamAction = doc.downstreamAction;
-                        delete  doc.downstreamListener;
+                    if (control.pendingUpstream  === 0 && control.downstreamAction) {
+                        var downstreamAction = control.downstreamAction;
+                        delete  control.downstreamListener;
                         downstreamAction();
                     }
                 });
@@ -6300,6 +6441,7 @@ $rdf.sparqlUpdate = function() {
             var candidateTarget = kb.the(response, this.ns.httph("content-location"));
             if (candidateTarget) targetURI = $rdf.uri.join(candidateTarget.value, targetURI);
             var xhr = $rdf.Util.XMLHTTPFactory();
+            xhr.options = {};
             xhr.onreadystatechange = function (){
                 if (xhr.readyState == 4){
                     //formula from sparqlUpdate.js, what about redirects?
@@ -6420,6 +6562,7 @@ $rdf.sparqlUpdate = function() {
             }
         }
         var xhr = $rdf.Util.XMLHTTPFactory();
+        xhr.options = {};
         xhr.onreadystatechange = function (){
             if (xhr.readyState == 4){
                 //formula from sparqlUpdate.js, what about redirects?
@@ -6448,29 +6591,47 @@ $rdf.sparqlUpdate = function() {
     //
     // Fast and cheap, no metaata
     // Measure times for the document 
-    // Recover data if fetch fails.
+    // Load it provisionally 
+    // Don't delete the statemenst before the load, or it will leave a broken document
+    // in the meantime.
     
     sparql.prototype.reload = function(kb, doc, callback) {
+        /*
         var saved = kb.statementsMatching(undefined, undefined, undefined, doc);
         console.log("Reload resource: Unloading statements " + saved.length
             + " out of " + kb.statements.length)
         kb.fetcher.unload(doc);
+        */
+        var g2 = $rdf.graph(); // A separate store to hold the data as we load it
+        var f2 = $rdf.fetcher(g2);
         var startTime = Date.now();
         // force sets no-cache and 
-        kb.fetcher.nowOrWhenFetched(doc.uri, {force: true, noMeta: true}, function(ok, body){
+        f2.nowOrWhenFetched(doc.uri, {force: true, noMeta: true}, function(ok, body, xhr){
             if (!ok) {
-                console.log("ERROR reloading data! -- restoring original " + saved.length + " statements. Error: " + body);
-                kb.add(saved);
-                callback(false, "Error reloading data: " + body)
+                console.log("    ERROR reloading data: " + body);
+                callback(false, "Error reloading data: " + body, xhr)
+            } else if (xhr.onErrorWasCalled || xhr.status !== 200) {
+                console.log("    Non-HTTP error reloading data! onErrorWasCalled="
+                    + xhr.onErrorWasCalled + " status: " + xhr.status);
+                callback(false, "Non-HTTP error reloading data: " + body, xhr)
+                
             } else {
-                console.log("Reloaded " + kb.statementsMatching(undefined, undefined, undefined, doc).length
-                    + " out of " + kb.statements.length)
+                var sts1 = kb.statementsMatching(undefined, undefined, undefined, doc).slice();// Take a copy!!
+                var sts2 = g2.statementsMatching(undefined, undefined, undefined, doc).slice();
+                console.log("    replacing " + sts1.length + " with " + sts2.length
+                    + " out of total statements " + kb.statements.length)
+                kb.remove(sts1);
+                kb.add(sts2);
                 elapsedTime_ms = Date.now() - startTime;
-                console.log("fetch took "+elapsedTime_ms+"ms. Now sync the DOM.");
+                if (sts2.length === 0) {
+                    console.log("????????????????? 0000000");
+                }
                 if (!doc.reloadTime_total) doc.reloadTime_total = 0;
                 if (!doc.reloadTime_count) doc.reloadTime_count = 0;
                 doc.reloadTime_total += elapsedTime_ms;
                 doc.reloadTime_count += 1;
+                console.log("    fetch took "+elapsedTime_ms+"ms, av. of " + doc.reloadTime_count +  " = "
+                    + (doc.reloadTime_total/doc.reloadTime_count) +"ms.");
                 callback(true);
             };
         });
@@ -19902,6 +20063,7 @@ $rdf.Fetcher = function(store, timeout, async) {
         if (!useJQuery) {
             var xhr = $rdf.Util.XMLHTTPFactory();
             var req = xhr.req = kb.bnode();
+            xhr.options = options;
             xhr.resource = docterm;
             xhr.requestedURI = args[0];
         } else {
@@ -19928,6 +20090,7 @@ $rdf.Fetcher = function(store, timeout, async) {
 
         var onerrorFactory = function(xhr) {
             return function(event) {
+                xhr.onErrorWasCalled = true; // debugging and may need it
                 if ($rdf.Fetcher.crossSiteProxyTemplate && (typeof document !== 'undefined') &&document.location && !xhr.proxyUsed) { // In mashup situation
                     var hostpart = $rdf.uri.hostpart;
                     var here = '' + document.location;
@@ -20290,6 +20453,7 @@ $rdf.Fetcher = function(store, timeout, async) {
             });
 
             xhr.req = req;
+            xhr.options = options;
 
             xhr.resource = docterm;
             xhr.options = options;
@@ -20306,6 +20470,7 @@ $rdf.Fetcher = function(store, timeout, async) {
             xhr.actualProxyURI = actualProxyURI;
 
             xhr.req = req;
+            xhr.options = options;
             xhr.options = options;
             xhr.resource = docterm;
             xhr.requestedURI = uri2;
@@ -26278,5 +26443,5 @@ else {
     // Leak a global regardless of module system
     root['$rdf'] = $rdf;
 }
-$rdf.buildTime = "2015-09-28T17:06:22";
+$rdf.buildTime = "2015-10-02T08:05:53";
 })(this);
