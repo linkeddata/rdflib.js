@@ -799,6 +799,7 @@ $rdf.Fetcher = function(store, timeout, async) {
         if (!useJQuery) {
             var xhr = $rdf.Util.XMLHTTPFactory();
             var req = xhr.req = kb.bnode();
+            xhr.options = options;
             xhr.resource = docterm;
             xhr.requestedURI = args[0];
         } else {
@@ -825,6 +826,7 @@ $rdf.Fetcher = function(store, timeout, async) {
 
         var onerrorFactory = function(xhr) {
             return function(event) {
+                xhr.onErrorWasCalled = true; // debugging and may need it
                 if ($rdf.Fetcher.crossSiteProxyTemplate && (typeof document !== 'undefined') &&document.location && !xhr.proxyUsed) { // In mashup situation
                     var hostpart = $rdf.uri.hostpart;
                     var here = '' + document.location;
@@ -1187,6 +1189,7 @@ $rdf.Fetcher = function(store, timeout, async) {
             });
 
             xhr.req = req;
+            xhr.options = options;
 
             xhr.resource = docterm;
             xhr.options = options;
@@ -1203,6 +1206,7 @@ $rdf.Fetcher = function(store, timeout, async) {
             xhr.actualProxyURI = actualProxyURI;
 
             xhr.req = req;
+            xhr.options = options;
             xhr.options = options;
             xhr.resource = docterm;
             xhr.requestedURI = uri2;
