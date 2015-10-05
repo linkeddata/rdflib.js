@@ -512,7 +512,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                     var p = s[j];
                     var paramsplit = p.split('=');
                     var name = paramsplit[0];
-                    var rel = paramsplit[1].replace(/["']/g, '');
+                    var rel = paramsplit[1].replace(/["']/g, ''); //'"
                     this.linkData(xhr, rel, href, thisReq);
                 }
             }
@@ -790,10 +790,8 @@ $rdf.Fetcher = function(store, timeout, async) {
         }
 
 
-        if (rterm) {
-            if (rterm.uri) { // A link betwen URIs not terms
-                kb.add(docterm.uri, ns.link("requestedBy"), rterm.uri, this.appNode)
-            }
+        if (!options.noMeta && rterm && rterm.uri) {
+            kb.add(docterm.uri, ns.link("requestedBy"), rterm.uri, this.appNode)
         }
 
         var useJQuery = typeof jQuery != 'undefined';
@@ -811,11 +809,11 @@ $rdf.Fetcher = function(store, timeout, async) {
 
         var now = new Date();
         var timeNow = "[" + now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds() + "] ";
-
-        kb.add(req, ns.rdfs("label"), kb.literal(timeNow + ' Request for ' + docuri), this.appNode)
-        kb.add(req, ns.link("requestedURI"), kb.literal(docuri), this.appNode)
-        kb.add(req, ns.link('status'), kb.collection(), this.appNode)
-
+        if (!options.noMeta) {
+            kb.add(req, ns.rdfs("label"), kb.literal(timeNow + ' Request for ' + docuri), this.appNode)
+            kb.add(req, ns.link("requestedURI"), kb.literal(docuri), this.appNode)
+            kb.add(req, ns.link('status'), kb.collection(), this.appNode)
+        }
         // This should not be stored in the store, but in the JS data
         /*
         if (typeof kb.anyStatementMatching(this.appNode, ns.link("protocol"), $rdf.uri.protocol(docuri)) == "undefined") {
@@ -824,71 +822,81 @@ $rdf.Fetcher = function(store, timeout, async) {
             return xhr
         }
         */
+        var checkCredentialsRetry = function() {
+            if (!xhr.withCredentials) return false; // not dealt with
+            
+            console.log("@@ Retrying with no credentials for " + xhr.resource)
+            xhr.abort();
+            delete sf.requested[docuri]; // forget the original request happened
+            newopt = {};
+            for (opt in options) if (options.hasOwnProperty(opt)) {
+                newopt[opt] = options[opt]
+            }
+            newopt.withCredentials = false;
+            sf.addStatus(xhr.req, "Abort: Will retry with credentials SUPPRESSED to see if that helps");
+            sf.requestURI(docuri, rterm, newopt, xhr.userCallback); // usercallback already registered (with where?)
+            return true;
+        }
+
 
         var onerrorFactory = function(xhr) {
             return function(event) {
                 xhr.onErrorWasCalled = true; // debugging and may need it
-                if ($rdf.Fetcher.crossSiteProxyTemplate && (typeof document !== 'undefined') &&document.location && !xhr.proxyUsed) { // In mashup situation
-                    var hostpart = $rdf.uri.hostpart;
-                    var here = '' + document.location;
-                    var uri = xhr.resource.uri
-                    if (hostpart(here) && hostpart(uri) && hostpart(here) != hostpart(uri)) {
-                        if (xhr.status === 401 || xhr.status === 403 || xhr.status === 404) {
-                            onreadystatechangeFactory(xhr)();
-                        } else {
-                            newURI = $rdf.Fetcher.crossSiteProxy(uri);
-                            sf.addStatus(xhr.req, "BLOCKED -> Cross-site Proxy to <" + newURI + ">");
-                            if (xhr.aborted) return;
+                if  (typeof document !== 'undefined') { // Mashup situation, not node etc
+                    if ($rdf.Fetcher.crossSiteProxyTemplate && document.location && !xhr.proxyUsed) { 
+                        var hostpart = $rdf.uri.hostpart;
+                        var here = '' + document.location;
+                        var uri = xhr.resource.uri
+                        if (hostpart(here) && hostpart(uri) && hostpart(here) != hostpart(uri)) {
+                            if (xhr.status === 401 || xhr.status === 403 || xhr.status === 404) {
+                                onreadystatechangeFactory(xhr)();
+                            } else {
+                                newURI = $rdf.Fetcher.crossSiteProxy(uri);
+                                sf.addStatus(xhr.req, "BLOCKED -> Cross-site Proxy to <" + newURI + ">");
+                                if (xhr.aborted) return;
 
-                            var kb = sf.store;
-                            var oldreq = xhr.req;
-                            kb.add(oldreq, ns.http('redirectedTo'), kb.sym(newURI), oldreq);
-
-                            xhr.abort()
-                            xhr.aborted = true
-
-                            sf.addStatus(oldreq, 'redirected to new request') // why
-                            //the callback throws an exception when called from xhr.onerror (so removed)
-                            //sf.fireCallbacks('done', args) // Are these args right? @@@   Not done yet! done means success
-                            sf.requested[xhr.resource.uri] = 'redirected';
-
-                            if (sf.fetchCallbacks[xhr.resource.uri]) {
-                                if (!sf.fetchCallbacks[newURI]) {
-                                    sf.fetchCallbacks[newURI] = [];
+                                var kb = sf.store;
+                                var oldreq = xhr.req;
+                                if (!xhr.options.noMeta) {
+                                    kb.add(oldreq, ns.http('redirectedTo'), kb.sym(newURI), oldreq);
                                 }
-                                sf.fetchCallbacks[newURI] == sf.fetchCallbacks[newURI].concat(sf.fetchCallbacks[xhr.resource.uri]);
-                                delete sf.fetchCallbacks[xhr.resource.uri];
-                            }
+                                xhr.abort()
+                                xhr.aborted = true
 
-                            var xhr2 = sf.requestURI(newURI, xhr.resource, options);
-                            xhr2.proxyUsed = true; //only try the proxy once
+                                sf.addStatus(oldreq, 'redirected to new request') // why
+                                //the callback throws an exception when called from xhr.onerror (so removed)
+                                //sf.fireCallbacks('done', args) // Are these args right? @@@   Not done yet! done means success
+                                sf.requested[xhr.resource.uri] = 'redirected';
 
-                            if (xhr2 && xhr2.req) {
-                                kb.add(xhr.req,
-                                    kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'),
-                                    xhr2.req,
-                                    sf.appNode);
-                                return;
+                                if (sf.fetchCallbacks[xhr.resource.uri]) {
+                                    if (!sf.fetchCallbacks[newURI]) {
+                                        sf.fetchCallbacks[newURI] = [];
+                                    }
+                                    sf.fetchCallbacks[newURI] == sf.fetchCallbacks[newURI].concat(sf.fetchCallbacks[xhr.resource.uri]);
+                                    delete sf.fetchCallbacks[xhr.resource.uri];
+                                }
+
+                                var xhr2 = sf.requestURI(newURI, xhr.resource, options);
+                                xhr2.proxyUsed = true; //only try the proxy once
+
+                                if (xhr2 && xhr2.req) {
+                                    if (!xhr.options.noMeta) {
+                                        kb.add(xhr.req,
+                                            kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'),
+                                            xhr2.req,
+                                            sf.appNode);
+                                    }
+                                    return;
+                                }
                             }
                         }
-                    } else {
-                        if (xhr.withCredentials) {
-                            console.log("@@ Retrying with no credentials for " + xhr.resource)
-                            xhr.abort();
-                            delete sf.requested[docuri]; // forget the original request happened
-                            newopt = {};
-                            for (opt in options) if (options.hasOwnProperty(opt)) {
-                                newopt[opt] = options[opt]
-                            }
-                            newopt.withCredentials = false;
-                            sf.addStatus(xhr.req, "Abort: Will retry with credentials SUPPRESSED to see if that helps");
-                             sf.requestURI(docuri, rterm, newopt); // usercallback already registered
-                            // xhr.send(); // try again -- not a function
-                        } else {
-                            //sf.failFetch(xhr, "XHR Error not from Credentials or cross-site: "+event); // Alas we get no error message
+                        
+                        if (checkCredentialsRetry(xhr)) {
+                            return;
                         }
+                        xhr.status = 999; // 
                     }
-                };
+                }; // mashu
             } // function of event
         }; // onerrorFactory
 
@@ -905,6 +913,18 @@ $rdf.Fetcher = function(store, timeout, async) {
                     var response = sf.saveResponseMetadata(xhr, kb);
                     sf.fireCallbacks('headers', [{uri: docuri, headers: xhr.headers}]);
 
+                    // Check for masked errors.
+                    // For "security reasons" theboraser hides errors such as CORS errors from 
+                    // the calling code (2015). oneror() used to be called but is not now.
+                    // 
+                    if (xhr.status === 0) {
+                        console.log("Masked error - status 0 for " + xhr.resource.uri);
+                        if (checkCredentialsRetry(xhr)) { // retry is could be credentials flag CORS issue
+                            return;
+                        }
+                        xhr.status = 900; // unknown masked error
+                        return;
+                    }
                     if (xhr.status >= 400) { // For extra dignostics, keep the reply
                     //  @@@ 401 should cause  a retry with credential son
                     // @@@ cache the credentials flag by host ????

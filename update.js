@@ -250,22 +250,13 @@ $rdf.sparqlUpdate = function() {
             //dump("SPARQL update ready state for <"+uri+"> readyState="+xhr.readyState+"\n"+query+"\n");
             if (xhr.readyState == 4) {
                 var success = (!xhr.status || (xhr.status >= 200 && xhr.status < 300));
-                if (!success) tabulator.log.error("sparql: update failed for <"+uri+"> status="+
+                if (!success) console.log("sparql: update failed for <"+uri+"> status="+
                     xhr.status+", "+xhr.statusText+", body length="+xhr.responseText.length+"\n   for query: "+query);
-                else  tabulator.log.debug("sparql: update Ok for <"+uri+">");
+                else  console.log("sparql: update Ok for <"+uri+">");
                 callback(uri, success, xhr.responseText, xhr);
             }
         }
 
-/*  Out of date protcol - CORS replaces this
-        if(!tabulator.isExtension) {
-            try {
-                $rdf.Util.enablePrivilege("UniversalBrowserRead")
-            } catch(e) {
-                alert("Failed to get privileges: " + e)
-            }
-        }
-  */      
         xhr.open('PATCH', uri, true);  // async=true
         xhr.setRequestHeader('Content-type', 'application/sparql-update');
         xhr.send(query);
@@ -369,32 +360,6 @@ $rdf.sparqlUpdate = function() {
 
 
 
-
-    
-    //  for all Link: uuu; rel=rrr  --->  { rrr: uuu }
-    sparql.prototype.linkRels = function(doc) {
-        var links = {}; // map relationship to uri
-        var linkHeaders = tabulator.fetcher.getHeader(doc, 'link');
-        if (!linkHeaders) return null;
-        linkHeaders.map(function(headerLine){
-            headerLine.split(',').map(function(headerValue) {
-                var arg = headerValue.trim().split(';');
-                var uri = arg[0];
-                arg.slice(1).map(function(a){
-                    var key = a.split('=')[0].trim();
-                    var val = a.split('=')[1].trim().replace(/["']/g, ''); // '"
-                    if (key ==='rel') {
-                        uri = uri.trim();
-                        if (uri.slice(0,1) === '<') { // strip < >
-                            uri = uri.slice(1, uri.length-1)
-                        }
-                        links[val] = uri;
-                    }
-                });
-            });
-        });
-        return links;
-    };
 
     //  for all Link: uuu; rel=rrr  --->  { rrr: uuu }
     sparql.prototype.getUpdatesVia = function(doc) {
@@ -614,7 +579,8 @@ $rdf.sparqlUpdate = function() {
                     // When upstream patches have been sent, reload state if downstream waiting 
                     if (control.pendingUpstream  === 0 && control.downstreamAction) {
                         var downstreamAction = control.downstreamAction;
-                        delete  control.downstreamListener;
+                        delete  control.downstreamAction;
+                        console.log("delayed downstream action:")
                         downstreamAction();
                     }
                 });
