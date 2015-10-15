@@ -129,6 +129,7 @@ $rdf.Fetcher = function(store, timeout, async) {
         }
         this.handlerFactory = function(xhr) {
             xhr.handle = function(cb) {
+                var relation, reverse;
                 if (!this.dom) {
                     this.dom = $rdf.Util.parseXML(xhr.responseText)
                 }
@@ -143,8 +144,17 @@ $rdf.Fetcher = function(store, timeout, async) {
 
                 // link rel
                 var links = this.dom.getElementsByTagName('link');
-                for (var x = links.length - 1; x >= 0; x--) {
-                    sf.linkData(xhr, links[x].getAttribute('rel'), links[x].getAttribute('href'), xhr.resource);
+                for (var x = links.length - 1; x >= 0; x--) { // @@ rev
+                    relation = links[x].getAttribute('rel'); 
+                    reverse = false;
+                    if (!relation) {
+                        relation = links[x].getAttribute('rev'); 
+                        reverse = true;
+                    }
+                    if (relation) {
+                        sf.linkData(xhr, relation,
+                        links[x].getAttribute('href'), xhr.resource, reverse);
+                    }
                 }
 
                 //GRDDL
@@ -474,20 +484,24 @@ $rdf.Fetcher = function(store, timeout, async) {
     }
 
     // in the why part of the quad distinguish between HTML and HTTP header
-    this.linkData = function(xhr, rel, uri, why) {
+    // Reverse is set iif the link was rev= as opposed to rel=
+    this.linkData = function(xhr, rel, uri, why, reverse) {
         var x = xhr.resource;
         if (!uri) return;
-        var predicate =  ns.rdfs('seeAlso');
+        var predicate;
         // See http://www.w3.org/TR/powder-dr/#httplink for describedby 2008-12-10
         var obj = kb.sym($rdf.uri.join(uri, xhr.resource.uri));
         if (rel == 'alternate' || rel == 'seeAlso' || rel == 'meta' || rel == 'describedby') {
-            if (obj.uri != xhr.resource.uri) {
-                kb.add(xhr.resource, predicate, obj, why);
-            }
+            if (obj.uri === xhr.resource.uri) return;
+            predicate = ns.rdfs('seeAlso');
         } else {
         // See https://www.iana.org/assignments/link-relations/link-relations.xml
         // Alas not yet in RDF yet for each predicate
             predicate = kb.sym($rdf.uri.join(rel, 'http://www.iana.org/assignments/link-relations/'));
+        }
+        if (reverse) {
+            kb.add(obj, predicate, xhr.resource, why);
+        } else {
             kb.add(xhr.resource, predicate, obj, why);
         }
     };
@@ -877,8 +891,9 @@ $rdf.Fetcher = function(store, timeout, async) {
                                 }
 
                                 var xhr2 = sf.requestURI(newURI, xhr.resource, options);
-                                xhr2.proxyUsed = true; //only try the proxy once
-
+                                if (xhr2) {
+                                    xhr2.proxyUsed = true; //only try the proxy once
+                                }
                                 if (xhr2 && xhr2.req) {
                                     if (!xhr.options.noMeta) {
                                         kb.add(xhr.req,
@@ -990,6 +1005,10 @@ $rdf.Fetcher = function(store, timeout, async) {
                         if (ct) {
                             if (ct.indexOf('image/') == 0 || ct.indexOf('application/pdf') == 0) addType(kb.sym('http://purl.org/dc/terms/Image'));
                         }
+                        if (options.clearPreviousData) { // Before we parse new data clear old but only on 200
+                            kb.removeDocument(xhr.resource);
+                        };
+                        
                     }
                     // application/octet-stream; charset=utf-8
 
@@ -1470,15 +1489,15 @@ $rdf.Fetcher = function(store, timeout, async) {
         }
     }
 
+    // deprecated -- use IndexedFormula.removeDocument(doc)
     this.unload = function(term) {
         this.store.removeMany(undefined, undefined, undefined, term)
         delete this.requested[term.uri]; // So it can be loaded again
     }
 
     this.refresh = function(term, userCallback) { // sources_refresh
-        this.unload(term);
         this.fireCallbacks('refresh', arguments)
-        this.requestURI(term.uri, undefined, { force: true}, userCallback)
+        this.requestURI(term.uri, undefined, { force: true, clearPreviousData: true}, userCallback)
     }
 
     this.retract = function(term) { // sources_retract

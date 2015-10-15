@@ -337,7 +337,7 @@ $rdf.sparqlUpdate = function() {
     sparql.prototype.requestDownstreamAction = function(doc, action) {
         var control = this.patchControlFor(doc);
         if (!control.pendingUpstream) {
-            action();
+            action(doc);
         } else {
             if (control.downstreamAction) {
                 if (control.downstreamAction === action) {
@@ -361,19 +361,68 @@ $rdf.sparqlUpdate = function() {
 
 
 
-    //  for all Link: uuu; rel=rrr  --->  { rrr: uuu }
+
     sparql.prototype.getUpdatesVia = function(doc) {
         var linkHeaders = tabulator.fetcher.getHeader(doc, 'updates-via');
         if (!linkHeaders) return null;
         return linkHeaders[0].trim();
     };
 
+    sparql.prototype.addDownstreamChangeListener = function(doc, listener) {
+        var control = this.patchControlFor(doc);
+        if (!control.downstreamChangeListeners) control.downstreamChangeListeners = [];
+        control.downstreamChangeListeners.push(listener);
+        this.setRefreshHandler(doc, this.reloadAndSync);
+    }
+
+    
+    sparql.prototype.reloadAndSync = function(doc) {
+        var control = tabulator.sparql.patchControlFor(doc);
+        
+        if (control.reloading) {
+            console.log("   Already reloading - stop")
+            return; // once only needed
+        }
+        control.reloading = true;
+        var retryTimeout = 1000; // ms
+        var tryReload = function() {
+            console.log("try reload - timeout = " + retryTimeout);
+            tabulator.sparql.reload(tabulator.kb, doc, function (ok, message, xhr) {
+                control.reloading = false;
+                if (ok) {
+                    if (control.downstreamChangeListeners) {
+                        for (var i=0; i< control.downstreamChangeListeners.length; i++) {
+                            console.log("        Calling downstream listener " + i)
+                            control.downstreamChangeListeners[i]();
+                        }
+                    }
+                } else {
+                    if  (xhr.status === 0) {
+                        console.log("Network error refreshing the data. Retrying in "
+                                            + retryTimeout/1000);
+                        control.reloading = true;
+                        retryTimeout = retryTimeout * 2;
+                        setTimeout(tryReload, retryTimeout)
+                    } else {
+                        console.log("Error " + xhr.status + "refreshing the data:" +
+                            message + ". Stopped" + doc);
+                    }
+                }
+            });
+        }
+        tryReload();
+    }
+    
 
 
-    // Set up websock listen on 
+    // Set up websocket to listen on 
     //
     // There is coordination between upstream changes and downstream ones
     // so that a reload is not done in the middle of an upsteeam patch.
+    // If you usie this API then you get called when a change happens, and you 
+    // have to reload the file yourself, and then refresh the UI.
+    // Alternative is addDownstreamChangeListener(), where you do not
+    // have to do the reload yourslf. Do mot mix them.
     //
     sparql.prototype.setRefreshHandler = function(doc, handler) {
 
@@ -778,17 +827,36 @@ $rdf.sparqlUpdate = function() {
     // in the meantime.
     
     sparql.prototype.reload = function(kb, doc, callback) {
-        /*
-        var saved = kb.statementsMatching(undefined, undefined, undefined, doc);
-        console.log("Reload resource: Unloading statements " + saved.length
-            + " out of " + kb.statements.length)
-        kb.fetcher.unload(doc);
-        */
+        var startTime = Date.now();
+        // force sets no-cache and 
+        kb.fetcher.nowOrWhenFetched(doc.uri, {force: true, noMeta: true, clearPreviousData: true}, function(ok, body, xhr){
+            if (!ok) {
+                console.log("    ERROR reloading data: " + body);
+                callback(false, "Error reloading data: " + body, xhr)
+            } else if (xhr.onErrorWasCalled || xhr.status !== 200) {
+                console.log("    Non-HTTP error reloading data! onErrorWasCalled="
+                    + xhr.onErrorWasCalled + " status: " + xhr.status);
+                callback(false, "Non-HTTP error reloading data: " + body, xhr)
+                
+            } else {
+                elapsedTime_ms = Date.now() - startTime;
+                if (!doc.reloadTime_total) doc.reloadTime_total = 0;
+                if (!doc.reloadTime_count) doc.reloadTime_count = 0;
+                doc.reloadTime_total += elapsedTime_ms;
+                doc.reloadTime_count += 1;
+                console.log("    Fetch took "+elapsedTime_ms+"ms, av. of " + doc.reloadTime_count +  " = "
+                    + (doc.reloadTime_total/doc.reloadTime_count) +"ms.");
+                callback(true);
+            };
+        });
+    };
+
+    sparql.prototype.oldReload = function(kb, doc, callback) {
         var g2 = $rdf.graph(); // A separate store to hold the data as we load it
         var f2 = $rdf.fetcher(g2);
         var startTime = Date.now();
         // force sets no-cache and 
-        f2.nowOrWhenFetched(doc.uri, {force: true, noMeta: true}, function(ok, body, xhr){
+        f2.nowOrWhenFetched(doc.uri, {force: true, noMeta: true, clearPreviousData: true}, function(ok, body, xhr){
             if (!ok) {
                 console.log("    ERROR reloading data: " + body);
                 callback(false, "Error reloading data: " + body, xhr)

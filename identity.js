@@ -409,6 +409,18 @@ $rdf.IndexedFormula.prototype.statementsMatching = function(subj,pred,obj,why,ju
 }; // statementsMatching
 
 
+/** Remove all statemnts in a doc
+**
+**/
+$rdf.IndexedFormula.prototype.removeDocument = function (doc) {
+    var sts = this.statementsMatching(undefined, undefined, undefined, doc).slice();// Take a copy as this is the actual index
+    for (var i=0; i< sts.length; i++) {
+        this.removeStatement(sts[i]);
+    }
+    return this;
+}
+
+
 /** Find a statement object and remove it 
 **
 ** Or array of statements or graph

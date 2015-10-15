@@ -4073,6 +4073,18 @@ $rdf.IndexedFormula.prototype.statementsMatching = function(subj,pred,obj,why,ju
 }; // statementsMatching
 
 
+/** Remove all statemnts in a doc
+**
+**/
+$rdf.IndexedFormula.prototype.removeDocument = function (doc) {
+    var sts = this.statementsMatching(undefined, undefined, undefined, doc).slice();// Take a copy as this is the actual index
+    for (var i=0; i< sts.length; i++) {
+        this.removeStatement(sts[i]);
+    }
+    return this;
+}
+
+
 /** Find a statement object and remove it 
 **
 ** Or array of statements or graph
@@ -6121,7 +6133,7 @@ $rdf.sparqlUpdate = function() {
     sparql.prototype.requestDownstreamAction = function(doc, action) {
         var control = this.patchControlFor(doc);
         if (!control.pendingUpstream) {
-            action();
+            action(doc);
         } else {
             if (control.downstreamAction) {
                 if (control.downstreamAction === action) {
@@ -6145,19 +6157,68 @@ $rdf.sparqlUpdate = function() {
 
 
 
-    //  for all Link: uuu; rel=rrr  --->  { rrr: uuu }
+
     sparql.prototype.getUpdatesVia = function(doc) {
         var linkHeaders = tabulator.fetcher.getHeader(doc, 'updates-via');
         if (!linkHeaders) return null;
         return linkHeaders[0].trim();
     };
 
+    sparql.prototype.addDownstreamChangeListener = function(doc, listener) {
+        var control = this.patchControlFor(doc);
+        if (!control.downstreamChangeListeners) control.downstreamChangeListeners = [];
+        control.downstreamChangeListeners.push(listener);
+        this.setRefreshHandler(doc, this.reloadAndSync);
+    }
+
+    
+    sparql.prototype.reloadAndSync = function(doc) {
+        var control = tabulator.sparql.patchControlFor(doc);
+        
+        if (control.reloading) {
+            console.log("   Already reloading - stop")
+            return; // once only needed
+        }
+        control.reloading = true;
+        var retryTimeout = 1000; // ms
+        var tryReload = function() {
+            console.log("try reload - timeout = " + retryTimeout);
+            tabulator.sparql.reload(tabulator.kb, doc, function (ok, message, xhr) {
+                control.reloading = false;
+                if (ok) {
+                    if (control.downstreamChangeListeners) {
+                        for (var i=0; i< control.downstreamChangeListeners.length; i++) {
+                            console.log("        Calling downstream listener " + i)
+                            control.downstreamChangeListeners[i]();
+                        }
+                    }
+                } else {
+                    if  (xhr.status === 0) {
+                        console.log("Network error refreshing the data. Retrying in "
+                                            + retryTimeout/1000);
+                        control.reloading = true;
+                        retryTimeout = retryTimeout * 2;
+                        setTimeout(tryReload, retryTimeout)
+                    } else {
+                        console.log("Error " + xhr.status + "refreshing the data:" +
+                            message + ". Stopped" + doc);
+                    }
+                }
+            });
+        }
+        tryReload();
+    }
+    
 
 
-    // Set up websock listen on 
+    // Set up websocket to listen on 
     //
     // There is coordination between upstream changes and downstream ones
     // so that a reload is not done in the middle of an upsteeam patch.
+    // If you usie this API then you get called when a change happens, and you 
+    // have to reload the file yourself, and then refresh the UI.
+    // Alternative is addDownstreamChangeListener(), where you do not
+    // have to do the reload yourslf. Do mot mix them.
     //
     sparql.prototype.setRefreshHandler = function(doc, handler) {
 
@@ -6562,17 +6623,36 @@ $rdf.sparqlUpdate = function() {
     // in the meantime.
     
     sparql.prototype.reload = function(kb, doc, callback) {
-        /*
-        var saved = kb.statementsMatching(undefined, undefined, undefined, doc);
-        console.log("Reload resource: Unloading statements " + saved.length
-            + " out of " + kb.statements.length)
-        kb.fetcher.unload(doc);
-        */
+        var startTime = Date.now();
+        // force sets no-cache and 
+        kb.fetcher.nowOrWhenFetched(doc.uri, {force: true, noMeta: true, clearPreviousData: true}, function(ok, body, xhr){
+            if (!ok) {
+                console.log("    ERROR reloading data: " + body);
+                callback(false, "Error reloading data: " + body, xhr)
+            } else if (xhr.onErrorWasCalled || xhr.status !== 200) {
+                console.log("    Non-HTTP error reloading data! onErrorWasCalled="
+                    + xhr.onErrorWasCalled + " status: " + xhr.status);
+                callback(false, "Non-HTTP error reloading data: " + body, xhr)
+                
+            } else {
+                elapsedTime_ms = Date.now() - startTime;
+                if (!doc.reloadTime_total) doc.reloadTime_total = 0;
+                if (!doc.reloadTime_count) doc.reloadTime_count = 0;
+                doc.reloadTime_total += elapsedTime_ms;
+                doc.reloadTime_count += 1;
+                console.log("    Fetch took "+elapsedTime_ms+"ms, av. of " + doc.reloadTime_count +  " = "
+                    + (doc.reloadTime_total/doc.reloadTime_count) +"ms.");
+                callback(true);
+            };
+        });
+    };
+
+    sparql.prototype.oldReload = function(kb, doc, callback) {
         var g2 = $rdf.graph(); // A separate store to hold the data as we load it
         var f2 = $rdf.fetcher(g2);
         var startTime = Date.now();
         // force sets no-cache and 
-        f2.nowOrWhenFetched(doc.uri, {force: true, noMeta: true}, function(ok, body, xhr){
+        f2.nowOrWhenFetched(doc.uri, {force: true, noMeta: true, clearPreviousData: true}, function(ok, body, xhr){
             if (!ok) {
                 console.log("    ERROR reloading data: " + body);
                 callback(false, "Error reloading data: " + body, xhr)
@@ -19359,6 +19439,7 @@ $rdf.Fetcher = function(store, timeout, async) {
         }
         this.handlerFactory = function(xhr) {
             xhr.handle = function(cb) {
+                var relation, reverse;
                 if (!this.dom) {
                     this.dom = $rdf.Util.parseXML(xhr.responseText)
                 }
@@ -19373,8 +19454,17 @@ $rdf.Fetcher = function(store, timeout, async) {
 
                 // link rel
                 var links = this.dom.getElementsByTagName('link');
-                for (var x = links.length - 1; x >= 0; x--) {
-                    sf.linkData(xhr, links[x].getAttribute('rel'), links[x].getAttribute('href'), xhr.resource);
+                for (var x = links.length - 1; x >= 0; x--) { // @@ rev
+                    relation = links[x].getAttribute('rel'); 
+                    reverse = false;
+                    if (!relation) {
+                        relation = links[x].getAttribute('rev'); 
+                        reverse = true;
+                    }
+                    if (relation) {
+                        sf.linkData(xhr, relation,
+                        links[x].getAttribute('href'), xhr.resource, reverse);
+                    }
                 }
 
                 //GRDDL
@@ -19704,20 +19794,24 @@ $rdf.Fetcher = function(store, timeout, async) {
     }
 
     // in the why part of the quad distinguish between HTML and HTTP header
-    this.linkData = function(xhr, rel, uri, why) {
+    // Reverse is set iif the link was rev= as opposed to rel=
+    this.linkData = function(xhr, rel, uri, why, reverse) {
         var x = xhr.resource;
         if (!uri) return;
-        var predicate =  ns.rdfs('seeAlso');
+        var predicate;
         // See http://www.w3.org/TR/powder-dr/#httplink for describedby 2008-12-10
         var obj = kb.sym($rdf.uri.join(uri, xhr.resource.uri));
         if (rel == 'alternate' || rel == 'seeAlso' || rel == 'meta' || rel == 'describedby') {
-            if (obj.uri != xhr.resource.uri) {
-                kb.add(xhr.resource, predicate, obj, why);
-            }
+            if (obj.uri === xhr.resource.uri) return;
+            predicate = ns.rdfs('seeAlso');
         } else {
         // See https://www.iana.org/assignments/link-relations/link-relations.xml
         // Alas not yet in RDF yet for each predicate
             predicate = kb.sym($rdf.uri.join(rel, 'http://www.iana.org/assignments/link-relations/'));
+        }
+        if (reverse) {
+            kb.add(obj, predicate, xhr.resource, why);
+        } else {
             kb.add(xhr.resource, predicate, obj, why);
         }
     };
@@ -20107,8 +20201,9 @@ $rdf.Fetcher = function(store, timeout, async) {
                                 }
 
                                 var xhr2 = sf.requestURI(newURI, xhr.resource, options);
-                                xhr2.proxyUsed = true; //only try the proxy once
-
+                                if (xhr2) {
+                                    xhr2.proxyUsed = true; //only try the proxy once
+                                }
                                 if (xhr2 && xhr2.req) {
                                     if (!xhr.options.noMeta) {
                                         kb.add(xhr.req,
@@ -20220,6 +20315,10 @@ $rdf.Fetcher = function(store, timeout, async) {
                         if (ct) {
                             if (ct.indexOf('image/') == 0 || ct.indexOf('application/pdf') == 0) addType(kb.sym('http://purl.org/dc/terms/Image'));
                         }
+                        if (options.clearPreviousData) { // Before we parse new data clear old but only on 200
+                            kb.removeDocument(xhr.resource);
+                        };
+                        
                     }
                     // application/octet-stream; charset=utf-8
 
@@ -20700,15 +20799,15 @@ $rdf.Fetcher = function(store, timeout, async) {
         }
     }
 
+    // deprecated -- use IndexedFormula.removeDocument(doc)
     this.unload = function(term) {
         this.store.removeMany(undefined, undefined, undefined, term)
         delete this.requested[term.uri]; // So it can be loaded again
     }
 
     this.refresh = function(term, userCallback) { // sources_refresh
-        this.unload(term);
         this.fireCallbacks('refresh', arguments)
-        this.requestURI(term.uri, undefined, { force: true}, userCallback)
+        this.requestURI(term.uri, undefined, { force: true, clearPreviousData: true}, userCallback)
     }
 
     this.retract = function(term) { // sources_retract
@@ -26430,5 +26529,5 @@ else {
     // Leak a global regardless of module system
     root['$rdf'] = $rdf;
 }
-$rdf.buildTime = "2015-10-05T08:26:20";
+$rdf.buildTime = "2015-10-14T11:39:36";
 })(this);
