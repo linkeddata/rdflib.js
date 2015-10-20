@@ -421,21 +421,22 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
                 if (f.redirections[t.hashString()]) {
                     t = f.redirections[t.hashString()]; //redirect
                 }
-                termIndex = ind[i];
-                item.index = termIndex[t.hashString()];
-                if (item.index === undefined) {
-                    // $rdf.log.debug("prepare: no occurrence [yet?] of term: "+ t);
+                termIndex = ind[i][t.hashString()];
+                
+                if (!termIndex) {
                     item.index = [];
+                    return false; // Query line cannot match
+                }
+                if ((item.index === null) || (item.index.length > termIndex.length)) {
+                    item.index = termIndex;
                 }
             }
         }
             
-        if (item.index === null) {
+        if (item.index === null) { // All 3 are variables? 
             item.index = f.statements;
         }
-        // $rdf.log.debug("Prep: index length="+item.index.length+" for "+item)
-        // $rdf.log.debug("prepare: index length "+item.index.length +" for "+ item);
-        return false;
+        return true;
     }; //prepare
         
     /** sorting function -- negative if self is easier **/
@@ -582,7 +583,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
             st = item.index[c]; //for each statement in the item's index, spawn a new match with that binding 
             nbs1 = unifyContents(
                     [item.subject, item.predicate, item.object],
-            [st.subject, st.predicate, st.object], bindingsSoFar, f);
+                    [st.subject, st.predicate, st.object], bindingsSoFar, f);
             $rdf.log.info(level+" From first: "+nbs1.length+": "+bindingsDebug(nbs1));
             nk=nbs1.length;
             //branch.count += nk;

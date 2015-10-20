@@ -445,8 +445,19 @@ $rdf.sparqlUpdate = function() {
         var openWebsocket = function() {
         
             // From https://github.com/solid/solid-spec#live-updates
-            var socket = new WebSocket(wssURI);
+            var socket;
+            if (typeof WebSocket !== 'undefined') {
+                socket = new WebSocket(wssURI);
+            } else if (typeof Services !== 'undefined'){ // Firefox add on http://stackoverflow.com/questions/24244886/is-websocket-supported-in-firefox-for-android-addons
+                socket = (Services.wm.getMostRecentWindow('navigator:browser').WebSocket)(wssURI);
+            } else if (typeof window !== 'undefined'  && window.WebSocket){
+                socket = window.WebSocket(wssURI);
+            } else {
+                console.log("Live update disabled, as WebSocket not supported by platform :-(");
+                return;
+            }
             socket.onopen = function() {
+            
                 console.log("    websocket open");
                 retryTimeout = 1500; // reset timeout to fast on success
                 this.send('sub ' + doc.uri);
@@ -630,7 +641,7 @@ $rdf.sparqlUpdate = function() {
                         var downstreamAction = control.downstreamAction;
                         delete  control.downstreamAction;
                         console.log("delayed downstream action:")
-                        downstreamAction();
+                        downstreamAction(doc);
                     }
                 });
             

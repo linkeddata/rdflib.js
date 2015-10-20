@@ -65,7 +65,8 @@ __Serializer.prototype.fromStr = function(s) {
 __Serializer.prototype.suggestPrefix = function(prefix, uri) {
     if (prefix.slice(0,7) === 'default') return; // Try to weed these out
     if (prefix.slice(0,2) === 'ns') return; //  From others inferior algos
-    if (this.namespaces[prefix] || this.prefixes[uri]) return; // already used 
+    if (!prefix || !uri) return; // empty strings not suitable
+    if (prefix in this.namespaces || uri in this.prefixes) return; // already used 
     this.prefixes[uri] = prefix;
     this.namespaces[prefix] = uri;
 }
@@ -73,7 +74,7 @@ __Serializer.prototype.suggestPrefix = function(prefix, uri) {
 // Takes a namespace -> prefix map
 __Serializer.prototype.suggestNamespaces = function(namespaces) {
     for (var px in namespaces) {
-        this.prefixes[namespaces[px]] = px;
+        this.suggestPrefix(px, namespaces[px]);
     }
 }
 
@@ -85,7 +86,7 @@ __Serializer.prototype.makeUpPrefix = function(uri) {
     function canUse(pp) {
         if (! __Serializer.prototype.validPrefix.test(pp)) return false; // bad format
         if (pp === 'ns') return false; // boring
-        if (this.namespaces[pp]) return false; // already used
+        if (pp in this.namespaces) return false; // already used
         this.prefixes[uri] = pp;
         this.namespaces[pp] = uri; 
         pok = pp;
