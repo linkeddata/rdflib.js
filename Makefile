@@ -96,3 +96,5 @@ coffee: $(LIB)
 .PHONY: test
 test: $(LIB)
 	@nodeunit tests/*.js
+	make -C tests/serialize
+

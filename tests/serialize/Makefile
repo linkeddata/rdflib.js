@@ -2,6 +2,9 @@
 
 all: t1 t2 t3 t4
 
+clean:
+	rm ,* || echo ok
+
 #  Problem: not adding the type of an object!
 t1:
 	/usr/local/bin/node ./data.js -in=t1.ttl -format=application/rdf+xml -out=,t1.xml
