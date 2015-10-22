@@ -1,0 +1,7 @@
+# Make up prefixes
+
+<https://example.net/67890#foo> <https://example.net/67890#bar> <https://example.net/88888#baz>.
+<https://example.org/67890#foo> <https://example.org/67890#bar> <https://example.org/88888#baz>.
+
+
+
