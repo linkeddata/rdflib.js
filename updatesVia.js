@@ -11,7 +11,7 @@ if (typeof $rdf === "undefined" || $rdf === null) {
 
 $rdf.UpdatesSocket = (function() {
   function UpdatesSocket(parent, via1) {
-    var error;
+    var error, error1;
     this.parent = parent;
     this.via = via1;
     this.subscribe = bind(this.subscribe, this);
@@ -31,8 +31,8 @@ $rdf.UpdatesSocket = (function() {
       this.socket.onclose = this.onClose;
       this.socket.onmessage = this.onMessage;
       this.socket.onerror = this.onError;
-    } catch (_error) {
-      error = _error;
+    } catch (error1) {
+      error = error1;
       this.onError(error);
     }
   }
