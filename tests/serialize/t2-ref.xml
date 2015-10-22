@@ -1,13 +1,13 @@
 <rdf:RDF
  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
- xmlns:t2="file:///devel/github.com/linkeddata/tabulator-firefox/content/js/rdf/tests/serialize/t2.ttl#">
-    <rdf:Description rdf:about="#foo">
-        <t2:p rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</t2:p>
-        <t2:p rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</t2:p>
-        <t2:p rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</t2:p>
-        <t2:r>rrrrr</t2:r>
-        <t2:s rdf:datatype="http://www.w3.org/2001/XMLSchema#date">2014-09-21</t2:s>
-        <t2:t rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">2</t2:t>
-        <t2:u rdf:datatype="http://www.w3.org/2001/XMLSchema#double">3.14159</t2:u>
+ xmlns:foo="https://example.org/foo#">
+    <rdf:Description rdf:about="https://example.org/foo#foo">
+        <foo:p rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</foo:p>
+        <foo:p rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</foo:p>
+        <foo:p rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</foo:p>
+        <foo:r>rrrrr</foo:r>
+        <foo:s rdf:datatype="http://www.w3.org/2001/XMLSchema#date">2014-09-21</foo:s>
+        <foo:t rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">2</foo:t>
+        <foo:u rdf:datatype="http://www.w3.org/2001/XMLSchema#double">3.14159</foo:u>
     </rdf:Description>
 </rdf:RDF>

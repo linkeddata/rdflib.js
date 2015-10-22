@@ -1,4 +1,6 @@
 
+@prefix : <https://example.org/foo#>.
+
 
 :foo  :p  1,2,3;
 #    :q ( 1 2 3);
