@@ -250,6 +250,8 @@
         return true;
     };
     
+    var XMLSerializer = require('xmldom').XMLSerializer;
+
     this.parseDOM = function(frame){
          // a DOM utility function used in parsing
         var rdfid;
@@ -357,7 +359,14 @@
                             frame.datatype = RDFParser.ns.RDF + "XMLLiteral";// (this.buildFrame(frame)).addLiteral(dom)
                                // should work but doesn't
                             frame = this.buildFrame(frame);
-                            frame.addLiteral(dom);
+                            // The property value should be an XML string
+                            // TODO: The DOM should be normalized to support === before serializing 
+                            var serializer = new XMLSerializer();
+                            var value='';
+                            for (var c=0; c<dom.childNodes.length; c++) {
+                                value += serializer.serializeToString(dom.childNodes[c]);
+                            }
+                            frame.addLiteral(value);
                             dig = false;
                         }
                         else if (nv === "Resource"){
