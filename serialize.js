@@ -39,20 +39,20 @@ __Serializer.prototype.setFlags = function(flags)
 
 
 __Serializer.prototype.toStr = function(x) {
-        var s = x.toNT();
-        if (x.termType == 'formula') {
-            this.formulas[s] = x; // remember as reverse does not work
-        }
-        return s;
+    var s = x.toNT();
+    if (x.termType == 'formula') {
+        this.formulas[s] = x; // remember as reverse does not work
+    }
+    return s;
 };
 
 __Serializer.prototype.fromStr = function(s) {
-        if (s[0] == '{') {
-            var x = this.formulas[s];
-            if (!x) alert('No formula object for '+s)
-            return x;
-        }
-        return this.store.fromNT(s);
+    if (s[0] == '{') {
+        var x = this.formulas[s];
+        if (!x) alert('No formula object for '+s)
+        return x;
+    }
+    return this.store.fromNT(s);
 };
 
 
@@ -81,11 +81,27 @@ __Serializer.prototype.suggestNamespaces = function(namespaces) {
     }
 }
 
+__Serializer.prototype.checkIntegrity = function() {
+    var p, ns;
+    for (p in this.namespaces) {
+        if (this.prefixes[this.namespaces[p]] !== p) {
+            throw "Serializer integity error 1: " + p + ", " + 
+                this.namespaces[p] + ", "+ this.prefixes[this.namespaces[p]] +"!";
+        }
+    }
+    for (ns in this.prefixes) {
+        if (this.namespaces[this.prefixes[ns]] !== ns) {
+            throw "Serializer integity error 2: " + ns + ", " + 
+                this.prefixs[ns] + ", "+ this.namespaces[this.prefixes[ns]] +"!";
+        
+        }
+    }
+}
+
 // Make up an unused prefix for a random namespace
 __Serializer.prototype.makeUpPrefix = function(uri) {
     var p = uri;
     var pok;
-
     function canUse(pp) {
         if (! __Serializer.prototype.validPrefix.test(pp)) return false; // bad format
         if (pp === 'ns') return false; // boring
@@ -576,7 +592,9 @@ __Serializer.prototype.symbolToN3 = function symbolToN3(x) {  // c.f. symbolStri
     if (j<0 && this.flags.indexOf('/') < 0) {
         j = uri.lastIndexOf('/');
     }
-    if (j >= 0 && this.flags.indexOf('p') < 0 && uri.indexOf('http') === 0)  { // Can split at namespace but only if HTTP URI
+    if (j >= 0 && this.flags.indexOf('p') < 0 &&
+        // Can split at namespace but only if http[s]: URI or file: or ws[s] (why not others?)
+        (uri.indexOf('http') === 0 || uri.indexOf('ws') === 0 || uri.indexOf('file') === 0))  { 
         var canSplit = true;
         for (var k=j+1; k<uri.length; k++) {
             if (__Serializer.prototype._notNameChars.indexOf(uri[k]) >=0) {
@@ -584,7 +602,7 @@ __Serializer.prototype.symbolToN3 = function symbolToN3(x) {  // c.f. symbolStri
             }
         }
 
-        if (uri.slice(0, j) == this.base) { // base-relative
+        if (uri.slice(0, j+1) == this.base + '#') { // base-relative
             return '<#' + uri.slice(j+1) + '>';
         }
         if (canSplit) {
@@ -597,6 +615,7 @@ __Serializer.prototype.symbolToN3 = function symbolToN3(x) {  // c.f. symbolStri
                     return localid;
                 return ':' + localid;
             }
+            this.checkIntegrity(); //  @@@ Remove when not testing
             var prefix = this.prefixes[namesp];
             if (!prefix) prefix = this.makeUpPrefix(namesp);
             if (prefix) {
