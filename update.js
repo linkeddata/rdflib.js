@@ -364,7 +364,7 @@ $rdf.sparqlUpdate = function() {
 
     sparql.prototype.getUpdatesVia = function(doc) {
         var linkHeaders = tabulator.fetcher.getHeader(doc, 'updates-via');
-        if (!linkHeaders) return null;
+        if (!linkHeaders || !linkHeaders.length) return null;
         return linkHeaders[0].trim();
     };
 

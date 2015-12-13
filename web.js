@@ -627,6 +627,26 @@ $rdf.Fetcher = function(store, timeout, async) {
         return uris.length
     }
 
+    /* Promise-based load function
+    ** 
+    ** Promise delivers xhr
+    **
+    ** @@ todo: If p1 is array then sequence or parallel fetch of all
+    */
+    this.load = function(uri, options) {
+	uri = uri.uri || uri;
+	var p = new Promise(function(resolve, reject){
+	    this.nowOrWhenFetched(uri, options, function(ok, message, xhr){
+		if (ok) {
+		    resolve(xhr);
+		} else {
+		    reject(message, xhr);
+		}
+	    
+	    });
+	});
+	return p;
+    }
 
     /*  Ask for a doc to be loaded if necessary then call back
     **
