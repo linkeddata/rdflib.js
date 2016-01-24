@@ -1,5 +1,6 @@
-
-// Test rdfa parser
+// General read-parse-serialize data tool
+//
+// Original motivation: Test rdfa parser
 //
 // See http://www.w3.org/TR/rdfa-syntax/  etc
 //
