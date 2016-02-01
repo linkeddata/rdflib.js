@@ -16,7 +16,7 @@ Javascript RDF library for browsers and NodeJS.
 
 #### Browser
 
-Install dependencies you may need to generate the js file.
+Install dependencies you may need to generate the .js file.
 
 ```bash
 $ npm install -g coffee-script nodeunit   
