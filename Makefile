@@ -11,8 +11,10 @@ PATH:=./node_modules/.bin:${PATH}
 
 all: dist $(targets) browserify
 
+# support both require('rdflib.js') syntax
+# and also publish a global $rdf variable.
 browserify: dist/rdflib-node.js
-	browserify dist/rdflib-node.js > dist/rdflib.js
+	browserify -r ./dist/rdflib-node.js:rdflib.js --standalone "\$$rdf" > dist/rdflib.js
 
 dist:
 	mkdir -p dist
