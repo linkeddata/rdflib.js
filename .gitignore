@@ -1,6 +1,2 @@
 parsers/*.js
-tests/*.js
 node_modules
-npm-debug.log
-dist/rdflib-rdfa.js
-web_browserify.js

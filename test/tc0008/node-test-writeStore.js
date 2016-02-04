@@ -8,8 +8,7 @@
 
 // var jQuery = require('jquery');
 
-//var $rdf = require('../../dist/node-rdflib.js').$rdf; // sic
-var $rdf = require('../../dist/node-rdflib.js');
+var $rdf = require('../../dist/rdflib-node.js');
 var util = require('util');
 var print = util.print;
 var k = $rdf.graph()
@@ -25,5 +24,3 @@ k.add(s, k.sym('baz:name'), 'Aimée', w);
 print('Dump 2:');
 z.writeStore(print);
 print('Done.\n');
-
-

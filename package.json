@@ -1,6 +1,6 @@
 {
   "name": "rdflib",
-  "description": "an rdf library for node.js.  Suitable for client and server side.",
+  "description": "an RDF library for node.js. Suitable for client and server side.",
   "version": "0.2.11",
   "private": false,
   "author": {
@@ -15,16 +15,15 @@
   "homepage": "http://github.com/linkeddata/rdflib.js",
   "bugs": "http://github.com/linkeddata/rdflib.js/issues",
   "dependencies": {
-    "xmldom": "*",
-    "xmlhttprequest": "^1.7.0",
-    "n3": "^0.4.1",
-    "jsonld": "^0.4.5",
     "async": "^0.9.x",
-    "browserify": "*",
-    "coffee-script": "*"
+    "jsonld": "^0.4.5",
+    "n3": "^0.4.1",
+    "xmldom": "^0.1.22",
+    "xmlhttprequest": "^1.7.0"
   },
   "devDependencies": {
-    "nodeunit": "*"
+    "browserify": "^13.0.0",
+    "nodeunit": "^0.9.1"
   },
   "scripts": {
     "test": "make test",
@@ -34,7 +33,7 @@
     "dist",
     "dist/rdflib.js"
   ],
-  "main": "dist/rdflib.js",
+  "main": "dist/rdflib-node.js",
   "keywords": [
     "linkeddata",
     "linked data",

@@ -14,18 +14,14 @@ Javascript RDF library for browsers and NodeJS.
 
 ## Install
 
-#### Browser
-
-Install dependencies you may need to generate the .js file.
-
 ```bash
-$ npm install -g coffee-script nodeunit   
+npm install
 ```
 
 Generate the dist directory
 
 ```bash
-$ npm install
+make all
 ```
 
 #### NodeJS
@@ -43,7 +39,7 @@ Possible out of date information is available from here: [http://dig.csail.mit.e
 
 #### Subdirectories
 
-- `dist`, Run 'make' in this directory to generate dist in whch libraries are buit
+- `dist`, Run 'make' in this directory to generate dist in which libraries are built
 - `test`, Tests are here.
 
 #### Dependencies

@@ -4,7 +4,7 @@
 
 if (typeof module !== 'undefined' && module.exports) { // Node.js environment
     var jQuery = require('jquery');
-    var $rdf = require('../../dist/node-rdflib.js');
+    var $rdf = require('../../dist/rdflib-node.js');
     var util = require('util');
     var alert = function(s){util.print('alert:'+s+'\n')};
     var kludgeForOfflineUse = function kludgeForOfflineUse(uri) {
@@ -20,8 +20,8 @@ if (typeof module !== 'undefined' && module.exports) { // Node.js environment
 
 var tc0007Passed = true;
 
-// Here is a totaly differnet manifest format for rdfa1.1. 
-var manifest_uri = 'https://raw.github.com/msporny/rdfa-test-suite/master/manifest.ttl'; 
+// Here is a totaly different manifest format for rdfa1.1.
+var manifest_uri = 'https://raw.github.com/msporny/rdfa-test-suite/master/manifest.ttl';
 
 // Original RDFa 1.0 one:
 //var manifest_uri = 'http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/rdfa-xhtml1-test-manifest.rdf';
@@ -53,7 +53,7 @@ var httpGetContents = function httpGetContents(uri,  callback) {
                 xhr.status+", "+xhr.statusText+", body length = "+xhr.responseText.length);
             } else {
                callback(true, xhr.responseText);
-            }    
+            }
         }
     }
 
@@ -64,7 +64,7 @@ var httpGetContents = function httpGetContents(uri,  callback) {
             alert("Failed to get privileges: " + e)
         }
     }
-    
+
     xhr.open('GET', uri, true);  // async=true
     // xhr.setRequestHeader('Content-type', 'application/sparql-query');
     xhr.send();
@@ -78,7 +78,7 @@ function testTC0007(showDetails, callback) {
     var passStyle = 'style="border: solid 2px green; padding: 1px 2px;"';
     //var allResults = "<div><strong>Detailed Results:</strong></div>";
     var tests = [ ];
-    
+
     callback(0, '<p>Now to get manifest '+escapeForXML(manifest_uri)+'...</p>');
 
     var meta = $rdf.graph();
@@ -87,9 +87,9 @@ function testTC0007(showDetails, callback) {
 
 
         callback(0, "<p>Loaded <a href='"+escapeForXML(manifest_uri)+"'>manifest</a></p>" );
-        
- 
-        
+
+
+
         function loadDataAndRunTest(tests, number){
 
             var test = tests[number];
@@ -99,9 +99,9 @@ function testTC0007(showDetails, callback) {
             test.input = meta.any(test, TD('informationResourceInput'));
             test.expected =  meta.any(test, TD('informationResourceResults'));
             test.purpose = meta.any(test, TD('purpose')).value;
-            
+
             test.inputData = test.expectedData = null;
-            
+
             var tryTest = function() {
                 if (test.inputData != null && test.expectedData != null) {
                     callback(0, "<hr><h2>"+test.no+") <a href='"+test.uri+"'>"+xtitle+"</a></h2>");
@@ -147,34 +147,34 @@ function testTC0007(showDetails, callback) {
                             }
                             // Try the given SPARQL query
                             var sq = $rdf.SPARQLToQuery(match[1], true);
-                            
+
 
                             //  Compare two graphs using unification
                             var q = new $rdf.Query();
                             q.pat = exp;
                             kb.query(q, function(bindings){callback(0,"<p>Match - result includes expected</p>");
                                                             forwards++},
-                                 undefined, 
+                                 undefined,
                                  function(){callback(0,"<p>Done res in exp!</p>"); countDone();});
-                                 
+
                             var q2 = new $rdf.Query();
                             q.pat = kb;
                             exp.query(q, function(bindings){callback(0,"<p>Match - expected includes result</p>");
                                                             reverse ++},
-                                 undefined, 
+                                 undefined,
                                  function(){callback(0,"<p>Done exp in res</p>"); countDone();});
                         }
-                        
+
 
                     } catch(e) {
 
                         callback(1, "<p style='background-color: #fcc'>Exception for test "
                                 +test.no+": "+e+'</p>')
                         if (typeof e == 'Object') {
-                            var details = ""; 
-                            for (var prop in e) {  
-                               details += '' + prop+ ": '"+ e[prop]+ "';\n"; 
-                            } 
+                            var details = "";
+                            for (var prop in e) {
+                               details += '' + prop+ ": '"+ e[prop]+ "';\n";
+                            }
                             callback(1, "<p style='background-color: #fcc'>Details:"+details+'</p>');
                         }
                         displayTestData();
@@ -193,7 +193,7 @@ function testTC0007(showDetails, callback) {
                     tryTest();
                 }
             });
-            
+
             httpGetContents(test.expected.uri, function(ok, body) {
                 if (!ok) {
                     callback(1, "<p class='error'>Error getting expected <"+test.expected.uri+"> : "+
@@ -205,19 +205,19 @@ function testTC0007(showDetails, callback) {
             });
             return;
         }; // loadDataAndRunTest
-        
-        
+
+
         // var cases = meta.each(undefined, RDF('type'), TD('TestCase'));
         var tests = meta.each(undefined, TD('reviewStatus'), TD('approved'));
-        
+
         // Just try 1 for now
         // oadDataAndRunTest(meta.sym(
         // 'http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/Test0001'), 1);
-        
+
         loadDataAndRunTest(tests, 0);
         // for(var i=0; i < tests.length; i++) loadDataAndRunTest(tests[i], i+1);
 
-    
+
     });
 
 }
@@ -232,4 +232,3 @@ if (typeof module !== 'undefined' && module.exports) { // Node.js environment
     })
     // while(1) {};
 };
-

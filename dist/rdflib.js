@@ -1,3 +1,4 @@
+(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 (function(root, undef) {
 /**
 * Utility functions for $rdf and the $rdf object itself
@@ -4282,6 +4283,937 @@ return $rdf.IndexedFormula;
 
 }();
 // ends
+//  RDF/A Parser for rdflib.js
+
+// Originally by: Alex Milowski
+// Converted: timbl 2015-08-25 not yet working
+// Was taken from:  https://github.com/alexmilowski/green-turtle
+
+
+// See http://www.w3.org/TR/rdfa-syntax/  etc
+
+// $rdf.RDFaProcessor.prototype = new Object(); // Was URIResolver
+
+//$rdf.RDFaProcessor.prototype.constructor=$rdf.RDFaProcessor;
+
+// options.base = base URI    not really an option, shopuld always be set.
+//
+
+
+
+if(typeof Node === 'undefined') { //  @@@@@@ Global. Interface to xmldom.
+    var Node = {
+      ELEMENT_NODE: 1,
+      ATTRIBUTE_NODE: 2,
+      TEXT_NODE: 3,
+      CDATA_SECTION_NODE: 4,
+      ENTITY_REFERENCE_NODE: 5,
+      ENTITY_NODE: 6,
+      PROCESSING_INSTRUCTION_NODE: 7,
+      COMMENT_NODE: 8,
+      DOCUMENT_NODE: 9,
+      DOCUMENT_TYPE_NODE: 10,
+      DOCUMENT_FRAGMENT_NODE: 11,
+      NOTATION_NODE:12
+    };
+}
+
+////////////////////////////////
+
+$rdf.RDFaProcessor = function RDFaProcessor(kb, options) {
+    this.options = options || {};
+    this.kb = kb;
+    this.target = options.target || {
+        graph: {
+            subjects: {},
+            prefixes: {},
+            terms: {}
+        }
+    };
+
+    console.log("base URI " + this.options.base)
+    var mode = options.mode || 'html';
+    this.inXHTMLMode = false;
+    this.inHTMLMode = false;
+    
+    this.theOne = "_:"+(new Date()).getTime();
+    this.language = null;
+    this.vocabulary = null;
+    this.blankCounter = 0;
+    this.langAttributes = [ { namespaceURI: "http://www.w3.org/XML/1998/namespace", localName: "lang" } ];
+    this.inXHTMLMode = false;
+    this.absURIRE = /[\w\_\-]+:\S+/;
+    this.finishedHandlers = [];
+    this.init();
+}
+
+$rdf.RDFaProcessor.prototype.newBlankNode = function() {
+   this.blankCounter++;
+   return "_:"+this.blankCounter;
+}
+
+$rdf.RDFaProcessor.XMLLiteralURI = "http://www.w3.org/1999/02/22-rdf-syntax-ns#XMLLiteral"; 
+$rdf.RDFaProcessor.HTMLLiteralURI = "http://www.w3.org/1999/02/22-rdf-syntax-ns#HTML"; 
+$rdf.RDFaProcessor.PlainLiteralURI = "http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral";
+$rdf.RDFaProcessor.objectURI = "http://www.w3.org/1999/02/22-rdf-syntax-ns#object";
+$rdf.RDFaProcessor.typeURI = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
+
+$rdf.RDFaProcessor.nameChar = '[-A-Z_a-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\u10000-\uEFFFF\.0-9\u00B7\u0300-\u036F\u203F-\u2040]';
+$rdf.RDFaProcessor.nameStartChar = '[\u0041-\u005A\u0061-\u007A\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u00FF\u0100-\u0131\u0134-\u013E\u0141-\u0148\u014A-\u017E\u0180-\u01C3\u01CD-\u01F0\u01F4-\u01F5\u01FA-\u0217\u0250-\u02A8\u02BB-\u02C1\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03D6\u03DA\u03DC\u03DE\u03E0\u03E2-\u03F3\u0401-\u040C\u040E-\u044F\u0451-\u045C\u045E-\u0481\u0490-\u04C4\u04C7-\u04C8\u04CB-\u04CC\u04D0-\u04EB\u04EE-\u04F5\u04F8-\u04F9\u0531-\u0556\u0559\u0561-\u0586\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0641-\u064A\u0671-\u06B7\u06BA-\u06BE\u06C0-\u06CE\u06D0-\u06D3\u06D5\u06E5-\u06E6\u0905-\u0939\u093D\u0958-\u0961\u0985-\u098C\u098F-\u0990\u0993-\u09A8\u09AA-\u09B0\u09B2\u09B6-\u09B9\u09DC-\u09DD\u09DF-\u09E1\u09F0-\u09F1\u0A05-\u0A0A\u0A0F-\u0A10\u0A13-\u0A28\u0A2A-\u0A30\u0A32-\u0A33\u0A35-\u0A36\u0A38-\u0A39\u0A59-\u0A5C\u0A5E\u0A72-\u0A74\u0A85-\u0A8B\u0A8D\u0A8F-\u0A91\u0A93-\u0AA8\u0AAA-\u0AB0\u0AB2-\u0AB3\u0AB5-\u0AB9\u0ABD\u0AE0\u0B05-\u0B0C\u0B0F-\u0B10\u0B13-\u0B28\u0B2A-\u0B30\u0B32-\u0B33\u0B36-\u0B39\u0B3D\u0B5C-\u0B5D\u0B5F-\u0B61\u0B85-\u0B8A\u0B8E-\u0B90\u0B92-\u0B95\u0B99-\u0B9A\u0B9C\u0B9E-\u0B9F\u0BA3-\u0BA4\u0BA8-\u0BAA\u0BAE-\u0BB5\u0BB7-\u0BB9\u0C05-\u0C0C\u0C0E-\u0C10\u0C12-\u0C28\u0C2A-\u0C33\u0C35-\u0C39\u0C60-\u0C61\u0C85-\u0C8C\u0C8E-\u0C90\u0C92-\u0CA8\u0CAA-\u0CB3\u0CB5-\u0CB9\u0CDE\u0CE0-\u0CE1\u0D05-\u0D0C\u0D0E-\u0D10\u0D12-\u0D28\u0D2A-\u0D39\u0D60-\u0D61\u0E01-\u0E2E\u0E30\u0E32-\u0E33\u0E40-\u0E45\u0E81-\u0E82\u0E84\u0E87-\u0E88\u0E8A\u0E8D\u0E94-\u0E97\u0E99-\u0E9F\u0EA1-\u0EA3\u0EA5\u0EA7\u0EAA-\u0EAB\u0EAD-\u0EAE\u0EB0\u0EB2-\u0EB3\u0EBD\u0EC0-\u0EC4\u0F40-\u0F47\u0F49-\u0F69\u10A0-\u10C5\u10D0-\u10F6\u1100\u1102-\u1103\u1105-\u1107\u1109\u110B-\u110C\u110E-\u1112\u113C\u113E\u1140\u114C\u114E\u1150\u1154-\u1155\u1159\u115F-\u1161\u1163\u1165\u1167\u1169\u116D-\u116E\u1172-\u1173\u1175\u119E\u11A8\u11AB\u11AE-\u11AF\u11B7-\u11B8\u11BA\u11BC-\u11C2\u11EB\u11F0\u11F9\u1E00-\u1E9B\u1EA0-\u1EF9\u1F00-\u1F15\u1F18-\u1F1D\u1F20-\u1F45\u1F48-\u1F4D\u1F50-\u1F57\u1F59\u1F5B\u1F5D\u1F5F-\u1F7D\u1F80-\u1FB4\u1FB6-\u1FBC\u1FBE\u1FC2-\u1FC4\u1FC6-\u1FCC\u1FD0-\u1FD3\u1FD6-\u1FDB\u1FE0-\u1FEC\u1FF2-\u1FF4\u1FF6-\u1FFC\u2126\u212A-\u212B\u212E\u2180-\u2182\u3041-\u3094\u30A1-\u30FA\u3105-\u312C\uAC00-\uD7A3\u4E00-\u9FA5\u3007\u3021-\u3029_]';
+$rdf.RDFaProcessor.NCNAME = new RegExp('^' + $rdf.RDFaProcessor.nameStartChar + $rdf.RDFaProcessor.nameChar + '*$');
+
+$rdf.RDFaProcessor.trim = function(str) {
+   return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
+}
+
+$rdf.RDFaProcessor.prototype.tokenize = function(str) {
+   return $rdf.RDFaProcessor.trim(str).split(/\s+/);
+}
+
+
+$rdf.RDFaProcessor.prototype.parseSafeCURIEOrCURIEOrURI = function(value,prefixes,base) {
+   value = $rdf.RDFaProcessor.trim(value);
+   if (value.charAt(0)=='[' && value.charAt(value.length-1)==']') {
+      value = value.substring(1,value.length-1);
+      value = value.trim(value);
+      if (value.length==0) {
+         return null;
+      }
+      if (value=="_:") {
+         // the one node
+         return this.theOne;
+      }
+      return this.parseCURIE(value,prefixes,base);
+   } else {
+      return this.parseCURIEOrURI(value,prefixes,base);
+   }
+}
+
+$rdf.RDFaProcessor.prototype.parseCURIE = function(value,prefixes,base) {
+   var colon = value.indexOf(":");
+   if (colon>=0) {
+      var prefix = value.substring(0,colon);
+      if (prefix=="") {
+         // default prefix
+         var uri = prefixes[""];
+         return uri ? uri+value.substring(colon+1) : null;
+      } else if (prefix=="_") {
+         // blank node
+         return "_:"+value.substring(colon+1);
+      } else if ($rdf.RDFaProcessor.NCNAME.test(prefix)) {
+         var uri = prefixes[prefix];
+         if (uri) {
+            return uri + value.substring(colon+1);
+         }
+      }
+   }
+   return null;
+}
+
+$rdf.RDFaProcessor.prototype.parseCURIEOrURI = function(value,prefixes,base) {
+   var curie = this.parseCURIE(value,prefixes,base);
+   if (curie) {
+      return curie;
+   }
+   return this.resolveAndNormalize(base,value);
+}
+
+$rdf.RDFaProcessor.prototype.parsePredicate = function(value,defaultVocabulary,terms,prefixes,base,ignoreTerms) {
+   if (value=="") {
+      return null;
+   }
+   var predicate = this.parseTermOrCURIEOrAbsURI(value,defaultVocabulary,ignoreTerms ? null : terms,prefixes,base);
+   if (predicate && predicate.indexOf("_:")==0) {
+      return null;
+   }
+   return predicate;
+}
+
+$rdf.RDFaProcessor.prototype.parseTermOrCURIEOrURI = function(value,defaultVocabulary,terms,prefixes,base) {
+   //alert("Parsing "+value+" with default vocab "+defaultVocabulary);
+   value = $rdf.RDFaProcessor.trim(value);
+   var curie = this.parseCURIE(value,prefixes,base);
+   if (curie) {
+      return curie;
+   } else {
+       var term = terms[value];
+       if (term) {
+          return term;
+       }
+       var lcvalue = value.toLowerCase();
+       term = terms[lcvalue];
+       if (term) {
+          return term;
+       }
+       if (defaultVocabulary && !this.absURIRE.exec(value)) {
+          return defaultVocabulary+value
+       }
+   }
+   return this.resolveAndNormalize(base,value);
+}
+
+$rdf.RDFaProcessor.prototype.parseTermOrCURIEOrAbsURI = function(value,defaultVocabulary,terms,prefixes,base) {
+   //alert("Parsing "+value+" with default vocab "+defaultVocabulary);
+   value = $rdf.RDFaProcessor.trim(value);
+   var curie = this.parseCURIE(value,prefixes,base);
+   if (curie) {
+      return curie;
+   } else if (terms) {
+       if (defaultVocabulary && !this.absURIRE.exec(value)) {
+          return defaultVocabulary+value
+       }
+       var term = terms[value];
+       if (term) {
+          return term;
+       }
+       var lcvalue = value.toLowerCase();
+       term = terms[lcvalue];
+       if (term) {
+          return term;
+       }
+   }
+   if (this.absURIRE.exec(value)) {
+      return this.resolveAndNormalize(base,value);
+   }
+   return null;
+}
+
+/*
+$rdf.RDFaProcessor.prototype.resolveAndNormalize = function(base,href) {
+   var u = base.resolve(href);
+   var parsed = this.parseURI(u);
+   parsed.normalize();
+   return parsed.spec;
+}
+*/
+
+$rdf.RDFaProcessor.prototype.parsePrefixMappings = function(str,target) {
+   var values = this.tokenize(str);
+   var prefix = null;
+   var uri = null;
+   for (var i=0; i<values.length; i++) {
+      if (values[i][values[i].length-1]==':') {
+         prefix = values[i].substring(0,values[i].length-1);
+      } else if (prefix) {
+         target[prefix] = this.options.base ? $rdf.uri.join(values[i], this.options.base) : values[i];
+         prefix = null;
+      }
+   }
+}
+
+$rdf.RDFaProcessor.prototype.copyMappings = function(mappings) {
+   var newMappings = {};
+   for (var k in mappings) {
+      newMappings[k] = mappings[k];
+   }
+   return newMappings;
+}
+
+$rdf.RDFaProcessor.prototype.ancestorPath = function(node) {
+   var path = "";
+   while (node && node.nodeType!=Node.DOCUMENT_NODE) {
+      path = "/"+node.localName+path;
+      node = node.parentNode;
+   }
+   return path;
+}
+
+$rdf.RDFaProcessor.prototype.setContext = function(node) {
+
+   // We only recognized XHTML+RDFa 1.1 if the version is set propertyly
+   if (node.localName=="html" && node.getAttribute("version")=="XHTML+RDFa 1.1") {
+      this.setXHTMLContext();
+   } else if (node.localName=="html" || node.namespaceURI=="http://www.w3.org/1999/xhtml") {
+      if (typeof document !== 'undefined' && document.doctype) {
+         if (document.doctype.publicId=="-//W3C//DTD XHTML+RDFa 1.0//EN" && document.doctype.systemId=="http://www.w3.org/MarkUp/DTD/xhtml-rdfa-1.dtd") {
+            console.log("WARNING: RDF 1.0 is not supported.  Defaulting to HTML5 mode.");
+            this.setHTMLContext();
+         } else if (document.doctype.publicId=="-//W3C//DTD XHTML+RDFa 1.1//EN" && document.doctype.systemId=="http://www.w3.org/MarkUp/DTD/xhtml-rdfa-2.dtd") {
+            this.setXHTMLContext();
+         } else {
+            this.setHTMLContext();
+         }
+      } else {
+         this.setHTMLContext();
+      }
+   } else {
+      this.setXMLContext();
+   }
+
+}
+
+$rdf.RDFaProcessor.prototype.setInitialContext = function() {
+   this.vocabulary = null;
+   // By default, the prefixes are terms are loaded to the RDFa 1.1. standard within the graph constructor
+   this.langAttributes = [ { namespaceURI: "http://www.w3.org/XML/1998/namespace", localName: "lang" } ];
+}
+
+$rdf.RDFaProcessor.prototype.setXMLContext = function() {
+   this.setInitialContext();
+   this.inXHTMLMode = false;
+   this.inHTMLMode = false;
+}
+
+$rdf.RDFaProcessor.prototype.setHTMLContext = function() {
+   this.setInitialContext();
+   this.langAttributes = [ { namespaceURI: "http://www.w3.org/XML/1998/namespace", localName: "lang" },
+                           { namespaceURI: null, localName: "lang" }];
+   this.inXHTMLMode = false;
+   this.inHTMLMode = true;
+}
+
+$rdf.RDFaProcessor.prototype.setXHTMLContext = function() {
+
+   this.setInitialContext();
+   
+   this.inXHTMLMode = true;
+   this.inHTMLMode = false;
+   
+   this.langAttributes = [ { namespaceURI: "http://www.w3.org/XML/1998/namespace", localName: "lang" },
+                           { namespaceURI: null, localName: "lang" }];
+
+   // From http://www.w3.org/2011/rdfa-context/xhtml-rdfa-1.1
+   this.target.graph.terms["alternate"] = "http://www.w3.org/1999/xhtml/vocab#alternate";
+   this.target.graph.terms["appendix"] = "http://www.w3.org/1999/xhtml/vocab#appendix";
+   this.target.graph.terms["bookmark"] = "http://www.w3.org/1999/xhtml/vocab#bookmark";
+   this.target.graph.terms["cite"] = "http://www.w3.org/1999/xhtml/vocab#cite"
+   this.target.graph.terms["chapter"] = "http://www.w3.org/1999/xhtml/vocab#chapter";
+   this.target.graph.terms["contents"] = "http://www.w3.org/1999/xhtml/vocab#contents";
+   this.target.graph.terms["copyright"] = "http://www.w3.org/1999/xhtml/vocab#copyright";
+   this.target.graph.terms["first"] = "http://www.w3.org/1999/xhtml/vocab#first";
+   this.target.graph.terms["glossary"] = "http://www.w3.org/1999/xhtml/vocab#glossary";
+   this.target.graph.terms["help"] = "http://www.w3.org/1999/xhtml/vocab#help";
+   this.target.graph.terms["icon"] = "http://www.w3.org/1999/xhtml/vocab#icon";
+   this.target.graph.terms["index"] = "http://www.w3.org/1999/xhtml/vocab#index";
+   this.target.graph.terms["last"] = "http://www.w3.org/1999/xhtml/vocab#last";
+   this.target.graph.terms["license"] = "http://www.w3.org/1999/xhtml/vocab#license";
+   this.target.graph.terms["meta"] = "http://www.w3.org/1999/xhtml/vocab#meta";
+   this.target.graph.terms["next"] = "http://www.w3.org/1999/xhtml/vocab#next";
+   this.target.graph.terms["prev"] = "http://www.w3.org/1999/xhtml/vocab#prev";
+   this.target.graph.terms["previous"] = "http://www.w3.org/1999/xhtml/vocab#previous";
+   this.target.graph.terms["section"] = "http://www.w3.org/1999/xhtml/vocab#section";
+   this.target.graph.terms["stylesheet"] = "http://www.w3.org/1999/xhtml/vocab#stylesheet";
+   this.target.graph.terms["subsection"] = "http://www.w3.org/1999/xhtml/vocab#subsection";
+   this.target.graph.terms["start"] = "http://www.w3.org/1999/xhtml/vocab#start";
+   this.target.graph.terms["top"] = "http://www.w3.org/1999/xhtml/vocab#top";
+   this.target.graph.terms["up"] = "http://www.w3.org/1999/xhtml/vocab#up";
+   this.target.graph.terms["p3pv1"] = "http://www.w3.org/1999/xhtml/vocab#p3pv1";
+
+   // other
+   this.target.graph.terms["related"] = "http://www.w3.org/1999/xhtml/vocab#related";
+   this.target.graph.terms["role"] = "http://www.w3.org/1999/xhtml/vocab#role";
+   this.target.graph.terms["transformation"] = "http://www.w3.org/1999/xhtml/vocab#transformation";
+}
+
+$rdf.RDFaProcessor.prototype.init = function() {
+}
+
+$rdf.RDFaProcessor.prototype.newSubjectOrigin = function(origin,subject) {
+    console.log("@@@@ newSubjectOrigin @@ what should this do? ")
+}
+
+$rdf.RDFaProcessor.prototype.addTriple = function(origin,subject,predicate,object) {
+    function convert(x) {
+        console.log("convert term " + typeof x );
+        if (typeof x === 'string') {
+            console.log("    string is " + x);
+            console.log("    sym is " + $rdf.sym(x));
+            return $rdf.sym(x);
+        }
+        if (typeof x === 'undefined') return undefined;
+        console.log("    type is " + x.type);
+        switch(object.type) {
+        case $rdf.RDFaProcessor.objectURI:
+            return $rdf.sym(x.value);
+        case $rdf.RDFaProcessor.PlainLiteralURI:
+            return $rdf.term(x.value); // @@ types?
+        default:
+        }
+        throw "internal type " + x.type
+    }
+    var su, ob, pr, or
+    if (typeof subject === 'undefined') {
+        su = $rdf.sym(this.options.base); // this document is default sub???
+    } else { 
+        su = convert(subject);
+    }
+    pr = convert(predicate);
+    ob = convert(object);
+    // or = convert(origin);
+    or = $rdf.sym(this.options.base);
+    console.log('Adding { '+ su + ' ' + pr + ' ' + ob + ' ' + or + ' }');
+    this.kb.add(su, pr, ob, or);
+}
+
+$rdf.RDFaProcessor.prototype.resolveAndNormalize = function(uri, base) {
+    // console.log("Joining " + uri + " to " + uri + " making " +  $rdf.uri.join(uri, base)); 
+    return $rdf.uri.join(uri, base); // @@ normalize?
+}
+
+
+$rdf.RDFaProcessor.prototype.parseURI = function(uri) {
+    return uri; // We just use strings as URIs, not objects now.
+}
+
+$rdf.RDFaProcessor.dateTimeTypes = [
+   { pattern: /-?P(?:[0-9]+Y)?(?:[0-9]+M)?(?:[0-9]+D)?(?:T(?:[0-9]+H)?(?:[0-9]+M)?(?:[0-9]+(?:\.[0-9]+)?S)?)?/,
+     type: "http://www.w3.org/2001/XMLSchema#duration" },
+   { pattern: /-?(?:[1-9][0-9][0-9][0-9]|0[1-9][0-9][0-9]|00[1-9][0-9]|000[1-9])-[0-9][0-9]-[0-9][0-9]T(?:[0-1][0-9]|2[0-4]):[0-5][0-9]:[0-5][0-9](?:\.[0-9]+)?(?:Z|[+\-][0-9][0-9]:[0-9][0-9])?/,
+     type: "http://www.w3.org/2001/XMLSchema#dateTime" },
+   { pattern: /-?(?:[1-9][0-9][0-9][0-9]|0[1-9][0-9][0-9]|00[1-9][0-9]|000[1-9])-[0-9][0-9]-[0-9][0-9](?:Z|[+\-][0-9][0-9]:[0-9][0-9])?/,
+     type: "http://www.w3.org/2001/XMLSchema#date" },
+   { pattern: /(?:[0-1][0-9]|2[0-4]):[0-5][0-9]:[0-5][0-9](?:\.[0-9]+)?(?:Z|[+\-][0-9][0-9]:[0-9][0-9])?/,
+     type: "http://www.w3.org/2001/XMLSchema#time" },
+   { pattern: /-?(?:[1-9][0-9][0-9][0-9]|0[1-9][0-9][0-9]|00[1-9][0-9]|000[1-9])-[0-9][0-9]/,
+     type: "http://www.w3.org/2001/XMLSchema#gYearMonth" },
+   { pattern: /-?[1-9][0-9][0-9][0-9]|0[1-9][0-9][0-9]|00[1-9][0-9]|000[1-9]/,
+     type: "http://www.w3.org/2001/XMLSchema#gYear" }
+];
+
+$rdf.RDFaProcessor.deriveDateTimeType = function(value) {
+   for (var i=0; i<$rdf.RDFaProcessor.dateTimeTypes.length; i++) {
+      //console.log("Checking "+value+" against "+$rdf.RDFaProcessor.dateTimeTypes[i].type);
+      var matched = $rdf.RDFaProcessor.dateTimeTypes[i].pattern.exec(value);
+      if (matched && matched[0].length==value.length) {
+         //console.log("Matched!");
+         return $rdf.RDFaProcessor.dateTimeTypes[i].type;
+      }
+   }
+   return null;
+}
+
+$rdf.RDFaProcessor.prototype.process = function(node, processOptions) {
+
+   console.log("node.baseURI 0 " + node.baseURI);
+
+   /*
+   if (!window.console) {
+      window.console = { log: function() {} };
+   }*/
+   var base;
+   if (node.nodeType==Node.DOCUMENT_NODE) {
+      base = node.baseURI;
+      node = node.documentElement;
+      node.baseURI = base;
+      this.setContext(node);
+   } else if (node.parentNode.nodeType==Node.DOCUMENT_NODE) {
+      this.setContext(node);
+   } 
+   var queue = [];
+   
+   // Fix for Firefox that includes the hash in the base URI
+   var removeHash = function(baseURI) {
+      return baseURI.split('#')[0];
+   }
+   
+   console.log("node.baseURI 1 " + node.baseURI);
+   queue.push({ current: node, context: this.push(null,removeHash(node.baseURI))});
+   while (queue.length>0) {
+      var item = queue.shift();
+      if (item.parent) {
+         // Sequence Step 14: list triple generation
+         if (item.context.parent && item.context.parent.listMapping==item.listMapping) {
+            // Skip a child context with exactly the same mapping
+            continue;
+         }
+         //console.log("Generating lists for "+item.subject+", tag "+item.parent.localName);
+         for (var predicate in item.listMapping) {
+            var list = item.listMapping[predicate];
+            if (list.length==0) {
+               this.addTriple(item.parent,item.subject,predicate,{ type: $rdf.RDFaProcessor.objectURI, value: "http://www.w3.org/1999/02/22-rdf-syntax-ns#nil" });
+               continue;
+            }
+            var bnodes = [];
+            for (var i=0; i<list.length; i++) {
+               bnodes.push(this.newBlankNode());
+               //this.newSubject(item.parent,bnodes[i]);
+            }
+            for (var i=0; i<bnodes.length; i++) {
+               this.addTriple(item.parent,bnodes[i],"http://www.w3.org/1999/02/22-rdf-syntax-ns#first",list[i]);
+               this.addTriple(item.parent,bnodes[i],"http://www.w3.org/1999/02/22-rdf-syntax-ns#rest",{ type: $rdf.RDFaProcessor.objectURI , value: (i+1)<bnodes.length ? bnodes[i+1] : "http://www.w3.org/1999/02/22-rdf-syntax-ns#nil" });
+            }
+            this.addTriple(item.parent,item.subject,predicate,{ type: $rdf.RDFaProcessor.objectURI, value: bnodes[0] });
+         }
+         continue;
+      }
+      var current = item.current;
+      var context = item.context;
+
+      //console.log("Tag: "+current.localName+", listMapping="+JSON.stringify(context.listMapping));
+
+      // Sequence Step 1
+      var skip = false;
+      var newSubject = null;
+      var currentObjectResource = null;
+      var typedResource = null;
+      var prefixes = context.prefixes;
+      var prefixesCopied = false;
+      var incomplete = [];
+      var listMapping = context.listMapping;
+      var listMappingDifferent = context.parent ? false : true;
+      var language = context.language;
+      var vocabulary = context.vocabulary;
+
+      // TODO: the "base" element may be used for HTML+RDFa 1.1
+      // console.log("sdf current.baseURI "+current.baseURI);
+      var base = this.parseURI(removeHash(current.baseURI));
+      current.item = null;
+
+      // Sequence Step 2: set the default vocabulary
+      var vocabAtt = current.getAttributeNode("vocab");
+      if (vocabAtt) {
+         var value = $rdf.RDFaProcessor.trim(vocabAtt.value);
+         if (value.length>0) {
+            vocabulary = value;
+            var baseSubject = base.spec;
+            //this.newSubject(current,baseSubject);
+            this.addTriple(current,baseSubject,"http://www.w3.org/ns/rdfa#usesVocabulary",{ type: $rdf.RDFaProcessor.objectURI , value: vocabulary});
+         } else {
+            vocabulary = this.vocabulary;
+         }
+      }
+
+      // Sequence Step 3: IRI mappings
+      // handle xmlns attributes
+      for (var i=0; i<current.attributes.length; i++) {
+         var att = current.attributes[i];
+         //if (att.namespaceURI=="http://www.w3.org/2000/xmlns/") {
+         if (att.nodeName.charAt(0)=="x" && att.nodeName.indexOf("xmlns:")==0) {
+            if (!prefixesCopied) {
+               prefixes = this.copyMappings(prefixes);
+               prefixesCopied = true;
+            }
+            var prefix = att.nodeName.substring(6);
+            // TODO: resolve relative?
+            var ref = $rdf.RDFaProcessor.trim(att.value);
+            prefixes[prefix] = this.options.base ? $rdf.uri.join(ref, this.options.base) :ref;
+         }
+      }
+      // Handle prefix mappings (@prefix)
+      var prefixAtt = current.getAttributeNode("prefix");
+      if (prefixAtt) {
+         if (!prefixesCopied) {
+            prefixes = this.copyMappings(prefixes);
+            prefixesCopied = true;
+         }
+         this.parsePrefixMappings(prefixAtt.value,prefixes);
+      }
+
+
+      // Sequence Step 4: language
+      var xmlLangAtt = null;
+      for (var i=0; !xmlLangAtt && i<this.langAttributes.length; i++) {
+         xmlLangAtt = current.getAttributeNodeNS(this.langAttributes[i].namespaceURI,this.langAttributes[i].localName);
+      }
+      if (xmlLangAtt) {
+         var value = $rdf.RDFaProcessor.trim(xmlLangAtt.value);
+         if (value.length>0) {
+            language = value;
+         } else {
+            language = null;
+         }
+      }
+
+      var relAtt = current.getAttributeNode("rel");
+      var revAtt = current.getAttributeNode("rev");
+      var typeofAtt = current.getAttributeNode("typeof");
+      var propertyAtt = current.getAttributeNode("property");
+      var datatypeAtt = current.getAttributeNode("datatype");
+      var datetimeAtt = this.inHTMLMode ? current.getAttributeNode("datetime") : null;
+      var contentAtt = current.getAttributeNode("content");
+      var aboutAtt = current.getAttributeNode("about");
+      var srcAtt = current.getAttributeNode("src");
+      var resourceAtt = current.getAttributeNode("resource");
+      var hrefAtt = current.getAttributeNode("href");
+      var inlistAtt = current.getAttributeNode("inlist");
+      
+      var relAttPredicates = [];
+      if (relAtt) {
+         var values = this.tokenize(relAtt.value);
+         for (var i=0; i<values.length; i++) {
+            var predicate = this.parsePredicate(values[i],vocabulary,context.terms,prefixes,base,this.inHTMLMode && propertyAtt!=null);
+            if (predicate) {
+               relAttPredicates.push(predicate);
+            }
+         }
+      }
+      var revAttPredicates = [];
+      if (revAtt) {
+         var values = this.tokenize(revAtt.value);
+         for (var i=0; i<values.length; i++) {
+            var predicate = this.parsePredicate(values[i],vocabulary,context.terms,prefixes,base,this.inHTMLMode && propertyAtt!=null);
+            if (predicate) {
+               revAttPredicates.push(predicate);
+            }
+         }
+      }
+      
+      // Section 3.1, bullet 7
+      if (this.inHTMLMode && (relAtt!=null || revAtt!=null) && propertyAtt!=null) {
+         if (relAttPredicates.length==0) {
+            relAtt = null;
+         }
+         if (revAttPredicates.length==0) {
+            revAtt = null;
+         }
+      }
+
+      if (relAtt || revAtt) {
+         // Sequence Step 6: establish new subject and value
+         if (aboutAtt) {
+            newSubject = this.parseSafeCURIEOrCURIEOrURI(aboutAtt.value,prefixes,base);
+         }
+         if (typeofAtt) {
+            typedResource = newSubject;
+         }
+         if (!newSubject) {
+            if (current.parentNode.nodeType==Node.DOCUMENT_NODE) {
+               console.log("kjkhk current.baseURI "+current.baseURI);
+               newSubject = removeHash(current.baseURI);
+            } else if (context.parentObject) {
+               // TODO: Verify: If the xml:base has been set and the parentObject is the baseURI of the parent, then the subject needs to be the new base URI
+               console.log("zxcv current.baseURI "+current.parentNode.baseURI);
+               newSubject = removeHash(current.parentNode.baseURI)==context.parentObject ? removeHash(current.baseURI) : context.parentObject;
+            }
+         }
+         if (resourceAtt) {
+            currentObjectResource = this.parseSafeCURIEOrCURIEOrURI(resourceAtt.value,prefixes,base);
+         }
+         
+         if (!currentObjectResource) {
+            if (hrefAtt) {
+               currentObjectResource = this.resolveAndNormalize(base,encodeURI(hrefAtt.value));
+            } else if (srcAtt) {
+               currentObjectResource = this.resolveAndNormalize(base,encodeURI(srcAtt.value));
+            } else if (typeofAtt && !aboutAtt && !(this.inXHTMLMode && (current.localName=="head" || current.localName=="body"))) {
+               currentObjectResource = this.newBlankNode();
+            }
+         }
+         if (typeofAtt && !aboutAtt && this.inXHTMLMode && (current.localName=="head" || current.localName=="body")) {
+            typedResource = newSubject;
+         } else if (typeofAtt && !aboutAtt) {
+            typedResource = currentObjectResource;
+         }
+
+      } else if (propertyAtt && !contentAtt && !datatypeAtt) {
+         // Sequence Step 5.1: establish a new subject
+         if (aboutAtt) {
+            newSubject = this.parseSafeCURIEOrCURIEOrURI(aboutAtt.value,prefixes,base);
+            if (typeofAtt) {
+               typedResource = newSubject;
+            }
+         }
+         if (!newSubject && current.parentNode.nodeType==Node.DOCUMENT_NODE) {
+            newSubject = removeHash(current.baseURI);
+            if (typeofAtt) {
+               typedResource = newSubject;
+            }
+         } else if (!newSubject && context.parentObject) {
+            // TODO: Verify: If the xml:base has been set and the parentObject is the baseURI of the parent, then the subject needs to be the new base URI
+            newSubject = removeHash(current.parentNode.baseURI)==context.parentObject ? removeHash(current.baseURI) : context.parentObject;
+         }
+         if (typeofAtt && !typedResource) {
+            if (resourceAtt) {
+               typedResource = this.parseSafeCURIEOrCURIEOrURI(resourceAtt.value,prefixes,base);
+            }
+            if (!typedResource &&hrefAtt) {
+               typedResource = this.resolveAndNormalize(base,encodeURI(hrefAtt.value));
+            }
+            if (!typedResource && srcAtt) {
+               typedResource = this.resolveAndNormalize(base,encodeURI(srcAtt.value));
+            }
+            if (!typedResource && (this.inXHTMLMode || this.inHTMLMode) && (current.localName=="head" || current.localName=="body")) {
+               typedResource = newSubject;
+            }
+            if (!typedResource) {
+               typedResource = this.newBlankNode();
+            }
+            currentObjectResource = typedResource;
+         }
+         //console.log(current.localName+", newSubject="+newSubject+", typedResource="+typedResource+", currentObjectResource="+currentObjectResource);
+      } else {
+         // Sequence Step 5.2: establish a new subject
+         if (aboutAtt) {
+            newSubject = this.parseSafeCURIEOrCURIEOrURI(aboutAtt.value,prefixes,base);
+         }
+         if (!newSubject && resourceAtt) {
+            newSubject = this.parseSafeCURIEOrCURIEOrURI(resourceAtt.value,prefixes,base);
+         }
+         if (!newSubject && hrefAtt) {
+            newSubject = this.resolveAndNormalize(base,encodeURI(hrefAtt.value));
+         }
+         if (!newSubject && srcAtt) {
+            newSubject = this.resolveAndNormalize(base,encodeURI(srcAtt.value));
+         }
+         if (!newSubject) {
+            if (current.parentNode.nodeType==Node.DOCUMENT_NODE) {
+               newSubject = removeHash(current.baseURI);
+            } else if ((this.inXHTMLMode || this.inHTMLMode) && (current.localName=="head" || current.localName=="body")) {
+               newSubject = removeHash(current.parentNode.baseURI)==context.parentObject ? removeHash(current.baseURI) : context.parentObject;
+            } else if (typeofAtt) {
+               newSubject = this.newBlankNode();
+            } else if (context.parentObject) {
+               // TODO: Verify: If the xml:base has been set and the parentObject is the baseURI of the parent, then the subject needs to be the new base URI
+               newSubject = removeHash(current.parentNode.baseURI)==context.parentObject ? removeHash(current.baseURI) : context.parentObject;
+               if (!propertyAtt) {
+                  skip = true;
+               }
+            }
+         }
+         if (typeofAtt) {
+            typedResource = newSubject;
+         }
+      }
+
+      //console.log(current.tagName+": newSubject="+newSubject+", currentObjectResource="+currentObjectResource+", typedResource="+typedResource+", skip="+skip);
+
+      var rdfaData = null;
+      if (newSubject) {
+         //this.newSubject(current,newSubject);
+         if (aboutAtt || resourceAtt || typedResource) {
+            var id = newSubject;
+            if (typeofAtt && !aboutAtt && !resourceAtt && currentObjectResource) {
+               id = currentObjectResource;
+            }
+            console.log("Setting data attribute for " + current.localName + " for subject "+id);
+            this.newSubjectOrigin(current,id);
+         }
+      }
+      
+      // Sequence Step 7: generate type triple
+      if (typedResource) {
+         var values = this.tokenize(typeofAtt.value);
+         for (var i=0; i<values.length; i++) {
+            var object = this.parseTermOrCURIEOrAbsURI(values[i],vocabulary,context.terms,prefixes,base);
+            if (object) {
+               this.addTriple(current,typedResource,$rdf.RDFaProcessor.typeURI,{ type: $rdf.RDFaProcessor.objectURI , value: object});
+            }
+         }
+      }
+
+      // Sequence Step 8: new list mappings if there is a new subject
+      //console.log("Step 8: newSubject="+newSubject+", context.parentObject="+context.parentObject);
+      if (newSubject && newSubject!=context.parentObject) {
+         //console.log("Generating new list mapping for "+newSubject);
+         listMapping = {};
+         listMappingDifferent = true;
+      }
+
+      // Sequence Step 9: generate object triple
+      if (currentObjectResource) {
+         if (relAtt && inlistAtt) {
+            for (var i=0; i<relAttPredicates.length; i++) {
+               var list = listMapping[relAttPredicates[i]];
+               if (!list) {
+                  list = [];
+                  listMapping[relAttPredicates[i]] = list;
+               }
+               list.push({ type: $rdf.RDFaProcessor.objectURI, value: currentObjectResource });
+            }
+         } else if (relAtt) {
+            for (var i=0; i<relAttPredicates.length; i++) {
+               this.addTriple(current,newSubject,relAttPredicates[i],{ type: $rdf.RDFaProcessor.objectURI, value: currentObjectResource});
+            }
+         }
+         if (revAtt) {
+            for (var i=0; i<revAttPredicates.length; i++) {
+               this.addTriple(current,currentObjectResource, revAttPredicates[i], { type: $rdf.RDFaProcessor.objectURI, value: newSubject});
+            }
+         }
+      } else {
+         // Sequence Step 10: incomplete triples
+         if (newSubject && !currentObjectResource && (relAtt || revAtt)) {
+            currentObjectResource = this.newBlankNode();
+            //alert(current.tagName+": generated blank node, newSubject="+newSubject+" currentObjectResource="+currentObjectResource);
+         }
+         if (relAtt && inlistAtt) {
+            for (var i=0; i<relAttPredicates.length; i++) {
+               var list = listMapping[relAttPredicates[i]];
+               if (!list) {
+                  list = [];
+                  listMapping[predicate] = list;
+               }
+               //console.log("Adding incomplete list for "+predicate);
+               incomplete.push({ predicate: relAttPredicates[i], list: list });
+            }
+         } else if (relAtt) {
+            for (var i=0; i<relAttPredicates.length; i++) {
+               incomplete.push({ predicate: relAttPredicates[i], forward: true });
+            }
+         }
+         if (revAtt) {
+            for (var i=0; i<revAttPredicates.length; i++) {
+               incomplete.push({ predicate: revAttPredicates[i], forward: false });
+            }
+         }
+      }
+
+      // Step 11: Current property values
+      if (propertyAtt) {
+         var datatype = null;
+         var content = null; 
+         if (datatypeAtt) {
+            datatype = datatypeAtt.value=="" ? $rdf.RDFaProcessor.PlainLiteralURI : this.parseTermOrCURIEOrAbsURI(datatypeAtt.value,vocabulary,context.terms,prefixes,base);
+            if (datetimeAtt && !contentAtt) {
+               content = datetimeAtt.value;
+            } else {
+               content = datatype==$rdf.RDFaProcessor.XMLLiteralURI || datatype==$rdf.RDFaProcessor.HTMLLiteralURI ? null : (contentAtt ? contentAtt.value : current.textContent);
+            }
+         } else if (contentAtt) {
+            datatype = $rdf.RDFaProcessor.PlainLiteralURI;
+            content = contentAtt.value;
+         } else if (datetimeAtt) {
+            content = datetimeAtt.value;
+            datatype = $rdf.RDFaProcessor.deriveDateTimeType(content);
+            if (!datatype) {
+               datatype = $rdf.RDFaProcessor.PlainLiteralURI;
+            }
+         } else if (!relAtt && !revAtt) {
+            if (resourceAtt) {
+               content = this.parseSafeCURIEOrCURIEOrURI(resourceAtt.value,prefixes,base);
+            }
+            if (!content && hrefAtt) {
+               content = this.resolveAndNormalize(base,encodeURI(hrefAtt.value));
+            } else if (!content && srcAtt) {
+               content = this.resolveAndNormalize(base,encodeURI(srcAtt.value));
+            }
+            if (content) {
+               datatype = $rdf.RDFaProcessor.objectURI;
+            }
+         }
+         if (!datatype) {
+            if (typeofAtt && !aboutAtt) {
+               datatype = $rdf.RDFaProcessor.objectURI;
+               content = typedResource;
+            } else {
+               content = current.textContent;
+               if (this.inHTMLMode && current.localName=="time") {
+                  datatype = $rdf.RDFaProcessor.deriveDateTimeType(content);
+               }
+               if (!datatype) {
+                  datatype = $rdf.RDFaProcessor.PlainLiteralURI;
+               }
+            }
+         }
+         var values = this.tokenize(propertyAtt.value);
+         for (var i=0; i<values.length; i++) {
+            var predicate = this.parsePredicate(values[i],vocabulary,context.terms,prefixes,base);
+            if (predicate) {
+               if (inlistAtt) {
+                  var list = listMapping[predicate];
+                  if (!list) {
+                     list = [];
+                     listMapping[predicate] = list;
+                  }
+                  list.push((datatype==$rdf.RDFaProcessor.XMLLiteralURI || datatype==$rdf.RDFaProcessor.HTMLLiteralURI) ? { type: datatype, value: current.childNodes} : { type: datatype ? datatype : $rdf.RDFaProcessor.PlainLiteralURI, value: content, language: language});
+               } else {
+                  if (datatype==$rdf.RDFaProcessor.XMLLiteralURI || datatype==$rdf.RDFaProcessor.HTMLLiteralURI) {
+                     this.addTriple(current,newSubject,predicate,{ type: datatype, value: current.childNodes});
+                  } else {
+                     this.addTriple(current,newSubject,predicate,{ type: datatype ? datatype : $rdf.RDFaProcessor.PlainLiteralURI, value: content, language: language});
+                     //console.log(newSubject+" "+predicate+"="+content);
+                  }
+               }
+            }
+         }
+      }
+
+      // Sequence Step 12: complete incomplete triples with new subject
+      if (newSubject && !skip) {
+         for (var i=0; i<context.incomplete.length; i++) {
+            if (context.incomplete[i].list) {
+               //console.log("Adding subject "+newSubject+" to list for "+context.incomplete[i].predicate);
+               // TODO: it is unclear what to do here
+               context.incomplete[i].list.push({ type: $rdf.RDFaProcessor.objectURI, value: newSubject });
+            } else if (context.incomplete[i].forward) {
+               //console.log(current.tagName+": completing forward triple "+context.incomplete[i].predicate+" with object="+newSubject);
+               this.addTriple(current,context.subject,context.incomplete[i].predicate, { type: $rdf.RDFaProcessor.objectURI, value: newSubject});
+            } else {
+               //console.log(current.tagName+": completing reverse triple with object="+context.subject);
+               this.addTriple(current,newSubject,context.incomplete[i].predicate,{ type: $rdf.RDFaProcessor.objectURI, value: context.subject});
+            }
+         }
+      }
+
+      var childContext = null;
+      var listSubject = newSubject;
+      if (skip) {
+         // TODO: should subject be null?
+         childContext = this.push(context,context.subject);
+         // TODO: should the entObject be passed along?  If not, then intermediary children will keep properties from being associated with incomplete triples.
+         // TODO: Verify: if the current baseURI has changed and the parentObject is the parent's base URI, then the baseURI should change
+         childContext.parentObject = removeHash(current.parentNode.baseURI)==context.parentObject ? removeHash(current.baseURI) : context.parentObject;
+         childContext.incomplete = context.incomplete;
+         childContext.language = language;
+         childContext.prefixes = prefixes;
+         childContext.vocabulary = vocabulary;
+      } else {
+         childContext = this.push(context,newSubject);
+         childContext.parentObject = currentObjectResource ? currentObjectResource : (newSubject ? newSubject : context.subject);
+         childContext.prefixes = prefixes;
+         childContext.incomplete = incomplete;
+         if (currentObjectResource) {
+            //console.log("Generating new list mapping for "+currentObjectResource);
+            listSubject = currentObjectResource;
+            listMapping = {};
+            listMappingDifferent = true;
+         }
+         childContext.listMapping = listMapping;
+         childContext.language = language;
+         childContext.vocabulary = vocabulary;
+      }
+      if (listMappingDifferent) {
+         console.log("Pushing list parent "+current.localName);
+         queue.unshift({ parent: current, context: context, subject: listSubject, listMapping: listMapping});
+      }
+      for (var child = current.lastChild; child; child = child.previousSibling) {
+         if (child.nodeType==Node.ELEMENT_NODE) {
+            //console.log("Pushing child "+child.localName);
+            child.baseURI = current.baseURI;
+            queue.unshift({ current: child, context: childContext});
+         }
+      }
+   }
+   
+   if (this.inHTMLMode) {
+      this.copyProperties();
+   }
+
+   for (var i=0; i<this.finishedHandlers.length; i++) {
+      this.finishedHandlers[i](node);
+   }
+}
+
+$rdf.RDFaProcessor.prototype.copyProperties = function() {
+}
+
+
+$rdf.RDFaProcessor.prototype.push = function(parent,subject) {
+   return {
+      parent: parent,
+      subject: subject ? subject : (parent ? parent.subject : null),
+      parentObject: null,
+      incomplete: [],
+      listMapping: parent ? parent.listMapping : {},
+      language: parent ? parent.language : this.language,
+      prefixes: parent ? parent.prefixes : this.target.graph.prefixes,
+      terms: parent ? parent.terms : this.target.graph.terms,
+      vocabulary: parent ? parent.vocabulary : this.vocabulary
+   };
+};
+/////////////////
+
+
+
+$rdf.parseDOM_RDFa = function(dom, kb, base) {
+    var p = new $rdf.RDFaProcessor(kb, { 'base': base } );
+    dom.baseURI = base; // @@ weird
+    console.log(" $rdf.parseDOM_RDFa dom.baseURI = " + dom.baseURI );
+    p.process(dom);
+}
+
+///////////////////
+
 // Parse a simple SPARL-Update subset syntax for patches.
 // 
 //  This parses 
@@ -7948,7 +8880,1845 @@ if ((typeof module !== "undefined" && module !== null ? module.exports : void 0)
     module.exports[k] = v;
   }
 }
-(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+/************************************************************
+ *
+ * Project: rdflib.js, originally part of Tabulator project
+ *
+ * File: web.js
+ *
+ * Description: contains functions for requesting/fetching/retracting
+ *  This implements quite a lot of the web architecture.
+ * A fetcher is bound to a specific knowledge base graph, into which
+ * it loads stuff and into which it writes its metadata
+ * @@ The metadata should be optionally a separate graph
+ *
+ * - implements semantics of HTTP headers, Internet Content Types
+ * - selects parsers for rdf/xml, n3, rdfa, grddl
+ *
+ * Dependencies:
+ *
+ * needs: util.js uri.js term.js rdfparser.js rdfa.js n3parser.js
+ *      identity.js sparql.js jsonparser.js
+ *
+ * If jQuery is defined, it uses jQuery.ajax, else is independent of jQuery
+ *
+ ************************************************************/
+
+/**
+ * Things to test: callbacks on request, refresh, retract
+ *   loading from HTTP, HTTPS, FTP, FILE, others?
+ * To do:
+ * Firing up a mail client for mid:  (message:) URLs
+ */
+
+var asyncLib = require('async');
+var jsonld = require('jsonld');
+var N3 = require('n3');
+
+$rdf.Fetcher = function(store, timeout, async) {
+    this.store = store
+    this.thisURI = "http://dig.csail.mit.edu/2005/ajar/ajaw/rdf/sources.js" + "#SourceFetcher" // -- Kenny
+    this.timeout = timeout ? timeout : 30000
+    this.async = async != null ? async : true
+    this.appNode = this.store.bnode(); // Denoting this session
+    this.store.fetcher = this; //Bi-linked
+    this.requested = {} ;
+    // this.requested[uri] states:
+    //   undefined     no record of web access or records reset
+    //   true          has been requested, XHR in progress
+    //   'done'        received, Ok
+    //   403           HTTP status unauthorized
+    //   404           Ressource does not exist. Can be created etc.
+    //   'redirected'  In attempt to counter CORS problems retried.
+    //   other strings mean various other erros, such as parse errros.
+    //
+
+    this.fetchCallbacks = {}; // fetchCallbacks[uri].push(callback)
+
+    this.nonexistant = {}; // keep track of explict 404s -> we can overwrite etc
+    this.lookedUp = {}
+    this.handlers = []
+    this.mediatypes = {}
+    var sf = this
+    var kb = this.store;
+    var ns = {} // Convenience namespaces needed in this module:
+    // These are delibertely not exported as the user application should
+    // make its own list and not rely on the prefixes used here,
+    // and not be tempted to add to them, and them clash with those of another
+    // application.
+    ns.link = $rdf.Namespace("http://www.w3.org/2007/ont/link#");
+    ns.http = $rdf.Namespace("http://www.w3.org/2007/ont/http#");
+    ns.httph = $rdf.Namespace("http://www.w3.org/2007/ont/httph#");
+    ns.rdf = $rdf.Namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#");
+    ns.rdfs = $rdf.Namespace("http://www.w3.org/2000/01/rdf-schema#");
+    ns.dc = $rdf.Namespace("http://purl.org/dc/elements/1.1/");
+
+
+    $rdf.Fetcher.crossSiteProxy = function(uri) {
+        if ($rdf.Fetcher.crossSiteProxyTemplate)
+          return $rdf.Fetcher.crossSiteProxyTemplate.replace('{uri}', encodeURIComponent(uri));
+        else return undefined;
+    };
+    $rdf.Fetcher.RDFXMLHandler = function(args) {
+        if (args) {
+            this.dom = args[0]
+        }
+        this.handlerFactory = function(xhr) {
+            xhr.handle = function(cb) {
+                //sf.addStatus(xhr.req, 'parsing soon as RDF/XML...');
+                var kb = sf.store;
+                if (!this.dom) this.dom = $rdf.Util.parseXML(xhr.responseText);
+                var root = this.dom.documentElement;
+                if (root.nodeName == 'parsererror') { //@@ Mozilla only See issue/issue110
+                    sf.failFetch(xhr, "Badly formed XML in " + xhr.resource.uri); //have to fail the request
+                    throw new Error("Badly formed XML in " + xhr.resource.uri); //@@ Add details
+                }
+                // Find the last URI we actual URI in a series of redirects
+                // (xhr.resource.uri is the original one)
+                var lastRequested = kb.any(xhr.req, ns.link('requestedURI'));
+                if (!lastRequested) {
+                    lastRequested = xhr.resource;
+                } else {
+                    lastRequested = kb.sym(lastRequested.value);
+                }
+                var parser = new $rdf.RDFParser(kb);
+                // sf.addStatus(xhr.req, 'parsing as RDF/XML...');
+                parser.parse(this.dom, lastRequested.uri, lastRequested);
+                if (!xhr.options.noMeta) {
+                    kb.add(lastRequested, ns.rdf('type'), ns.link('RDFDocument'), sf.appNode);
+                }
+                cb();
+            }
+        }
+    };
+    $rdf.Fetcher.RDFXMLHandler.term = this.store.sym(this.thisURI + ".RDFXMLHandler");
+    $rdf.Fetcher.RDFXMLHandler.toString = function() {
+        return "RDFXMLHandler"
+    };
+    $rdf.Fetcher.RDFXMLHandler.register = function(sf) {
+        sf.mediatypes['application/rdf+xml'] = {}
+    };
+    $rdf.Fetcher.RDFXMLHandler.pattern = new RegExp("application/rdf\\+xml");
+
+    // This would much better use on-board XSLT engine. @@
+    $rdf.Fetcher.doGRDDL = function(kb, doc, xslturi, xmluri) {
+        sf.requestURI('http://www.w3.org/2005/08/' + 'online_xslt/xslt?' + 'xslfile=' + escape(xslturi) + '&xmlfile=' + escape(xmluri), doc)
+    };
+
+    $rdf.Fetcher.XHTMLHandler = function(args) {
+        if (args) {
+            this.dom = args[0]
+        }
+        this.handlerFactory = function(xhr) {
+            xhr.handle = function(cb) {
+                var relation, reverse;
+                if (!this.dom) {
+                    this.dom = $rdf.Util.parseXML(xhr.responseText)
+                }
+                var kb = sf.store;
+
+                // dc:title
+                var title = this.dom.getElementsByTagName('title')
+                if (title.length > 0) {
+                    kb.add(xhr.resource, ns.dc('title'), kb.literal(title[0].textContent), xhr.resource)
+                    // $rdf.log.info("Inferring title of " + xhr.resource)
+                }
+
+                // link rel
+                var links = this.dom.getElementsByTagName('link');
+                for (var x = links.length - 1; x >= 0; x--) { // @@ rev
+                    relation = links[x].getAttribute('rel'); 
+                    reverse = false;
+                    if (!relation) {
+                        relation = links[x].getAttribute('rev'); 
+                        reverse = true;
+                    }
+                    if (relation) {
+                        sf.linkData(xhr, relation,
+                        links[x].getAttribute('href'), xhr.resource, reverse);
+                    }
+                }
+
+                //GRDDL
+                var head = this.dom.getElementsByTagName('head')[0]
+                if (head) {
+                    var profile = head.getAttribute('profile');
+                    if (profile && $rdf.uri.protocol(profile) == 'http') {
+                        // $rdf.log.info("GRDDL: Using generic " + "2003/11/rdf-in-xhtml-processor.");
+                         $rdf.Fetcher.doGRDDL(kb, xhr.resource, "http://www.w3.org/2003/11/rdf-in-xhtml-processor", xhr.resource.uri)
+/*			sf.requestURI('http://www.w3.org/2005/08/'
+					  + 'online_xslt/xslt?'
+					  + 'xslfile=http://www.w3.org'
+					  + '/2003/11/'
+					  + 'rdf-in-xhtml-processor'
+					  + '&xmlfile='
+					  + escape(xhr.resource.uri),
+				      xhr.resource)
+                        */
+                    } else {
+                        // $rdf.log.info("GRDDL: No GRDDL profile in " + xhr.resource)
+                    }
+                }
+                if (!xhr.options.noMeta) {
+                    kb.add(xhr.resource, ns.rdf('type'), ns.link('WebPage'), sf.appNode);
+                }
+                // Do RDFa here
+
+                if ($rdf.parseDOM_RDFa) {
+                    $rdf.parseDOM_RDFa(this.dom, kb, xhr.resource.uri);
+                }
+                cb(); // Fire done callbacks
+            }
+        }
+    };
+    $rdf.Fetcher.XHTMLHandler.term = this.store.sym(this.thisURI + ".XHTMLHandler");
+    $rdf.Fetcher.XHTMLHandler.toString = function() {
+        return "XHTMLHandler"
+    };
+    $rdf.Fetcher.XHTMLHandler.register = function(sf) {
+        sf.mediatypes['application/xhtml+xml'] = {
+            'q': 0.3
+        }
+    };
+    $rdf.Fetcher.XHTMLHandler.pattern = new RegExp("application/xhtml");
+
+
+    /******************************************************/
+
+    $rdf.Fetcher.XMLHandler = function() {
+        this.handlerFactory = function(xhr) {
+            xhr.handle = function(cb) {
+                var kb = sf.store
+                var dom = $rdf.Util.parseXML(xhr.responseText)
+
+                // XML Semantics defined by root element namespace
+                // figure out the root element
+                for (var c = 0; c < dom.childNodes.length; c++) {
+                    // is this node an element?
+                    if (dom.childNodes[c].nodeType == 1) {
+                        // We've found the first element, it's the root
+                        var ns = dom.childNodes[c].namespaceURI;
+
+                        // Is it RDF/XML?
+                        if (ns != undefined && ns == ns['rdf']) {
+                            sf.addStatus(xhr.req, "Has XML root element in the RDF namespace, so assume RDF/XML.")
+                            sf.switchHandler('RDFXMLHandler', xhr, cb, [dom])
+                            return
+                        }
+                        // it isn't RDF/XML or we can't tell
+                        // Are there any GRDDL transforms for this namespace?
+                        // @@ assumes ns documents have already been loaded
+                        var xforms = kb.each(kb.sym(ns), kb.sym("http://www.w3.org/2003/g/data-view#namespaceTransformation"));
+                        for (var i = 0; i < xforms.length; i++) {
+                            var xform = xforms[i];
+                            // $rdf.log.info(xhr.resource.uri + " namespace " + ns + " has GRDDL ns transform" + xform.uri);
+                             $rdf.Fetcher.doGRDDL(kb, xhr.resource, xform.uri, xhr.resource.uri);
+                        }
+                        break
+                    }
+                }
+
+                // Or it could be XHTML?
+                // Maybe it has an XHTML DOCTYPE?
+                if (dom.doctype) {
+                    // $rdf.log.info("We found a DOCTYPE in " + xhr.resource)
+                    if (dom.doctype.name == 'html' && dom.doctype.publicId.match(/^-\/\/W3C\/\/DTD XHTML/) && dom.doctype.systemId.match(/http:\/\/www.w3.org\/TR\/xhtml/)) {
+                        sf.addStatus(xhr.req,"Has XHTML DOCTYPE. Switching to XHTML Handler.\n")
+                        sf.switchHandler('XHTMLHandler', xhr, cb)
+                        return
+                    }
+                }
+
+                // Or what about an XHTML namespace?
+                var html = dom.getElementsByTagName('html')[0]
+                if (html) {
+                    var xmlns = html.getAttribute('xmlns')
+                    if (xmlns && xmlns.match(/^http:\/\/www.w3.org\/1999\/xhtml/)) {
+                        sf.addStatus(xhr.req, "Has a default namespace for " + "XHTML. Switching to XHTMLHandler.\n")
+                        sf.switchHandler('XHTMLHandler', xhr, cb)
+                        return
+                    }
+                }
+
+                // At this point we should check the namespace document (cache it!) and
+                // look for a GRDDL transform
+                // @@  Get namespace document <n>, parse it, look for  <n> grddl:namespaceTransform ?y
+                // Apply ?y to   dom
+                // We give up. What dialect is this?
+                sf.failFetch(xhr, "Unsupported dialect of XML: not RDF or XHTML namespace, etc.\n"+xhr.responseText.slice(0,80));
+            }
+        }
+    };
+    $rdf.Fetcher.XMLHandler.term = this.store.sym(this.thisURI + ".XMLHandler");
+    $rdf.Fetcher.XMLHandler.toString = function() {
+        return "XMLHandler"
+    };
+    $rdf.Fetcher.XMLHandler.register = function(sf) {
+        sf.mediatypes['text/xml'] = {
+            'q': 0.2
+        }
+        sf.mediatypes['application/xml'] = {
+            'q': 0.2
+        }
+    };
+    $rdf.Fetcher.XMLHandler.pattern = new RegExp("(text|application)/(.*)xml");
+
+    $rdf.Fetcher.HTMLHandler = function() {
+        this.handlerFactory = function(xhr) {
+            xhr.handle = function(cb) {
+                var rt = xhr.responseText
+                // We only handle XHTML so we have to figure out if this is XML
+                // $rdf.log.info("Sniffing HTML " + xhr.resource + " for XHTML.");
+
+                if (rt.match(/\s*<\?xml\s+version\s*=[^<>]+\?>/)) {
+                    sf.addStatus(xhr.req, "Has an XML declaration. We'll assume " +
+                        "it's XHTML as the content-type was text/html.\n")
+                    sf.switchHandler('XHTMLHandler', xhr, cb)
+                    return
+                }
+
+                // DOCTYPE
+                // There is probably a smarter way to do this
+                if (rt.match(/.*<!DOCTYPE\s+html[^<]+-\/\/W3C\/\/DTD XHTML[^<]+http:\/\/www.w3.org\/TR\/xhtml[^<]+>/)) {
+                    sf.addStatus(xhr.req, "Has XHTML DOCTYPE. Switching to XHTMLHandler.\n")
+                    sf.switchHandler('XHTMLHandler', xhr, cb)
+                    return
+                }
+
+                // xmlns
+                if (rt.match(/[^(<html)]*<html\s+[^<]*xmlns=['"]http:\/\/www.w3.org\/1999\/xhtml["'][^<]*>/)) {
+                    sf.addStatus(xhr.req, "Has default namespace for XHTML, so switching to XHTMLHandler.\n")
+                    sf.switchHandler('XHTMLHandler', xhr, cb)
+                    return
+                }
+
+
+                // dc:title	                       //no need to escape '/' here
+                var titleMatch = (new RegExp("<title>([\\s\\S]+?)</title>", 'im')).exec(rt);
+                if (titleMatch) {
+                    var kb = sf.store;
+                    kb.add(xhr.resource, ns.dc('title'), kb.literal(titleMatch[1]), xhr.resource); //think about xml:lang later
+                    kb.add(xhr.resource, ns.rdf('type'), ns.link('WebPage'), sf.appNode);
+                    cb(); //doneFetch, not failed
+                    return;
+                }
+
+                sf.failFetch(xhr, "Sorry, can't yet parse non-XML HTML")
+            }
+        }
+    };
+    $rdf.Fetcher.HTMLHandler.term = this.store.sym(this.thisURI + ".HTMLHandler");
+    $rdf.Fetcher.HTMLHandler.toString = function() {
+        return "HTMLHandler"
+    };
+    $rdf.Fetcher.HTMLHandler.register = function(sf) {
+        sf.mediatypes['text/html'] = {
+            'q': 0.3
+        }
+    };
+    $rdf.Fetcher.HTMLHandler.pattern = new RegExp("text/html");
+
+    /***********************************************/
+
+    $rdf.Fetcher.TextHandler = function() {
+        this.handlerFactory = function(xhr) {
+            xhr.handle = function(cb) {
+                // We only speak dialects of XML right now. Is this XML?
+                var rt = xhr.responseText
+
+                // Look for an XML declaration
+                if (rt.match(/\s*<\?xml\s+version\s*=[^<>]+\?>/)) {
+                    sf.addStatus(xhr.req, "Warning: "+xhr.resource + " has an XML declaration. We'll assume "
+                        + "it's XML but its content-type wasn't XML.\n")
+                    sf.switchHandler('XMLHandler', xhr, cb)
+                    return
+                }
+
+                // Look for an XML declaration
+                if (rt.slice(0, 500).match(/xmlns:/)) {
+                    sf.addStatus(xhr.req, "May have an XML namespace. We'll assume "
+                            + "it's XML but its content-type wasn't XML.\n")
+                    sf.switchHandler('XMLHandler', xhr, cb)
+                    return
+                }
+
+                // We give up finding semantics - this is not an error, just no data
+                sf.addStatus(xhr.req, "Plain text document, no known RDF semantics.");
+                sf.doneFetch(xhr, [xhr.resource.uri]);
+//                sf.failFetch(xhr, "unparseable - text/plain not visibly XML")
+//                dump(xhr.resource + " unparseable - text/plain not visibly XML, starts:\n" + rt.slice(0, 500)+"\n")
+
+            }
+        }
+    };
+    $rdf.Fetcher.TextHandler.term = this.store.sym(this.thisURI + ".TextHandler");
+    $rdf.Fetcher.TextHandler.toString = function() {
+        return "TextHandler";
+    };
+    $rdf.Fetcher.TextHandler.register = function(sf) {
+        sf.mediatypes['text/plain'] = {
+            'q': 0.1
+        }
+    }
+    $rdf.Fetcher.TextHandler.pattern = new RegExp("text/plain");
+
+    /***********************************************/
+
+    $rdf.Fetcher.N3Handler = function() {
+        this.handlerFactory = function(xhr) {
+            xhr.handle = function(cb) {
+                // Parse the text of this non-XML file
+                $rdf.log.debug("web.js: Parsing as N3 " + xhr.resource.uri); // @@@@ comment me out
+                //sf.addStatus(xhr.req, "N3 not parsed yet...")
+                var rt = xhr.responseText
+                var p = $rdf.N3Parser(kb, kb, xhr.resource.uri, xhr.resource.uri, null, null, "", null)
+                //                p.loadBuf(xhr.responseText)
+                try {
+                    p.loadBuf(xhr.responseText)
+
+                } catch (e) {
+                    var msg = ("Error trying to parse " + xhr.resource + " as Notation3:\n" + e +':\n'+e.stack)
+                    // dump(msg+"\n")
+                    sf.failFetch(xhr, msg)
+                    return;
+                }
+
+                sf.addStatus(xhr.req, "N3 parsed: " + p.statementCount + " triples in " + p.lines + " lines.")
+                sf.store.add(xhr.resource, ns.rdf('type'), ns.link('RDFDocument'), sf.appNode);
+                args = [xhr.resource.uri]; // Other args needed ever?
+                sf.doneFetch(xhr, args)
+            }
+        }
+    };
+    $rdf.Fetcher.N3Handler.term = this.store.sym(this.thisURI + ".N3Handler");
+    $rdf.Fetcher.N3Handler.toString = function() {
+        return "N3Handler";
+    }
+    $rdf.Fetcher.N3Handler.register = function(sf) {
+        sf.mediatypes['text/n3'] = {
+            'q': '1.0'
+        } // as per 2008 spec
+        sf.mediatypes['application/x-turtle'] = {
+            'q': 1.0
+        } // pre 2008
+        sf.mediatypes['text/turtle'] = {
+            'q': 1.0
+        } // pre 2008
+    }
+    $rdf.Fetcher.N3Handler.pattern = new RegExp("(application|text)/(x-)?(rdf\\+)?(n3|turtle)")
+
+    /***********************************************/
+
+    $rdf.Util.callbackify(this, ['request', 'recv', 'headers', 'load', 'fail', 'refresh', 'retract', 'done']);
+
+    this.addHandler = function(handler) {
+        sf.handlers.push(handler)
+        handler.register(sf)
+    }
+
+    this.switchHandler = function(name, xhr, cb, args) {
+        var kb = this.store; var handler = null;
+        for (var i=0; i<this.handlers.length; i++) {
+            if (''+this.handlers[i] == name) {
+                handler = this.handlers[i];
+            }
+        }
+        if (handler == undefined) {
+            throw 'web.js: switchHandler: name='+name+' , this.handlers ='+this.handlers+'\n' +
+                    'switchHandler: switching to '+handler+'; sf='+sf +
+                    '; typeof $rdf.Fetcher='+typeof $rdf.Fetcher +
+                    ';\n\t $rdf.Fetcher.HTMLHandler='+$rdf.Fetcher.HTMLHandler+'\n' +
+                    '\n\tsf.handlers='+sf.handlers+'\n'
+        }
+        (new handler(args)).handlerFactory(xhr);
+        xhr.handle(cb)
+    }
+
+    this.addStatus = function(req, status) {
+        //<Debug about="parsePerformance">
+        var now = new Date();
+        status = "[" + now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds() + "." + now.getMilliseconds() + "] " + status;
+        //</Debug>
+        var kb = this.store
+        var s = kb.the(req, ns.link('status'));
+        if (s && s.append) {
+            s.append(kb.literal(status));
+        } else {
+            $rdf.log.warn("web.js: No list to add to: " + s + ',' + status); // @@@
+        };
+    }
+
+    // Record errors in the system on failure
+    // Returns xhr so can just do return this.failfetch(...)
+    this.failFetch = function(xhr, status) {
+        this.addStatus(xhr.req, status)
+        if (!xhr.options.noMeta) {
+            kb.add(xhr.resource, ns.link('error'), status)
+        }
+        this.requested[$rdf.uri.docpart(xhr.resource.uri)] = xhr.status; // changed 2015 was false
+        while (this.fetchCallbacks[xhr.resource.uri] && this.fetchCallbacks[xhr.resource.uri].length) {
+            this.fetchCallbacks[xhr.resource.uri].shift()(false, "Fetch of <" + xhr.resource.uri + "> failed: "+status, xhr);
+        }
+        delete this.fetchCallbacks[xhr.resource.uri];
+        this.fireCallbacks('fail', [xhr.requestedURI, status])
+        xhr.abort()
+        return xhr
+    }
+
+    // in the why part of the quad distinguish between HTML and HTTP header
+    // Reverse is set iif the link was rev= as opposed to rel=
+    this.linkData = function(xhr, rel, uri, why, reverse) {
+        var x = xhr.resource;
+        if (!uri) return;
+        var predicate;
+        // See http://www.w3.org/TR/powder-dr/#httplink for describedby 2008-12-10
+        var obj = kb.sym($rdf.uri.join(uri, xhr.resource.uri));
+        if (rel == 'alternate' || rel == 'seeAlso' || rel == 'meta' || rel == 'describedby') {
+            if (obj.uri === xhr.resource.uri) return;
+            predicate = ns.rdfs('seeAlso');
+        } else {
+        // See https://www.iana.org/assignments/link-relations/link-relations.xml
+        // Alas not yet in RDF yet for each predicate
+            predicate = kb.sym($rdf.uri.join(rel, 'http://www.iana.org/assignments/link-relations/'));
+        }
+        if (reverse) {
+            kb.add(obj, predicate, xhr.resource, why);
+        } else {
+            kb.add(xhr.resource, predicate, obj, why);
+        }
+    };
+
+    this.parseLinkHeader = function(xhr, thisReq) {
+        var link;
+        try {
+            link = xhr.getResponseHeader('link'); // May crash from CORS error
+        }catch(e){}
+        if (link) {
+            var linkexp = /<[^>]*>\s*(\s*;\s*[^\(\)<>@,;:"\/\[\]\?={} \t]+=(([^\(\)<>@,;:"\/\[\]\?={} \t]+)|("[^"]*")))*(,|$)/g;
+            var paramexp = /[^\(\)<>@,;:"\/\[\]\?={} \t]+=(([^\(\)<>@,;:"\/\[\]\?={} \t]+)|("[^"]*"))/g;
+
+            var matches = link.match(linkexp);
+            var rels = {};
+            for (var i = 0; i < matches.length; i++) {
+                var split = matches[i].split('>');
+                var href = split[0].substring(1);
+                var ps = split[1];
+                var s = ps.match(paramexp);
+                for (var j = 0; j < s.length; j++) {
+                    var p = s[j];
+                    var paramsplit = p.split('=');
+                    var name = paramsplit[0];
+                    var rel = paramsplit[1].replace(/["']/g, ''); //'"
+                    this.linkData(xhr, rel, href, thisReq);
+                }
+            }
+        }
+    };
+
+
+
+    this.doneFetch = function(xhr, args) {
+        this.addStatus(xhr.req, 'Done.')
+        // $rdf.log.info("Done with parse, firing 'done' callbacks for " + xhr.resource)
+        this.requested[xhr.resource.uri] = 'done'; //Kenny
+        while (this.fetchCallbacks[xhr.resource.uri] && this.fetchCallbacks[xhr.resource.uri].length) {
+            this.fetchCallbacks[xhr.resource.uri].shift()(true, undefined, xhr);
+        }
+        delete this.fetchCallbacks[xhr.resource.uri];
+        this.fireCallbacks('done', args)
+    };
+
+
+    [$rdf.Fetcher.RDFXMLHandler, $rdf.Fetcher.XHTMLHandler,
+     $rdf.Fetcher.XMLHandler, $rdf.Fetcher.HTMLHandler,
+     $rdf.Fetcher.TextHandler, $rdf.Fetcher.N3Handler ].map(this.addHandler);
+
+
+
+    /** Note two nodes are now smushed
+     **
+     ** If only one was flagged as looked up, then
+     ** the new node is looked up again, which
+     ** will make sure all the URIs are dereferenced
+     */
+    this.nowKnownAs = function(was, now) {
+        if (this.lookedUp[was.uri]) {
+            if (!this.lookedUp[now.uri]) this.lookUpThing(now, was) //  @@@@  Transfer userCallback
+        } else if (this.lookedUp[now.uri]) {
+            if (!this.lookedUp[was.uri]) this.lookUpThing(was, now)
+        }
+    }
+
+
+
+
+
+    // Looks up something.
+    //
+    // Looks up all the URIs a things has.
+    //
+    // Parameters:
+    //
+    //  term:       canonical term for the thing whose URI is to be dereferenced
+    //  rterm:      the resource which refered to this (for tracking bad links)
+    //  options:    (old: force paraemter) or dictionary of options:
+    //      force:      Load the data even if loaded before
+    //  oneDone:   is called as callback(ok, errorbody, xhr) for each one
+    //  allDone:   is called as callback(ok, errorbody) for all of them
+    // Returns      the number of URIs fetched
+    //
+    this.lookUpThing = function(term, rterm, options, oneDone, allDone) {
+        var uris = kb.uris(term) // Get all URIs
+        var success = true;
+        var errors = '';
+        var outstanding = {}, force;
+        if (options === false || options === true) { // Old signature
+            force = options;
+            options = { force: force };
+        } else {
+            if (options === undefined) options = {};
+            force = !!options.force;
+        }
+
+        if (typeof uris !== 'undefined') {
+            for (var i = 0; i < uris.length; i++) {
+                var u = uris[i];
+                outstanding[u] = true;
+                this.lookedUp[u] = true;
+                var sf = this;
+
+                var requestOne = function requestOne(u1){
+                    sf.requestURI($rdf.uri.docpart(u1), rterm, options,
+                        function(ok, body, xhr){
+                            if (ok) {
+                                if (oneDone) oneDone(true, u1);
+                            } else {
+                                if (oneDone) oneDone(false, body);
+                                success = false;
+                                errors += body + '\n';
+                            };
+                            delete outstanding[u];
+                            for (x in outstanding) return;
+                            if (allDone) allDone(success, errors);
+                        }
+                    );
+                };
+                requestOne(u);
+            }
+        }
+        return uris.length
+    }
+
+    /* Promise-based load function
+    ** 
+    ** Promise delivers xhr
+    **
+    ** @@ todo: If p1 is array then sequence or parallel fetch of all
+    */
+    this.load = function(uri, options) {
+	uri = uri.uri || uri;
+	var p = new Promise(function(resolve, reject){
+	    this.nowOrWhenFetched(uri, options, function(ok, message, xhr){
+		if (ok) {
+		    resolve(xhr);
+		} else {
+		    reject(message, xhr);
+		}
+	    
+	    });
+	});
+	return p;
+    }
+
+    /*  Ask for a doc to be loaded if necessary then call back
+    **
+    ** Changed 2013-08-20:  Added (ok, errormessage) params to callback
+    **
+    ** Calling methods:
+    **   nowOrWhenFetched (uri, userCallback)
+    **   nowOrWhenFetched (uri, options, userCallback)
+    **   nowOrWhenFetched (uri, referringTerm, userCallback, options)  <-- old
+    **   nowOrWhenFetched (uri, referringTerm, userCallback) <-- old
+    **
+    **  Options include:
+    **   referringTerm    The docuemnt in which this link was found.
+    **                    this is valuable when finding the source of bad URIs
+    **   force            boolean.  Never mind whether you have tried before,
+    **                    load this from scratch.
+    **   forceContentType Override the incoming header to force the data to be
+    **                    treaed as this content-type.
+    **/
+    this.nowOrWhenFetched = function(uri, p2, userCallback, options) {
+        uri = uri.uri || uri; // allow symbol object or string to be passed
+        if (typeof p2 == 'function') {
+            options = {};
+            userCallback = p2;
+        } else if (typeof p2 == 'undefined') { // original calling signature
+            referingTerm = undefined;
+        } else if (p2 instanceof $rdf.Symbol) {
+            referingTerm = p2;
+        } else {
+            options = p2;
+        }
+
+        this.requestURI(uri, p2, options || {}, userCallback);
+    }
+
+    this.get = this.nowOrWhenFetched;
+
+    // Look up response header
+    //
+    // Returns: a list of header values found in a stored HTTP response
+    //      or [] if response was found but no header found
+    //      or undefined if no response is available.
+    //
+    this.getHeader = function(doc, header) {
+        var kb = this.store;
+        var requests = kb.each(undefined, ns.link("requestedURI"), doc.uri);
+        for (var r=0; r<requests.length; r++) {
+            var request = requests[r];
+            if (request !== undefined) {
+                var response = kb.any(request, ns.link("response"));
+                if (request !== undefined) {
+                    var results = kb.each(response, ns.httph(header.toLowerCase()));
+                    if (results.length) {
+                        return results.map(function(v){return v.value});
+                    }
+                    return [];
+                }
+            }
+        }
+        return undefined;
+    };
+
+    this.proxyIfNecessary = function(uri) {
+        if (typeof tabulator != 'undefined' && tabulator.isExtension) return uri; // Extenstion does not need proxy
+            // browser does 2014 on as https browser script not trusted
+            // If the web app origin is https: then the mixed content rules
+            // prevent it loading insecure http: stuff so we need proxy.
+        if ($rdf.Fetcher.crossSiteProxyTemplate && (typeof document !== 'undefined') &&document.location
+			&& ('' + document.location).slice(0,6) === 'https:' // Origin is secure
+                && uri.slice(0,5) === 'http:') { // requested data is not
+              return $rdf.Fetcher.crossSiteProxyTemplate.replace('{uri}', encodeURIComponent(uri));
+        }
+        return uri;
+    };
+
+
+    this.saveRequestMetadata = function(xhr, kb, docuri) {
+        var request = kb.bnode();
+        xhr.resource = $rdf.sym(docuri);
+
+        xhr.req = request;
+        if (!xhr.options.noMeta) { // Store no triples but do mind the bnode for req
+            var now = new Date();
+            var timeNow = "[" + now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds() + "] ";
+            kb.add(request, ns.rdfs("label"), kb.literal(timeNow + ' Request for ' + docuri), this.appNode);
+            kb.add(request, ns.link("requestedURI"), kb.literal(docuri), this.appNode);
+
+            kb.add(request, ns.link('status'), kb.collection(), this.appNode);
+        }
+        return request;
+    };
+
+    this.saveResponseMetadata = function(xhr, kb) {
+        var response = kb.bnode();
+
+        if (xhr.req) kb.add(xhr.req, ns.link('response'), response);
+        kb.add(response, ns.http('status'), kb.literal(xhr.status), response);
+        kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response);
+
+        xhr.headers = {}
+        if ($rdf.uri.protocol(xhr.resource.uri) == 'http' || $rdf.uri.protocol(xhr.resource.uri) == 'https') {
+            xhr.headers = $rdf.Util.getHTTPHeaders(xhr)
+            for (var h in xhr.headers) { // trim below for Safari - adds a CR!
+                kb.add(response, ns.httph(h.toLowerCase()), xhr.headers[h].trim(), response)
+            }
+        }
+        return response;
+    };
+
+
+    /** Requests a document URI and arranges to load the document.
+     ** Parameters:
+     **	    term:  term for the thing whose URI is to be dereferenced
+     **      rterm:  the resource which refered to this (for tracking bad links)
+     **      options:
+     **              force:  Load the data even if loaded before
+     **              withCredentials:   flag for XHR/CORS etc
+     **      userCallback:  Called with (true) or (false, errorbody, {status: 400}) after load is done or failed
+     ** Return value:
+     **	    The xhr object for the HTTP access
+     **      null if the protocol is not a look-up protocol,
+     **              or URI has already been loaded
+     */
+    this.requestURI = function(docuri, rterm, options, userCallback) { //sources_request_new
+        docuri = docuri.uri || docuri; // Symbol or string
+        // Remove #localid
+        docuri = docuri.split('#')[0];
+
+        if (typeof options === 'boolean') options = { 'force': options}; // Ols dignature
+        if (typeof options === 'undefined') options = {};
+        var force = !! options.force
+        var kb = this.store;
+        var args = arguments;
+
+
+        var pcol = $rdf.uri.protocol(docuri);
+        if (pcol == 'tel' || pcol == 'mailto' || pcol == 'urn') {
+            return userCallback? userCallback(false, "Unsupported protocol", {'status':  900 }) : undefined; //"No look-up operation on these, but they are not errors?"
+        }
+        var docterm = kb.sym(docuri);
+
+        var sta = this.getState(docuri);
+        if (!force) {
+            if (sta == 'fetched') return userCallback ? userCallback(true) : undefined;
+            if (sta == 'failed') return userCallback ?
+                userCallback(false, "Previously failed. " + this.requested[docuri],
+                    {'status': this.requested[docuri]}) : undefined; // An xhr standin
+            //if (sta == 'requested') return userCallback? userCallback(false, "Sorry already requested - pending already.", {'status': 999 }) : undefined;
+        } else {
+            delete this.nonexistant[docuri];
+        }
+        // @@ Should allow concurrent requests
+
+        // If it is 'failed', then shoulkd we try again?  I think so so an old error doens't get stuck
+        //if (sta == 'unrequested')
+
+
+
+        this.fireCallbacks('request', args); //Kenny: fire 'request' callbacks here
+        // dump( "web.js: Requesting uri: " + docuri + "\n" );
+
+
+        if (userCallback) {
+            if (!this.fetchCallbacks[docuri]) {
+                this.fetchCallbacks[docuri] = [ userCallback ];
+            } else {
+                this.fetchCallbacks[docuri].push(userCallback);
+            }
+        }
+
+        if (this.requested[docuri] === true) {
+            return; // Don't ask again - wait for existing call
+        } else {
+            this.requested[docuri] = true;
+        }
+
+
+        if (!options.noMeta && rterm && rterm.uri) {
+            kb.add(docterm.uri, ns.link("requestedBy"), rterm.uri, this.appNode)
+        }
+
+        var useJQuery = typeof jQuery != 'undefined';
+        if (!useJQuery) {
+            var xhr = $rdf.Util.XMLHTTPFactory();
+            var req = xhr.req = kb.bnode();
+            xhr.options = options;
+            xhr.resource = docterm;
+            xhr.requestedURI = args[0];
+        } else {
+            var req = kb.bnode();
+        }
+        var requestHandlers = kb.collection();
+        var sf = this;
+
+        var now = new Date();
+        var timeNow = "[" + now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds() + "] ";
+        if (!options.noMeta) {
+            kb.add(req, ns.rdfs("label"), kb.literal(timeNow + ' Request for ' + docuri), this.appNode)
+            kb.add(req, ns.link("requestedURI"), kb.literal(docuri), this.appNode)
+            kb.add(req, ns.link('status'), kb.collection(), this.appNode)
+        }
+        // This should not be stored in the store, but in the JS data
+        /*
+        if (typeof kb.anyStatementMatching(this.appNode, ns.link("protocol"), $rdf.uri.protocol(docuri)) == "undefined") {
+            // update the status before we break out
+            this.failFetch(xhr, "Unsupported protocol: "+$rdf.uri.protocol(docuri))
+            return xhr
+        }
+        */
+        var checkCredentialsRetry = function() {
+            if (!xhr.withCredentials) return false; // not dealt with
+            
+            console.log("@@ Retrying with no credentials for " + xhr.resource)
+            xhr.abort();
+            delete sf.requested[docuri]; // forget the original request happened
+            newopt = {};
+            for (opt in options) if (options.hasOwnProperty(opt)) {
+                newopt[opt] = options[opt]
+            }
+            newopt.withCredentials = false;
+            sf.addStatus(xhr.req, "Abort: Will retry with credentials SUPPRESSED to see if that helps");
+            sf.requestURI(docuri, rterm, newopt, xhr.userCallback); // usercallback already registered (with where?)
+            return true;
+        }
+
+
+        var onerrorFactory = function(xhr) {
+            return function(event) {
+                xhr.onErrorWasCalled = true; // debugging and may need it
+                if  (typeof document !== 'undefined') { // Mashup situation, not node etc
+                    if ($rdf.Fetcher.crossSiteProxyTemplate && document.location && !xhr.proxyUsed) { 
+                        var hostpart = $rdf.uri.hostpart;
+                        var here = '' + document.location;
+                        var uri = xhr.resource.uri
+                        if (hostpart(here) && hostpart(uri) && hostpart(here) != hostpart(uri)) {
+                            if (xhr.status === 401 || xhr.status === 403 || xhr.status === 404) {
+                                onreadystatechangeFactory(xhr)();
+                            } else {
+                                newURI = $rdf.Fetcher.crossSiteProxy(uri);
+                                sf.addStatus(xhr.req, "BLOCKED -> Cross-site Proxy to <" + newURI + ">");
+                                if (xhr.aborted) return;
+
+                                var kb = sf.store;
+                                var oldreq = xhr.req;
+                                if (!xhr.options.noMeta) {
+                                    kb.add(oldreq, ns.http('redirectedTo'), kb.sym(newURI), oldreq);
+                                }
+                                xhr.abort()
+                                xhr.aborted = true
+
+                                sf.addStatus(oldreq, 'redirected to new request') // why
+                                //the callback throws an exception when called from xhr.onerror (so removed)
+                                //sf.fireCallbacks('done', args) // Are these args right? @@@   Not done yet! done means success
+                                sf.requested[xhr.resource.uri] = 'redirected';
+
+                                if (sf.fetchCallbacks[xhr.resource.uri]) {
+                                    if (!sf.fetchCallbacks[newURI]) {
+                                        sf.fetchCallbacks[newURI] = [];
+                                    }
+                                    sf.fetchCallbacks[newURI] == sf.fetchCallbacks[newURI].concat(sf.fetchCallbacks[xhr.resource.uri]);
+                                    delete sf.fetchCallbacks[xhr.resource.uri];
+                                }
+
+                                var xhr2 = sf.requestURI(newURI, xhr.resource, options);
+                                if (xhr2) {
+                                    xhr2.proxyUsed = true; //only try the proxy once
+                                }
+                                if (xhr2 && xhr2.req) {
+                                    if (!xhr.options.noMeta) {
+                                        kb.add(xhr.req,
+                                            kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'),
+                                            xhr2.req,
+                                            sf.appNode);
+                                    }
+                                    return;
+                                }
+                            }
+                        }
+                        
+                        if (checkCredentialsRetry(xhr)) {
+                            return;
+                        }
+                        xhr.status = 999; // 
+                    }
+                }; // mashu
+            } // function of event
+        }; // onerrorFactory
+
+            // Set up callbacks
+        var onreadystatechangeFactory = function(xhr) {
+            return function() {
+                var handleResponse = function() {
+                    if (xhr.handleResponseDone) return;
+                    xhr.handleResponseDone = true;
+                    var handler = null;
+                    var thisReq = xhr.req // Might have changes by redirect
+                    sf.fireCallbacks('recv', args)
+                    var kb = sf.store;
+                    var response = sf.saveResponseMetadata(xhr, kb);
+                    sf.fireCallbacks('headers', [{uri: docuri, headers: xhr.headers}]);
+
+                    // Check for masked errors.
+                    // For "security reasons" theboraser hides errors such as CORS errors from 
+                    // the calling code (2015). oneror() used to be called but is not now.
+                    // 
+                    if (xhr.status === 0) {
+                        console.log("Masked error - status 0 for " + xhr.resource.uri);
+                        if (checkCredentialsRetry(xhr)) { // retry is could be credentials flag CORS issue
+                            return;
+                        }
+                        xhr.status = 900; // unknown masked error
+                        return;
+                    }
+                    if (xhr.status >= 400) { // For extra dignostics, keep the reply
+                    //  @@@ 401 should cause  a retry with credential son
+                    // @@@ cache the credentials flag by host ????
+                        if (xhr.status === 404) {
+                            kb.fetcher.nonexistant[xhr.resource.uri] = true;
+                        }
+                        if (xhr.responseText.length > 10) {
+                            var response = kb.bnode();
+                            kb.add(response, ns.http('content'), kb.literal(xhr.responseText), response);
+                            if (xhr.statusText) {
+                                kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response);
+                            }
+                            // dump("HTTP >= 400 responseText:\n"+xhr.responseText+"\n"); // @@@@
+                        }
+                        sf.failFetch(xhr, "HTTP error for " +xhr.resource + ": "+ xhr.status + ' ' + xhr.statusText);
+                        return;
+                    }
+
+                    var loc = xhr.headers['content-location'];
+
+                    // deduce some things from the HTTP transaction
+                    var addType = function(cla) { // add type to all redirected resources too
+                        var prev = thisReq;
+                        if (loc) {
+                            var docURI = kb.any(prev, ns.link('requestedURI'));
+                            if (docURI != loc) {
+                                kb.add(kb.sym(loc), ns.rdf('type'), cla, sf.appNode);
+                            }
+                        }
+                        for (;;) {
+                            var doc = kb.any(prev, ns.link('requestedURI'));
+                            if (doc && doc.value) // convert Literal
+                                kb.add(kb.sym(doc.value), ns.rdf('type'), cla, sf.appNode);
+                            prev = kb.any(undefined, kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'), prev);
+                            if (!prev) break;
+                            var response = kb.any(prev, kb.sym('http://www.w3.org/2007/ont/link#response'));
+                            if (!response) break;
+                            var redirection = kb.any(response, kb.sym('http://www.w3.org/2007/ont/http#status'));
+                            if (!redirection) break;
+                            if (redirection != '301' && redirection != '302') break;
+                        }
+                    }
+                    // This is a minimal set to allow the use of damaged servers if necessary
+                    var extensionToContentType = {
+                        'rdf': 'application/rdf+xml', 'owl': 'application/rdf+xml',
+                        'n3': 'text/n3', 'ttl': 'text/turtle', 'nt': 'text/n3', 'acl': 'text/n3',
+                        'html': 'text/html', 'html': 'text/htm',
+                        'xml': 'text/xml'
+                    };
+
+                    if (xhr.status == 200) {
+                        addType(ns.link('Document'));
+                        var ct = xhr.headers['content-type'];
+                        if (options.forceContentType) {
+                            xhr.headers['content-type'] = options.forceContentType;
+                        };
+                        if (!ct || ct.indexOf('application/octet-stream') >=0 ) {
+                            var guess = extensionToContentType[xhr.resource.uri.split('.').pop()];
+                            if (guess) {
+                                xhr.headers['content-type'] = guess;
+                            }
+                        }
+                        if (ct) {
+                            if (ct.indexOf('image/') == 0 || ct.indexOf('application/pdf') == 0) addType(kb.sym('http://purl.org/dc/terms/Image'));
+                        }
+                        if (options.clearPreviousData) { // Before we parse new data clear old but only on 200
+                            kb.removeDocument(xhr.resource);
+                        };
+                        
+                    }
+                    // application/octet-stream; charset=utf-8
+
+
+
+                    if ($rdf.uri.protocol(xhr.resource.uri) == 'file' || $rdf.uri.protocol(xhr.resource.uri) == 'chrome') {
+                        if (options.forceContentType) {
+                            xhr.headers['content-type'] = options.forceContentType;
+                        } else {
+                            var guess = extensionToContentType[xhr.resource.uri.split('.').pop()];
+                            if (guess) {
+                                xhr.headers['content-type'] = guess;
+                            } else {
+                                xhr.headers['content-type'] = 'text/xml';
+                            }
+                        }
+                    }
+
+                    // If we have alread got the thing at this location, abort
+                    if (loc) {
+                        var udoc = $rdf.uri.join(xhr.resource.uri, loc)
+                        if (!force && udoc != xhr.resource.uri && sf.requested[udoc]
+                            && sf.requested[udoc] == 'done') { // we have already fetched this in fact.
+                            // should we smush too?
+                            // $rdf.log.info("HTTP headers indicate we have already" + " retrieved " + xhr.resource + " as " + udoc + ". Aborting.")
+                            sf.doneFetch(xhr, args)
+                            xhr.abort()
+                            return
+                        }
+                        sf.requested[udoc] = true
+                    }
+
+                    for (var x = 0; x < sf.handlers.length; x++) {
+                        if (xhr.headers['content-type'] && xhr.headers['content-type'].match(sf.handlers[x].pattern)) {
+                            handler = new sf.handlers[x]();
+                            requestHandlers.append(sf.handlers[x].term) // FYI
+                            break
+                        }
+                    }
+
+                    sf.parseLinkHeader(xhr, thisReq);
+
+                    if (handler) {
+                        try {
+                            handler.handlerFactory(xhr);
+                        } catch(e) { // Try to avoid silent errors
+                            sf.failFetch(xhr, "Exception handling content-type " + xhr.headers['content-type'] + ' was: '+e);
+                        };
+                    } else {
+                        sf.doneFetch(xhr, args); //  Not a problem, we just don't extract data.
+                        /*
+                        // sf.failFetch(xhr, "Unhandled content type: " + xhr.headers['content-type']+
+                        //        ", readyState = "+xhr.readyState);
+                        */
+                        return;
+                    }
+                };
+
+                // DONE: 4
+                // HEADERS_RECEIVED: 2
+                // LOADING: 3
+                // OPENED: 1
+                // UNSENT: 0
+
+                // $rdf.log.debug("web.js: XHR " + xhr.resource.uri + ' readyState='+xhr.readyState); // @@@@ comment me out
+
+                switch (xhr.readyState) {
+                case 0:
+                    var uri = xhr.resource.uri, newURI;
+                    if (this.crossSiteProxyTemplate && (typeof document !== 'undefined') &&document.location) { // In mashup situation
+                        var hostpart = $rdf.uri.hostpart;
+                        var here = '' + document.location;
+                        if (hostpart(here) && hostpart(uri) && hostpart(here) != hostpart(uri)) {
+                            newURI = this.crossSiteProxyTemplate.replace('{uri}', encodeURIComponent(uri));
+                            sf.addStatus(xhr.req, "BLOCKED -> Cross-site Proxy to <" + newURI + ">");
+                            if (xhr.aborted) return;
+
+                            var kb = sf.store;
+                            var oldreq = xhr.req;
+                            kb.add(oldreq, ns.http('redirectedTo'), kb.sym(newURI), oldreq);
+
+
+                            ////////////// Change the request node to a new one:  @@@@@@@@@@@@ Duplicate?
+                            var newreq = xhr.req = kb.bnode() // Make NEW reqest for everything else
+                            kb.add(oldreq, ns.http('redirectedRequest'), newreq, xhr.req);
+
+                            var now = new Date();
+                            var timeNow = "[" + now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds() + "] ";
+                            kb.add(newreq, ns.rdfs("label"), kb.literal(timeNow + ' Request for ' + newURI), this.appNode)
+                            kb.add(newreq, ns.link('status'), kb.collection(), this.appNode);
+                            kb.add(newreq, ns.link("requestedURI"), kb.literal(newURI), this.appNode);
+
+                            var response = kb.bnode();
+                            kb.add(oldreq, ns.link('response'), response);
+                            // kb.add(response, ns.http('status'), kb.literal(xhr.status), response);
+                            // if (xhr.statusText) kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response)
+
+                            xhr.abort()
+                            xhr.aborted = true;
+                            xhr.redirected = true;
+
+                            sf.addStatus(oldreq, 'redirected XHR') // why
+
+                            if (sf.fetchCallbacks[xhr.resource.uri]) {
+                                if (!sf.fetchCallbacks[newURI]) {
+                                    sf.fetchCallbacks[newURI] = [];
+                                }
+                                sf.fetchCallbacks[newURI] == sf.fetchCallbacks[newURI].concat(sf.fetchCallbacks[xhr.resource.uri]);
+                                delete sf.fetchCallbacks[xhr.resource.uri];
+                            }
+
+
+                            sf.fireCallbacks('redirected', args) // Are these args right? @@@
+                            sf.requested[xhr.resource.uri] = 'redirected';
+
+                            var xhr2 = sf.requestURI(newURI, xhr.resource, xhr.options || {} );
+                            if (xhr2 && xhr2.req) kb.add(xhr.req,
+                                kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'),
+                                xhr2.req, sf.appNode);                             return;
+                        }
+                    }
+                    sf.failFetch(xhr, "HTTP Blocked. (ReadyState 0) Cross-site violation for <"+
+                    docuri+">");
+
+                    break;
+
+                case 3:
+                    // Intermediate state -- 3 may OR MAY NOT be called, selon browser.
+                    // handleResponse();   // In general it you can't do it yet as the headers are in but not the data
+                    break
+                case 4:
+                    // Final state for this XHR but may be redirected
+                    handleResponse();
+                    // Now handle
+                    if (xhr.handle && xhr.responseText) {
+                        if (sf.requested[xhr.resource.uri] === 'redirected') {
+                            break;
+                        }
+                        sf.fireCallbacks('load', args)
+                        xhr.handle(function() {
+                            sf.doneFetch(xhr, args)
+                        })
+                    } else {
+                        if (xhr.redirected) {
+                            sf.addStatus(xhr.req, "Aborted and redirected to new request.");
+                        } else {
+                            sf.addStatus(xhr.req, "Fetch over. No data handled. Aborted = " + xhr.aborted);
+                        }
+                        // sf.failFetch(xhr, "HTTP failed unusually. (no handler set) (x-site violation? no net?) for <"+
+                        //    docuri+">");
+                    }
+                    break
+                } // switch
+            };
+        }
+
+
+        // Map the URI to a localhost proxy if we are running on localhost
+        // This is used for working offline, e.g. on planes.
+        // Is the script istelf is running in localhost, then access all data in a localhost mirror.
+        // Do not remove without checking with TimBL
+        var uri2 = docuri;
+        if (typeof tabulator != 'undefined' && tabulator.preferences.get('offlineModeUsingLocalhost')) {
+            if (uri2.slice(0,7) == 'http://'  && uri2.slice(7,17) != 'localhost/') {
+                uri2 = 'http://localhost/' + uri2.slice(7);
+                $rdf.log.warn("Localhost kludge for offline use: actually getting <" + uri2 + ">");
+            } else {
+                // $rdf.log.warn("Localhost kludge NOT USED <" + uri2 + ">");
+            };
+        } else {
+            // $rdf.log.warn("Localhost kludge OFF offline use: actually getting <" + uri2 + ">");
+        }
+        // 2014 probelm:
+        // XMLHttpRequest cannot load http://www.w3.org/People/Berners-Lee/card.
+        // A wildcard '*' cannot be used in the 'Access-Control-Allow-Origin' header when the credentials flag is true.
+        // @ Many ontology files under http: and need CORS wildcard -> can't have withCredentials
+
+        var withCredentials = ( uri2.slice(0,6) === 'https:'); // @@ Kludge -- need for webid which typically is served from https
+        if (options.withCredentials !== undefined) {
+            withCredentials = options.withCredentials;
+        }
+        var actualProxyURI = this.proxyIfNecessary(uri2);
+
+
+        // Setup the request
+        if (typeof jQuery !== 'undefined' && jQuery.ajax) {
+            var xhrFields = { withCredentials: withCredentials};
+            var xhr = jQuery.ajax({
+                url: actualProxyURI,
+                accepts: {'*': 'text/turtle,text/n3,application/rdf+xml'},
+                processData: false,
+                xhrFields: xhrFields,
+                timeout: sf.timeout,
+                headers: force ? { 'cache-control': 'no-cache'} : {},
+                error: function(xhr, s, e) {
+
+                    xhr.req = req;   // Add these in case fails before .ajax returns
+                    xhr.resource = docterm;
+                    xhr.options = options;
+                    xhr.requestedURI = uri2;
+                    xhr.withCredentials = withCredentials; // Somehow gets lost by jq
+
+
+                    if (s == 'timeout')
+                        sf.failFetch(xhr, "requestTimeout");
+                    else
+                        onerrorFactory(xhr)(e);
+                },
+                success: function(d, s, xhr) {
+
+                    xhr.req = req;
+                    xhr.resource = docterm;
+                    xhr.resource = docterm;
+                    xhr.requestedURI = uri2;
+
+                    onreadystatechangeFactory(xhr)();
+                }
+            });
+
+            xhr.req = req;
+            xhr.options = options;
+
+            xhr.resource = docterm;
+            xhr.options = options;
+            xhr.requestedURI = uri2;
+            xhr.actualProxyURI = actualProxyURI;
+
+
+        } else {
+            var xhr = $rdf.Util.XMLHTTPFactory();
+            xhr.onerror = onerrorFactory(xhr);
+            xhr.onreadystatechange = onreadystatechangeFactory(xhr);
+            xhr.timeout = sf.timeout;
+            xhr.withCredentials = withCredentials;
+            xhr.actualProxyURI = actualProxyURI;
+
+            xhr.req = req;
+            xhr.options = options;
+            xhr.options = options;
+            xhr.resource = docterm;
+            xhr.requestedURI = uri2;
+
+            xhr.ontimeout = function () {
+                sf.failFetch(xhr, "requestTimeout");
+            }
+            try {
+                xhr.open('GET', actualProxyURI, this.async);
+            } catch (er) {
+                return this.failFetch(xhr, "XHR open for GET failed for <"+uri2+">:\n\t" + er);
+            }
+            if (force) { // must happen after open
+                xhr.setRequestHeader('Cache-control', 'no-cache');
+            }
+
+        } // if not jQuery
+
+        // Set redirect callback and request headers -- alas Firefox Extension Only
+
+        if (typeof tabulator != 'undefined' && tabulator.isExtension && xhr.channel &&
+            ($rdf.uri.protocol(xhr.resource.uri) == 'http' ||
+             $rdf.uri.protocol(xhr.resource.uri) == 'https')) {
+            try {
+                xhr.channel.notificationCallbacks = {
+                    getInterface: function(iid) {
+                        if (iid.equals(Components.interfaces.nsIChannelEventSink)) {
+                            return {
+
+                                onChannelRedirect: function(oldC, newC, flags) {
+                                    if (xhr.aborted) return;
+                                    var kb = sf.store;
+                                    var newURI = newC.URI.spec;
+                                    var oldreq = xhr.req;
+                                    if (!xhr.options.noMeta) {
+
+                                        sf.addStatus(xhr.req, "Redirected: " + xhr.status + " to <" + newURI + ">");
+                                        kb.add(oldreq, ns.http('redirectedTo'), kb.sym(newURI), xhr.req);
+
+                                    ////////////// Change the request node to a new one:  @@@@@@@@@@@@ Duplicate code?
+                                        var newreq = xhr.req = kb.bnode() // Make NEW reqest for everything else
+                                        kb.add(oldreq, ns.http('redirectedRequest'), newreq, this.appNode);
+
+                                        var now = new Date();
+                                        var timeNow = "[" + now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds() + "] ";
+                                        kb.add(newreq, ns.rdfs("label"), kb.literal(timeNow + ' Request for ' + newURI), this.appNode)
+                                        kb.add(newreq, ns.link('status'), kb.collection(), this.appNode)
+                                        kb.add(newreq, ns.link("requestedURI"), kb.literal(newURI), this.appNode)
+                                        ///////////////
+
+
+                                        //// $rdf.log.info('@@ sources onChannelRedirect'+
+                                        //               "Redirected: "+
+                                        //               xhr.status + " to <" + newURI + ">"); //@@
+                                        var response = kb.bnode();
+                                        // kb.add(response, ns.http('location'), newURI, response); Not on this response
+                                        kb.add(oldreq, ns.link('response'), response);
+                                        kb.add(response, ns.http('status'), kb.literal(xhr.status), response);
+                                        if (xhr.statusText) kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response)
+                                    }
+                                    if (xhr.status - 0 != 303) kb.HTTPRedirects[xhr.resource.uri] = newURI; // same document as
+                                    if (xhr.status - 0 == 301 && rterm) { // 301 Moved
+                                        var badDoc = $rdf.uri.docpart(rterm.uri);
+                                        var msg = 'Warning: ' + xhr.resource + ' has moved to <' + newURI + '>.';
+                                        if (rterm) {
+                                            msg += ' Link in <' + badDoc + ' >should be changed';
+                                            kb.add(badDoc, kb.sym('http://www.w3.org/2007/ont/link#warning'), msg, sf.appNode);
+                                        }
+                                        // dump(msg+"\n");
+                                    }
+                                    xhr.abort()
+                                    xhr.aborted = true
+
+                                    if (sf.fetchCallbacks[xhr.resource.uri]) {
+                                        if (!sf.fetchCallbacks[newURI]) {
+                                            sf.fetchCallbacks[newURI] = [];
+                                        }
+                                        sf.fetchCallbacks[newURI] == sf.fetchCallbacks[newURI].concat(sf.fetchCallbacks[xhr.resource.uri]);
+                                        delete sf.fetchCallbacks[xhr.resource.uri];
+                                    }
+
+                                    sf.addStatus(oldreq, 'redirected') // why
+                                    sf.fireCallbacks('redirected', args) // Are these args right? @@@
+                                    sf.requested[xhr.resource.uri] = 'redirected';
+
+                                    var hash = newURI.indexOf('#');
+                                    if (hash >= 0) {
+                                        var msg = ('Warning: ' + xhr.resource + ' HTTP redirects to' + newURI + ' which should not contain a "#" sign');
+                                        if (!xhr.options.noMeta) {
+                                            kb.add(xhr.resource, kb.sym('http://www.w3.org/2007/ont/link#warning'), msg)
+                                        }
+                                        newURI = newURI.slice(0, hash);
+                                    }
+                                    var xhr2 = sf.requestURI(newURI, xhr.resource);
+                                    if (xhr2 && xhr2.req && !noMeta) kb.add(xhr.req,
+                                        kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'),
+                                        xhr2.req, sf.appNode);
+
+                                    // else dump("No xhr.req available for redirect from "+xhr.resource+" to "+newURI+"\n")
+                                },
+
+                                // See https://developer.mozilla.org/en/XPCOM_Interface_Reference/nsIChannelEventSink
+                                asyncOnChannelRedirect: function(oldC, newC, flags, callback) {
+                                    if (xhr.aborted) return;
+                                    var kb = sf.store;
+                                    var newURI = newC.URI.spec;
+                                    var oldreq = xhr.req;
+                                    sf.addStatus(xhr.req, "Redirected: " + xhr.status + " to <" + newURI + ">");
+                                    kb.add(oldreq, ns.http('redirectedTo'), kb.sym(newURI), xhr.req);
+
+
+
+                                    ////////////// Change the request node to a new one:  @@@@@@@@@@@@ Duplicate?
+                                    var newreq = xhr.req = kb.bnode() // Make NEW reqest for everything else
+                                    // xhr.resource = docterm
+                                    // xhr.requestedURI = args[0]
+                                    // var requestHandlers = kb.collection()
+
+                                    // kb.add(kb.sym(newURI), ns.link("request"), req, this.appNode)
+                                    kb.add(oldreq, ns.http('redirectedRequest'), newreq, xhr.req);
+
+                                    var now = new Date();
+                                    var timeNow = "[" + now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds() + "] ";
+                                    kb.add(newreq, ns.rdfs("label"), kb.literal(timeNow + ' Request for ' + newURI), this.appNode)
+                                    kb.add(newreq, ns.link('status'), kb.collection(), this.appNode)
+                                    kb.add(newreq, ns.link("requestedURI"), kb.literal(newURI), this.appNode)
+                                    ///////////////
+
+
+                                    //// $rdf.log.info('@@ sources onChannelRedirect'+
+                                    //               "Redirected: "+
+                                    //               xhr.status + " to <" + newURI + ">"); //@@
+                                    var response = kb.bnode();
+                                    // kb.add(response, ns.http('location'), newURI, response); Not on this response
+                                    kb.add(oldreq, ns.link('response'), response);
+                                    kb.add(response, ns.http('status'), kb.literal(xhr.status), response);
+                                    if (xhr.statusText) kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response)
+
+                                    if (xhr.status - 0 != 303) kb.HTTPRedirects[xhr.resource.uri] = newURI; // same document as
+                                    if (xhr.status - 0 == 301 && rterm) { // 301 Moved
+                                        var badDoc = $rdf.uri.docpart(rterm.uri);
+                                        var msg = 'Warning: ' + xhr.resource + ' has moved to <' + newURI + '>.';
+                                        if (rterm) {
+                                            msg += ' Link in <' + badDoc + ' >should be changed';
+                                            kb.add(badDoc, kb.sym('http://www.w3.org/2007/ont/link#warning'), msg, sf.appNode);
+                                        }
+                                        // dump(msg+"\n");
+                                    }
+                                    xhr.abort()
+                                    xhr.aborted = true
+
+                                    var hash = newURI.indexOf('#');
+                                    if (hash >= 0) {
+                                        var msg = ('Warning: ' + xhr.resource + ' HTTP redirects to' + newURI + ' which should not contain a "#" sign');
+                                        // dump(msg+"\n");
+                                        kb.add(xhr.resource, kb.sym('http://www.w3.org/2007/ont/link#warning'), msg)
+                                        newURI = newURI.slice(0, hash);
+                                    }
+
+                                    if (sf.fetchCallbacks[xhr.resource.uri]) {
+                                        if (!sf.fetchCallbacks[newURI]) {
+                                            sf.fetchCallbacks[newURI] = [];
+                                        }
+                                        sf.fetchCallbacks[newURI] == sf.fetchCallbacks[newURI].concat(sf.fetchCallbacks[xhr.resource.uri]);
+                                        delete sf.fetchCallbacks[xhr.resource.uri];
+                                    }
+
+                                    sf.requested[xhr.resource.uri] = 'redirected';
+
+                                    var xhr2 = sf.requestURI(newURI, xhr.resource);
+                                    if (xhr2 && xhr2.req) kb.add(xhr.req,
+                                        kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'),
+                                        xhr2.req, sf.appNode);
+
+                                    // else dump("No xhr.req available for redirect from "+xhr.resource+" to "+newURI+"\n")
+                                } // asyncOnChannelRedirect
+                            }
+                        }
+                        return Components.results.NS_NOINTERFACE
+                    }
+                }
+            } catch (err) {
+                 return sf.failFetch(xhr,
+                    "@@ Couldn't set callback for redirects: " + err);
+            } // try
+
+        } // if Firefox extension
+
+        try {
+            var acceptstring = ""
+            for (var type in this.mediatypes) {
+                var attrstring = ""
+                if (acceptstring != "") {
+                    acceptstring += ", "
+                }
+                acceptstring += type
+                for (var attr in this.mediatypes[type]) {
+                    acceptstring += ';' + attr + '=' + this.mediatypes[type][attr]
+                }
+            }
+            xhr.setRequestHeader('Accept', acceptstring)
+
+            //if (requester) { xhr.setRequestHeader('Referer',requester) }
+        } catch (err) {
+            throw ("Can't set Accept header: " + err)
+        }
+
+        // Fire
+
+        if (!useJQuery) {
+            try {
+                xhr.send(null)
+            } catch (er) {
+                return this.failFetch(xhr, "XHR send failed:" + er);
+            }
+            setTimeout(function() {
+                    if (xhr.readyState != 4 && sf.isPending(xhr.resource.uri)) {
+                        sf.failFetch(xhr, "requestTimeout")
+                    }
+                },
+                this.timeout);
+            this.addStatus(xhr.req, "HTTP Request sent.");
+
+        } else {
+            this.addStatus(xhr.req, "HTTP Request sent (using jQuery)");
+        }
+
+        return xhr
+
+    } // this.requestURI()
+
+
+    this.objectRefresh = function(term) {
+        var uris = kb.uris(term) // Get all URIs
+        if (typeof uris != 'undefined') {
+            for (var i = 0; i < uris.length; i++) {
+                this.refresh(this.store.sym($rdf.uri.docpart(uris[i])));
+                //what about rterm?
+            }
+        }
+    }
+
+    // deprecated -- use IndexedFormula.removeDocument(doc)
+    this.unload = function(term) {
+        this.store.removeMany(undefined, undefined, undefined, term)
+        delete this.requested[term.uri]; // So it can be loaded again
+    }
+
+    this.refresh = function(term, userCallback) { // sources_refresh
+        this.fireCallbacks('refresh', arguments)
+        this.requestURI(term.uri, undefined, { force: true, clearPreviousData: true}, userCallback)
+    }
+
+    this.retract = function(term) { // sources_retract
+        this.store.removeMany(undefined, undefined, undefined, term)
+        if (term.uri) {
+            delete this.requested[$rdf.uri.docpart(term.uri)]
+        }
+        this.fireCallbacks('retract', arguments)
+    }
+
+    this.getState = function(docuri) {
+        if (typeof this.requested[docuri] == "undefined") {
+            return "unrequested"
+        } else if (this.requested[docuri] === true) {
+            return "requested"
+        } else if (this.requested[docuri] === 'done') {
+            return "fetched"
+        } else  { // An non-200 HTTP error status
+            return "failed"
+        }
+    }
+
+    //doing anyStatementMatching is wasting time
+    this.isPending = function(docuri) { // sources_pending
+        //if it's not pending: false -> flailed 'done' -> done 'redirected' -> redirected
+        return this.requested[docuri] === true;
+    }
+
+    // var updatesVia = new $rdf.UpdatesVia(this); // Subscribe to headers
+
+    // @@@@@@@@ This is turned off because it causes a websocket to be set up for ANY fetch
+    // whether we want to track it ot not. including ontologies loaed though the XSSproxy
+
+}; // End of fetcher
+
+$rdf.fetcher = function(store, timeout, async) { return new $rdf.Fetcher(store, timeout, async) };
+
+// Parse a string and put the result into the graph kb
+$rdf.parse = function parse(str, kb, base, contentType, callback) {
+    try {
+        if (contentType == 'text/n3' || contentType == 'text/turtle') {
+            var p = $rdf.N3Parser(kb, kb, base, base, null, null, "", null)
+            p.loadBuf(str)
+            executeCallback();
+        } else if (contentType == 'application/rdf+xml') {
+            var parser = new $rdf.RDFParser(kb);
+            parser.parse($rdf.Util.parseXML(str), base, kb.sym(base));
+            executeCallback();
+        } else if (contentType == 'application/rdfa') {  // @@ not really a valid mime type
+            $rdf.parseDOM_RDFa($rdf.Util.parseXML(str), kb, base);
+            executeCallback();
+        } else if (contentType == 'application/sparql-update') {  // @@ we handle a subset
+            spaqlUpdateParser(store, str, base)
+            executeCallback();
+        } else if (contentType == 'application/ld+json' ||
+            contentType == 'application/nquads' ||
+            contentType == 'application/n-quads') {
+            var n3Parser = N3.Parser();
+            var N3Util = N3.Util;
+            var triples = []
+            var prefixes = {};
+            if (contentType == 'application/ld+json') {
+                var jsonDocument;
+                try {
+                    jsonDocument = JSON.parse(str);
+                    setJsonLdBase(jsonDocument, base);
+                } catch(parseErr) {
+                    callback(err, null);
+                }
+                jsonld.toRDF(jsonDocument,
+                    {format: 'application/nquads'},
+                    nquadCallback);
+            } else {
+                nquadCallback(null, str);
+            }
+        } else {
+            throw "Don't know how to parse "+contentType+" yet";
+        }
+    } catch(e) {
+        executeErrorCallback(e);
+    }
+
+    function executeCallback() {
+        if (callback) {
+            callback(null, kb);
+        } else {
+            return;
+        }
+    }
+
+    function executeErrorCallback(e) {
+        if(contentType != 'application/ld+json' ||
+           contentType != 'application/nquads' ||
+           contentType != 'application/n-quads') {
+            if (callback) {
+                callback(e, kb);
+            } else {
+                throw "Error trying to parse <"+base+"> as " +
+                    contentType+":\n"+e +':\n'+e.stack;
+            }
+        }
+    }
+
+    function setJsonLdBase(doc, base) {
+        if (doc instanceof Array) {
+            return;
+        }
+        if (!('@context' in doc)) {
+            doc['@context'] = {};
+        }
+        doc['@context']['@base'] = base;
+    }
+
+    function nquadCallback(err, nquads) {
+        if (err) {
+            callback(err, kb);
+        }
+        try {
+            n3Parser.parse(nquads, tripleCallback);
+        } catch (err) {
+            callback(err, kb);
+        }
+    }
+
+    function tripleCallback(err, triple, prefixes) {
+        if (err) {
+            callback(err, kb);
+        }
+        if (triple) {
+            triples.push(triple);
+        } else {
+            for (var i = 0; i < triples.length; i++) {
+                addTriple(kb, triples[i]);
+            }
+            callback(null, kb);
+        }
+    }
+
+    function addTriple(kb, triple) {
+        var subject = createTerm(triple.subject);
+        var predicate = createTerm(triple.predicate);
+        var object = createTerm(triple.object);
+        var why = null;
+        if (triple.graph) {
+            why = createTerm(triple.graph);
+        }
+        kb.add(subject, predicate, object, why);
+    }
+
+    function createTerm(termString) {
+        if (N3Util.isLiteral(termString)) {
+            var value = N3Util.getLiteralValue(termString);
+            var language = N3Util.getLiteralLanguage(termString);
+            var datatype = new $rdf.Symbol(N3Util.getLiteralType(termString));
+            return new $rdf.Literal(value, language, datatype);
+        } else if (N3Util.isIRI(termString)) {
+            return new $rdf.Symbol(termString);
+        } else if (N3Util.isBlank(termString)) {
+            var value = termString.substring(2, termString.length);
+            return new $rdf.BlankNode(value);
+        } else {
+            return null;
+        }
+    }
+}; // $rdf.parse()
+
+
+//   Serialize to the appropriate format
+//
+// Either
+//
+// @@ Currently NQuads and JSON/LD are deal with extrelemently inefficiently
+// through mutiple conversions.
+//
+$rdf.serialize = function(target, kb, base, contentType, callback) {
+    var documentString = null;
+    try {
+        var sz = $rdf.Serializer(kb);
+        var newSts = kb.statementsMatching(undefined, undefined, undefined, target);
+        var n3String;
+        sz.suggestNamespaces(kb.namespaces);
+        sz.setBase(base);
+        switch(contentType){
+        case 'application/rdf+xml':
+            documentString = sz.statementsToXML(newSts);
+            return executeCallback(null, documentString);
+            break;
+        case 'text/n3':
+        case 'text/turtle':
+        case 'application/x-turtle': // Legacy
+        case 'application/n3': // Legacy
+            documentString = sz.statementsToN3(newSts);
+            return executeCallback(null, documentString);
+        case 'application/ld+json':
+            n3String = sz.statementsToN3(newSts);
+            $rdf.convert.convertToJson(n3String, callback);
+            break;
+        case 'application/n-quads':
+        case 'application/nquads': // @@@ just outpout the quads? Does not work for collections
+            n3String = sz.statementsToN3(newSts);
+            documentString = $rdf.convert.convertToNQuads(n3String, callback);
+            break;
+        default:
+            throw "Serialize: Content-type "+ contentType +" not supported for data write.";
+        }
+    } catch(err) {
+        if (callback) {
+            return (err);
+        }
+        throw err; // Don't hide problems from caller in sync mode
+    }
+
+    function executeCallback(err, result) {
+        if(callback) {
+            callback(err, result);
+            return;
+        } else {
+            return result;
+        }
+    }
+};
+
+////////////////// JSON-LD code currently requires Node
+//
+//  Beware of bloat of the library! timbl
+//
+
+
+if (typeof $rdf.convert == 'undefined') $rdf.convert = {};
+
+$rdf.convert.convertToJson = function(n3String, jsonCallback) {
+    var jsonString = undefined;
+    var n3Parser = N3.Parser();
+    var n3Writer = N3.Writer({
+            format: 'N-Quads'
+    });
+    asyncLib.waterfall([
+            function(callback) {
+                n3Parser.parse(n3String, callback);
+            },
+            function(triple, prefix, callback) {
+                if (triple !== null) {
+                    n3Writer.addTriple(triple);
+                }
+                if (typeof callback === 'function') {
+                    n3Writer.end(callback);
+                }
+            },
+            function(result, callback) {
+                try {
+                    jsonld.fromRDF(result, {
+                            format: 'application/nquads'
+                    }, callback);
+                } catch (err) {
+                    callback(err);
+                }
+            },
+            function(json, callback) {
+                jsonString = JSON.stringify(json);
+                jsonCallback(null, jsonString);
+            }
+        ], function(err, result) {
+            jsonCallback(err, jsonString);
+        }
+    );
+};
+
+$rdf.convert.convertToNQuads = function(n3String, nquadCallback) {
+    var nquadString = undefined;
+    var n3Parser = N3.Parser();
+    var n3Writer = N3.Writer({
+        format: 'N-Quads'
+    });
+    asyncLib.waterfall([
+            function(callback) {
+                n3Parser.parse(n3String, callback);
+            },
+            function(triple, prefix, callback) {
+                if (triple !== null) {
+                    n3Writer.addTriple(triple);
+                }
+                if (typeof callback === 'function') {
+                    n3Writer.end(callback);
+                }
+            },
+            function(result, callback) {
+                nquadString = result;
+                nquadCallback(null, nquadString);
+            },
+        ], function(err, result) {
+            nquadCallback(err, nquadString);
+            }
+    );
+};
+
+
+// ends
+
+// Handle node, amd, and global systems
+if (typeof exports !== 'undefined') {
+    if (typeof module !== 'undefined' && module.exports) {
+        exports = module.exports = $rdf;
+    }
+    exports.$rdf = $rdf;
+}
+else {
+    if (typeof define === 'function' && define.amd) {
+        define([], function() {
+            return $rdf;
+        });
+    }
+
+    // Leak a global regardless of module system
+    root['$rdf'] = $rdf;
+}
+$rdf.buildTime = "2016-02-04T09:57:22";
+})(this);
+
+},{"async":2,"jsonld":18,"n3":19,"xmldom":55,"xmlhttprequest":58}],2:[function(require,module,exports){
 (function (process){
 /*!
  * async
@@ -9075,9 +11845,3184 @@ if ((typeof module !== "undefined" && module !== null ? module.exports : void 0)
 }());
 
 }).call(this,require('_process'))
-},{"_process":23}],2:[function(require,module,exports){
+},{"_process":28}],3:[function(require,module,exports){
+;(function (exports) {
+  'use strict'
+
+  var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+
+  var Arr = (typeof Uint8Array !== 'undefined')
+    ? Uint8Array
+    : Array
+
+  var PLUS = '+'.charCodeAt(0)
+  var SLASH = '/'.charCodeAt(0)
+  var NUMBER = '0'.charCodeAt(0)
+  var LOWER = 'a'.charCodeAt(0)
+  var UPPER = 'A'.charCodeAt(0)
+  var PLUS_URL_SAFE = '-'.charCodeAt(0)
+  var SLASH_URL_SAFE = '_'.charCodeAt(0)
+
+  function decode (elt) {
+    var code = elt.charCodeAt(0)
+    if (code === PLUS || code === PLUS_URL_SAFE) return 62 // '+'
+    if (code === SLASH || code === SLASH_URL_SAFE) return 63 // '/'
+    if (code < NUMBER) return -1 // no match
+    if (code < NUMBER + 10) return code - NUMBER + 26 + 26
+    if (code < UPPER + 26) return code - UPPER
+    if (code < LOWER + 26) return code - LOWER + 26
+  }
+
+  function b64ToByteArray (b64) {
+    var i, j, l, tmp, placeHolders, arr
+
+    if (b64.length % 4 > 0) {
+      throw new Error('Invalid string. Length must be a multiple of 4')
+    }
+
+    // the number of equal signs (place holders)
+    // if there are two placeholders, than the two characters before it
+    // represent one byte
+    // if there is only one, then the three characters before it represent 2 bytes
+    // this is just a cheap hack to not do indexOf twice
+    var len = b64.length
+    placeHolders = b64.charAt(len - 2) === '=' ? 2 : b64.charAt(len - 1) === '=' ? 1 : 0
+
+    // base64 is 4/3 + up to two characters of the original data
+    arr = new Arr(b64.length * 3 / 4 - placeHolders)
+
+    // if there are placeholders, only get up to the last complete 4 chars
+    l = placeHolders > 0 ? b64.length - 4 : b64.length
+
+    var L = 0
+
+    function push (v) {
+      arr[L++] = v
+    }
+
+    for (i = 0, j = 0; i < l; i += 4, j += 3) {
+      tmp = (decode(b64.charAt(i)) << 18) | (decode(b64.charAt(i + 1)) << 12) | (decode(b64.charAt(i + 2)) << 6) | decode(b64.charAt(i + 3))
+      push((tmp & 0xFF0000) >> 16)
+      push((tmp & 0xFF00) >> 8)
+      push(tmp & 0xFF)
+    }
+
+    if (placeHolders === 2) {
+      tmp = (decode(b64.charAt(i)) << 2) | (decode(b64.charAt(i + 1)) >> 4)
+      push(tmp & 0xFF)
+    } else if (placeHolders === 1) {
+      tmp = (decode(b64.charAt(i)) << 10) | (decode(b64.charAt(i + 1)) << 4) | (decode(b64.charAt(i + 2)) >> 2)
+      push((tmp >> 8) & 0xFF)
+      push(tmp & 0xFF)
+    }
+
+    return arr
+  }
+
+  function uint8ToBase64 (uint8) {
+    var i
+    var extraBytes = uint8.length % 3 // if we have 1 byte left, pad 2 bytes
+    var output = ''
+    var temp, length
+
+    function encode (num) {
+      return lookup.charAt(num)
+    }
+
+    function tripletToBase64 (num) {
+      return encode(num >> 18 & 0x3F) + encode(num >> 12 & 0x3F) + encode(num >> 6 & 0x3F) + encode(num & 0x3F)
+    }
+
+    // go through the array every three bytes, we'll deal with trailing stuff later
+    for (i = 0, length = uint8.length - extraBytes; i < length; i += 3) {
+      temp = (uint8[i] << 16) + (uint8[i + 1] << 8) + (uint8[i + 2])
+      output += tripletToBase64(temp)
+    }
+
+    // pad the end with zeros, but make sure to not forget the extra bytes
+    switch (extraBytes) {
+      case 1:
+        temp = uint8[uint8.length - 1]
+        output += encode(temp >> 2)
+        output += encode((temp << 4) & 0x3F)
+        output += '=='
+        break
+      case 2:
+        temp = (uint8[uint8.length - 2] << 8) + (uint8[uint8.length - 1])
+        output += encode(temp >> 10)
+        output += encode((temp >> 4) & 0x3F)
+        output += encode((temp << 2) & 0x3F)
+        output += '='
+        break
+      default:
+        break
+    }
+
+    return output
+  }
+
+  exports.toByteArray = b64ToByteArray
+  exports.fromByteArray = uint8ToBase64
+}(typeof exports === 'undefined' ? (this.base64js = {}) : exports))
+
+},{}],4:[function(require,module,exports){
+
+},{}],5:[function(require,module,exports){
+arguments[4][4][0].apply(exports,arguments)
+},{"dup":4}],6:[function(require,module,exports){
+(function (global){
+/*!
+ * The buffer module from node.js, for the browser.
+ *
+ * @author   Feross Aboukhadijeh <feross@feross.org> <http://feross.org>
+ * @license  MIT
+ */
+/* eslint-disable no-proto */
+
+'use strict'
+
+var base64 = require('base64-js')
+var ieee754 = require('ieee754')
+var isArray = require('isarray')
+
+exports.Buffer = Buffer
+exports.SlowBuffer = SlowBuffer
+exports.INSPECT_MAX_BYTES = 50
+Buffer.poolSize = 8192 // not used by this implementation
+
+var rootParent = {}
+
+/**
+ * If `Buffer.TYPED_ARRAY_SUPPORT`:
+ *   === true    Use Uint8Array implementation (fastest)
+ *   === false   Use Object implementation (most compatible, even IE6)
+ *
+ * Browsers that support typed arrays are IE 10+, Firefox 4+, Chrome 7+, Safari 5.1+,
+ * Opera 11.6+, iOS 4.2+.
+ *
+ * Due to various browser bugs, sometimes the Object implementation will be used even
+ * when the browser supports typed arrays.
+ *
+ * Note:
+ *
+ *   - Firefox 4-29 lacks support for adding new properties to `Uint8Array` instances,
+ *     See: https://bugzilla.mozilla.org/show_bug.cgi?id=695438.
+ *
+ *   - Chrome 9-10 is missing the `TypedArray.prototype.subarray` function.
+ *
+ *   - IE10 has a broken `TypedArray.prototype.subarray` function which returns arrays of
+ *     incorrect length in some situations.
+
+ * We detect these buggy browsers and set `Buffer.TYPED_ARRAY_SUPPORT` to `false` so they
+ * get the Object implementation, which is slower but behaves correctly.
+ */
+Buffer.TYPED_ARRAY_SUPPORT = global.TYPED_ARRAY_SUPPORT !== undefined
+  ? global.TYPED_ARRAY_SUPPORT
+  : typedArraySupport()
+
+function typedArraySupport () {
+  try {
+    var arr = new Uint8Array(1)
+    arr.foo = function () { return 42 }
+    return arr.foo() === 42 && // typed array instances can be augmented
+        typeof arr.subarray === 'function' && // chrome 9-10 lack `subarray`
+        arr.subarray(1, 1).byteLength === 0 // ie10 has broken `subarray`
+  } catch (e) {
+    return false
+  }
+}
+
+function kMaxLength () {
+  return Buffer.TYPED_ARRAY_SUPPORT
+    ? 0x7fffffff
+    : 0x3fffffff
+}
+
+/**
+ * The Buffer constructor returns instances of `Uint8Array` that have their
+ * prototype changed to `Buffer.prototype`. Furthermore, `Buffer` is a subclass of
+ * `Uint8Array`, so the returned instances will have all the node `Buffer` methods
+ * and the `Uint8Array` methods. Square bracket notation works as expected -- it
+ * returns a single octet.
+ *
+ * The `Uint8Array` prototype remains unmodified.
+ */
+function Buffer (arg) {
+  if (!(this instanceof Buffer)) {
+    // Avoid going through an ArgumentsAdaptorTrampoline in the common case.
+    if (arguments.length > 1) return new Buffer(arg, arguments[1])
+    return new Buffer(arg)
+  }
+
+  if (!Buffer.TYPED_ARRAY_SUPPORT) {
+    this.length = 0
+    this.parent = undefined
+  }
+
+  // Common case.
+  if (typeof arg === 'number') {
+    return fromNumber(this, arg)
+  }
+
+  // Slightly less common case.
+  if (typeof arg === 'string') {
+    return fromString(this, arg, arguments.length > 1 ? arguments[1] : 'utf8')
+  }
+
+  // Unusual.
+  return fromObject(this, arg)
+}
+
+// TODO: Legacy, not needed anymore. Remove in next major version.
+Buffer._augment = function (arr) {
+  arr.__proto__ = Buffer.prototype
+  return arr
+}
+
+function fromNumber (that, length) {
+  that = allocate(that, length < 0 ? 0 : checked(length) | 0)
+  if (!Buffer.TYPED_ARRAY_SUPPORT) {
+    for (var i = 0; i < length; i++) {
+      that[i] = 0
+    }
+  }
+  return that
+}
+
+function fromString (that, string, encoding) {
+  if (typeof encoding !== 'string' || encoding === '') encoding = 'utf8'
+
+  // Assumption: byteLength() return value is always < kMaxLength.
+  var length = byteLength(string, encoding) | 0
+  that = allocate(that, length)
+
+  that.write(string, encoding)
+  return that
+}
+
+function fromObject (that, object) {
+  if (Buffer.isBuffer(object)) return fromBuffer(that, object)
+
+  if (isArray(object)) return fromArray(that, object)
+
+  if (object == null) {
+    throw new TypeError('must start with number, buffer, array or string')
+  }
+
+  if (typeof ArrayBuffer !== 'undefined') {
+    if (object.buffer instanceof ArrayBuffer) {
+      return fromTypedArray(that, object)
+    }
+    if (object instanceof ArrayBuffer) {
+      return fromArrayBuffer(that, object)
+    }
+  }
+
+  if (object.length) return fromArrayLike(that, object)
+
+  return fromJsonObject(that, object)
+}
+
+function fromBuffer (that, buffer) {
+  var length = checked(buffer.length) | 0
+  that = allocate(that, length)
+  buffer.copy(that, 0, 0, length)
+  return that
+}
+
+function fromArray (that, array) {
+  var length = checked(array.length) | 0
+  that = allocate(that, length)
+  for (var i = 0; i < length; i += 1) {
+    that[i] = array[i] & 255
+  }
+  return that
+}
+
+// Duplicate of fromArray() to keep fromArray() monomorphic.
+function fromTypedArray (that, array) {
+  var length = checked(array.length) | 0
+  that = allocate(that, length)
+  // Truncating the elements is probably not what people expect from typed
+  // arrays with BYTES_PER_ELEMENT > 1 but it's compatible with the behavior
+  // of the old Buffer constructor.
+  for (var i = 0; i < length; i += 1) {
+    that[i] = array[i] & 255
+  }
+  return that
+}
+
+function fromArrayBuffer (that, array) {
+  array.byteLength // this throws if `array` is not a valid ArrayBuffer
+
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    // Return an augmented `Uint8Array` instance, for best performance
+    that = new Uint8Array(array)
+    that.__proto__ = Buffer.prototype
+  } else {
+    // Fallback: Return an object instance of the Buffer class
+    that = fromTypedArray(that, new Uint8Array(array))
+  }
+  return that
+}
+
+function fromArrayLike (that, array) {
+  var length = checked(array.length) | 0
+  that = allocate(that, length)
+  for (var i = 0; i < length; i += 1) {
+    that[i] = array[i] & 255
+  }
+  return that
+}
+
+// Deserialize { type: 'Buffer', data: [1,2,3,...] } into a Buffer object.
+// Returns a zero-length buffer for inputs that don't conform to the spec.
+function fromJsonObject (that, object) {
+  var array
+  var length = 0
+
+  if (object.type === 'Buffer' && isArray(object.data)) {
+    array = object.data
+    length = checked(array.length) | 0
+  }
+  that = allocate(that, length)
+
+  for (var i = 0; i < length; i += 1) {
+    that[i] = array[i] & 255
+  }
+  return that
+}
+
+if (Buffer.TYPED_ARRAY_SUPPORT) {
+  Buffer.prototype.__proto__ = Uint8Array.prototype
+  Buffer.__proto__ = Uint8Array
+} else {
+  // pre-set for values that may exist in the future
+  Buffer.prototype.length = undefined
+  Buffer.prototype.parent = undefined
+}
+
+function allocate (that, length) {
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    // Return an augmented `Uint8Array` instance, for best performance
+    that = new Uint8Array(length)
+    that.__proto__ = Buffer.prototype
+  } else {
+    // Fallback: Return an object instance of the Buffer class
+    that.length = length
+  }
+
+  var fromPool = length !== 0 && length <= Buffer.poolSize >>> 1
+  if (fromPool) that.parent = rootParent
+
+  return that
+}
+
+function checked (length) {
+  // Note: cannot use `length < kMaxLength` here because that fails when
+  // length is NaN (which is otherwise coerced to zero.)
+  if (length >= kMaxLength()) {
+    throw new RangeError('Attempt to allocate Buffer larger than maximum ' +
+                         'size: 0x' + kMaxLength().toString(16) + ' bytes')
+  }
+  return length | 0
+}
+
+function SlowBuffer (subject, encoding) {
+  if (!(this instanceof SlowBuffer)) return new SlowBuffer(subject, encoding)
+
+  var buf = new Buffer(subject, encoding)
+  delete buf.parent
+  return buf
+}
+
+Buffer.isBuffer = function isBuffer (b) {
+  return !!(b != null && b._isBuffer)
+}
+
+Buffer.compare = function compare (a, b) {
+  if (!Buffer.isBuffer(a) || !Buffer.isBuffer(b)) {
+    throw new TypeError('Arguments must be Buffers')
+  }
+
+  if (a === b) return 0
+
+  var x = a.length
+  var y = b.length
+
+  var i = 0
+  var len = Math.min(x, y)
+  while (i < len) {
+    if (a[i] !== b[i]) break
+
+    ++i
+  }
+
+  if (i !== len) {
+    x = a[i]
+    y = b[i]
+  }
+
+  if (x < y) return -1
+  if (y < x) return 1
+  return 0
+}
+
+Buffer.isEncoding = function isEncoding (encoding) {
+  switch (String(encoding).toLowerCase()) {
+    case 'hex':
+    case 'utf8':
+    case 'utf-8':
+    case 'ascii':
+    case 'binary':
+    case 'base64':
+    case 'raw':
+    case 'ucs2':
+    case 'ucs-2':
+    case 'utf16le':
+    case 'utf-16le':
+      return true
+    default:
+      return false
+  }
+}
+
+Buffer.concat = function concat (list, length) {
+  if (!isArray(list)) throw new TypeError('list argument must be an Array of Buffers.')
+
+  if (list.length === 0) {
+    return new Buffer(0)
+  }
+
+  var i
+  if (length === undefined) {
+    length = 0
+    for (i = 0; i < list.length; i++) {
+      length += list[i].length
+    }
+  }
+
+  var buf = new Buffer(length)
+  var pos = 0
+  for (i = 0; i < list.length; i++) {
+    var item = list[i]
+    item.copy(buf, pos)
+    pos += item.length
+  }
+  return buf
+}
+
+function byteLength (string, encoding) {
+  if (typeof string !== 'string') string = '' + string
+
+  var len = string.length
+  if (len === 0) return 0
+
+  // Use a for loop to avoid recursion
+  var loweredCase = false
+  for (;;) {
+    switch (encoding) {
+      case 'ascii':
+      case 'binary':
+      // Deprecated
+      case 'raw':
+      case 'raws':
+        return len
+      case 'utf8':
+      case 'utf-8':
+        return utf8ToBytes(string).length
+      case 'ucs2':
+      case 'ucs-2':
+      case 'utf16le':
+      case 'utf-16le':
+        return len * 2
+      case 'hex':
+        return len >>> 1
+      case 'base64':
+        return base64ToBytes(string).length
+      default:
+        if (loweredCase) return utf8ToBytes(string).length // assume utf8
+        encoding = ('' + encoding).toLowerCase()
+        loweredCase = true
+    }
+  }
+}
+Buffer.byteLength = byteLength
+
+function slowToString (encoding, start, end) {
+  var loweredCase = false
+
+  start = start | 0
+  end = end === undefined || end === Infinity ? this.length : end | 0
+
+  if (!encoding) encoding = 'utf8'
+  if (start < 0) start = 0
+  if (end > this.length) end = this.length
+  if (end <= start) return ''
+
+  while (true) {
+    switch (encoding) {
+      case 'hex':
+        return hexSlice(this, start, end)
+
+      case 'utf8':
+      case 'utf-8':
+        return utf8Slice(this, start, end)
+
+      case 'ascii':
+        return asciiSlice(this, start, end)
+
+      case 'binary':
+        return binarySlice(this, start, end)
+
+      case 'base64':
+        return base64Slice(this, start, end)
+
+      case 'ucs2':
+      case 'ucs-2':
+      case 'utf16le':
+      case 'utf-16le':
+        return utf16leSlice(this, start, end)
+
+      default:
+        if (loweredCase) throw new TypeError('Unknown encoding: ' + encoding)
+        encoding = (encoding + '').toLowerCase()
+        loweredCase = true
+    }
+  }
+}
+
+// The property is used by `Buffer.isBuffer` and `is-buffer` (in Safari 5-7) to detect
+// Buffer instances.
+Buffer.prototype._isBuffer = true
+
+Buffer.prototype.toString = function toString () {
+  var length = this.length | 0
+  if (length === 0) return ''
+  if (arguments.length === 0) return utf8Slice(this, 0, length)
+  return slowToString.apply(this, arguments)
+}
+
+Buffer.prototype.equals = function equals (b) {
+  if (!Buffer.isBuffer(b)) throw new TypeError('Argument must be a Buffer')
+  if (this === b) return true
+  return Buffer.compare(this, b) === 0
+}
+
+Buffer.prototype.inspect = function inspect () {
+  var str = ''
+  var max = exports.INSPECT_MAX_BYTES
+  if (this.length > 0) {
+    str = this.toString('hex', 0, max).match(/.{2}/g).join(' ')
+    if (this.length > max) str += ' ... '
+  }
+  return '<Buffer ' + str + '>'
+}
+
+Buffer.prototype.compare = function compare (b) {
+  if (!Buffer.isBuffer(b)) throw new TypeError('Argument must be a Buffer')
+  if (this === b) return 0
+  return Buffer.compare(this, b)
+}
+
+Buffer.prototype.indexOf = function indexOf (val, byteOffset) {
+  if (byteOffset > 0x7fffffff) byteOffset = 0x7fffffff
+  else if (byteOffset < -0x80000000) byteOffset = -0x80000000
+  byteOffset >>= 0
+
+  if (this.length === 0) return -1
+  if (byteOffset >= this.length) return -1
+
+  // Negative offsets start from the end of the buffer
+  if (byteOffset < 0) byteOffset = Math.max(this.length + byteOffset, 0)
+
+  if (typeof val === 'string') {
+    if (val.length === 0) return -1 // special case: looking for empty string always fails
+    return String.prototype.indexOf.call(this, val, byteOffset)
+  }
+  if (Buffer.isBuffer(val)) {
+    return arrayIndexOf(this, val, byteOffset)
+  }
+  if (typeof val === 'number') {
+    if (Buffer.TYPED_ARRAY_SUPPORT && Uint8Array.prototype.indexOf === 'function') {
+      return Uint8Array.prototype.indexOf.call(this, val, byteOffset)
+    }
+    return arrayIndexOf(this, [ val ], byteOffset)
+  }
+
+  function arrayIndexOf (arr, val, byteOffset) {
+    var foundIndex = -1
+    for (var i = 0; byteOffset + i < arr.length; i++) {
+      if (arr[byteOffset + i] === val[foundIndex === -1 ? 0 : i - foundIndex]) {
+        if (foundIndex === -1) foundIndex = i
+        if (i - foundIndex + 1 === val.length) return byteOffset + foundIndex
+      } else {
+        foundIndex = -1
+      }
+    }
+    return -1
+  }
+
+  throw new TypeError('val must be string, number or Buffer')
+}
+
+function hexWrite (buf, string, offset, length) {
+  offset = Number(offset) || 0
+  var remaining = buf.length - offset
+  if (!length) {
+    length = remaining
+  } else {
+    length = Number(length)
+    if (length > remaining) {
+      length = remaining
+    }
+  }
+
+  // must be an even number of digits
+  var strLen = string.length
+  if (strLen % 2 !== 0) throw new Error('Invalid hex string')
+
+  if (length > strLen / 2) {
+    length = strLen / 2
+  }
+  for (var i = 0; i < length; i++) {
+    var parsed = parseInt(string.substr(i * 2, 2), 16)
+    if (isNaN(parsed)) throw new Error('Invalid hex string')
+    buf[offset + i] = parsed
+  }
+  return i
+}
+
+function utf8Write (buf, string, offset, length) {
+  return blitBuffer(utf8ToBytes(string, buf.length - offset), buf, offset, length)
+}
+
+function asciiWrite (buf, string, offset, length) {
+  return blitBuffer(asciiToBytes(string), buf, offset, length)
+}
+
+function binaryWrite (buf, string, offset, length) {
+  return asciiWrite(buf, string, offset, length)
+}
+
+function base64Write (buf, string, offset, length) {
+  return blitBuffer(base64ToBytes(string), buf, offset, length)
+}
+
+function ucs2Write (buf, string, offset, length) {
+  return blitBuffer(utf16leToBytes(string, buf.length - offset), buf, offset, length)
+}
+
+Buffer.prototype.write = function write (string, offset, length, encoding) {
+  // Buffer#write(string)
+  if (offset === undefined) {
+    encoding = 'utf8'
+    length = this.length
+    offset = 0
+  // Buffer#write(string, encoding)
+  } else if (length === undefined && typeof offset === 'string') {
+    encoding = offset
+    length = this.length
+    offset = 0
+  // Buffer#write(string, offset[, length][, encoding])
+  } else if (isFinite(offset)) {
+    offset = offset | 0
+    if (isFinite(length)) {
+      length = length | 0
+      if (encoding === undefined) encoding = 'utf8'
+    } else {
+      encoding = length
+      length = undefined
+    }
+  // legacy write(string, encoding, offset, length) - remove in v0.13
+  } else {
+    var swap = encoding
+    encoding = offset
+    offset = length | 0
+    length = swap
+  }
+
+  var remaining = this.length - offset
+  if (length === undefined || length > remaining) length = remaining
+
+  if ((string.length > 0 && (length < 0 || offset < 0)) || offset > this.length) {
+    throw new RangeError('attempt to write outside buffer bounds')
+  }
+
+  if (!encoding) encoding = 'utf8'
+
+  var loweredCase = false
+  for (;;) {
+    switch (encoding) {
+      case 'hex':
+        return hexWrite(this, string, offset, length)
+
+      case 'utf8':
+      case 'utf-8':
+        return utf8Write(this, string, offset, length)
+
+      case 'ascii':
+        return asciiWrite(this, string, offset, length)
+
+      case 'binary':
+        return binaryWrite(this, string, offset, length)
+
+      case 'base64':
+        // Warning: maxLength not taken into account in base64Write
+        return base64Write(this, string, offset, length)
+
+      case 'ucs2':
+      case 'ucs-2':
+      case 'utf16le':
+      case 'utf-16le':
+        return ucs2Write(this, string, offset, length)
+
+      default:
+        if (loweredCase) throw new TypeError('Unknown encoding: ' + encoding)
+        encoding = ('' + encoding).toLowerCase()
+        loweredCase = true
+    }
+  }
+}
+
+Buffer.prototype.toJSON = function toJSON () {
+  return {
+    type: 'Buffer',
+    data: Array.prototype.slice.call(this._arr || this, 0)
+  }
+}
+
+function base64Slice (buf, start, end) {
+  if (start === 0 && end === buf.length) {
+    return base64.fromByteArray(buf)
+  } else {
+    return base64.fromByteArray(buf.slice(start, end))
+  }
+}
+
+function utf8Slice (buf, start, end) {
+  end = Math.min(buf.length, end)
+  var res = []
+
+  var i = start
+  while (i < end) {
+    var firstByte = buf[i]
+    var codePoint = null
+    var bytesPerSequence = (firstByte > 0xEF) ? 4
+      : (firstByte > 0xDF) ? 3
+      : (firstByte > 0xBF) ? 2
+      : 1
+
+    if (i + bytesPerSequence <= end) {
+      var secondByte, thirdByte, fourthByte, tempCodePoint
+
+      switch (bytesPerSequence) {
+        case 1:
+          if (firstByte < 0x80) {
+            codePoint = firstByte
+          }
+          break
+        case 2:
+          secondByte = buf[i + 1]
+          if ((secondByte & 0xC0) === 0x80) {
+            tempCodePoint = (firstByte & 0x1F) << 0x6 | (secondByte & 0x3F)
+            if (tempCodePoint > 0x7F) {
+              codePoint = tempCodePoint
+            }
+          }
+          break
+        case 3:
+          secondByte = buf[i + 1]
+          thirdByte = buf[i + 2]
+          if ((secondByte & 0xC0) === 0x80 && (thirdByte & 0xC0) === 0x80) {
+            tempCodePoint = (firstByte & 0xF) << 0xC | (secondByte & 0x3F) << 0x6 | (thirdByte & 0x3F)
+            if (tempCodePoint > 0x7FF && (tempCodePoint < 0xD800 || tempCodePoint > 0xDFFF)) {
+              codePoint = tempCodePoint
+            }
+          }
+          break
+        case 4:
+          secondByte = buf[i + 1]
+          thirdByte = buf[i + 2]
+          fourthByte = buf[i + 3]
+          if ((secondByte & 0xC0) === 0x80 && (thirdByte & 0xC0) === 0x80 && (fourthByte & 0xC0) === 0x80) {
+            tempCodePoint = (firstByte & 0xF) << 0x12 | (secondByte & 0x3F) << 0xC | (thirdByte & 0x3F) << 0x6 | (fourthByte & 0x3F)
+            if (tempCodePoint > 0xFFFF && tempCodePoint < 0x110000) {
+              codePoint = tempCodePoint
+            }
+          }
+      }
+    }
+
+    if (codePoint === null) {
+      // we did not generate a valid codePoint so insert a
+      // replacement char (U+FFFD) and advance only 1 byte
+      codePoint = 0xFFFD
+      bytesPerSequence = 1
+    } else if (codePoint > 0xFFFF) {
+      // encode to utf16 (surrogate pair dance)
+      codePoint -= 0x10000
+      res.push(codePoint >>> 10 & 0x3FF | 0xD800)
+      codePoint = 0xDC00 | codePoint & 0x3FF
+    }
+
+    res.push(codePoint)
+    i += bytesPerSequence
+  }
+
+  return decodeCodePointsArray(res)
+}
+
+// Based on http://stackoverflow.com/a/22747272/680742, the browser with
+// the lowest limit is Chrome, with 0x10000 args.
+// We go 1 magnitude less, for safety
+var MAX_ARGUMENTS_LENGTH = 0x1000
+
+function decodeCodePointsArray (codePoints) {
+  var len = codePoints.length
+  if (len <= MAX_ARGUMENTS_LENGTH) {
+    return String.fromCharCode.apply(String, codePoints) // avoid extra slice()
+  }
+
+  // Decode in chunks to avoid "call stack size exceeded".
+  var res = ''
+  var i = 0
+  while (i < len) {
+    res += String.fromCharCode.apply(
+      String,
+      codePoints.slice(i, i += MAX_ARGUMENTS_LENGTH)
+    )
+  }
+  return res
+}
+
+function asciiSlice (buf, start, end) {
+  var ret = ''
+  end = Math.min(buf.length, end)
+
+  for (var i = start; i < end; i++) {
+    ret += String.fromCharCode(buf[i] & 0x7F)
+  }
+  return ret
+}
+
+function binarySlice (buf, start, end) {
+  var ret = ''
+  end = Math.min(buf.length, end)
+
+  for (var i = start; i < end; i++) {
+    ret += String.fromCharCode(buf[i])
+  }
+  return ret
+}
+
+function hexSlice (buf, start, end) {
+  var len = buf.length
+
+  if (!start || start < 0) start = 0
+  if (!end || end < 0 || end > len) end = len
+
+  var out = ''
+  for (var i = start; i < end; i++) {
+    out += toHex(buf[i])
+  }
+  return out
+}
+
+function utf16leSlice (buf, start, end) {
+  var bytes = buf.slice(start, end)
+  var res = ''
+  for (var i = 0; i < bytes.length; i += 2) {
+    res += String.fromCharCode(bytes[i] + bytes[i + 1] * 256)
+  }
+  return res
+}
+
+Buffer.prototype.slice = function slice (start, end) {
+  var len = this.length
+  start = ~~start
+  end = end === undefined ? len : ~~end
+
+  if (start < 0) {
+    start += len
+    if (start < 0) start = 0
+  } else if (start > len) {
+    start = len
+  }
+
+  if (end < 0) {
+    end += len
+    if (end < 0) end = 0
+  } else if (end > len) {
+    end = len
+  }
+
+  if (end < start) end = start
+
+  var newBuf
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    newBuf = this.subarray(start, end)
+    newBuf.__proto__ = Buffer.prototype
+  } else {
+    var sliceLen = end - start
+    newBuf = new Buffer(sliceLen, undefined)
+    for (var i = 0; i < sliceLen; i++) {
+      newBuf[i] = this[i + start]
+    }
+  }
+
+  if (newBuf.length) newBuf.parent = this.parent || this
+
+  return newBuf
+}
+
+/*
+ * Need to make sure that buffer isn't trying to write out of bounds.
+ */
+function checkOffset (offset, ext, length) {
+  if ((offset % 1) !== 0 || offset < 0) throw new RangeError('offset is not uint')
+  if (offset + ext > length) throw new RangeError('Trying to access beyond buffer length')
+}
+
+Buffer.prototype.readUIntLE = function readUIntLE (offset, byteLength, noAssert) {
+  offset = offset | 0
+  byteLength = byteLength | 0
+  if (!noAssert) checkOffset(offset, byteLength, this.length)
+
+  var val = this[offset]
+  var mul = 1
+  var i = 0
+  while (++i < byteLength && (mul *= 0x100)) {
+    val += this[offset + i] * mul
+  }
+
+  return val
+}
+
+Buffer.prototype.readUIntBE = function readUIntBE (offset, byteLength, noAssert) {
+  offset = offset | 0
+  byteLength = byteLength | 0
+  if (!noAssert) {
+    checkOffset(offset, byteLength, this.length)
+  }
+
+  var val = this[offset + --byteLength]
+  var mul = 1
+  while (byteLength > 0 && (mul *= 0x100)) {
+    val += this[offset + --byteLength] * mul
+  }
+
+  return val
+}
+
+Buffer.prototype.readUInt8 = function readUInt8 (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 1, this.length)
+  return this[offset]
+}
+
+Buffer.prototype.readUInt16LE = function readUInt16LE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 2, this.length)
+  return this[offset] | (this[offset + 1] << 8)
+}
+
+Buffer.prototype.readUInt16BE = function readUInt16BE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 2, this.length)
+  return (this[offset] << 8) | this[offset + 1]
+}
+
+Buffer.prototype.readUInt32LE = function readUInt32LE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 4, this.length)
+
+  return ((this[offset]) |
+      (this[offset + 1] << 8) |
+      (this[offset + 2] << 16)) +
+      (this[offset + 3] * 0x1000000)
+}
+
+Buffer.prototype.readUInt32BE = function readUInt32BE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 4, this.length)
+
+  return (this[offset] * 0x1000000) +
+    ((this[offset + 1] << 16) |
+    (this[offset + 2] << 8) |
+    this[offset + 3])
+}
+
+Buffer.prototype.readIntLE = function readIntLE (offset, byteLength, noAssert) {
+  offset = offset | 0
+  byteLength = byteLength | 0
+  if (!noAssert) checkOffset(offset, byteLength, this.length)
+
+  var val = this[offset]
+  var mul = 1
+  var i = 0
+  while (++i < byteLength && (mul *= 0x100)) {
+    val += this[offset + i] * mul
+  }
+  mul *= 0x80
+
+  if (val >= mul) val -= Math.pow(2, 8 * byteLength)
+
+  return val
+}
+
+Buffer.prototype.readIntBE = function readIntBE (offset, byteLength, noAssert) {
+  offset = offset | 0
+  byteLength = byteLength | 0
+  if (!noAssert) checkOffset(offset, byteLength, this.length)
+
+  var i = byteLength
+  var mul = 1
+  var val = this[offset + --i]
+  while (i > 0 && (mul *= 0x100)) {
+    val += this[offset + --i] * mul
+  }
+  mul *= 0x80
+
+  if (val >= mul) val -= Math.pow(2, 8 * byteLength)
+
+  return val
+}
+
+Buffer.prototype.readInt8 = function readInt8 (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 1, this.length)
+  if (!(this[offset] & 0x80)) return (this[offset])
+  return ((0xff - this[offset] + 1) * -1)
+}
+
+Buffer.prototype.readInt16LE = function readInt16LE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 2, this.length)
+  var val = this[offset] | (this[offset + 1] << 8)
+  return (val & 0x8000) ? val | 0xFFFF0000 : val
+}
+
+Buffer.prototype.readInt16BE = function readInt16BE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 2, this.length)
+  var val = this[offset + 1] | (this[offset] << 8)
+  return (val & 0x8000) ? val | 0xFFFF0000 : val
+}
+
+Buffer.prototype.readInt32LE = function readInt32LE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 4, this.length)
+
+  return (this[offset]) |
+    (this[offset + 1] << 8) |
+    (this[offset + 2] << 16) |
+    (this[offset + 3] << 24)
+}
+
+Buffer.prototype.readInt32BE = function readInt32BE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 4, this.length)
+
+  return (this[offset] << 24) |
+    (this[offset + 1] << 16) |
+    (this[offset + 2] << 8) |
+    (this[offset + 3])
+}
+
+Buffer.prototype.readFloatLE = function readFloatLE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 4, this.length)
+  return ieee754.read(this, offset, true, 23, 4)
+}
+
+Buffer.prototype.readFloatBE = function readFloatBE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 4, this.length)
+  return ieee754.read(this, offset, false, 23, 4)
+}
+
+Buffer.prototype.readDoubleLE = function readDoubleLE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 8, this.length)
+  return ieee754.read(this, offset, true, 52, 8)
+}
+
+Buffer.prototype.readDoubleBE = function readDoubleBE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 8, this.length)
+  return ieee754.read(this, offset, false, 52, 8)
+}
+
+function checkInt (buf, value, offset, ext, max, min) {
+  if (!Buffer.isBuffer(buf)) throw new TypeError('buffer must be a Buffer instance')
+  if (value > max || value < min) throw new RangeError('value is out of bounds')
+  if (offset + ext > buf.length) throw new RangeError('index out of range')
+}
+
+Buffer.prototype.writeUIntLE = function writeUIntLE (value, offset, byteLength, noAssert) {
+  value = +value
+  offset = offset | 0
+  byteLength = byteLength | 0
+  if (!noAssert) checkInt(this, value, offset, byteLength, Math.pow(2, 8 * byteLength), 0)
+
+  var mul = 1
+  var i = 0
+  this[offset] = value & 0xFF
+  while (++i < byteLength && (mul *= 0x100)) {
+    this[offset + i] = (value / mul) & 0xFF
+  }
+
+  return offset + byteLength
+}
+
+Buffer.prototype.writeUIntBE = function writeUIntBE (value, offset, byteLength, noAssert) {
+  value = +value
+  offset = offset | 0
+  byteLength = byteLength | 0
+  if (!noAssert) checkInt(this, value, offset, byteLength, Math.pow(2, 8 * byteLength), 0)
+
+  var i = byteLength - 1
+  var mul = 1
+  this[offset + i] = value & 0xFF
+  while (--i >= 0 && (mul *= 0x100)) {
+    this[offset + i] = (value / mul) & 0xFF
+  }
+
+  return offset + byteLength
+}
+
+Buffer.prototype.writeUInt8 = function writeUInt8 (value, offset, noAssert) {
+  value = +value
+  offset = offset | 0
+  if (!noAssert) checkInt(this, value, offset, 1, 0xff, 0)
+  if (!Buffer.TYPED_ARRAY_SUPPORT) value = Math.floor(value)
+  this[offset] = (value & 0xff)
+  return offset + 1
+}
+
+function objectWriteUInt16 (buf, value, offset, littleEndian) {
+  if (value < 0) value = 0xffff + value + 1
+  for (var i = 0, j = Math.min(buf.length - offset, 2); i < j; i++) {
+    buf[offset + i] = (value & (0xff << (8 * (littleEndian ? i : 1 - i)))) >>>
+      (littleEndian ? i : 1 - i) * 8
+  }
+}
+
+Buffer.prototype.writeUInt16LE = function writeUInt16LE (value, offset, noAssert) {
+  value = +value
+  offset = offset | 0
+  if (!noAssert) checkInt(this, value, offset, 2, 0xffff, 0)
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    this[offset] = (value & 0xff)
+    this[offset + 1] = (value >>> 8)
+  } else {
+    objectWriteUInt16(this, value, offset, true)
+  }
+  return offset + 2
+}
+
+Buffer.prototype.writeUInt16BE = function writeUInt16BE (value, offset, noAssert) {
+  value = +value
+  offset = offset | 0
+  if (!noAssert) checkInt(this, value, offset, 2, 0xffff, 0)
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    this[offset] = (value >>> 8)
+    this[offset + 1] = (value & 0xff)
+  } else {
+    objectWriteUInt16(this, value, offset, false)
+  }
+  return offset + 2
+}
+
+function objectWriteUInt32 (buf, value, offset, littleEndian) {
+  if (value < 0) value = 0xffffffff + value + 1
+  for (var i = 0, j = Math.min(buf.length - offset, 4); i < j; i++) {
+    buf[offset + i] = (value >>> (littleEndian ? i : 3 - i) * 8) & 0xff
+  }
+}
+
+Buffer.prototype.writeUInt32LE = function writeUInt32LE (value, offset, noAssert) {
+  value = +value
+  offset = offset | 0
+  if (!noAssert) checkInt(this, value, offset, 4, 0xffffffff, 0)
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    this[offset + 3] = (value >>> 24)
+    this[offset + 2] = (value >>> 16)
+    this[offset + 1] = (value >>> 8)
+    this[offset] = (value & 0xff)
+  } else {
+    objectWriteUInt32(this, value, offset, true)
+  }
+  return offset + 4
+}
+
+Buffer.prototype.writeUInt32BE = function writeUInt32BE (value, offset, noAssert) {
+  value = +value
+  offset = offset | 0
+  if (!noAssert) checkInt(this, value, offset, 4, 0xffffffff, 0)
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    this[offset] = (value >>> 24)
+    this[offset + 1] = (value >>> 16)
+    this[offset + 2] = (value >>> 8)
+    this[offset + 3] = (value & 0xff)
+  } else {
+    objectWriteUInt32(this, value, offset, false)
+  }
+  return offset + 4
+}
+
+Buffer.prototype.writeIntLE = function writeIntLE (value, offset, byteLength, noAssert) {
+  value = +value
+  offset = offset | 0
+  if (!noAssert) {
+    var limit = Math.pow(2, 8 * byteLength - 1)
+
+    checkInt(this, value, offset, byteLength, limit - 1, -limit)
+  }
+
+  var i = 0
+  var mul = 1
+  var sub = value < 0 ? 1 : 0
+  this[offset] = value & 0xFF
+  while (++i < byteLength && (mul *= 0x100)) {
+    this[offset + i] = ((value / mul) >> 0) - sub & 0xFF
+  }
+
+  return offset + byteLength
+}
+
+Buffer.prototype.writeIntBE = function writeIntBE (value, offset, byteLength, noAssert) {
+  value = +value
+  offset = offset | 0
+  if (!noAssert) {
+    var limit = Math.pow(2, 8 * byteLength - 1)
+
+    checkInt(this, value, offset, byteLength, limit - 1, -limit)
+  }
+
+  var i = byteLength - 1
+  var mul = 1
+  var sub = value < 0 ? 1 : 0
+  this[offset + i] = value & 0xFF
+  while (--i >= 0 && (mul *= 0x100)) {
+    this[offset + i] = ((value / mul) >> 0) - sub & 0xFF
+  }
+
+  return offset + byteLength
+}
+
+Buffer.prototype.writeInt8 = function writeInt8 (value, offset, noAssert) {
+  value = +value
+  offset = offset | 0
+  if (!noAssert) checkInt(this, value, offset, 1, 0x7f, -0x80)
+  if (!Buffer.TYPED_ARRAY_SUPPORT) value = Math.floor(value)
+  if (value < 0) value = 0xff + value + 1
+  this[offset] = (value & 0xff)
+  return offset + 1
+}
+
+Buffer.prototype.writeInt16LE = function writeInt16LE (value, offset, noAssert) {
+  value = +value
+  offset = offset | 0
+  if (!noAssert) checkInt(this, value, offset, 2, 0x7fff, -0x8000)
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    this[offset] = (value & 0xff)
+    this[offset + 1] = (value >>> 8)
+  } else {
+    objectWriteUInt16(this, value, offset, true)
+  }
+  return offset + 2
+}
+
+Buffer.prototype.writeInt16BE = function writeInt16BE (value, offset, noAssert) {
+  value = +value
+  offset = offset | 0
+  if (!noAssert) checkInt(this, value, offset, 2, 0x7fff, -0x8000)
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    this[offset] = (value >>> 8)
+    this[offset + 1] = (value & 0xff)
+  } else {
+    objectWriteUInt16(this, value, offset, false)
+  }
+  return offset + 2
+}
+
+Buffer.prototype.writeInt32LE = function writeInt32LE (value, offset, noAssert) {
+  value = +value
+  offset = offset | 0
+  if (!noAssert) checkInt(this, value, offset, 4, 0x7fffffff, -0x80000000)
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    this[offset] = (value & 0xff)
+    this[offset + 1] = (value >>> 8)
+    this[offset + 2] = (value >>> 16)
+    this[offset + 3] = (value >>> 24)
+  } else {
+    objectWriteUInt32(this, value, offset, true)
+  }
+  return offset + 4
+}
+
+Buffer.prototype.writeInt32BE = function writeInt32BE (value, offset, noAssert) {
+  value = +value
+  offset = offset | 0
+  if (!noAssert) checkInt(this, value, offset, 4, 0x7fffffff, -0x80000000)
+  if (value < 0) value = 0xffffffff + value + 1
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    this[offset] = (value >>> 24)
+    this[offset + 1] = (value >>> 16)
+    this[offset + 2] = (value >>> 8)
+    this[offset + 3] = (value & 0xff)
+  } else {
+    objectWriteUInt32(this, value, offset, false)
+  }
+  return offset + 4
+}
+
+function checkIEEE754 (buf, value, offset, ext, max, min) {
+  if (offset + ext > buf.length) throw new RangeError('index out of range')
+  if (offset < 0) throw new RangeError('index out of range')
+}
+
+function writeFloat (buf, value, offset, littleEndian, noAssert) {
+  if (!noAssert) {
+    checkIEEE754(buf, value, offset, 4, 3.4028234663852886e+38, -3.4028234663852886e+38)
+  }
+  ieee754.write(buf, value, offset, littleEndian, 23, 4)
+  return offset + 4
+}
+
+Buffer.prototype.writeFloatLE = function writeFloatLE (value, offset, noAssert) {
+  return writeFloat(this, value, offset, true, noAssert)
+}
+
+Buffer.prototype.writeFloatBE = function writeFloatBE (value, offset, noAssert) {
+  return writeFloat(this, value, offset, false, noAssert)
+}
+
+function writeDouble (buf, value, offset, littleEndian, noAssert) {
+  if (!noAssert) {
+    checkIEEE754(buf, value, offset, 8, 1.7976931348623157E+308, -1.7976931348623157E+308)
+  }
+  ieee754.write(buf, value, offset, littleEndian, 52, 8)
+  return offset + 8
+}
+
+Buffer.prototype.writeDoubleLE = function writeDoubleLE (value, offset, noAssert) {
+  return writeDouble(this, value, offset, true, noAssert)
+}
+
+Buffer.prototype.writeDoubleBE = function writeDoubleBE (value, offset, noAssert) {
+  return writeDouble(this, value, offset, false, noAssert)
+}
+
+// copy(targetBuffer, targetStart=0, sourceStart=0, sourceEnd=buffer.length)
+Buffer.prototype.copy = function copy (target, targetStart, start, end) {
+  if (!start) start = 0
+  if (!end && end !== 0) end = this.length
+  if (targetStart >= target.length) targetStart = target.length
+  if (!targetStart) targetStart = 0
+  if (end > 0 && end < start) end = start
+
+  // Copy 0 bytes; we're done
+  if (end === start) return 0
+  if (target.length === 0 || this.length === 0) return 0
+
+  // Fatal error conditions
+  if (targetStart < 0) {
+    throw new RangeError('targetStart out of bounds')
+  }
+  if (start < 0 || start >= this.length) throw new RangeError('sourceStart out of bounds')
+  if (end < 0) throw new RangeError('sourceEnd out of bounds')
+
+  // Are we oob?
+  if (end > this.length) end = this.length
+  if (target.length - targetStart < end - start) {
+    end = target.length - targetStart + start
+  }
+
+  var len = end - start
+  var i
+
+  if (this === target && start < targetStart && targetStart < end) {
+    // descending copy from end
+    for (i = len - 1; i >= 0; i--) {
+      target[i + targetStart] = this[i + start]
+    }
+  } else if (len < 1000 || !Buffer.TYPED_ARRAY_SUPPORT) {
+    // ascending copy from start
+    for (i = 0; i < len; i++) {
+      target[i + targetStart] = this[i + start]
+    }
+  } else {
+    Uint8Array.prototype.set.call(
+      target,
+      this.subarray(start, start + len),
+      targetStart
+    )
+  }
+
+  return len
+}
+
+// fill(value, start=0, end=buffer.length)
+Buffer.prototype.fill = function fill (value, start, end) {
+  if (!value) value = 0
+  if (!start) start = 0
+  if (!end) end = this.length
+
+  if (end < start) throw new RangeError('end < start')
+
+  // Fill 0 bytes; we're done
+  if (end === start) return
+  if (this.length === 0) return
+
+  if (start < 0 || start >= this.length) throw new RangeError('start out of bounds')
+  if (end < 0 || end > this.length) throw new RangeError('end out of bounds')
+
+  var i
+  if (typeof value === 'number') {
+    for (i = start; i < end; i++) {
+      this[i] = value
+    }
+  } else {
+    var bytes = utf8ToBytes(value.toString())
+    var len = bytes.length
+    for (i = start; i < end; i++) {
+      this[i] = bytes[i % len]
+    }
+  }
+
+  return this
+}
+
+// HELPER FUNCTIONS
+// ================
+
+var INVALID_BASE64_RE = /[^+\/0-9A-Za-z-_]/g
+
+function base64clean (str) {
+  // Node strips out invalid characters like \n and \t from the string, base64-js does not
+  str = stringtrim(str).replace(INVALID_BASE64_RE, '')
+  // Node converts strings with length < 2 to ''
+  if (str.length < 2) return ''
+  // Node allows for non-padded base64 strings (missing trailing ===), base64-js does not
+  while (str.length % 4 !== 0) {
+    str = str + '='
+  }
+  return str
+}
+
+function stringtrim (str) {
+  if (str.trim) return str.trim()
+  return str.replace(/^\s+|\s+$/g, '')
+}
+
+function toHex (n) {
+  if (n < 16) return '0' + n.toString(16)
+  return n.toString(16)
+}
+
+function utf8ToBytes (string, units) {
+  units = units || Infinity
+  var codePoint
+  var length = string.length
+  var leadSurrogate = null
+  var bytes = []
+
+  for (var i = 0; i < length; i++) {
+    codePoint = string.charCodeAt(i)
+
+    // is surrogate component
+    if (codePoint > 0xD7FF && codePoint < 0xE000) {
+      // last char was a lead
+      if (!leadSurrogate) {
+        // no lead yet
+        if (codePoint > 0xDBFF) {
+          // unexpected trail
+          if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
+          continue
+        } else if (i + 1 === length) {
+          // unpaired lead
+          if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
+          continue
+        }
+
+        // valid lead
+        leadSurrogate = codePoint
+
+        continue
+      }
+
+      // 2 leads in a row
+      if (codePoint < 0xDC00) {
+        if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
+        leadSurrogate = codePoint
+        continue
+      }
+
+      // valid surrogate pair
+      codePoint = (leadSurrogate - 0xD800 << 10 | codePoint - 0xDC00) + 0x10000
+    } else if (leadSurrogate) {
+      // valid bmp char, but last char was a lead
+      if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
+    }
+
+    leadSurrogate = null
+
+    // encode utf8
+    if (codePoint < 0x80) {
+      if ((units -= 1) < 0) break
+      bytes.push(codePoint)
+    } else if (codePoint < 0x800) {
+      if ((units -= 2) < 0) break
+      bytes.push(
+        codePoint >> 0x6 | 0xC0,
+        codePoint & 0x3F | 0x80
+      )
+    } else if (codePoint < 0x10000) {
+      if ((units -= 3) < 0) break
+      bytes.push(
+        codePoint >> 0xC | 0xE0,
+        codePoint >> 0x6 & 0x3F | 0x80,
+        codePoint & 0x3F | 0x80
+      )
+    } else if (codePoint < 0x110000) {
+      if ((units -= 4) < 0) break
+      bytes.push(
+        codePoint >> 0x12 | 0xF0,
+        codePoint >> 0xC & 0x3F | 0x80,
+        codePoint >> 0x6 & 0x3F | 0x80,
+        codePoint & 0x3F | 0x80
+      )
+    } else {
+      throw new Error('Invalid code point')
+    }
+  }
+
+  return bytes
+}
+
+function asciiToBytes (str) {
+  var byteArray = []
+  for (var i = 0; i < str.length; i++) {
+    // Node's code seems to be doing this and not & 0x7F..
+    byteArray.push(str.charCodeAt(i) & 0xFF)
+  }
+  return byteArray
+}
+
+function utf16leToBytes (str, units) {
+  var c, hi, lo
+  var byteArray = []
+  for (var i = 0; i < str.length; i++) {
+    if ((units -= 2) < 0) break
+
+    c = str.charCodeAt(i)
+    hi = c >> 8
+    lo = c % 256
+    byteArray.push(lo)
+    byteArray.push(hi)
+  }
+
+  return byteArray
+}
+
+function base64ToBytes (str) {
+  return base64.toByteArray(base64clean(str))
+}
+
+function blitBuffer (src, dst, offset, length) {
+  for (var i = 0; i < length; i++) {
+    if ((i + offset >= dst.length) || (i >= src.length)) break
+    dst[i + offset] = src[i]
+  }
+  return i
+}
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"base64-js":3,"ieee754":13,"isarray":7}],7:[function(require,module,exports){
+var toString = {}.toString;
+
+module.exports = Array.isArray || function (arr) {
+  return toString.call(arr) == '[object Array]';
+};
+
+},{}],8:[function(require,module,exports){
+module.exports = {
+  "100": "Continue",
+  "101": "Switching Protocols",
+  "102": "Processing",
+  "200": "OK",
+  "201": "Created",
+  "202": "Accepted",
+  "203": "Non-Authoritative Information",
+  "204": "No Content",
+  "205": "Reset Content",
+  "206": "Partial Content",
+  "207": "Multi-Status",
+  "300": "Multiple Choices",
+  "301": "Moved Permanently",
+  "302": "Moved Temporarily",
+  "303": "See Other",
+  "304": "Not Modified",
+  "305": "Use Proxy",
+  "307": "Temporary Redirect",
+  "308": "Permanent Redirect",
+  "400": "Bad Request",
+  "401": "Unauthorized",
+  "402": "Payment Required",
+  "403": "Forbidden",
+  "404": "Not Found",
+  "405": "Method Not Allowed",
+  "406": "Not Acceptable",
+  "407": "Proxy Authentication Required",
+  "408": "Request Time-out",
+  "409": "Conflict",
+  "410": "Gone",
+  "411": "Length Required",
+  "412": "Precondition Failed",
+  "413": "Request Entity Too Large",
+  "414": "Request-URI Too Large",
+  "415": "Unsupported Media Type",
+  "416": "Requested Range Not Satisfiable",
+  "417": "Expectation Failed",
+  "418": "I'm a teapot",
+  "422": "Unprocessable Entity",
+  "423": "Locked",
+  "424": "Failed Dependency",
+  "425": "Unordered Collection",
+  "426": "Upgrade Required",
+  "428": "Precondition Required",
+  "429": "Too Many Requests",
+  "431": "Request Header Fields Too Large",
+  "500": "Internal Server Error",
+  "501": "Not Implemented",
+  "502": "Bad Gateway",
+  "503": "Service Unavailable",
+  "504": "Gateway Time-out",
+  "505": "HTTP Version Not Supported",
+  "506": "Variant Also Negotiates",
+  "507": "Insufficient Storage",
+  "509": "Bandwidth Limit Exceeded",
+  "510": "Not Extended",
+  "511": "Network Authentication Required"
+}
+
+},{}],9:[function(require,module,exports){
+(function (Buffer){
+// Copyright Joyent, Inc. and other Node contributors.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to permit
+// persons to whom the Software is furnished to do so, subject to the
+// following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+// NOTE: These type checking functions intentionally don't use `instanceof`
+// because it is fragile and can be easily faked with `Object.create()`.
+
+function isArray(arg) {
+  if (Array.isArray) {
+    return Array.isArray(arg);
+  }
+  return objectToString(arg) === '[object Array]';
+}
+exports.isArray = isArray;
+
+function isBoolean(arg) {
+  return typeof arg === 'boolean';
+}
+exports.isBoolean = isBoolean;
+
+function isNull(arg) {
+  return arg === null;
+}
+exports.isNull = isNull;
+
+function isNullOrUndefined(arg) {
+  return arg == null;
+}
+exports.isNullOrUndefined = isNullOrUndefined;
+
+function isNumber(arg) {
+  return typeof arg === 'number';
+}
+exports.isNumber = isNumber;
+
+function isString(arg) {
+  return typeof arg === 'string';
+}
+exports.isString = isString;
+
+function isSymbol(arg) {
+  return typeof arg === 'symbol';
+}
+exports.isSymbol = isSymbol;
+
+function isUndefined(arg) {
+  return arg === void 0;
+}
+exports.isUndefined = isUndefined;
+
+function isRegExp(re) {
+  return objectToString(re) === '[object RegExp]';
+}
+exports.isRegExp = isRegExp;
+
+function isObject(arg) {
+  return typeof arg === 'object' && arg !== null;
+}
+exports.isObject = isObject;
+
+function isDate(d) {
+  return objectToString(d) === '[object Date]';
+}
+exports.isDate = isDate;
+
+function isError(e) {
+  return (objectToString(e) === '[object Error]' || e instanceof Error);
+}
+exports.isError = isError;
+
+function isFunction(arg) {
+  return typeof arg === 'function';
+}
+exports.isFunction = isFunction;
+
+function isPrimitive(arg) {
+  return arg === null ||
+         typeof arg === 'boolean' ||
+         typeof arg === 'number' ||
+         typeof arg === 'string' ||
+         typeof arg === 'symbol' ||  // ES6 symbol
+         typeof arg === 'undefined';
+}
+exports.isPrimitive = isPrimitive;
+
+exports.isBuffer = Buffer.isBuffer;
+
+function objectToString(o) {
+  return Object.prototype.toString.call(o);
+}
+
+}).call(this,{"isBuffer":require("../../is-buffer/index.js")})
+},{"../../is-buffer/index.js":15}],10:[function(require,module,exports){
+(function (process,global){
+/*!
+ * @overview es6-promise - a tiny implementation of Promises/A+.
+ * @copyright Copyright (c) 2014 Yehuda Katz, Tom Dale, Stefan Penner and contributors (Conversion to ES6 API by Jake Archibald)
+ * @license   Licensed under MIT license
+ *            See https://raw.githubusercontent.com/jakearchibald/es6-promise/master/LICENSE
+ * @version   2.0.1
+ */
+
+(function() {
+    "use strict";
+
+    function $$utils$$objectOrFunction(x) {
+      return typeof x === 'function' || (typeof x === 'object' && x !== null);
+    }
+
+    function $$utils$$isFunction(x) {
+      return typeof x === 'function';
+    }
+
+    function $$utils$$isMaybeThenable(x) {
+      return typeof x === 'object' && x !== null;
+    }
+
+    var $$utils$$_isArray;
+
+    if (!Array.isArray) {
+      $$utils$$_isArray = function (x) {
+        return Object.prototype.toString.call(x) === '[object Array]';
+      };
+    } else {
+      $$utils$$_isArray = Array.isArray;
+    }
+
+    var $$utils$$isArray = $$utils$$_isArray;
+    var $$utils$$now = Date.now || function() { return new Date().getTime(); };
+    function $$utils$$F() { }
+
+    var $$utils$$o_create = (Object.create || function (o) {
+      if (arguments.length > 1) {
+        throw new Error('Second argument not supported');
+      }
+      if (typeof o !== 'object') {
+        throw new TypeError('Argument must be an object');
+      }
+      $$utils$$F.prototype = o;
+      return new $$utils$$F();
+    });
+
+    var $$asap$$len = 0;
+
+    var $$asap$$default = function asap(callback, arg) {
+      $$asap$$queue[$$asap$$len] = callback;
+      $$asap$$queue[$$asap$$len + 1] = arg;
+      $$asap$$len += 2;
+      if ($$asap$$len === 2) {
+        // If len is 1, that means that we need to schedule an async flush.
+        // If additional callbacks are queued before the queue is flushed, they
+        // will be processed by this flush that we are scheduling.
+        $$asap$$scheduleFlush();
+      }
+    };
+
+    var $$asap$$browserGlobal = (typeof window !== 'undefined') ? window : {};
+    var $$asap$$BrowserMutationObserver = $$asap$$browserGlobal.MutationObserver || $$asap$$browserGlobal.WebKitMutationObserver;
+
+    // test for web worker but not in IE10
+    var $$asap$$isWorker = typeof Uint8ClampedArray !== 'undefined' &&
+      typeof importScripts !== 'undefined' &&
+      typeof MessageChannel !== 'undefined';
+
+    // node
+    function $$asap$$useNextTick() {
+      return function() {
+        process.nextTick($$asap$$flush);
+      };
+    }
+
+    function $$asap$$useMutationObserver() {
+      var iterations = 0;
+      var observer = new $$asap$$BrowserMutationObserver($$asap$$flush);
+      var node = document.createTextNode('');
+      observer.observe(node, { characterData: true });
+
+      return function() {
+        node.data = (iterations = ++iterations % 2);
+      };
+    }
+
+    // web worker
+    function $$asap$$useMessageChannel() {
+      var channel = new MessageChannel();
+      channel.port1.onmessage = $$asap$$flush;
+      return function () {
+        channel.port2.postMessage(0);
+      };
+    }
+
+    function $$asap$$useSetTimeout() {
+      return function() {
+        setTimeout($$asap$$flush, 1);
+      };
+    }
+
+    var $$asap$$queue = new Array(1000);
+
+    function $$asap$$flush() {
+      for (var i = 0; i < $$asap$$len; i+=2) {
+        var callback = $$asap$$queue[i];
+        var arg = $$asap$$queue[i+1];
+
+        callback(arg);
+
+        $$asap$$queue[i] = undefined;
+        $$asap$$queue[i+1] = undefined;
+      }
+
+      $$asap$$len = 0;
+    }
+
+    var $$asap$$scheduleFlush;
+
+    // Decide what async method to use to triggering processing of queued callbacks:
+    if (typeof process !== 'undefined' && {}.toString.call(process) === '[object process]') {
+      $$asap$$scheduleFlush = $$asap$$useNextTick();
+    } else if ($$asap$$BrowserMutationObserver) {
+      $$asap$$scheduleFlush = $$asap$$useMutationObserver();
+    } else if ($$asap$$isWorker) {
+      $$asap$$scheduleFlush = $$asap$$useMessageChannel();
+    } else {
+      $$asap$$scheduleFlush = $$asap$$useSetTimeout();
+    }
+
+    function $$$internal$$noop() {}
+    var $$$internal$$PENDING   = void 0;
+    var $$$internal$$FULFILLED = 1;
+    var $$$internal$$REJECTED  = 2;
+    var $$$internal$$GET_THEN_ERROR = new $$$internal$$ErrorObject();
+
+    function $$$internal$$selfFullfillment() {
+      return new TypeError("You cannot resolve a promise with itself");
+    }
+
+    function $$$internal$$cannotReturnOwn() {
+      return new TypeError('A promises callback cannot return that same promise.')
+    }
+
+    function $$$internal$$getThen(promise) {
+      try {
+        return promise.then;
+      } catch(error) {
+        $$$internal$$GET_THEN_ERROR.error = error;
+        return $$$internal$$GET_THEN_ERROR;
+      }
+    }
+
+    function $$$internal$$tryThen(then, value, fulfillmentHandler, rejectionHandler) {
+      try {
+        then.call(value, fulfillmentHandler, rejectionHandler);
+      } catch(e) {
+        return e;
+      }
+    }
+
+    function $$$internal$$handleForeignThenable(promise, thenable, then) {
+       $$asap$$default(function(promise) {
+        var sealed = false;
+        var error = $$$internal$$tryThen(then, thenable, function(value) {
+          if (sealed) { return; }
+          sealed = true;
+          if (thenable !== value) {
+            $$$internal$$resolve(promise, value);
+          } else {
+            $$$internal$$fulfill(promise, value);
+          }
+        }, function(reason) {
+          if (sealed) { return; }
+          sealed = true;
+
+          $$$internal$$reject(promise, reason);
+        }, 'Settle: ' + (promise._label || ' unknown promise'));
+
+        if (!sealed && error) {
+          sealed = true;
+          $$$internal$$reject(promise, error);
+        }
+      }, promise);
+    }
+
+    function $$$internal$$handleOwnThenable(promise, thenable) {
+      if (thenable._state === $$$internal$$FULFILLED) {
+        $$$internal$$fulfill(promise, thenable._result);
+      } else if (promise._state === $$$internal$$REJECTED) {
+        $$$internal$$reject(promise, thenable._result);
+      } else {
+        $$$internal$$subscribe(thenable, undefined, function(value) {
+          $$$internal$$resolve(promise, value);
+        }, function(reason) {
+          $$$internal$$reject(promise, reason);
+        });
+      }
+    }
+
+    function $$$internal$$handleMaybeThenable(promise, maybeThenable) {
+      if (maybeThenable.constructor === promise.constructor) {
+        $$$internal$$handleOwnThenable(promise, maybeThenable);
+      } else {
+        var then = $$$internal$$getThen(maybeThenable);
+
+        if (then === $$$internal$$GET_THEN_ERROR) {
+          $$$internal$$reject(promise, $$$internal$$GET_THEN_ERROR.error);
+        } else if (then === undefined) {
+          $$$internal$$fulfill(promise, maybeThenable);
+        } else if ($$utils$$isFunction(then)) {
+          $$$internal$$handleForeignThenable(promise, maybeThenable, then);
+        } else {
+          $$$internal$$fulfill(promise, maybeThenable);
+        }
+      }
+    }
+
+    function $$$internal$$resolve(promise, value) {
+      if (promise === value) {
+        $$$internal$$reject(promise, $$$internal$$selfFullfillment());
+      } else if ($$utils$$objectOrFunction(value)) {
+        $$$internal$$handleMaybeThenable(promise, value);
+      } else {
+        $$$internal$$fulfill(promise, value);
+      }
+    }
+
+    function $$$internal$$publishRejection(promise) {
+      if (promise._onerror) {
+        promise._onerror(promise._result);
+      }
+
+      $$$internal$$publish(promise);
+    }
+
+    function $$$internal$$fulfill(promise, value) {
+      if (promise._state !== $$$internal$$PENDING) { return; }
+
+      promise._result = value;
+      promise._state = $$$internal$$FULFILLED;
+
+      if (promise._subscribers.length === 0) {
+      } else {
+        $$asap$$default($$$internal$$publish, promise);
+      }
+    }
+
+    function $$$internal$$reject(promise, reason) {
+      if (promise._state !== $$$internal$$PENDING) { return; }
+      promise._state = $$$internal$$REJECTED;
+      promise._result = reason;
+
+      $$asap$$default($$$internal$$publishRejection, promise);
+    }
+
+    function $$$internal$$subscribe(parent, child, onFulfillment, onRejection) {
+      var subscribers = parent._subscribers;
+      var length = subscribers.length;
+
+      parent._onerror = null;
+
+      subscribers[length] = child;
+      subscribers[length + $$$internal$$FULFILLED] = onFulfillment;
+      subscribers[length + $$$internal$$REJECTED]  = onRejection;
+
+      if (length === 0 && parent._state) {
+        $$asap$$default($$$internal$$publish, parent);
+      }
+    }
+
+    function $$$internal$$publish(promise) {
+      var subscribers = promise._subscribers;
+      var settled = promise._state;
+
+      if (subscribers.length === 0) { return; }
+
+      var child, callback, detail = promise._result;
+
+      for (var i = 0; i < subscribers.length; i += 3) {
+        child = subscribers[i];
+        callback = subscribers[i + settled];
+
+        if (child) {
+          $$$internal$$invokeCallback(settled, child, callback, detail);
+        } else {
+          callback(detail);
+        }
+      }
+
+      promise._subscribers.length = 0;
+    }
+
+    function $$$internal$$ErrorObject() {
+      this.error = null;
+    }
+
+    var $$$internal$$TRY_CATCH_ERROR = new $$$internal$$ErrorObject();
+
+    function $$$internal$$tryCatch(callback, detail) {
+      try {
+        return callback(detail);
+      } catch(e) {
+        $$$internal$$TRY_CATCH_ERROR.error = e;
+        return $$$internal$$TRY_CATCH_ERROR;
+      }
+    }
+
+    function $$$internal$$invokeCallback(settled, promise, callback, detail) {
+      var hasCallback = $$utils$$isFunction(callback),
+          value, error, succeeded, failed;
+
+      if (hasCallback) {
+        value = $$$internal$$tryCatch(callback, detail);
+
+        if (value === $$$internal$$TRY_CATCH_ERROR) {
+          failed = true;
+          error = value.error;
+          value = null;
+        } else {
+          succeeded = true;
+        }
+
+        if (promise === value) {
+          $$$internal$$reject(promise, $$$internal$$cannotReturnOwn());
+          return;
+        }
+
+      } else {
+        value = detail;
+        succeeded = true;
+      }
+
+      if (promise._state !== $$$internal$$PENDING) {
+        // noop
+      } else if (hasCallback && succeeded) {
+        $$$internal$$resolve(promise, value);
+      } else if (failed) {
+        $$$internal$$reject(promise, error);
+      } else if (settled === $$$internal$$FULFILLED) {
+        $$$internal$$fulfill(promise, value);
+      } else if (settled === $$$internal$$REJECTED) {
+        $$$internal$$reject(promise, value);
+      }
+    }
+
+    function $$$internal$$initializePromise(promise, resolver) {
+      try {
+        resolver(function resolvePromise(value){
+          $$$internal$$resolve(promise, value);
+        }, function rejectPromise(reason) {
+          $$$internal$$reject(promise, reason);
+        });
+      } catch(e) {
+        $$$internal$$reject(promise, e);
+      }
+    }
+
+    function $$$enumerator$$makeSettledResult(state, position, value) {
+      if (state === $$$internal$$FULFILLED) {
+        return {
+          state: 'fulfilled',
+          value: value
+        };
+      } else {
+        return {
+          state: 'rejected',
+          reason: value
+        };
+      }
+    }
+
+    function $$$enumerator$$Enumerator(Constructor, input, abortOnReject, label) {
+      this._instanceConstructor = Constructor;
+      this.promise = new Constructor($$$internal$$noop, label);
+      this._abortOnReject = abortOnReject;
+
+      if (this._validateInput(input)) {
+        this._input     = input;
+        this.length     = input.length;
+        this._remaining = input.length;
+
+        this._init();
+
+        if (this.length === 0) {
+          $$$internal$$fulfill(this.promise, this._result);
+        } else {
+          this.length = this.length || 0;
+          this._enumerate();
+          if (this._remaining === 0) {
+            $$$internal$$fulfill(this.promise, this._result);
+          }
+        }
+      } else {
+        $$$internal$$reject(this.promise, this._validationError());
+      }
+    }
+
+    $$$enumerator$$Enumerator.prototype._validateInput = function(input) {
+      return $$utils$$isArray(input);
+    };
+
+    $$$enumerator$$Enumerator.prototype._validationError = function() {
+      return new Error('Array Methods must be provided an Array');
+    };
+
+    $$$enumerator$$Enumerator.prototype._init = function() {
+      this._result = new Array(this.length);
+    };
+
+    var $$$enumerator$$default = $$$enumerator$$Enumerator;
+
+    $$$enumerator$$Enumerator.prototype._enumerate = function() {
+      var length  = this.length;
+      var promise = this.promise;
+      var input   = this._input;
+
+      for (var i = 0; promise._state === $$$internal$$PENDING && i < length; i++) {
+        this._eachEntry(input[i], i);
+      }
+    };
+
+    $$$enumerator$$Enumerator.prototype._eachEntry = function(entry, i) {
+      var c = this._instanceConstructor;
+      if ($$utils$$isMaybeThenable(entry)) {
+        if (entry.constructor === c && entry._state !== $$$internal$$PENDING) {
+          entry._onerror = null;
+          this._settledAt(entry._state, i, entry._result);
+        } else {
+          this._willSettleAt(c.resolve(entry), i);
+        }
+      } else {
+        this._remaining--;
+        this._result[i] = this._makeResult($$$internal$$FULFILLED, i, entry);
+      }
+    };
+
+    $$$enumerator$$Enumerator.prototype._settledAt = function(state, i, value) {
+      var promise = this.promise;
+
+      if (promise._state === $$$internal$$PENDING) {
+        this._remaining--;
+
+        if (this._abortOnReject && state === $$$internal$$REJECTED) {
+          $$$internal$$reject(promise, value);
+        } else {
+          this._result[i] = this._makeResult(state, i, value);
+        }
+      }
+
+      if (this._remaining === 0) {
+        $$$internal$$fulfill(promise, this._result);
+      }
+    };
+
+    $$$enumerator$$Enumerator.prototype._makeResult = function(state, i, value) {
+      return value;
+    };
+
+    $$$enumerator$$Enumerator.prototype._willSettleAt = function(promise, i) {
+      var enumerator = this;
+
+      $$$internal$$subscribe(promise, undefined, function(value) {
+        enumerator._settledAt($$$internal$$FULFILLED, i, value);
+      }, function(reason) {
+        enumerator._settledAt($$$internal$$REJECTED, i, reason);
+      });
+    };
+
+    var $$promise$all$$default = function all(entries, label) {
+      return new $$$enumerator$$default(this, entries, true /* abort on reject */, label).promise;
+    };
+
+    var $$promise$race$$default = function race(entries, label) {
+      /*jshint validthis:true */
+      var Constructor = this;
+
+      var promise = new Constructor($$$internal$$noop, label);
+
+      if (!$$utils$$isArray(entries)) {
+        $$$internal$$reject(promise, new TypeError('You must pass an array to race.'));
+        return promise;
+      }
+
+      var length = entries.length;
+
+      function onFulfillment(value) {
+        $$$internal$$resolve(promise, value);
+      }
+
+      function onRejection(reason) {
+        $$$internal$$reject(promise, reason);
+      }
+
+      for (var i = 0; promise._state === $$$internal$$PENDING && i < length; i++) {
+        $$$internal$$subscribe(Constructor.resolve(entries[i]), undefined, onFulfillment, onRejection);
+      }
+
+      return promise;
+    };
+
+    var $$promise$resolve$$default = function resolve(object, label) {
+      /*jshint validthis:true */
+      var Constructor = this;
+
+      if (object && typeof object === 'object' && object.constructor === Constructor) {
+        return object;
+      }
+
+      var promise = new Constructor($$$internal$$noop, label);
+      $$$internal$$resolve(promise, object);
+      return promise;
+    };
+
+    var $$promise$reject$$default = function reject(reason, label) {
+      /*jshint validthis:true */
+      var Constructor = this;
+      var promise = new Constructor($$$internal$$noop, label);
+      $$$internal$$reject(promise, reason);
+      return promise;
+    };
+
+    var $$es6$promise$promise$$counter = 0;
+
+    function $$es6$promise$promise$$needsResolver() {
+      throw new TypeError('You must pass a resolver function as the first argument to the promise constructor');
+    }
+
+    function $$es6$promise$promise$$needsNew() {
+      throw new TypeError("Failed to construct 'Promise': Please use the 'new' operator, this object constructor cannot be called as a function.");
+    }
+
+    var $$es6$promise$promise$$default = $$es6$promise$promise$$Promise;
+
+    /**
+      Promise objects represent the eventual result of an asynchronous operation. The
+      primary way of interacting with a promise is through its `then` method, which
+      registers callbacks to receive either a promise’s eventual value or the reason
+      why the promise cannot be fulfilled.
+
+      Terminology
+      -----------
+
+      - `promise` is an object or function with a `then` method whose behavior conforms to this specification.
+      - `thenable` is an object or function that defines a `then` method.
+      - `value` is any legal JavaScript value (including undefined, a thenable, or a promise).
+      - `exception` is a value that is thrown using the throw statement.
+      - `reason` is a value that indicates why a promise was rejected.
+      - `settled` the final resting state of a promise, fulfilled or rejected.
+
+      A promise can be in one of three states: pending, fulfilled, or rejected.
+
+      Promises that are fulfilled have a fulfillment value and are in the fulfilled
+      state.  Promises that are rejected have a rejection reason and are in the
+      rejected state.  A fulfillment value is never a thenable.
+
+      Promises can also be said to *resolve* a value.  If this value is also a
+      promise, then the original promise's settled state will match the value's
+      settled state.  So a promise that *resolves* a promise that rejects will
+      itself reject, and a promise that *resolves* a promise that fulfills will
+      itself fulfill.
+
+
+      Basic Usage:
+      ------------
+
+      ```js
+      var promise = new Promise(function(resolve, reject) {
+        // on success
+        resolve(value);
+
+        // on failure
+        reject(reason);
+      });
+
+      promise.then(function(value) {
+        // on fulfillment
+      }, function(reason) {
+        // on rejection
+      });
+      ```
+
+      Advanced Usage:
+      ---------------
+
+      Promises shine when abstracting away asynchronous interactions such as
+      `XMLHttpRequest`s.
+
+      ```js
+      function getJSON(url) {
+        return new Promise(function(resolve, reject){
+          var xhr = new XMLHttpRequest();
+
+          xhr.open('GET', url);
+          xhr.onreadystatechange = handler;
+          xhr.responseType = 'json';
+          xhr.setRequestHeader('Accept', 'application/json');
+          xhr.send();
+
+          function handler() {
+            if (this.readyState === this.DONE) {
+              if (this.status === 200) {
+                resolve(this.response);
+              } else {
+                reject(new Error('getJSON: `' + url + '` failed with status: [' + this.status + ']'));
+              }
+            }
+          };
+        });
+      }
+
+      getJSON('/posts.json').then(function(json) {
+        // on fulfillment
+      }, function(reason) {
+        // on rejection
+      });
+      ```
+
+      Unlike callbacks, promises are great composable primitives.
+
+      ```js
+      Promise.all([
+        getJSON('/posts'),
+        getJSON('/comments')
+      ]).then(function(values){
+        values[0] // => postsJSON
+        values[1] // => commentsJSON
+
+        return values;
+      });
+      ```
+
+      @class Promise
+      @param {function} resolver
+      Useful for tooling.
+      @constructor
+    */
+    function $$es6$promise$promise$$Promise(resolver) {
+      this._id = $$es6$promise$promise$$counter++;
+      this._state = undefined;
+      this._result = undefined;
+      this._subscribers = [];
+
+      if ($$$internal$$noop !== resolver) {
+        if (!$$utils$$isFunction(resolver)) {
+          $$es6$promise$promise$$needsResolver();
+        }
+
+        if (!(this instanceof $$es6$promise$promise$$Promise)) {
+          $$es6$promise$promise$$needsNew();
+        }
+
+        $$$internal$$initializePromise(this, resolver);
+      }
+    }
+
+    $$es6$promise$promise$$Promise.all = $$promise$all$$default;
+    $$es6$promise$promise$$Promise.race = $$promise$race$$default;
+    $$es6$promise$promise$$Promise.resolve = $$promise$resolve$$default;
+    $$es6$promise$promise$$Promise.reject = $$promise$reject$$default;
+
+    $$es6$promise$promise$$Promise.prototype = {
+      constructor: $$es6$promise$promise$$Promise,
+
+    /**
+      The primary way of interacting with a promise is through its `then` method,
+      which registers callbacks to receive either a promise's eventual value or the
+      reason why the promise cannot be fulfilled.
+
+      ```js
+      findUser().then(function(user){
+        // user is available
+      }, function(reason){
+        // user is unavailable, and you are given the reason why
+      });
+      ```
+
+      Chaining
+      --------
+
+      The return value of `then` is itself a promise.  This second, 'downstream'
+      promise is resolved with the return value of the first promise's fulfillment
+      or rejection handler, or rejected if the handler throws an exception.
+
+      ```js
+      findUser().then(function (user) {
+        return user.name;
+      }, function (reason) {
+        return 'default name';
+      }).then(function (userName) {
+        // If `findUser` fulfilled, `userName` will be the user's name, otherwise it
+        // will be `'default name'`
+      });
+
+      findUser().then(function (user) {
+        throw new Error('Found user, but still unhappy');
+      }, function (reason) {
+        throw new Error('`findUser` rejected and we're unhappy');
+      }).then(function (value) {
+        // never reached
+      }, function (reason) {
+        // if `findUser` fulfilled, `reason` will be 'Found user, but still unhappy'.
+        // If `findUser` rejected, `reason` will be '`findUser` rejected and we're unhappy'.
+      });
+      ```
+      If the downstream promise does not specify a rejection handler, rejection reasons will be propagated further downstream.
+
+      ```js
+      findUser().then(function (user) {
+        throw new PedagogicalException('Upstream error');
+      }).then(function (value) {
+        // never reached
+      }).then(function (value) {
+        // never reached
+      }, function (reason) {
+        // The `PedgagocialException` is propagated all the way down to here
+      });
+      ```
+
+      Assimilation
+      ------------
+
+      Sometimes the value you want to propagate to a downstream promise can only be
+      retrieved asynchronously. This can be achieved by returning a promise in the
+      fulfillment or rejection handler. The downstream promise will then be pending
+      until the returned promise is settled. This is called *assimilation*.
+
+      ```js
+      findUser().then(function (user) {
+        return findCommentsByAuthor(user);
+      }).then(function (comments) {
+        // The user's comments are now available
+      });
+      ```
+
+      If the assimliated promise rejects, then the downstream promise will also reject.
+
+      ```js
+      findUser().then(function (user) {
+        return findCommentsByAuthor(user);
+      }).then(function (comments) {
+        // If `findCommentsByAuthor` fulfills, we'll have the value here
+      }, function (reason) {
+        // If `findCommentsByAuthor` rejects, we'll have the reason here
+      });
+      ```
+
+      Simple Example
+      --------------
+
+      Synchronous Example
+
+      ```javascript
+      var result;
+
+      try {
+        result = findResult();
+        // success
+      } catch(reason) {
+        // failure
+      }
+      ```
+
+      Errback Example
+
+      ```js
+      findResult(function(result, err){
+        if (err) {
+          // failure
+        } else {
+          // success
+        }
+      });
+      ```
+
+      Promise Example;
+
+      ```javascript
+      findResult().then(function(result){
+        // success
+      }, function(reason){
+        // failure
+      });
+      ```
+
+      Advanced Example
+      --------------
+
+      Synchronous Example
+
+      ```javascript
+      var author, books;
+
+      try {
+        author = findAuthor();
+        books  = findBooksByAuthor(author);
+        // success
+      } catch(reason) {
+        // failure
+      }
+      ```
+
+      Errback Example
+
+      ```js
+
+      function foundBooks(books) {
+
+      }
+
+      function failure(reason) {
+
+      }
+
+      findAuthor(function(author, err){
+        if (err) {
+          failure(err);
+          // failure
+        } else {
+          try {
+            findBoooksByAuthor(author, function(books, err) {
+              if (err) {
+                failure(err);
+              } else {
+                try {
+                  foundBooks(books);
+                } catch(reason) {
+                  failure(reason);
+                }
+              }
+            });
+          } catch(error) {
+            failure(err);
+          }
+          // success
+        }
+      });
+      ```
+
+      Promise Example;
+
+      ```javascript
+      findAuthor().
+        then(findBooksByAuthor).
+        then(function(books){
+          // found books
+      }).catch(function(reason){
+        // something went wrong
+      });
+      ```
+
+      @method then
+      @param {Function} onFulfilled
+      @param {Function} onRejected
+      Useful for tooling.
+      @return {Promise}
+    */
+      then: function(onFulfillment, onRejection) {
+        var parent = this;
+        var state = parent._state;
+
+        if (state === $$$internal$$FULFILLED && !onFulfillment || state === $$$internal$$REJECTED && !onRejection) {
+          return this;
+        }
+
+        var child = new this.constructor($$$internal$$noop);
+        var result = parent._result;
+
+        if (state) {
+          var callback = arguments[state - 1];
+          $$asap$$default(function(){
+            $$$internal$$invokeCallback(state, child, callback, result);
+          });
+        } else {
+          $$$internal$$subscribe(parent, child, onFulfillment, onRejection);
+        }
+
+        return child;
+      },
+
+    /**
+      `catch` is simply sugar for `then(undefined, onRejection)` which makes it the same
+      as the catch block of a try/catch statement.
+
+      ```js
+      function findAuthor(){
+        throw new Error('couldn't find that author');
+      }
+
+      // synchronous
+      try {
+        findAuthor();
+      } catch(reason) {
+        // something went wrong
+      }
+
+      // async with promises
+      findAuthor().catch(function(reason){
+        // something went wrong
+      });
+      ```
+
+      @method catch
+      @param {Function} onRejection
+      Useful for tooling.
+      @return {Promise}
+    */
+      'catch': function(onRejection) {
+        return this.then(null, onRejection);
+      }
+    };
+
+    var $$es6$promise$polyfill$$default = function polyfill() {
+      var local;
+
+      if (typeof global !== 'undefined') {
+        local = global;
+      } else if (typeof window !== 'undefined' && window.document) {
+        local = window;
+      } else {
+        local = self;
+      }
+
+      var es6PromiseSupport =
+        "Promise" in local &&
+        // Some of these methods are missing from
+        // Firefox/Chrome experimental implementations
+        "resolve" in local.Promise &&
+        "reject" in local.Promise &&
+        "all" in local.Promise &&
+        "race" in local.Promise &&
+        // Older version of the spec had a resolver object
+        // as the arg rather than a function
+        (function() {
+          var resolve;
+          new local.Promise(function(r) { resolve = r; });
+          return $$utils$$isFunction(resolve);
+        }());
+
+      if (!es6PromiseSupport) {
+        local.Promise = $$es6$promise$promise$$default;
+      }
+    };
+
+    var es6$promise$umd$$ES6Promise = {
+      'Promise': $$es6$promise$promise$$default,
+      'polyfill': $$es6$promise$polyfill$$default
+    };
+
+    /* global define:true module:true window: true */
+    if (typeof define === 'function' && define['amd']) {
+      define(function() { return es6$promise$umd$$ES6Promise; });
+    } else if (typeof module !== 'undefined' && module['exports']) {
+      module['exports'] = es6$promise$umd$$ES6Promise;
+    } else if (typeof this !== 'undefined') {
+      this['ES6Promise'] = es6$promise$umd$$ES6Promise;
+    }
+}).call(this);
+}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"_process":28}],11:[function(require,module,exports){
+// Copyright Joyent, Inc. and other Node contributors.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to permit
+// persons to whom the Software is furnished to do so, subject to the
+// following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+function EventEmitter() {
+  this._events = this._events || {};
+  this._maxListeners = this._maxListeners || undefined;
+}
+module.exports = EventEmitter;
+
+// Backwards-compat with node 0.10.x
+EventEmitter.EventEmitter = EventEmitter;
+
+EventEmitter.prototype._events = undefined;
+EventEmitter.prototype._maxListeners = undefined;
+
+// By default EventEmitters will print a warning if more than 10 listeners are
+// added to it. This is a useful default which helps finding memory leaks.
+EventEmitter.defaultMaxListeners = 10;
+
+// Obviously not all Emitters should be limited to 10. This function allows
+// that to be increased. Set to zero for unlimited.
+EventEmitter.prototype.setMaxListeners = function(n) {
+  if (!isNumber(n) || n < 0 || isNaN(n))
+    throw TypeError('n must be a positive number');
+  this._maxListeners = n;
+  return this;
+};
+
+EventEmitter.prototype.emit = function(type) {
+  var er, handler, len, args, i, listeners;
+
+  if (!this._events)
+    this._events = {};
+
+  // If there is no 'error' event listener then throw.
+  if (type === 'error') {
+    if (!this._events.error ||
+        (isObject(this._events.error) && !this._events.error.length)) {
+      er = arguments[1];
+      if (er instanceof Error) {
+        throw er; // Unhandled 'error' event
+      }
+      throw TypeError('Uncaught, unspecified "error" event.');
+    }
+  }
+
+  handler = this._events[type];
+
+  if (isUndefined(handler))
+    return false;
+
+  if (isFunction(handler)) {
+    switch (arguments.length) {
+      // fast cases
+      case 1:
+        handler.call(this);
+        break;
+      case 2:
+        handler.call(this, arguments[1]);
+        break;
+      case 3:
+        handler.call(this, arguments[1], arguments[2]);
+        break;
+      // slower
+      default:
+        args = Array.prototype.slice.call(arguments, 1);
+        handler.apply(this, args);
+    }
+  } else if (isObject(handler)) {
+    args = Array.prototype.slice.call(arguments, 1);
+    listeners = handler.slice();
+    len = listeners.length;
+    for (i = 0; i < len; i++)
+      listeners[i].apply(this, args);
+  }
+
+  return true;
+};
+
+EventEmitter.prototype.addListener = function(type, listener) {
+  var m;
+
+  if (!isFunction(listener))
+    throw TypeError('listener must be a function');
+
+  if (!this._events)
+    this._events = {};
+
+  // To avoid recursion in the case that type === "newListener"! Before
+  // adding it to the listeners, first emit "newListener".
+  if (this._events.newListener)
+    this.emit('newListener', type,
+              isFunction(listener.listener) ?
+              listener.listener : listener);
+
+  if (!this._events[type])
+    // Optimize the case of one listener. Don't need the extra array object.
+    this._events[type] = listener;
+  else if (isObject(this._events[type]))
+    // If we've already got an array, just append.
+    this._events[type].push(listener);
+  else
+    // Adding the second element, need to change to array.
+    this._events[type] = [this._events[type], listener];
+
+  // Check for listener leak
+  if (isObject(this._events[type]) && !this._events[type].warned) {
+    if (!isUndefined(this._maxListeners)) {
+      m = this._maxListeners;
+    } else {
+      m = EventEmitter.defaultMaxListeners;
+    }
+
+    if (m && m > 0 && this._events[type].length > m) {
+      this._events[type].warned = true;
+      console.error('(node) warning: possible EventEmitter memory ' +
+                    'leak detected. %d listeners added. ' +
+                    'Use emitter.setMaxListeners() to increase limit.',
+                    this._events[type].length);
+      if (typeof console.trace === 'function') {
+        // not supported in IE 10
+        console.trace();
+      }
+    }
+  }
+
+  return this;
+};
+
+EventEmitter.prototype.on = EventEmitter.prototype.addListener;
+
+EventEmitter.prototype.once = function(type, listener) {
+  if (!isFunction(listener))
+    throw TypeError('listener must be a function');
+
+  var fired = false;
+
+  function g() {
+    this.removeListener(type, g);
+
+    if (!fired) {
+      fired = true;
+      listener.apply(this, arguments);
+    }
+  }
+
+  g.listener = listener;
+  this.on(type, g);
+
+  return this;
+};
+
+// emits a 'removeListener' event iff the listener was removed
+EventEmitter.prototype.removeListener = function(type, listener) {
+  var list, position, length, i;
+
+  if (!isFunction(listener))
+    throw TypeError('listener must be a function');
+
+  if (!this._events || !this._events[type])
+    return this;
+
+  list = this._events[type];
+  length = list.length;
+  position = -1;
+
+  if (list === listener ||
+      (isFunction(list.listener) && list.listener === listener)) {
+    delete this._events[type];
+    if (this._events.removeListener)
+      this.emit('removeListener', type, listener);
+
+  } else if (isObject(list)) {
+    for (i = length; i-- > 0;) {
+      if (list[i] === listener ||
+          (list[i].listener && list[i].listener === listener)) {
+        position = i;
+        break;
+      }
+    }
+
+    if (position < 0)
+      return this;
+
+    if (list.length === 1) {
+      list.length = 0;
+      delete this._events[type];
+    } else {
+      list.splice(position, 1);
+    }
+
+    if (this._events.removeListener)
+      this.emit('removeListener', type, listener);
+  }
+
+  return this;
+};
+
+EventEmitter.prototype.removeAllListeners = function(type) {
+  var key, listeners;
+
+  if (!this._events)
+    return this;
+
+  // not listening for removeListener, no need to emit
+  if (!this._events.removeListener) {
+    if (arguments.length === 0)
+      this._events = {};
+    else if (this._events[type])
+      delete this._events[type];
+    return this;
+  }
+
+  // emit removeListener for all listeners on all events
+  if (arguments.length === 0) {
+    for (key in this._events) {
+      if (key === 'removeListener') continue;
+      this.removeAllListeners(key);
+    }
+    this.removeAllListeners('removeListener');
+    this._events = {};
+    return this;
+  }
+
+  listeners = this._events[type];
+
+  if (isFunction(listeners)) {
+    this.removeListener(type, listeners);
+  } else if (listeners) {
+    // LIFO order
+    while (listeners.length)
+      this.removeListener(type, listeners[listeners.length - 1]);
+  }
+  delete this._events[type];
+
+  return this;
+};
+
+EventEmitter.prototype.listeners = function(type) {
+  var ret;
+  if (!this._events || !this._events[type])
+    ret = [];
+  else if (isFunction(this._events[type]))
+    ret = [this._events[type]];
+  else
+    ret = this._events[type].slice();
+  return ret;
+};
+
+EventEmitter.prototype.listenerCount = function(type) {
+  if (this._events) {
+    var evlistener = this._events[type];
+
+    if (isFunction(evlistener))
+      return 1;
+    else if (evlistener)
+      return evlistener.length;
+  }
+  return 0;
+};
+
+EventEmitter.listenerCount = function(emitter, type) {
+  return emitter.listenerCount(type);
+};
+
+function isFunction(arg) {
+  return typeof arg === 'function';
+}
+
+function isNumber(arg) {
+  return typeof arg === 'number';
+}
+
+function isObject(arg) {
+  return typeof arg === 'object' && arg !== null;
+}
+
+function isUndefined(arg) {
+  return arg === void 0;
+}
+
+},{}],12:[function(require,module,exports){
+var http = require('http');
+
+var https = module.exports;
+
+for (var key in http) {
+    if (http.hasOwnProperty(key)) https[key] = http[key];
+};
+
+https.request = function (params, cb) {
+    if (!params) params = {};
+    params.scheme = 'https';
+    params.protocol = 'https:';
+    return http.request.call(this, params, cb);
+}
+
+},{"http":44}],13:[function(require,module,exports){
+exports.read = function (buffer, offset, isLE, mLen, nBytes) {
+  var e, m
+  var eLen = nBytes * 8 - mLen - 1
+  var eMax = (1 << eLen) - 1
+  var eBias = eMax >> 1
+  var nBits = -7
+  var i = isLE ? (nBytes - 1) : 0
+  var d = isLE ? -1 : 1
+  var s = buffer[offset + i]
+
+  i += d
+
+  e = s & ((1 << (-nBits)) - 1)
+  s >>= (-nBits)
+  nBits += eLen
+  for (; nBits > 0; e = e * 256 + buffer[offset + i], i += d, nBits -= 8) {}
+
+  m = e & ((1 << (-nBits)) - 1)
+  e >>= (-nBits)
+  nBits += mLen
+  for (; nBits > 0; m = m * 256 + buffer[offset + i], i += d, nBits -= 8) {}
+
+  if (e === 0) {
+    e = 1 - eBias
+  } else if (e === eMax) {
+    return m ? NaN : ((s ? -1 : 1) * Infinity)
+  } else {
+    m = m + Math.pow(2, mLen)
+    e = e - eBias
+  }
+  return (s ? -1 : 1) * m * Math.pow(2, e - mLen)
+}
+
+exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
+  var e, m, c
+  var eLen = nBytes * 8 - mLen - 1
+  var eMax = (1 << eLen) - 1
+  var eBias = eMax >> 1
+  var rt = (mLen === 23 ? Math.pow(2, -24) - Math.pow(2, -77) : 0)
+  var i = isLE ? 0 : (nBytes - 1)
+  var d = isLE ? 1 : -1
+  var s = value < 0 || (value === 0 && 1 / value < 0) ? 1 : 0
+
+  value = Math.abs(value)
+
+  if (isNaN(value) || value === Infinity) {
+    m = isNaN(value) ? 1 : 0
+    e = eMax
+  } else {
+    e = Math.floor(Math.log(value) / Math.LN2)
+    if (value * (c = Math.pow(2, -e)) < 1) {
+      e--
+      c *= 2
+    }
+    if (e + eBias >= 1) {
+      value += rt / c
+    } else {
+      value += rt * Math.pow(2, 1 - eBias)
+    }
+    if (value * c >= 2) {
+      e++
+      c /= 2
+    }
+
+    if (e + eBias >= eMax) {
+      m = 0
+      e = eMax
+    } else if (e + eBias >= 1) {
+      m = (value * c - 1) * Math.pow(2, mLen)
+      e = e + eBias
+    } else {
+      m = value * Math.pow(2, eBias - 1) * Math.pow(2, mLen)
+      e = 0
+    }
+  }
+
+  for (; mLen >= 8; buffer[offset + i] = m & 0xff, i += d, m /= 256, mLen -= 8) {}
+
+  e = (e << mLen) | m
+  eLen += mLen
+  for (; eLen > 0; buffer[offset + i] = e & 0xff, i += d, e /= 256, eLen -= 8) {}
+
+  buffer[offset + i - d] |= s * 128
+}
+
+},{}],14:[function(require,module,exports){
+if (typeof Object.create === 'function') {
+  // implementation from standard node.js 'util' module
+  module.exports = function inherits(ctor, superCtor) {
+    ctor.super_ = superCtor
+    ctor.prototype = Object.create(superCtor.prototype, {
+      constructor: {
+        value: ctor,
+        enumerable: false,
+        writable: true,
+        configurable: true
+      }
+    });
+  };
+} else {
+  // old school shim for old browsers
+  module.exports = function inherits(ctor, superCtor) {
+    ctor.super_ = superCtor
+    var TempCtor = function () {}
+    TempCtor.prototype = superCtor.prototype
+    ctor.prototype = new TempCtor()
+    ctor.prototype.constructor = ctor
+  }
+}
+
+},{}],15:[function(require,module,exports){
+/**
+ * Determine if an object is Buffer
+ *
+ * Author:   Feross Aboukhadijeh <feross@feross.org> <http://feross.org>
+ * License:  MIT
+ *
+ * `npm install is-buffer`
+ */
+
+module.exports = function (obj) {
+  return !!(obj != null &&
+    (obj._isBuffer || // For Safari 5-7 (missing Object.prototype.constructor)
+      (obj.constructor &&
+      typeof obj.constructor.isBuffer === 'function' &&
+      obj.constructor.isBuffer(obj))
+    ))
+}
+
+},{}],16:[function(require,module,exports){
+module.exports = Array.isArray || function (arr) {
+  return Object.prototype.toString.call(arr) == '[object Array]';
+};
+
+},{}],17:[function(require,module,exports){
 // Ignore module for browserify (see package.json)
-},{}],3:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 (function (process,global,__dirname){
 /**
  * A JavaScript implementation of the JSON-LD API.
@@ -9085,7 +15030,7 @@ if ((typeof module !== "undefined" && module !== null ? module.exports : void 0)
  * @author Dave Longley
  *
  * @license BSD 3-Clause License
- * Copyright (c) 2011-2014 Digital Bazaar, Inc.
+ * Copyright (c) 2011-2015 Digital Bazaar, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -9825,13 +15770,19 @@ jsonld.objectify = function(input, ctx, options, callback) {
 };
 
 /**
- * Performs RDF dataset normalization on the given JSON-LD input. The output
- * is an RDF dataset unless the 'format' option is used.
+ * Performs RDF dataset normalization on the given input. The input is JSON-LD
+ * unless the 'inputFormat' option is used. The output is an RDF dataset
+ * unless the 'format' option is used.
  *
- * @param input the JSON-LD input to normalize.
+ * @param input the input to normalize as JSON-LD or as a format specified by
+ *          the 'inputFormat' option.
  * @param [options] the options to use:
+ *          [algorithm] the normalization algorithm to use, `URDNA2015` or
+ *            `URGNA2012` (default: `URGNA2012`).
  *          [base] the base IRI to use.
  *          [expandContext] a context to expand with.
+ *          [inputFormat] the format if input is not JSON-LD:
+ *            'application/nquads' for N-Quads.
  *          [format] the format if output is a string:
  *            'application/nquads' for N-Quads.
  *          [documentLoader(url, callback(err, remoteDoc))] the document loader.
@@ -9852,6 +15803,9 @@ jsonld.normalize = function(input, options, callback) {
   options = options || {};
 
   // set default options
+  if(!('algorithm' in options)) {
+    options.algorithm = 'URGNA2012';
+  }
   if(!('base' in options)) {
     options.base = (typeof input === 'string') ? input : '';
   }
@@ -9859,20 +15813,30 @@ jsonld.normalize = function(input, options, callback) {
     options.documentLoader = jsonld.loadDocument;
   }
 
-  // convert to RDF dataset then do normalization
-  var opts = _clone(options);
-  delete opts.format;
-  opts.produceGeneralizedRdf = false;
-  jsonld.toRDF(input, opts, function(err, dataset) {
-    if(err) {
+  if('inputFormat' in options) {
+    if(options.inputFormat !== 'application/nquads') {
       return callback(new JsonLdError(
-        'Could not convert input to RDF dataset before normalization.',
-        'jsonld.NormalizeError', {cause: err}));
+        'Unknown normalization input format.',
+        'jsonld.NormalizeError'));
     }
-
+    var parsedInput = _parseNQuads(input);
     // do normalization
-    new Processor().normalize(dataset, options, callback);
-  });
+    new Processor().normalize(parsedInput, options, callback);
+  } else {
+    // convert to RDF dataset then do normalization
+    var opts = _clone(options);
+    delete opts.format;
+    opts.produceGeneralizedRdf = false;
+    jsonld.toRDF(input, opts, function(err, dataset) {
+      if(err) {
+        return callback(new JsonLdError(
+          'Could not convert input to RDF dataset before normalization.',
+          'jsonld.NormalizeError', {cause: err}));
+      }
+      // do normalization
+      new Processor().normalize(dataset, options, callback);
+    });
+  }
 };
 
 /**
@@ -10045,7 +16009,8 @@ jsonld.toRDF = function(input, options, callback) {
  * @param [options] the options to use:
  *          [base] the base IRI to use.
  *          [expandContext] a context to expand with.
- *          [namer] a jsonld.UniqueNamer to use to label blank nodes.
+ *          [issuer] a jsonld.IdentifierIssuer to use to label blank nodes.
+ *          [namer] (deprecated)
  *          [documentLoader(url, callback(err, remoteDoc))] the document loader.
  * @param callback(err, nodeMap) called once the operation completes.
  */
@@ -10100,7 +16065,8 @@ jsonld.createNodeMap = function(input, options, callback) {
  * @param [options] the options to use:
  *          [base] the base IRI to use.
  *          [expandContext] a context to expand with.
- *          [namer] a jsonld.UniqueNamer to use to label blank nodes.
+ *          [issuer] a jsonld.IdentifierIssuer to use to label blank nodes.
+ *          [namer] (deprecated).
  *          [mergeNodes] true to merge properties for nodes with the same ID,
  *            false to ignore new properties for nodes with the same ID once
  *            the ID has been defined; note that this may not prevent merging
@@ -10166,7 +16132,7 @@ jsonld.merge = function(docs, ctx, options, callback) {
       mergeNodes = options.mergeNodes;
     }
 
-    var namer = options.namer || new UniqueNamer('_:b');
+    var issuer = options.namer || options.issuer || new IdentifierIssuer('_:b');
     var graphs = {'@default': {}};
 
     var defaultGraph;
@@ -10175,13 +16141,13 @@ jsonld.merge = function(docs, ctx, options, callback) {
         // uniquely relabel blank nodes
         var doc = expanded[i];
         doc = jsonld.relabelBlankNodes(doc, {
-          namer: new UniqueNamer('_:b' + i + '-')
+          issuer: new IdentifierIssuer('_:b' + i + '-')
         });
 
         // add nodes to the shared node map graphs if merging nodes, to a
         // separate graph set if not
         var _graphs = (mergeNodes || i === 0) ? graphs : {'@default': {}};
-        _createNodeMap(doc, _graphs, '@default', namer);
+        _createNodeMap(doc, _graphs, '@default', issuer);
 
         if(_graphs !== graphs) {
           // merge document graphs but don't merge existing nodes
@@ -10241,12 +16207,13 @@ jsonld.merge = function(docs, ctx, options, callback) {
  *
  * @param input the JSON-LD input.
  * @param [options] the options to use:
- *          [namer] a jsonld.UniqueNamer to use.
+ *          [issuer] a jsonld.IdentifierIssuer to use to label blank nodes.
+ *          [namer] (deprecated).
  */
 jsonld.relabelBlankNodes = function(input, options) {
   options = options || {};
-  var namer = options.namer || new UniqueNamer('_:b');
-  return _labelBlankNodes(namer, input);
+  var issuer = options.namer || options.issuer || new IdentifierIssuer('_:b');
+  return _labelBlankNodes(issuer, input);
 };
 
 /**
@@ -10804,7 +16771,8 @@ jsonld.documentLoaders.node = function(options) {
   var maxRedirects = ('maxRedirects' in options) ? options.maxRedirects : -1;
   var request = require('request');
   var http = require('http');
-  var cache = new jsonld.DocumentCache();
+  // TODO: disable cache until HTTP caching implemented
+  //var cache = new jsonld.DocumentCache();
 
   var queue = new jsonld.RequestQueue();
   if(options.usePromise) {
@@ -10831,7 +16799,8 @@ jsonld.documentLoaders.node = function(options) {
         'jsonld.InvalidUrl', {code: 'loading document failed', url: url}),
         {contextUrl: null, documentUrl: url, document: null});
     }
-    var doc = cache.get(url);
+    // TODO: disable cache until HTTP caching implemented
+    var doc = null;//cache.get(url);
     if(doc !== null) {
       return callback(null, doc);
     }
@@ -10911,11 +16880,12 @@ jsonld.documentLoaders.node = function(options) {
       }
       // cache for each redirected URL
       redirects.push(url);
-      for(var i = 0; i < redirects.length; ++i) {
+      // TODO: disable cache until HTTP caching implemented
+      /*for(var i = 0; i < redirects.length; ++i) {
         cache.set(
           redirects[i],
           {contextUrl: null, documentUrl: redirects[i], document: body});
-      }
+      }*/
       callback(err, doc);
     }
   }
@@ -12092,7 +18062,8 @@ Processor.prototype.expand = function(
  *
  * @param input the expanded JSON-LD to create a node map of.
  * @param [options] the options to use:
- *          [namer] the UniqueNamer to use.
+ *          [issuer] a jsonld.IdentifierIssuer to use to label blank nodes.
+ *          [namer] (deprecated).
  *
  * @return the node map.
  */
@@ -12100,9 +18071,9 @@ Processor.prototype.createNodeMap = function(input, options) {
   options = options || {};
 
   // produce a map of all subjects and name each bnode
-  var namer = options.namer || new UniqueNamer('_:b');
+  var issuer = options.namer || options.issuer || new IdentifierIssuer('_:b');
   var graphs = {'@default': {}};
-  _createNodeMap(input, graphs, '@default', namer);
+  _createNodeMap(input, graphs, '@default', issuer);
 
   // add all non-default graphs to default graph
   return _mergeNodeMaps(graphs);
@@ -12151,8 +18122,8 @@ Processor.prototype.frame = function(input, frame, options) {
 
   // produce a map of all graphs and name each bnode
   // FIXME: currently uses subjects from @merged graph only
-  var namer = new UniqueNamer('_:b');
-  _createNodeMap(input, state.graphs, '@merged', namer);
+  var issuer = new IdentifierIssuer('_:b');
+  _createNodeMap(input, state.graphs, '@merged', issuer);
   state.subjects = state.graphs['@merged'];
 
   // frame the subjects
@@ -12169,201 +18140,14 @@ Processor.prototype.frame = function(input, frame, options) {
  * @param callback(err, normalized) called once the operation completes.
  */
 Processor.prototype.normalize = function(dataset, options, callback) {
-  // create quads and map bnodes to their associated quads
-  var quads = [];
-  var bnodes = {};
-  for(var graphName in dataset) {
-    var triples = dataset[graphName];
-    if(graphName === '@default') {
-      graphName = null;
-    }
-    for(var ti = 0; ti < triples.length; ++ti) {
-      var quad = triples[ti];
-      if(graphName !== null) {
-        if(graphName.indexOf('_:') === 0) {
-          quad.name = {type: 'blank node', value: graphName};
-        } else {
-          quad.name = {type: 'IRI', value: graphName};
-        }
-      }
-      quads.push(quad);
-
-      var attrs = ['subject', 'object', 'name'];
-      for(var ai = 0; ai < attrs.length; ++ai) {
-        var attr = attrs[ai];
-        if(quad[attr] && quad[attr].type === 'blank node') {
-          var id = quad[attr].value;
-          if(id in bnodes) {
-            bnodes[id].quads.push(quad);
-          } else {
-            bnodes[id] = {quads: [quad]};
-          }
-        }
-      }
-    }
+  if(options.algorithm === 'URDNA2015') {
+    return new URDNA2015(options).main(dataset, callback);
   }
-
-  // mapping complete, start canonical naming
-  var namer = new UniqueNamer('_:c14n');
-  return hashBlankNodes(Object.keys(bnodes));
-
-  // generates unique and duplicate hashes for bnodes
-  function hashBlankNodes(unnamed) {
-    var nextUnnamed = [];
-    var duplicates = {};
-    var unique = {};
-
-    // TODO: instead of N calls to setImmediate, run
-    // atomic normalization parts for a specified
-    // slice of time (perhaps configurable) as this
-    // will better utilize CPU and improve performance
-    // as JS processing speed improves
-
-    // hash quads for each unnamed bnode
-    jsonld.setImmediate(function() {hashUnnamed(0);});
-    function hashUnnamed(i) {
-      if(i === unnamed.length) {
-        // done, name blank nodes
-        return nameBlankNodes(unique, duplicates, nextUnnamed);
-      }
-
-      // hash unnamed bnode
-      var bnode = unnamed[i];
-      var hash = _hashQuads(bnode, bnodes);
-
-      // store hash as unique or a duplicate
-      if(hash in duplicates) {
-        duplicates[hash].push(bnode);
-        nextUnnamed.push(bnode);
-      } else if(hash in unique) {
-        duplicates[hash] = [unique[hash], bnode];
-        nextUnnamed.push(unique[hash]);
-        nextUnnamed.push(bnode);
-        delete unique[hash];
-      } else {
-        unique[hash] = bnode;
-      }
-
-      // hash next unnamed bnode
-      jsonld.setImmediate(function() {hashUnnamed(i + 1);});
-    }
+  if(options.algorithm === 'URGNA2012') {
+    return new URGNA2012(options).main(dataset, callback);
   }
-
-  // names unique hash bnodes
-  function nameBlankNodes(unique, duplicates, unnamed) {
-    // name unique bnodes in sorted hash order
-    var named = false;
-    var hashes = Object.keys(unique).sort();
-    for(var i = 0; i < hashes.length; ++i) {
-      var bnode = unique[hashes[i]];
-      namer.getName(bnode);
-      named = true;
-    }
-
-    if(named) {
-      // continue to hash bnodes if a bnode was assigned a name
-      hashBlankNodes(unnamed);
-    } else {
-      // name the duplicate hash bnodes
-      nameDuplicates(duplicates);
-    }
-  }
-
-  // names duplicate hash bnodes
-  function nameDuplicates(duplicates) {
-    // enumerate duplicate hash groups in sorted order
-    var hashes = Object.keys(duplicates).sort();
-
-    // process each group
-    processGroup(0);
-    function processGroup(i) {
-      if(i === hashes.length) {
-        // done, create JSON-LD array
-        return createArray();
-      }
-
-      // name each group member
-      var group = duplicates[hashes[i]];
-      var results = [];
-      nameGroupMember(group, 0);
-      function nameGroupMember(group, n) {
-        if(n === group.length) {
-          // name bnodes in hash order
-          results.sort(function(a, b) {
-            a = a.hash;
-            b = b.hash;
-            return (a < b) ? -1 : ((a > b) ? 1 : 0);
-          });
-          for(var r = 0; r < results.length; ++r) {
-            // name all bnodes in path namer in key-entry order
-            // Note: key-order is preserved in javascript
-            for(var key in results[r].pathNamer.existing) {
-              namer.getName(key);
-            }
-          }
-          return processGroup(i + 1);
-        }
-
-        // skip already-named bnodes
-        var bnode = group[n];
-        if(namer.isNamed(bnode)) {
-          return nameGroupMember(group, n + 1);
-        }
-
-        // hash bnode paths
-        var pathNamer = new UniqueNamer('_:b');
-        pathNamer.getName(bnode);
-        _hashPaths(bnode, bnodes, namer, pathNamer,
-          function(err, result) {
-            if(err) {
-              return callback(err);
-            }
-            results.push(result);
-            nameGroupMember(group, n + 1);
-          });
-      }
-    }
-  }
-
-  // creates the sorted array of RDF quads
-  function createArray() {
-    var normalized = [];
-
-    /* Note: At this point all bnodes in the set of RDF quads have been
-     assigned canonical names, which have been stored in the 'namer' object.
-     Here each quad is updated by assigning each of its bnodes its new name
-     via the 'namer' object. */
-
-    // update bnode names in each quad and serialize
-    for(var i = 0; i < quads.length; ++i) {
-      var quad = quads[i];
-      var attrs = ['subject', 'object', 'name'];
-      for(var ai = 0; ai < attrs.length; ++ai) {
-        var attr = attrs[ai];
-        if(quad[attr] && quad[attr].type === 'blank node' &&
-          quad[attr].value.indexOf('_:c14n') !== 0) {
-          quad[attr].value = namer.getName(quad[attr].value);
-        }
-      }
-      normalized.push(_toNQuad(quad, quad.name ? quad.name.value : null));
-    }
-
-    // sort normalized output
-    normalized.sort();
-
-    // handle output format
-    if(options.format) {
-      if(options.format === 'application/nquads') {
-        return callback(null, normalized.join(''));
-      }
-      return callback(new JsonLdError(
-        'Unknown output format.',
-        'jsonld.UnknownFormat', {format: options.format}));
-    }
-
-    // output RDF dataset
-    callback(null, _parseNQuads(normalized.join('')));
-  }
+  callback(new Error(
+    'Invalid RDF Dataset Normalization algorithm: ' + options.algorithm));
 };
 
 /**
@@ -12552,9 +18336,9 @@ Processor.prototype.fromRDF = function(dataset, options, callback) {
  */
 Processor.prototype.toRDF = function(input, options) {
   // create node map for default graph (and any named graphs)
-  var namer = new UniqueNamer('_:b');
+  var issuer = new IdentifierIssuer('_:b');
   var nodeMap = {'@default': {}};
-  _createNodeMap(input, nodeMap, '@default', namer);
+  _createNodeMap(input, nodeMap, '@default', issuer);
 
   var dataset = {};
   var graphNames = Object.keys(nodeMap).sort();
@@ -12562,7 +18346,7 @@ Processor.prototype.toRDF = function(input, options) {
     var graphName = graphNames[i];
     // skip relative IRIs
     if(graphName === '@default' || _isAbsoluteIri(graphName)) {
-      dataset[graphName] = _graphToRDF(nodeMap[graphName], namer, options);
+      dataset[graphName] = _graphToRDF(nodeMap[graphName], issuer, options);
     }
   }
   return dataset;
@@ -12726,6 +18510,10 @@ function _expandLanguageMap(languageMap) {
     }
     for(var vi = 0; vi < val.length; ++vi) {
       var item = val[vi];
+      if(item === null) {
+          // null values are allowed (8.5) but ignored (3.1)
+          continue;
+      }
       if(!_isString(item)) {
         throw new JsonLdError(
           'Invalid JSON-LD syntax; language map values must be strings.',
@@ -12742,24 +18530,24 @@ function _expandLanguageMap(languageMap) {
 }
 
 /**
- * Labels the blank nodes in the given value using the given UniqueNamer.
+ * Labels the blank nodes in the given value using the given IdentifierIssuer.
  *
- * @param namer the UniqueNamer to use.
+ * @param issuer the IdentifierIssuer to use.
  * @param element the element with blank nodes to rename.
  *
  * @return the element.
  */
-function _labelBlankNodes(namer, element) {
+function _labelBlankNodes(issuer, element) {
   if(_isArray(element)) {
     for(var i = 0; i < element.length; ++i) {
-      element[i] = _labelBlankNodes(namer, element[i]);
+      element[i] = _labelBlankNodes(issuer, element[i]);
     }
   } else if(_isList(element)) {
-    element['@list'] = _labelBlankNodes(namer, element['@list']);
+    element['@list'] = _labelBlankNodes(issuer, element['@list']);
   } else if(_isObject(element)) {
-    // rename blank node
+    // relabel blank node
     if(_isBlankNode(element)) {
-      element['@id'] = namer.getName(element['@id']);
+      element['@id'] = issuer.getId(element['@id']);
     }
 
     // recursively apply to all keys
@@ -12767,7 +18555,7 @@ function _labelBlankNodes(namer, element) {
     for(var ki = 0; ki < keys.length; ++ki) {
       var key = keys[ki];
       if(key !== '@id') {
-        element[key] = _labelBlankNodes(namer, element[key]);
+        element[key] = _labelBlankNodes(issuer, element[key]);
       }
     }
   }
@@ -12842,12 +18630,12 @@ function _expandValue(activeCtx, activeProperty, value) {
  * Creates an array of RDF triples for the given graph.
  *
  * @param graph the graph to create RDF triples for.
- * @param namer a UniqueNamer for assigning blank node names.
+ * @param issuer a IdentifierIssuer for assigning blank node names.
  * @param options the RDF serialization options.
  *
  * @return the array of RDF triples for the given graph.
  */
-function _graphToRDF(graph, namer, options) {
+function _graphToRDF(graph, issuer, options) {
   var rval = [];
 
   var ids = Object.keys(graph).sort();
@@ -12894,7 +18682,7 @@ function _graphToRDF(graph, namer, options) {
 
         // convert @list to triples
         if(_isList(item)) {
-          _listToRDF(item['@list'], namer, subject, predicate, rval);
+          _listToRDF(item['@list'], issuer, subject, predicate, rval);
         } else {
           // convert value or node object to triple
           var object = _objectToRDF(item);
@@ -12915,12 +18703,12 @@ function _graphToRDF(graph, namer, options) {
  * (an RDF collection).
  *
  * @param list the @list value.
- * @param namer a UniqueNamer for assigning blank node names.
+ * @param issuer a IdentifierIssuer for assigning blank node names.
  * @param subject the subject for the head of the list.
  * @param predicate the predicate for the head of the list.
  * @param triples the array of triples to append to.
  */
-function _listToRDF(list, namer, subject, predicate, triples) {
+function _listToRDF(list, issuer, subject, predicate, triples) {
   var first = {type: 'IRI', value: RDF_FIRST};
   var rest = {type: 'IRI', value: RDF_REST};
   var nil = {type: 'IRI', value: RDF_NIL};
@@ -12928,7 +18716,7 @@ function _listToRDF(list, namer, subject, predicate, triples) {
   for(var i = 0; i < list.length; ++i) {
     var item = list[i];
 
-    var blankNode = {type: 'blank node', value: namer.getName()};
+    var blankNode = {type: 'blank node', value: issuer.getId()};
     triples.push({subject: subject, predicate: predicate, object: blankNode});
 
     subject = blankNode;
@@ -13081,215 +18869,801 @@ function _compareRDFTriples(t1, t2) {
   return true;
 }
 
-/**
- * Hashes all of the quads about a blank node.
- *
- * @param id the ID of the bnode to hash quads for.
- * @param bnodes the mapping of bnodes to quads.
- *
- * @return the new hash.
- */
-function _hashQuads(id, bnodes) {
-  // return cached hash
-  if('hash' in bnodes[id]) {
-    return bnodes[id].hash;
+/////////////////////////////// DEFINE URDNA2015 //////////////////////////////
+
+var URDNA2015 = (function() {
+
+var POSITIONS = {'subject': 's', 'object': 'o', 'name': 'g'};
+
+var Normalize = function(options) {
+  options = options || {};
+  this.name = 'URDNA2015';
+  this.options = options;
+  this.blankNodeInfo = {};
+  this.hashToBlankNodes = {};
+  this.canonicalIssuer = new IdentifierIssuer('_:c14n');
+  this.quads = [];
+  this.schedule = {};
+  if('maxCallStackDepth' in options) {
+    this.schedule.MAX_DEPTH = options.maxCallStackDepth;
+  } else {
+    this.schedule.MAX_DEPTH = 500;
+  }
+  if('maxTotalCallStackDepth' in options) {
+    this.schedule.MAX_TOTAL_DEPTH = options.maxCallStackDepth;
+  } else {
+    this.schedule.MAX_TOTAL_DEPTH = 0xFFFFFFFF;
+  }
+  this.schedule.depth = 0;
+  this.schedule.totalDepth = 0;
+  if('timeSlice' in options) {
+    this.schedule.timeSlice = options.timeSlice;
+  } else {
+    // milliseconds
+    this.schedule.timeSlice = 10;
+  }
+};
+
+// do some work in a time slice, but in serial
+Normalize.prototype.doWork = function(fn, callback) {
+  var schedule = this.schedule;
+
+  if(schedule.totalDepth >= schedule.MAX_TOTAL_DEPTH) {
+    return callback(new Error(
+      'Maximum total call stack depth exceeded; normalization aborting.'));
   }
 
-  // serialize all of bnode's quads
-  var quads = bnodes[id].quads;
-  var nquads = [];
-  for(var i = 0; i < quads.length; ++i) {
-    nquads.push(_toNQuad(
-      quads[i], quads[i].name ? quads[i].name.value : null, id));
-  }
-  // sort serialized quads
-  nquads.sort();
-  // return hashed quads
-  var hash = bnodes[id].hash = sha1.hash(nquads);
-  return hash;
-}
-
-/**
- * Produces a hash for the paths of adjacent bnodes for a bnode,
- * incorporating all information about its subgraph of bnodes. This
- * method will recursively pick adjacent bnode permutations that produce the
- * lexicographically-least 'path' serializations.
- *
- * @param id the ID of the bnode to hash paths for.
- * @param bnodes the map of bnode quads.
- * @param namer the canonical bnode namer.
- * @param pathNamer the namer used to assign names to adjacent bnodes.
- * @param callback(err, result) called once the operation completes.
- */
-function _hashPaths(id, bnodes, namer, pathNamer, callback) {
-  // create SHA-1 digest
-  var md = sha1.create();
-
-  // group adjacent bnodes by hash, keep properties and references separate
-  var groups = {};
-  var groupHashes;
-  var quads = bnodes[id].quads;
-  jsonld.setImmediate(function() {groupNodes(0);});
-  function groupNodes(i) {
-    if(i === quads.length) {
-      // done, hash groups
-      groupHashes = Object.keys(groups).sort();
-      return hashGroup(0);
+  (function work() {
+    if(schedule.depth === schedule.MAX_DEPTH) {
+      // stack too deep, run on next tick
+      schedule.depth = 0;
+      schedule.running = false;
+      return jsonld.nextTick(work);
     }
 
-    // get adjacent bnode
-    var quad = quads[i];
-    var bnode = _getAdjacentBlankNodeName(quad.subject, id);
-    var direction = null;
-    if(bnode !== null) {
-      // normal property
-      direction = 'p';
-    } else {
-      bnode = _getAdjacentBlankNodeName(quad.object, id);
-      if(bnode !== null) {
-        // reverse property
-        direction = 'r';
-      }
+    // if not yet running, force run
+    var now = new Date().getTime();
+    if(!schedule.running) {
+      schedule.start = new Date().getTime();
+      schedule.deadline = schedule.start + schedule.timeSlice;
     }
 
-    if(bnode !== null) {
-      // get bnode name (try canonical, path, then hash)
-      var name;
-      if(namer.isNamed(bnode)) {
-        name = namer.getName(bnode);
-      } else if(pathNamer.isNamed(bnode)) {
-        name = pathNamer.getName(bnode);
-      } else {
-        name = _hashQuads(bnode, bnodes);
-      }
-
-      // hash direction, property, and bnode name/hash
-      var md = sha1.create();
-      md.update(direction);
-      md.update(quad.predicate.value);
-      md.update(name);
-      var groupHash = md.digest();
-
-      // add bnode to hash group
-      if(groupHash in groups) {
-        groups[groupHash].push(bnode);
-      } else {
-        groups[groupHash] = [bnode];
-      }
+    // TODO: should also include an estimate of expectedWorkTime
+    if(now < schedule.deadline) {
+      schedule.running = true;
+      schedule.depth++;
+      schedule.totalDepth++;
+      return fn(function(err, result) {
+        schedule.depth--;
+        schedule.totalDepth--;
+        callback(err, result);
+      });
     }
 
-    jsonld.setImmediate(function() {groupNodes(i + 1);});
+    // not enough time left in this slice, run after letting browser
+    // do some other things
+    schedule.depth = 0;
+    schedule.running = false;
+    jsonld.setImmediate(work);
+  })();
+};
+
+// asynchronously loop
+Normalize.prototype.forEach = function(iterable, fn, callback) {
+  var self = this;
+  var iterator;
+  var idx = 0;
+  var length;
+  if(_isArray(iterable)) {
+    length = iterable.length;
+    iterator = function() {
+      if(idx === length) {
+        return false;
+      }
+      iterator.value = iterable[idx++];
+      iterator.key = idx;
+      return true;
+    };
+  } else {
+    var keys = Object.keys(iterable);
+    length = keys.length;
+    iterator = function() {
+      if(idx === length) {
+        return false;
+      }
+      iterator.key = keys[idx++];
+      iterator.value = iterable[iterator.key];
+      return true;
+    };
   }
 
-  // hashes a group of adjacent bnodes
-  function hashGroup(i) {
-    if(i === groupHashes.length) {
-      // done, return SHA-1 digest and path namer
-      return callback(null, {hash: md.digest(), pathNamer: pathNamer});
+  (function iterate(err, result) {
+    if(err) {
+      return callback(err);
     }
+    if(iterator()) {
+      return self.doWork(function() {
+        fn(iterator.value, iterator.key, iterate);
+      });
+    }
+    callback();
+  })();
+};
 
-    // digest group hash
-    var groupHash = groupHashes[i];
-    md.update(groupHash);
+// asynchronous waterfall
+Normalize.prototype.waterfall = function(fns, callback) {
+  var self = this;
+  self.forEach(fns, function(fn, idx, callback) {
+    self.doWork(fn, callback);
+  }, callback);
+};
 
-    // choose a path and namer from the permutations
-    var chosenPath = null;
-    var chosenNamer = null;
-    var permutator = new Permutator(groups[groupHash]);
-    jsonld.setImmediate(function() {permutate();});
-    function permutate() {
-      var permutation = permutator.next();
-      var pathNamerCopy = pathNamer.clone();
+// asynchronous while
+Normalize.prototype.whilst = function(condition, fn, callback) {
+  var self = this;
+  (function loop(err) {
+    if(err) {
+      return callback(err);
+    }
+    if(!condition()) {
+      return callback();
+    }
+    self.doWork(fn, loop);
+  })();
+};
 
-      // build adjacent path
-      var path = '';
-      var recurse = [];
-      for(var n in permutation) {
-        var bnode = permutation[n];
+// 4.4) Normalization Algorithm
+Normalize.prototype.main = function(dataset, callback) {
+  var self = this;
+  self.schedule.start = new Date().getTime();
+  var result;
 
-        // use canonical name if available
-        if(namer.isNamed(bnode)) {
-          path += namer.getName(bnode);
-        } else {
-          // recurse if bnode isn't named in the path yet
-          if(!pathNamerCopy.isNamed(bnode)) {
-            recurse.push(bnode);
+  // handle invalid output format
+  if(self.options.format) {
+    if(self.options.format !== 'application/nquads') {
+      return callback(new JsonLdError(
+        'Unknown output format.',
+        'jsonld.UnknownFormat', {format: self.options.format}));
+    }
+  }
+
+  // 1) Create the normalization state.
+
+  // Note: Optimize by generating non-normalized blank node map concurrently.
+  var nonNormalized = {};
+
+  self.waterfall([
+    function(callback) {
+      // 2) For every quad in input dataset:
+      self.forEach(dataset, function(triples, graphName, callback) {
+        if(graphName === '@default') {
+          graphName = null;
+        }
+        self.forEach(triples, function(quad, idx, callback) {
+          if(graphName !== null) {
+            if(graphName.indexOf('_:') === 0) {
+              quad.name = {type: 'blank node', value: graphName};
+            } else {
+              quad.name = {type: 'IRI', value: graphName};
+            }
           }
-          path += pathNamerCopy.getName(bnode);
-        }
+          self.quads.push(quad);
 
-        // skip permutation if path is already >= chosen path
-        if(chosenPath !== null && path.length >= chosenPath.length &&
-          path > chosenPath) {
-          return nextPermutation(true);
-        }
-      }
-
-      // does the next recursion
-      nextRecursion(0);
-      function nextRecursion(n) {
-        if(n === recurse.length) {
-          // done, do next permutation
-          return nextPermutation(false);
-        }
-
-        // do recursion
-        var bnode = recurse[n];
-        _hashPaths(bnode, bnodes, namer, pathNamerCopy,
-          function(err, result) {
-            if(err) {
-              return callback(err);
+          // 2.1) For each blank node that occurs in the quad, add a reference
+          // to the quad using the blank node identifier in the blank node to
+          // quads map, creating a new entry if necessary.
+          self.forEachComponent(quad, function(component) {
+            if(component.type !== 'blank node') {
+              return;
             }
-            path += pathNamerCopy.getName(bnode) + '<' + result.hash + '>';
-            pathNamerCopy = result.pathNamer;
-
-            // skip permutation if path is already >= chosen path
-            if(chosenPath !== null && path.length >= chosenPath.length &&
-              path > chosenPath) {
-              return nextPermutation(true);
+            var id = component.value;
+            if(id in self.blankNodeInfo) {
+              self.blankNodeInfo[id].quads.push(quad);
+            } else {
+              nonNormalized[id] = true;
+              self.blankNodeInfo[id] = {quads: [quad]};
             }
-
-            // do next recursion
-            nextRecursion(n + 1);
           });
-      }
+          callback();
+        }, callback);
+      }, callback);
+    },
+    function(callback) {
+      // 3) Create a list of non-normalized blank node identifiers
+      // non-normalized identifiers and populate it using the keys from the
+      // blank node to quads map.
+      // Note: We use a map here and it was generated during step 2.
 
-      // stores the results of this permutation and runs the next
-      function nextPermutation(skipped) {
-        if(!skipped && (chosenPath === null || path < chosenPath)) {
-          chosenPath = path;
-          chosenNamer = pathNamerCopy;
+      // 4) Initialize simple, a boolean flag, to true.
+      var simple = true;
+
+      // 5) While simple is true, issue canonical identifiers for blank nodes:
+      self.whilst(function() { return simple; }, function(callback) {
+        // 5.1) Set simple to false.
+        simple = false;
+
+        // 5.2) Clear hash to blank nodes map.
+        self.hashToBlankNodes = {};
+
+        self.waterfall([
+          function(callback) {
+            // 5.3) For each blank node identifier identifier in non-normalized
+            // identifiers:
+            self.forEach(nonNormalized, function(value, id, callback) {
+              // 5.3.1) Create a hash, hash, according to the Hash First Degree
+              // Quads algorithm.
+              self.hashFirstDegreeQuads(id, function(err, hash) {
+                if(err) {
+                  return callback(err);
+                }
+                // 5.3.2) Add hash and identifier to hash to blank nodes map,
+                // creating a new entry if necessary.
+                if(hash in self.hashToBlankNodes) {
+                  self.hashToBlankNodes[hash].push(id);
+                } else {
+                  self.hashToBlankNodes[hash] = [id];
+                }
+                callback();
+              });
+            }, callback);
+          },
+          function(callback) {
+            // 5.4) For each hash to identifier list mapping in hash to blank
+            // nodes map, lexicographically-sorted by hash:
+            var hashes = Object.keys(self.hashToBlankNodes).sort();
+            self.forEach(hashes, function(hash, i, callback) {
+              // 5.4.1) If the length of identifier list is greater than 1,
+              // continue to the next mapping.
+              var idList = self.hashToBlankNodes[hash];
+              if(idList.length > 1) {
+                return callback();
+              }
+
+              // 5.4.2) Use the Issue Identifier algorithm, passing canonical
+              // issuer and the single blank node identifier in identifier
+              // list, identifier, to issue a canonical replacement identifier
+              // for identifier.
+              // TODO: consider changing `getId` to `issue`
+              var id = idList[0];
+              self.canonicalIssuer.getId(id);
+
+              // 5.4.3) Remove identifier from non-normalized identifiers.
+              delete nonNormalized[id];
+
+              // 5.4.4) Remove hash from the hash to blank nodes map.
+              delete self.hashToBlankNodes[hash];
+
+              // 5.4.5) Set simple to true.
+              simple = true;
+              callback();
+            }, callback);
+          }
+        ], callback);
+      }, callback);
+    },
+    function(callback) {
+      // 6) For each hash to identifier list mapping in hash to blank nodes map,
+      // lexicographically-sorted by hash:
+      var hashes = Object.keys(self.hashToBlankNodes).sort();
+      self.forEach(hashes, function(hash, idx, callback) {
+        // 6.1) Create hash path list where each item will be a result of
+        // running the Hash N-Degree Quads algorithm.
+        var hashPathList = [];
+
+        // 6.2) For each blank node identifier identifier in identifier list:
+        var idList = self.hashToBlankNodes[hash];
+        self.waterfall([
+          function(callback) {
+            self.forEach(idList, function(id, idx, callback) {
+              // 6.2.1) If a canonical identifier has already been issued for
+              // identifier, continue to the next identifier.
+              if(self.canonicalIssuer.hasId(id)) {
+                return callback();
+              }
+
+              // 6.2.2) Create temporary issuer, an identifier issuer
+              // initialized with the prefix _:b.
+              var issuer = new IdentifierIssuer('_:b');
+
+              // 6.2.3) Use the Issue Identifier algorithm, passing temporary
+              // issuer and identifier, to issue a new temporary blank node
+              // identifier for identifier.
+              issuer.getId(id);
+
+              // 6.2.4) Run the Hash N-Degree Quads algorithm, passing
+              // temporary issuer, and append the result to the hash path list.
+              self.hashNDegreeQuads(id, issuer, function(err, result) {
+                if(err) {
+                  return callback(err);
+                }
+                hashPathList.push(result);
+                callback();
+              });
+            }, callback);
+          },
+          function(callback) {
+            // 6.3) For each result in the hash path list,
+            // lexicographically-sorted by the hash in result:
+            hashPathList.sort(function(a, b) {
+              return (a.hash < b.hash) ? -1 : ((a.hash > b.hash) ? 1 : 0);
+            });
+            self.forEach(hashPathList, function(result, idx, callback) {
+              // 6.3.1) For each blank node identifier, existing identifier,
+              // that was issued a temporary identifier by identifier issuer
+              // in result, issue a canonical identifier, in the same order,
+              // using the Issue Identifier algorithm, passing canonical
+              // issuer and existing identifier.
+              for(var existing in result.issuer.existing) {
+                self.canonicalIssuer.getId(existing);
+              }
+              callback();
+            }, callback);
+          }
+        ], callback);
+      }, callback);
+    }, function(callback) {
+      /* Note: At this point all blank nodes in the set of RDF quads have been
+      assigned canonical identifiers, which have been stored in the canonical
+      issuer. Here each quad is updated by assigning each of its blank nodes
+      its new identifier. */
+
+      // 7) For each quad, quad, in input dataset:
+      var normalized = [];
+      self.waterfall([
+        function(callback) {
+          self.forEach(self.quads, function(quad, idx, callback) {
+            // 7.1) Create a copy, quad copy, of quad and replace any existing
+            // blank node identifiers using the canonical identifiers
+            // previously issued by canonical issuer.
+            // Note: We optimize away the copy here.
+            self.forEachComponent(quad, function(component) {
+              if(component.type === 'blank node' &&
+                component.value.indexOf(self.canonicalIssuer.prefix) !== 0) {
+                component.value = self.canonicalIssuer.getId(component.value);
+              }
+            });
+            // 7.2) Add quad copy to the normalized dataset.
+            normalized.push(_toNQuad(quad));
+            callback();
+          }, callback);
+        },
+        function(callback) {
+          // sort normalized output
+          normalized.sort();
+
+          // 8) Return the normalized dataset.
+          if(self.options.format === 'application/nquads') {
+            result = normalized.join('');
+            return callback();
+          }
+
+          result = _parseNQuads(normalized.join(''));
+          callback();
         }
-
-        // do next permutation
-        if(permutator.hasNext()) {
-          jsonld.setImmediate(function() {permutate();});
-        } else {
-          // digest chosen path and update namer
-          md.update(chosenPath);
-          pathNamer = chosenNamer;
-
-          // hash the next group
-          hashGroup(i + 1);
-        }
-      }
+      ], callback);
     }
-  }
-}
+  ], function(err) {
+    callback(err, result);
+  });
+};
 
-/**
- * A helper function that gets the blank node name from an RDF quad node
- * (subject or object). If the node is a blank node and its value
- * does not match the given blank node ID, it will be returned.
- *
- * @param node the RDF quad node.
- * @param id the ID of the blank node to look next to.
- *
- * @return the adjacent blank node name or null if none was found.
- */
-function _getAdjacentBlankNodeName(node, id) {
-  return (node.type === 'blank node' && node.value !== id ? node.value : null);
-}
+// 4.6) Hash First Degree Quads
+Normalize.prototype.hashFirstDegreeQuads = function(id, callback) {
+  var self = this;
+
+  // return cached hash
+  var info = self.blankNodeInfo[id];
+  if('hash' in info) {
+    return callback(null, info.hash);
+  }
+
+  // 1) Initialize nquads to an empty list. It will be used to store quads in
+  // N-Quads format.
+  var nquads = [];
+
+  // 2) Get the list of quads quads associated with the reference blank node
+  // identifier in the blank node to quads map.
+  var quads = info.quads;
+
+  // 3) For each quad quad in quads:
+  self.forEach(quads, function(quad, idx, callback) {
+    // 3.1) Serialize the quad in N-Quads format with the following special
+    // rule:
+
+    // 3.1.1) If any component in quad is an blank node, then serialize it
+    // using a special identifier as follows:
+    var copy = {predicate: quad.predicate};
+    self.forEachComponent(quad, function(component, key) {
+      // 3.1.2) If the blank node's existing blank node identifier matches the
+      // reference blank node identifier then use the blank node identifier _:a,
+      // otherwise, use the blank node identifier _:z.
+      copy[key] = self.modifyFirstDegreeComponent(id, component, key);
+    });
+    nquads.push(_toNQuad(copy));
+    callback();
+  }, function(err) {
+    if(err) {
+      return callback(err);
+    }
+    // 4) Sort nquads in lexicographical order.
+    nquads.sort();
+
+    // 5) Return the hash that results from passing the sorted, joined nquads
+    // through the hash algorithm.
+    info.hash = NormalizeHash.hashNQuads(self.name, nquads);
+    callback(null, info.hash);
+  });
+};
+
+// helper for modifying component during Hash First Degree Quads
+Normalize.prototype.modifyFirstDegreeComponent = function(id, component) {
+  if(component.type !== 'blank node') {
+    return component;
+  }
+  component = _clone(component);
+  component.value = (component.value === id ? '_:a' : '_:z');
+  return component;
+};
+
+// 4.7) Hash Related Blank Node
+Normalize.prototype.hashRelatedBlankNode = function(
+  related, quad, issuer, position, callback) {
+  var self = this;
+
+  // 1) Set the identifier to use for related, preferring first the canonical
+  // identifier for related if issued, second the identifier issued by issuer
+  // if issued, and last, if necessary, the result of the Hash First Degree
+  // Quads algorithm, passing related.
+  var id;
+  self.waterfall([
+    function(callback) {
+      if(self.canonicalIssuer.hasId(related)) {
+        id = self.canonicalIssuer.getId(related);
+        return callback();
+      }
+      if(issuer.hasId(related)) {
+        id = issuer.getId(related);
+        return callback();
+      }
+      self.hashFirstDegreeQuads(related, function(err, hash) {
+        if(err) {
+          return callback(err);
+        }
+        id = hash;
+        callback();
+      });
+    }
+  ], function(err) {
+    if(err) {
+      return callback(err);
+    }
+
+    // 2) Initialize a string input to the value of position.
+    // Note: We use a hash object instead.
+    var md = new NormalizeHash(self.name);
+    md.update(position);
+
+    // 3) If position is not g, append <, the value of the predicate in quad,
+    // and > to input.
+    if(position !== 'g') {
+      md.update(self.getRelatedPredicate(quad));
+    }
+
+    // 4) Append identifier to input.
+    md.update(id);
+
+    // 5) Return the hash that results from passing input through the hash
+    // algorithm.
+    return callback(null, md.digest());
+  });
+};
+
+// helper for getting a related predicate
+Normalize.prototype.getRelatedPredicate = function(quad) {
+  return '<' + quad.predicate.value + '>';
+};
+
+// 4.8) Hash N-Degree Quads
+Normalize.prototype.hashNDegreeQuads = function(id, issuer, callback) {
+  var self = this;
+
+  // 1) Create a hash to related blank nodes map for storing hashes that
+  // identify related blank nodes.
+  // Note: 2) and 3) handled within `createHashToRelated`
+  var hashToRelated;
+  var md = new NormalizeHash(self.name);
+  self.waterfall([
+    function(callback) {
+      self.createHashToRelated(id, issuer, function(err, result) {
+        if(err) {
+          return callback(err);
+        }
+        hashToRelated = result;
+        callback();
+      });
+    },
+    function(callback) {
+      // 4) Create an empty string, data to hash.
+      // Note: We created a hash object `md` above instead.
+
+      // 5) For each related hash to blank node list mapping in hash to related
+      // blank nodes map, sorted lexicographically by related hash:
+      var hashes = Object.keys(hashToRelated).sort();
+      self.forEach(hashes, function(hash, idx, callback) {
+        // 5.1) Append the related hash to the data to hash.
+        md.update(hash);
+
+        // 5.2) Create a string chosen path.
+        var chosenPath = '';
+
+        // 5.3) Create an unset chosen issuer variable.
+        var chosenIssuer;
+
+        // 5.4) For each permutation of blank node list:
+        var permutator = new Permutator(hashToRelated[hash]);
+        self.whilst(
+          function() { return permutator.hasNext(); },
+          function(nextPermutation) {
+          var permutation = permutator.next();
+
+          // 5.4.1) Create a copy of issuer, issuer copy.
+          var issuerCopy = issuer.clone();
+
+          // 5.4.2) Create a string path.
+          var path = '';
+
+          // 5.4.3) Create a recursion list, to store blank node identifiers
+          // that must be recursively processed by this algorithm.
+          var recursionList = [];
+
+          self.waterfall([
+            function(callback) {
+              // 5.4.4) For each related in permutation:
+              self.forEach(permutation, function(related, idx, callback) {
+                // 5.4.4.1) If a canonical identifier has been issued for
+                // related, append it to path.
+                if(self.canonicalIssuer.hasId(related)) {
+                  path += self.canonicalIssuer.getId(related);
+                } else {
+                  // 5.4.4.2) Otherwise:
+                  // 5.4.4.2.1) If issuer copy has not issued an identifier for
+                  // related, append related to recursion list.
+                  if(!issuerCopy.hasId(related)) {
+                    recursionList.push(related);
+                  }
+                  // 5.4.4.2.2) Use the Issue Identifier algorithm, passing
+                  // issuer copy and related and append the result to path.
+                  path += issuerCopy.getId(related);
+                }
+
+                // 5.4.4.3) If chosen path is not empty and the length of path
+                // is greater than or equal to the length of chosen path and
+                // path is lexicographically greater than chosen path, then
+                // skip to the next permutation.
+                if(chosenPath.length !== 0 &&
+                  path.length >= chosenPath.length && path > chosenPath) {
+                  // FIXME: may cause inaccurate total depth calculation
+                  return nextPermutation();
+                }
+                callback();
+              }, callback);
+            },
+            function(callback) {
+              // 5.4.5) For each related in recursion list:
+              self.forEach(recursionList, function(related, idx, callback) {
+                // 5.4.5.1) Set result to the result of recursively executing
+                // the Hash N-Degree Quads algorithm, passing related for
+                // identifier and issuer copy for path identifier issuer.
+                self.hashNDegreeQuads(
+                  related, issuerCopy, function(err, result) {
+                  if(err) {
+                    return callback(err);
+                  }
+
+                  // 5.4.5.2) Use the Issue Identifier algorithm, passing issuer
+                  // copy and related and append the result to path.
+                  path += issuerCopy.getId(related);
+
+                  // 5.4.5.3) Append <, the hash in result, and > to path.
+                  path += '<' + result.hash + '>';
+
+                  // 5.4.5.4) Set issuer copy to the identifier issuer in
+                  // result.
+                  issuerCopy = result.issuer;
+
+                  // 5.4.5.5) If chosen path is not empty and the length of path
+                  // is greater than or equal to the length of chosen path and
+                  // path is lexicographically greater than chosen path, then
+                  // skip to the next permutation.
+                  if(chosenPath.length !== 0 &&
+                    path.length >= chosenPath.length && path > chosenPath) {
+                    // FIXME: may cause inaccurate total depth calculation
+                    return nextPermutation();
+                  }
+                  callback();
+                });
+              }, callback);
+            },
+            function(callback) {
+              // 5.4.6) If chosen path is empty or path is lexicographically
+              // less than chosen path, set chosen path to path and chosen
+              // issuer to issuer copy.
+              if(chosenPath.length === 0 || path < chosenPath) {
+                chosenPath = path;
+                chosenIssuer = issuerCopy;
+              }
+              callback();
+            }
+          ], nextPermutation);
+        }, function(err) {
+          if(err) {
+            return callback(err);
+          }
+
+          // 5.5) Append chosen path to data to hash.
+          md.update(chosenPath);
+
+          // 5.6) Replace issuer, by reference, with chosen issuer.
+          issuer = chosenIssuer;
+          callback();
+        });
+      }, callback);
+    }
+  ], function(err) {
+    // 6) Return issuer and the hash that results from passing data to hash
+    // through the hash algorithm.
+    callback(err, {hash: md.digest(), issuer: issuer});
+  });
+};
+
+// helper for creating hash to related blank nodes map
+Normalize.prototype.createHashToRelated = function(id, issuer, callback) {
+  var self = this;
+
+  // 1) Create a hash to related blank nodes map for storing hashes that
+  // identify related blank nodes.
+  var hashToRelated = {};
+
+  // 2) Get a reference, quads, to the list of quads in the blank node to
+  // quads map for the key identifier.
+  var quads = self.blankNodeInfo[id].quads;
+
+  // 3) For each quad in quads:
+  self.forEach(quads, function(quad, idx, callback) {
+    // 3.1) For each component in quad, if component is the subject, object,
+    // and graph name and it is a blank node that is not identified by
+    // identifier:
+    self.forEach(quad, function(component, key, callback) {
+      if(key === 'predicate' ||
+        !(component.type === 'blank node' && component.value !== id)) {
+        return callback();
+      }
+      // 3.1.1) Set hash to the result of the Hash Related Blank Node
+      // algorithm, passing the blank node identifier for component as
+      // related, quad, path identifier issuer as issuer, and position as
+      // either s, o, or g based on whether component is a subject, object,
+      // graph name, respectively.
+      var related = component.value;
+      var position = POSITIONS[key];
+      self.hashRelatedBlankNode(
+        related, quad, issuer, position, function(err, hash) {
+        if(err) {
+          return callback(err);
+        }
+        // 3.1.2) Add a mapping of hash to the blank node identifier for
+        // component to hash to related blank nodes map, adding an entry as
+        // necessary.
+        if(hash in hashToRelated) {
+          hashToRelated[hash].push(related);
+        } else {
+          hashToRelated[hash] = [related];
+        }
+        callback();
+      });
+    }, callback);
+  }, function(err) {
+    callback(err, hashToRelated);
+  });
+};
+
+// helper that iterates over quad components (skips predicate)
+Normalize.prototype.forEachComponent = function(quad, op) {
+  for(var key in quad) {
+    // skip `predicate`
+    if(key === 'predicate') {
+      continue;
+    }
+    op(quad[key], key, quad);
+  }
+};
+
+return Normalize;
+
+})(); // end of define URDNA2015
+
+/////////////////////////////// DEFINE URGNA2012 //////////////////////////////
+
+var URGNA2012 = (function() {
+
+var Normalize = function(options) {
+  URDNA2015.call(this, options);
+  this.name = 'URGNA2012';
+};
+Normalize.prototype = new URDNA2015();
+
+// helper for modifying component during Hash First Degree Quads
+Normalize.prototype.modifyFirstDegreeComponent = function(id, component, key) {
+  if(component.type !== 'blank node') {
+    return component;
+  }
+  component = _clone(component);
+  if(key === 'name') {
+    component.value = '_:g';
+  } else {
+    component.value = (component.value === id ? '_:a' : '_:z');
+  }
+  return component;
+};
+
+// helper for getting a related predicate
+Normalize.prototype.getRelatedPredicate = function(quad) {
+  return quad.predicate.value;
+};
+
+// helper for creating hash to related blank nodes map
+Normalize.prototype.createHashToRelated = function(id, issuer, callback) {
+  var self = this;
+
+  // 1) Create a hash to related blank nodes map for storing hashes that
+  // identify related blank nodes.
+  var hashToRelated = {};
+
+  // 2) Get a reference, quads, to the list of quads in the blank node to
+  // quads map for the key identifier.
+  var quads = self.blankNodeInfo[id].quads;
+
+  // 3) For each quad in quads:
+  self.forEach(quads, function(quad, idx, callback) {
+    // 3.1) If the quad's subject is a blank node that does not match
+    // identifier, set hash to the result of the Hash Related Blank Node
+    // algorithm, passing the blank node identifier for subject as related,
+    // quad, path identifier issuer as issuer, and p as position.
+    var position;
+    var related;
+    if(quad.subject.type === 'blank node' && quad.subject.value !== id) {
+      related = quad.subject.value;
+      position = 'p';
+    } else if(quad.object.type === 'blank node' && quad.object.value !== id) {
+      // 3.2) Otherwise, if quad's object is a blank node that does not match
+      // identifier, to the result of the Hash Related Blank Node algorithm,
+      // passing the blank node identifier for object as related, quad, path
+      // identifier issuer as issuer, and r as position.
+      related = quad.object.value;
+      position = 'r';
+    } else {
+      // 3.3) Otherwise, continue to the next quad.
+      return callback();
+    }
+    // 3.4) Add a mapping of hash to the blank node identifier for the
+    // component that matched (subject or object) to hash to related blank
+    // nodes map, adding an entry as necessary.
+    self.hashRelatedBlankNode(
+      related, quad, issuer, position, function(err, hash) {
+      if(hash in hashToRelated) {
+        hashToRelated[hash].push(related);
+      } else {
+        hashToRelated[hash] = [related];
+      }
+      callback();
+    });
+  }, function(err) {
+    callback(err, hashToRelated);
+  });
+};
+
+return Normalize;
+
+})(); // end of define URGNA2012
 
 /**
  * Recursively flattens the subjects in the given JSON-LD expanded input
@@ -13298,15 +19672,15 @@ function _getAdjacentBlankNodeName(node, id) {
  * @param input the JSON-LD expanded input.
  * @param graphs a map of graph name to subject map.
  * @param graph the name of the current graph.
- * @param namer the blank node namer.
+ * @param issuer the blank node identifier issuer.
  * @param name the name assigned to the current input if it is a bnode.
  * @param list the list to append to, null for none.
  */
-function _createNodeMap(input, graphs, graph, namer, name, list) {
+function _createNodeMap(input, graphs, graph, issuer, name, list) {
   // recurse through array
   if(_isArray(input)) {
     for(var i = 0; i < input.length; ++i) {
-      _createNodeMap(input[i], graphs, graph, namer, undefined, list);
+      _createNodeMap(input[i], graphs, graph, issuer, undefined, list);
     }
     return;
   }
@@ -13325,7 +19699,7 @@ function _createNodeMap(input, graphs, graph, namer, name, list) {
       var type = input['@type'];
       // rename @type blank node
       if(type.indexOf('_:') === 0) {
-        input['@type'] = type = namer.getName(type);
+        input['@type'] = type = issuer.getId(type);
       }
     }
     if(list) {
@@ -13342,14 +19716,14 @@ function _createNodeMap(input, graphs, graph, namer, name, list) {
     for(var i = 0; i < types.length; ++i) {
       var type = types[i];
       if(type.indexOf('_:') === 0) {
-        namer.getName(type);
+        issuer.getId(type);
       }
     }
   }
 
   // get name for subject
   if(_isUndefined(name)) {
-    name = _isBlankNode(input) ? namer.getName(input['@id']) : input['@id'];
+    name = _isBlankNode(input) ? issuer.getId(input['@id']) : input['@id'];
   }
 
   // add subject reference to list
@@ -13380,9 +19754,9 @@ function _createNodeMap(input, graphs, graph, namer, name, list) {
           var item = items[ii];
           var itemName = item['@id'];
           if(_isBlankNode(item)) {
-            itemName = namer.getName(itemName);
+            itemName = issuer.getId(itemName);
           }
-          _createNodeMap(item, graphs, graph, namer, itemName);
+          _createNodeMap(item, graphs, graph, issuer, itemName);
           jsonld.addValue(
             subjects[itemName], reverseProperty, referencedNode,
             {propertyIsArray: true, allowDuplicate: false});
@@ -13398,7 +19772,7 @@ function _createNodeMap(input, graphs, graph, namer, name, list) {
         graphs[name] = {};
       }
       var g = (graph === '@merged') ? graph : name;
-      _createNodeMap(input[property], graphs, g, namer);
+      _createNodeMap(input[property], graphs, g, issuer);
       continue;
     }
 
@@ -13421,7 +19795,7 @@ function _createNodeMap(input, graphs, graph, namer, name, list) {
 
     // if property is a bnode, assign it a new id
     if(property.indexOf('_:') === 0) {
-      property = namer.getName(property);
+      property = issuer.getId(property);
     }
 
     // ensure property is added for empty arrays
@@ -13434,30 +19808,30 @@ function _createNodeMap(input, graphs, graph, namer, name, list) {
 
       if(property === '@type') {
         // rename @type blank nodes
-        o = (o.indexOf('_:') === 0) ? namer.getName(o) : o;
+        o = (o.indexOf('_:') === 0) ? issuer.getId(o) : o;
       }
 
       // handle embedded subject or subject reference
       if(_isSubject(o) || _isSubjectReference(o)) {
-        // rename blank node @id
-        var id = _isBlankNode(o) ? namer.getName(o['@id']) : o['@id'];
+        // relabel blank node @id
+        var id = _isBlankNode(o) ? issuer.getId(o['@id']) : o['@id'];
 
         // add reference and recurse
         jsonld.addValue(
           subject, property, {'@id': id},
           {propertyIsArray: true, allowDuplicate: false});
-        _createNodeMap(o, graphs, graph, namer, id);
+        _createNodeMap(o, graphs, graph, issuer, id);
       } else if(_isList(o)) {
         // handle @list
         var _list = [];
-        _createNodeMap(o['@list'], graphs, graph, namer, name, _list);
+        _createNodeMap(o['@list'], graphs, graph, issuer, name, _list);
         o = {'@list': _list};
         jsonld.addValue(
           subject, property, o,
           {propertyIsArray: true, allowDuplicate: false});
       } else {
         // handle @value
-        _createNodeMap(o, graphs, graph, namer, name);
+        _createNodeMap(o, graphs, graph, issuer, name);
         jsonld.addValue(
           subject, property, o, {propertyIsArray: true, allowDuplicate: false});
       }
@@ -15483,10 +21857,11 @@ function _parseNQuads(input) {
   var datatype = '(?:\\^\\^' + iri + ')';
   var language = '(?:@([a-z]+(?:-[a-z0-9]+)*))';
   var literal = '(?:' + plain + '(?:' + datatype + '|' + language + ')?)';
+  var comment = '(?:#.*)?';
   var ws = '[ \\t]+';
   var wso = '[ \\t]*';
   var eoln = /(?:\r\n)|(?:\n)|(?:\r)/g;
-  var empty = new RegExp('^' + wso + '$');
+  var empty = new RegExp('^' + wso + comment + '$');
 
   // define quad part regexes
   var subject = '(?:' + iri + '|' + bnode + ')' + ws;
@@ -15496,7 +21871,7 @@ function _parseNQuads(input) {
 
   // full quad regex
   var quad = new RegExp(
-    '^' + wso + subject + property + object + graphName + wso + '$');
+    '^' + wso + subject + property + object + graphName + wso + comment + '$');
 
   // build RDF dataset
   var dataset = {};
@@ -15609,37 +21984,36 @@ function _toNQuads(dataset) {
       quads.push(_toNQuad(triple, graphName));
     }
   }
-  quads.sort();
-  return quads.join('');
+  return quads.sort().join('');
 }
 
 /**
  * Converts an RDF triple and graph name to an N-Quad string (a single quad).
  *
- * @param triple the RDF triple to convert.
+ * @param triple the RDF triple or quad to convert (a triple or quad may be
+ *          passed, if a triple is passed then `graphName` should be given
+ *          to specify the name of the graph the triple is in, `null` for
+ *          the default graph).
  * @param graphName the name of the graph containing the triple, null for
  *          the default graph.
- * @param bnode the bnode the quad is mapped to (optional, for use
- *          during normalization only).
  *
  * @return the N-Quad string.
  */
-function _toNQuad(triple, graphName, bnode) {
+function _toNQuad(triple, graphName) {
   var s = triple.subject;
   var p = triple.predicate;
   var o = triple.object;
-  var g = graphName;
+  var g = graphName || null;
+  if('name' in triple && triple.name) {
+    g = triple.name.value;
+  }
 
   var quad = '';
 
   // subject is an IRI
   if(s.type === 'IRI') {
     quad += '<' + s.value + '>';
-  } else if(bnode) {
-    // bnode normalization mode
-    quad += (s.value === bnode) ? '_:a' : '_:z';
   } else {
-    // bnode normal mode
     quad += s.value;
   }
   quad += ' ';
@@ -15647,12 +22021,7 @@ function _toNQuad(triple, graphName, bnode) {
   // predicate is an IRI
   if(p.type === 'IRI') {
     quad += '<' + p.value + '>';
-  } else if(bnode) {
-    // FIXME: TBD what to do with bnode predicates during normalization
-    // bnode normalization mode
-    quad += '_:p';
   } else {
-    // bnode normal mode
     quad += p.value;
   }
   quad += ' ';
@@ -15661,13 +22030,7 @@ function _toNQuad(triple, graphName, bnode) {
   if(o.type === 'IRI') {
     quad += '<' + o.value + '>';
   } else if(o.type === 'blank node') {
-    // normalization mode
-    if(bnode) {
-      quad += (o.value === bnode) ? '_:a' : '_:z';
-    } else {
-      // normal mode
-      quad += o.value;
-    }
+    quad += o.value;
   } else {
     var escaped = o.value
       .replace(/\\/g, '\\\\')
@@ -15686,11 +22049,9 @@ function _toNQuad(triple, graphName, bnode) {
   }
 
   // graph
-  if(g !== null) {
+  if(g !== null && g !== undefined) {
     if(g.indexOf('_:') !== 0) {
       quad += ' <' + g + '>';
-    } else if(bnode) {
-      quad += ' _:g';
     } else {
       quad += ' ' + g;
     }
@@ -15804,66 +22165,74 @@ function _parseRdfaApiData(data) {
 jsonld.registerRDFParser('rdfa-api', _parseRdfaApiData);
 
 /**
- * Creates a new UniqueNamer. A UniqueNamer issues unique names, keeping
- * track of any previously issued names.
+ * Creates a new IdentifierIssuer. A IdentifierIssuer issues unique
+ * identifiers, keeping track of any previously issued identifiers.
  *
  * @param prefix the prefix to use ('<prefix><counter>').
  */
-function UniqueNamer(prefix) {
+function IdentifierIssuer(prefix) {
   this.prefix = prefix;
   this.counter = 0;
   this.existing = {};
 }
-jsonld.UniqueNamer = UniqueNamer;
+jsonld.IdentifierIssuer = IdentifierIssuer;
+// backwards-compability
+jsonld.UniqueNamer = IdentifierIssuer;
 
 /**
- * Copies this UniqueNamer.
+ * Copies this IdentifierIssuer.
  *
- * @return a copy of this UniqueNamer.
+ * @return a copy of this IdentifierIssuer.
  */
-UniqueNamer.prototype.clone = function() {
-  var copy = new UniqueNamer(this.prefix);
+IdentifierIssuer.prototype.clone = function() {
+  var copy = new IdentifierIssuer(this.prefix);
   copy.counter = this.counter;
   copy.existing = _clone(this.existing);
   return copy;
 };
 
 /**
- * Gets the new name for the given old name, where if no old name is given
- * a new name will be generated.
+ * Gets the new identifier for the given old identifier, where if no old
+ * identifier is given a new identifier will be generated.
  *
- * @param [oldName] the old name to get the new name for.
+ * @param [old] the old identifier to get the new identifier for.
  *
- * @return the new name.
+ * @return the new identifier.
  */
-UniqueNamer.prototype.getName = function(oldName) {
-  // return existing old name
-  if(oldName && oldName in this.existing) {
-    return this.existing[oldName];
+IdentifierIssuer.prototype.getId = function(old) {
+  // return existing old identifier
+  if(old && old in this.existing) {
+    return this.existing[old];
   }
 
-  // get next name
-  var name = this.prefix + this.counter;
+  // get next identifier
+  var identifier = this.prefix + this.counter;
   this.counter += 1;
 
   // save mapping
-  if(oldName) {
-    this.existing[oldName] = name;
+  if(old) {
+    this.existing[old] = identifier;
   }
 
-  return name;
+  return identifier;
 };
+// alias
+IdentifierIssuer.prototype.getName = IdentifierIssuer.prototype.getName;
 
 /**
- * Returns true if the given oldName has already been assigned a new name.
+ * Returns true if the given old identifer has already been assigned a new
+ * identifier.
  *
- * @param oldName the oldName to check.
+ * @param old the old identifier to check.
  *
- * @return true if the oldName has been assigned a new name, false if not.
+ * @return true if the old identifier has been assigned a new identifier, false
+ *   if not.
  */
-UniqueNamer.prototype.isNamed = function(oldName) {
-  return (oldName in this.existing);
+IdentifierIssuer.prototype.hasId = function(old) {
+  return (old in this.existing);
 };
+// alias
+IdentifierIssuer.prototype.isNamed = IdentifierIssuer.prototype.hasId;
 
 /**
  * A Permutator iterates over all possible permutations of the given array
@@ -15941,52 +22310,250 @@ Permutator.prototype.next = function() {
   return rval;
 };
 
-// SHA-1 API
-var sha1 = jsonld.sha1 = {};
-
-if(_nodejs) {
-  var crypto = require('crypto');
-  sha1.create = function() {
-    var md = crypto.createHash('sha1');
-    return {
-      update: function(data) {
-        md.update(data, 'utf8');
-      },
-      digest: function() {
-        return md.digest('hex');
-      }
-    };
-  };
-} else {
-  sha1.create = function() {
-    return new sha1.MessageDigest();
-  };
-}
+//////////////////////// DEFINE NORMALIZATION HASH API ////////////////////////
 
 /**
- * Hashes the given array of quads and returns its hexadecimal SHA-1 message
- * digest.
+ * Creates a new NormalizeHash for use by the given normalization algorithm.
  *
- * @param nquads the list of serialized quads to hash.
- *
- * @return the hexadecimal SHA-1 message digest.
+ * @param algorithm the RDF Dataset Normalization algorithm to use:
+ *          'URDNA2015' or 'URGNA2012'.
  */
-sha1.hash = function(nquads) {
-  var md = sha1.create();
+var NormalizeHash = function(algorithm) {
+  if(!(this instanceof NormalizeHash)) {
+    return new NormalizeHash(algorithm);
+  }
+  if(['URDNA2015', 'URGNA2012'].indexOf(algorithm) === -1) {
+    throw new Error(
+      'Invalid RDF Dataset Normalization algorithm: ' + algorithm);
+  }
+  NormalizeHash._init.call(this, algorithm);
+};
+NormalizeHash.hashNQuads = function(algorithm, nquads) {
+  var md = new NormalizeHash(algorithm);
   for(var i = 0; i < nquads.length; ++i) {
     md.update(nquads[i]);
   }
   return md.digest();
 };
 
-// only define sha1 MessageDigest for non-nodejs
-if(!_nodejs) {
+// switch definition of NormalizeHash based on environment
+(function(_nodejs) {
+
+if(_nodejs) {
+  // define NormalizeHash using native crypto lib
+  var crypto = require('crypto');
+  NormalizeHash._init = function(algorithm) {
+    if(algorithm === 'URDNA2015') {
+      algorithm = 'sha256';
+    } else {
+      // assume URGNA2012
+      algorithm = 'sha1';
+    }
+    this.md = crypto.createHash(algorithm);
+  };
+  NormalizeHash.prototype.update = function(msg) {
+    return this.md.update(msg, 'utf8');
+  };
+  NormalizeHash.prototype.digest = function() {
+    return this.md.digest('hex');
+  };
+  return;
+}
+
+// define NormalizeHash using JavaScript
+NormalizeHash._init = function(algorithm) {
+  if(algorithm === 'URDNA2015') {
+    algorithm = new sha256.Algorithm();
+  } else {
+    // assume URGNA2012
+    algorithm = new sha1.Algorithm();
+  }
+  this.md = new MessageDigest(algorithm);
+};
+NormalizeHash.prototype.update = function(msg) {
+  return this.md.update(msg);
+};
+NormalizeHash.prototype.digest = function() {
+  return this.md.digest().toHex();
+};
+
+/////////////////////////// DEFINE MESSAGE DIGEST API /////////////////////////
+
+/**
+ * Creates a new MessageDigest.
+ *
+ * @param algorithm the algorithm to use.
+ */
+var MessageDigest = function(algorithm) {
+  if(!(this instanceof MessageDigest)) {
+    return new MessageDigest(algorithm);
+  }
+
+  this._algorithm = algorithm;
+
+  // create shared padding as needed
+  if(!MessageDigest._padding ||
+    MessageDigest._padding.length < this._algorithm.blockSize) {
+    MessageDigest._padding = String.fromCharCode(128);
+    var c = String.fromCharCode(0x00);
+    var n = 64;
+    while(n > 0) {
+      if(n & 1) {
+        MessageDigest._padding += c;
+      }
+      n >>>= 1;
+      if(n > 0) {
+        c += c;
+      }
+    }
+  }
+
+  // start digest automatically for first time
+  this.start();
+};
+
+/**
+ * Starts the digest.
+ *
+ * @return this digest object.
+ */
+MessageDigest.prototype.start = function() {
+  // up to 56-bit message length for convenience
+  this.messageLength = 0;
+
+  // full message length
+  this.fullMessageLength = [];
+  var int32s = this._algorithm.messageLengthSize / 4;
+  for(var i = 0; i < int32s; ++i) {
+    this.fullMessageLength.push(0);
+  }
+
+  // input buffer
+  this._input = new MessageDigest.ByteBuffer();
+
+  // get starting state
+  this.state = this._algorithm.start();
+
+  return this;
+};
+
+/**
+ * Updates the digest with the given message input. The input must be
+ * a string of characters.
+ *
+ * @param msg the message input to update with (ByteBuffer or string).
+ *
+ * @return this digest object.
+ */
+MessageDigest.prototype.update = function(msg) {
+  // encode message as a UTF-8 encoded binary string
+  msg = new MessageDigest.ByteBuffer(unescape(encodeURIComponent(msg)));
+
+  // update message length
+  this.messageLength += msg.length();
+  var len = msg.length();
+  len = [(len / 0x100000000) >>> 0, len >>> 0];
+  for(var i = this.fullMessageLength.length - 1; i >= 0; --i) {
+    this.fullMessageLength[i] += len[1];
+    len[1] = len[0] + ((this.fullMessageLength[i] / 0x100000000) >>> 0);
+    this.fullMessageLength[i] = this.fullMessageLength[i] >>> 0;
+    len[0] = ((len[1] / 0x100000000) >>> 0);
+  }
+
+  // add bytes to input buffer
+  this._input.putBytes(msg.bytes());
+
+  // digest blocks
+  while(this._input.length() >= this._algorithm.blockSize) {
+    this.state = this._algorithm.digest(this.state, this._input);
+  }
+
+  // compact input buffer every 2K or if empty
+  if(this._input.read > 2048 || this._input.length() === 0) {
+    this._input.compact();
+  }
+
+  return this;
+};
+
+/**
+ * Produces the digest.
+ *
+ * @return a byte buffer containing the digest value.
+ */
+MessageDigest.prototype.digest = function() {
+  /* Note: Here we copy the remaining bytes in the input buffer and add the
+  appropriate padding. Then we do the final update on a copy of the state so
+  that if the user wants to get intermediate digests they can do so. */
+
+  /* Determine the number of bytes that must be added to the message to
+  ensure its length is appropriately congruent. In other words, the data to
+  be digested must be a multiple of `blockSize`. This data includes the
+  message, some padding, and the length of the message. Since the length of
+  the message will be encoded as `messageLengthSize` bytes, that means that
+  the last segment of the data must have `blockSize` - `messageLengthSize`
+  bytes of message and padding. Therefore, the length of the message plus the
+  padding must be congruent to X mod `blockSize` because
+  `blockSize` - `messageLengthSize` = X.
+
+  For example, SHA-1 is congruent to 448 mod 512 and SHA-512 is congruent to
+  896 mod 1024. SHA-1 uses a `blockSize` of 64 bytes (512 bits) and a
+  `messageLengthSize` of 8 bytes (64 bits). SHA-512 uses a `blockSize` of
+  128 bytes (1024 bits) and a `messageLengthSize` of 16 bytes (128 bits).
+
+  In order to fill up the message length it must be filled with padding that
+  begins with 1 bit followed by all 0 bits. Padding must *always* be present,
+  so if the message length is already congruent, then `blockSize` padding bits
+  must be added. */
+
+  // create final block
+  var finalBlock = new MessageDigest.ByteBuffer();
+  finalBlock.putBytes(this._input.bytes());
+
+  // compute remaining size to be digested (include message length size)
+  var remaining = (
+    this.fullMessageLength[this.fullMessageLength.length - 1] +
+    this._algorithm.messageLengthSize);
+
+  // add padding for overflow blockSize - overflow
+  // _padding starts with 1 byte with first bit is set (byte value 128), then
+  // there may be up to (blockSize - 1) other pad bytes
+  var overflow = remaining & (this._algorithm.blockSize - 1);
+  finalBlock.putBytes(MessageDigest._padding.substr(
+    0, this._algorithm.blockSize - overflow));
+
+  // serialize message length in bits in big-endian order; since length
+  // is stored in bytes we multiply by 8 (left shift by 3 and merge in
+  // remainder from )
+  var messageLength = new MessageDigest.ByteBuffer();
+  for(var i = 0; i < this.fullMessageLength.length; ++i) {
+    messageLength.putInt32((this.fullMessageLength[i] << 3) |
+      (this.fullMessageLength[i + 1] >>> 28));
+  }
+
+  // write the length of the message (algorithm-specific)
+  this._algorithm.writeMessageLength(finalBlock, messageLength);
+
+  // digest final block
+  var state = this._algorithm.digest(this.state.copy(), finalBlock);
+
+  // write state to buffer
+  var rval = new MessageDigest.ByteBuffer();
+  state.write(rval);
+  return rval;
+};
 
 /**
  * Creates a simple byte buffer for message digest operations.
+ *
+ * @param data the data to put in the buffer.
  */
-sha1.Buffer = function() {
-  this.data = '';
+MessageDigest.ByteBuffer = function(data) {
+  if(typeof data === 'string') {
+    this.data = data;
+  } else {
+    this.data = '';
+  }
   this.read = 0;
 };
 
@@ -15995,7 +22562,7 @@ sha1.Buffer = function() {
  *
  * @param i the 32-bit integer.
  */
-sha1.Buffer.prototype.putInt32 = function(i) {
+MessageDigest.ByteBuffer.prototype.putInt32 = function(i) {
   this.data += (
     String.fromCharCode(i >> 24 & 0xFF) +
     String.fromCharCode(i >> 16 & 0xFF) +
@@ -16009,7 +22576,7 @@ sha1.Buffer.prototype.putInt32 = function(i) {
  *
  * @return the word.
  */
-sha1.Buffer.prototype.getInt32 = function() {
+MessageDigest.ByteBuffer.prototype.getInt32 = function() {
   var rval = (
     this.data.charCodeAt(this.read) << 24 ^
     this.data.charCodeAt(this.read + 1) << 16 ^
@@ -16020,11 +22587,20 @@ sha1.Buffer.prototype.getInt32 = function() {
 };
 
 /**
+ * Puts the given bytes into this buffer.
+ *
+ * @param bytes the bytes as a binary-encoded string.
+ */
+MessageDigest.ByteBuffer.prototype.putBytes = function(bytes) {
+  this.data += bytes;
+};
+
+/**
  * Gets the bytes in this buffer.
  *
  * @return a string full of UTF-8 encoded characters.
  */
-sha1.Buffer.prototype.bytes = function() {
+MessageDigest.ByteBuffer.prototype.bytes = function() {
   return this.data.slice(this.read);
 };
 
@@ -16033,14 +22609,14 @@ sha1.Buffer.prototype.bytes = function() {
  *
  * @return the number of bytes in this buffer.
  */
-sha1.Buffer.prototype.length = function() {
+MessageDigest.ByteBuffer.prototype.length = function() {
   return this.data.length - this.read;
 };
 
 /**
  * Compacts this buffer.
  */
-sha1.Buffer.prototype.compact = function() {
+MessageDigest.ByteBuffer.prototype.compact = function() {
   this.data = this.data.slice(this.read);
   this.read = 0;
 };
@@ -16050,7 +22626,7 @@ sha1.Buffer.prototype.compact = function() {
  *
  * @return a hexadecimal string.
  */
-sha1.Buffer.prototype.toHex = function() {
+MessageDigest.ByteBuffer.prototype.toHex = function() {
   var rval = '';
   for(var i = this.read; i < this.data.length; ++i) {
     var b = this.data.charCodeAt(i);
@@ -16062,148 +22638,39 @@ sha1.Buffer.prototype.toHex = function() {
   return rval;
 };
 
-/**
- * Creates a SHA-1 message digest object.
- *
- * @return a message digest object.
- */
-sha1.MessageDigest = function() {
-  // do initialization as necessary
-  if(!_sha1.initialized) {
-    _sha1.init();
-  }
+///////////////////////////// DEFINE SHA-1 ALGORITHM //////////////////////////
 
-  this.blockLength = 64;
+var sha1 = {
+  // used for word storage
+  _w: null
+};
+
+sha1.Algorithm = function() {
+  this.name = 'sha1',
+  this.blockSize = 64;
   this.digestLength = 20;
-  // length of message so far (does not including padding)
-  this.messageLength = 0;
-
-  // input buffer
-  this.input = new sha1.Buffer();
-
-  // for storing words in the SHA-1 algorithm
-  this.words = new Array(80);
-
-  // SHA-1 state contains five 32-bit integers
-  this.state = {
-    h0: 0x67452301,
-    h1: 0xEFCDAB89,
-    h2: 0x98BADCFE,
-    h3: 0x10325476,
-    h4: 0xC3D2E1F0
-  };
+  this.messageLengthSize = 8;
 };
 
-/**
- * Updates the digest with the given string input.
- *
- * @param msg the message input to update with.
- */
-sha1.MessageDigest.prototype.update = function(msg) {
-  // UTF-8 encode message
-  msg = unescape(encodeURIComponent(msg));
-
-  // update message length and input buffer
-  this.messageLength += msg.length;
-  this.input.data += msg;
-
-  // process input
-  _sha1.update(this.state, this.words, this.input);
-
-  // compact input buffer every 2K or if empty
-  if(this.input.read > 2048 || this.input.length() === 0) {
-    this.input.compact();
+sha1.Algorithm.prototype.start = function() {
+  if(!sha1._w) {
+    sha1._w = new Array(80);
   }
+  return sha1._createState();
 };
 
-/**
- * Produces the digest.
- *
- * @return the digest as a hexadecimal string.
- */
-sha1.MessageDigest.prototype.digest = function() {
-  /* Determine the number of bytes that must be added to the message
-  to ensure its length is congruent to 448 mod 512. In other words,
-  a 64-bit integer that gives the length of the message will be
-  appended to the message and whatever the length of the message is
-  plus 64 bits must be a multiple of 512. So the length of the
-  message must be congruent to 448 mod 512 because 512 - 64 = 448.
-
-  In order to fill up the message length it must be filled with
-  padding that begins with 1 bit followed by all 0 bits. Padding
-  must *always* be present, so if the message length is already
-  congruent to 448 mod 512, then 512 padding bits must be added. */
-
-  // 512 bits == 64 bytes, 448 bits == 56 bytes, 64 bits = 8 bytes
-  // _padding starts with 1 byte with first bit is set in it which
-  // is byte value 128, then there may be up to 63 other pad bytes
-  var len = this.messageLength;
-  var padBytes = new sha1.Buffer();
-  padBytes.data += this.input.bytes();
-  padBytes.data += _sha1.padding.substr(0, 64 - ((len + 8) % 64));
-
-  /* Now append length of the message. The length is appended in bits
-  as a 64-bit number in big-endian order. Since we store the length
-  in bytes, we must multiply it by 8 (or left shift by 3). So here
-  store the high 3 bits in the low end of the first 32-bits of the
-  64-bit number and the lower 5 bits in the high end of the second
-  32-bits. */
-  padBytes.putInt32((len >>> 29) & 0xFF);
-  padBytes.putInt32((len << 3) & 0xFFFFFFFF);
-  _sha1.update(this.state, this.words, padBytes);
-  var rval = new sha1.Buffer();
-  rval.putInt32(this.state.h0);
-  rval.putInt32(this.state.h1);
-  rval.putInt32(this.state.h2);
-  rval.putInt32(this.state.h3);
-  rval.putInt32(this.state.h4);
-  return rval.toHex();
+sha1.Algorithm.prototype.writeMessageLength = function(
+  finalBlock, messageLength) {
+  // message length is in bits and in big-endian order; simply append
+  finalBlock.putBytes(messageLength.bytes());
 };
 
-// private SHA-1 data
-var _sha1 = {
-  padding: null,
-  initialized: false
-};
-
-/**
- * Initializes the constant tables.
- */
-_sha1.init = function() {
-  // create padding
-  _sha1.padding = String.fromCharCode(128);
-  var c = String.fromCharCode(0x00);
-  var n = 64;
-  while(n > 0) {
-    if(n & 1) {
-      _sha1.padding += c;
-    }
-    n >>>= 1;
-    if(n > 0) {
-      c += c;
-    }
-  }
-
-  // now initialized
-  _sha1.initialized = true;
-};
-
-/**
- * Updates a SHA-1 state with the given byte buffer.
- *
- * @param s the SHA-1 state to update.
- * @param w the array to use to store words.
- * @param input the input byte buffer.
- */
-_sha1.update = function(s, w, input) {
+sha1.Algorithm.prototype.digest = function(s, input) {
   // consume 512 bit (64 byte) chunks
   var t, a, b, c, d, e, f, i;
   var len = input.length();
+  var _w = sha1._w;
   while(len >= 64) {
-    // the w array will be populated with sixteen 32-bit big-endian words
-    // and then extended into 80 32-bit words according to SHA-1 algorithm
-    // and for 32-79 using Max Locktyukhin's optimization
-
     // initialize hash value for this chunk
     a = s.h0;
     b = s.h1;
@@ -16211,10 +22678,14 @@ _sha1.update = function(s, w, input) {
     d = s.h3;
     e = s.h4;
 
+    // the _w array will be populated with sixteen 32-bit big-endian words
+    // and then extended into 80 32-bit words according to SHA-1 algorithm
+    // and for 32-79 using Max Locktyukhin's optimization
+
     // round 1
     for(i = 0; i < 16; ++i) {
       t = input.getInt32();
-      w[i] = t;
+      _w[i] = t;
       f = d ^ (b & (c ^ d));
       t = ((a << 5) | (a >>> 27)) + f + e + 0x5A827999 + t;
       e = d;
@@ -16224,9 +22695,9 @@ _sha1.update = function(s, w, input) {
       a = t;
     }
     for(; i < 20; ++i) {
-      t = (w[i - 3] ^ w[i - 8] ^ w[i - 14] ^ w[i - 16]);
+      t = (_w[i - 3] ^ _w[i - 8] ^ _w[i - 14] ^ _w[i - 16]);
       t = (t << 1) | (t >>> 31);
-      w[i] = t;
+      _w[i] = t;
       f = d ^ (b & (c ^ d));
       t = ((a << 5) | (a >>> 27)) + f + e + 0x5A827999 + t;
       e = d;
@@ -16237,9 +22708,9 @@ _sha1.update = function(s, w, input) {
     }
     // round 2
     for(; i < 32; ++i) {
-      t = (w[i - 3] ^ w[i - 8] ^ w[i - 14] ^ w[i - 16]);
+      t = (_w[i - 3] ^ _w[i - 8] ^ _w[i - 14] ^ _w[i - 16]);
       t = (t << 1) | (t >>> 31);
-      w[i] = t;
+      _w[i] = t;
       f = b ^ c ^ d;
       t = ((a << 5) | (a >>> 27)) + f + e + 0x6ED9EBA1 + t;
       e = d;
@@ -16249,9 +22720,9 @@ _sha1.update = function(s, w, input) {
       a = t;
     }
     for(; i < 40; ++i) {
-      t = (w[i - 6] ^ w[i - 16] ^ w[i - 28] ^ w[i - 32]);
+      t = (_w[i - 6] ^ _w[i - 16] ^ _w[i - 28] ^ _w[i - 32]);
       t = (t << 2) | (t >>> 30);
-      w[i] = t;
+      _w[i] = t;
       f = b ^ c ^ d;
       t = ((a << 5) | (a >>> 27)) + f + e + 0x6ED9EBA1 + t;
       e = d;
@@ -16262,9 +22733,9 @@ _sha1.update = function(s, w, input) {
     }
     // round 3
     for(; i < 60; ++i) {
-      t = (w[i - 6] ^ w[i - 16] ^ w[i - 28] ^ w[i - 32]);
+      t = (_w[i - 6] ^ _w[i - 16] ^ _w[i - 28] ^ _w[i - 32]);
       t = (t << 2) | (t >>> 30);
-      w[i] = t;
+      _w[i] = t;
       f = (b & c) | (d & (b ^ c));
       t = ((a << 5) | (a >>> 27)) + f + e + 0x8F1BBCDC + t;
       e = d;
@@ -16275,9 +22746,9 @@ _sha1.update = function(s, w, input) {
     }
     // round 4
     for(; i < 80; ++i) {
-      t = (w[i - 6] ^ w[i - 16] ^ w[i - 28] ^ w[i - 32]);
+      t = (_w[i - 6] ^ _w[i - 16] ^ _w[i - 28] ^ _w[i - 32]);
       t = (t << 2) | (t >>> 30);
-      w[i] = t;
+      _w[i] = t;
       f = b ^ c ^ d;
       t = ((a << 5) | (a >>> 27)) + f + e + 0xCA62C1D6 + t;
       e = d;
@@ -16288,17 +22759,218 @@ _sha1.update = function(s, w, input) {
     }
 
     // update hash state
-    s.h0 += a;
-    s.h1 += b;
-    s.h2 += c;
-    s.h3 += d;
-    s.h4 += e;
+    s.h0 = (s.h0 + a) | 0;
+    s.h1 = (s.h1 + b) | 0;
+    s.h2 = (s.h2 + c) | 0;
+    s.h3 = (s.h3 + d) | 0;
+    s.h4 = (s.h4 + e) | 0;
 
     len -= 64;
   }
+
+  return s;
 };
 
-} // end non-nodejs
+sha1._createState = function() {
+  var state = {
+    h0: 0x67452301,
+    h1: 0xEFCDAB89,
+    h2: 0x98BADCFE,
+    h3: 0x10325476,
+    h4: 0xC3D2E1F0
+  };
+  state.copy = function() {
+    var rval = sha1._createState();
+    rval.h0 = state.h0;
+    rval.h1 = state.h1;
+    rval.h2 = state.h2;
+    rval.h3 = state.h3;
+    rval.h4 = state.h4;
+    return rval;
+  };
+  state.write = function(buffer) {
+    buffer.putInt32(state.h0);
+    buffer.putInt32(state.h1);
+    buffer.putInt32(state.h2);
+    buffer.putInt32(state.h3);
+    buffer.putInt32(state.h4);
+  };
+  return state;
+};
+
+//////////////////////////// DEFINE SHA-256 ALGORITHM /////////////////////////
+
+var sha256 = {
+  // shared state
+  _k: null,
+  _w: null
+};
+
+sha256.Algorithm = function() {
+  this.name = 'sha256',
+  this.blockSize = 64;
+  this.digestLength = 32;
+  this.messageLengthSize = 8;
+};
+
+sha256.Algorithm.prototype.start = function() {
+  if(!sha256._k) {
+    sha256._init();
+  }
+  return sha256._createState();
+};
+
+sha256.Algorithm.prototype.writeMessageLength = function(
+  finalBlock, messageLength) {
+  // message length is in bits and in big-endian order; simply append
+  finalBlock.putBytes(messageLength.bytes());
+};
+
+sha256.Algorithm.prototype.digest = function(s, input) {
+  // consume 512 bit (64 byte) chunks
+  var t1, t2, s0, s1, ch, maj, i, a, b, c, d, e, f, g, h;
+  var len = input.length();
+  var _k = sha256._k;
+  var _w = sha256._w;
+  while(len >= 64) {
+    // the w array will be populated with sixteen 32-bit big-endian words
+    // and then extended into 64 32-bit words according to SHA-256
+    for(i = 0; i < 16; ++i) {
+      _w[i] = input.getInt32();
+    }
+    for(; i < 64; ++i) {
+      // XOR word 2 words ago rot right 17, rot right 19, shft right 10
+      t1 = _w[i - 2];
+      t1 =
+        ((t1 >>> 17) | (t1 << 15)) ^
+        ((t1 >>> 19) | (t1 << 13)) ^
+        (t1 >>> 10);
+      // XOR word 15 words ago rot right 7, rot right 18, shft right 3
+      t2 = _w[i - 15];
+      t2 =
+        ((t2 >>> 7) | (t2 << 25)) ^
+        ((t2 >>> 18) | (t2 << 14)) ^
+        (t2 >>> 3);
+      // sum(t1, word 7 ago, t2, word 16 ago) modulo 2^32
+      _w[i] = (t1 + _w[i - 7] + t2 + _w[i - 16]) | 0;
+    }
+
+    // initialize hash value for this chunk
+    a = s.h0;
+    b = s.h1;
+    c = s.h2;
+    d = s.h3;
+    e = s.h4;
+    f = s.h5;
+    g = s.h6;
+    h = s.h7;
+
+    // round function
+    for(i = 0; i < 64; ++i) {
+      // Sum1(e)
+      s1 =
+        ((e >>> 6) | (e << 26)) ^
+        ((e >>> 11) | (e << 21)) ^
+        ((e >>> 25) | (e << 7));
+      // Ch(e, f, g) (optimized the same way as SHA-1)
+      ch = g ^ (e & (f ^ g));
+      // Sum0(a)
+      s0 =
+        ((a >>> 2) | (a << 30)) ^
+        ((a >>> 13) | (a << 19)) ^
+        ((a >>> 22) | (a << 10));
+      // Maj(a, b, c) (optimized the same way as SHA-1)
+      maj = (a & b) | (c & (a ^ b));
+
+      // main algorithm
+      t1 = h + s1 + ch + _k[i] + _w[i];
+      t2 = s0 + maj;
+      h = g;
+      g = f;
+      f = e;
+      e = (d + t1) | 0;
+      d = c;
+      c = b;
+      b = a;
+      a = (t1 + t2) | 0;
+    }
+
+    // update hash state
+    s.h0 = (s.h0 + a) | 0;
+    s.h1 = (s.h1 + b) | 0;
+    s.h2 = (s.h2 + c) | 0;
+    s.h3 = (s.h3 + d) | 0;
+    s.h4 = (s.h4 + e) | 0;
+    s.h5 = (s.h5 + f) | 0;
+    s.h6 = (s.h6 + g) | 0;
+    s.h7 = (s.h7 + h) | 0;
+    len -= 64;
+  }
+
+  return s;
+};
+
+sha256._createState = function() {
+  var state = {
+    h0: 0x6A09E667,
+    h1: 0xBB67AE85,
+    h2: 0x3C6EF372,
+    h3: 0xA54FF53A,
+    h4: 0x510E527F,
+    h5: 0x9B05688C,
+    h6: 0x1F83D9AB,
+    h7: 0x5BE0CD19
+  };
+  state.copy = function() {
+    var rval = sha256._createState();
+    rval.h0 = state.h0;
+    rval.h1 = state.h1;
+    rval.h2 = state.h2;
+    rval.h3 = state.h3;
+    rval.h4 = state.h4;
+    rval.h5 = state.h5;
+    rval.h6 = state.h6;
+    rval.h7 = state.h7;
+    return rval;
+  };
+  state.write = function(buffer) {
+    buffer.putInt32(state.h0);
+    buffer.putInt32(state.h1);
+    buffer.putInt32(state.h2);
+    buffer.putInt32(state.h3);
+    buffer.putInt32(state.h4);
+    buffer.putInt32(state.h5);
+    buffer.putInt32(state.h6);
+    buffer.putInt32(state.h7);
+  };
+  return state;
+};
+
+sha256._init = function() {
+  // create K table for SHA-256
+  sha256._k = [
+    0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5,
+    0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+    0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3,
+    0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+    0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc,
+    0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+    0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7,
+    0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+    0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13,
+    0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+    0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3,
+    0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+    0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5,
+    0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+    0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208,
+    0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2];
+
+  // used for word storage
+  sha256._w = new Array(64);
+};
+
+})(_nodejs); // end definition of NormalizeHash
 
 if(!XMLSerializer) {
 
@@ -16386,9 +23058,10 @@ if(_nodejs) {
 if(_nodejs) {
   jsonld.use = function(extension) {
     switch(extension) {
+      // TODO: Deprecated as of 0.4.0. Remove at some point.
       case 'request':
         // use node JSON-LD request extension
-        jsonld.request = require('./request');
+        jsonld.request = require('jsonld-request');
         break;
       default:
         throw new JsonLdError(
@@ -16448,1109 +23121,7 @@ return factory;
 })();
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},"/node_modules/jsonld/js")
-},{"./request":2,"_process":23,"crypto":2,"es6-promise":4,"http":2,"pkginfo":5,"request":2,"util":2,"xmldom":2}],4:[function(require,module,exports){
-(function (process,global){
-/*!
- * @overview es6-promise - a tiny implementation of Promises/A+.
- * @copyright Copyright (c) 2014 Yehuda Katz, Tom Dale, Stefan Penner and contributors (Conversion to ES6 API by Jake Archibald)
- * @license   Licensed under MIT license
- *            See https://raw.githubusercontent.com/jakearchibald/es6-promise/master/LICENSE
- * @version   2.0.1
- */
-
-(function() {
-    "use strict";
-
-    function $$utils$$objectOrFunction(x) {
-      return typeof x === 'function' || (typeof x === 'object' && x !== null);
-    }
-
-    function $$utils$$isFunction(x) {
-      return typeof x === 'function';
-    }
-
-    function $$utils$$isMaybeThenable(x) {
-      return typeof x === 'object' && x !== null;
-    }
-
-    var $$utils$$_isArray;
-
-    if (!Array.isArray) {
-      $$utils$$_isArray = function (x) {
-        return Object.prototype.toString.call(x) === '[object Array]';
-      };
-    } else {
-      $$utils$$_isArray = Array.isArray;
-    }
-
-    var $$utils$$isArray = $$utils$$_isArray;
-    var $$utils$$now = Date.now || function() { return new Date().getTime(); };
-    function $$utils$$F() { }
-
-    var $$utils$$o_create = (Object.create || function (o) {
-      if (arguments.length > 1) {
-        throw new Error('Second argument not supported');
-      }
-      if (typeof o !== 'object') {
-        throw new TypeError('Argument must be an object');
-      }
-      $$utils$$F.prototype = o;
-      return new $$utils$$F();
-    });
-
-    var $$asap$$len = 0;
-
-    var $$asap$$default = function asap(callback, arg) {
-      $$asap$$queue[$$asap$$len] = callback;
-      $$asap$$queue[$$asap$$len + 1] = arg;
-      $$asap$$len += 2;
-      if ($$asap$$len === 2) {
-        // If len is 1, that means that we need to schedule an async flush.
-        // If additional callbacks are queued before the queue is flushed, they
-        // will be processed by this flush that we are scheduling.
-        $$asap$$scheduleFlush();
-      }
-    };
-
-    var $$asap$$browserGlobal = (typeof window !== 'undefined') ? window : {};
-    var $$asap$$BrowserMutationObserver = $$asap$$browserGlobal.MutationObserver || $$asap$$browserGlobal.WebKitMutationObserver;
-
-    // test for web worker but not in IE10
-    var $$asap$$isWorker = typeof Uint8ClampedArray !== 'undefined' &&
-      typeof importScripts !== 'undefined' &&
-      typeof MessageChannel !== 'undefined';
-
-    // node
-    function $$asap$$useNextTick() {
-      return function() {
-        process.nextTick($$asap$$flush);
-      };
-    }
-
-    function $$asap$$useMutationObserver() {
-      var iterations = 0;
-      var observer = new $$asap$$BrowserMutationObserver($$asap$$flush);
-      var node = document.createTextNode('');
-      observer.observe(node, { characterData: true });
-
-      return function() {
-        node.data = (iterations = ++iterations % 2);
-      };
-    }
-
-    // web worker
-    function $$asap$$useMessageChannel() {
-      var channel = new MessageChannel();
-      channel.port1.onmessage = $$asap$$flush;
-      return function () {
-        channel.port2.postMessage(0);
-      };
-    }
-
-    function $$asap$$useSetTimeout() {
-      return function() {
-        setTimeout($$asap$$flush, 1);
-      };
-    }
-
-    var $$asap$$queue = new Array(1000);
-
-    function $$asap$$flush() {
-      for (var i = 0; i < $$asap$$len; i+=2) {
-        var callback = $$asap$$queue[i];
-        var arg = $$asap$$queue[i+1];
-
-        callback(arg);
-
-        $$asap$$queue[i] = undefined;
-        $$asap$$queue[i+1] = undefined;
-      }
-
-      $$asap$$len = 0;
-    }
-
-    var $$asap$$scheduleFlush;
-
-    // Decide what async method to use to triggering processing of queued callbacks:
-    if (typeof process !== 'undefined' && {}.toString.call(process) === '[object process]') {
-      $$asap$$scheduleFlush = $$asap$$useNextTick();
-    } else if ($$asap$$BrowserMutationObserver) {
-      $$asap$$scheduleFlush = $$asap$$useMutationObserver();
-    } else if ($$asap$$isWorker) {
-      $$asap$$scheduleFlush = $$asap$$useMessageChannel();
-    } else {
-      $$asap$$scheduleFlush = $$asap$$useSetTimeout();
-    }
-
-    function $$$internal$$noop() {}
-    var $$$internal$$PENDING   = void 0;
-    var $$$internal$$FULFILLED = 1;
-    var $$$internal$$REJECTED  = 2;
-    var $$$internal$$GET_THEN_ERROR = new $$$internal$$ErrorObject();
-
-    function $$$internal$$selfFullfillment() {
-      return new TypeError("You cannot resolve a promise with itself");
-    }
-
-    function $$$internal$$cannotReturnOwn() {
-      return new TypeError('A promises callback cannot return that same promise.')
-    }
-
-    function $$$internal$$getThen(promise) {
-      try {
-        return promise.then;
-      } catch(error) {
-        $$$internal$$GET_THEN_ERROR.error = error;
-        return $$$internal$$GET_THEN_ERROR;
-      }
-    }
-
-    function $$$internal$$tryThen(then, value, fulfillmentHandler, rejectionHandler) {
-      try {
-        then.call(value, fulfillmentHandler, rejectionHandler);
-      } catch(e) {
-        return e;
-      }
-    }
-
-    function $$$internal$$handleForeignThenable(promise, thenable, then) {
-       $$asap$$default(function(promise) {
-        var sealed = false;
-        var error = $$$internal$$tryThen(then, thenable, function(value) {
-          if (sealed) { return; }
-          sealed = true;
-          if (thenable !== value) {
-            $$$internal$$resolve(promise, value);
-          } else {
-            $$$internal$$fulfill(promise, value);
-          }
-        }, function(reason) {
-          if (sealed) { return; }
-          sealed = true;
-
-          $$$internal$$reject(promise, reason);
-        }, 'Settle: ' + (promise._label || ' unknown promise'));
-
-        if (!sealed && error) {
-          sealed = true;
-          $$$internal$$reject(promise, error);
-        }
-      }, promise);
-    }
-
-    function $$$internal$$handleOwnThenable(promise, thenable) {
-      if (thenable._state === $$$internal$$FULFILLED) {
-        $$$internal$$fulfill(promise, thenable._result);
-      } else if (promise._state === $$$internal$$REJECTED) {
-        $$$internal$$reject(promise, thenable._result);
-      } else {
-        $$$internal$$subscribe(thenable, undefined, function(value) {
-          $$$internal$$resolve(promise, value);
-        }, function(reason) {
-          $$$internal$$reject(promise, reason);
-        });
-      }
-    }
-
-    function $$$internal$$handleMaybeThenable(promise, maybeThenable) {
-      if (maybeThenable.constructor === promise.constructor) {
-        $$$internal$$handleOwnThenable(promise, maybeThenable);
-      } else {
-        var then = $$$internal$$getThen(maybeThenable);
-
-        if (then === $$$internal$$GET_THEN_ERROR) {
-          $$$internal$$reject(promise, $$$internal$$GET_THEN_ERROR.error);
-        } else if (then === undefined) {
-          $$$internal$$fulfill(promise, maybeThenable);
-        } else if ($$utils$$isFunction(then)) {
-          $$$internal$$handleForeignThenable(promise, maybeThenable, then);
-        } else {
-          $$$internal$$fulfill(promise, maybeThenable);
-        }
-      }
-    }
-
-    function $$$internal$$resolve(promise, value) {
-      if (promise === value) {
-        $$$internal$$reject(promise, $$$internal$$selfFullfillment());
-      } else if ($$utils$$objectOrFunction(value)) {
-        $$$internal$$handleMaybeThenable(promise, value);
-      } else {
-        $$$internal$$fulfill(promise, value);
-      }
-    }
-
-    function $$$internal$$publishRejection(promise) {
-      if (promise._onerror) {
-        promise._onerror(promise._result);
-      }
-
-      $$$internal$$publish(promise);
-    }
-
-    function $$$internal$$fulfill(promise, value) {
-      if (promise._state !== $$$internal$$PENDING) { return; }
-
-      promise._result = value;
-      promise._state = $$$internal$$FULFILLED;
-
-      if (promise._subscribers.length === 0) {
-      } else {
-        $$asap$$default($$$internal$$publish, promise);
-      }
-    }
-
-    function $$$internal$$reject(promise, reason) {
-      if (promise._state !== $$$internal$$PENDING) { return; }
-      promise._state = $$$internal$$REJECTED;
-      promise._result = reason;
-
-      $$asap$$default($$$internal$$publishRejection, promise);
-    }
-
-    function $$$internal$$subscribe(parent, child, onFulfillment, onRejection) {
-      var subscribers = parent._subscribers;
-      var length = subscribers.length;
-
-      parent._onerror = null;
-
-      subscribers[length] = child;
-      subscribers[length + $$$internal$$FULFILLED] = onFulfillment;
-      subscribers[length + $$$internal$$REJECTED]  = onRejection;
-
-      if (length === 0 && parent._state) {
-        $$asap$$default($$$internal$$publish, parent);
-      }
-    }
-
-    function $$$internal$$publish(promise) {
-      var subscribers = promise._subscribers;
-      var settled = promise._state;
-
-      if (subscribers.length === 0) { return; }
-
-      var child, callback, detail = promise._result;
-
-      for (var i = 0; i < subscribers.length; i += 3) {
-        child = subscribers[i];
-        callback = subscribers[i + settled];
-
-        if (child) {
-          $$$internal$$invokeCallback(settled, child, callback, detail);
-        } else {
-          callback(detail);
-        }
-      }
-
-      promise._subscribers.length = 0;
-    }
-
-    function $$$internal$$ErrorObject() {
-      this.error = null;
-    }
-
-    var $$$internal$$TRY_CATCH_ERROR = new $$$internal$$ErrorObject();
-
-    function $$$internal$$tryCatch(callback, detail) {
-      try {
-        return callback(detail);
-      } catch(e) {
-        $$$internal$$TRY_CATCH_ERROR.error = e;
-        return $$$internal$$TRY_CATCH_ERROR;
-      }
-    }
-
-    function $$$internal$$invokeCallback(settled, promise, callback, detail) {
-      var hasCallback = $$utils$$isFunction(callback),
-          value, error, succeeded, failed;
-
-      if (hasCallback) {
-        value = $$$internal$$tryCatch(callback, detail);
-
-        if (value === $$$internal$$TRY_CATCH_ERROR) {
-          failed = true;
-          error = value.error;
-          value = null;
-        } else {
-          succeeded = true;
-        }
-
-        if (promise === value) {
-          $$$internal$$reject(promise, $$$internal$$cannotReturnOwn());
-          return;
-        }
-
-      } else {
-        value = detail;
-        succeeded = true;
-      }
-
-      if (promise._state !== $$$internal$$PENDING) {
-        // noop
-      } else if (hasCallback && succeeded) {
-        $$$internal$$resolve(promise, value);
-      } else if (failed) {
-        $$$internal$$reject(promise, error);
-      } else if (settled === $$$internal$$FULFILLED) {
-        $$$internal$$fulfill(promise, value);
-      } else if (settled === $$$internal$$REJECTED) {
-        $$$internal$$reject(promise, value);
-      }
-    }
-
-    function $$$internal$$initializePromise(promise, resolver) {
-      try {
-        resolver(function resolvePromise(value){
-          $$$internal$$resolve(promise, value);
-        }, function rejectPromise(reason) {
-          $$$internal$$reject(promise, reason);
-        });
-      } catch(e) {
-        $$$internal$$reject(promise, e);
-      }
-    }
-
-    function $$$enumerator$$makeSettledResult(state, position, value) {
-      if (state === $$$internal$$FULFILLED) {
-        return {
-          state: 'fulfilled',
-          value: value
-        };
-      } else {
-        return {
-          state: 'rejected',
-          reason: value
-        };
-      }
-    }
-
-    function $$$enumerator$$Enumerator(Constructor, input, abortOnReject, label) {
-      this._instanceConstructor = Constructor;
-      this.promise = new Constructor($$$internal$$noop, label);
-      this._abortOnReject = abortOnReject;
-
-      if (this._validateInput(input)) {
-        this._input     = input;
-        this.length     = input.length;
-        this._remaining = input.length;
-
-        this._init();
-
-        if (this.length === 0) {
-          $$$internal$$fulfill(this.promise, this._result);
-        } else {
-          this.length = this.length || 0;
-          this._enumerate();
-          if (this._remaining === 0) {
-            $$$internal$$fulfill(this.promise, this._result);
-          }
-        }
-      } else {
-        $$$internal$$reject(this.promise, this._validationError());
-      }
-    }
-
-    $$$enumerator$$Enumerator.prototype._validateInput = function(input) {
-      return $$utils$$isArray(input);
-    };
-
-    $$$enumerator$$Enumerator.prototype._validationError = function() {
-      return new Error('Array Methods must be provided an Array');
-    };
-
-    $$$enumerator$$Enumerator.prototype._init = function() {
-      this._result = new Array(this.length);
-    };
-
-    var $$$enumerator$$default = $$$enumerator$$Enumerator;
-
-    $$$enumerator$$Enumerator.prototype._enumerate = function() {
-      var length  = this.length;
-      var promise = this.promise;
-      var input   = this._input;
-
-      for (var i = 0; promise._state === $$$internal$$PENDING && i < length; i++) {
-        this._eachEntry(input[i], i);
-      }
-    };
-
-    $$$enumerator$$Enumerator.prototype._eachEntry = function(entry, i) {
-      var c = this._instanceConstructor;
-      if ($$utils$$isMaybeThenable(entry)) {
-        if (entry.constructor === c && entry._state !== $$$internal$$PENDING) {
-          entry._onerror = null;
-          this._settledAt(entry._state, i, entry._result);
-        } else {
-          this._willSettleAt(c.resolve(entry), i);
-        }
-      } else {
-        this._remaining--;
-        this._result[i] = this._makeResult($$$internal$$FULFILLED, i, entry);
-      }
-    };
-
-    $$$enumerator$$Enumerator.prototype._settledAt = function(state, i, value) {
-      var promise = this.promise;
-
-      if (promise._state === $$$internal$$PENDING) {
-        this._remaining--;
-
-        if (this._abortOnReject && state === $$$internal$$REJECTED) {
-          $$$internal$$reject(promise, value);
-        } else {
-          this._result[i] = this._makeResult(state, i, value);
-        }
-      }
-
-      if (this._remaining === 0) {
-        $$$internal$$fulfill(promise, this._result);
-      }
-    };
-
-    $$$enumerator$$Enumerator.prototype._makeResult = function(state, i, value) {
-      return value;
-    };
-
-    $$$enumerator$$Enumerator.prototype._willSettleAt = function(promise, i) {
-      var enumerator = this;
-
-      $$$internal$$subscribe(promise, undefined, function(value) {
-        enumerator._settledAt($$$internal$$FULFILLED, i, value);
-      }, function(reason) {
-        enumerator._settledAt($$$internal$$REJECTED, i, reason);
-      });
-    };
-
-    var $$promise$all$$default = function all(entries, label) {
-      return new $$$enumerator$$default(this, entries, true /* abort on reject */, label).promise;
-    };
-
-    var $$promise$race$$default = function race(entries, label) {
-      /*jshint validthis:true */
-      var Constructor = this;
-
-      var promise = new Constructor($$$internal$$noop, label);
-
-      if (!$$utils$$isArray(entries)) {
-        $$$internal$$reject(promise, new TypeError('You must pass an array to race.'));
-        return promise;
-      }
-
-      var length = entries.length;
-
-      function onFulfillment(value) {
-        $$$internal$$resolve(promise, value);
-      }
-
-      function onRejection(reason) {
-        $$$internal$$reject(promise, reason);
-      }
-
-      for (var i = 0; promise._state === $$$internal$$PENDING && i < length; i++) {
-        $$$internal$$subscribe(Constructor.resolve(entries[i]), undefined, onFulfillment, onRejection);
-      }
-
-      return promise;
-    };
-
-    var $$promise$resolve$$default = function resolve(object, label) {
-      /*jshint validthis:true */
-      var Constructor = this;
-
-      if (object && typeof object === 'object' && object.constructor === Constructor) {
-        return object;
-      }
-
-      var promise = new Constructor($$$internal$$noop, label);
-      $$$internal$$resolve(promise, object);
-      return promise;
-    };
-
-    var $$promise$reject$$default = function reject(reason, label) {
-      /*jshint validthis:true */
-      var Constructor = this;
-      var promise = new Constructor($$$internal$$noop, label);
-      $$$internal$$reject(promise, reason);
-      return promise;
-    };
-
-    var $$es6$promise$promise$$counter = 0;
-
-    function $$es6$promise$promise$$needsResolver() {
-      throw new TypeError('You must pass a resolver function as the first argument to the promise constructor');
-    }
-
-    function $$es6$promise$promise$$needsNew() {
-      throw new TypeError("Failed to construct 'Promise': Please use the 'new' operator, this object constructor cannot be called as a function.");
-    }
-
-    var $$es6$promise$promise$$default = $$es6$promise$promise$$Promise;
-
-    /**
-      Promise objects represent the eventual result of an asynchronous operation. The
-      primary way of interacting with a promise is through its `then` method, which
-      registers callbacks to receive either a promise’s eventual value or the reason
-      why the promise cannot be fulfilled.
-
-      Terminology
-      -----------
-
-      - `promise` is an object or function with a `then` method whose behavior conforms to this specification.
-      - `thenable` is an object or function that defines a `then` method.
-      - `value` is any legal JavaScript value (including undefined, a thenable, or a promise).
-      - `exception` is a value that is thrown using the throw statement.
-      - `reason` is a value that indicates why a promise was rejected.
-      - `settled` the final resting state of a promise, fulfilled or rejected.
-
-      A promise can be in one of three states: pending, fulfilled, or rejected.
-
-      Promises that are fulfilled have a fulfillment value and are in the fulfilled
-      state.  Promises that are rejected have a rejection reason and are in the
-      rejected state.  A fulfillment value is never a thenable.
-
-      Promises can also be said to *resolve* a value.  If this value is also a
-      promise, then the original promise's settled state will match the value's
-      settled state.  So a promise that *resolves* a promise that rejects will
-      itself reject, and a promise that *resolves* a promise that fulfills will
-      itself fulfill.
-
-
-      Basic Usage:
-      ------------
-
-      ```js
-      var promise = new Promise(function(resolve, reject) {
-        // on success
-        resolve(value);
-
-        // on failure
-        reject(reason);
-      });
-
-      promise.then(function(value) {
-        // on fulfillment
-      }, function(reason) {
-        // on rejection
-      });
-      ```
-
-      Advanced Usage:
-      ---------------
-
-      Promises shine when abstracting away asynchronous interactions such as
-      `XMLHttpRequest`s.
-
-      ```js
-      function getJSON(url) {
-        return new Promise(function(resolve, reject){
-          var xhr = new XMLHttpRequest();
-
-          xhr.open('GET', url);
-          xhr.onreadystatechange = handler;
-          xhr.responseType = 'json';
-          xhr.setRequestHeader('Accept', 'application/json');
-          xhr.send();
-
-          function handler() {
-            if (this.readyState === this.DONE) {
-              if (this.status === 200) {
-                resolve(this.response);
-              } else {
-                reject(new Error('getJSON: `' + url + '` failed with status: [' + this.status + ']'));
-              }
-            }
-          };
-        });
-      }
-
-      getJSON('/posts.json').then(function(json) {
-        // on fulfillment
-      }, function(reason) {
-        // on rejection
-      });
-      ```
-
-      Unlike callbacks, promises are great composable primitives.
-
-      ```js
-      Promise.all([
-        getJSON('/posts'),
-        getJSON('/comments')
-      ]).then(function(values){
-        values[0] // => postsJSON
-        values[1] // => commentsJSON
-
-        return values;
-      });
-      ```
-
-      @class Promise
-      @param {function} resolver
-      Useful for tooling.
-      @constructor
-    */
-    function $$es6$promise$promise$$Promise(resolver) {
-      this._id = $$es6$promise$promise$$counter++;
-      this._state = undefined;
-      this._result = undefined;
-      this._subscribers = [];
-
-      if ($$$internal$$noop !== resolver) {
-        if (!$$utils$$isFunction(resolver)) {
-          $$es6$promise$promise$$needsResolver();
-        }
-
-        if (!(this instanceof $$es6$promise$promise$$Promise)) {
-          $$es6$promise$promise$$needsNew();
-        }
-
-        $$$internal$$initializePromise(this, resolver);
-      }
-    }
-
-    $$es6$promise$promise$$Promise.all = $$promise$all$$default;
-    $$es6$promise$promise$$Promise.race = $$promise$race$$default;
-    $$es6$promise$promise$$Promise.resolve = $$promise$resolve$$default;
-    $$es6$promise$promise$$Promise.reject = $$promise$reject$$default;
-
-    $$es6$promise$promise$$Promise.prototype = {
-      constructor: $$es6$promise$promise$$Promise,
-
-    /**
-      The primary way of interacting with a promise is through its `then` method,
-      which registers callbacks to receive either a promise's eventual value or the
-      reason why the promise cannot be fulfilled.
-
-      ```js
-      findUser().then(function(user){
-        // user is available
-      }, function(reason){
-        // user is unavailable, and you are given the reason why
-      });
-      ```
-
-      Chaining
-      --------
-
-      The return value of `then` is itself a promise.  This second, 'downstream'
-      promise is resolved with the return value of the first promise's fulfillment
-      or rejection handler, or rejected if the handler throws an exception.
-
-      ```js
-      findUser().then(function (user) {
-        return user.name;
-      }, function (reason) {
-        return 'default name';
-      }).then(function (userName) {
-        // If `findUser` fulfilled, `userName` will be the user's name, otherwise it
-        // will be `'default name'`
-      });
-
-      findUser().then(function (user) {
-        throw new Error('Found user, but still unhappy');
-      }, function (reason) {
-        throw new Error('`findUser` rejected and we're unhappy');
-      }).then(function (value) {
-        // never reached
-      }, function (reason) {
-        // if `findUser` fulfilled, `reason` will be 'Found user, but still unhappy'.
-        // If `findUser` rejected, `reason` will be '`findUser` rejected and we're unhappy'.
-      });
-      ```
-      If the downstream promise does not specify a rejection handler, rejection reasons will be propagated further downstream.
-
-      ```js
-      findUser().then(function (user) {
-        throw new PedagogicalException('Upstream error');
-      }).then(function (value) {
-        // never reached
-      }).then(function (value) {
-        // never reached
-      }, function (reason) {
-        // The `PedgagocialException` is propagated all the way down to here
-      });
-      ```
-
-      Assimilation
-      ------------
-
-      Sometimes the value you want to propagate to a downstream promise can only be
-      retrieved asynchronously. This can be achieved by returning a promise in the
-      fulfillment or rejection handler. The downstream promise will then be pending
-      until the returned promise is settled. This is called *assimilation*.
-
-      ```js
-      findUser().then(function (user) {
-        return findCommentsByAuthor(user);
-      }).then(function (comments) {
-        // The user's comments are now available
-      });
-      ```
-
-      If the assimliated promise rejects, then the downstream promise will also reject.
-
-      ```js
-      findUser().then(function (user) {
-        return findCommentsByAuthor(user);
-      }).then(function (comments) {
-        // If `findCommentsByAuthor` fulfills, we'll have the value here
-      }, function (reason) {
-        // If `findCommentsByAuthor` rejects, we'll have the reason here
-      });
-      ```
-
-      Simple Example
-      --------------
-
-      Synchronous Example
-
-      ```javascript
-      var result;
-
-      try {
-        result = findResult();
-        // success
-      } catch(reason) {
-        // failure
-      }
-      ```
-
-      Errback Example
-
-      ```js
-      findResult(function(result, err){
-        if (err) {
-          // failure
-        } else {
-          // success
-        }
-      });
-      ```
-
-      Promise Example;
-
-      ```javascript
-      findResult().then(function(result){
-        // success
-      }, function(reason){
-        // failure
-      });
-      ```
-
-      Advanced Example
-      --------------
-
-      Synchronous Example
-
-      ```javascript
-      var author, books;
-
-      try {
-        author = findAuthor();
-        books  = findBooksByAuthor(author);
-        // success
-      } catch(reason) {
-        // failure
-      }
-      ```
-
-      Errback Example
-
-      ```js
-
-      function foundBooks(books) {
-
-      }
-
-      function failure(reason) {
-
-      }
-
-      findAuthor(function(author, err){
-        if (err) {
-          failure(err);
-          // failure
-        } else {
-          try {
-            findBoooksByAuthor(author, function(books, err) {
-              if (err) {
-                failure(err);
-              } else {
-                try {
-                  foundBooks(books);
-                } catch(reason) {
-                  failure(reason);
-                }
-              }
-            });
-          } catch(error) {
-            failure(err);
-          }
-          // success
-        }
-      });
-      ```
-
-      Promise Example;
-
-      ```javascript
-      findAuthor().
-        then(findBooksByAuthor).
-        then(function(books){
-          // found books
-      }).catch(function(reason){
-        // something went wrong
-      });
-      ```
-
-      @method then
-      @param {Function} onFulfilled
-      @param {Function} onRejected
-      Useful for tooling.
-      @return {Promise}
-    */
-      then: function(onFulfillment, onRejection) {
-        var parent = this;
-        var state = parent._state;
-
-        if (state === $$$internal$$FULFILLED && !onFulfillment || state === $$$internal$$REJECTED && !onRejection) {
-          return this;
-        }
-
-        var child = new this.constructor($$$internal$$noop);
-        var result = parent._result;
-
-        if (state) {
-          var callback = arguments[state - 1];
-          $$asap$$default(function(){
-            $$$internal$$invokeCallback(state, child, callback, result);
-          });
-        } else {
-          $$$internal$$subscribe(parent, child, onFulfillment, onRejection);
-        }
-
-        return child;
-      },
-
-    /**
-      `catch` is simply sugar for `then(undefined, onRejection)` which makes it the same
-      as the catch block of a try/catch statement.
-
-      ```js
-      function findAuthor(){
-        throw new Error('couldn't find that author');
-      }
-
-      // synchronous
-      try {
-        findAuthor();
-      } catch(reason) {
-        // something went wrong
-      }
-
-      // async with promises
-      findAuthor().catch(function(reason){
-        // something went wrong
-      });
-      ```
-
-      @method catch
-      @param {Function} onRejection
-      Useful for tooling.
-      @return {Promise}
-    */
-      'catch': function(onRejection) {
-        return this.then(null, onRejection);
-      }
-    };
-
-    var $$es6$promise$polyfill$$default = function polyfill() {
-      var local;
-
-      if (typeof global !== 'undefined') {
-        local = global;
-      } else if (typeof window !== 'undefined' && window.document) {
-        local = window;
-      } else {
-        local = self;
-      }
-
-      var es6PromiseSupport =
-        "Promise" in local &&
-        // Some of these methods are missing from
-        // Firefox/Chrome experimental implementations
-        "resolve" in local.Promise &&
-        "reject" in local.Promise &&
-        "all" in local.Promise &&
-        "race" in local.Promise &&
-        // Older version of the spec had a resolver object
-        // as the arg rather than a function
-        (function() {
-          var resolve;
-          new local.Promise(function(r) { resolve = r; });
-          return $$utils$$isFunction(resolve);
-        }());
-
-      if (!es6PromiseSupport) {
-        local.Promise = $$es6$promise$promise$$default;
-      }
-    };
-
-    var es6$promise$umd$$ES6Promise = {
-      'Promise': $$es6$promise$promise$$default,
-      'polyfill': $$es6$promise$polyfill$$default
-    };
-
-    /* global define:true module:true window: true */
-    if (typeof define === 'function' && define['amd']) {
-      define(function() { return es6$promise$umd$$ES6Promise; });
-    } else if (typeof module !== 'undefined' && module['exports']) {
-      module['exports'] = es6$promise$umd$$ES6Promise;
-    } else if (typeof this !== 'undefined') {
-      this['ES6Promise'] = es6$promise$umd$$ES6Promise;
-    }
-}).call(this);
-}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":23}],5:[function(require,module,exports){
-(function (__dirname){
-/*
- * pkginfo.js: Top-level include for the pkginfo module
- *
- * (C) 2011, Charlie Robbins
- *
- */
- 
-var fs = require('fs'),
-    path = require('path');
-
-//
-// ### function pkginfo ([options, 'property', 'property' ..])
-// #### @pmodule {Module} Parent module to read from.
-// #### @options {Object|Array|string} **Optional** Options used when exposing properties.
-// #### @arguments {string...} **Optional** Specified properties to expose.
-// Exposes properties from the package.json file for the parent module on 
-// it's exports. Valid usage:
-//
-// `require('pkginfo')()`
-//
-// `require('pkginfo')('version', 'author');`
-//
-// `require('pkginfo')(['version', 'author']);`
-//
-// `require('pkginfo')({ include: ['version', 'author'] });`
-//
-var pkginfo = module.exports = function (pmodule, options) {
-  var args = [].slice.call(arguments, 2).filter(function (arg) {
-    return typeof arg === 'string';
-  });
-  
-  //
-  // **Parse variable arguments**
-  //
-  if (Array.isArray(options)) {
-    //
-    // If the options passed in is an Array assume that
-    // it is the Array of properties to expose from the
-    // on the package.json file on the parent module.
-    //
-    options = { include: options };
-  }
-  else if (typeof options === 'string') {
-    //
-    // Otherwise if the first argument is a string, then
-    // assume that it is the first property to expose from
-    // the package.json file on the parent module.
-    //
-    options = { include: [options] };
-  }
-  
-  //
-  // **Setup default options**
-  //
-  options = options || {};
-  
-  // ensure that includes have been defined
-  options.include = options.include || [];
-  
-  if (args.length > 0) {
-    //
-    // If additional string arguments have been passed in
-    // then add them to the properties to expose on the 
-    // parent module. 
-    //
-    options.include = options.include.concat(args);
-  }
-  
-  var pkg = pkginfo.read(pmodule, options.dir).package;
-  Object.keys(pkg).forEach(function (key) {
-    if (options.include.length > 0 && !~options.include.indexOf(key)) {
-      return;
-    }
-    
-    if (!pmodule.exports[key]) {
-      pmodule.exports[key] = pkg[key];
-    }
-  });
-  
-  return pkginfo;
-};
-
-//
-// ### function find (dir)
-// #### @pmodule {Module} Parent module to read from.
-// #### @dir {string} **Optional** Directory to start search from.
-// Searches up the directory tree from `dir` until it finds a directory
-// which contains a `package.json` file. 
-//
-pkginfo.find = function (pmodule, dir) {
-  if (! dir) {
-    dir = path.dirname(pmodule.filename);
-  }
-  
-  var files = fs.readdirSync(dir);
-  
-  if (~files.indexOf('package.json')) {
-    return path.join(dir, 'package.json');
-  }
-  
-  if (dir === '/') {
-    throw new Error('Could not find package.json up from: ' + dir);
-  }
-  else if (!dir || dir === '.') {
-    throw new Error('Cannot find package.json from unspecified directory');
-  }
-  
-  return pkginfo.find(pmodule, path.dirname(dir));
-};
-
-//
-// ### function read (pmodule, dir)
-// #### @pmodule {Module} Parent module to read from.
-// #### @dir {string} **Optional** Directory to start search from.
-// Searches up the directory tree from `dir` until it finds a directory
-// which contains a `package.json` file and returns the package information.
-//
-pkginfo.read = function (pmodule, dir) { 
-  dir = pkginfo.find(pmodule, dir);
-  
-  var data = fs.readFileSync(dir).toString();
-      
-  return {
-    dir: dir, 
-    package: JSON.parse(data)
-  };
-};
-
-//
-// Call `pkginfo` on this module and expose version.
-//
-pkginfo(module, {
-  dir: __dirname,
-  include: ['version'],
-  target: pkginfo
-});
-}).call(this,"/node_modules/jsonld/node_modules/pkginfo/lib")
-},{"fs":15,"path":22}],6:[function(require,module,exports){
+},{"_process":28,"crypto":17,"es6-promise":10,"http":17,"jsonld-request":17,"pkginfo":17,"request":17,"util":17,"xmldom":17}],19:[function(require,module,exports){
 // Replace local require by a lazy loader
 var globalRequire = require;
 require = function () {};
@@ -17578,7 +23149,7 @@ Object.keys(exports).forEach(function (submodule) {
   });
 });
 
-},{"./lib/N3Lexer":7,"./lib/N3Parser":8,"./lib/N3Store":9,"./lib/N3StreamParser":10,"./lib/N3StreamWriter":11,"./lib/N3Util":12,"./lib/N3Writer":13}],7:[function(require,module,exports){
+},{"./lib/N3Lexer":20,"./lib/N3Parser":21,"./lib/N3Store":22,"./lib/N3StreamParser":23,"./lib/N3StreamWriter":24,"./lib/N3Util":25,"./lib/N3Writer":26}],20:[function(require,module,exports){
 // **N3Lexer** tokenizes N3 documents.
 var fromCharCode = String.fromCharCode;
 var immediately = typeof setImmediate === 'function' ? setImmediate :
@@ -17939,7 +23510,7 @@ N3Lexer.prototype = {
 // Export the `N3Lexer` class as a whole.
 module.exports = N3Lexer;
 
-},{}],8:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 // **N3Parser** parses N3 documents.
 var N3Lexer = require('./N3Lexer');
 
@@ -18641,7 +24212,7 @@ function noop() {}
 // Export the `N3Parser` class as a whole.
 module.exports = N3Parser;
 
-},{"./N3Lexer":7}],9:[function(require,module,exports){
+},{"./N3Lexer":20}],22:[function(require,module,exports){
 // **N3Store** objects store N3 triples by graph in memory.
 
 var expandPrefixedName = require('./N3Util').expandPrefixedName;
@@ -19000,7 +24571,7 @@ N3Store.prototype = {
 // Export the `N3Store` class as a whole.
 module.exports = N3Store;
 
-},{"./N3Util":12}],10:[function(require,module,exports){
+},{"./N3Util":25}],23:[function(require,module,exports){
 // **N3StreamParser** parses an N3 stream into a triple stream
 var Transform = require('stream').Transform,
     util = require('util'),
@@ -19036,7 +24607,7 @@ util.inherits(N3StreamParser, Transform);
 // Export the `N3StreamParser` class as a whole.
 module.exports = N3StreamParser;
 
-},{"./N3Parser.js":8,"stream":36,"util":38}],11:[function(require,module,exports){
+},{"./N3Parser.js":21,"stream":43,"util":54}],24:[function(require,module,exports){
 // **N3StreamWriter** serializes a triple stream into an N3 stream
 var Transform = require('stream').Transform,
     util = require('util'),
@@ -19068,7 +24639,7 @@ util.inherits(N3StreamWriter, Transform);
 // Export the `N3StreamWriter` class as a whole.
 module.exports = N3StreamWriter;
 
-},{"./N3Writer.js":13,"stream":36,"util":38}],12:[function(require,module,exports){
+},{"./N3Writer.js":26,"stream":43,"util":54}],25:[function(require,module,exports){
 // **N3Util** provides N3 utility functions
 
 var Xsd = 'http://www.w3.org/2001/XMLSchema#';
@@ -19186,7 +24757,7 @@ function applyToThis(f) {
 // Expose N3Util, attaching all functions to it
 module.exports = addN3Util(addN3Util);
 
-},{}],13:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 // **N3Writer** writes N3 documents.
 
 // Matches a literal as represented in memory by the N3 library
@@ -19516,3813 +25087,102 @@ function characterReplacer(character) {
 // Export the `N3Writer` class as a whole.
 module.exports = N3Writer;
 
-},{}],14:[function(require,module,exports){
-/************************************************************
- *
- * Project: rdflib.js, originally part of Tabulator project
- *
- * File: web.js
- *
- * Description: contains functions for requesting/fetching/retracting
- *  This implements quite a lot of the web architecture.
- * A fetcher is bound to a specific knowledge base graph, into which
- * it loads stuff and into which it writes its metadata
- * @@ The metadata should be optionally a separate graph
- *
- * - implements semantics of HTTP headers, Internet Content Types
- * - selects parsers for rdf/xml, n3, rdfa, grddl
- *
- * Dependencies:
- *
- * needs: util.js uri.js term.js rdfparser.js rdfa.js n3parser.js
- *      identity.js sparql.js jsonparser.js
- *
- * If jQuery is defined, it uses jQuery.ajax, else is independent of jQuery
- *
- ************************************************************/
-
-/**
- * Things to test: callbacks on request, refresh, retract
- *   loading from HTTP, HTTPS, FTP, FILE, others?
- * To do:
- * Firing up a mail client for mid:  (message:) URLs
- */
-
-var asyncLib = require('async');
-var jsonld = require('jsonld');
-var N3 = require('n3');
-
-$rdf.Fetcher = function(store, timeout, async) {
-    this.store = store
-    this.thisURI = "http://dig.csail.mit.edu/2005/ajar/ajaw/rdf/sources.js" + "#SourceFetcher" // -- Kenny
-    this.timeout = timeout ? timeout : 30000
-    this.async = async != null ? async : true
-    this.appNode = this.store.bnode(); // Denoting this session
-    this.store.fetcher = this; //Bi-linked
-    this.requested = {} ;
-    // this.requested[uri] states:
-    //   undefined     no record of web access or records reset
-    //   true          has been requested, XHR in progress
-    //   'done'        received, Ok
-    //   403           HTTP status unauthorized
-    //   404           Ressource does not exist. Can be created etc.
-    //   'redirected'  In attempt to counter CORS problems retried.
-    //   other strings mean various other erros, such as parse errros.
-    //
-
-    this.fetchCallbacks = {}; // fetchCallbacks[uri].push(callback)
-
-    this.nonexistant = {}; // keep track of explict 404s -> we can overwrite etc
-    this.lookedUp = {}
-    this.handlers = []
-    this.mediatypes = {}
-    var sf = this
-    var kb = this.store;
-    var ns = {} // Convenience namespaces needed in this module:
-    // These are delibertely not exported as the user application should
-    // make its own list and not rely on the prefixes used here,
-    // and not be tempted to add to them, and them clash with those of another
-    // application.
-    ns.link = $rdf.Namespace("http://www.w3.org/2007/ont/link#");
-    ns.http = $rdf.Namespace("http://www.w3.org/2007/ont/http#");
-    ns.httph = $rdf.Namespace("http://www.w3.org/2007/ont/httph#");
-    ns.rdf = $rdf.Namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#");
-    ns.rdfs = $rdf.Namespace("http://www.w3.org/2000/01/rdf-schema#");
-    ns.dc = $rdf.Namespace("http://purl.org/dc/elements/1.1/");
-
-
-    $rdf.Fetcher.crossSiteProxy = function(uri) {
-        if ($rdf.Fetcher.crossSiteProxyTemplate)
-          return $rdf.Fetcher.crossSiteProxyTemplate.replace('{uri}', encodeURIComponent(uri));
-        else return undefined;
-    };
-    $rdf.Fetcher.RDFXMLHandler = function(args) {
-        if (args) {
-            this.dom = args[0]
-        }
-        this.handlerFactory = function(xhr) {
-            xhr.handle = function(cb) {
-                //sf.addStatus(xhr.req, 'parsing soon as RDF/XML...');
-                var kb = sf.store;
-                if (!this.dom) this.dom = $rdf.Util.parseXML(xhr.responseText);
-                var root = this.dom.documentElement;
-                if (root.nodeName == 'parsererror') { //@@ Mozilla only See issue/issue110
-                    sf.failFetch(xhr, "Badly formed XML in " + xhr.resource.uri); //have to fail the request
-                    throw new Error("Badly formed XML in " + xhr.resource.uri); //@@ Add details
-                }
-                // Find the last URI we actual URI in a series of redirects
-                // (xhr.resource.uri is the original one)
-                var lastRequested = kb.any(xhr.req, ns.link('requestedURI'));
-                if (!lastRequested) {
-                    lastRequested = xhr.resource;
-                } else {
-                    lastRequested = kb.sym(lastRequested.value);
-                }
-                var parser = new $rdf.RDFParser(kb);
-                // sf.addStatus(xhr.req, 'parsing as RDF/XML...');
-                parser.parse(this.dom, lastRequested.uri, lastRequested);
-                if (!xhr.options.noMeta) {
-                    kb.add(lastRequested, ns.rdf('type'), ns.link('RDFDocument'), sf.appNode);
-                }
-                cb();
-            }
-        }
-    };
-    $rdf.Fetcher.RDFXMLHandler.term = this.store.sym(this.thisURI + ".RDFXMLHandler");
-    $rdf.Fetcher.RDFXMLHandler.toString = function() {
-        return "RDFXMLHandler"
-    };
-    $rdf.Fetcher.RDFXMLHandler.register = function(sf) {
-        sf.mediatypes['application/rdf+xml'] = {}
-    };
-    $rdf.Fetcher.RDFXMLHandler.pattern = new RegExp("application/rdf\\+xml");
-
-    // This would much better use on-board XSLT engine. @@
-    $rdf.Fetcher.doGRDDL = function(kb, doc, xslturi, xmluri) {
-        sf.requestURI('http://www.w3.org/2005/08/' + 'online_xslt/xslt?' + 'xslfile=' + escape(xslturi) + '&xmlfile=' + escape(xmluri), doc)
-    };
-
-    $rdf.Fetcher.XHTMLHandler = function(args) {
-        if (args) {
-            this.dom = args[0]
-        }
-        this.handlerFactory = function(xhr) {
-            xhr.handle = function(cb) {
-                var relation, reverse;
-                if (!this.dom) {
-                    this.dom = $rdf.Util.parseXML(xhr.responseText)
-                }
-                var kb = sf.store;
-
-                // dc:title
-                var title = this.dom.getElementsByTagName('title')
-                if (title.length > 0) {
-                    kb.add(xhr.resource, ns.dc('title'), kb.literal(title[0].textContent), xhr.resource)
-                    // $rdf.log.info("Inferring title of " + xhr.resource)
-                }
-
-                // link rel
-                var links = this.dom.getElementsByTagName('link');
-                for (var x = links.length - 1; x >= 0; x--) { // @@ rev
-                    relation = links[x].getAttribute('rel'); 
-                    reverse = false;
-                    if (!relation) {
-                        relation = links[x].getAttribute('rev'); 
-                        reverse = true;
-                    }
-                    if (relation) {
-                        sf.linkData(xhr, relation,
-                        links[x].getAttribute('href'), xhr.resource, reverse);
-                    }
-                }
-
-                //GRDDL
-                var head = this.dom.getElementsByTagName('head')[0]
-                if (head) {
-                    var profile = head.getAttribute('profile');
-                    if (profile && $rdf.uri.protocol(profile) == 'http') {
-                        // $rdf.log.info("GRDDL: Using generic " + "2003/11/rdf-in-xhtml-processor.");
-                         $rdf.Fetcher.doGRDDL(kb, xhr.resource, "http://www.w3.org/2003/11/rdf-in-xhtml-processor", xhr.resource.uri)
-/*			sf.requestURI('http://www.w3.org/2005/08/'
-					  + 'online_xslt/xslt?'
-					  + 'xslfile=http://www.w3.org'
-					  + '/2003/11/'
-					  + 'rdf-in-xhtml-processor'
-					  + '&xmlfile='
-					  + escape(xhr.resource.uri),
-				      xhr.resource)
-                        */
-                    } else {
-                        // $rdf.log.info("GRDDL: No GRDDL profile in " + xhr.resource)
-                    }
-                }
-                if (!xhr.options.noMeta) {
-                    kb.add(xhr.resource, ns.rdf('type'), ns.link('WebPage'), sf.appNode);
-                }
-                // Do RDFa here
-
-                if ($rdf.parseDOM_RDFa) {
-                    $rdf.parseDOM_RDFa(this.dom, kb, xhr.resource.uri);
-                }
-                cb(); // Fire done callbacks
-            }
-        }
-    };
-    $rdf.Fetcher.XHTMLHandler.term = this.store.sym(this.thisURI + ".XHTMLHandler");
-    $rdf.Fetcher.XHTMLHandler.toString = function() {
-        return "XHTMLHandler"
-    };
-    $rdf.Fetcher.XHTMLHandler.register = function(sf) {
-        sf.mediatypes['application/xhtml+xml'] = {
-            'q': 0.3
-        }
-    };
-    $rdf.Fetcher.XHTMLHandler.pattern = new RegExp("application/xhtml");
-
-
-    /******************************************************/
-
-    $rdf.Fetcher.XMLHandler = function() {
-        this.handlerFactory = function(xhr) {
-            xhr.handle = function(cb) {
-                var kb = sf.store
-                var dom = $rdf.Util.parseXML(xhr.responseText)
-
-                // XML Semantics defined by root element namespace
-                // figure out the root element
-                for (var c = 0; c < dom.childNodes.length; c++) {
-                    // is this node an element?
-                    if (dom.childNodes[c].nodeType == 1) {
-                        // We've found the first element, it's the root
-                        var ns = dom.childNodes[c].namespaceURI;
-
-                        // Is it RDF/XML?
-                        if (ns != undefined && ns == ns['rdf']) {
-                            sf.addStatus(xhr.req, "Has XML root element in the RDF namespace, so assume RDF/XML.")
-                            sf.switchHandler('RDFXMLHandler', xhr, cb, [dom])
-                            return
-                        }
-                        // it isn't RDF/XML or we can't tell
-                        // Are there any GRDDL transforms for this namespace?
-                        // @@ assumes ns documents have already been loaded
-                        var xforms = kb.each(kb.sym(ns), kb.sym("http://www.w3.org/2003/g/data-view#namespaceTransformation"));
-                        for (var i = 0; i < xforms.length; i++) {
-                            var xform = xforms[i];
-                            // $rdf.log.info(xhr.resource.uri + " namespace " + ns + " has GRDDL ns transform" + xform.uri);
-                             $rdf.Fetcher.doGRDDL(kb, xhr.resource, xform.uri, xhr.resource.uri);
-                        }
-                        break
-                    }
-                }
-
-                // Or it could be XHTML?
-                // Maybe it has an XHTML DOCTYPE?
-                if (dom.doctype) {
-                    // $rdf.log.info("We found a DOCTYPE in " + xhr.resource)
-                    if (dom.doctype.name == 'html' && dom.doctype.publicId.match(/^-\/\/W3C\/\/DTD XHTML/) && dom.doctype.systemId.match(/http:\/\/www.w3.org\/TR\/xhtml/)) {
-                        sf.addStatus(xhr.req,"Has XHTML DOCTYPE. Switching to XHTML Handler.\n")
-                        sf.switchHandler('XHTMLHandler', xhr, cb)
-                        return
-                    }
-                }
-
-                // Or what about an XHTML namespace?
-                var html = dom.getElementsByTagName('html')[0]
-                if (html) {
-                    var xmlns = html.getAttribute('xmlns')
-                    if (xmlns && xmlns.match(/^http:\/\/www.w3.org\/1999\/xhtml/)) {
-                        sf.addStatus(xhr.req, "Has a default namespace for " + "XHTML. Switching to XHTMLHandler.\n")
-                        sf.switchHandler('XHTMLHandler', xhr, cb)
-                        return
-                    }
-                }
-
-                // At this point we should check the namespace document (cache it!) and
-                // look for a GRDDL transform
-                // @@  Get namespace document <n>, parse it, look for  <n> grddl:namespaceTransform ?y
-                // Apply ?y to   dom
-                // We give up. What dialect is this?
-                sf.failFetch(xhr, "Unsupported dialect of XML: not RDF or XHTML namespace, etc.\n"+xhr.responseText.slice(0,80));
-            }
-        }
-    };
-    $rdf.Fetcher.XMLHandler.term = this.store.sym(this.thisURI + ".XMLHandler");
-    $rdf.Fetcher.XMLHandler.toString = function() {
-        return "XMLHandler"
-    };
-    $rdf.Fetcher.XMLHandler.register = function(sf) {
-        sf.mediatypes['text/xml'] = {
-            'q': 0.2
-        }
-        sf.mediatypes['application/xml'] = {
-            'q': 0.2
-        }
-    };
-    $rdf.Fetcher.XMLHandler.pattern = new RegExp("(text|application)/(.*)xml");
-
-    $rdf.Fetcher.HTMLHandler = function() {
-        this.handlerFactory = function(xhr) {
-            xhr.handle = function(cb) {
-                var rt = xhr.responseText
-                // We only handle XHTML so we have to figure out if this is XML
-                // $rdf.log.info("Sniffing HTML " + xhr.resource + " for XHTML.");
-
-                if (rt.match(/\s*<\?xml\s+version\s*=[^<>]+\?>/)) {
-                    sf.addStatus(xhr.req, "Has an XML declaration. We'll assume " +
-                        "it's XHTML as the content-type was text/html.\n")
-                    sf.switchHandler('XHTMLHandler', xhr, cb)
-                    return
-                }
-
-                // DOCTYPE
-                // There is probably a smarter way to do this
-                if (rt.match(/.*<!DOCTYPE\s+html[^<]+-\/\/W3C\/\/DTD XHTML[^<]+http:\/\/www.w3.org\/TR\/xhtml[^<]+>/)) {
-                    sf.addStatus(xhr.req, "Has XHTML DOCTYPE. Switching to XHTMLHandler.\n")
-                    sf.switchHandler('XHTMLHandler', xhr, cb)
-                    return
-                }
-
-                // xmlns
-                if (rt.match(/[^(<html)]*<html\s+[^<]*xmlns=['"]http:\/\/www.w3.org\/1999\/xhtml["'][^<]*>/)) {
-                    sf.addStatus(xhr.req, "Has default namespace for XHTML, so switching to XHTMLHandler.\n")
-                    sf.switchHandler('XHTMLHandler', xhr, cb)
-                    return
-                }
-
-
-                // dc:title	                       //no need to escape '/' here
-                var titleMatch = (new RegExp("<title>([\\s\\S]+?)</title>", 'im')).exec(rt);
-                if (titleMatch) {
-                    var kb = sf.store;
-                    kb.add(xhr.resource, ns.dc('title'), kb.literal(titleMatch[1]), xhr.resource); //think about xml:lang later
-                    kb.add(xhr.resource, ns.rdf('type'), ns.link('WebPage'), sf.appNode);
-                    cb(); //doneFetch, not failed
-                    return;
-                }
-
-                sf.failFetch(xhr, "Sorry, can't yet parse non-XML HTML")
-            }
-        }
-    };
-    $rdf.Fetcher.HTMLHandler.term = this.store.sym(this.thisURI + ".HTMLHandler");
-    $rdf.Fetcher.HTMLHandler.toString = function() {
-        return "HTMLHandler"
-    };
-    $rdf.Fetcher.HTMLHandler.register = function(sf) {
-        sf.mediatypes['text/html'] = {
-            'q': 0.3
-        }
-    };
-    $rdf.Fetcher.HTMLHandler.pattern = new RegExp("text/html");
-
-    /***********************************************/
-
-    $rdf.Fetcher.TextHandler = function() {
-        this.handlerFactory = function(xhr) {
-            xhr.handle = function(cb) {
-                // We only speak dialects of XML right now. Is this XML?
-                var rt = xhr.responseText
-
-                // Look for an XML declaration
-                if (rt.match(/\s*<\?xml\s+version\s*=[^<>]+\?>/)) {
-                    sf.addStatus(xhr.req, "Warning: "+xhr.resource + " has an XML declaration. We'll assume "
-                        + "it's XML but its content-type wasn't XML.\n")
-                    sf.switchHandler('XMLHandler', xhr, cb)
-                    return
-                }
-
-                // Look for an XML declaration
-                if (rt.slice(0, 500).match(/xmlns:/)) {
-                    sf.addStatus(xhr.req, "May have an XML namespace. We'll assume "
-                            + "it's XML but its content-type wasn't XML.\n")
-                    sf.switchHandler('XMLHandler', xhr, cb)
-                    return
-                }
-
-                // We give up finding semantics - this is not an error, just no data
-                sf.addStatus(xhr.req, "Plain text document, no known RDF semantics.");
-                sf.doneFetch(xhr, [xhr.resource.uri]);
-//                sf.failFetch(xhr, "unparseable - text/plain not visibly XML")
-//                dump(xhr.resource + " unparseable - text/plain not visibly XML, starts:\n" + rt.slice(0, 500)+"\n")
-
-            }
-        }
-    };
-    $rdf.Fetcher.TextHandler.term = this.store.sym(this.thisURI + ".TextHandler");
-    $rdf.Fetcher.TextHandler.toString = function() {
-        return "TextHandler";
-    };
-    $rdf.Fetcher.TextHandler.register = function(sf) {
-        sf.mediatypes['text/plain'] = {
-            'q': 0.1
-        }
-    }
-    $rdf.Fetcher.TextHandler.pattern = new RegExp("text/plain");
-
-    /***********************************************/
-
-    $rdf.Fetcher.N3Handler = function() {
-        this.handlerFactory = function(xhr) {
-            xhr.handle = function(cb) {
-                // Parse the text of this non-XML file
-                $rdf.log.debug("web.js: Parsing as N3 " + xhr.resource.uri); // @@@@ comment me out
-                //sf.addStatus(xhr.req, "N3 not parsed yet...")
-                var rt = xhr.responseText
-                var p = $rdf.N3Parser(kb, kb, xhr.resource.uri, xhr.resource.uri, null, null, "", null)
-                //                p.loadBuf(xhr.responseText)
-                try {
-                    p.loadBuf(xhr.responseText)
-
-                } catch (e) {
-                    var msg = ("Error trying to parse " + xhr.resource + " as Notation3:\n" + e +':\n'+e.stack)
-                    // dump(msg+"\n")
-                    sf.failFetch(xhr, msg)
-                    return;
-                }
-
-                sf.addStatus(xhr.req, "N3 parsed: " + p.statementCount + " triples in " + p.lines + " lines.")
-                sf.store.add(xhr.resource, ns.rdf('type'), ns.link('RDFDocument'), sf.appNode);
-                args = [xhr.resource.uri]; // Other args needed ever?
-                sf.doneFetch(xhr, args)
-            }
-        }
-    };
-    $rdf.Fetcher.N3Handler.term = this.store.sym(this.thisURI + ".N3Handler");
-    $rdf.Fetcher.N3Handler.toString = function() {
-        return "N3Handler";
-    }
-    $rdf.Fetcher.N3Handler.register = function(sf) {
-        sf.mediatypes['text/n3'] = {
-            'q': '1.0'
-        } // as per 2008 spec
-        sf.mediatypes['application/x-turtle'] = {
-            'q': 1.0
-        } // pre 2008
-        sf.mediatypes['text/turtle'] = {
-            'q': 1.0
-        } // pre 2008
-    }
-    $rdf.Fetcher.N3Handler.pattern = new RegExp("(application|text)/(x-)?(rdf\\+)?(n3|turtle)")
-
-    /***********************************************/
-
-    $rdf.Util.callbackify(this, ['request', 'recv', 'headers', 'load', 'fail', 'refresh', 'retract', 'done']);
-
-    this.addHandler = function(handler) {
-        sf.handlers.push(handler)
-        handler.register(sf)
-    }
-
-    this.switchHandler = function(name, xhr, cb, args) {
-        var kb = this.store; var handler = null;
-        for (var i=0; i<this.handlers.length; i++) {
-            if (''+this.handlers[i] == name) {
-                handler = this.handlers[i];
-            }
-        }
-        if (handler == undefined) {
-            throw 'web.js: switchHandler: name='+name+' , this.handlers ='+this.handlers+'\n' +
-                    'switchHandler: switching to '+handler+'; sf='+sf +
-                    '; typeof $rdf.Fetcher='+typeof $rdf.Fetcher +
-                    ';\n\t $rdf.Fetcher.HTMLHandler='+$rdf.Fetcher.HTMLHandler+'\n' +
-                    '\n\tsf.handlers='+sf.handlers+'\n'
-        }
-        (new handler(args)).handlerFactory(xhr);
-        xhr.handle(cb)
-    }
-
-    this.addStatus = function(req, status) {
-        //<Debug about="parsePerformance">
-        var now = new Date();
-        status = "[" + now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds() + "." + now.getMilliseconds() + "] " + status;
-        //</Debug>
-        var kb = this.store
-        var s = kb.the(req, ns.link('status'));
-        if (s && s.append) {
-            s.append(kb.literal(status));
-        } else {
-            $rdf.log.warn("web.js: No list to add to: " + s + ',' + status); // @@@
-        };
-    }
-
-    // Record errors in the system on failure
-    // Returns xhr so can just do return this.failfetch(...)
-    this.failFetch = function(xhr, status) {
-        this.addStatus(xhr.req, status)
-        if (!xhr.options.noMeta) {
-            kb.add(xhr.resource, ns.link('error'), status)
-        }
-        this.requested[$rdf.uri.docpart(xhr.resource.uri)] = xhr.status; // changed 2015 was false
-        while (this.fetchCallbacks[xhr.resource.uri] && this.fetchCallbacks[xhr.resource.uri].length) {
-            this.fetchCallbacks[xhr.resource.uri].shift()(false, "Fetch of <" + xhr.resource.uri + "> failed: "+status, xhr);
-        }
-        delete this.fetchCallbacks[xhr.resource.uri];
-        this.fireCallbacks('fail', [xhr.requestedURI, status])
-        xhr.abort()
-        return xhr
-    }
-
-    // in the why part of the quad distinguish between HTML and HTTP header
-    // Reverse is set iif the link was rev= as opposed to rel=
-    this.linkData = function(xhr, rel, uri, why, reverse) {
-        var x = xhr.resource;
-        if (!uri) return;
-        var predicate;
-        // See http://www.w3.org/TR/powder-dr/#httplink for describedby 2008-12-10
-        var obj = kb.sym($rdf.uri.join(uri, xhr.resource.uri));
-        if (rel == 'alternate' || rel == 'seeAlso' || rel == 'meta' || rel == 'describedby') {
-            if (obj.uri === xhr.resource.uri) return;
-            predicate = ns.rdfs('seeAlso');
-        } else {
-        // See https://www.iana.org/assignments/link-relations/link-relations.xml
-        // Alas not yet in RDF yet for each predicate
-            predicate = kb.sym($rdf.uri.join(rel, 'http://www.iana.org/assignments/link-relations/'));
-        }
-        if (reverse) {
-            kb.add(obj, predicate, xhr.resource, why);
-        } else {
-            kb.add(xhr.resource, predicate, obj, why);
-        }
-    };
-
-    this.parseLinkHeader = function(xhr, thisReq) {
-        var link;
-        try {
-            link = xhr.getResponseHeader('link'); // May crash from CORS error
-        }catch(e){}
-        if (link) {
-            var linkexp = /<[^>]*>\s*(\s*;\s*[^\(\)<>@,;:"\/\[\]\?={} \t]+=(([^\(\)<>@,;:"\/\[\]\?={} \t]+)|("[^"]*")))*(,|$)/g;
-            var paramexp = /[^\(\)<>@,;:"\/\[\]\?={} \t]+=(([^\(\)<>@,;:"\/\[\]\?={} \t]+)|("[^"]*"))/g;
-
-            var matches = link.match(linkexp);
-            var rels = {};
-            for (var i = 0; i < matches.length; i++) {
-                var split = matches[i].split('>');
-                var href = split[0].substring(1);
-                var ps = split[1];
-                var s = ps.match(paramexp);
-                for (var j = 0; j < s.length; j++) {
-                    var p = s[j];
-                    var paramsplit = p.split('=');
-                    var name = paramsplit[0];
-                    var rel = paramsplit[1].replace(/["']/g, ''); //'"
-                    this.linkData(xhr, rel, href, thisReq);
-                }
-            }
-        }
-    };
-
-
-
-    this.doneFetch = function(xhr, args) {
-        this.addStatus(xhr.req, 'Done.')
-        // $rdf.log.info("Done with parse, firing 'done' callbacks for " + xhr.resource)
-        this.requested[xhr.resource.uri] = 'done'; //Kenny
-        while (this.fetchCallbacks[xhr.resource.uri] && this.fetchCallbacks[xhr.resource.uri].length) {
-            this.fetchCallbacks[xhr.resource.uri].shift()(true, undefined, xhr);
-        }
-        delete this.fetchCallbacks[xhr.resource.uri];
-        this.fireCallbacks('done', args)
-    };
-
-
-    [$rdf.Fetcher.RDFXMLHandler, $rdf.Fetcher.XHTMLHandler,
-     $rdf.Fetcher.XMLHandler, $rdf.Fetcher.HTMLHandler,
-     $rdf.Fetcher.TextHandler, $rdf.Fetcher.N3Handler ].map(this.addHandler);
-
-
-
-    /** Note two nodes are now smushed
-     **
-     ** If only one was flagged as looked up, then
-     ** the new node is looked up again, which
-     ** will make sure all the URIs are dereferenced
-     */
-    this.nowKnownAs = function(was, now) {
-        if (this.lookedUp[was.uri]) {
-            if (!this.lookedUp[now.uri]) this.lookUpThing(now, was) //  @@@@  Transfer userCallback
-        } else if (this.lookedUp[now.uri]) {
-            if (!this.lookedUp[was.uri]) this.lookUpThing(was, now)
-        }
-    }
-
-
-
-
-
-    // Looks up something.
-    //
-    // Looks up all the URIs a things has.
-    //
-    // Parameters:
-    //
-    //  term:       canonical term for the thing whose URI is to be dereferenced
-    //  rterm:      the resource which refered to this (for tracking bad links)
-    //  options:    (old: force paraemter) or dictionary of options:
-    //      force:      Load the data even if loaded before
-    //  oneDone:   is called as callback(ok, errorbody, xhr) for each one
-    //  allDone:   is called as callback(ok, errorbody) for all of them
-    // Returns      the number of URIs fetched
-    //
-    this.lookUpThing = function(term, rterm, options, oneDone, allDone) {
-        var uris = kb.uris(term) // Get all URIs
-        var success = true;
-        var errors = '';
-        var outstanding = {}, force;
-        if (options === false || options === true) { // Old signature
-            force = options;
-            options = { force: force };
-        } else {
-            if (options === undefined) options = {};
-            force = !!options.force;
-        }
-
-        if (typeof uris !== 'undefined') {
-            for (var i = 0; i < uris.length; i++) {
-                var u = uris[i];
-                outstanding[u] = true;
-                this.lookedUp[u] = true;
-                var sf = this;
-
-                var requestOne = function requestOne(u1){
-                    sf.requestURI($rdf.uri.docpart(u1), rterm, options,
-                        function(ok, body, xhr){
-                            if (ok) {
-                                if (oneDone) oneDone(true, u1);
-                            } else {
-                                if (oneDone) oneDone(false, body);
-                                success = false;
-                                errors += body + '\n';
-                            };
-                            delete outstanding[u];
-                            for (x in outstanding) return;
-                            if (allDone) allDone(success, errors);
-                        }
-                    );
-                };
-                requestOne(u);
-            }
-        }
-        return uris.length
-    }
-
-    /* Promise-based load function
-    ** 
-    ** Promise delivers xhr
-    **
-    ** @@ todo: If p1 is array then sequence or parallel fetch of all
-    */
-    this.load = function(uri, options) {
-	uri = uri.uri || uri;
-	var p = new Promise(function(resolve, reject){
-	    this.nowOrWhenFetched(uri, options, function(ok, message, xhr){
-		if (ok) {
-		    resolve(xhr);
-		} else {
-		    reject(message, xhr);
-		}
-	    
-	    });
-	});
-	return p;
-    }
-
-    /*  Ask for a doc to be loaded if necessary then call back
-    **
-    ** Changed 2013-08-20:  Added (ok, errormessage) params to callback
-    **
-    ** Calling methods:
-    **   nowOrWhenFetched (uri, userCallback)
-    **   nowOrWhenFetched (uri, options, userCallback)
-    **   nowOrWhenFetched (uri, referringTerm, userCallback, options)  <-- old
-    **   nowOrWhenFetched (uri, referringTerm, userCallback) <-- old
-    **
-    **  Options include:
-    **   referringTerm    The docuemnt in which this link was found.
-    **                    this is valuable when finding the source of bad URIs
-    **   force            boolean.  Never mind whether you have tried before,
-    **                    load this from scratch.
-    **   forceContentType Override the incoming header to force the data to be
-    **                    treaed as this content-type.
-    **/
-    this.nowOrWhenFetched = function(uri, p2, userCallback, options) {
-        uri = uri.uri || uri; // allow symbol object or string to be passed
-        if (typeof p2 == 'function') {
-            options = {};
-            userCallback = p2;
-        } else if (typeof p2 == 'undefined') { // original calling signature
-            referingTerm = undefined;
-        } else if (p2 instanceof $rdf.Symbol) {
-            referingTerm = p2;
-        } else {
-            options = p2;
-        }
-
-        this.requestURI(uri, p2, options || {}, userCallback);
-    }
-
-    this.get = this.nowOrWhenFetched;
-
-    // Look up response header
-    //
-    // Returns: a list of header values found in a stored HTTP response
-    //      or [] if response was found but no header found
-    //      or undefined if no response is available.
-    //
-    this.getHeader = function(doc, header) {
-        var kb = this.store;
-        var requests = kb.each(undefined, ns.link("requestedURI"), doc.uri);
-        for (var r=0; r<requests.length; r++) {
-            var request = requests[r];
-            if (request !== undefined) {
-                var response = kb.any(request, ns.link("response"));
-                if (request !== undefined) {
-                    var results = kb.each(response, ns.httph(header.toLowerCase()));
-                    if (results.length) {
-                        return results.map(function(v){return v.value});
-                    }
-                    return [];
-                }
-            }
-        }
-        return undefined;
-    };
-
-    this.proxyIfNecessary = function(uri) {
-        if (typeof tabulator != 'undefined' && tabulator.isExtension) return uri; // Extenstion does not need proxy
-            // browser does 2014 on as https browser script not trusted
-            // If the web app origin is https: then the mixed content rules
-            // prevent it loading insecure http: stuff so we need proxy.
-        if ($rdf.Fetcher.crossSiteProxyTemplate && (typeof document !== 'undefined') &&document.location
-			&& ('' + document.location).slice(0,6) === 'https:' // Origin is secure
-                && uri.slice(0,5) === 'http:') { // requested data is not
-              return $rdf.Fetcher.crossSiteProxyTemplate.replace('{uri}', encodeURIComponent(uri));
-        }
-        return uri;
-    };
-
-
-    this.saveRequestMetadata = function(xhr, kb, docuri) {
-        var request = kb.bnode();
-        xhr.resource = $rdf.sym(docuri);
-
-        xhr.req = request;
-        if (!xhr.options.noMeta) { // Store no triples but do mind the bnode for req
-            var now = new Date();
-            var timeNow = "[" + now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds() + "] ";
-            kb.add(request, ns.rdfs("label"), kb.literal(timeNow + ' Request for ' + docuri), this.appNode);
-            kb.add(request, ns.link("requestedURI"), kb.literal(docuri), this.appNode);
-
-            kb.add(request, ns.link('status'), kb.collection(), this.appNode);
-        }
-        return request;
-    };
-
-    this.saveResponseMetadata = function(xhr, kb) {
-        var response = kb.bnode();
-
-        if (xhr.req) kb.add(xhr.req, ns.link('response'), response);
-        kb.add(response, ns.http('status'), kb.literal(xhr.status), response);
-        kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response);
-
-        xhr.headers = {}
-        if ($rdf.uri.protocol(xhr.resource.uri) == 'http' || $rdf.uri.protocol(xhr.resource.uri) == 'https') {
-            xhr.headers = $rdf.Util.getHTTPHeaders(xhr)
-            for (var h in xhr.headers) { // trim below for Safari - adds a CR!
-                kb.add(response, ns.httph(h.toLowerCase()), xhr.headers[h].trim(), response)
-            }
-        }
-        return response;
-    };
-
-
-    /** Requests a document URI and arranges to load the document.
-     ** Parameters:
-     **	    term:  term for the thing whose URI is to be dereferenced
-     **      rterm:  the resource which refered to this (for tracking bad links)
-     **      options:
-     **              force:  Load the data even if loaded before
-     **              withCredentials:   flag for XHR/CORS etc
-     **      userCallback:  Called with (true) or (false, errorbody, {status: 400}) after load is done or failed
-     ** Return value:
-     **	    The xhr object for the HTTP access
-     **      null if the protocol is not a look-up protocol,
-     **              or URI has already been loaded
-     */
-    this.requestURI = function(docuri, rterm, options, userCallback) { //sources_request_new
-        docuri = docuri.uri || docuri; // Symbol or string
-        // Remove #localid
-        docuri = docuri.split('#')[0];
-
-        if (typeof options === 'boolean') options = { 'force': options}; // Ols dignature
-        if (typeof options === 'undefined') options = {};
-        var force = !! options.force
-        var kb = this.store;
-        var args = arguments;
-
-
-        var pcol = $rdf.uri.protocol(docuri);
-        if (pcol == 'tel' || pcol == 'mailto' || pcol == 'urn') {
-            return userCallback? userCallback(false, "Unsupported protocol", {'status':  900 }) : undefined; //"No look-up operation on these, but they are not errors?"
-        }
-        var docterm = kb.sym(docuri);
-
-        var sta = this.getState(docuri);
-        if (!force) {
-            if (sta == 'fetched') return userCallback ? userCallback(true) : undefined;
-            if (sta == 'failed') return userCallback ?
-                userCallback(false, "Previously failed. " + this.requested[docuri],
-                    {'status': this.requested[docuri]}) : undefined; // An xhr standin
-            //if (sta == 'requested') return userCallback? userCallback(false, "Sorry already requested - pending already.", {'status': 999 }) : undefined;
-        } else {
-            delete this.nonexistant[docuri];
-        }
-        // @@ Should allow concurrent requests
-
-        // If it is 'failed', then shoulkd we try again?  I think so so an old error doens't get stuck
-        //if (sta == 'unrequested')
-
-
-
-        this.fireCallbacks('request', args); //Kenny: fire 'request' callbacks here
-        // dump( "web.js: Requesting uri: " + docuri + "\n" );
-
-
-        if (userCallback) {
-            if (!this.fetchCallbacks[docuri]) {
-                this.fetchCallbacks[docuri] = [ userCallback ];
-            } else {
-                this.fetchCallbacks[docuri].push(userCallback);
-            }
-        }
-
-        if (this.requested[docuri] === true) {
-            return; // Don't ask again - wait for existing call
-        } else {
-            this.requested[docuri] = true;
-        }
-
-
-        if (!options.noMeta && rterm && rterm.uri) {
-            kb.add(docterm.uri, ns.link("requestedBy"), rterm.uri, this.appNode)
-        }
-
-        var useJQuery = typeof jQuery != 'undefined';
-        if (!useJQuery) {
-            var xhr = $rdf.Util.XMLHTTPFactory();
-            var req = xhr.req = kb.bnode();
-            xhr.options = options;
-            xhr.resource = docterm;
-            xhr.requestedURI = args[0];
-        } else {
-            var req = kb.bnode();
-        }
-        var requestHandlers = kb.collection();
-        var sf = this;
-
-        var now = new Date();
-        var timeNow = "[" + now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds() + "] ";
-        if (!options.noMeta) {
-            kb.add(req, ns.rdfs("label"), kb.literal(timeNow + ' Request for ' + docuri), this.appNode)
-            kb.add(req, ns.link("requestedURI"), kb.literal(docuri), this.appNode)
-            kb.add(req, ns.link('status'), kb.collection(), this.appNode)
-        }
-        // This should not be stored in the store, but in the JS data
-        /*
-        if (typeof kb.anyStatementMatching(this.appNode, ns.link("protocol"), $rdf.uri.protocol(docuri)) == "undefined") {
-            // update the status before we break out
-            this.failFetch(xhr, "Unsupported protocol: "+$rdf.uri.protocol(docuri))
-            return xhr
-        }
-        */
-        var checkCredentialsRetry = function() {
-            if (!xhr.withCredentials) return false; // not dealt with
-            
-            console.log("@@ Retrying with no credentials for " + xhr.resource)
-            xhr.abort();
-            delete sf.requested[docuri]; // forget the original request happened
-            newopt = {};
-            for (opt in options) if (options.hasOwnProperty(opt)) {
-                newopt[opt] = options[opt]
-            }
-            newopt.withCredentials = false;
-            sf.addStatus(xhr.req, "Abort: Will retry with credentials SUPPRESSED to see if that helps");
-            sf.requestURI(docuri, rterm, newopt, xhr.userCallback); // usercallback already registered (with where?)
-            return true;
-        }
-
-
-        var onerrorFactory = function(xhr) {
-            return function(event) {
-                xhr.onErrorWasCalled = true; // debugging and may need it
-                if  (typeof document !== 'undefined') { // Mashup situation, not node etc
-                    if ($rdf.Fetcher.crossSiteProxyTemplate && document.location && !xhr.proxyUsed) { 
-                        var hostpart = $rdf.uri.hostpart;
-                        var here = '' + document.location;
-                        var uri = xhr.resource.uri
-                        if (hostpart(here) && hostpart(uri) && hostpart(here) != hostpart(uri)) {
-                            if (xhr.status === 401 || xhr.status === 403 || xhr.status === 404) {
-                                onreadystatechangeFactory(xhr)();
-                            } else {
-                                newURI = $rdf.Fetcher.crossSiteProxy(uri);
-                                sf.addStatus(xhr.req, "BLOCKED -> Cross-site Proxy to <" + newURI + ">");
-                                if (xhr.aborted) return;
-
-                                var kb = sf.store;
-                                var oldreq = xhr.req;
-                                if (!xhr.options.noMeta) {
-                                    kb.add(oldreq, ns.http('redirectedTo'), kb.sym(newURI), oldreq);
-                                }
-                                xhr.abort()
-                                xhr.aborted = true
-
-                                sf.addStatus(oldreq, 'redirected to new request') // why
-                                //the callback throws an exception when called from xhr.onerror (so removed)
-                                //sf.fireCallbacks('done', args) // Are these args right? @@@   Not done yet! done means success
-                                sf.requested[xhr.resource.uri] = 'redirected';
-
-                                if (sf.fetchCallbacks[xhr.resource.uri]) {
-                                    if (!sf.fetchCallbacks[newURI]) {
-                                        sf.fetchCallbacks[newURI] = [];
-                                    }
-                                    sf.fetchCallbacks[newURI] == sf.fetchCallbacks[newURI].concat(sf.fetchCallbacks[xhr.resource.uri]);
-                                    delete sf.fetchCallbacks[xhr.resource.uri];
-                                }
-
-                                var xhr2 = sf.requestURI(newURI, xhr.resource, options);
-                                if (xhr2) {
-                                    xhr2.proxyUsed = true; //only try the proxy once
-                                }
-                                if (xhr2 && xhr2.req) {
-                                    if (!xhr.options.noMeta) {
-                                        kb.add(xhr.req,
-                                            kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'),
-                                            xhr2.req,
-                                            sf.appNode);
-                                    }
-                                    return;
-                                }
-                            }
-                        }
-                        
-                        if (checkCredentialsRetry(xhr)) {
-                            return;
-                        }
-                        xhr.status = 999; // 
-                    }
-                }; // mashu
-            } // function of event
-        }; // onerrorFactory
-
-            // Set up callbacks
-        var onreadystatechangeFactory = function(xhr) {
-            return function() {
-                var handleResponse = function() {
-                    if (xhr.handleResponseDone) return;
-                    xhr.handleResponseDone = true;
-                    var handler = null;
-                    var thisReq = xhr.req // Might have changes by redirect
-                    sf.fireCallbacks('recv', args)
-                    var kb = sf.store;
-                    var response = sf.saveResponseMetadata(xhr, kb);
-                    sf.fireCallbacks('headers', [{uri: docuri, headers: xhr.headers}]);
-
-                    // Check for masked errors.
-                    // For "security reasons" theboraser hides errors such as CORS errors from 
-                    // the calling code (2015). oneror() used to be called but is not now.
-                    // 
-                    if (xhr.status === 0) {
-                        console.log("Masked error - status 0 for " + xhr.resource.uri);
-                        if (checkCredentialsRetry(xhr)) { // retry is could be credentials flag CORS issue
-                            return;
-                        }
-                        xhr.status = 900; // unknown masked error
-                        return;
-                    }
-                    if (xhr.status >= 400) { // For extra dignostics, keep the reply
-                    //  @@@ 401 should cause  a retry with credential son
-                    // @@@ cache the credentials flag by host ????
-                        if (xhr.status === 404) {
-                            kb.fetcher.nonexistant[xhr.resource.uri] = true;
-                        }
-                        if (xhr.responseText.length > 10) {
-                            var response = kb.bnode();
-                            kb.add(response, ns.http('content'), kb.literal(xhr.responseText), response);
-                            if (xhr.statusText) {
-                                kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response);
-                            }
-                            // dump("HTTP >= 400 responseText:\n"+xhr.responseText+"\n"); // @@@@
-                        }
-                        sf.failFetch(xhr, "HTTP error for " +xhr.resource + ": "+ xhr.status + ' ' + xhr.statusText);
-                        return;
-                    }
-
-                    var loc = xhr.headers['content-location'];
-
-                    // deduce some things from the HTTP transaction
-                    var addType = function(cla) { // add type to all redirected resources too
-                        var prev = thisReq;
-                        if (loc) {
-                            var docURI = kb.any(prev, ns.link('requestedURI'));
-                            if (docURI != loc) {
-                                kb.add(kb.sym(loc), ns.rdf('type'), cla, sf.appNode);
-                            }
-                        }
-                        for (;;) {
-                            var doc = kb.any(prev, ns.link('requestedURI'));
-                            if (doc && doc.value) // convert Literal
-                                kb.add(kb.sym(doc.value), ns.rdf('type'), cla, sf.appNode);
-                            prev = kb.any(undefined, kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'), prev);
-                            if (!prev) break;
-                            var response = kb.any(prev, kb.sym('http://www.w3.org/2007/ont/link#response'));
-                            if (!response) break;
-                            var redirection = kb.any(response, kb.sym('http://www.w3.org/2007/ont/http#status'));
-                            if (!redirection) break;
-                            if (redirection != '301' && redirection != '302') break;
-                        }
-                    }
-                    // This is a minimal set to allow the use of damaged servers if necessary
-                    var extensionToContentType = {
-                        'rdf': 'application/rdf+xml', 'owl': 'application/rdf+xml',
-                        'n3': 'text/n3', 'ttl': 'text/turtle', 'nt': 'text/n3', 'acl': 'text/n3',
-                        'html': 'text/html', 'html': 'text/htm',
-                        'xml': 'text/xml'
-                    };
-
-                    if (xhr.status == 200) {
-                        addType(ns.link('Document'));
-                        var ct = xhr.headers['content-type'];
-                        if (options.forceContentType) {
-                            xhr.headers['content-type'] = options.forceContentType;
-                        };
-                        if (!ct || ct.indexOf('application/octet-stream') >=0 ) {
-                            var guess = extensionToContentType[xhr.resource.uri.split('.').pop()];
-                            if (guess) {
-                                xhr.headers['content-type'] = guess;
-                            }
-                        }
-                        if (ct) {
-                            if (ct.indexOf('image/') == 0 || ct.indexOf('application/pdf') == 0) addType(kb.sym('http://purl.org/dc/terms/Image'));
-                        }
-                        if (options.clearPreviousData) { // Before we parse new data clear old but only on 200
-                            kb.removeDocument(xhr.resource);
-                        };
-                        
-                    }
-                    // application/octet-stream; charset=utf-8
-
-
-
-                    if ($rdf.uri.protocol(xhr.resource.uri) == 'file' || $rdf.uri.protocol(xhr.resource.uri) == 'chrome') {
-                        if (options.forceContentType) {
-                            xhr.headers['content-type'] = options.forceContentType;
-                        } else {
-                            var guess = extensionToContentType[xhr.resource.uri.split('.').pop()];
-                            if (guess) {
-                                xhr.headers['content-type'] = guess;
-                            } else {
-                                xhr.headers['content-type'] = 'text/xml';
-                            }
-                        }
-                    }
-
-                    // If we have alread got the thing at this location, abort
-                    if (loc) {
-                        var udoc = $rdf.uri.join(xhr.resource.uri, loc)
-                        if (!force && udoc != xhr.resource.uri && sf.requested[udoc]
-                            && sf.requested[udoc] == 'done') { // we have already fetched this in fact.
-                            // should we smush too?
-                            // $rdf.log.info("HTTP headers indicate we have already" + " retrieved " + xhr.resource + " as " + udoc + ". Aborting.")
-                            sf.doneFetch(xhr, args)
-                            xhr.abort()
-                            return
-                        }
-                        sf.requested[udoc] = true
-                    }
-
-                    for (var x = 0; x < sf.handlers.length; x++) {
-                        if (xhr.headers['content-type'] && xhr.headers['content-type'].match(sf.handlers[x].pattern)) {
-                            handler = new sf.handlers[x]();
-                            requestHandlers.append(sf.handlers[x].term) // FYI
-                            break
-                        }
-                    }
-
-                    sf.parseLinkHeader(xhr, thisReq);
-
-                    if (handler) {
-                        try {
-                            handler.handlerFactory(xhr);
-                        } catch(e) { // Try to avoid silent errors
-                            sf.failFetch(xhr, "Exception handling content-type " + xhr.headers['content-type'] + ' was: '+e);
-                        };
-                    } else {
-                        sf.doneFetch(xhr, args); //  Not a problem, we just don't extract data.
-                        /*
-                        // sf.failFetch(xhr, "Unhandled content type: " + xhr.headers['content-type']+
-                        //        ", readyState = "+xhr.readyState);
-                        */
-                        return;
-                    }
-                };
-
-                // DONE: 4
-                // HEADERS_RECEIVED: 2
-                // LOADING: 3
-                // OPENED: 1
-                // UNSENT: 0
-
-                // $rdf.log.debug("web.js: XHR " + xhr.resource.uri + ' readyState='+xhr.readyState); // @@@@ comment me out
-
-                switch (xhr.readyState) {
-                case 0:
-                    var uri = xhr.resource.uri, newURI;
-                    if (this.crossSiteProxyTemplate && (typeof document !== 'undefined') &&document.location) { // In mashup situation
-                        var hostpart = $rdf.uri.hostpart;
-                        var here = '' + document.location;
-                        if (hostpart(here) && hostpart(uri) && hostpart(here) != hostpart(uri)) {
-                            newURI = this.crossSiteProxyTemplate.replace('{uri}', encodeURIComponent(uri));
-                            sf.addStatus(xhr.req, "BLOCKED -> Cross-site Proxy to <" + newURI + ">");
-                            if (xhr.aborted) return;
-
-                            var kb = sf.store;
-                            var oldreq = xhr.req;
-                            kb.add(oldreq, ns.http('redirectedTo'), kb.sym(newURI), oldreq);
-
-
-                            ////////////// Change the request node to a new one:  @@@@@@@@@@@@ Duplicate?
-                            var newreq = xhr.req = kb.bnode() // Make NEW reqest for everything else
-                            kb.add(oldreq, ns.http('redirectedRequest'), newreq, xhr.req);
-
-                            var now = new Date();
-                            var timeNow = "[" + now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds() + "] ";
-                            kb.add(newreq, ns.rdfs("label"), kb.literal(timeNow + ' Request for ' + newURI), this.appNode)
-                            kb.add(newreq, ns.link('status'), kb.collection(), this.appNode);
-                            kb.add(newreq, ns.link("requestedURI"), kb.literal(newURI), this.appNode);
-
-                            var response = kb.bnode();
-                            kb.add(oldreq, ns.link('response'), response);
-                            // kb.add(response, ns.http('status'), kb.literal(xhr.status), response);
-                            // if (xhr.statusText) kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response)
-
-                            xhr.abort()
-                            xhr.aborted = true;
-                            xhr.redirected = true;
-
-                            sf.addStatus(oldreq, 'redirected XHR') // why
-
-                            if (sf.fetchCallbacks[xhr.resource.uri]) {
-                                if (!sf.fetchCallbacks[newURI]) {
-                                    sf.fetchCallbacks[newURI] = [];
-                                }
-                                sf.fetchCallbacks[newURI] == sf.fetchCallbacks[newURI].concat(sf.fetchCallbacks[xhr.resource.uri]);
-                                delete sf.fetchCallbacks[xhr.resource.uri];
-                            }
-
-
-                            sf.fireCallbacks('redirected', args) // Are these args right? @@@
-                            sf.requested[xhr.resource.uri] = 'redirected';
-
-                            var xhr2 = sf.requestURI(newURI, xhr.resource, xhr.options || {} );
-                            if (xhr2 && xhr2.req) kb.add(xhr.req,
-                                kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'),
-                                xhr2.req, sf.appNode);                             return;
-                        }
-                    }
-                    sf.failFetch(xhr, "HTTP Blocked. (ReadyState 0) Cross-site violation for <"+
-                    docuri+">");
-
-                    break;
-
-                case 3:
-                    // Intermediate state -- 3 may OR MAY NOT be called, selon browser.
-                    // handleResponse();   // In general it you can't do it yet as the headers are in but not the data
-                    break
-                case 4:
-                    // Final state for this XHR but may be redirected
-                    handleResponse();
-                    // Now handle
-                    if (xhr.handle && xhr.responseText) {
-                        if (sf.requested[xhr.resource.uri] === 'redirected') {
-                            break;
-                        }
-                        sf.fireCallbacks('load', args)
-                        xhr.handle(function() {
-                            sf.doneFetch(xhr, args)
-                        })
-                    } else {
-                        if (xhr.redirected) {
-                            sf.addStatus(xhr.req, "Aborted and redirected to new request.");
-                        } else {
-                            sf.addStatus(xhr.req, "Fetch over. No data handled. Aborted = " + xhr.aborted);
-                        }
-                        // sf.failFetch(xhr, "HTTP failed unusually. (no handler set) (x-site violation? no net?) for <"+
-                        //    docuri+">");
-                    }
-                    break
-                } // switch
-            };
-        }
-
-
-        // Map the URI to a localhost proxy if we are running on localhost
-        // This is used for working offline, e.g. on planes.
-        // Is the script istelf is running in localhost, then access all data in a localhost mirror.
-        // Do not remove without checking with TimBL
-        var uri2 = docuri;
-        if (typeof tabulator != 'undefined' && tabulator.preferences.get('offlineModeUsingLocalhost')) {
-            if (uri2.slice(0,7) == 'http://'  && uri2.slice(7,17) != 'localhost/') {
-                uri2 = 'http://localhost/' + uri2.slice(7);
-                $rdf.log.warn("Localhost kludge for offline use: actually getting <" + uri2 + ">");
-            } else {
-                // $rdf.log.warn("Localhost kludge NOT USED <" + uri2 + ">");
-            };
-        } else {
-            // $rdf.log.warn("Localhost kludge OFF offline use: actually getting <" + uri2 + ">");
-        }
-        // 2014 probelm:
-        // XMLHttpRequest cannot load http://www.w3.org/People/Berners-Lee/card.
-        // A wildcard '*' cannot be used in the 'Access-Control-Allow-Origin' header when the credentials flag is true.
-        // @ Many ontology files under http: and need CORS wildcard -> can't have withCredentials
-
-        var withCredentials = ( uri2.slice(0,6) === 'https:'); // @@ Kludge -- need for webid which typically is served from https
-        if (options.withCredentials !== undefined) {
-            withCredentials = options.withCredentials;
-        }
-        var actualProxyURI = this.proxyIfNecessary(uri2);
-
-
-        // Setup the request
-        if (typeof jQuery !== 'undefined' && jQuery.ajax) {
-            var xhrFields = { withCredentials: withCredentials};
-            var xhr = jQuery.ajax({
-                url: actualProxyURI,
-                accepts: {'*': 'text/turtle,text/n3,application/rdf+xml'},
-                processData: false,
-                xhrFields: xhrFields,
-                timeout: sf.timeout,
-                headers: force ? { 'cache-control': 'no-cache'} : {},
-                error: function(xhr, s, e) {
-
-                    xhr.req = req;   // Add these in case fails before .ajax returns
-                    xhr.resource = docterm;
-                    xhr.options = options;
-                    xhr.requestedURI = uri2;
-                    xhr.withCredentials = withCredentials; // Somehow gets lost by jq
-
-
-                    if (s == 'timeout')
-                        sf.failFetch(xhr, "requestTimeout");
-                    else
-                        onerrorFactory(xhr)(e);
-                },
-                success: function(d, s, xhr) {
-
-                    xhr.req = req;
-                    xhr.resource = docterm;
-                    xhr.resource = docterm;
-                    xhr.requestedURI = uri2;
-
-                    onreadystatechangeFactory(xhr)();
-                }
-            });
-
-            xhr.req = req;
-            xhr.options = options;
-
-            xhr.resource = docterm;
-            xhr.options = options;
-            xhr.requestedURI = uri2;
-            xhr.actualProxyURI = actualProxyURI;
-
-
-        } else {
-            var xhr = $rdf.Util.XMLHTTPFactory();
-            xhr.onerror = onerrorFactory(xhr);
-            xhr.onreadystatechange = onreadystatechangeFactory(xhr);
-            xhr.timeout = sf.timeout;
-            xhr.withCredentials = withCredentials;
-            xhr.actualProxyURI = actualProxyURI;
-
-            xhr.req = req;
-            xhr.options = options;
-            xhr.options = options;
-            xhr.resource = docterm;
-            xhr.requestedURI = uri2;
-
-            xhr.ontimeout = function () {
-                sf.failFetch(xhr, "requestTimeout");
-            }
-            try {
-                xhr.open('GET', actualProxyURI, this.async);
-            } catch (er) {
-                return this.failFetch(xhr, "XHR open for GET failed for <"+uri2+">:\n\t" + er);
-            }
-            if (force) { // must happen after open
-                xhr.setRequestHeader('Cache-control', 'no-cache');
-            }
-
-        } // if not jQuery
-
-        // Set redirect callback and request headers -- alas Firefox Extension Only
-
-        if (typeof tabulator != 'undefined' && tabulator.isExtension && xhr.channel &&
-            ($rdf.uri.protocol(xhr.resource.uri) == 'http' ||
-             $rdf.uri.protocol(xhr.resource.uri) == 'https')) {
-            try {
-                xhr.channel.notificationCallbacks = {
-                    getInterface: function(iid) {
-                        if (iid.equals(Components.interfaces.nsIChannelEventSink)) {
-                            return {
-
-                                onChannelRedirect: function(oldC, newC, flags) {
-                                    if (xhr.aborted) return;
-                                    var kb = sf.store;
-                                    var newURI = newC.URI.spec;
-                                    var oldreq = xhr.req;
-                                    if (!xhr.options.noMeta) {
-
-                                        sf.addStatus(xhr.req, "Redirected: " + xhr.status + " to <" + newURI + ">");
-                                        kb.add(oldreq, ns.http('redirectedTo'), kb.sym(newURI), xhr.req);
-
-                                    ////////////// Change the request node to a new one:  @@@@@@@@@@@@ Duplicate code?
-                                        var newreq = xhr.req = kb.bnode() // Make NEW reqest for everything else
-                                        kb.add(oldreq, ns.http('redirectedRequest'), newreq, this.appNode);
-
-                                        var now = new Date();
-                                        var timeNow = "[" + now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds() + "] ";
-                                        kb.add(newreq, ns.rdfs("label"), kb.literal(timeNow + ' Request for ' + newURI), this.appNode)
-                                        kb.add(newreq, ns.link('status'), kb.collection(), this.appNode)
-                                        kb.add(newreq, ns.link("requestedURI"), kb.literal(newURI), this.appNode)
-                                        ///////////////
-
-
-                                        //// $rdf.log.info('@@ sources onChannelRedirect'+
-                                        //               "Redirected: "+
-                                        //               xhr.status + " to <" + newURI + ">"); //@@
-                                        var response = kb.bnode();
-                                        // kb.add(response, ns.http('location'), newURI, response); Not on this response
-                                        kb.add(oldreq, ns.link('response'), response);
-                                        kb.add(response, ns.http('status'), kb.literal(xhr.status), response);
-                                        if (xhr.statusText) kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response)
-                                    }
-                                    if (xhr.status - 0 != 303) kb.HTTPRedirects[xhr.resource.uri] = newURI; // same document as
-                                    if (xhr.status - 0 == 301 && rterm) { // 301 Moved
-                                        var badDoc = $rdf.uri.docpart(rterm.uri);
-                                        var msg = 'Warning: ' + xhr.resource + ' has moved to <' + newURI + '>.';
-                                        if (rterm) {
-                                            msg += ' Link in <' + badDoc + ' >should be changed';
-                                            kb.add(badDoc, kb.sym('http://www.w3.org/2007/ont/link#warning'), msg, sf.appNode);
-                                        }
-                                        // dump(msg+"\n");
-                                    }
-                                    xhr.abort()
-                                    xhr.aborted = true
-
-                                    if (sf.fetchCallbacks[xhr.resource.uri]) {
-                                        if (!sf.fetchCallbacks[newURI]) {
-                                            sf.fetchCallbacks[newURI] = [];
-                                        }
-                                        sf.fetchCallbacks[newURI] == sf.fetchCallbacks[newURI].concat(sf.fetchCallbacks[xhr.resource.uri]);
-                                        delete sf.fetchCallbacks[xhr.resource.uri];
-                                    }
-
-                                    sf.addStatus(oldreq, 'redirected') // why
-                                    sf.fireCallbacks('redirected', args) // Are these args right? @@@
-                                    sf.requested[xhr.resource.uri] = 'redirected';
-
-                                    var hash = newURI.indexOf('#');
-                                    if (hash >= 0) {
-                                        var msg = ('Warning: ' + xhr.resource + ' HTTP redirects to' + newURI + ' which should not contain a "#" sign');
-                                        if (!xhr.options.noMeta) {
-                                            kb.add(xhr.resource, kb.sym('http://www.w3.org/2007/ont/link#warning'), msg)
-                                        }
-                                        newURI = newURI.slice(0, hash);
-                                    }
-                                    var xhr2 = sf.requestURI(newURI, xhr.resource);
-                                    if (xhr2 && xhr2.req && !noMeta) kb.add(xhr.req,
-                                        kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'),
-                                        xhr2.req, sf.appNode);
-
-                                    // else dump("No xhr.req available for redirect from "+xhr.resource+" to "+newURI+"\n")
-                                },
-
-                                // See https://developer.mozilla.org/en/XPCOM_Interface_Reference/nsIChannelEventSink
-                                asyncOnChannelRedirect: function(oldC, newC, flags, callback) {
-                                    if (xhr.aborted) return;
-                                    var kb = sf.store;
-                                    var newURI = newC.URI.spec;
-                                    var oldreq = xhr.req;
-                                    sf.addStatus(xhr.req, "Redirected: " + xhr.status + " to <" + newURI + ">");
-                                    kb.add(oldreq, ns.http('redirectedTo'), kb.sym(newURI), xhr.req);
-
-
-
-                                    ////////////// Change the request node to a new one:  @@@@@@@@@@@@ Duplicate?
-                                    var newreq = xhr.req = kb.bnode() // Make NEW reqest for everything else
-                                    // xhr.resource = docterm
-                                    // xhr.requestedURI = args[0]
-                                    // var requestHandlers = kb.collection()
-
-                                    // kb.add(kb.sym(newURI), ns.link("request"), req, this.appNode)
-                                    kb.add(oldreq, ns.http('redirectedRequest'), newreq, xhr.req);
-
-                                    var now = new Date();
-                                    var timeNow = "[" + now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds() + "] ";
-                                    kb.add(newreq, ns.rdfs("label"), kb.literal(timeNow + ' Request for ' + newURI), this.appNode)
-                                    kb.add(newreq, ns.link('status'), kb.collection(), this.appNode)
-                                    kb.add(newreq, ns.link("requestedURI"), kb.literal(newURI), this.appNode)
-                                    ///////////////
-
-
-                                    //// $rdf.log.info('@@ sources onChannelRedirect'+
-                                    //               "Redirected: "+
-                                    //               xhr.status + " to <" + newURI + ">"); //@@
-                                    var response = kb.bnode();
-                                    // kb.add(response, ns.http('location'), newURI, response); Not on this response
-                                    kb.add(oldreq, ns.link('response'), response);
-                                    kb.add(response, ns.http('status'), kb.literal(xhr.status), response);
-                                    if (xhr.statusText) kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response)
-
-                                    if (xhr.status - 0 != 303) kb.HTTPRedirects[xhr.resource.uri] = newURI; // same document as
-                                    if (xhr.status - 0 == 301 && rterm) { // 301 Moved
-                                        var badDoc = $rdf.uri.docpart(rterm.uri);
-                                        var msg = 'Warning: ' + xhr.resource + ' has moved to <' + newURI + '>.';
-                                        if (rterm) {
-                                            msg += ' Link in <' + badDoc + ' >should be changed';
-                                            kb.add(badDoc, kb.sym('http://www.w3.org/2007/ont/link#warning'), msg, sf.appNode);
-                                        }
-                                        // dump(msg+"\n");
-                                    }
-                                    xhr.abort()
-                                    xhr.aborted = true
-
-                                    var hash = newURI.indexOf('#');
-                                    if (hash >= 0) {
-                                        var msg = ('Warning: ' + xhr.resource + ' HTTP redirects to' + newURI + ' which should not contain a "#" sign');
-                                        // dump(msg+"\n");
-                                        kb.add(xhr.resource, kb.sym('http://www.w3.org/2007/ont/link#warning'), msg)
-                                        newURI = newURI.slice(0, hash);
-                                    }
-
-                                    if (sf.fetchCallbacks[xhr.resource.uri]) {
-                                        if (!sf.fetchCallbacks[newURI]) {
-                                            sf.fetchCallbacks[newURI] = [];
-                                        }
-                                        sf.fetchCallbacks[newURI] == sf.fetchCallbacks[newURI].concat(sf.fetchCallbacks[xhr.resource.uri]);
-                                        delete sf.fetchCallbacks[xhr.resource.uri];
-                                    }
-
-                                    sf.requested[xhr.resource.uri] = 'redirected';
-
-                                    var xhr2 = sf.requestURI(newURI, xhr.resource);
-                                    if (xhr2 && xhr2.req) kb.add(xhr.req,
-                                        kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'),
-                                        xhr2.req, sf.appNode);
-
-                                    // else dump("No xhr.req available for redirect from "+xhr.resource+" to "+newURI+"\n")
-                                } // asyncOnChannelRedirect
-                            }
-                        }
-                        return Components.results.NS_NOINTERFACE
-                    }
-                }
-            } catch (err) {
-                 return sf.failFetch(xhr,
-                    "@@ Couldn't set callback for redirects: " + err);
-            } // try
-
-        } // if Firefox extension
-
-        try {
-            var acceptstring = ""
-            for (var type in this.mediatypes) {
-                var attrstring = ""
-                if (acceptstring != "") {
-                    acceptstring += ", "
-                }
-                acceptstring += type
-                for (var attr in this.mediatypes[type]) {
-                    acceptstring += ';' + attr + '=' + this.mediatypes[type][attr]
-                }
-            }
-            xhr.setRequestHeader('Accept', acceptstring)
-
-            //if (requester) { xhr.setRequestHeader('Referer',requester) }
-        } catch (err) {
-            throw ("Can't set Accept header: " + err)
-        }
-
-        // Fire
-
-        if (!useJQuery) {
-            try {
-                xhr.send(null)
-            } catch (er) {
-                return this.failFetch(xhr, "XHR send failed:" + er);
-            }
-            setTimeout(function() {
-                    if (xhr.readyState != 4 && sf.isPending(xhr.resource.uri)) {
-                        sf.failFetch(xhr, "requestTimeout")
-                    }
-                },
-                this.timeout);
-            this.addStatus(xhr.req, "HTTP Request sent.");
-
-        } else {
-            this.addStatus(xhr.req, "HTTP Request sent (using jQuery)");
-        }
-
-        return xhr
-
-    } // this.requestURI()
-
-
-    this.objectRefresh = function(term) {
-        var uris = kb.uris(term) // Get all URIs
-        if (typeof uris != 'undefined') {
-            for (var i = 0; i < uris.length; i++) {
-                this.refresh(this.store.sym($rdf.uri.docpart(uris[i])));
-                //what about rterm?
-            }
-        }
-    }
-
-    // deprecated -- use IndexedFormula.removeDocument(doc)
-    this.unload = function(term) {
-        this.store.removeMany(undefined, undefined, undefined, term)
-        delete this.requested[term.uri]; // So it can be loaded again
-    }
-
-    this.refresh = function(term, userCallback) { // sources_refresh
-        this.fireCallbacks('refresh', arguments)
-        this.requestURI(term.uri, undefined, { force: true, clearPreviousData: true}, userCallback)
-    }
-
-    this.retract = function(term) { // sources_retract
-        this.store.removeMany(undefined, undefined, undefined, term)
-        if (term.uri) {
-            delete this.requested[$rdf.uri.docpart(term.uri)]
-        }
-        this.fireCallbacks('retract', arguments)
-    }
-
-    this.getState = function(docuri) {
-        if (typeof this.requested[docuri] == "undefined") {
-            return "unrequested"
-        } else if (this.requested[docuri] === true) {
-            return "requested"
-        } else if (this.requested[docuri] === 'done') {
-            return "fetched"
-        } else  { // An non-200 HTTP error status
-            return "failed"
-        }
-    }
-
-    //doing anyStatementMatching is wasting time
-    this.isPending = function(docuri) { // sources_pending
-        //if it's not pending: false -> flailed 'done' -> done 'redirected' -> redirected
-        return this.requested[docuri] === true;
-    }
-
-    // var updatesVia = new $rdf.UpdatesVia(this); // Subscribe to headers
-
-    // @@@@@@@@ This is turned off because it causes a websocket to be set up for ANY fetch
-    // whether we want to track it ot not. including ontologies loaed though the XSSproxy
-
-}; // End of fetcher
-
-$rdf.fetcher = function(store, timeout, async) { return new $rdf.Fetcher(store, timeout, async) };
-
-// Parse a string and put the result into the graph kb
-$rdf.parse = function parse(str, kb, base, contentType, callback) {
-    try {
-        if (contentType == 'text/n3' || contentType == 'text/turtle') {
-            var p = $rdf.N3Parser(kb, kb, base, base, null, null, "", null)
-            p.loadBuf(str)
-            executeCallback();
-        } else if (contentType == 'application/rdf+xml') {
-            var parser = new $rdf.RDFParser(kb);
-            parser.parse($rdf.Util.parseXML(str), base, kb.sym(base));
-            executeCallback();
-        } else if (contentType == 'application/rdfa') {  // @@ not really a valid mime type
-            $rdf.parseDOM_RDFa($rdf.Util.parseXML(str), kb, base);
-            executeCallback();
-        } else if (contentType == 'application/sparql-update') {  // @@ we handle a subset
-            spaqlUpdateParser(store, str, base)
-            executeCallback();
-        } else if (contentType == 'application/ld+json' ||
-            contentType == 'application/nquads' ||
-            contentType == 'application/n-quads') {
-            var n3Parser = N3.Parser();
-            var N3Util = N3.Util;
-            var triples = []
-            var prefixes = {};
-            if (contentType == 'application/ld+json') {
-                var jsonDocument;
-                try {
-                    jsonDocument = JSON.parse(str);
-                    setJsonLdBase(jsonDocument, base);
-                } catch(parseErr) {
-                    callback(err, null);
-                }
-                jsonld.toRDF(jsonDocument,
-                    {format: 'application/nquads'},
-                    nquadCallback);
-            } else {
-                nquadCallback(null, str);
-            }
-        } else {
-            throw "Don't know how to parse "+contentType+" yet";
-        }
-    } catch(e) {
-        executeErrorCallback(e);
-    }
-
-    function executeCallback() {
-        if (callback) {
-            callback(null, kb);
-        } else {
-            return;
-        }
-    }
-
-    function executeErrorCallback(e) {
-        if(contentType != 'application/ld+json' ||
-           contentType != 'application/nquads' ||
-           contentType != 'application/n-quads') {
-            if (callback) {
-                callback(e, kb);
-            } else {
-                throw "Error trying to parse <"+base+"> as " +
-                    contentType+":\n"+e +':\n'+e.stack;
-            }
-        }
-    }
-
-    function setJsonLdBase(doc, base) {
-        if (doc instanceof Array) {
-            return;
-        }
-        if (!('@context' in doc)) {
-            doc['@context'] = {};
-        }
-        doc['@context']['@base'] = base;
-    }
-
-    function nquadCallback(err, nquads) {
-        if (err) {
-            callback(err, kb);
-        }
-        try {
-            n3Parser.parse(nquads, tripleCallback);
-        } catch (err) {
-            callback(err, kb);
-        }
-    }
-
-    function tripleCallback(err, triple, prefixes) {
-        if (err) {
-            callback(err, kb);
-        }
-        if (triple) {
-            triples.push(triple);
-        } else {
-            for (var i = 0; i < triples.length; i++) {
-                addTriple(kb, triples[i]);
-            }
-            callback(null, kb);
-        }
-    }
-
-    function addTriple(kb, triple) {
-        var subject = createTerm(triple.subject);
-        var predicate = createTerm(triple.predicate);
-        var object = createTerm(triple.object);
-        var why = null;
-        if (triple.graph) {
-            why = createTerm(triple.graph);
-        }
-        kb.add(subject, predicate, object, why);
-    }
-
-    function createTerm(termString) {
-        if (N3Util.isLiteral(termString)) {
-            var value = N3Util.getLiteralValue(termString);
-            var language = N3Util.getLiteralLanguage(termString);
-            var datatype = new $rdf.Symbol(N3Util.getLiteralType(termString));
-            return new $rdf.Literal(value, language, datatype);
-        } else if (N3Util.isIRI(termString)) {
-            return new $rdf.Symbol(termString);
-        } else if (N3Util.isBlank(termString)) {
-            var value = termString.substring(2, termString.length);
-            return new $rdf.BlankNode(value);
-        } else {
-            return null;
-        }
-    }
-}; // $rdf.parse()
-
-
-//   Serialize to the appropriate format
-//
-// Either
-//
-// @@ Currently NQuads and JSON/LD are deal with extrelemently inefficiently
-// through mutiple conversions.
-//
-$rdf.serialize = function(target, kb, base, contentType, callback) {
-    var documentString = null;
-    try {
-        var sz = $rdf.Serializer(kb);
-        var newSts = kb.statementsMatching(undefined, undefined, undefined, target);
-        var n3String;
-        sz.suggestNamespaces(kb.namespaces);
-        sz.setBase(base);
-        switch(contentType){
-        case 'application/rdf+xml':
-            documentString = sz.statementsToXML(newSts);
-            return executeCallback(null, documentString);
-            break;
-        case 'text/n3':
-        case 'text/turtle':
-        case 'application/x-turtle': // Legacy
-        case 'application/n3': // Legacy
-            documentString = sz.statementsToN3(newSts);
-            return executeCallback(null, documentString);
-        case 'application/ld+json':
-            n3String = sz.statementsToN3(newSts);
-            $rdf.convert.convertToJson(n3String, callback);
-            break;
-        case 'application/n-quads':
-        case 'application/nquads': // @@@ just outpout the quads? Does not work for collections
-            n3String = sz.statementsToN3(newSts);
-            documentString = $rdf.convert.convertToNQuads(n3String, callback);
-            break;
-        default:
-            throw "Serialize: Content-type "+ contentType +" not supported for data write.";
-        }
-    } catch(err) {
-        if (callback) {
-            return (err);
-        }
-        throw err; // Don't hide problems from caller in sync mode
-    }
-
-    function executeCallback(err, result) {
-        if(callback) {
-            callback(err, result);
-            return;
-        } else {
-            return result;
-        }
-    }
-};
-
-////////////////// JSON-LD code currently requires Node
-//
-//  Beware of bloat of the library! timbl
-//
-
-
-if (typeof $rdf.convert == 'undefined') $rdf.convert = {};
-
-$rdf.convert.convertToJson = function(n3String, jsonCallback) {
-    var jsonString = undefined;
-    var n3Parser = N3.Parser();
-    var n3Writer = N3.Writer({
-            format: 'N-Quads'
-    });
-    asyncLib.waterfall([
-            function(callback) {
-                n3Parser.parse(n3String, callback);
-            },
-            function(triple, prefix, callback) {
-                if (triple !== null) {
-                    n3Writer.addTriple(triple);
-                }
-                if (typeof callback === 'function') {
-                    n3Writer.end(callback);
-                }
-            },
-            function(result, callback) {
-                try {
-                    jsonld.fromRDF(result, {
-                            format: 'application/nquads'
-                    }, callback);
-                } catch (err) {
-                    callback(err);
-                }
-            },
-            function(json, callback) {
-                jsonString = JSON.stringify(json);
-                jsonCallback(null, jsonString);
-            }
-        ], function(err, result) {
-            jsonCallback(err, jsonString);
-        }
-    );
-};
-
-$rdf.convert.convertToNQuads = function(n3String, nquadCallback) {
-    var nquadString = undefined;
-    var n3Parser = N3.Parser();
-    var n3Writer = N3.Writer({
-        format: 'N-Quads'
-    });
-    asyncLib.waterfall([
-            function(callback) {
-                n3Parser.parse(n3String, callback);
-            },
-            function(triple, prefix, callback) {
-                if (triple !== null) {
-                    n3Writer.addTriple(triple);
-                }
-                if (typeof callback === 'function') {
-                    n3Writer.end(callback);
-                }
-            },
-            function(result, callback) {
-                nquadString = result;
-                nquadCallback(null, nquadString);
-            },
-        ], function(err, result) {
-            nquadCallback(err, nquadString);
-            }
-    );
-};
-
-
-// ends
-
-},{"async":1,"jsonld":3,"n3":6}],15:[function(require,module,exports){
-
-},{}],16:[function(require,module,exports){
-/*!
- * The buffer module from node.js, for the browser.
- *
- * @author   Feross Aboukhadijeh <feross@feross.org> <http://feross.org>
- * @license  MIT
- */
-
-var base64 = require('base64-js')
-var ieee754 = require('ieee754')
-
-exports.Buffer = Buffer
-exports.SlowBuffer = Buffer
-exports.INSPECT_MAX_BYTES = 50
-Buffer.poolSize = 8192
-
-/**
- * If `TYPED_ARRAY_SUPPORT`:
- *   === true    Use Uint8Array implementation (fastest)
- *   === false   Use Object implementation (most compatible, even IE6)
- *
- * Browsers that support typed arrays are IE 10+, Firefox 4+, Chrome 7+, Safari 5.1+,
- * Opera 11.6+, iOS 4.2+.
- *
- * Note:
- *
- * - Implementation must support adding new properties to `Uint8Array` instances.
- *   Firefox 4-29 lacked support, fixed in Firefox 30+.
- *   See: https://bugzilla.mozilla.org/show_bug.cgi?id=695438.
- *
- *  - Chrome 9-10 is missing the `TypedArray.prototype.subarray` function.
- *
- *  - IE10 has a broken `TypedArray.prototype.subarray` function which returns arrays of
- *    incorrect length in some situations.
- *
- * We detect these buggy browsers and set `TYPED_ARRAY_SUPPORT` to `false` so they will
- * get the Object implementation, which is slower but will work correctly.
- */
-var TYPED_ARRAY_SUPPORT = (function () {
-  try {
-    var buf = new ArrayBuffer(0)
-    var arr = new Uint8Array(buf)
-    arr.foo = function () { return 42 }
-    return 42 === arr.foo() && // typed array instances can be augmented
-        typeof arr.subarray === 'function' && // chrome 9-10 lack `subarray`
-        new Uint8Array(1).subarray(1, 1).byteLength === 0 // ie10 has broken `subarray`
-  } catch (e) {
-    return false
-  }
-})()
-
-/**
- * Class: Buffer
- * =============
- *
- * The Buffer constructor returns instances of `Uint8Array` that are augmented
- * with function properties for all the node `Buffer` API functions. We use
- * `Uint8Array` so that square bracket notation works as expected -- it returns
- * a single octet.
- *
- * By augmenting the instances, we can avoid modifying the `Uint8Array`
- * prototype.
- */
-function Buffer (subject, encoding, noZero) {
-  if (!(this instanceof Buffer))
-    return new Buffer(subject, encoding, noZero)
-
-  var type = typeof subject
-
-  // Find the length
-  var length
-  if (type === 'number')
-    length = subject > 0 ? subject >>> 0 : 0
-  else if (type === 'string') {
-    if (encoding === 'base64')
-      subject = base64clean(subject)
-    length = Buffer.byteLength(subject, encoding)
-  } else if (type === 'object' && subject !== null) { // assume object is array-like
-    if (subject.type === 'Buffer' && isArray(subject.data))
-      subject = subject.data
-    length = +subject.length > 0 ? Math.floor(+subject.length) : 0
-  } else
-    throw new Error('First argument needs to be a number, array or string.')
-
-  var buf
-  if (TYPED_ARRAY_SUPPORT) {
-    // Preferred: Return an augmented `Uint8Array` instance for best performance
-    buf = Buffer._augment(new Uint8Array(length))
-  } else {
-    // Fallback: Return THIS instance of Buffer (created by `new`)
-    buf = this
-    buf.length = length
-    buf._isBuffer = true
-  }
-
-  var i
-  if (TYPED_ARRAY_SUPPORT && typeof subject.byteLength === 'number') {
-    // Speed optimization -- use set if we're copying from a typed array
-    buf._set(subject)
-  } else if (isArrayish(subject)) {
-    // Treat array-ish objects as a byte array
-    if (Buffer.isBuffer(subject)) {
-      for (i = 0; i < length; i++)
-        buf[i] = subject.readUInt8(i)
-    } else {
-      for (i = 0; i < length; i++)
-        buf[i] = ((subject[i] % 256) + 256) % 256
-    }
-  } else if (type === 'string') {
-    buf.write(subject, 0, encoding)
-  } else if (type === 'number' && !TYPED_ARRAY_SUPPORT && !noZero) {
-    for (i = 0; i < length; i++) {
-      buf[i] = 0
-    }
-  }
-
-  return buf
-}
-
-// STATIC METHODS
-// ==============
-
-Buffer.isEncoding = function (encoding) {
-  switch (String(encoding).toLowerCase()) {
-    case 'hex':
-    case 'utf8':
-    case 'utf-8':
-    case 'ascii':
-    case 'binary':
-    case 'base64':
-    case 'raw':
-    case 'ucs2':
-    case 'ucs-2':
-    case 'utf16le':
-    case 'utf-16le':
-      return true
-    default:
-      return false
-  }
-}
-
-Buffer.isBuffer = function (b) {
-  return !!(b != null && b._isBuffer)
-}
-
-Buffer.byteLength = function (str, encoding) {
-  var ret
-  str = str.toString()
-  switch (encoding || 'utf8') {
-    case 'hex':
-      ret = str.length / 2
-      break
-    case 'utf8':
-    case 'utf-8':
-      ret = utf8ToBytes(str).length
-      break
-    case 'ascii':
-    case 'binary':
-    case 'raw':
-      ret = str.length
-      break
-    case 'base64':
-      ret = base64ToBytes(str).length
-      break
-    case 'ucs2':
-    case 'ucs-2':
-    case 'utf16le':
-    case 'utf-16le':
-      ret = str.length * 2
-      break
-    default:
-      throw new Error('Unknown encoding')
-  }
-  return ret
-}
-
-Buffer.concat = function (list, totalLength) {
-  assert(isArray(list), 'Usage: Buffer.concat(list[, length])')
-
-  if (list.length === 0) {
-    return new Buffer(0)
-  } else if (list.length === 1) {
-    return list[0]
-  }
-
-  var i
-  if (totalLength === undefined) {
-    totalLength = 0
-    for (i = 0; i < list.length; i++) {
-      totalLength += list[i].length
-    }
-  }
-
-  var buf = new Buffer(totalLength)
-  var pos = 0
-  for (i = 0; i < list.length; i++) {
-    var item = list[i]
-    item.copy(buf, pos)
-    pos += item.length
-  }
-  return buf
-}
-
-Buffer.compare = function (a, b) {
-  assert(Buffer.isBuffer(a) && Buffer.isBuffer(b), 'Arguments must be Buffers')
-  var x = a.length
-  var y = b.length
-  for (var i = 0, len = Math.min(x, y); i < len && a[i] === b[i]; i++) {}
-  if (i !== len) {
-    x = a[i]
-    y = b[i]
-  }
-  if (x < y) {
-    return -1
-  }
-  if (y < x) {
-    return 1
-  }
-  return 0
-}
-
-// BUFFER INSTANCE METHODS
-// =======================
-
-function hexWrite (buf, string, offset, length) {
-  offset = Number(offset) || 0
-  var remaining = buf.length - offset
-  if (!length) {
-    length = remaining
-  } else {
-    length = Number(length)
-    if (length > remaining) {
-      length = remaining
-    }
-  }
-
-  // must be an even number of digits
-  var strLen = string.length
-  assert(strLen % 2 === 0, 'Invalid hex string')
-
-  if (length > strLen / 2) {
-    length = strLen / 2
-  }
-  for (var i = 0; i < length; i++) {
-    var byte = parseInt(string.substr(i * 2, 2), 16)
-    assert(!isNaN(byte), 'Invalid hex string')
-    buf[offset + i] = byte
-  }
-  return i
-}
-
-function utf8Write (buf, string, offset, length) {
-  var charsWritten = blitBuffer(utf8ToBytes(string), buf, offset, length)
-  return charsWritten
-}
-
-function asciiWrite (buf, string, offset, length) {
-  var charsWritten = blitBuffer(asciiToBytes(string), buf, offset, length)
-  return charsWritten
-}
-
-function binaryWrite (buf, string, offset, length) {
-  return asciiWrite(buf, string, offset, length)
-}
-
-function base64Write (buf, string, offset, length) {
-  var charsWritten = blitBuffer(base64ToBytes(string), buf, offset, length)
-  return charsWritten
-}
-
-function utf16leWrite (buf, string, offset, length) {
-  var charsWritten = blitBuffer(utf16leToBytes(string), buf, offset, length)
-  return charsWritten
-}
-
-Buffer.prototype.write = function (string, offset, length, encoding) {
-  // Support both (string, offset, length, encoding)
-  // and the legacy (string, encoding, offset, length)
-  if (isFinite(offset)) {
-    if (!isFinite(length)) {
-      encoding = length
-      length = undefined
-    }
-  } else {  // legacy
-    var swap = encoding
-    encoding = offset
-    offset = length
-    length = swap
-  }
-
-  offset = Number(offset) || 0
-  var remaining = this.length - offset
-  if (!length) {
-    length = remaining
-  } else {
-    length = Number(length)
-    if (length > remaining) {
-      length = remaining
-    }
-  }
-  encoding = String(encoding || 'utf8').toLowerCase()
-
-  var ret
-  switch (encoding) {
-    case 'hex':
-      ret = hexWrite(this, string, offset, length)
-      break
-    case 'utf8':
-    case 'utf-8':
-      ret = utf8Write(this, string, offset, length)
-      break
-    case 'ascii':
-      ret = asciiWrite(this, string, offset, length)
-      break
-    case 'binary':
-      ret = binaryWrite(this, string, offset, length)
-      break
-    case 'base64':
-      ret = base64Write(this, string, offset, length)
-      break
-    case 'ucs2':
-    case 'ucs-2':
-    case 'utf16le':
-    case 'utf-16le':
-      ret = utf16leWrite(this, string, offset, length)
-      break
-    default:
-      throw new Error('Unknown encoding')
-  }
-  return ret
-}
-
-Buffer.prototype.toString = function (encoding, start, end) {
-  var self = this
-
-  encoding = String(encoding || 'utf8').toLowerCase()
-  start = Number(start) || 0
-  end = (end === undefined) ? self.length : Number(end)
-
-  // Fastpath empty strings
-  if (end === start)
-    return ''
-
-  var ret
-  switch (encoding) {
-    case 'hex':
-      ret = hexSlice(self, start, end)
-      break
-    case 'utf8':
-    case 'utf-8':
-      ret = utf8Slice(self, start, end)
-      break
-    case 'ascii':
-      ret = asciiSlice(self, start, end)
-      break
-    case 'binary':
-      ret = binarySlice(self, start, end)
-      break
-    case 'base64':
-      ret = base64Slice(self, start, end)
-      break
-    case 'ucs2':
-    case 'ucs-2':
-    case 'utf16le':
-    case 'utf-16le':
-      ret = utf16leSlice(self, start, end)
-      break
-    default:
-      throw new Error('Unknown encoding')
-  }
-  return ret
-}
-
-Buffer.prototype.toJSON = function () {
-  return {
-    type: 'Buffer',
-    data: Array.prototype.slice.call(this._arr || this, 0)
-  }
-}
-
-Buffer.prototype.equals = function (b) {
-  assert(Buffer.isBuffer(b), 'Argument must be a Buffer')
-  return Buffer.compare(this, b) === 0
-}
-
-Buffer.prototype.compare = function (b) {
-  assert(Buffer.isBuffer(b), 'Argument must be a Buffer')
-  return Buffer.compare(this, b)
-}
-
-// copy(targetBuffer, targetStart=0, sourceStart=0, sourceEnd=buffer.length)
-Buffer.prototype.copy = function (target, target_start, start, end) {
-  var source = this
-
-  if (!start) start = 0
-  if (!end && end !== 0) end = this.length
-  if (!target_start) target_start = 0
-
-  // Copy 0 bytes; we're done
-  if (end === start) return
-  if (target.length === 0 || source.length === 0) return
-
-  // Fatal error conditions
-  assert(end >= start, 'sourceEnd < sourceStart')
-  assert(target_start >= 0 && target_start < target.length,
-      'targetStart out of bounds')
-  assert(start >= 0 && start < source.length, 'sourceStart out of bounds')
-  assert(end >= 0 && end <= source.length, 'sourceEnd out of bounds')
-
-  // Are we oob?
-  if (end > this.length)
-    end = this.length
-  if (target.length - target_start < end - start)
-    end = target.length - target_start + start
-
-  var len = end - start
-
-  if (len < 100 || !TYPED_ARRAY_SUPPORT) {
-    for (var i = 0; i < len; i++) {
-      target[i + target_start] = this[i + start]
-    }
-  } else {
-    target._set(this.subarray(start, start + len), target_start)
-  }
-}
-
-function base64Slice (buf, start, end) {
-  if (start === 0 && end === buf.length) {
-    return base64.fromByteArray(buf)
-  } else {
-    return base64.fromByteArray(buf.slice(start, end))
-  }
-}
-
-function utf8Slice (buf, start, end) {
-  var res = ''
-  var tmp = ''
-  end = Math.min(buf.length, end)
-
-  for (var i = start; i < end; i++) {
-    if (buf[i] <= 0x7F) {
-      res += decodeUtf8Char(tmp) + String.fromCharCode(buf[i])
-      tmp = ''
-    } else {
-      tmp += '%' + buf[i].toString(16)
-    }
-  }
-
-  return res + decodeUtf8Char(tmp)
-}
-
-function asciiSlice (buf, start, end) {
-  var ret = ''
-  end = Math.min(buf.length, end)
-
-  for (var i = start; i < end; i++) {
-    ret += String.fromCharCode(buf[i])
-  }
-  return ret
-}
-
-function binarySlice (buf, start, end) {
-  return asciiSlice(buf, start, end)
-}
-
-function hexSlice (buf, start, end) {
-  var len = buf.length
-
-  if (!start || start < 0) start = 0
-  if (!end || end < 0 || end > len) end = len
-
-  var out = ''
-  for (var i = start; i < end; i++) {
-    out += toHex(buf[i])
-  }
-  return out
-}
-
-function utf16leSlice (buf, start, end) {
-  var bytes = buf.slice(start, end)
-  var res = ''
-  for (var i = 0; i < bytes.length; i += 2) {
-    res += String.fromCharCode(bytes[i] + bytes[i + 1] * 256)
-  }
-  return res
-}
-
-Buffer.prototype.slice = function (start, end) {
-  var len = this.length
-  start = ~~start
-  end = end === undefined ? len : ~~end
-
-  if (start < 0) {
-    start += len;
-    if (start < 0)
-      start = 0
-  } else if (start > len) {
-    start = len
-  }
-
-  if (end < 0) {
-    end += len
-    if (end < 0)
-      end = 0
-  } else if (end > len) {
-    end = len
-  }
-
-  if (end < start)
-    end = start
-
-  if (TYPED_ARRAY_SUPPORT) {
-    return Buffer._augment(this.subarray(start, end))
-  } else {
-    var sliceLen = end - start
-    var newBuf = new Buffer(sliceLen, undefined, true)
-    for (var i = 0; i < sliceLen; i++) {
-      newBuf[i] = this[i + start]
-    }
-    return newBuf
-  }
-}
-
-// `get` will be removed in Node 0.13+
-Buffer.prototype.get = function (offset) {
-  console.log('.get() is deprecated. Access using array indexes instead.')
-  return this.readUInt8(offset)
-}
-
-// `set` will be removed in Node 0.13+
-Buffer.prototype.set = function (v, offset) {
-  console.log('.set() is deprecated. Access using array indexes instead.')
-  return this.writeUInt8(v, offset)
-}
-
-Buffer.prototype.readUInt8 = function (offset, noAssert) {
-  if (!noAssert) {
-    assert(offset !== undefined && offset !== null, 'missing offset')
-    assert(offset < this.length, 'Trying to read beyond buffer length')
-  }
-
-  if (offset >= this.length)
-    return
-
-  return this[offset]
-}
-
-function readUInt16 (buf, offset, littleEndian, noAssert) {
-  if (!noAssert) {
-    assert(typeof littleEndian === 'boolean', 'missing or invalid endian')
-    assert(offset !== undefined && offset !== null, 'missing offset')
-    assert(offset + 1 < buf.length, 'Trying to read beyond buffer length')
-  }
-
-  var len = buf.length
-  if (offset >= len)
-    return
-
-  var val
-  if (littleEndian) {
-    val = buf[offset]
-    if (offset + 1 < len)
-      val |= buf[offset + 1] << 8
-  } else {
-    val = buf[offset] << 8
-    if (offset + 1 < len)
-      val |= buf[offset + 1]
-  }
-  return val
-}
-
-Buffer.prototype.readUInt16LE = function (offset, noAssert) {
-  return readUInt16(this, offset, true, noAssert)
-}
-
-Buffer.prototype.readUInt16BE = function (offset, noAssert) {
-  return readUInt16(this, offset, false, noAssert)
-}
-
-function readUInt32 (buf, offset, littleEndian, noAssert) {
-  if (!noAssert) {
-    assert(typeof littleEndian === 'boolean', 'missing or invalid endian')
-    assert(offset !== undefined && offset !== null, 'missing offset')
-    assert(offset + 3 < buf.length, 'Trying to read beyond buffer length')
-  }
-
-  var len = buf.length
-  if (offset >= len)
-    return
-
-  var val
-  if (littleEndian) {
-    if (offset + 2 < len)
-      val = buf[offset + 2] << 16
-    if (offset + 1 < len)
-      val |= buf[offset + 1] << 8
-    val |= buf[offset]
-    if (offset + 3 < len)
-      val = val + (buf[offset + 3] << 24 >>> 0)
-  } else {
-    if (offset + 1 < len)
-      val = buf[offset + 1] << 16
-    if (offset + 2 < len)
-      val |= buf[offset + 2] << 8
-    if (offset + 3 < len)
-      val |= buf[offset + 3]
-    val = val + (buf[offset] << 24 >>> 0)
-  }
-  return val
-}
-
-Buffer.prototype.readUInt32LE = function (offset, noAssert) {
-  return readUInt32(this, offset, true, noAssert)
-}
-
-Buffer.prototype.readUInt32BE = function (offset, noAssert) {
-  return readUInt32(this, offset, false, noAssert)
-}
-
-Buffer.prototype.readInt8 = function (offset, noAssert) {
-  if (!noAssert) {
-    assert(offset !== undefined && offset !== null,
-        'missing offset')
-    assert(offset < this.length, 'Trying to read beyond buffer length')
-  }
-
-  if (offset >= this.length)
-    return
-
-  var neg = this[offset] & 0x80
-  if (neg)
-    return (0xff - this[offset] + 1) * -1
-  else
-    return this[offset]
-}
-
-function readInt16 (buf, offset, littleEndian, noAssert) {
-  if (!noAssert) {
-    assert(typeof littleEndian === 'boolean', 'missing or invalid endian')
-    assert(offset !== undefined && offset !== null, 'missing offset')
-    assert(offset + 1 < buf.length, 'Trying to read beyond buffer length')
-  }
-
-  var len = buf.length
-  if (offset >= len)
-    return
-
-  var val = readUInt16(buf, offset, littleEndian, true)
-  var neg = val & 0x8000
-  if (neg)
-    return (0xffff - val + 1) * -1
-  else
-    return val
-}
-
-Buffer.prototype.readInt16LE = function (offset, noAssert) {
-  return readInt16(this, offset, true, noAssert)
-}
-
-Buffer.prototype.readInt16BE = function (offset, noAssert) {
-  return readInt16(this, offset, false, noAssert)
-}
-
-function readInt32 (buf, offset, littleEndian, noAssert) {
-  if (!noAssert) {
-    assert(typeof littleEndian === 'boolean', 'missing or invalid endian')
-    assert(offset !== undefined && offset !== null, 'missing offset')
-    assert(offset + 3 < buf.length, 'Trying to read beyond buffer length')
-  }
-
-  var len = buf.length
-  if (offset >= len)
-    return
-
-  var val = readUInt32(buf, offset, littleEndian, true)
-  var neg = val & 0x80000000
-  if (neg)
-    return (0xffffffff - val + 1) * -1
-  else
-    return val
-}
-
-Buffer.prototype.readInt32LE = function (offset, noAssert) {
-  return readInt32(this, offset, true, noAssert)
-}
-
-Buffer.prototype.readInt32BE = function (offset, noAssert) {
-  return readInt32(this, offset, false, noAssert)
-}
-
-function readFloat (buf, offset, littleEndian, noAssert) {
-  if (!noAssert) {
-    assert(typeof littleEndian === 'boolean', 'missing or invalid endian')
-    assert(offset + 3 < buf.length, 'Trying to read beyond buffer length')
-  }
-
-  return ieee754.read(buf, offset, littleEndian, 23, 4)
-}
-
-Buffer.prototype.readFloatLE = function (offset, noAssert) {
-  return readFloat(this, offset, true, noAssert)
-}
-
-Buffer.prototype.readFloatBE = function (offset, noAssert) {
-  return readFloat(this, offset, false, noAssert)
-}
-
-function readDouble (buf, offset, littleEndian, noAssert) {
-  if (!noAssert) {
-    assert(typeof littleEndian === 'boolean', 'missing or invalid endian')
-    assert(offset + 7 < buf.length, 'Trying to read beyond buffer length')
-  }
-
-  return ieee754.read(buf, offset, littleEndian, 52, 8)
-}
-
-Buffer.prototype.readDoubleLE = function (offset, noAssert) {
-  return readDouble(this, offset, true, noAssert)
-}
-
-Buffer.prototype.readDoubleBE = function (offset, noAssert) {
-  return readDouble(this, offset, false, noAssert)
-}
-
-Buffer.prototype.writeUInt8 = function (value, offset, noAssert) {
-  if (!noAssert) {
-    assert(value !== undefined && value !== null, 'missing value')
-    assert(offset !== undefined && offset !== null, 'missing offset')
-    assert(offset < this.length, 'trying to write beyond buffer length')
-    verifuint(value, 0xff)
-  }
-
-  if (offset >= this.length) return
-
-  this[offset] = value
-  return offset + 1
-}
-
-function writeUInt16 (buf, value, offset, littleEndian, noAssert) {
-  if (!noAssert) {
-    assert(value !== undefined && value !== null, 'missing value')
-    assert(typeof littleEndian === 'boolean', 'missing or invalid endian')
-    assert(offset !== undefined && offset !== null, 'missing offset')
-    assert(offset + 1 < buf.length, 'trying to write beyond buffer length')
-    verifuint(value, 0xffff)
-  }
-
-  var len = buf.length
-  if (offset >= len)
-    return
-
-  for (var i = 0, j = Math.min(len - offset, 2); i < j; i++) {
-    buf[offset + i] =
-        (value & (0xff << (8 * (littleEndian ? i : 1 - i)))) >>>
-            (littleEndian ? i : 1 - i) * 8
-  }
-  return offset + 2
-}
-
-Buffer.prototype.writeUInt16LE = function (value, offset, noAssert) {
-  return writeUInt16(this, value, offset, true, noAssert)
-}
-
-Buffer.prototype.writeUInt16BE = function (value, offset, noAssert) {
-  return writeUInt16(this, value, offset, false, noAssert)
-}
-
-function writeUInt32 (buf, value, offset, littleEndian, noAssert) {
-  if (!noAssert) {
-    assert(value !== undefined && value !== null, 'missing value')
-    assert(typeof littleEndian === 'boolean', 'missing or invalid endian')
-    assert(offset !== undefined && offset !== null, 'missing offset')
-    assert(offset + 3 < buf.length, 'trying to write beyond buffer length')
-    verifuint(value, 0xffffffff)
-  }
-
-  var len = buf.length
-  if (offset >= len)
-    return
-
-  for (var i = 0, j = Math.min(len - offset, 4); i < j; i++) {
-    buf[offset + i] =
-        (value >>> (littleEndian ? i : 3 - i) * 8) & 0xff
-  }
-  return offset + 4
-}
-
-Buffer.prototype.writeUInt32LE = function (value, offset, noAssert) {
-  return writeUInt32(this, value, offset, true, noAssert)
-}
-
-Buffer.prototype.writeUInt32BE = function (value, offset, noAssert) {
-  return writeUInt32(this, value, offset, false, noAssert)
-}
-
-Buffer.prototype.writeInt8 = function (value, offset, noAssert) {
-  if (!noAssert) {
-    assert(value !== undefined && value !== null, 'missing value')
-    assert(offset !== undefined && offset !== null, 'missing offset')
-    assert(offset < this.length, 'Trying to write beyond buffer length')
-    verifsint(value, 0x7f, -0x80)
-  }
-
-  if (offset >= this.length)
-    return
-
-  if (value >= 0)
-    this.writeUInt8(value, offset, noAssert)
-  else
-    this.writeUInt8(0xff + value + 1, offset, noAssert)
-  return offset + 1
-}
-
-function writeInt16 (buf, value, offset, littleEndian, noAssert) {
-  if (!noAssert) {
-    assert(value !== undefined && value !== null, 'missing value')
-    assert(typeof littleEndian === 'boolean', 'missing or invalid endian')
-    assert(offset !== undefined && offset !== null, 'missing offset')
-    assert(offset + 1 < buf.length, 'Trying to write beyond buffer length')
-    verifsint(value, 0x7fff, -0x8000)
-  }
-
-  var len = buf.length
-  if (offset >= len)
-    return
-
-  if (value >= 0)
-    writeUInt16(buf, value, offset, littleEndian, noAssert)
-  else
-    writeUInt16(buf, 0xffff + value + 1, offset, littleEndian, noAssert)
-  return offset + 2
-}
-
-Buffer.prototype.writeInt16LE = function (value, offset, noAssert) {
-  return writeInt16(this, value, offset, true, noAssert)
-}
-
-Buffer.prototype.writeInt16BE = function (value, offset, noAssert) {
-  return writeInt16(this, value, offset, false, noAssert)
-}
-
-function writeInt32 (buf, value, offset, littleEndian, noAssert) {
-  if (!noAssert) {
-    assert(value !== undefined && value !== null, 'missing value')
-    assert(typeof littleEndian === 'boolean', 'missing or invalid endian')
-    assert(offset !== undefined && offset !== null, 'missing offset')
-    assert(offset + 3 < buf.length, 'Trying to write beyond buffer length')
-    verifsint(value, 0x7fffffff, -0x80000000)
-  }
-
-  var len = buf.length
-  if (offset >= len)
-    return
-
-  if (value >= 0)
-    writeUInt32(buf, value, offset, littleEndian, noAssert)
-  else
-    writeUInt32(buf, 0xffffffff + value + 1, offset, littleEndian, noAssert)
-  return offset + 4
-}
-
-Buffer.prototype.writeInt32LE = function (value, offset, noAssert) {
-  return writeInt32(this, value, offset, true, noAssert)
-}
-
-Buffer.prototype.writeInt32BE = function (value, offset, noAssert) {
-  return writeInt32(this, value, offset, false, noAssert)
-}
-
-function writeFloat (buf, value, offset, littleEndian, noAssert) {
-  if (!noAssert) {
-    assert(value !== undefined && value !== null, 'missing value')
-    assert(typeof littleEndian === 'boolean', 'missing or invalid endian')
-    assert(offset !== undefined && offset !== null, 'missing offset')
-    assert(offset + 3 < buf.length, 'Trying to write beyond buffer length')
-    verifIEEE754(value, 3.4028234663852886e+38, -3.4028234663852886e+38)
-  }
-
-  var len = buf.length
-  if (offset >= len)
-    return
-
-  ieee754.write(buf, value, offset, littleEndian, 23, 4)
-  return offset + 4
-}
-
-Buffer.prototype.writeFloatLE = function (value, offset, noAssert) {
-  return writeFloat(this, value, offset, true, noAssert)
-}
-
-Buffer.prototype.writeFloatBE = function (value, offset, noAssert) {
-  return writeFloat(this, value, offset, false, noAssert)
-}
-
-function writeDouble (buf, value, offset, littleEndian, noAssert) {
-  if (!noAssert) {
-    assert(value !== undefined && value !== null, 'missing value')
-    assert(typeof littleEndian === 'boolean', 'missing or invalid endian')
-    assert(offset !== undefined && offset !== null, 'missing offset')
-    assert(offset + 7 < buf.length,
-        'Trying to write beyond buffer length')
-    verifIEEE754(value, 1.7976931348623157E+308, -1.7976931348623157E+308)
-  }
-
-  var len = buf.length
-  if (offset >= len)
-    return
-
-  ieee754.write(buf, value, offset, littleEndian, 52, 8)
-  return offset + 8
-}
-
-Buffer.prototype.writeDoubleLE = function (value, offset, noAssert) {
-  return writeDouble(this, value, offset, true, noAssert)
-}
-
-Buffer.prototype.writeDoubleBE = function (value, offset, noAssert) {
-  return writeDouble(this, value, offset, false, noAssert)
-}
-
-// fill(value, start=0, end=buffer.length)
-Buffer.prototype.fill = function (value, start, end) {
-  if (!value) value = 0
-  if (!start) start = 0
-  if (!end) end = this.length
-
-  assert(end >= start, 'end < start')
-
-  // Fill 0 bytes; we're done
-  if (end === start) return
-  if (this.length === 0) return
-
-  assert(start >= 0 && start < this.length, 'start out of bounds')
-  assert(end >= 0 && end <= this.length, 'end out of bounds')
-
-  var i
-  if (typeof value === 'number') {
-    for (i = start; i < end; i++) {
-      this[i] = value
-    }
-  } else {
-    var bytes = utf8ToBytes(value.toString())
-    var len = bytes.length
-    for (i = start; i < end; i++) {
-      this[i] = bytes[i % len]
-    }
-  }
-
-  return this
-}
-
-Buffer.prototype.inspect = function () {
-  var out = []
-  var len = this.length
-  for (var i = 0; i < len; i++) {
-    out[i] = toHex(this[i])
-    if (i === exports.INSPECT_MAX_BYTES) {
-      out[i + 1] = '...'
-      break
-    }
-  }
-  return '<Buffer ' + out.join(' ') + '>'
-}
-
-/**
- * Creates a new `ArrayBuffer` with the *copied* memory of the buffer instance.
- * Added in Node 0.12. Only available in browsers that support ArrayBuffer.
- */
-Buffer.prototype.toArrayBuffer = function () {
-  if (typeof Uint8Array !== 'undefined') {
-    if (TYPED_ARRAY_SUPPORT) {
-      return (new Buffer(this)).buffer
-    } else {
-      var buf = new Uint8Array(this.length)
-      for (var i = 0, len = buf.length; i < len; i += 1) {
-        buf[i] = this[i]
-      }
-      return buf.buffer
-    }
-  } else {
-    throw new Error('Buffer.toArrayBuffer not supported in this browser')
-  }
-}
-
-// HELPER FUNCTIONS
-// ================
-
-var BP = Buffer.prototype
-
-/**
- * Augment a Uint8Array *instance* (not the Uint8Array class!) with Buffer methods
- */
-Buffer._augment = function (arr) {
-  arr._isBuffer = true
-
-  // save reference to original Uint8Array get/set methods before overwriting
-  arr._get = arr.get
-  arr._set = arr.set
-
-  // deprecated, will be removed in node 0.13+
-  arr.get = BP.get
-  arr.set = BP.set
-
-  arr.write = BP.write
-  arr.toString = BP.toString
-  arr.toLocaleString = BP.toString
-  arr.toJSON = BP.toJSON
-  arr.equals = BP.equals
-  arr.compare = BP.compare
-  arr.copy = BP.copy
-  arr.slice = BP.slice
-  arr.readUInt8 = BP.readUInt8
-  arr.readUInt16LE = BP.readUInt16LE
-  arr.readUInt16BE = BP.readUInt16BE
-  arr.readUInt32LE = BP.readUInt32LE
-  arr.readUInt32BE = BP.readUInt32BE
-  arr.readInt8 = BP.readInt8
-  arr.readInt16LE = BP.readInt16LE
-  arr.readInt16BE = BP.readInt16BE
-  arr.readInt32LE = BP.readInt32LE
-  arr.readInt32BE = BP.readInt32BE
-  arr.readFloatLE = BP.readFloatLE
-  arr.readFloatBE = BP.readFloatBE
-  arr.readDoubleLE = BP.readDoubleLE
-  arr.readDoubleBE = BP.readDoubleBE
-  arr.writeUInt8 = BP.writeUInt8
-  arr.writeUInt16LE = BP.writeUInt16LE
-  arr.writeUInt16BE = BP.writeUInt16BE
-  arr.writeUInt32LE = BP.writeUInt32LE
-  arr.writeUInt32BE = BP.writeUInt32BE
-  arr.writeInt8 = BP.writeInt8
-  arr.writeInt16LE = BP.writeInt16LE
-  arr.writeInt16BE = BP.writeInt16BE
-  arr.writeInt32LE = BP.writeInt32LE
-  arr.writeInt32BE = BP.writeInt32BE
-  arr.writeFloatLE = BP.writeFloatLE
-  arr.writeFloatBE = BP.writeFloatBE
-  arr.writeDoubleLE = BP.writeDoubleLE
-  arr.writeDoubleBE = BP.writeDoubleBE
-  arr.fill = BP.fill
-  arr.inspect = BP.inspect
-  arr.toArrayBuffer = BP.toArrayBuffer
-
-  return arr
-}
-
-var INVALID_BASE64_RE = /[^+\/0-9A-z]/g
-
-function base64clean (str) {
-  // Node strips out invalid characters like \n and \t from the string, base64-js does not
-  str = stringtrim(str).replace(INVALID_BASE64_RE, '')
-  // Node allows for non-padded base64 strings (missing trailing ===), base64-js does not
-  while (str.length % 4 !== 0) {
-    str = str + '='
-  }
-  return str
-}
-
-function stringtrim (str) {
-  if (str.trim) return str.trim()
-  return str.replace(/^\s+|\s+$/g, '')
-}
-
-function isArray (subject) {
-  return (Array.isArray || function (subject) {
-    return Object.prototype.toString.call(subject) === '[object Array]'
-  })(subject)
-}
-
-function isArrayish (subject) {
-  return isArray(subject) || Buffer.isBuffer(subject) ||
-      subject && typeof subject === 'object' &&
-      typeof subject.length === 'number'
-}
-
-function toHex (n) {
-  if (n < 16) return '0' + n.toString(16)
-  return n.toString(16)
-}
-
-function utf8ToBytes (str) {
-  var byteArray = []
-  for (var i = 0; i < str.length; i++) {
-    var b = str.charCodeAt(i)
-    if (b <= 0x7F) {
-      byteArray.push(b)
-    } else {
-      var start = i
-      if (b >= 0xD800 && b <= 0xDFFF) i++
-      var h = encodeURIComponent(str.slice(start, i+1)).substr(1).split('%')
-      for (var j = 0; j < h.length; j++) {
-        byteArray.push(parseInt(h[j], 16))
-      }
-    }
-  }
-  return byteArray
-}
-
-function asciiToBytes (str) {
-  var byteArray = []
-  for (var i = 0; i < str.length; i++) {
-    // Node's code seems to be doing this and not & 0x7F..
-    byteArray.push(str.charCodeAt(i) & 0xFF)
-  }
-  return byteArray
-}
-
-function utf16leToBytes (str) {
-  var c, hi, lo
-  var byteArray = []
-  for (var i = 0; i < str.length; i++) {
-    c = str.charCodeAt(i)
-    hi = c >> 8
-    lo = c % 256
-    byteArray.push(lo)
-    byteArray.push(hi)
-  }
-
-  return byteArray
-}
-
-function base64ToBytes (str) {
-  return base64.toByteArray(str)
-}
-
-function blitBuffer (src, dst, offset, length) {
-  for (var i = 0; i < length; i++) {
-    if ((i + offset >= dst.length) || (i >= src.length))
-      break
-    dst[i + offset] = src[i]
-  }
-  return i
-}
-
-function decodeUtf8Char (str) {
-  try {
-    return decodeURIComponent(str)
-  } catch (err) {
-    return String.fromCharCode(0xFFFD) // UTF 8 invalid char
-  }
-}
-
-/*
- * We have to make sure that the value is a valid integer. This means that it
- * is non-negative. It has no fractional component and that it does not
- * exceed the maximum allowed value.
- */
-function verifuint (value, max) {
-  assert(typeof value === 'number', 'cannot write a non-number as a number')
-  assert(value >= 0, 'specified a negative value for writing an unsigned value')
-  assert(value <= max, 'value is larger than maximum value for type')
-  assert(Math.floor(value) === value, 'value has a fractional component')
-}
-
-function verifsint (value, max, min) {
-  assert(typeof value === 'number', 'cannot write a non-number as a number')
-  assert(value <= max, 'value larger than maximum allowed value')
-  assert(value >= min, 'value smaller than minimum allowed value')
-  assert(Math.floor(value) === value, 'value has a fractional component')
-}
-
-function verifIEEE754 (value, max, min) {
-  assert(typeof value === 'number', 'cannot write a non-number as a number')
-  assert(value <= max, 'value larger than maximum allowed value')
-  assert(value >= min, 'value smaller than minimum allowed value')
-}
-
-function assert (test, message) {
-  if (!test) throw new Error(message || 'Failed assertion')
-}
-
-},{"base64-js":17,"ieee754":18}],17:[function(require,module,exports){
-var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-
-;(function (exports) {
-	'use strict';
-
-  var Arr = (typeof Uint8Array !== 'undefined')
-    ? Uint8Array
-    : Array
-
-	var PLUS   = '+'.charCodeAt(0)
-	var SLASH  = '/'.charCodeAt(0)
-	var NUMBER = '0'.charCodeAt(0)
-	var LOWER  = 'a'.charCodeAt(0)
-	var UPPER  = 'A'.charCodeAt(0)
-
-	function decode (elt) {
-		var code = elt.charCodeAt(0)
-		if (code === PLUS)
-			return 62 // '+'
-		if (code === SLASH)
-			return 63 // '/'
-		if (code < NUMBER)
-			return -1 //no match
-		if (code < NUMBER + 10)
-			return code - NUMBER + 26 + 26
-		if (code < UPPER + 26)
-			return code - UPPER
-		if (code < LOWER + 26)
-			return code - LOWER + 26
-	}
-
-	function b64ToByteArray (b64) {
-		var i, j, l, tmp, placeHolders, arr
-
-		if (b64.length % 4 > 0) {
-			throw new Error('Invalid string. Length must be a multiple of 4')
-		}
-
-		// the number of equal signs (place holders)
-		// if there are two placeholders, than the two characters before it
-		// represent one byte
-		// if there is only one, then the three characters before it represent 2 bytes
-		// this is just a cheap hack to not do indexOf twice
-		var len = b64.length
-		placeHolders = '=' === b64.charAt(len - 2) ? 2 : '=' === b64.charAt(len - 1) ? 1 : 0
-
-		// base64 is 4/3 + up to two characters of the original data
-		arr = new Arr(b64.length * 3 / 4 - placeHolders)
-
-		// if there are placeholders, only get up to the last complete 4 chars
-		l = placeHolders > 0 ? b64.length - 4 : b64.length
-
-		var L = 0
-
-		function push (v) {
-			arr[L++] = v
-		}
-
-		for (i = 0, j = 0; i < l; i += 4, j += 3) {
-			tmp = (decode(b64.charAt(i)) << 18) | (decode(b64.charAt(i + 1)) << 12) | (decode(b64.charAt(i + 2)) << 6) | decode(b64.charAt(i + 3))
-			push((tmp & 0xFF0000) >> 16)
-			push((tmp & 0xFF00) >> 8)
-			push(tmp & 0xFF)
-		}
-
-		if (placeHolders === 2) {
-			tmp = (decode(b64.charAt(i)) << 2) | (decode(b64.charAt(i + 1)) >> 4)
-			push(tmp & 0xFF)
-		} else if (placeHolders === 1) {
-			tmp = (decode(b64.charAt(i)) << 10) | (decode(b64.charAt(i + 1)) << 4) | (decode(b64.charAt(i + 2)) >> 2)
-			push((tmp >> 8) & 0xFF)
-			push(tmp & 0xFF)
-		}
-
-		return arr
-	}
-
-	function uint8ToBase64 (uint8) {
-		var i,
-			extraBytes = uint8.length % 3, // if we have 1 byte left, pad 2 bytes
-			output = "",
-			temp, length
-
-		function encode (num) {
-			return lookup.charAt(num)
-		}
-
-		function tripletToBase64 (num) {
-			return encode(num >> 18 & 0x3F) + encode(num >> 12 & 0x3F) + encode(num >> 6 & 0x3F) + encode(num & 0x3F)
-		}
-
-		// go through the array every three bytes, we'll deal with trailing stuff later
-		for (i = 0, length = uint8.length - extraBytes; i < length; i += 3) {
-			temp = (uint8[i] << 16) + (uint8[i + 1] << 8) + (uint8[i + 2])
-			output += tripletToBase64(temp)
-		}
-
-		// pad the end with zeros, but make sure to not forget the extra bytes
-		switch (extraBytes) {
-			case 1:
-				temp = uint8[uint8.length - 1]
-				output += encode(temp >> 2)
-				output += encode((temp << 4) & 0x3F)
-				output += '=='
-				break
-			case 2:
-				temp = (uint8[uint8.length - 2] << 8) + (uint8[uint8.length - 1])
-				output += encode(temp >> 10)
-				output += encode((temp >> 4) & 0x3F)
-				output += encode((temp << 2) & 0x3F)
-				output += '='
-				break
-		}
-
-		return output
-	}
-
-	exports.toByteArray = b64ToByteArray
-	exports.fromByteArray = uint8ToBase64
-}(typeof exports === 'undefined' ? (this.base64js = {}) : exports))
-
-},{}],18:[function(require,module,exports){
-exports.read = function(buffer, offset, isLE, mLen, nBytes) {
-  var e, m,
-      eLen = nBytes * 8 - mLen - 1,
-      eMax = (1 << eLen) - 1,
-      eBias = eMax >> 1,
-      nBits = -7,
-      i = isLE ? (nBytes - 1) : 0,
-      d = isLE ? -1 : 1,
-      s = buffer[offset + i];
-
-  i += d;
-
-  e = s & ((1 << (-nBits)) - 1);
-  s >>= (-nBits);
-  nBits += eLen;
-  for (; nBits > 0; e = e * 256 + buffer[offset + i], i += d, nBits -= 8);
-
-  m = e & ((1 << (-nBits)) - 1);
-  e >>= (-nBits);
-  nBits += mLen;
-  for (; nBits > 0; m = m * 256 + buffer[offset + i], i += d, nBits -= 8);
-
-  if (e === 0) {
-    e = 1 - eBias;
-  } else if (e === eMax) {
-    return m ? NaN : ((s ? -1 : 1) * Infinity);
-  } else {
-    m = m + Math.pow(2, mLen);
-    e = e - eBias;
-  }
-  return (s ? -1 : 1) * m * Math.pow(2, e - mLen);
-};
-
-exports.write = function(buffer, value, offset, isLE, mLen, nBytes) {
-  var e, m, c,
-      eLen = nBytes * 8 - mLen - 1,
-      eMax = (1 << eLen) - 1,
-      eBias = eMax >> 1,
-      rt = (mLen === 23 ? Math.pow(2, -24) - Math.pow(2, -77) : 0),
-      i = isLE ? 0 : (nBytes - 1),
-      d = isLE ? 1 : -1,
-      s = value < 0 || (value === 0 && 1 / value < 0) ? 1 : 0;
-
-  value = Math.abs(value);
-
-  if (isNaN(value) || value === Infinity) {
-    m = isNaN(value) ? 1 : 0;
-    e = eMax;
-  } else {
-    e = Math.floor(Math.log(value) / Math.LN2);
-    if (value * (c = Math.pow(2, -e)) < 1) {
-      e--;
-      c *= 2;
-    }
-    if (e + eBias >= 1) {
-      value += rt / c;
-    } else {
-      value += rt * Math.pow(2, 1 - eBias);
-    }
-    if (value * c >= 2) {
-      e++;
-      c /= 2;
-    }
-
-    if (e + eBias >= eMax) {
-      m = 0;
-      e = eMax;
-    } else if (e + eBias >= 1) {
-      m = (value * c - 1) * Math.pow(2, mLen);
-      e = e + eBias;
-    } else {
-      m = value * Math.pow(2, eBias - 1) * Math.pow(2, mLen);
-      e = 0;
-    }
-  }
-
-  for (; mLen >= 8; buffer[offset + i] = m & 0xff, i += d, m /= 256, mLen -= 8);
-
-  e = (e << mLen) | m;
-  eLen += mLen;
-  for (; eLen > 0; buffer[offset + i] = e & 0xff, i += d, e /= 256, eLen -= 8);
-
-  buffer[offset + i - d] |= s * 128;
-};
-
-},{}],19:[function(require,module,exports){
-// Copyright Joyent, Inc. and other Node contributors.
-//
-// Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the
-// "Software"), to deal in the Software without restriction, including
-// without limitation the rights to use, copy, modify, merge, publish,
-// distribute, sublicense, and/or sell copies of the Software, and to permit
-// persons to whom the Software is furnished to do so, subject to the
-// following conditions:
-//
-// The above copyright notice and this permission notice shall be included
-// in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-function EventEmitter() {
-  this._events = this._events || {};
-  this._maxListeners = this._maxListeners || undefined;
-}
-module.exports = EventEmitter;
-
-// Backwards-compat with node 0.10.x
-EventEmitter.EventEmitter = EventEmitter;
-
-EventEmitter.prototype._events = undefined;
-EventEmitter.prototype._maxListeners = undefined;
-
-// By default EventEmitters will print a warning if more than 10 listeners are
-// added to it. This is a useful default which helps finding memory leaks.
-EventEmitter.defaultMaxListeners = 10;
-
-// Obviously not all Emitters should be limited to 10. This function allows
-// that to be increased. Set to zero for unlimited.
-EventEmitter.prototype.setMaxListeners = function(n) {
-  if (!isNumber(n) || n < 0 || isNaN(n))
-    throw TypeError('n must be a positive number');
-  this._maxListeners = n;
-  return this;
-};
-
-EventEmitter.prototype.emit = function(type) {
-  var er, handler, len, args, i, listeners;
-
-  if (!this._events)
-    this._events = {};
-
-  // If there is no 'error' event listener then throw.
-  if (type === 'error') {
-    if (!this._events.error ||
-        (isObject(this._events.error) && !this._events.error.length)) {
-      er = arguments[1];
-      if (er instanceof Error) {
-        throw er; // Unhandled 'error' event
-      } else {
-        throw TypeError('Uncaught, unspecified "error" event.');
-      }
-      return false;
-    }
-  }
-
-  handler = this._events[type];
-
-  if (isUndefined(handler))
-    return false;
-
-  if (isFunction(handler)) {
-    switch (arguments.length) {
-      // fast cases
-      case 1:
-        handler.call(this);
-        break;
-      case 2:
-        handler.call(this, arguments[1]);
-        break;
-      case 3:
-        handler.call(this, arguments[1], arguments[2]);
-        break;
-      // slower
-      default:
-        len = arguments.length;
-        args = new Array(len - 1);
-        for (i = 1; i < len; i++)
-          args[i - 1] = arguments[i];
-        handler.apply(this, args);
-    }
-  } else if (isObject(handler)) {
-    len = arguments.length;
-    args = new Array(len - 1);
-    for (i = 1; i < len; i++)
-      args[i - 1] = arguments[i];
-
-    listeners = handler.slice();
-    len = listeners.length;
-    for (i = 0; i < len; i++)
-      listeners[i].apply(this, args);
-  }
-
-  return true;
-};
-
-EventEmitter.prototype.addListener = function(type, listener) {
-  var m;
-
-  if (!isFunction(listener))
-    throw TypeError('listener must be a function');
-
-  if (!this._events)
-    this._events = {};
-
-  // To avoid recursion in the case that type === "newListener"! Before
-  // adding it to the listeners, first emit "newListener".
-  if (this._events.newListener)
-    this.emit('newListener', type,
-              isFunction(listener.listener) ?
-              listener.listener : listener);
-
-  if (!this._events[type])
-    // Optimize the case of one listener. Don't need the extra array object.
-    this._events[type] = listener;
-  else if (isObject(this._events[type]))
-    // If we've already got an array, just append.
-    this._events[type].push(listener);
-  else
-    // Adding the second element, need to change to array.
-    this._events[type] = [this._events[type], listener];
-
-  // Check for listener leak
-  if (isObject(this._events[type]) && !this._events[type].warned) {
-    var m;
-    if (!isUndefined(this._maxListeners)) {
-      m = this._maxListeners;
-    } else {
-      m = EventEmitter.defaultMaxListeners;
-    }
-
-    if (m && m > 0 && this._events[type].length > m) {
-      this._events[type].warned = true;
-      console.error('(node) warning: possible EventEmitter memory ' +
-                    'leak detected. %d listeners added. ' +
-                    'Use emitter.setMaxListeners() to increase limit.',
-                    this._events[type].length);
-      if (typeof console.trace === 'function') {
-        // not supported in IE 10
-        console.trace();
-      }
-    }
-  }
-
-  return this;
-};
-
-EventEmitter.prototype.on = EventEmitter.prototype.addListener;
-
-EventEmitter.prototype.once = function(type, listener) {
-  if (!isFunction(listener))
-    throw TypeError('listener must be a function');
-
-  var fired = false;
-
-  function g() {
-    this.removeListener(type, g);
-
-    if (!fired) {
-      fired = true;
-      listener.apply(this, arguments);
-    }
-  }
-
-  g.listener = listener;
-  this.on(type, g);
-
-  return this;
-};
-
-// emits a 'removeListener' event iff the listener was removed
-EventEmitter.prototype.removeListener = function(type, listener) {
-  var list, position, length, i;
-
-  if (!isFunction(listener))
-    throw TypeError('listener must be a function');
-
-  if (!this._events || !this._events[type])
-    return this;
-
-  list = this._events[type];
-  length = list.length;
-  position = -1;
-
-  if (list === listener ||
-      (isFunction(list.listener) && list.listener === listener)) {
-    delete this._events[type];
-    if (this._events.removeListener)
-      this.emit('removeListener', type, listener);
-
-  } else if (isObject(list)) {
-    for (i = length; i-- > 0;) {
-      if (list[i] === listener ||
-          (list[i].listener && list[i].listener === listener)) {
-        position = i;
-        break;
-      }
-    }
-
-    if (position < 0)
-      return this;
-
-    if (list.length === 1) {
-      list.length = 0;
-      delete this._events[type];
-    } else {
-      list.splice(position, 1);
-    }
-
-    if (this._events.removeListener)
-      this.emit('removeListener', type, listener);
-  }
-
-  return this;
-};
-
-EventEmitter.prototype.removeAllListeners = function(type) {
-  var key, listeners;
-
-  if (!this._events)
-    return this;
-
-  // not listening for removeListener, no need to emit
-  if (!this._events.removeListener) {
-    if (arguments.length === 0)
-      this._events = {};
-    else if (this._events[type])
-      delete this._events[type];
-    return this;
-  }
-
-  // emit removeListener for all listeners on all events
-  if (arguments.length === 0) {
-    for (key in this._events) {
-      if (key === 'removeListener') continue;
-      this.removeAllListeners(key);
-    }
-    this.removeAllListeners('removeListener');
-    this._events = {};
-    return this;
-  }
-
-  listeners = this._events[type];
-
-  if (isFunction(listeners)) {
-    this.removeListener(type, listeners);
-  } else {
-    // LIFO order
-    while (listeners.length)
-      this.removeListener(type, listeners[listeners.length - 1]);
-  }
-  delete this._events[type];
-
-  return this;
-};
-
-EventEmitter.prototype.listeners = function(type) {
-  var ret;
-  if (!this._events || !this._events[type])
-    ret = [];
-  else if (isFunction(this._events[type]))
-    ret = [this._events[type]];
-  else
-    ret = this._events[type].slice();
-  return ret;
-};
-
-EventEmitter.listenerCount = function(emitter, type) {
-  var ret;
-  if (!emitter._events || !emitter._events[type])
-    ret = 0;
-  else if (isFunction(emitter._events[type]))
-    ret = 1;
-  else
-    ret = emitter._events[type].length;
-  return ret;
-};
-
-function isFunction(arg) {
-  return typeof arg === 'function';
-}
-
-function isNumber(arg) {
-  return typeof arg === 'number';
-}
-
-function isObject(arg) {
-  return typeof arg === 'object' && arg !== null;
-}
-
-function isUndefined(arg) {
-  return arg === void 0;
-}
-
-},{}],20:[function(require,module,exports){
-if (typeof Object.create === 'function') {
-  // implementation from standard node.js 'util' module
-  module.exports = function inherits(ctor, superCtor) {
-    ctor.super_ = superCtor
-    ctor.prototype = Object.create(superCtor.prototype, {
-      constructor: {
-        value: ctor,
-        enumerable: false,
-        writable: true,
-        configurable: true
-      }
-    });
-  };
-} else {
-  // old school shim for old browsers
-  module.exports = function inherits(ctor, superCtor) {
-    ctor.super_ = superCtor
-    var TempCtor = function () {}
-    TempCtor.prototype = superCtor.prototype
-    ctor.prototype = new TempCtor()
-    ctor.prototype.constructor = ctor
-  }
-}
-
-},{}],21:[function(require,module,exports){
-module.exports = Array.isArray || function (arr) {
-  return Object.prototype.toString.call(arr) == '[object Array]';
-};
-
-},{}],22:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 (function (process){
-// Copyright Joyent, Inc. and other Node contributors.
-//
-// Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the
-// "Software"), to deal in the Software without restriction, including
-// without limitation the rights to use, copy, modify, merge, publish,
-// distribute, sublicense, and/or sell copies of the Software, and to permit
-// persons to whom the Software is furnished to do so, subject to the
-// following conditions:
-//
-// The above copyright notice and this permission notice shall be included
-// in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-// USE OR OTHER DEALINGS IN THE SOFTWARE.
+'use strict';
 
-// resolves . and .. elements in a path array with directory names there
-// must be no slashes, empty elements, or device names (c:\) in the array
-// (so also no leading and trailing slashes - it does not distinguish
-// relative and absolute paths)
-function normalizeArray(parts, allowAboveRoot) {
-  // if the path tries to go above the root, `up` ends up > 0
-  var up = 0;
-  for (var i = parts.length - 1; i >= 0; i--) {
-    var last = parts[i];
-    if (last === '.') {
-      parts.splice(i, 1);
-    } else if (last === '..') {
-      parts.splice(i, 1);
-      up++;
-    } else if (up) {
-      parts.splice(i, 1);
-      up--;
-    }
-  }
-
-  // if the path is allowed to go above the root, restore leading ..s
-  if (allowAboveRoot) {
-    for (; up--; up) {
-      parts.unshift('..');
-    }
-  }
-
-  return parts;
+if (!process.version ||
+    process.version.indexOf('v0.') === 0 ||
+    process.version.indexOf('v1.') === 0 && process.version.indexOf('v1.8.') !== 0) {
+  module.exports = nextTick;
+} else {
+  module.exports = process.nextTick;
 }
 
-// Split a filename into [root, dir, basename, ext], unix version
-// 'root' is just a slash, or nothing.
-var splitPathRe =
-    /^(\/?|)([\s\S]*?)((?:\.{1,2}|[^\/]+?|)(\.[^.\/]*|))(?:[\/]*)$/;
-var splitPath = function(filename) {
-  return splitPathRe.exec(filename).slice(1);
-};
-
-// path.resolve([from ...], to)
-// posix version
-exports.resolve = function() {
-  var resolvedPath = '',
-      resolvedAbsolute = false;
-
-  for (var i = arguments.length - 1; i >= -1 && !resolvedAbsolute; i--) {
-    var path = (i >= 0) ? arguments[i] : process.cwd();
-
-    // Skip empty and invalid entries
-    if (typeof path !== 'string') {
-      throw new TypeError('Arguments to path.resolve must be strings');
-    } else if (!path) {
-      continue;
-    }
-
-    resolvedPath = path + '/' + resolvedPath;
-    resolvedAbsolute = path.charAt(0) === '/';
+function nextTick(fn) {
+  var args = new Array(arguments.length - 1);
+  var i = 0;
+  while (i < args.length) {
+    args[i++] = arguments[i];
   }
-
-  // At this point the path should be resolved to a full absolute path, but
-  // handle relative paths to be safe (might happen when process.cwd() fails)
-
-  // Normalize the path
-  resolvedPath = normalizeArray(filter(resolvedPath.split('/'), function(p) {
-    return !!p;
-  }), !resolvedAbsolute).join('/');
-
-  return ((resolvedAbsolute ? '/' : '') + resolvedPath) || '.';
-};
-
-// path.normalize(path)
-// posix version
-exports.normalize = function(path) {
-  var isAbsolute = exports.isAbsolute(path),
-      trailingSlash = substr(path, -1) === '/';
-
-  // Normalize the path
-  path = normalizeArray(filter(path.split('/'), function(p) {
-    return !!p;
-  }), !isAbsolute).join('/');
-
-  if (!path && !isAbsolute) {
-    path = '.';
-  }
-  if (path && trailingSlash) {
-    path += '/';
-  }
-
-  return (isAbsolute ? '/' : '') + path;
-};
-
-// posix version
-exports.isAbsolute = function(path) {
-  return path.charAt(0) === '/';
-};
-
-// posix version
-exports.join = function() {
-  var paths = Array.prototype.slice.call(arguments, 0);
-  return exports.normalize(filter(paths, function(p, index) {
-    if (typeof p !== 'string') {
-      throw new TypeError('Arguments to path.join must be strings');
-    }
-    return p;
-  }).join('/'));
-};
-
-
-// path.relative(from, to)
-// posix version
-exports.relative = function(from, to) {
-  from = exports.resolve(from).substr(1);
-  to = exports.resolve(to).substr(1);
-
-  function trim(arr) {
-    var start = 0;
-    for (; start < arr.length; start++) {
-      if (arr[start] !== '') break;
-    }
-
-    var end = arr.length - 1;
-    for (; end >= 0; end--) {
-      if (arr[end] !== '') break;
-    }
-
-    if (start > end) return [];
-    return arr.slice(start, end - start + 1);
-  }
-
-  var fromParts = trim(from.split('/'));
-  var toParts = trim(to.split('/'));
-
-  var length = Math.min(fromParts.length, toParts.length);
-  var samePartsLength = length;
-  for (var i = 0; i < length; i++) {
-    if (fromParts[i] !== toParts[i]) {
-      samePartsLength = i;
-      break;
-    }
-  }
-
-  var outputParts = [];
-  for (var i = samePartsLength; i < fromParts.length; i++) {
-    outputParts.push('..');
-  }
-
-  outputParts = outputParts.concat(toParts.slice(samePartsLength));
-
-  return outputParts.join('/');
-};
-
-exports.sep = '/';
-exports.delimiter = ':';
-
-exports.dirname = function(path) {
-  var result = splitPath(path),
-      root = result[0],
-      dir = result[1];
-
-  if (!root && !dir) {
-    // No dirname whatsoever
-    return '.';
-  }
-
-  if (dir) {
-    // It has a dirname, strip trailing slash
-    dir = dir.substr(0, dir.length - 1);
-  }
-
-  return root + dir;
-};
-
-
-exports.basename = function(path, ext) {
-  var f = splitPath(path)[2];
-  // TODO: make this comparison case-insensitive on windows?
-  if (ext && f.substr(-1 * ext.length) === ext) {
-    f = f.substr(0, f.length - ext.length);
-  }
-  return f;
-};
-
-
-exports.extname = function(path) {
-  return splitPath(path)[3];
-};
-
-function filter (xs, f) {
-    if (xs.filter) return xs.filter(f);
-    var res = [];
-    for (var i = 0; i < xs.length; i++) {
-        if (f(xs[i], i, xs)) res.push(xs[i]);
-    }
-    return res;
+  process.nextTick(function afterTick() {
+    fn.apply(null, args);
+  });
 }
-
-// String.prototype.substr - negative index don't work in IE8
-var substr = 'ab'.substr(-1) === 'b'
-    ? function (str, start, len) { return str.substr(start, len) }
-    : function (str, start, len) {
-        if (start < 0) start = str.length + start;
-        return str.substr(start, len);
-    }
-;
 
 }).call(this,require('_process'))
-},{"_process":23}],23:[function(require,module,exports){
+},{"_process":28}],28:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
+var queue = [];
+var draining = false;
+var currentQueue;
+var queueIndex = -1;
 
-process.nextTick = (function () {
-    var canSetImmediate = typeof window !== 'undefined'
-    && window.setImmediate;
-    var canPost = typeof window !== 'undefined'
-    && window.postMessage && window.addEventListener
-    ;
-
-    if (canSetImmediate) {
-        return function (f) { return window.setImmediate(f) };
+function cleanUpNextTick() {
+    draining = false;
+    if (currentQueue.length) {
+        queue = currentQueue.concat(queue);
+    } else {
+        queueIndex = -1;
     }
+    if (queue.length) {
+        drainQueue();
+    }
+}
 
-    if (canPost) {
-        var queue = [];
-        window.addEventListener('message', function (ev) {
-            var source = ev.source;
-            if ((source === window || source === null) && ev.data === 'process-tick') {
-                ev.stopPropagation();
-                if (queue.length > 0) {
-                    var fn = queue.shift();
-                    fn();
-                }
+function drainQueue() {
+    if (draining) {
+        return;
+    }
+    var timeout = setTimeout(cleanUpNextTick);
+    draining = true;
+
+    var len = queue.length;
+    while(len) {
+        currentQueue = queue;
+        queue = [];
+        while (++queueIndex < len) {
+            if (currentQueue) {
+                currentQueue[queueIndex].run();
             }
-        }, true);
-
-        return function nextTick(fn) {
-            queue.push(fn);
-            window.postMessage('process-tick', '*');
-        };
+        }
+        queueIndex = -1;
+        len = queue.length;
     }
+    currentQueue = null;
+    draining = false;
+    clearTimeout(timeout);
+}
 
-    return function nextTick(fn) {
-        setTimeout(fn, 0);
-    };
-})();
+process.nextTick = function (fun) {
+    var args = new Array(arguments.length - 1);
+    if (arguments.length > 1) {
+        for (var i = 1; i < arguments.length; i++) {
+            args[i - 1] = arguments[i];
+        }
+    }
+    queue.push(new Item(fun, args));
+    if (queue.length === 1 && !draining) {
+        setTimeout(drainQueue, 0);
+    }
+};
 
+// v8 likes predictible objects
+function Item(fun, array) {
+    this.fun = fun;
+    this.array = array;
+}
+Item.prototype.run = function () {
+    this.fun.apply(null, this.array);
+};
 process.title = 'browser';
 process.browser = true;
 process.env = {};
 process.argv = [];
+process.version = ''; // empty string to avoid regexp issues
+process.versions = {};
 
 function noop() {}
 
@@ -23336,19 +25196,552 @@ process.emit = noop;
 
 process.binding = function (name) {
     throw new Error('process.binding is not supported');
-}
+};
 
-// TODO(shtylman)
 process.cwd = function () { return '/' };
 process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
+process.umask = function() { return 0; };
 
-},{}],24:[function(require,module,exports){
-module.exports = require("./lib/_stream_duplex.js")
+},{}],29:[function(require,module,exports){
+(function (global){
+/*! https://mths.be/punycode v1.4.0 by @mathias */
+;(function(root) {
 
-},{"./lib/_stream_duplex.js":25}],25:[function(require,module,exports){
-(function (process){
+	/** Detect free variables */
+	var freeExports = typeof exports == 'object' && exports &&
+		!exports.nodeType && exports;
+	var freeModule = typeof module == 'object' && module &&
+		!module.nodeType && module;
+	var freeGlobal = typeof global == 'object' && global;
+	if (
+		freeGlobal.global === freeGlobal ||
+		freeGlobal.window === freeGlobal ||
+		freeGlobal.self === freeGlobal
+	) {
+		root = freeGlobal;
+	}
+
+	/**
+	 * The `punycode` object.
+	 * @name punycode
+	 * @type Object
+	 */
+	var punycode,
+
+	/** Highest positive signed 32-bit float value */
+	maxInt = 2147483647, // aka. 0x7FFFFFFF or 2^31-1
+
+	/** Bootstring parameters */
+	base = 36,
+	tMin = 1,
+	tMax = 26,
+	skew = 38,
+	damp = 700,
+	initialBias = 72,
+	initialN = 128, // 0x80
+	delimiter = '-', // '\x2D'
+
+	/** Regular expressions */
+	regexPunycode = /^xn--/,
+	regexNonASCII = /[^\x20-\x7E]/, // unprintable ASCII chars + non-ASCII chars
+	regexSeparators = /[\x2E\u3002\uFF0E\uFF61]/g, // RFC 3490 separators
+
+	/** Error messages */
+	errors = {
+		'overflow': 'Overflow: input needs wider integers to process',
+		'not-basic': 'Illegal input >= 0x80 (not a basic code point)',
+		'invalid-input': 'Invalid input'
+	},
+
+	/** Convenience shortcuts */
+	baseMinusTMin = base - tMin,
+	floor = Math.floor,
+	stringFromCharCode = String.fromCharCode,
+
+	/** Temporary variable */
+	key;
+
+	/*--------------------------------------------------------------------------*/
+
+	/**
+	 * A generic error utility function.
+	 * @private
+	 * @param {String} type The error type.
+	 * @returns {Error} Throws a `RangeError` with the applicable error message.
+	 */
+	function error(type) {
+		throw new RangeError(errors[type]);
+	}
+
+	/**
+	 * A generic `Array#map` utility function.
+	 * @private
+	 * @param {Array} array The array to iterate over.
+	 * @param {Function} callback The function that gets called for every array
+	 * item.
+	 * @returns {Array} A new array of values returned by the callback function.
+	 */
+	function map(array, fn) {
+		var length = array.length;
+		var result = [];
+		while (length--) {
+			result[length] = fn(array[length]);
+		}
+		return result;
+	}
+
+	/**
+	 * A simple `Array#map`-like wrapper to work with domain name strings or email
+	 * addresses.
+	 * @private
+	 * @param {String} domain The domain name or email address.
+	 * @param {Function} callback The function that gets called for every
+	 * character.
+	 * @returns {Array} A new string of characters returned by the callback
+	 * function.
+	 */
+	function mapDomain(string, fn) {
+		var parts = string.split('@');
+		var result = '';
+		if (parts.length > 1) {
+			// In email addresses, only the domain name should be punycoded. Leave
+			// the local part (i.e. everything up to `@`) intact.
+			result = parts[0] + '@';
+			string = parts[1];
+		}
+		// Avoid `split(regex)` for IE8 compatibility. See #17.
+		string = string.replace(regexSeparators, '\x2E');
+		var labels = string.split('.');
+		var encoded = map(labels, fn).join('.');
+		return result + encoded;
+	}
+
+	/**
+	 * Creates an array containing the numeric code points of each Unicode
+	 * character in the string. While JavaScript uses UCS-2 internally,
+	 * this function will convert a pair of surrogate halves (each of which
+	 * UCS-2 exposes as separate characters) into a single code point,
+	 * matching UTF-16.
+	 * @see `punycode.ucs2.encode`
+	 * @see <https://mathiasbynens.be/notes/javascript-encoding>
+	 * @memberOf punycode.ucs2
+	 * @name decode
+	 * @param {String} string The Unicode input string (UCS-2).
+	 * @returns {Array} The new array of code points.
+	 */
+	function ucs2decode(string) {
+		var output = [],
+		    counter = 0,
+		    length = string.length,
+		    value,
+		    extra;
+		while (counter < length) {
+			value = string.charCodeAt(counter++);
+			if (value >= 0xD800 && value <= 0xDBFF && counter < length) {
+				// high surrogate, and there is a next character
+				extra = string.charCodeAt(counter++);
+				if ((extra & 0xFC00) == 0xDC00) { // low surrogate
+					output.push(((value & 0x3FF) << 10) + (extra & 0x3FF) + 0x10000);
+				} else {
+					// unmatched surrogate; only append this code unit, in case the next
+					// code unit is the high surrogate of a surrogate pair
+					output.push(value);
+					counter--;
+				}
+			} else {
+				output.push(value);
+			}
+		}
+		return output;
+	}
+
+	/**
+	 * Creates a string based on an array of numeric code points.
+	 * @see `punycode.ucs2.decode`
+	 * @memberOf punycode.ucs2
+	 * @name encode
+	 * @param {Array} codePoints The array of numeric code points.
+	 * @returns {String} The new Unicode string (UCS-2).
+	 */
+	function ucs2encode(array) {
+		return map(array, function(value) {
+			var output = '';
+			if (value > 0xFFFF) {
+				value -= 0x10000;
+				output += stringFromCharCode(value >>> 10 & 0x3FF | 0xD800);
+				value = 0xDC00 | value & 0x3FF;
+			}
+			output += stringFromCharCode(value);
+			return output;
+		}).join('');
+	}
+
+	/**
+	 * Converts a basic code point into a digit/integer.
+	 * @see `digitToBasic()`
+	 * @private
+	 * @param {Number} codePoint The basic numeric code point value.
+	 * @returns {Number} The numeric value of a basic code point (for use in
+	 * representing integers) in the range `0` to `base - 1`, or `base` if
+	 * the code point does not represent a value.
+	 */
+	function basicToDigit(codePoint) {
+		if (codePoint - 48 < 10) {
+			return codePoint - 22;
+		}
+		if (codePoint - 65 < 26) {
+			return codePoint - 65;
+		}
+		if (codePoint - 97 < 26) {
+			return codePoint - 97;
+		}
+		return base;
+	}
+
+	/**
+	 * Converts a digit/integer into a basic code point.
+	 * @see `basicToDigit()`
+	 * @private
+	 * @param {Number} digit The numeric value of a basic code point.
+	 * @returns {Number} The basic code point whose value (when used for
+	 * representing integers) is `digit`, which needs to be in the range
+	 * `0` to `base - 1`. If `flag` is non-zero, the uppercase form is
+	 * used; else, the lowercase form is used. The behavior is undefined
+	 * if `flag` is non-zero and `digit` has no uppercase form.
+	 */
+	function digitToBasic(digit, flag) {
+		//  0..25 map to ASCII a..z or A..Z
+		// 26..35 map to ASCII 0..9
+		return digit + 22 + 75 * (digit < 26) - ((flag != 0) << 5);
+	}
+
+	/**
+	 * Bias adaptation function as per section 3.4 of RFC 3492.
+	 * https://tools.ietf.org/html/rfc3492#section-3.4
+	 * @private
+	 */
+	function adapt(delta, numPoints, firstTime) {
+		var k = 0;
+		delta = firstTime ? floor(delta / damp) : delta >> 1;
+		delta += floor(delta / numPoints);
+		for (/* no initialization */; delta > baseMinusTMin * tMax >> 1; k += base) {
+			delta = floor(delta / baseMinusTMin);
+		}
+		return floor(k + (baseMinusTMin + 1) * delta / (delta + skew));
+	}
+
+	/**
+	 * Converts a Punycode string of ASCII-only symbols to a string of Unicode
+	 * symbols.
+	 * @memberOf punycode
+	 * @param {String} input The Punycode string of ASCII-only symbols.
+	 * @returns {String} The resulting string of Unicode symbols.
+	 */
+	function decode(input) {
+		// Don't use UCS-2
+		var output = [],
+		    inputLength = input.length,
+		    out,
+		    i = 0,
+		    n = initialN,
+		    bias = initialBias,
+		    basic,
+		    j,
+		    index,
+		    oldi,
+		    w,
+		    k,
+		    digit,
+		    t,
+		    /** Cached calculation results */
+		    baseMinusT;
+
+		// Handle the basic code points: let `basic` be the number of input code
+		// points before the last delimiter, or `0` if there is none, then copy
+		// the first basic code points to the output.
+
+		basic = input.lastIndexOf(delimiter);
+		if (basic < 0) {
+			basic = 0;
+		}
+
+		for (j = 0; j < basic; ++j) {
+			// if it's not a basic code point
+			if (input.charCodeAt(j) >= 0x80) {
+				error('not-basic');
+			}
+			output.push(input.charCodeAt(j));
+		}
+
+		// Main decoding loop: start just after the last delimiter if any basic code
+		// points were copied; start at the beginning otherwise.
+
+		for (index = basic > 0 ? basic + 1 : 0; index < inputLength; /* no final expression */) {
+
+			// `index` is the index of the next character to be consumed.
+			// Decode a generalized variable-length integer into `delta`,
+			// which gets added to `i`. The overflow checking is easier
+			// if we increase `i` as we go, then subtract off its starting
+			// value at the end to obtain `delta`.
+			for (oldi = i, w = 1, k = base; /* no condition */; k += base) {
+
+				if (index >= inputLength) {
+					error('invalid-input');
+				}
+
+				digit = basicToDigit(input.charCodeAt(index++));
+
+				if (digit >= base || digit > floor((maxInt - i) / w)) {
+					error('overflow');
+				}
+
+				i += digit * w;
+				t = k <= bias ? tMin : (k >= bias + tMax ? tMax : k - bias);
+
+				if (digit < t) {
+					break;
+				}
+
+				baseMinusT = base - t;
+				if (w > floor(maxInt / baseMinusT)) {
+					error('overflow');
+				}
+
+				w *= baseMinusT;
+
+			}
+
+			out = output.length + 1;
+			bias = adapt(i - oldi, out, oldi == 0);
+
+			// `i` was supposed to wrap around from `out` to `0`,
+			// incrementing `n` each time, so we'll fix that now:
+			if (floor(i / out) > maxInt - n) {
+				error('overflow');
+			}
+
+			n += floor(i / out);
+			i %= out;
+
+			// Insert `n` at position `i` of the output
+			output.splice(i++, 0, n);
+
+		}
+
+		return ucs2encode(output);
+	}
+
+	/**
+	 * Converts a string of Unicode symbols (e.g. a domain name label) to a
+	 * Punycode string of ASCII-only symbols.
+	 * @memberOf punycode
+	 * @param {String} input The string of Unicode symbols.
+	 * @returns {String} The resulting Punycode string of ASCII-only symbols.
+	 */
+	function encode(input) {
+		var n,
+		    delta,
+		    handledCPCount,
+		    basicLength,
+		    bias,
+		    j,
+		    m,
+		    q,
+		    k,
+		    t,
+		    currentValue,
+		    output = [],
+		    /** `inputLength` will hold the number of code points in `input`. */
+		    inputLength,
+		    /** Cached calculation results */
+		    handledCPCountPlusOne,
+		    baseMinusT,
+		    qMinusT;
+
+		// Convert the input in UCS-2 to Unicode
+		input = ucs2decode(input);
+
+		// Cache the length
+		inputLength = input.length;
+
+		// Initialize the state
+		n = initialN;
+		delta = 0;
+		bias = initialBias;
+
+		// Handle the basic code points
+		for (j = 0; j < inputLength; ++j) {
+			currentValue = input[j];
+			if (currentValue < 0x80) {
+				output.push(stringFromCharCode(currentValue));
+			}
+		}
+
+		handledCPCount = basicLength = output.length;
+
+		// `handledCPCount` is the number of code points that have been handled;
+		// `basicLength` is the number of basic code points.
+
+		// Finish the basic string - if it is not empty - with a delimiter
+		if (basicLength) {
+			output.push(delimiter);
+		}
+
+		// Main encoding loop:
+		while (handledCPCount < inputLength) {
+
+			// All non-basic code points < n have been handled already. Find the next
+			// larger one:
+			for (m = maxInt, j = 0; j < inputLength; ++j) {
+				currentValue = input[j];
+				if (currentValue >= n && currentValue < m) {
+					m = currentValue;
+				}
+			}
+
+			// Increase `delta` enough to advance the decoder's <n,i> state to <m,0>,
+			// but guard against overflow
+			handledCPCountPlusOne = handledCPCount + 1;
+			if (m - n > floor((maxInt - delta) / handledCPCountPlusOne)) {
+				error('overflow');
+			}
+
+			delta += (m - n) * handledCPCountPlusOne;
+			n = m;
+
+			for (j = 0; j < inputLength; ++j) {
+				currentValue = input[j];
+
+				if (currentValue < n && ++delta > maxInt) {
+					error('overflow');
+				}
+
+				if (currentValue == n) {
+					// Represent delta as a generalized variable-length integer
+					for (q = delta, k = base; /* no condition */; k += base) {
+						t = k <= bias ? tMin : (k >= bias + tMax ? tMax : k - bias);
+						if (q < t) {
+							break;
+						}
+						qMinusT = q - t;
+						baseMinusT = base - t;
+						output.push(
+							stringFromCharCode(digitToBasic(t + qMinusT % baseMinusT, 0))
+						);
+						q = floor(qMinusT / baseMinusT);
+					}
+
+					output.push(stringFromCharCode(digitToBasic(q, 0)));
+					bias = adapt(delta, handledCPCountPlusOne, handledCPCount == basicLength);
+					delta = 0;
+					++handledCPCount;
+				}
+			}
+
+			++delta;
+			++n;
+
+		}
+		return output.join('');
+	}
+
+	/**
+	 * Converts a Punycode string representing a domain name or an email address
+	 * to Unicode. Only the Punycoded parts of the input will be converted, i.e.
+	 * it doesn't matter if you call it on a string that has already been
+	 * converted to Unicode.
+	 * @memberOf punycode
+	 * @param {String} input The Punycoded domain name or email address to
+	 * convert to Unicode.
+	 * @returns {String} The Unicode representation of the given Punycode
+	 * string.
+	 */
+	function toUnicode(input) {
+		return mapDomain(input, function(string) {
+			return regexPunycode.test(string)
+				? decode(string.slice(4).toLowerCase())
+				: string;
+		});
+	}
+
+	/**
+	 * Converts a Unicode string representing a domain name or an email address to
+	 * Punycode. Only the non-ASCII parts of the domain name will be converted,
+	 * i.e. it doesn't matter if you call it with a domain that's already in
+	 * ASCII.
+	 * @memberOf punycode
+	 * @param {String} input The domain name or email address to convert, as a
+	 * Unicode string.
+	 * @returns {String} The Punycode representation of the given domain name or
+	 * email address.
+	 */
+	function toASCII(input) {
+		return mapDomain(input, function(string) {
+			return regexNonASCII.test(string)
+				? 'xn--' + encode(string)
+				: string;
+		});
+	}
+
+	/*--------------------------------------------------------------------------*/
+
+	/** Define the public API */
+	punycode = {
+		/**
+		 * A string representing the current Punycode.js version number.
+		 * @memberOf punycode
+		 * @type String
+		 */
+		'version': '1.3.2',
+		/**
+		 * An object of methods to convert from JavaScript's internal character
+		 * representation (UCS-2) to Unicode code points, and back.
+		 * @see <https://mathiasbynens.be/notes/javascript-encoding>
+		 * @memberOf punycode
+		 * @type Object
+		 */
+		'ucs2': {
+			'decode': ucs2decode,
+			'encode': ucs2encode
+		},
+		'decode': decode,
+		'encode': encode,
+		'toASCII': toASCII,
+		'toUnicode': toUnicode
+	};
+
+	/** Expose `punycode` */
+	// Some AMD build optimizers, like r.js, check for specific condition patterns
+	// like the following:
+	if (
+		typeof define == 'function' &&
+		typeof define.amd == 'object' &&
+		define.amd
+	) {
+		define('punycode', function() {
+			return punycode;
+		});
+	} else if (freeExports && freeModule) {
+		if (module.exports == freeExports) {
+			// in Node.js, io.js, or RingoJS v0.8.0+
+			freeModule.exports = punycode;
+		} else {
+			// in Narwhal or RingoJS v0.7.0-
+			for (key in punycode) {
+				punycode.hasOwnProperty(key) && (freeExports[key] = punycode[key]);
+			}
+		}
+	} else {
+		// in Rhino or a web browser
+		root.punycode = punycode;
+	}
+
+}(this));
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{}],30:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -23370,12 +25763,173 @@ module.exports = require("./lib/_stream_duplex.js")
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+'use strict';
+
+// If obj.hasOwnProperty has been overridden, then calling
+// obj.hasOwnProperty(prop) will break.
+// See: https://github.com/joyent/node/issues/1707
+function hasOwnProperty(obj, prop) {
+  return Object.prototype.hasOwnProperty.call(obj, prop);
+}
+
+module.exports = function(qs, sep, eq, options) {
+  sep = sep || '&';
+  eq = eq || '=';
+  var obj = {};
+
+  if (typeof qs !== 'string' || qs.length === 0) {
+    return obj;
+  }
+
+  var regexp = /\+/g;
+  qs = qs.split(sep);
+
+  var maxKeys = 1000;
+  if (options && typeof options.maxKeys === 'number') {
+    maxKeys = options.maxKeys;
+  }
+
+  var len = qs.length;
+  // maxKeys <= 0 means that we should not limit keys count
+  if (maxKeys > 0 && len > maxKeys) {
+    len = maxKeys;
+  }
+
+  for (var i = 0; i < len; ++i) {
+    var x = qs[i].replace(regexp, '%20'),
+        idx = x.indexOf(eq),
+        kstr, vstr, k, v;
+
+    if (idx >= 0) {
+      kstr = x.substr(0, idx);
+      vstr = x.substr(idx + 1);
+    } else {
+      kstr = x;
+      vstr = '';
+    }
+
+    k = decodeURIComponent(kstr);
+    v = decodeURIComponent(vstr);
+
+    if (!hasOwnProperty(obj, k)) {
+      obj[k] = v;
+    } else if (isArray(obj[k])) {
+      obj[k].push(v);
+    } else {
+      obj[k] = [obj[k], v];
+    }
+  }
+
+  return obj;
+};
+
+var isArray = Array.isArray || function (xs) {
+  return Object.prototype.toString.call(xs) === '[object Array]';
+};
+
+},{}],31:[function(require,module,exports){
+// Copyright Joyent, Inc. and other Node contributors.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to permit
+// persons to whom the Software is furnished to do so, subject to the
+// following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+'use strict';
+
+var stringifyPrimitive = function(v) {
+  switch (typeof v) {
+    case 'string':
+      return v;
+
+    case 'boolean':
+      return v ? 'true' : 'false';
+
+    case 'number':
+      return isFinite(v) ? v : '';
+
+    default:
+      return '';
+  }
+};
+
+module.exports = function(obj, sep, eq, name) {
+  sep = sep || '&';
+  eq = eq || '=';
+  if (obj === null) {
+    obj = undefined;
+  }
+
+  if (typeof obj === 'object') {
+    return map(objectKeys(obj), function(k) {
+      var ks = encodeURIComponent(stringifyPrimitive(k)) + eq;
+      if (isArray(obj[k])) {
+        return map(obj[k], function(v) {
+          return ks + encodeURIComponent(stringifyPrimitive(v));
+        }).join(sep);
+      } else {
+        return ks + encodeURIComponent(stringifyPrimitive(obj[k]));
+      }
+    }).join(sep);
+
+  }
+
+  if (!name) return '';
+  return encodeURIComponent(stringifyPrimitive(name)) + eq +
+         encodeURIComponent(stringifyPrimitive(obj));
+};
+
+var isArray = Array.isArray || function (xs) {
+  return Object.prototype.toString.call(xs) === '[object Array]';
+};
+
+function map (xs, f) {
+  if (xs.map) return xs.map(f);
+  var res = [];
+  for (var i = 0; i < xs.length; i++) {
+    res.push(f(xs[i], i));
+  }
+  return res;
+}
+
+var objectKeys = Object.keys || function (obj) {
+  var res = [];
+  for (var key in obj) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) res.push(key);
+  }
+  return res;
+};
+
+},{}],32:[function(require,module,exports){
+'use strict';
+
+exports.decode = exports.parse = require('./decode');
+exports.encode = exports.stringify = require('./encode');
+
+},{"./decode":30,"./encode":31}],33:[function(require,module,exports){
+module.exports = require("./lib/_stream_duplex.js")
+
+},{"./lib/_stream_duplex.js":34}],34:[function(require,module,exports){
 // a duplex stream is just a stream that is both readable and writable.
 // Since JS doesn't have multiple prototypal inheritance, this class
 // prototypally inherits from Readable, and then parasitically from
 // Writable.
 
-module.exports = Duplex;
+'use strict';
 
 /*<replacement>*/
 var objectKeys = Object.keys || function (obj) {
@@ -23384,6 +25938,14 @@ var objectKeys = Object.keys || function (obj) {
   return keys;
 }
 /*</replacement>*/
+
+
+module.exports = Duplex;
+
+/*<replacement>*/
+var processNextTick = require('process-nextick-args');
+/*</replacement>*/
+
 
 
 /*<replacement>*/
@@ -23396,10 +25958,12 @@ var Writable = require('./_stream_writable');
 
 util.inherits(Duplex, Readable);
 
-forEach(objectKeys(Writable.prototype), function(method) {
+var keys = objectKeys(Writable.prototype);
+for (var v = 0; v < keys.length; v++) {
+  var method = keys[v];
   if (!Duplex.prototype[method])
     Duplex.prototype[method] = Writable.prototype[method];
-});
+}
 
 function Duplex(options) {
   if (!(this instanceof Duplex))
@@ -23430,7 +25994,11 @@ function onend() {
 
   // no more data can be written.
   // But allow more writes to happen in this tick.
-  process.nextTick(this.end.bind(this));
+  processNextTick(onEndNT, this);
+}
+
+function onEndNT(self) {
+  self.end();
 }
 
 function forEach (xs, f) {
@@ -23439,32 +26007,12 @@ function forEach (xs, f) {
   }
 }
 
-}).call(this,require('_process'))
-},{"./_stream_readable":27,"./_stream_writable":29,"_process":23,"core-util-is":30,"inherits":20}],26:[function(require,module,exports){
-// Copyright Joyent, Inc. and other Node contributors.
-//
-// Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the
-// "Software"), to deal in the Software without restriction, including
-// without limitation the rights to use, copy, modify, merge, publish,
-// distribute, sublicense, and/or sell copies of the Software, and to permit
-// persons to whom the Software is furnished to do so, subject to the
-// following conditions:
-//
-// The above copyright notice and this permission notice shall be included
-// in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
+},{"./_stream_readable":36,"./_stream_writable":38,"core-util-is":9,"inherits":14,"process-nextick-args":27}],35:[function(require,module,exports){
 // a passthrough stream.
 // basically just the most minimal sort of Transform stream.
 // Every written chunk gets output as-is.
+
+'use strict';
 
 module.exports = PassThrough;
 
@@ -23488,30 +26036,16 @@ PassThrough.prototype._transform = function(chunk, encoding, cb) {
   cb(null, chunk);
 };
 
-},{"./_stream_transform":28,"core-util-is":30,"inherits":20}],27:[function(require,module,exports){
+},{"./_stream_transform":37,"core-util-is":9,"inherits":14}],36:[function(require,module,exports){
 (function (process){
-// Copyright Joyent, Inc. and other Node contributors.
-//
-// Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the
-// "Software"), to deal in the Software without restriction, including
-// without limitation the rights to use, copy, modify, merge, publish,
-// distribute, sublicense, and/or sell copies of the Software, and to permit
-// persons to whom the Software is furnished to do so, subject to the
-// following conditions:
-//
-// The above copyright notice and this permission notice shall be included
-// in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-// USE OR OTHER DEALINGS IN THE SOFTWARE.
+'use strict';
 
 module.exports = Readable;
+
+/*<replacement>*/
+var processNextTick = require('process-nextick-args');
+/*</replacement>*/
+
 
 /*<replacement>*/
 var isArray = require('isarray');
@@ -23524,32 +26058,67 @@ var Buffer = require('buffer').Buffer;
 
 Readable.ReadableState = ReadableState;
 
-var EE = require('events').EventEmitter;
+var EE = require('events');
 
 /*<replacement>*/
-if (!EE.listenerCount) EE.listenerCount = function(emitter, type) {
+var EElistenerCount = function(emitter, type) {
   return emitter.listeners(type).length;
 };
 /*</replacement>*/
 
-var Stream = require('stream');
+
+
+/*<replacement>*/
+var Stream;
+(function (){try{
+  Stream = require('st' + 'ream');
+}catch(_){}finally{
+  if (!Stream)
+    Stream = require('events').EventEmitter;
+}}())
+/*</replacement>*/
+
+var Buffer = require('buffer').Buffer;
 
 /*<replacement>*/
 var util = require('core-util-is');
 util.inherits = require('inherits');
 /*</replacement>*/
 
+
+
+/*<replacement>*/
+var debugUtil = require('util');
+var debug;
+if (debugUtil && debugUtil.debuglog) {
+  debug = debugUtil.debuglog('stream');
+} else {
+  debug = function () {};
+}
+/*</replacement>*/
+
 var StringDecoder;
 
 util.inherits(Readable, Stream);
 
+var Duplex;
 function ReadableState(options, stream) {
+  Duplex = Duplex || require('./_stream_duplex');
+
   options = options || {};
+
+  // object stream flag. Used to make read(n) ignore n and to
+  // make all the buffer merging and length checks go away
+  this.objectMode = !!options.objectMode;
+
+  if (stream instanceof Duplex)
+    this.objectMode = this.objectMode || !!options.readableObjectMode;
 
   // the point at which it stops calling _read() to fill the buffer
   // Note: 0 is a valid value, means "don't call _read preemptively ever"
   var hwm = options.highWaterMark;
-  this.highWaterMark = (hwm || hwm === 0) ? hwm : 16 * 1024;
+  var defaultHwm = this.objectMode ? 16 : 16 * 1024;
+  this.highWaterMark = (hwm || hwm === 0) ? hwm : defaultHwm;
 
   // cast to ints.
   this.highWaterMark = ~~this.highWaterMark;
@@ -23558,19 +26127,13 @@ function ReadableState(options, stream) {
   this.length = 0;
   this.pipes = null;
   this.pipesCount = 0;
-  this.flowing = false;
+  this.flowing = null;
   this.ended = false;
   this.endEmitted = false;
   this.reading = false;
 
-  // In streams that never have any data, and do push(null) right away,
-  // the consumer can miss the 'end' event if they do some I/O before
-  // consuming the stream.  So, we don't emit('end') until some reading
-  // happens.
-  this.calledRead = false;
-
   // a flag to be able to tell if the onwrite cb is called immediately,
-  // or on a later tick.  We set this to true at first, becuase any
+  // or on a later tick.  We set this to true at first, because any
   // actions that shouldn't happen until "later" should generally also
   // not happen before the first write call.
   this.sync = true;
@@ -23580,11 +26143,6 @@ function ReadableState(options, stream) {
   this.needReadable = false;
   this.emittedReadable = false;
   this.readableListening = false;
-
-
-  // object stream flag. Used to make read(n) ignore n and to
-  // make all the buffer merging and length checks go away
-  this.objectMode = !!options.objectMode;
 
   // Crypto is kind of old and crusty.  Historically, its default string
   // encoding is 'binary' so we have to make this configurable.
@@ -23611,7 +26169,10 @@ function ReadableState(options, stream) {
   }
 }
 
+var Duplex;
 function Readable(options) {
+  Duplex = Duplex || require('./_stream_duplex');
+
   if (!(this instanceof Readable))
     return new Readable(options);
 
@@ -23619,6 +26180,9 @@ function Readable(options) {
 
   // legacy
   this.readable = true;
+
+  if (options && typeof options.read === 'function')
+    this._read = options.read;
 
   Stream.call(this);
 }
@@ -23630,7 +26194,7 @@ function Readable(options) {
 Readable.prototype.push = function(chunk, encoding) {
   var state = this._readableState;
 
-  if (typeof chunk === 'string' && !state.objectMode) {
+  if (!state.objectMode && typeof chunk === 'string') {
     encoding = encoding || state.defaultEncoding;
     if (encoding !== state.encoding) {
       chunk = new Buffer(chunk, encoding);
@@ -23647,14 +26211,17 @@ Readable.prototype.unshift = function(chunk) {
   return readableAddChunk(this, state, chunk, '', true);
 };
 
+Readable.prototype.isPaused = function() {
+  return this._readableState.flowing === false;
+};
+
 function readableAddChunk(stream, state, chunk, encoding, addToFront) {
   var er = chunkInvalid(state, chunk);
   if (er) {
     stream.emit('error', er);
-  } else if (chunk === null || chunk === undefined) {
+  } else if (chunk === null) {
     state.reading = false;
-    if (!state.ended)
-      onEofChunk(stream, state);
+    onEofChunk(stream, state);
   } else if (state.objectMode || chunk && chunk.length > 0) {
     if (state.ended && !addToFront) {
       var e = new Error('stream.push() after EOF');
@@ -23666,17 +26233,24 @@ function readableAddChunk(stream, state, chunk, encoding, addToFront) {
       if (state.decoder && !addToFront && !encoding)
         chunk = state.decoder.write(chunk);
 
-      // update the buffer info.
-      state.length += state.objectMode ? 1 : chunk.length;
-      if (addToFront) {
-        state.buffer.unshift(chunk);
-      } else {
+      if (!addToFront)
         state.reading = false;
-        state.buffer.push(chunk);
-      }
 
-      if (state.needReadable)
-        emitReadable(stream);
+      // if we want the data now, just emit it.
+      if (state.flowing && state.length === 0 && !state.sync) {
+        stream.emit('data', chunk);
+        stream.read(0);
+      } else {
+        // update the buffer info.
+        state.length += state.objectMode ? 1 : chunk.length;
+        if (addToFront)
+          state.buffer.unshift(chunk);
+        else
+          state.buffer.push(chunk);
+
+        if (state.needReadable)
+          emitReadable(stream);
+      }
 
       maybeReadMore(stream, state);
     }
@@ -23686,7 +26260,6 @@ function readableAddChunk(stream, state, chunk, encoding, addToFront) {
 
   return needMoreData(state);
 }
-
 
 
 // if it's past the high water mark, we can push in some more.
@@ -23709,17 +26282,22 @@ Readable.prototype.setEncoding = function(enc) {
     StringDecoder = require('string_decoder/').StringDecoder;
   this._readableState.decoder = new StringDecoder(enc);
   this._readableState.encoding = enc;
+  return this;
 };
 
-// Don't raise the hwm > 128MB
+// Don't raise the hwm > 8MB
 var MAX_HWM = 0x800000;
-function roundUpToNextPowerOf2(n) {
+function computeNewHighWaterMark(n) {
   if (n >= MAX_HWM) {
     n = MAX_HWM;
   } else {
     // Get the next highest power of 2
     n--;
-    for (var p = 1; p < 32; p <<= 1) n |= n >> p;
+    n |= n >>> 1;
+    n |= n >>> 2;
+    n |= n >>> 4;
+    n |= n >>> 8;
+    n |= n >>> 16;
     n++;
   }
   return n;
@@ -23732,7 +26310,7 @@ function howMuchToRead(n, state) {
   if (state.objectMode)
     return n === 0 ? 0 : 1;
 
-  if (isNaN(n) || n === null) {
+  if (n === null || isNaN(n)) {
     // only flow one buffer at a time
     if (state.flowing && state.buffer.length)
       return state.buffer[0].length;
@@ -23748,15 +26326,16 @@ function howMuchToRead(n, state) {
   // power of 2, to prevent increasing it excessively in tiny
   // amounts.
   if (n > state.highWaterMark)
-    state.highWaterMark = roundUpToNextPowerOf2(n);
+    state.highWaterMark = computeNewHighWaterMark(n);
 
   // don't have that much.  return null, unless we've ended.
   if (n > state.length) {
     if (!state.ended) {
       state.needReadable = true;
       return 0;
-    } else
+    } else {
       return state.length;
+    }
   }
 
   return n;
@@ -23764,8 +26343,8 @@ function howMuchToRead(n, state) {
 
 // you can override either this method, or the async _read(n) below.
 Readable.prototype.read = function(n) {
+  debug('read', n);
   var state = this._readableState;
-  state.calledRead = true;
   var nOrig = n;
 
   if (typeof n !== 'number' || n > 0)
@@ -23777,7 +26356,11 @@ Readable.prototype.read = function(n) {
   if (n === 0 &&
       state.needReadable &&
       (state.length >= state.highWaterMark || state.ended)) {
-    emitReadable(this);
+    debug('read: emitReadable', state.length, state.ended);
+    if (state.length === 0 && state.ended)
+      endReadable(this);
+    else
+      emitReadable(this);
     return null;
   }
 
@@ -23814,17 +26397,23 @@ Readable.prototype.read = function(n) {
 
   // if we need a readable event, then we need to do some reading.
   var doRead = state.needReadable;
+  debug('need readable', doRead);
 
   // if we currently have less than the highWaterMark, then also read some
-  if (state.length - n <= state.highWaterMark)
+  if (state.length === 0 || state.length - n < state.highWaterMark) {
     doRead = true;
+    debug('length less than watermark', doRead);
+  }
 
   // however, if we've ended, then there's no point, and if we're already
   // reading, then it's unnecessary.
-  if (state.ended || state.reading)
+  if (state.ended || state.reading) {
     doRead = false;
+    debug('reading or ended', doRead);
+  }
 
   if (doRead) {
+    debug('do read');
     state.reading = true;
     state.sync = true;
     // if the length is currently zero, then we *need* a readable event.
@@ -23835,9 +26424,8 @@ Readable.prototype.read = function(n) {
     state.sync = false;
   }
 
-  // If _read called its callback synchronously, then `reading`
-  // will be false, and we need to re-evaluate how much data we
-  // can return to the user.
+  // If _read pushed data synchronously, then `reading` will be false,
+  // and we need to re-evaluate how much data we can return to the user.
   if (doRead && !state.reading)
     n = howMuchToRead(nOrig, state);
 
@@ -23859,23 +26447,23 @@ Readable.prototype.read = function(n) {
   if (state.length === 0 && !state.ended)
     state.needReadable = true;
 
-  // If we happened to read() exactly the remaining amount in the
-  // buffer, and the EOF has been seen at this point, then make sure
-  // that we emit 'end' on the very next tick.
-  if (state.ended && !state.endEmitted && state.length === 0)
+  // If we tried to read() past the EOF, then emit end on the next tick.
+  if (nOrig !== n && state.ended && state.length === 0)
     endReadable(this);
+
+  if (ret !== null)
+    this.emit('data', ret);
 
   return ret;
 };
 
 function chunkInvalid(state, chunk) {
   var er = null;
-  if (!Buffer.isBuffer(chunk) &&
-      'string' !== typeof chunk &&
+  if (!(Buffer.isBuffer(chunk)) &&
+      typeof chunk !== 'string' &&
       chunk !== null &&
       chunk !== undefined &&
-      !state.objectMode &&
-      !er) {
+      !state.objectMode) {
     er = new TypeError('Invalid non-string/buffer chunk');
   }
   return er;
@@ -23883,7 +26471,8 @@ function chunkInvalid(state, chunk) {
 
 
 function onEofChunk(stream, state) {
-  if (state.decoder && !state.ended) {
+  if (state.ended) return;
+  if (state.decoder) {
     var chunk = state.decoder.end();
     if (chunk && chunk.length) {
       state.buffer.push(chunk);
@@ -23892,12 +26481,8 @@ function onEofChunk(stream, state) {
   }
   state.ended = true;
 
-  // if we've ended and we have some data left, then emit
-  // 'readable' now to make sure it gets picked up.
-  if (state.length > 0)
-    emitReadable(stream);
-  else
-    endReadable(stream);
+  // emit 'readable' now to make sure it gets picked up.
+  emitReadable(stream);
 }
 
 // Don't emit readable right away in sync mode, because this can trigger
@@ -23906,20 +26491,20 @@ function onEofChunk(stream, state) {
 function emitReadable(stream) {
   var state = stream._readableState;
   state.needReadable = false;
-  if (state.emittedReadable)
-    return;
-
-  state.emittedReadable = true;
-  if (state.sync)
-    process.nextTick(function() {
+  if (!state.emittedReadable) {
+    debug('emitReadable', state.flowing);
+    state.emittedReadable = true;
+    if (state.sync)
+      processNextTick(emitReadable_, stream);
+    else
       emitReadable_(stream);
-    });
-  else
-    emitReadable_(stream);
+  }
 }
 
 function emitReadable_(stream) {
+  debug('emit readable');
   stream.emit('readable');
+  flow(stream);
 }
 
 
@@ -23932,9 +26517,7 @@ function emitReadable_(stream) {
 function maybeReadMore(stream, state) {
   if (!state.readingMore) {
     state.readingMore = true;
-    process.nextTick(function() {
-      maybeReadMore_(stream, state);
-    });
+    processNextTick(maybeReadMore_, stream, state);
   }
 }
 
@@ -23942,6 +26525,7 @@ function maybeReadMore_(stream, state) {
   var len = state.length;
   while (!state.reading && !state.flowing && !state.ended &&
          state.length < state.highWaterMark) {
+    debug('maybeReadMore read 0');
     stream.read(0);
     if (len === state.length)
       // didn't get any data, stop spinning.
@@ -23976,6 +26560,7 @@ Readable.prototype.pipe = function(dest, pipeOpts) {
       break;
   }
   state.pipesCount += 1;
+  debug('pipe count=%d opts=%j', state.pipesCount, pipeOpts);
 
   var doEnd = (!pipeOpts || pipeOpts.end !== false) &&
               dest !== process.stdout &&
@@ -23983,17 +26568,20 @@ Readable.prototype.pipe = function(dest, pipeOpts) {
 
   var endFn = doEnd ? onend : cleanup;
   if (state.endEmitted)
-    process.nextTick(endFn);
+    processNextTick(endFn);
   else
     src.once('end', endFn);
 
   dest.on('unpipe', onunpipe);
   function onunpipe(readable) {
-    if (readable !== src) return;
-    cleanup();
+    debug('onunpipe');
+    if (readable === src) {
+      cleanup();
+    }
   }
 
   function onend() {
+    debug('onend');
     dest.end();
   }
 
@@ -24004,7 +26592,9 @@ Readable.prototype.pipe = function(dest, pipeOpts) {
   var ondrain = pipeOnDrain(src);
   dest.on('drain', ondrain);
 
+  var cleanedUp = false;
   function cleanup() {
+    debug('cleanup');
     // cleanup event handlers once the pipe is broken
     dest.removeListener('close', onclose);
     dest.removeListener('finish', onfinish);
@@ -24013,22 +26603,46 @@ Readable.prototype.pipe = function(dest, pipeOpts) {
     dest.removeListener('unpipe', onunpipe);
     src.removeListener('end', onend);
     src.removeListener('end', cleanup);
+    src.removeListener('data', ondata);
+
+    cleanedUp = true;
 
     // if the reader is waiting for a drain event from this
     // specific writer, then it would cause it to never start
     // flowing again.
     // So, if this is awaiting a drain, then we just call it now.
     // If we don't know, then assume that we are waiting for one.
-    if (!dest._writableState || dest._writableState.needDrain)
+    if (state.awaitDrain &&
+        (!dest._writableState || dest._writableState.needDrain))
       ondrain();
+  }
+
+  src.on('data', ondata);
+  function ondata(chunk) {
+    debug('ondata');
+    var ret = dest.write(chunk);
+    if (false === ret) {
+      // If the user unpiped during `dest.write()`, it is possible
+      // to get stuck in a permanently paused state if that write
+      // also returned false.
+      if (state.pipesCount === 1 &&
+          state.pipes[0] === dest &&
+          src.listenerCount('data') === 1 &&
+          !cleanedUp) {
+        debug('false write response, pause', src._readableState.awaitDrain);
+        src._readableState.awaitDrain++;
+      }
+      src.pause();
+    }
   }
 
   // if the dest has an error, then stop piping into it.
   // however, don't suppress the throwing behavior for this.
   function onerror(er) {
+    debug('onerror', er);
     unpipe();
     dest.removeListener('error', onerror);
-    if (EE.listenerCount(dest, 'error') === 0)
+    if (EElistenerCount(dest, 'error') === 0)
       dest.emit('error', er);
   }
   // This is a brutally ugly hack to make sure that our error handler
@@ -24041,7 +26655,6 @@ Readable.prototype.pipe = function(dest, pipeOpts) {
     dest._events.error = [onerror, dest._events.error];
 
 
-
   // Both close and finish should trigger unpipe, but only once.
   function onclose() {
     dest.removeListener('finish', onfinish);
@@ -24049,12 +26662,14 @@ Readable.prototype.pipe = function(dest, pipeOpts) {
   }
   dest.once('close', onclose);
   function onfinish() {
+    debug('onfinish');
     dest.removeListener('close', onclose);
     unpipe();
   }
   dest.once('finish', onfinish);
 
   function unpipe() {
+    debug('unpipe');
     src.unpipe(dest);
   }
 
@@ -24063,16 +26678,8 @@ Readable.prototype.pipe = function(dest, pipeOpts) {
 
   // start the flow if it hasn't been started already.
   if (!state.flowing) {
-    // the handler that waits for readable events after all
-    // the data gets sucked out in flow.
-    // This would be easier to follow with a .once() handler
-    // in flow(), but that is too slow.
-    this.on('readable', pipeOnReadable);
-
-    state.flowing = true;
-    process.nextTick(function() {
-      flow(src);
-    });
+    debug('pipe resume');
+    src.resume();
   }
 
   return dest;
@@ -24080,63 +26687,15 @@ Readable.prototype.pipe = function(dest, pipeOpts) {
 
 function pipeOnDrain(src) {
   return function() {
-    var dest = this;
     var state = src._readableState;
-    state.awaitDrain--;
-    if (state.awaitDrain === 0)
+    debug('pipeOnDrain', state.awaitDrain);
+    if (state.awaitDrain)
+      state.awaitDrain--;
+    if (state.awaitDrain === 0 && EElistenerCount(src, 'data')) {
+      state.flowing = true;
       flow(src);
-  };
-}
-
-function flow(src) {
-  var state = src._readableState;
-  var chunk;
-  state.awaitDrain = 0;
-
-  function write(dest, i, list) {
-    var written = dest.write(chunk);
-    if (false === written) {
-      state.awaitDrain++;
     }
-  }
-
-  while (state.pipesCount && null !== (chunk = src.read())) {
-
-    if (state.pipesCount === 1)
-      write(state.pipes, 0, null);
-    else
-      forEach(state.pipes, write);
-
-    src.emit('data', chunk);
-
-    // if anyone needs a drain, then we have to wait for that.
-    if (state.awaitDrain > 0)
-      return;
-  }
-
-  // if every destination was unpiped, either before entering this
-  // function, or in the while loop, then stop flowing.
-  //
-  // NB: This is a pretty rare edge case.
-  if (state.pipesCount === 0) {
-    state.flowing = false;
-
-    // if there were data event listeners added, then switch to old mode.
-    if (EE.listenerCount(src, 'data') > 0)
-      emitDataEvents(src);
-    return;
-  }
-
-  // at this point, no one needed a drain, so we just ran out of data
-  // on the next readable event, start it over again.
-  state.ranOut = true;
-}
-
-function pipeOnReadable() {
-  if (this._readableState.ranOut) {
-    this._readableState.ranOut = false;
-    flow(this);
-  }
+  };
 }
 
 
@@ -24159,7 +26718,6 @@ Readable.prototype.unpipe = function(dest) {
     // got a match.
     state.pipes = null;
     state.pipesCount = 0;
-    this.removeListener('readable', pipeOnReadable);
     state.flowing = false;
     if (dest)
       dest.emit('unpipe', this);
@@ -24174,7 +26732,6 @@ Readable.prototype.unpipe = function(dest) {
     var len = state.pipesCount;
     state.pipes = null;
     state.pipesCount = 0;
-    this.removeListener('readable', pipeOnReadable);
     state.flowing = false;
 
     for (var i = 0; i < len; i++)
@@ -24202,8 +26759,11 @@ Readable.prototype.unpipe = function(dest) {
 Readable.prototype.on = function(ev, fn) {
   var res = Stream.prototype.on.call(this, ev, fn);
 
-  if (ev === 'data' && !this._readableState.flowing)
-    emitDataEvents(this);
+  // If listening to data, and it has not explicitly been paused,
+  // then call resume to start the flow of data on the next tick.
+  if (ev === 'data' && false !== this._readableState.flowing) {
+    this.resume();
+  }
 
   if (ev === 'readable' && this.readable) {
     var state = this._readableState;
@@ -24212,7 +26772,7 @@ Readable.prototype.on = function(ev, fn) {
       state.emittedReadable = false;
       state.needReadable = true;
       if (!state.reading) {
-        this.read(0);
+        processNextTick(nReadingNextTick, this);
       } else if (state.length) {
         emitReadable(this, state);
       }
@@ -24223,66 +26783,61 @@ Readable.prototype.on = function(ev, fn) {
 };
 Readable.prototype.addListener = Readable.prototype.on;
 
+function nReadingNextTick(self) {
+  debug('readable nexttick read 0');
+  self.read(0);
+}
+
 // pause() and resume() are remnants of the legacy readable stream API
 // If the user uses them, then switch into old mode.
 Readable.prototype.resume = function() {
-  emitDataEvents(this);
-  this.read(0);
-  this.emit('resume');
+  var state = this._readableState;
+  if (!state.flowing) {
+    debug('resume');
+    state.flowing = true;
+    resume(this, state);
+  }
+  return this;
 };
 
-Readable.prototype.pause = function() {
-  emitDataEvents(this, true);
-  this.emit('pause');
-};
+function resume(stream, state) {
+  if (!state.resumeScheduled) {
+    state.resumeScheduled = true;
+    processNextTick(resume_, stream, state);
+  }
+}
 
-function emitDataEvents(stream, startPaused) {
-  var state = stream._readableState;
-
-  if (state.flowing) {
-    // https://github.com/isaacs/readable-stream/issues/16
-    throw new Error('Cannot switch to old mode now.');
+function resume_(stream, state) {
+  if (!state.reading) {
+    debug('resume read 0');
+    stream.read(0);
   }
 
-  var paused = startPaused || false;
-  var readable = false;
+  state.resumeScheduled = false;
+  stream.emit('resume');
+  flow(stream);
+  if (state.flowing && !state.reading)
+    stream.read(0);
+}
 
-  // convert to an old-style stream.
-  stream.readable = true;
-  stream.pipe = Stream.prototype.pipe;
-  stream.on = stream.addListener = Stream.prototype.on;
-
-  stream.on('readable', function() {
-    readable = true;
-
-    var c;
-    while (!paused && (null !== (c = stream.read())))
-      stream.emit('data', c);
-
-    if (c === null) {
-      readable = false;
-      stream._readableState.needReadable = true;
-    }
-  });
-
-  stream.pause = function() {
-    paused = true;
+Readable.prototype.pause = function() {
+  debug('call pause flowing=%j', this._readableState.flowing);
+  if (false !== this._readableState.flowing) {
+    debug('pause');
+    this._readableState.flowing = false;
     this.emit('pause');
-  };
+  }
+  return this;
+};
 
-  stream.resume = function() {
-    paused = false;
-    if (readable)
-      process.nextTick(function() {
-        stream.emit('readable');
-      });
-    else
-      this.read(0);
-    this.emit('resume');
-  };
-
-  // now make it start, just in case it hadn't already.
-  stream.emit('readable');
+function flow(stream) {
+  var state = stream._readableState;
+  debug('flow', state.flowing);
+  if (state.flowing) {
+    do {
+      var chunk = stream.read();
+    } while (null !== chunk && state.flowing);
+  }
 }
 
 // wrap an old-style stream as the async data source.
@@ -24294,6 +26849,7 @@ Readable.prototype.wrap = function(stream) {
 
   var self = this;
   stream.on('end', function() {
+    debug('wrapped end');
     if (state.decoder && !state.ended) {
       var chunk = state.decoder.end();
       if (chunk && chunk.length)
@@ -24304,9 +26860,14 @@ Readable.prototype.wrap = function(stream) {
   });
 
   stream.on('data', function(chunk) {
+    debug('wrapped data');
     if (state.decoder)
       chunk = state.decoder.write(chunk);
-    if (!chunk || !state.objectMode && !chunk.length)
+
+    // don't skip over falsy values in objectMode
+    if (state.objectMode && (chunk === null || chunk === undefined))
+      return;
+    else if (!state.objectMode && (!chunk || !chunk.length))
       return;
 
     var ret = self.push(chunk);
@@ -24319,11 +26880,10 @@ Readable.prototype.wrap = function(stream) {
   // proxy all the other methods.
   // important when wrapping filters and duplexes.
   for (var i in stream) {
-    if (typeof stream[i] === 'function' &&
-        typeof this[i] === 'undefined') {
+    if (this[i] === undefined && typeof stream[i] === 'function') {
       this[i] = function(method) { return function() {
         return stream[method].apply(stream, arguments);
-      }}(i);
+      }; }(i);
     }
   }
 
@@ -24336,6 +26896,7 @@ Readable.prototype.wrap = function(stream) {
   // when we try to consume some more bytes, simply unpause the
   // underlying stream.
   self._read = function(n) {
+    debug('wrapped _read', n);
     if (paused) {
       paused = false;
       stream.resume();
@@ -24344,7 +26905,6 @@ Readable.prototype.wrap = function(stream) {
 
   return self;
 };
-
 
 
 // exposed for testing purposes only.
@@ -24371,6 +26931,8 @@ function fromList(n, state) {
     // read it all, truncate the array.
     if (stringMode)
       ret = list.join('');
+    else if (list.length === 1)
+      ret = list[0];
     else
       ret = Buffer.concat(list, length);
     list.length = 0;
@@ -24424,16 +26986,18 @@ function endReadable(stream) {
   if (state.length > 0)
     throw new Error('endReadable called on non-empty stream');
 
-  if (!state.endEmitted && state.calledRead) {
+  if (!state.endEmitted) {
     state.ended = true;
-    process.nextTick(function() {
-      // Check that we didn't get one last unshift.
-      if (!state.endEmitted && state.length === 0) {
-        state.endEmitted = true;
-        stream.readable = false;
-        stream.emit('end');
-      }
-    });
+    processNextTick(endReadableNT, state, stream);
+  }
+}
+
+function endReadableNT(state, stream) {
+  // Check that we didn't get one last unshift.
+  if (!state.endEmitted && state.length === 0) {
+    state.endEmitted = true;
+    stream.readable = false;
+    stream.emit('end');
   }
 }
 
@@ -24451,29 +27015,7 @@ function indexOf (xs, x) {
 }
 
 }).call(this,require('_process'))
-},{"_process":23,"buffer":16,"core-util-is":30,"events":19,"inherits":20,"isarray":21,"stream":36,"string_decoder/":31}],28:[function(require,module,exports){
-// Copyright Joyent, Inc. and other Node contributors.
-//
-// Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the
-// "Software"), to deal in the Software without restriction, including
-// without limitation the rights to use, copy, modify, merge, publish,
-// distribute, sublicense, and/or sell copies of the Software, and to permit
-// persons to whom the Software is furnished to do so, subject to the
-// following conditions:
-//
-// The above copyright notice and this permission notice shall be included
-// in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-
+},{"./_stream_duplex":34,"_process":28,"buffer":6,"core-util-is":9,"events":11,"inherits":14,"isarray":16,"process-nextick-args":27,"string_decoder/":48,"util":4}],37:[function(require,module,exports){
 // a transform stream is a readable/writable stream where you do
 // something with the data.  Sometimes it's called a "filter",
 // but that's not a great name for it, since that implies a thing where
@@ -24516,6 +27058,8 @@ function indexOf (xs, x) {
 // would be consumed, and then the rest would wait (un-transformed) until
 // the results of the previous transformed chunk were consumed.
 
+'use strict';
+
 module.exports = Transform;
 
 var Duplex = require('./_stream_duplex');
@@ -24528,7 +27072,7 @@ util.inherits = require('inherits');
 util.inherits(Transform, Duplex);
 
 
-function TransformState(options, stream) {
+function TransformState(stream) {
   this.afterTransform = function(er, data) {
     return afterTransform(stream, er, data);
   };
@@ -24571,7 +27115,7 @@ function Transform(options) {
 
   Duplex.call(this, options);
 
-  var ts = this._transformState = new TransformState(options, this);
+  this._transformState = new TransformState(this);
 
   // when the writable side finishes, then flush out anything remaining.
   var stream = this;
@@ -24584,8 +27128,16 @@ function Transform(options) {
   // sync guard flag.
   this._readableState.sync = false;
 
-  this.once('finish', function() {
-    if ('function' === typeof this._flush)
+  if (options) {
+    if (typeof options.transform === 'function')
+      this._transform = options.transform;
+
+    if (typeof options.flush === 'function')
+      this._flush = options.flush;
+  }
+
+  this.once('prefinish', function() {
+    if (typeof this._flush === 'function')
       this._flush(function(er) {
         done(stream, er);
       });
@@ -24651,7 +27203,6 @@ function done(stream, er) {
   // if there's nothing in the write buffer, then that means
   // that nothing more will ever be provided
   var ws = stream._writableState;
-  var rs = stream._readableState;
   var ts = stream._transformState;
 
   if (ws.length)
@@ -24663,34 +27214,19 @@ function done(stream, er) {
   return stream.push(null);
 }
 
-},{"./_stream_duplex":25,"core-util-is":30,"inherits":20}],29:[function(require,module,exports){
-(function (process){
-// Copyright Joyent, Inc. and other Node contributors.
-//
-// Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the
-// "Software"), to deal in the Software without restriction, including
-// without limitation the rights to use, copy, modify, merge, publish,
-// distribute, sublicense, and/or sell copies of the Software, and to permit
-// persons to whom the Software is furnished to do so, subject to the
-// following conditions:
-//
-// The above copyright notice and this permission notice shall be included
-// in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
+},{"./_stream_duplex":34,"core-util-is":9,"inherits":14}],38:[function(require,module,exports){
 // A bit simpler than readable streams.
-// Implement an async ._write(chunk, cb), and it'll handle all
+// Implement an async ._write(chunk, encoding, cb), and it'll handle all
 // the drain event emission and buffering.
 
+'use strict';
+
 module.exports = Writable;
+
+/*<replacement>*/
+var processNextTick = require('process-nextick-args');
+/*</replacement>*/
+
 
 /*<replacement>*/
 var Buffer = require('buffer').Buffer;
@@ -24705,28 +27241,56 @@ util.inherits = require('inherits');
 /*</replacement>*/
 
 
-var Stream = require('stream');
+/*<replacement>*/
+var internalUtil = {
+  deprecate: require('util-deprecate')
+};
+/*</replacement>*/
+
+
+
+/*<replacement>*/
+var Stream;
+(function (){try{
+  Stream = require('st' + 'ream');
+}catch(_){}finally{
+  if (!Stream)
+    Stream = require('events').EventEmitter;
+}}())
+/*</replacement>*/
+
+var Buffer = require('buffer').Buffer;
 
 util.inherits(Writable, Stream);
+
+function nop() {}
 
 function WriteReq(chunk, encoding, cb) {
   this.chunk = chunk;
   this.encoding = encoding;
   this.callback = cb;
+  this.next = null;
 }
 
+var Duplex;
 function WritableState(options, stream) {
+  Duplex = Duplex || require('./_stream_duplex');
+
   options = options || {};
+
+  // object stream flag to indicate whether or not this stream
+  // contains buffers or objects.
+  this.objectMode = !!options.objectMode;
+
+  if (stream instanceof Duplex)
+    this.objectMode = this.objectMode || !!options.writableObjectMode;
 
   // the point at which write() starts returning false
   // Note: 0 is a valid value, means that we always return false if
   // the entire buffer is not flushed immediately on write()
   var hwm = options.highWaterMark;
-  this.highWaterMark = (hwm || hwm === 0) ? hwm : 16 * 1024;
-
-  // object stream flag to indicate whether or not this stream
-  // contains buffers or objects.
-  this.objectMode = !!options.objectMode;
+  var defaultHwm = this.objectMode ? 16 : 16 * 1024;
+  this.highWaterMark = (hwm || hwm === 0) ? hwm : defaultHwm;
 
   // cast to ints.
   this.highWaterMark = ~~this.highWaterMark;
@@ -24758,8 +27322,11 @@ function WritableState(options, stream) {
   // a flag to see when we're in the middle of a write.
   this.writing = false;
 
+  // when true all writes will be buffered until .uncork() call
+  this.corked = 0;
+
   // a flag to be able to tell if the onwrite cb is called immediately,
-  // or on a later tick.  We set this to true at first, becuase any
+  // or on a later tick.  We set this to true at first, because any
   // actions that shouldn't happen until "later" should generally also
   // not happen before the first write call.
   this.sync = true;
@@ -24780,14 +27347,44 @@ function WritableState(options, stream) {
   // the amount that is being written when _write is called.
   this.writelen = 0;
 
-  this.buffer = [];
+  this.bufferedRequest = null;
+  this.lastBufferedRequest = null;
+
+  // number of pending user-supplied write callbacks
+  // this must be 0 before 'finish' can be emitted
+  this.pendingcb = 0;
+
+  // emit prefinish if the only thing we're waiting for is _write cbs
+  // This is relevant for synchronous Transform streams
+  this.prefinished = false;
 
   // True if the error was already emitted and should not be thrown again
   this.errorEmitted = false;
 }
 
+WritableState.prototype.getBuffer = function writableStateGetBuffer() {
+  var current = this.bufferedRequest;
+  var out = [];
+  while (current) {
+    out.push(current);
+    current = current.next;
+  }
+  return out;
+};
+
+(function (){try {
+Object.defineProperty(WritableState.prototype, 'buffer', {
+  get: internalUtil.deprecate(function() {
+    return this.getBuffer();
+  }, '_writableState.buffer is deprecated. Use _writableState.getBuffer ' +
+     'instead.')
+});
+}catch(_){}}());
+
+
+var Duplex;
 function Writable(options) {
-  var Duplex = require('./_stream_duplex');
+  Duplex = Duplex || require('./_stream_duplex');
 
   // Writable ctor is applied to Duplexes, though they're not
   // instanceof Writable, they're instanceof Readable.
@@ -24799,6 +27396,14 @@ function Writable(options) {
   // legacy.
   this.writable = true;
 
+  if (options) {
+    if (typeof options.write === 'function')
+      this._write = options.write;
+
+    if (typeof options.writev === 'function')
+      this._writev = options.writev;
+  }
+
   Stream.call(this);
 }
 
@@ -24808,13 +27413,11 @@ Writable.prototype.pipe = function() {
 };
 
 
-function writeAfterEnd(stream, state, cb) {
+function writeAfterEnd(stream, cb) {
   var er = new Error('write after end');
   // TODO: defer error events consistently everywhere, not just the cb
   stream.emit('error', er);
-  process.nextTick(function() {
-    cb(er);
-  });
+  processNextTick(cb, er);
 }
 
 // If we get something that is not a buffer, string, null, or undefined,
@@ -24824,16 +27427,15 @@ function writeAfterEnd(stream, state, cb) {
 // how many bytes or characters.
 function validChunk(stream, state, chunk, cb) {
   var valid = true;
-  if (!Buffer.isBuffer(chunk) &&
-      'string' !== typeof chunk &&
+
+  if (!(Buffer.isBuffer(chunk)) &&
+      typeof chunk !== 'string' &&
       chunk !== null &&
       chunk !== undefined &&
       !state.objectMode) {
     var er = new TypeError('Invalid non-string/buffer chunk');
     stream.emit('error', er);
-    process.nextTick(function() {
-      cb(er);
-    });
+    processNextTick(cb, er);
     valid = false;
   }
   return valid;
@@ -24854,14 +27456,48 @@ Writable.prototype.write = function(chunk, encoding, cb) {
     encoding = state.defaultEncoding;
 
   if (typeof cb !== 'function')
-    cb = function() {};
+    cb = nop;
 
   if (state.ended)
-    writeAfterEnd(this, state, cb);
-  else if (validChunk(this, state, chunk, cb))
+    writeAfterEnd(this, cb);
+  else if (validChunk(this, state, chunk, cb)) {
+    state.pendingcb++;
     ret = writeOrBuffer(this, state, chunk, encoding, cb);
+  }
 
   return ret;
+};
+
+Writable.prototype.cork = function() {
+  var state = this._writableState;
+
+  state.corked++;
+};
+
+Writable.prototype.uncork = function() {
+  var state = this._writableState;
+
+  if (state.corked) {
+    state.corked--;
+
+    if (!state.writing &&
+        !state.corked &&
+        !state.finished &&
+        !state.bufferProcessing &&
+        state.bufferedRequest)
+      clearBuffer(this, state);
+  }
+};
+
+Writable.prototype.setDefaultEncoding = function setDefaultEncoding(encoding) {
+  // node::ParseEncoding() requires lower case.
+  if (typeof encoding === 'string')
+    encoding = encoding.toLowerCase();
+  if (!(['hex', 'utf8', 'utf-8', 'ascii', 'binary', 'base64',
+'ucs2', 'ucs-2','utf16le', 'utf-16le', 'raw']
+.indexOf((encoding + '').toLowerCase()) > -1))
+    throw new TypeError('Unknown encoding: ' + encoding);
+  this._writableState.defaultEncoding = encoding;
 };
 
 function decodeChunk(state, chunk, encoding) {
@@ -24878,6 +27514,7 @@ function decodeChunk(state, chunk, encoding) {
 // If we return false, then we need a drain event, so set that flag.
 function writeOrBuffer(stream, state, chunk, encoding, cb) {
   chunk = decodeChunk(state, chunk, encoding);
+
   if (Buffer.isBuffer(chunk))
     encoding = 'buffer';
   var len = state.objectMode ? 1 : chunk.length;
@@ -24889,28 +27526,37 @@ function writeOrBuffer(stream, state, chunk, encoding, cb) {
   if (!ret)
     state.needDrain = true;
 
-  if (state.writing)
-    state.buffer.push(new WriteReq(chunk, encoding, cb));
-  else
-    doWrite(stream, state, len, chunk, encoding, cb);
+  if (state.writing || state.corked) {
+    var last = state.lastBufferedRequest;
+    state.lastBufferedRequest = new WriteReq(chunk, encoding, cb);
+    if (last) {
+      last.next = state.lastBufferedRequest;
+    } else {
+      state.bufferedRequest = state.lastBufferedRequest;
+    }
+  } else {
+    doWrite(stream, state, false, len, chunk, encoding, cb);
+  }
 
   return ret;
 }
 
-function doWrite(stream, state, len, chunk, encoding, cb) {
+function doWrite(stream, state, writev, len, chunk, encoding, cb) {
   state.writelen = len;
   state.writecb = cb;
   state.writing = true;
   state.sync = true;
-  stream._write(chunk, encoding, state.onwrite);
+  if (writev)
+    stream._writev(chunk, state.onwrite);
+  else
+    stream._write(chunk, encoding, state.onwrite);
   state.sync = false;
 }
 
 function onwriteError(stream, state, sync, er, cb) {
+  --state.pendingcb;
   if (sync)
-    process.nextTick(function() {
-      cb(er);
-    });
+    processNextTick(cb, er);
   else
     cb(er);
 
@@ -24936,15 +27582,17 @@ function onwrite(stream, er) {
     onwriteError(stream, state, sync, er, cb);
   else {
     // Check if we're actually ready to finish, but don't emit yet
-    var finished = needFinish(stream, state);
+    var finished = needFinish(state);
 
-    if (!finished && !state.bufferProcessing && state.buffer.length)
+    if (!finished &&
+        !state.corked &&
+        !state.bufferProcessing &&
+        state.bufferedRequest) {
       clearBuffer(stream, state);
+    }
 
     if (sync) {
-      process.nextTick(function() {
-        afterWrite(stream, state, finished, cb);
-      });
+      processNextTick(afterWrite, stream, state, finished, cb);
     } else {
       afterWrite(stream, state, finished, cb);
     }
@@ -24954,9 +27602,9 @@ function onwrite(stream, er) {
 function afterWrite(stream, state, finished, cb) {
   if (!finished)
     onwriteDrain(stream, state);
+  state.pendingcb--;
   cb();
-  if (finished)
-    finishMaybe(stream, state);
+  finishMaybe(stream, state);
 }
 
 // Must force callback to be called on nextTick, so that we don't
@@ -24973,36 +27621,61 @@ function onwriteDrain(stream, state) {
 // if there's something in the buffer waiting, then process it
 function clearBuffer(stream, state) {
   state.bufferProcessing = true;
+  var entry = state.bufferedRequest;
 
-  for (var c = 0; c < state.buffer.length; c++) {
-    var entry = state.buffer[c];
-    var chunk = entry.chunk;
-    var encoding = entry.encoding;
-    var cb = entry.callback;
-    var len = state.objectMode ? 1 : chunk.length;
-
-    doWrite(stream, state, len, chunk, encoding, cb);
-
-    // if we didn't call the onwrite immediately, then
-    // it means that we need to wait until it does.
-    // also, that means that the chunk and cb are currently
-    // being processed, so move the buffer counter past them.
-    if (state.writing) {
-      c++;
-      break;
+  if (stream._writev && entry && entry.next) {
+    // Fast case, write everything using _writev()
+    var buffer = [];
+    var cbs = [];
+    while (entry) {
+      cbs.push(entry.callback);
+      buffer.push(entry);
+      entry = entry.next;
     }
-  }
 
+    // count the one we are adding, as well.
+    // TODO(isaacs) clean this up
+    state.pendingcb++;
+    state.lastBufferedRequest = null;
+    doWrite(stream, state, true, state.length, buffer, '', function(err) {
+      for (var i = 0; i < cbs.length; i++) {
+        state.pendingcb--;
+        cbs[i](err);
+      }
+    });
+
+    // Clear buffer
+  } else {
+    // Slow case, write chunks one-by-one
+    while (entry) {
+      var chunk = entry.chunk;
+      var encoding = entry.encoding;
+      var cb = entry.callback;
+      var len = state.objectMode ? 1 : chunk.length;
+
+      doWrite(stream, state, false, len, chunk, encoding, cb);
+      entry = entry.next;
+      // if we didn't call the onwrite immediately, then
+      // it means that we need to wait until it does.
+      // also, that means that the chunk and cb are currently
+      // being processed, so move the buffer counter past them.
+      if (state.writing) {
+        break;
+      }
+    }
+
+    if (entry === null)
+      state.lastBufferedRequest = null;
+  }
+  state.bufferedRequest = entry;
   state.bufferProcessing = false;
-  if (c < state.buffer.length)
-    state.buffer = state.buffer.slice(c);
-  else
-    state.buffer.length = 0;
 }
 
 Writable.prototype._write = function(chunk, encoding, cb) {
   cb(new Error('not implemented'));
 };
+
+Writable.prototype._writev = null;
 
 Writable.prototype.end = function(chunk, encoding, cb) {
   var state = this._writableState;
@@ -25016,8 +27689,14 @@ Writable.prototype.end = function(chunk, encoding, cb) {
     encoding = null;
   }
 
-  if (typeof chunk !== 'undefined' && chunk !== null)
+  if (chunk !== null && chunk !== undefined)
     this.write(chunk, encoding);
+
+  // .end() fully uncorks
+  if (state.corked) {
+    state.corked = 1;
+    this.uncork();
+  }
 
   // ignore unnecessary end() calls.
   if (!state.ending && !state.finished)
@@ -25025,18 +27704,31 @@ Writable.prototype.end = function(chunk, encoding, cb) {
 };
 
 
-function needFinish(stream, state) {
+function needFinish(state) {
   return (state.ending &&
           state.length === 0 &&
+          state.bufferedRequest === null &&
           !state.finished &&
           !state.writing);
 }
 
+function prefinish(stream, state) {
+  if (!state.prefinished) {
+    state.prefinished = true;
+    stream.emit('prefinish');
+  }
+}
+
 function finishMaybe(stream, state) {
-  var need = needFinish(stream, state);
+  var need = needFinish(state);
   if (need) {
-    state.finished = true;
-    stream.emit('finish');
+    if (state.pendingcb === 0) {
+      prefinish(stream, state);
+      state.finished = true;
+      stream.emit('finish');
+    } else {
+      prefinish(stream, state);
+    }
   }
   return need;
 }
@@ -25046,344 +27738,37 @@ function endWritable(stream, state, cb) {
   finishMaybe(stream, state);
   if (cb) {
     if (state.finished)
-      process.nextTick(cb);
+      processNextTick(cb);
     else
       stream.once('finish', cb);
   }
   state.ended = true;
 }
 
-}).call(this,require('_process'))
-},{"./_stream_duplex":25,"_process":23,"buffer":16,"core-util-is":30,"inherits":20,"stream":36}],30:[function(require,module,exports){
-(function (Buffer){
-// Copyright Joyent, Inc. and other Node contributors.
-//
-// Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the
-// "Software"), to deal in the Software without restriction, including
-// without limitation the rights to use, copy, modify, merge, publish,
-// distribute, sublicense, and/or sell copies of the Software, and to permit
-// persons to whom the Software is furnished to do so, subject to the
-// following conditions:
-//
-// The above copyright notice and this permission notice shall be included
-// in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-// NOTE: These type checking functions intentionally don't use `instanceof`
-// because it is fragile and can be easily faked with `Object.create()`.
-function isArray(ar) {
-  return Array.isArray(ar);
-}
-exports.isArray = isArray;
-
-function isBoolean(arg) {
-  return typeof arg === 'boolean';
-}
-exports.isBoolean = isBoolean;
-
-function isNull(arg) {
-  return arg === null;
-}
-exports.isNull = isNull;
-
-function isNullOrUndefined(arg) {
-  return arg == null;
-}
-exports.isNullOrUndefined = isNullOrUndefined;
-
-function isNumber(arg) {
-  return typeof arg === 'number';
-}
-exports.isNumber = isNumber;
-
-function isString(arg) {
-  return typeof arg === 'string';
-}
-exports.isString = isString;
-
-function isSymbol(arg) {
-  return typeof arg === 'symbol';
-}
-exports.isSymbol = isSymbol;
-
-function isUndefined(arg) {
-  return arg === void 0;
-}
-exports.isUndefined = isUndefined;
-
-function isRegExp(re) {
-  return isObject(re) && objectToString(re) === '[object RegExp]';
-}
-exports.isRegExp = isRegExp;
-
-function isObject(arg) {
-  return typeof arg === 'object' && arg !== null;
-}
-exports.isObject = isObject;
-
-function isDate(d) {
-  return isObject(d) && objectToString(d) === '[object Date]';
-}
-exports.isDate = isDate;
-
-function isError(e) {
-  return isObject(e) &&
-      (objectToString(e) === '[object Error]' || e instanceof Error);
-}
-exports.isError = isError;
-
-function isFunction(arg) {
-  return typeof arg === 'function';
-}
-exports.isFunction = isFunction;
-
-function isPrimitive(arg) {
-  return arg === null ||
-         typeof arg === 'boolean' ||
-         typeof arg === 'number' ||
-         typeof arg === 'string' ||
-         typeof arg === 'symbol' ||  // ES6 symbol
-         typeof arg === 'undefined';
-}
-exports.isPrimitive = isPrimitive;
-
-function isBuffer(arg) {
-  return Buffer.isBuffer(arg);
-}
-exports.isBuffer = isBuffer;
-
-function objectToString(o) {
-  return Object.prototype.toString.call(o);
-}
-}).call(this,require("buffer").Buffer)
-},{"buffer":16}],31:[function(require,module,exports){
-// Copyright Joyent, Inc. and other Node contributors.
-//
-// Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the
-// "Software"), to deal in the Software without restriction, including
-// without limitation the rights to use, copy, modify, merge, publish,
-// distribute, sublicense, and/or sell copies of the Software, and to permit
-// persons to whom the Software is furnished to do so, subject to the
-// following conditions:
-//
-// The above copyright notice and this permission notice shall be included
-// in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-var Buffer = require('buffer').Buffer;
-
-var isBufferEncoding = Buffer.isEncoding
-  || function(encoding) {
-       switch (encoding && encoding.toLowerCase()) {
-         case 'hex': case 'utf8': case 'utf-8': case 'ascii': case 'binary': case 'base64': case 'ucs2': case 'ucs-2': case 'utf16le': case 'utf-16le': case 'raw': return true;
-         default: return false;
-       }
-     }
-
-
-function assertEncoding(encoding) {
-  if (encoding && !isBufferEncoding(encoding)) {
-    throw new Error('Unknown encoding: ' + encoding);
-  }
-}
-
-var StringDecoder = exports.StringDecoder = function(encoding) {
-  this.encoding = (encoding || 'utf8').toLowerCase().replace(/[-_]/, '');
-  assertEncoding(encoding);
-  switch (this.encoding) {
-    case 'utf8':
-      // CESU-8 represents each of Surrogate Pair by 3-bytes
-      this.surrogateSize = 3;
-      break;
-    case 'ucs2':
-    case 'utf16le':
-      // UTF-16 represents each of Surrogate Pair by 2-bytes
-      this.surrogateSize = 2;
-      this.detectIncompleteChar = utf16DetectIncompleteChar;
-      break;
-    case 'base64':
-      // Base-64 stores 3 bytes in 4 chars, and pads the remainder.
-      this.surrogateSize = 3;
-      this.detectIncompleteChar = base64DetectIncompleteChar;
-      break;
-    default:
-      this.write = passThroughWrite;
-      return;
-  }
-
-  this.charBuffer = new Buffer(6);
-  this.charReceived = 0;
-  this.charLength = 0;
-};
-
-
-StringDecoder.prototype.write = function(buffer) {
-  var charStr = '';
-  var offset = 0;
-
-  // if our last write ended with an incomplete multibyte character
-  while (this.charLength) {
-    // determine how many remaining bytes this buffer has to offer for this char
-    var i = (buffer.length >= this.charLength - this.charReceived) ?
-                this.charLength - this.charReceived :
-                buffer.length;
-
-    // add the new bytes to the char buffer
-    buffer.copy(this.charBuffer, this.charReceived, offset, i);
-    this.charReceived += (i - offset);
-    offset = i;
-
-    if (this.charReceived < this.charLength) {
-      // still not enough chars in this buffer? wait for more ...
-      return '';
-    }
-
-    // get the character that was split
-    charStr = this.charBuffer.slice(0, this.charLength).toString(this.encoding);
-
-    // lead surrogate (D800-DBFF) is also the incomplete character
-    var charCode = charStr.charCodeAt(charStr.length - 1);
-    if (charCode >= 0xD800 && charCode <= 0xDBFF) {
-      this.charLength += this.surrogateSize;
-      charStr = '';
-      continue;
-    }
-    this.charReceived = this.charLength = 0;
-
-    // if there are no more bytes in this buffer, just emit our char
-    if (i == buffer.length) return charStr;
-
-    // otherwise cut off the characters end from the beginning of this buffer
-    buffer = buffer.slice(i, buffer.length);
-    break;
-  }
-
-  var lenIncomplete = this.detectIncompleteChar(buffer);
-
-  var end = buffer.length;
-  if (this.charLength) {
-    // buffer the incomplete character bytes we got
-    buffer.copy(this.charBuffer, 0, buffer.length - lenIncomplete, end);
-    this.charReceived = lenIncomplete;
-    end -= lenIncomplete;
-  }
-
-  charStr += buffer.toString(this.encoding, 0, end);
-
-  var end = charStr.length - 1;
-  var charCode = charStr.charCodeAt(end);
-  // lead surrogate (D800-DBFF) is also the incomplete character
-  if (charCode >= 0xD800 && charCode <= 0xDBFF) {
-    var size = this.surrogateSize;
-    this.charLength += size;
-    this.charReceived += size;
-    this.charBuffer.copy(this.charBuffer, size, 0, size);
-    this.charBuffer.write(charStr.charAt(charStr.length - 1), this.encoding);
-    return charStr.substring(0, end);
-  }
-
-  // or just emit the charStr
-  return charStr;
-};
-
-StringDecoder.prototype.detectIncompleteChar = function(buffer) {
-  // determine how many bytes we have to check at the end of this buffer
-  var i = (buffer.length >= 3) ? 3 : buffer.length;
-
-  // Figure out if one of the last i bytes of our buffer announces an
-  // incomplete char.
-  for (; i > 0; i--) {
-    var c = buffer[buffer.length - i];
-
-    // See http://en.wikipedia.org/wiki/UTF-8#Description
-
-    // 110XXXXX
-    if (i == 1 && c >> 5 == 0x06) {
-      this.charLength = 2;
-      break;
-    }
-
-    // 1110XXXX
-    if (i <= 2 && c >> 4 == 0x0E) {
-      this.charLength = 3;
-      break;
-    }
-
-    // 11110XXX
-    if (i <= 3 && c >> 3 == 0x1E) {
-      this.charLength = 4;
-      break;
-    }
-  }
-
-  return i;
-};
-
-StringDecoder.prototype.end = function(buffer) {
-  var res = '';
-  if (buffer && buffer.length)
-    res = this.write(buffer);
-
-  if (this.charReceived) {
-    var cr = this.charReceived;
-    var buf = this.charBuffer;
-    var enc = this.encoding;
-    res += buf.slice(0, cr).toString(enc);
-  }
-
-  return res;
-};
-
-function passThroughWrite(buffer) {
-  return buffer.toString(this.encoding);
-}
-
-function utf16DetectIncompleteChar(buffer) {
-  var incomplete = this.charReceived = buffer.length % 2;
-  this.charLength = incomplete ? 2 : 0;
-  return incomplete;
-}
-
-function base64DetectIncompleteChar(buffer) {
-  var incomplete = this.charReceived = buffer.length % 3;
-  this.charLength = incomplete ? 3 : 0;
-  return incomplete;
-}
-
-},{"buffer":16}],32:[function(require,module,exports){
+},{"./_stream_duplex":34,"buffer":6,"core-util-is":9,"events":11,"inherits":14,"process-nextick-args":27,"util-deprecate":52}],39:[function(require,module,exports){
 module.exports = require("./lib/_stream_passthrough.js")
 
-},{"./lib/_stream_passthrough.js":26}],33:[function(require,module,exports){
+},{"./lib/_stream_passthrough.js":35}],40:[function(require,module,exports){
+var Stream = (function (){
+  try {
+    return require('st' + 'ream'); // hack to fix a circular dependency issue when used with browserify
+  } catch(_){}
+}());
 exports = module.exports = require('./lib/_stream_readable.js');
+exports.Stream = Stream || exports;
 exports.Readable = exports;
 exports.Writable = require('./lib/_stream_writable.js');
 exports.Duplex = require('./lib/_stream_duplex.js');
 exports.Transform = require('./lib/_stream_transform.js');
 exports.PassThrough = require('./lib/_stream_passthrough.js');
 
-},{"./lib/_stream_duplex.js":25,"./lib/_stream_passthrough.js":26,"./lib/_stream_readable.js":27,"./lib/_stream_transform.js":28,"./lib/_stream_writable.js":29}],34:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":34,"./lib/_stream_passthrough.js":35,"./lib/_stream_readable.js":36,"./lib/_stream_transform.js":37,"./lib/_stream_writable.js":38}],41:[function(require,module,exports){
 module.exports = require("./lib/_stream_transform.js")
 
-},{"./lib/_stream_transform.js":28}],35:[function(require,module,exports){
+},{"./lib/_stream_transform.js":37}],42:[function(require,module,exports){
 module.exports = require("./lib/_stream_writable.js")
 
-},{"./lib/_stream_writable.js":29}],36:[function(require,module,exports){
+},{"./lib/_stream_writable.js":38}],43:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -25512,14 +27897,1673 @@ Stream.prototype.pipe = function(dest, options) {
   return dest;
 };
 
-},{"events":19,"inherits":20,"readable-stream/duplex.js":24,"readable-stream/passthrough.js":32,"readable-stream/readable.js":33,"readable-stream/transform.js":34,"readable-stream/writable.js":35}],37:[function(require,module,exports){
+},{"events":11,"inherits":14,"readable-stream/duplex.js":33,"readable-stream/passthrough.js":39,"readable-stream/readable.js":40,"readable-stream/transform.js":41,"readable-stream/writable.js":42}],44:[function(require,module,exports){
+(function (global){
+var ClientRequest = require('./lib/request')
+var extend = require('xtend')
+var statusCodes = require('builtin-status-codes')
+var url = require('url')
+
+var http = exports
+
+http.request = function (opts, cb) {
+	if (typeof opts === 'string')
+		opts = url.parse(opts)
+	else
+		opts = extend(opts)
+
+	// Normally, the page is loaded from http or https, so not specifying a protocol
+	// will result in a (valid) protocol-relative url. However, this won't work if
+	// the protocol is something else, like 'file:'
+	var defaultProtocol = global.location.protocol.search(/^https?:$/) === -1 ? 'http:' : ''
+
+	var protocol = opts.protocol || defaultProtocol
+	var host = opts.hostname || opts.host
+	var port = opts.port
+	var path = opts.path || '/'
+
+	// Necessary for IPv6 addresses
+	if (host && host.indexOf(':') !== -1)
+		host = '[' + host + ']'
+
+	// This may be a relative url. The browser should always be able to interpret it correctly.
+	opts.url = (host ? (protocol + '//' + host) : '') + (port ? ':' + port : '') + path
+	opts.method = (opts.method || 'GET').toUpperCase()
+	opts.headers = opts.headers || {}
+
+	// Also valid opts.auth, opts.mode
+
+	var req = new ClientRequest(opts)
+	if (cb)
+		req.on('response', cb)
+	return req
+}
+
+http.get = function get (opts, cb) {
+	var req = http.request(opts, cb)
+	req.end()
+	return req
+}
+
+http.Agent = function () {}
+http.Agent.defaultMaxSockets = 4
+
+http.STATUS_CODES = statusCodes
+
+http.METHODS = [
+	'CHECKOUT',
+	'CONNECT',
+	'COPY',
+	'DELETE',
+	'GET',
+	'HEAD',
+	'LOCK',
+	'M-SEARCH',
+	'MERGE',
+	'MKACTIVITY',
+	'MKCOL',
+	'MOVE',
+	'NOTIFY',
+	'OPTIONS',
+	'PATCH',
+	'POST',
+	'PROPFIND',
+	'PROPPATCH',
+	'PURGE',
+	'PUT',
+	'REPORT',
+	'SEARCH',
+	'SUBSCRIBE',
+	'TRACE',
+	'UNLOCK',
+	'UNSUBSCRIBE'
+]
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"./lib/request":46,"builtin-status-codes":8,"url":50,"xtend":59}],45:[function(require,module,exports){
+(function (global){
+exports.fetch = isFunction(global.fetch) && isFunction(global.ReadableByteStream)
+
+exports.blobConstructor = false
+try {
+	new Blob([new ArrayBuffer(1)])
+	exports.blobConstructor = true
+} catch (e) {}
+
+var xhr = new global.XMLHttpRequest()
+// If location.host is empty, e.g. if this page/worker was loaded
+// from a Blob, then use example.com to avoid an error
+xhr.open('GET', global.location.host ? '/' : 'https://example.com')
+
+function checkTypeSupport (type) {
+	try {
+		xhr.responseType = type
+		return xhr.responseType === type
+	} catch (e) {}
+	return false
+}
+
+// For some strange reason, Safari 7.0 reports typeof global.ArrayBuffer === 'object'.
+// Safari 7.1 appears to have fixed this bug.
+var haveArrayBuffer = typeof global.ArrayBuffer !== 'undefined'
+var haveSlice = haveArrayBuffer && isFunction(global.ArrayBuffer.prototype.slice)
+
+exports.arraybuffer = haveArrayBuffer && checkTypeSupport('arraybuffer')
+// These next two tests unavoidably show warnings in Chrome. Since fetch will always
+// be used if it's available, just return false for these to avoid the warnings.
+exports.msstream = !exports.fetch && haveSlice && checkTypeSupport('ms-stream')
+exports.mozchunkedarraybuffer = !exports.fetch && haveArrayBuffer &&
+	checkTypeSupport('moz-chunked-arraybuffer')
+exports.overrideMimeType = isFunction(xhr.overrideMimeType)
+exports.vbArray = isFunction(global.VBArray)
+
+function isFunction (value) {
+  return typeof value === 'function'
+}
+
+xhr = null // Help gc
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{}],46:[function(require,module,exports){
+(function (process,global,Buffer){
+// var Base64 = require('Base64')
+var capability = require('./capability')
+var inherits = require('inherits')
+var response = require('./response')
+var stream = require('stream')
+var toArrayBuffer = require('to-arraybuffer')
+
+var IncomingMessage = response.IncomingMessage
+var rStates = response.readyStates
+
+function decideMode (preferBinary) {
+	if (capability.fetch) {
+		return 'fetch'
+	} else if (capability.mozchunkedarraybuffer) {
+		return 'moz-chunked-arraybuffer'
+	} else if (capability.msstream) {
+		return 'ms-stream'
+	} else if (capability.arraybuffer && preferBinary) {
+		return 'arraybuffer'
+	} else if (capability.vbArray && preferBinary) {
+		return 'text:vbarray'
+	} else {
+		return 'text'
+	}
+}
+
+var ClientRequest = module.exports = function (opts) {
+	var self = this
+	stream.Writable.call(self)
+
+	self._opts = opts
+	self._body = []
+	self._headers = {}
+	if (opts.auth)
+		self.setHeader('Authorization', 'Basic ' + new Buffer(opts.auth).toString('base64'))
+	Object.keys(opts.headers).forEach(function (name) {
+		self.setHeader(name, opts.headers[name])
+	})
+
+	var preferBinary
+	if (opts.mode === 'prefer-streaming') {
+		// If streaming is a high priority but binary compatibility and
+		// the accuracy of the 'content-type' header aren't
+		preferBinary = false
+	} else if (opts.mode === 'allow-wrong-content-type') {
+		// If streaming is more important than preserving the 'content-type' header
+		preferBinary = !capability.overrideMimeType
+	} else if (!opts.mode || opts.mode === 'default' || opts.mode === 'prefer-fast') {
+		// Use binary if text streaming may corrupt data or the content-type header, or for speed
+		preferBinary = true
+	} else {
+		throw new Error('Invalid value for opts.mode')
+	}
+	self._mode = decideMode(preferBinary)
+
+	self.on('finish', function () {
+		self._onFinish()
+	})
+}
+
+inherits(ClientRequest, stream.Writable)
+
+ClientRequest.prototype.setHeader = function (name, value) {
+	var self = this
+	var lowerName = name.toLowerCase()
+	// This check is not necessary, but it prevents warnings from browsers about setting unsafe
+	// headers. To be honest I'm not entirely sure hiding these warnings is a good thing, but
+	// http-browserify did it, so I will too.
+	if (unsafeHeaders.indexOf(lowerName) !== -1)
+		return
+
+	self._headers[lowerName] = {
+		name: name,
+		value: value
+	}
+}
+
+ClientRequest.prototype.getHeader = function (name) {
+	var self = this
+	return self._headers[name.toLowerCase()].value
+}
+
+ClientRequest.prototype.removeHeader = function (name) {
+	var self = this
+	delete self._headers[name.toLowerCase()]
+}
+
+ClientRequest.prototype._onFinish = function () {
+	var self = this
+
+	if (self._destroyed)
+		return
+	var opts = self._opts
+
+	var headersObj = self._headers
+	var body
+	if (opts.method === 'POST' || opts.method === 'PUT' || opts.method === 'PATCH') {
+		if (capability.blobConstructor) {
+			body = new global.Blob(self._body.map(function (buffer) {
+				return toArrayBuffer(buffer)
+			}), {
+				type: (headersObj['content-type'] || {}).value || ''
+			})
+		} else {
+			// get utf8 string
+			body = Buffer.concat(self._body).toString()
+		}
+	}
+
+	if (self._mode === 'fetch') {
+		var headers = Object.keys(headersObj).map(function (name) {
+			return [headersObj[name].name, headersObj[name].value]
+		})
+
+		global.fetch(self._opts.url, {
+			method: self._opts.method,
+			headers: headers,
+			body: body,
+			mode: 'cors',
+			credentials: opts.withCredentials ? 'include' : 'same-origin'
+		}).then(function (response) {
+			self._fetchResponse = response
+			self._connect()
+		}, function (reason) {
+			self.emit('error', reason)
+		})
+	} else {
+		var xhr = self._xhr = new global.XMLHttpRequest()
+		try {
+			xhr.open(self._opts.method, self._opts.url, true)
+		} catch (err) {
+			process.nextTick(function () {
+				self.emit('error', err)
+			})
+			return
+		}
+
+		// Can't set responseType on really old browsers
+		if ('responseType' in xhr)
+			xhr.responseType = self._mode.split(':')[0]
+
+		if ('withCredentials' in xhr)
+			xhr.withCredentials = !!opts.withCredentials
+
+		if (self._mode === 'text' && 'overrideMimeType' in xhr)
+			xhr.overrideMimeType('text/plain; charset=x-user-defined')
+
+		Object.keys(headersObj).forEach(function (name) {
+			xhr.setRequestHeader(headersObj[name].name, headersObj[name].value)
+		})
+
+		self._response = null
+		xhr.onreadystatechange = function () {
+			switch (xhr.readyState) {
+				case rStates.LOADING:
+				case rStates.DONE:
+					self._onXHRProgress()
+					break
+			}
+		}
+		// Necessary for streaming in Firefox, since xhr.response is ONLY defined
+		// in onprogress, not in onreadystatechange with xhr.readyState = 3
+		if (self._mode === 'moz-chunked-arraybuffer') {
+			xhr.onprogress = function () {
+				self._onXHRProgress()
+			}
+		}
+
+		xhr.onerror = function () {
+			if (self._destroyed)
+				return
+			self.emit('error', new Error('XHR error'))
+		}
+
+		try {
+			xhr.send(body)
+		} catch (err) {
+			process.nextTick(function () {
+				self.emit('error', err)
+			})
+			return
+		}
+	}
+}
+
+/**
+ * Checks if xhr.status is readable and non-zero, indicating no error.
+ * Even though the spec says it should be available in readyState 3,
+ * accessing it throws an exception in IE8
+ */
+function statusValid (xhr) {
+	try {
+		var status = xhr.status
+		return (status !== null && status !== 0)
+	} catch (e) {
+		return false
+	}
+}
+
+ClientRequest.prototype._onXHRProgress = function () {
+	var self = this
+
+	if (!statusValid(self._xhr) || self._destroyed)
+		return
+
+	if (!self._response)
+		self._connect()
+
+	self._response._onXHRProgress()
+}
+
+ClientRequest.prototype._connect = function () {
+	var self = this
+
+	if (self._destroyed)
+		return
+
+	self._response = new IncomingMessage(self._xhr, self._fetchResponse, self._mode)
+	self.emit('response', self._response)
+}
+
+ClientRequest.prototype._write = function (chunk, encoding, cb) {
+	var self = this
+
+	self._body.push(chunk)
+	cb()
+}
+
+ClientRequest.prototype.abort = ClientRequest.prototype.destroy = function () {
+	var self = this
+	self._destroyed = true
+	if (self._response)
+		self._response._destroyed = true
+	if (self._xhr)
+		self._xhr.abort()
+	// Currently, there isn't a way to truly abort a fetch.
+	// If you like bikeshedding, see https://github.com/whatwg/fetch/issues/27
+}
+
+ClientRequest.prototype.end = function (data, encoding, cb) {
+	var self = this
+	if (typeof data === 'function') {
+		cb = data
+		data = undefined
+	}
+
+	stream.Writable.prototype.end.call(self, data, encoding, cb)
+}
+
+ClientRequest.prototype.flushHeaders = function () {}
+ClientRequest.prototype.setTimeout = function () {}
+ClientRequest.prototype.setNoDelay = function () {}
+ClientRequest.prototype.setSocketKeepAlive = function () {}
+
+// Taken from http://www.w3.org/TR/XMLHttpRequest/#the-setrequestheader%28%29-method
+var unsafeHeaders = [
+	'accept-charset',
+	'accept-encoding',
+	'access-control-request-headers',
+	'access-control-request-method',
+	'connection',
+	'content-length',
+	'cookie',
+	'cookie2',
+	'date',
+	'dnt',
+	'expect',
+	'host',
+	'keep-alive',
+	'origin',
+	'referer',
+	'te',
+	'trailer',
+	'transfer-encoding',
+	'upgrade',
+	'user-agent',
+	'via'
+]
+
+}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer)
+},{"./capability":45,"./response":47,"_process":28,"buffer":6,"inherits":14,"stream":43,"to-arraybuffer":49}],47:[function(require,module,exports){
+(function (process,global,Buffer){
+var capability = require('./capability')
+var inherits = require('inherits')
+var stream = require('stream')
+
+var rStates = exports.readyStates = {
+	UNSENT: 0,
+	OPENED: 1,
+	HEADERS_RECEIVED: 2,
+	LOADING: 3,
+	DONE: 4
+}
+
+var IncomingMessage = exports.IncomingMessage = function (xhr, response, mode) {
+	var self = this
+	stream.Readable.call(self)
+
+	self._mode = mode
+	self.headers = {}
+	self.rawHeaders = []
+	self.trailers = {}
+	self.rawTrailers = []
+
+	// Fake the 'close' event, but only once 'end' fires
+	self.on('end', function () {
+		// The nextTick is necessary to prevent the 'request' module from causing an infinite loop
+		process.nextTick(function () {
+			self.emit('close')
+		})
+	})
+
+	if (mode === 'fetch') {
+		self._fetchResponse = response
+
+		self.statusCode = response.status
+		self.statusMessage = response.statusText
+		// backwards compatible version of for (<item> of <iterable>):
+		// for (var <item>,_i,_it = <iterable>[Symbol.iterator](); <item> = (_i = _it.next()).value,!_i.done;)
+		for (var header, _i, _it = response.headers[Symbol.iterator](); header = (_i = _it.next()).value, !_i.done;) {
+			self.headers[header[0].toLowerCase()] = header[1]
+			self.rawHeaders.push(header[0], header[1])
+		}
+
+		// TODO: this doesn't respect backpressure. Once WritableStream is available, this can be fixed
+		var reader = response.body.getReader()
+		function read () {
+			reader.read().then(function (result) {
+				if (self._destroyed)
+					return
+				if (result.done) {
+					self.push(null)
+					return
+				}
+				self.push(new Buffer(result.value))
+				read()
+			})
+		}
+		read()
+
+	} else {
+		self._xhr = xhr
+		self._pos = 0
+
+		self.statusCode = xhr.status
+		self.statusMessage = xhr.statusText
+		var headers = xhr.getAllResponseHeaders().split(/\r?\n/)
+		headers.forEach(function (header) {
+			var matches = header.match(/^([^:]+):\s*(.*)/)
+			if (matches) {
+				var key = matches[1].toLowerCase()
+				if (self.headers[key] !== undefined)
+					self.headers[key] += ', ' + matches[2]
+				else
+					self.headers[key] = matches[2]
+				self.rawHeaders.push(matches[1], matches[2])
+			}
+		})
+
+		self._charset = 'x-user-defined'
+		if (!capability.overrideMimeType) {
+			var mimeType = self.rawHeaders['mime-type']
+			if (mimeType) {
+				var charsetMatch = mimeType.match(/;\s*charset=([^;])(;|$)/)
+				if (charsetMatch) {
+					self._charset = charsetMatch[1].toLowerCase()
+				}
+			}
+			if (!self._charset)
+				self._charset = 'utf-8' // best guess
+		}
+	}
+}
+
+inherits(IncomingMessage, stream.Readable)
+
+IncomingMessage.prototype._read = function () {}
+
+IncomingMessage.prototype._onXHRProgress = function () {
+	var self = this
+
+	var xhr = self._xhr
+
+	var response = null
+	switch (self._mode) {
+		case 'text:vbarray': // For IE9
+			if (xhr.readyState !== rStates.DONE)
+				break
+			try {
+				// This fails in IE8
+				response = new global.VBArray(xhr.responseBody).toArray()
+			} catch (e) {}
+			if (response !== null) {
+				self.push(new Buffer(response))
+				break
+			}
+			// Falls through in IE8	
+		case 'text':
+			try { // This will fail when readyState = 3 in IE9. Switch mode and wait for readyState = 4
+				response = xhr.responseText
+			} catch (e) {
+				self._mode = 'text:vbarray'
+				break
+			}
+			if (response.length > self._pos) {
+				var newData = response.substr(self._pos)
+				if (self._charset === 'x-user-defined') {
+					var buffer = new Buffer(newData.length)
+					for (var i = 0; i < newData.length; i++)
+						buffer[i] = newData.charCodeAt(i) & 0xff
+
+					self.push(buffer)
+				} else {
+					self.push(newData, self._charset)
+				}
+				self._pos = response.length
+			}
+			break
+		case 'arraybuffer':
+			if (xhr.readyState !== rStates.DONE)
+				break
+			response = xhr.response
+			self.push(new Buffer(new Uint8Array(response)))
+			break
+		case 'moz-chunked-arraybuffer': // take whole
+			response = xhr.response
+			if (xhr.readyState !== rStates.LOADING || !response)
+				break
+			self.push(new Buffer(new Uint8Array(response)))
+			break
+		case 'ms-stream':
+			response = xhr.response
+			if (xhr.readyState !== rStates.LOADING)
+				break
+			var reader = new global.MSStreamReader()
+			reader.onprogress = function () {
+				if (reader.result.byteLength > self._pos) {
+					self.push(new Buffer(new Uint8Array(reader.result.slice(self._pos))))
+					self._pos = reader.result.byteLength
+				}
+			}
+			reader.onload = function () {
+				self.push(null)
+			}
+			// reader.onerror = ??? // TODO: this
+			reader.readAsArrayBuffer(response)
+			break
+	}
+
+	// The ms-stream case handles end separately in reader.onload()
+	if (self._xhr.readyState === rStates.DONE && self._mode !== 'ms-stream') {
+		self.push(null)
+	}
+}
+
+}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer)
+},{"./capability":45,"_process":28,"buffer":6,"inherits":14,"stream":43}],48:[function(require,module,exports){
+// Copyright Joyent, Inc. and other Node contributors.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to permit
+// persons to whom the Software is furnished to do so, subject to the
+// following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+var Buffer = require('buffer').Buffer;
+
+var isBufferEncoding = Buffer.isEncoding
+  || function(encoding) {
+       switch (encoding && encoding.toLowerCase()) {
+         case 'hex': case 'utf8': case 'utf-8': case 'ascii': case 'binary': case 'base64': case 'ucs2': case 'ucs-2': case 'utf16le': case 'utf-16le': case 'raw': return true;
+         default: return false;
+       }
+     }
+
+
+function assertEncoding(encoding) {
+  if (encoding && !isBufferEncoding(encoding)) {
+    throw new Error('Unknown encoding: ' + encoding);
+  }
+}
+
+// StringDecoder provides an interface for efficiently splitting a series of
+// buffers into a series of JS strings without breaking apart multi-byte
+// characters. CESU-8 is handled as part of the UTF-8 encoding.
+//
+// @TODO Handling all encodings inside a single object makes it very difficult
+// to reason about this code, so it should be split up in the future.
+// @TODO There should be a utf8-strict encoding that rejects invalid UTF-8 code
+// points as used by CESU-8.
+var StringDecoder = exports.StringDecoder = function(encoding) {
+  this.encoding = (encoding || 'utf8').toLowerCase().replace(/[-_]/, '');
+  assertEncoding(encoding);
+  switch (this.encoding) {
+    case 'utf8':
+      // CESU-8 represents each of Surrogate Pair by 3-bytes
+      this.surrogateSize = 3;
+      break;
+    case 'ucs2':
+    case 'utf16le':
+      // UTF-16 represents each of Surrogate Pair by 2-bytes
+      this.surrogateSize = 2;
+      this.detectIncompleteChar = utf16DetectIncompleteChar;
+      break;
+    case 'base64':
+      // Base-64 stores 3 bytes in 4 chars, and pads the remainder.
+      this.surrogateSize = 3;
+      this.detectIncompleteChar = base64DetectIncompleteChar;
+      break;
+    default:
+      this.write = passThroughWrite;
+      return;
+  }
+
+  // Enough space to store all bytes of a single character. UTF-8 needs 4
+  // bytes, but CESU-8 may require up to 6 (3 bytes per surrogate).
+  this.charBuffer = new Buffer(6);
+  // Number of bytes received for the current incomplete multi-byte character.
+  this.charReceived = 0;
+  // Number of bytes expected for the current incomplete multi-byte character.
+  this.charLength = 0;
+};
+
+
+// write decodes the given buffer and returns it as JS string that is
+// guaranteed to not contain any partial multi-byte characters. Any partial
+// character found at the end of the buffer is buffered up, and will be
+// returned when calling write again with the remaining bytes.
+//
+// Note: Converting a Buffer containing an orphan surrogate to a String
+// currently works, but converting a String to a Buffer (via `new Buffer`, or
+// Buffer#write) will replace incomplete surrogates with the unicode
+// replacement character. See https://codereview.chromium.org/121173009/ .
+StringDecoder.prototype.write = function(buffer) {
+  var charStr = '';
+  // if our last write ended with an incomplete multibyte character
+  while (this.charLength) {
+    // determine how many remaining bytes this buffer has to offer for this char
+    var available = (buffer.length >= this.charLength - this.charReceived) ?
+        this.charLength - this.charReceived :
+        buffer.length;
+
+    // add the new bytes to the char buffer
+    buffer.copy(this.charBuffer, this.charReceived, 0, available);
+    this.charReceived += available;
+
+    if (this.charReceived < this.charLength) {
+      // still not enough chars in this buffer? wait for more ...
+      return '';
+    }
+
+    // remove bytes belonging to the current character from the buffer
+    buffer = buffer.slice(available, buffer.length);
+
+    // get the character that was split
+    charStr = this.charBuffer.slice(0, this.charLength).toString(this.encoding);
+
+    // CESU-8: lead surrogate (D800-DBFF) is also the incomplete character
+    var charCode = charStr.charCodeAt(charStr.length - 1);
+    if (charCode >= 0xD800 && charCode <= 0xDBFF) {
+      this.charLength += this.surrogateSize;
+      charStr = '';
+      continue;
+    }
+    this.charReceived = this.charLength = 0;
+
+    // if there are no more bytes in this buffer, just emit our char
+    if (buffer.length === 0) {
+      return charStr;
+    }
+    break;
+  }
+
+  // determine and set charLength / charReceived
+  this.detectIncompleteChar(buffer);
+
+  var end = buffer.length;
+  if (this.charLength) {
+    // buffer the incomplete character bytes we got
+    buffer.copy(this.charBuffer, 0, buffer.length - this.charReceived, end);
+    end -= this.charReceived;
+  }
+
+  charStr += buffer.toString(this.encoding, 0, end);
+
+  var end = charStr.length - 1;
+  var charCode = charStr.charCodeAt(end);
+  // CESU-8: lead surrogate (D800-DBFF) is also the incomplete character
+  if (charCode >= 0xD800 && charCode <= 0xDBFF) {
+    var size = this.surrogateSize;
+    this.charLength += size;
+    this.charReceived += size;
+    this.charBuffer.copy(this.charBuffer, size, 0, size);
+    buffer.copy(this.charBuffer, 0, 0, size);
+    return charStr.substring(0, end);
+  }
+
+  // or just emit the charStr
+  return charStr;
+};
+
+// detectIncompleteChar determines if there is an incomplete UTF-8 character at
+// the end of the given buffer. If so, it sets this.charLength to the byte
+// length that character, and sets this.charReceived to the number of bytes
+// that are available for this character.
+StringDecoder.prototype.detectIncompleteChar = function(buffer) {
+  // determine how many bytes we have to check at the end of this buffer
+  var i = (buffer.length >= 3) ? 3 : buffer.length;
+
+  // Figure out if one of the last i bytes of our buffer announces an
+  // incomplete char.
+  for (; i > 0; i--) {
+    var c = buffer[buffer.length - i];
+
+    // See http://en.wikipedia.org/wiki/UTF-8#Description
+
+    // 110XXXXX
+    if (i == 1 && c >> 5 == 0x06) {
+      this.charLength = 2;
+      break;
+    }
+
+    // 1110XXXX
+    if (i <= 2 && c >> 4 == 0x0E) {
+      this.charLength = 3;
+      break;
+    }
+
+    // 11110XXX
+    if (i <= 3 && c >> 3 == 0x1E) {
+      this.charLength = 4;
+      break;
+    }
+  }
+  this.charReceived = i;
+};
+
+StringDecoder.prototype.end = function(buffer) {
+  var res = '';
+  if (buffer && buffer.length)
+    res = this.write(buffer);
+
+  if (this.charReceived) {
+    var cr = this.charReceived;
+    var buf = this.charBuffer;
+    var enc = this.encoding;
+    res += buf.slice(0, cr).toString(enc);
+  }
+
+  return res;
+};
+
+function passThroughWrite(buffer) {
+  return buffer.toString(this.encoding);
+}
+
+function utf16DetectIncompleteChar(buffer) {
+  this.charReceived = buffer.length % 2;
+  this.charLength = this.charReceived ? 2 : 0;
+}
+
+function base64DetectIncompleteChar(buffer) {
+  this.charReceived = buffer.length % 3;
+  this.charLength = this.charReceived ? 3 : 0;
+}
+
+},{"buffer":6}],49:[function(require,module,exports){
+var Buffer = require('buffer').Buffer
+
+module.exports = function (buf) {
+	// If the buffer is backed by a Uint8Array, a faster version will work
+	if (buf instanceof Uint8Array) {
+		// If the buffer isn't a subarray, return the underlying ArrayBuffer
+		if (buf.byteOffset === 0 && buf.byteLength === buf.buffer.byteLength) {
+			return buf.buffer
+		} else if (typeof buf.buffer.slice === 'function') {
+			// Otherwise we need to get a proper copy
+			return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength)
+		}
+	}
+
+	if (Buffer.isBuffer(buf)) {
+		// This is the slow version that will work with any Buffer
+		// implementation (even in old browsers)
+		var arrayCopy = new Uint8Array(buf.length)
+		var len = buf.length
+		for (var i = 0; i < len; i++) {
+			arrayCopy[i] = buf[i]
+		}
+		return arrayCopy.buffer
+	} else {
+		throw new Error('Argument must be a Buffer')
+	}
+}
+
+},{"buffer":6}],50:[function(require,module,exports){
+// Copyright Joyent, Inc. and other Node contributors.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to permit
+// persons to whom the Software is furnished to do so, subject to the
+// following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+'use strict';
+
+var punycode = require('punycode');
+var util = require('./util');
+
+exports.parse = urlParse;
+exports.resolve = urlResolve;
+exports.resolveObject = urlResolveObject;
+exports.format = urlFormat;
+
+exports.Url = Url;
+
+function Url() {
+  this.protocol = null;
+  this.slashes = null;
+  this.auth = null;
+  this.host = null;
+  this.port = null;
+  this.hostname = null;
+  this.hash = null;
+  this.search = null;
+  this.query = null;
+  this.pathname = null;
+  this.path = null;
+  this.href = null;
+}
+
+// Reference: RFC 3986, RFC 1808, RFC 2396
+
+// define these here so at least they only have to be
+// compiled once on the first module load.
+var protocolPattern = /^([a-z0-9.+-]+:)/i,
+    portPattern = /:[0-9]*$/,
+
+    // Special case for a simple path URL
+    simplePathPattern = /^(\/\/?(?!\/)[^\?\s]*)(\?[^\s]*)?$/,
+
+    // RFC 2396: characters reserved for delimiting URLs.
+    // We actually just auto-escape these.
+    delims = ['<', '>', '"', '`', ' ', '\r', '\n', '\t'],
+
+    // RFC 2396: characters not allowed for various reasons.
+    unwise = ['{', '}', '|', '\\', '^', '`'].concat(delims),
+
+    // Allowed by RFCs, but cause of XSS attacks.  Always escape these.
+    autoEscape = ['\''].concat(unwise),
+    // Characters that are never ever allowed in a hostname.
+    // Note that any invalid chars are also handled, but these
+    // are the ones that are *expected* to be seen, so we fast-path
+    // them.
+    nonHostChars = ['%', '/', '?', ';', '#'].concat(autoEscape),
+    hostEndingChars = ['/', '?', '#'],
+    hostnameMaxLen = 255,
+    hostnamePartPattern = /^[+a-z0-9A-Z_-]{0,63}$/,
+    hostnamePartStart = /^([+a-z0-9A-Z_-]{0,63})(.*)$/,
+    // protocols that can allow "unsafe" and "unwise" chars.
+    unsafeProtocol = {
+      'javascript': true,
+      'javascript:': true
+    },
+    // protocols that never have a hostname.
+    hostlessProtocol = {
+      'javascript': true,
+      'javascript:': true
+    },
+    // protocols that always contain a // bit.
+    slashedProtocol = {
+      'http': true,
+      'https': true,
+      'ftp': true,
+      'gopher': true,
+      'file': true,
+      'http:': true,
+      'https:': true,
+      'ftp:': true,
+      'gopher:': true,
+      'file:': true
+    },
+    querystring = require('querystring');
+
+function urlParse(url, parseQueryString, slashesDenoteHost) {
+  if (url && util.isObject(url) && url instanceof Url) return url;
+
+  var u = new Url;
+  u.parse(url, parseQueryString, slashesDenoteHost);
+  return u;
+}
+
+Url.prototype.parse = function(url, parseQueryString, slashesDenoteHost) {
+  if (!util.isString(url)) {
+    throw new TypeError("Parameter 'url' must be a string, not " + typeof url);
+  }
+
+  // Copy chrome, IE, opera backslash-handling behavior.
+  // Back slashes before the query string get converted to forward slashes
+  // See: https://code.google.com/p/chromium/issues/detail?id=25916
+  var queryIndex = url.indexOf('?'),
+      splitter =
+          (queryIndex !== -1 && queryIndex < url.indexOf('#')) ? '?' : '#',
+      uSplit = url.split(splitter),
+      slashRegex = /\\/g;
+  uSplit[0] = uSplit[0].replace(slashRegex, '/');
+  url = uSplit.join(splitter);
+
+  var rest = url;
+
+  // trim before proceeding.
+  // This is to support parse stuff like "  http://foo.com  \n"
+  rest = rest.trim();
+
+  if (!slashesDenoteHost && url.split('#').length === 1) {
+    // Try fast path regexp
+    var simplePath = simplePathPattern.exec(rest);
+    if (simplePath) {
+      this.path = rest;
+      this.href = rest;
+      this.pathname = simplePath[1];
+      if (simplePath[2]) {
+        this.search = simplePath[2];
+        if (parseQueryString) {
+          this.query = querystring.parse(this.search.substr(1));
+        } else {
+          this.query = this.search.substr(1);
+        }
+      } else if (parseQueryString) {
+        this.search = '';
+        this.query = {};
+      }
+      return this;
+    }
+  }
+
+  var proto = protocolPattern.exec(rest);
+  if (proto) {
+    proto = proto[0];
+    var lowerProto = proto.toLowerCase();
+    this.protocol = lowerProto;
+    rest = rest.substr(proto.length);
+  }
+
+  // figure out if it's got a host
+  // user@server is *always* interpreted as a hostname, and url
+  // resolution will treat //foo/bar as host=foo,path=bar because that's
+  // how the browser resolves relative URLs.
+  if (slashesDenoteHost || proto || rest.match(/^\/\/[^@\/]+@[^@\/]+/)) {
+    var slashes = rest.substr(0, 2) === '//';
+    if (slashes && !(proto && hostlessProtocol[proto])) {
+      rest = rest.substr(2);
+      this.slashes = true;
+    }
+  }
+
+  if (!hostlessProtocol[proto] &&
+      (slashes || (proto && !slashedProtocol[proto]))) {
+
+    // there's a hostname.
+    // the first instance of /, ?, ;, or # ends the host.
+    //
+    // If there is an @ in the hostname, then non-host chars *are* allowed
+    // to the left of the last @ sign, unless some host-ending character
+    // comes *before* the @-sign.
+    // URLs are obnoxious.
+    //
+    // ex:
+    // http://a@b@c/ => user:a@b host:c
+    // http://a@b?@c => user:a host:c path:/?@c
+
+    // v0.12 TODO(isaacs): This is not quite how Chrome does things.
+    // Review our test case against browsers more comprehensively.
+
+    // find the first instance of any hostEndingChars
+    var hostEnd = -1;
+    for (var i = 0; i < hostEndingChars.length; i++) {
+      var hec = rest.indexOf(hostEndingChars[i]);
+      if (hec !== -1 && (hostEnd === -1 || hec < hostEnd))
+        hostEnd = hec;
+    }
+
+    // at this point, either we have an explicit point where the
+    // auth portion cannot go past, or the last @ char is the decider.
+    var auth, atSign;
+    if (hostEnd === -1) {
+      // atSign can be anywhere.
+      atSign = rest.lastIndexOf('@');
+    } else {
+      // atSign must be in auth portion.
+      // http://a@b/c@d => host:b auth:a path:/c@d
+      atSign = rest.lastIndexOf('@', hostEnd);
+    }
+
+    // Now we have a portion which is definitely the auth.
+    // Pull that off.
+    if (atSign !== -1) {
+      auth = rest.slice(0, atSign);
+      rest = rest.slice(atSign + 1);
+      this.auth = decodeURIComponent(auth);
+    }
+
+    // the host is the remaining to the left of the first non-host char
+    hostEnd = -1;
+    for (var i = 0; i < nonHostChars.length; i++) {
+      var hec = rest.indexOf(nonHostChars[i]);
+      if (hec !== -1 && (hostEnd === -1 || hec < hostEnd))
+        hostEnd = hec;
+    }
+    // if we still have not hit it, then the entire thing is a host.
+    if (hostEnd === -1)
+      hostEnd = rest.length;
+
+    this.host = rest.slice(0, hostEnd);
+    rest = rest.slice(hostEnd);
+
+    // pull out port.
+    this.parseHost();
+
+    // we've indicated that there is a hostname,
+    // so even if it's empty, it has to be present.
+    this.hostname = this.hostname || '';
+
+    // if hostname begins with [ and ends with ]
+    // assume that it's an IPv6 address.
+    var ipv6Hostname = this.hostname[0] === '[' &&
+        this.hostname[this.hostname.length - 1] === ']';
+
+    // validate a little.
+    if (!ipv6Hostname) {
+      var hostparts = this.hostname.split(/\./);
+      for (var i = 0, l = hostparts.length; i < l; i++) {
+        var part = hostparts[i];
+        if (!part) continue;
+        if (!part.match(hostnamePartPattern)) {
+          var newpart = '';
+          for (var j = 0, k = part.length; j < k; j++) {
+            if (part.charCodeAt(j) > 127) {
+              // we replace non-ASCII char with a temporary placeholder
+              // we need this to make sure size of hostname is not
+              // broken by replacing non-ASCII by nothing
+              newpart += 'x';
+            } else {
+              newpart += part[j];
+            }
+          }
+          // we test again with ASCII char only
+          if (!newpart.match(hostnamePartPattern)) {
+            var validParts = hostparts.slice(0, i);
+            var notHost = hostparts.slice(i + 1);
+            var bit = part.match(hostnamePartStart);
+            if (bit) {
+              validParts.push(bit[1]);
+              notHost.unshift(bit[2]);
+            }
+            if (notHost.length) {
+              rest = '/' + notHost.join('.') + rest;
+            }
+            this.hostname = validParts.join('.');
+            break;
+          }
+        }
+      }
+    }
+
+    if (this.hostname.length > hostnameMaxLen) {
+      this.hostname = '';
+    } else {
+      // hostnames are always lower case.
+      this.hostname = this.hostname.toLowerCase();
+    }
+
+    if (!ipv6Hostname) {
+      // IDNA Support: Returns a punycoded representation of "domain".
+      // It only converts parts of the domain name that
+      // have non-ASCII characters, i.e. it doesn't matter if
+      // you call it with a domain that already is ASCII-only.
+      this.hostname = punycode.toASCII(this.hostname);
+    }
+
+    var p = this.port ? ':' + this.port : '';
+    var h = this.hostname || '';
+    this.host = h + p;
+    this.href += this.host;
+
+    // strip [ and ] from the hostname
+    // the host field still retains them, though
+    if (ipv6Hostname) {
+      this.hostname = this.hostname.substr(1, this.hostname.length - 2);
+      if (rest[0] !== '/') {
+        rest = '/' + rest;
+      }
+    }
+  }
+
+  // now rest is set to the post-host stuff.
+  // chop off any delim chars.
+  if (!unsafeProtocol[lowerProto]) {
+
+    // First, make 100% sure that any "autoEscape" chars get
+    // escaped, even if encodeURIComponent doesn't think they
+    // need to be.
+    for (var i = 0, l = autoEscape.length; i < l; i++) {
+      var ae = autoEscape[i];
+      if (rest.indexOf(ae) === -1)
+        continue;
+      var esc = encodeURIComponent(ae);
+      if (esc === ae) {
+        esc = escape(ae);
+      }
+      rest = rest.split(ae).join(esc);
+    }
+  }
+
+
+  // chop off from the tail first.
+  var hash = rest.indexOf('#');
+  if (hash !== -1) {
+    // got a fragment string.
+    this.hash = rest.substr(hash);
+    rest = rest.slice(0, hash);
+  }
+  var qm = rest.indexOf('?');
+  if (qm !== -1) {
+    this.search = rest.substr(qm);
+    this.query = rest.substr(qm + 1);
+    if (parseQueryString) {
+      this.query = querystring.parse(this.query);
+    }
+    rest = rest.slice(0, qm);
+  } else if (parseQueryString) {
+    // no query string, but parseQueryString still requested
+    this.search = '';
+    this.query = {};
+  }
+  if (rest) this.pathname = rest;
+  if (slashedProtocol[lowerProto] &&
+      this.hostname && !this.pathname) {
+    this.pathname = '/';
+  }
+
+  //to support http.request
+  if (this.pathname || this.search) {
+    var p = this.pathname || '';
+    var s = this.search || '';
+    this.path = p + s;
+  }
+
+  // finally, reconstruct the href based on what has been validated.
+  this.href = this.format();
+  return this;
+};
+
+// format a parsed object into a url string
+function urlFormat(obj) {
+  // ensure it's an object, and not a string url.
+  // If it's an obj, this is a no-op.
+  // this way, you can call url_format() on strings
+  // to clean up potentially wonky urls.
+  if (util.isString(obj)) obj = urlParse(obj);
+  if (!(obj instanceof Url)) return Url.prototype.format.call(obj);
+  return obj.format();
+}
+
+Url.prototype.format = function() {
+  var auth = this.auth || '';
+  if (auth) {
+    auth = encodeURIComponent(auth);
+    auth = auth.replace(/%3A/i, ':');
+    auth += '@';
+  }
+
+  var protocol = this.protocol || '',
+      pathname = this.pathname || '',
+      hash = this.hash || '',
+      host = false,
+      query = '';
+
+  if (this.host) {
+    host = auth + this.host;
+  } else if (this.hostname) {
+    host = auth + (this.hostname.indexOf(':') === -1 ?
+        this.hostname :
+        '[' + this.hostname + ']');
+    if (this.port) {
+      host += ':' + this.port;
+    }
+  }
+
+  if (this.query &&
+      util.isObject(this.query) &&
+      Object.keys(this.query).length) {
+    query = querystring.stringify(this.query);
+  }
+
+  var search = this.search || (query && ('?' + query)) || '';
+
+  if (protocol && protocol.substr(-1) !== ':') protocol += ':';
+
+  // only the slashedProtocols get the //.  Not mailto:, xmpp:, etc.
+  // unless they had them to begin with.
+  if (this.slashes ||
+      (!protocol || slashedProtocol[protocol]) && host !== false) {
+    host = '//' + (host || '');
+    if (pathname && pathname.charAt(0) !== '/') pathname = '/' + pathname;
+  } else if (!host) {
+    host = '';
+  }
+
+  if (hash && hash.charAt(0) !== '#') hash = '#' + hash;
+  if (search && search.charAt(0) !== '?') search = '?' + search;
+
+  pathname = pathname.replace(/[?#]/g, function(match) {
+    return encodeURIComponent(match);
+  });
+  search = search.replace('#', '%23');
+
+  return protocol + host + pathname + search + hash;
+};
+
+function urlResolve(source, relative) {
+  return urlParse(source, false, true).resolve(relative);
+}
+
+Url.prototype.resolve = function(relative) {
+  return this.resolveObject(urlParse(relative, false, true)).format();
+};
+
+function urlResolveObject(source, relative) {
+  if (!source) return relative;
+  return urlParse(source, false, true).resolveObject(relative);
+}
+
+Url.prototype.resolveObject = function(relative) {
+  if (util.isString(relative)) {
+    var rel = new Url();
+    rel.parse(relative, false, true);
+    relative = rel;
+  }
+
+  var result = new Url();
+  var tkeys = Object.keys(this);
+  for (var tk = 0; tk < tkeys.length; tk++) {
+    var tkey = tkeys[tk];
+    result[tkey] = this[tkey];
+  }
+
+  // hash is always overridden, no matter what.
+  // even href="" will remove it.
+  result.hash = relative.hash;
+
+  // if the relative url is empty, then there's nothing left to do here.
+  if (relative.href === '') {
+    result.href = result.format();
+    return result;
+  }
+
+  // hrefs like //foo/bar always cut to the protocol.
+  if (relative.slashes && !relative.protocol) {
+    // take everything except the protocol from relative
+    var rkeys = Object.keys(relative);
+    for (var rk = 0; rk < rkeys.length; rk++) {
+      var rkey = rkeys[rk];
+      if (rkey !== 'protocol')
+        result[rkey] = relative[rkey];
+    }
+
+    //urlParse appends trailing / to urls like http://www.example.com
+    if (slashedProtocol[result.protocol] &&
+        result.hostname && !result.pathname) {
+      result.path = result.pathname = '/';
+    }
+
+    result.href = result.format();
+    return result;
+  }
+
+  if (relative.protocol && relative.protocol !== result.protocol) {
+    // if it's a known url protocol, then changing
+    // the protocol does weird things
+    // first, if it's not file:, then we MUST have a host,
+    // and if there was a path
+    // to begin with, then we MUST have a path.
+    // if it is file:, then the host is dropped,
+    // because that's known to be hostless.
+    // anything else is assumed to be absolute.
+    if (!slashedProtocol[relative.protocol]) {
+      var keys = Object.keys(relative);
+      for (var v = 0; v < keys.length; v++) {
+        var k = keys[v];
+        result[k] = relative[k];
+      }
+      result.href = result.format();
+      return result;
+    }
+
+    result.protocol = relative.protocol;
+    if (!relative.host && !hostlessProtocol[relative.protocol]) {
+      var relPath = (relative.pathname || '').split('/');
+      while (relPath.length && !(relative.host = relPath.shift()));
+      if (!relative.host) relative.host = '';
+      if (!relative.hostname) relative.hostname = '';
+      if (relPath[0] !== '') relPath.unshift('');
+      if (relPath.length < 2) relPath.unshift('');
+      result.pathname = relPath.join('/');
+    } else {
+      result.pathname = relative.pathname;
+    }
+    result.search = relative.search;
+    result.query = relative.query;
+    result.host = relative.host || '';
+    result.auth = relative.auth;
+    result.hostname = relative.hostname || relative.host;
+    result.port = relative.port;
+    // to support http.request
+    if (result.pathname || result.search) {
+      var p = result.pathname || '';
+      var s = result.search || '';
+      result.path = p + s;
+    }
+    result.slashes = result.slashes || relative.slashes;
+    result.href = result.format();
+    return result;
+  }
+
+  var isSourceAbs = (result.pathname && result.pathname.charAt(0) === '/'),
+      isRelAbs = (
+          relative.host ||
+          relative.pathname && relative.pathname.charAt(0) === '/'
+      ),
+      mustEndAbs = (isRelAbs || isSourceAbs ||
+                    (result.host && relative.pathname)),
+      removeAllDots = mustEndAbs,
+      srcPath = result.pathname && result.pathname.split('/') || [],
+      relPath = relative.pathname && relative.pathname.split('/') || [],
+      psychotic = result.protocol && !slashedProtocol[result.protocol];
+
+  // if the url is a non-slashed url, then relative
+  // links like ../.. should be able
+  // to crawl up to the hostname, as well.  This is strange.
+  // result.protocol has already been set by now.
+  // Later on, put the first path part into the host field.
+  if (psychotic) {
+    result.hostname = '';
+    result.port = null;
+    if (result.host) {
+      if (srcPath[0] === '') srcPath[0] = result.host;
+      else srcPath.unshift(result.host);
+    }
+    result.host = '';
+    if (relative.protocol) {
+      relative.hostname = null;
+      relative.port = null;
+      if (relative.host) {
+        if (relPath[0] === '') relPath[0] = relative.host;
+        else relPath.unshift(relative.host);
+      }
+      relative.host = null;
+    }
+    mustEndAbs = mustEndAbs && (relPath[0] === '' || srcPath[0] === '');
+  }
+
+  if (isRelAbs) {
+    // it's absolute.
+    result.host = (relative.host || relative.host === '') ?
+                  relative.host : result.host;
+    result.hostname = (relative.hostname || relative.hostname === '') ?
+                      relative.hostname : result.hostname;
+    result.search = relative.search;
+    result.query = relative.query;
+    srcPath = relPath;
+    // fall through to the dot-handling below.
+  } else if (relPath.length) {
+    // it's relative
+    // throw away the existing file, and take the new path instead.
+    if (!srcPath) srcPath = [];
+    srcPath.pop();
+    srcPath = srcPath.concat(relPath);
+    result.search = relative.search;
+    result.query = relative.query;
+  } else if (!util.isNullOrUndefined(relative.search)) {
+    // just pull out the search.
+    // like href='?foo'.
+    // Put this after the other two cases because it simplifies the booleans
+    if (psychotic) {
+      result.hostname = result.host = srcPath.shift();
+      //occationaly the auth can get stuck only in host
+      //this especially happens in cases like
+      //url.resolveObject('mailto:local1@domain1', 'local2@domain2')
+      var authInHost = result.host && result.host.indexOf('@') > 0 ?
+                       result.host.split('@') : false;
+      if (authInHost) {
+        result.auth = authInHost.shift();
+        result.host = result.hostname = authInHost.shift();
+      }
+    }
+    result.search = relative.search;
+    result.query = relative.query;
+    //to support http.request
+    if (!util.isNull(result.pathname) || !util.isNull(result.search)) {
+      result.path = (result.pathname ? result.pathname : '') +
+                    (result.search ? result.search : '');
+    }
+    result.href = result.format();
+    return result;
+  }
+
+  if (!srcPath.length) {
+    // no path at all.  easy.
+    // we've already handled the other stuff above.
+    result.pathname = null;
+    //to support http.request
+    if (result.search) {
+      result.path = '/' + result.search;
+    } else {
+      result.path = null;
+    }
+    result.href = result.format();
+    return result;
+  }
+
+  // if a url ENDs in . or .., then it must get a trailing slash.
+  // however, if it ends in anything else non-slashy,
+  // then it must NOT get a trailing slash.
+  var last = srcPath.slice(-1)[0];
+  var hasTrailingSlash = (
+      (result.host || relative.host || srcPath.length > 1) &&
+      (last === '.' || last === '..') || last === '');
+
+  // strip single dots, resolve double dots to parent dir
+  // if the path tries to go above the root, `up` ends up > 0
+  var up = 0;
+  for (var i = srcPath.length; i >= 0; i--) {
+    last = srcPath[i];
+    if (last === '.') {
+      srcPath.splice(i, 1);
+    } else if (last === '..') {
+      srcPath.splice(i, 1);
+      up++;
+    } else if (up) {
+      srcPath.splice(i, 1);
+      up--;
+    }
+  }
+
+  // if the path is allowed to go above the root, restore leading ..s
+  if (!mustEndAbs && !removeAllDots) {
+    for (; up--; up) {
+      srcPath.unshift('..');
+    }
+  }
+
+  if (mustEndAbs && srcPath[0] !== '' &&
+      (!srcPath[0] || srcPath[0].charAt(0) !== '/')) {
+    srcPath.unshift('');
+  }
+
+  if (hasTrailingSlash && (srcPath.join('/').substr(-1) !== '/')) {
+    srcPath.push('');
+  }
+
+  var isAbsolute = srcPath[0] === '' ||
+      (srcPath[0] && srcPath[0].charAt(0) === '/');
+
+  // put the host back
+  if (psychotic) {
+    result.hostname = result.host = isAbsolute ? '' :
+                                    srcPath.length ? srcPath.shift() : '';
+    //occationaly the auth can get stuck only in host
+    //this especially happens in cases like
+    //url.resolveObject('mailto:local1@domain1', 'local2@domain2')
+    var authInHost = result.host && result.host.indexOf('@') > 0 ?
+                     result.host.split('@') : false;
+    if (authInHost) {
+      result.auth = authInHost.shift();
+      result.host = result.hostname = authInHost.shift();
+    }
+  }
+
+  mustEndAbs = mustEndAbs || (result.host && srcPath.length);
+
+  if (mustEndAbs && !isAbsolute) {
+    srcPath.unshift('');
+  }
+
+  if (!srcPath.length) {
+    result.pathname = null;
+    result.path = null;
+  } else {
+    result.pathname = srcPath.join('/');
+  }
+
+  //to support request.http
+  if (!util.isNull(result.pathname) || !util.isNull(result.search)) {
+    result.path = (result.pathname ? result.pathname : '') +
+                  (result.search ? result.search : '');
+  }
+  result.auth = relative.auth || result.auth;
+  result.slashes = result.slashes || relative.slashes;
+  result.href = result.format();
+  return result;
+};
+
+Url.prototype.parseHost = function() {
+  var host = this.host;
+  var port = portPattern.exec(host);
+  if (port) {
+    port = port[0];
+    if (port !== ':') {
+      this.port = port.substr(1);
+    }
+    host = host.substr(0, host.length - port.length);
+  }
+  if (host) this.hostname = host;
+};
+
+},{"./util":51,"punycode":29,"querystring":32}],51:[function(require,module,exports){
+'use strict';
+
+module.exports = {
+  isString: function(arg) {
+    return typeof(arg) === 'string';
+  },
+  isObject: function(arg) {
+    return typeof(arg) === 'object' && arg !== null;
+  },
+  isNull: function(arg) {
+    return arg === null;
+  },
+  isNullOrUndefined: function(arg) {
+    return arg == null;
+  }
+};
+
+},{}],52:[function(require,module,exports){
+(function (global){
+
+/**
+ * Module exports.
+ */
+
+module.exports = deprecate;
+
+/**
+ * Mark that a method should not be used.
+ * Returns a modified function which warns once by default.
+ *
+ * If `localStorage.noDeprecation = true` is set, then it is a no-op.
+ *
+ * If `localStorage.throwDeprecation = true` is set, then deprecated functions
+ * will throw an Error when invoked.
+ *
+ * If `localStorage.traceDeprecation = true` is set, then deprecated functions
+ * will invoke `console.trace()` instead of `console.error()`.
+ *
+ * @param {Function} fn - the function to deprecate
+ * @param {String} msg - the string to print to the console when `fn` is invoked
+ * @returns {Function} a new "deprecated" version of `fn`
+ * @api public
+ */
+
+function deprecate (fn, msg) {
+  if (config('noDeprecation')) {
+    return fn;
+  }
+
+  var warned = false;
+  function deprecated() {
+    if (!warned) {
+      if (config('throwDeprecation')) {
+        throw new Error(msg);
+      } else if (config('traceDeprecation')) {
+        console.trace(msg);
+      } else {
+        console.warn(msg);
+      }
+      warned = true;
+    }
+    return fn.apply(this, arguments);
+  }
+
+  return deprecated;
+}
+
+/**
+ * Checks `localStorage` for boolean values for the given `name`.
+ *
+ * @param {String} name
+ * @returns {Boolean}
+ * @api private
+ */
+
+function config (name) {
+  // accessing global.localStorage can trigger a DOMException in sandboxed iframes
+  try {
+    if (!global.localStorage) return false;
+  } catch (_) {
+    return false;
+  }
+  var val = global.localStorage[name];
+  if (null == val) return false;
+  return String(val).toLowerCase() === 'true';
+}
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{}],53:[function(require,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
     && typeof arg.fill === 'function'
     && typeof arg.readUInt8 === 'function';
 }
-},{}],38:[function(require,module,exports){
+},{}],54:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -26109,24 +30153,2637 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":37,"_process":23,"inherits":20}]},{},[14]);
-
-// Handle node, amd, and global systems
-if (typeof exports !== 'undefined') {
-    if (typeof module !== 'undefined' && module.exports) {
-        exports = module.exports = $rdf;
-    }
-    exports.$rdf = $rdf;
+},{"./support/isBuffer":53,"_process":28,"inherits":14}],55:[function(require,module,exports){
+function DOMParser(options){
+	this.options = options ||{locator:{}};
+	
 }
-else {
-    if (typeof define === 'function' && define.amd) {
-        define([], function() {
-            return $rdf;
+DOMParser.prototype.parseFromString = function(source,mimeType){	
+	var options = this.options;
+	var sax =  new XMLReader();
+	var domBuilder = options.domBuilder || new DOMHandler();//contentHandler and LexicalHandler
+	var errorHandler = options.errorHandler;
+	var locator = options.locator;
+	var defaultNSMap = options.xmlns||{};
+	var entityMap = {'lt':'<','gt':'>','amp':'&','quot':'"','apos':"'"}
+	if(locator){
+		domBuilder.setDocumentLocator(locator)
+	}
+	
+	sax.errorHandler = buildErrorHandler(errorHandler,domBuilder,locator);
+	sax.domBuilder = options.domBuilder || domBuilder;
+	if(/\/x?html?$/.test(mimeType)){
+		entityMap.nbsp = '\xa0';
+		entityMap.copy = '\xa9';
+		defaultNSMap['']= 'http://www.w3.org/1999/xhtml';
+	}
+	defaultNSMap.xml = defaultNSMap.xml || 'http://www.w3.org/XML/1998/namespace';
+	if(source){
+		sax.parse(source,defaultNSMap,entityMap);
+	}else{
+		sax.errorHandler.error("invalid document source");
+	}
+	return domBuilder.document;
+}
+function buildErrorHandler(errorImpl,domBuilder,locator){
+	if(!errorImpl){
+		if(domBuilder instanceof DOMHandler){
+			return domBuilder;
+		}
+		errorImpl = domBuilder ;
+	}
+	var errorHandler = {}
+	var isCallback = errorImpl instanceof Function;
+	locator = locator||{}
+	function build(key){
+		var fn = errorImpl[key];
+		if(!fn && isCallback){
+			fn = errorImpl.length == 2?function(msg){errorImpl(key,msg)}:errorImpl;
+		}
+		errorHandler[key] = fn && function(msg){
+			fn('[xmldom '+key+']\t'+msg+_locator(locator));
+		}||function(){};
+	}
+	build('warning');
+	build('error');
+	build('fatalError');
+	return errorHandler;
+}
+
+//console.log('#\n\n\n\n\n\n\n####')
+/**
+ * +ContentHandler+ErrorHandler
+ * +LexicalHandler+EntityResolver2
+ * -DeclHandler-DTDHandler 
+ * 
+ * DefaultHandler:EntityResolver, DTDHandler, ContentHandler, ErrorHandler
+ * DefaultHandler2:DefaultHandler,LexicalHandler, DeclHandler, EntityResolver2
+ * @link http://www.saxproject.org/apidoc/org/xml/sax/helpers/DefaultHandler.html
+ */
+function DOMHandler() {
+    this.cdata = false;
+}
+function position(locator,node){
+	node.lineNumber = locator.lineNumber;
+	node.columnNumber = locator.columnNumber;
+}
+/**
+ * @see org.xml.sax.ContentHandler#startDocument
+ * @link http://www.saxproject.org/apidoc/org/xml/sax/ContentHandler.html
+ */ 
+DOMHandler.prototype = {
+	startDocument : function() {
+    	this.document = new DOMImplementation().createDocument(null, null, null);
+    	if (this.locator) {
+        	this.document.documentURI = this.locator.systemId;
+    	}
+	},
+	startElement:function(namespaceURI, localName, qName, attrs) {
+		var doc = this.document;
+	    var el = doc.createElementNS(namespaceURI, qName||localName);
+	    var len = attrs.length;
+	    appendElement(this, el);
+	    this.currentElement = el;
+	    
+		this.locator && position(this.locator,el)
+	    for (var i = 0 ; i < len; i++) {
+	        var namespaceURI = attrs.getURI(i);
+	        var value = attrs.getValue(i);
+	        var qName = attrs.getQName(i);
+			var attr = doc.createAttributeNS(namespaceURI, qName);
+			if( attr.getOffset){
+				position(attr.getOffset(1),attr)
+			}
+			attr.value = attr.nodeValue = value;
+			el.setAttributeNode(attr)
+	    }
+	},
+	endElement:function(namespaceURI, localName, qName) {
+		var current = this.currentElement
+	    var tagName = current.tagName;
+	    this.currentElement = current.parentNode;
+	},
+	startPrefixMapping:function(prefix, uri) {
+	},
+	endPrefixMapping:function(prefix) {
+	},
+	processingInstruction:function(target, data) {
+	    var ins = this.document.createProcessingInstruction(target, data);
+	    this.locator && position(this.locator,ins)
+	    appendElement(this, ins);
+	},
+	ignorableWhitespace:function(ch, start, length) {
+	},
+	characters:function(chars, start, length) {
+		chars = _toString.apply(this,arguments)
+		//console.log(chars)
+		if(this.currentElement && chars){
+			if (this.cdata) {
+				var charNode = this.document.createCDATASection(chars);
+				this.currentElement.appendChild(charNode);
+			} else {
+				var charNode = this.document.createTextNode(chars);
+				this.currentElement.appendChild(charNode);
+			}
+			this.locator && position(this.locator,charNode)
+		}
+	},
+	skippedEntity:function(name) {
+	},
+	endDocument:function() {
+		this.document.normalize();
+	},
+	setDocumentLocator:function (locator) {
+	    if(this.locator = locator){// && !('lineNumber' in locator)){
+	    	locator.lineNumber = 0;
+	    }
+	},
+	//LexicalHandler
+	comment:function(chars, start, length) {
+		chars = _toString.apply(this,arguments)
+	    var comm = this.document.createComment(chars);
+	    this.locator && position(this.locator,comm)
+	    appendElement(this, comm);
+	},
+	
+	startCDATA:function() {
+	    //used in characters() methods
+	    this.cdata = true;
+	},
+	endCDATA:function() {
+	    this.cdata = false;
+	},
+	
+	startDTD:function(name, publicId, systemId) {
+		var impl = this.document.implementation;
+	    if (impl && impl.createDocumentType) {
+	        var dt = impl.createDocumentType(name, publicId, systemId);
+	        this.locator && position(this.locator,dt)
+	        appendElement(this, dt);
+	    }
+	},
+	/**
+	 * @see org.xml.sax.ErrorHandler
+	 * @link http://www.saxproject.org/apidoc/org/xml/sax/ErrorHandler.html
+	 */
+	warning:function(error) {
+		console.warn('[xmldom warning]\t'+error,_locator(this.locator));
+	},
+	error:function(error) {
+		console.error('[xmldom error]\t'+error,_locator(this.locator));
+	},
+	fatalError:function(error) {
+		console.error('[xmldom fatalError]\t'+error,_locator(this.locator));
+	    throw error;
+	}
+}
+function _locator(l){
+	if(l){
+		return '\n@'+(l.systemId ||'')+'#[line:'+l.lineNumber+',col:'+l.columnNumber+']'
+	}
+}
+function _toString(chars,start,length){
+	if(typeof chars == 'string'){
+		return chars.substr(start,length)
+	}else{//java sax connect width xmldom on rhino(what about: "? && !(chars instanceof String)")
+		if(chars.length >= start+length || start){
+			return new java.lang.String(chars,start,length)+'';
+		}
+		return chars;
+	}
+}
+
+/*
+ * @link http://www.saxproject.org/apidoc/org/xml/sax/ext/LexicalHandler.html
+ * used method of org.xml.sax.ext.LexicalHandler:
+ *  #comment(chars, start, length)
+ *  #startCDATA()
+ *  #endCDATA()
+ *  #startDTD(name, publicId, systemId)
+ *
+ *
+ * IGNORED method of org.xml.sax.ext.LexicalHandler:
+ *  #endDTD()
+ *  #startEntity(name)
+ *  #endEntity(name)
+ *
+ *
+ * @link http://www.saxproject.org/apidoc/org/xml/sax/ext/DeclHandler.html
+ * IGNORED method of org.xml.sax.ext.DeclHandler
+ * 	#attributeDecl(eName, aName, type, mode, value)
+ *  #elementDecl(name, model)
+ *  #externalEntityDecl(name, publicId, systemId)
+ *  #internalEntityDecl(name, value)
+ * @link http://www.saxproject.org/apidoc/org/xml/sax/ext/EntityResolver2.html
+ * IGNORED method of org.xml.sax.EntityResolver2
+ *  #resolveEntity(String name,String publicId,String baseURI,String systemId)
+ *  #resolveEntity(publicId, systemId)
+ *  #getExternalSubset(name, baseURI)
+ * @link http://www.saxproject.org/apidoc/org/xml/sax/DTDHandler.html
+ * IGNORED method of org.xml.sax.DTDHandler
+ *  #notationDecl(name, publicId, systemId) {};
+ *  #unparsedEntityDecl(name, publicId, systemId, notationName) {};
+ */
+"endDTD,startEntity,endEntity,attributeDecl,elementDecl,externalEntityDecl,internalEntityDecl,resolveEntity,getExternalSubset,notationDecl,unparsedEntityDecl".replace(/\w+/g,function(key){
+	DOMHandler.prototype[key] = function(){return null}
+})
+
+/* Private static helpers treated below as private instance methods, so don't need to add these to the public API; we might use a Relator to also get rid of non-standard public properties */
+function appendElement (hander,node) {
+    if (!hander.currentElement) {
+        hander.document.appendChild(node);
+    } else {
+        hander.currentElement.appendChild(node);
+    }
+}//appendChild and setAttributeNS are preformance key
+
+if(typeof require == 'function'){
+	var XMLReader = require('./sax').XMLReader;
+	var DOMImplementation = exports.DOMImplementation = require('./dom').DOMImplementation;
+	exports.XMLSerializer = require('./dom').XMLSerializer ;
+	exports.DOMParser = DOMParser;
+}
+
+},{"./dom":56,"./sax":57}],56:[function(require,module,exports){
+/*
+ * DOM Level 2
+ * Object DOMException
+ * @see http://www.w3.org/TR/REC-DOM-Level-1/ecma-script-language-binding.html
+ * @see http://www.w3.org/TR/2000/REC-DOM-Level-2-Core-20001113/ecma-script-binding.html
+ */
+
+function copy(src,dest){
+	for(var p in src){
+		dest[p] = src[p];
+	}
+}
+/**
+^\w+\.prototype\.([_\w]+)\s*=\s*((?:.*\{\s*?[\r\n][\s\S]*?^})|\S.*?(?=[;\r\n]));?
+^\w+\.prototype\.([_\w]+)\s*=\s*(\S.*?(?=[;\r\n]));?
+ */
+function _extends(Class,Super){
+	var pt = Class.prototype;
+	if(Object.create){
+		var ppt = Object.create(Super.prototype)
+		pt.__proto__ = ppt;
+	}
+	if(!(pt instanceof Super)){
+		function t(){};
+		t.prototype = Super.prototype;
+		t = new t();
+		copy(pt,t);
+		Class.prototype = pt = t;
+	}
+	if(pt.constructor != Class){
+		if(typeof Class != 'function'){
+			console.error("unknow Class:"+Class)
+		}
+		pt.constructor = Class
+	}
+}
+var htmlns = 'http://www.w3.org/1999/xhtml' ;
+// Node Types
+var NodeType = {}
+var ELEMENT_NODE                = NodeType.ELEMENT_NODE                = 1;
+var ATTRIBUTE_NODE              = NodeType.ATTRIBUTE_NODE              = 2;
+var TEXT_NODE                   = NodeType.TEXT_NODE                   = 3;
+var CDATA_SECTION_NODE          = NodeType.CDATA_SECTION_NODE          = 4;
+var ENTITY_REFERENCE_NODE       = NodeType.ENTITY_REFERENCE_NODE       = 5;
+var ENTITY_NODE                 = NodeType.ENTITY_NODE                 = 6;
+var PROCESSING_INSTRUCTION_NODE = NodeType.PROCESSING_INSTRUCTION_NODE = 7;
+var COMMENT_NODE                = NodeType.COMMENT_NODE                = 8;
+var DOCUMENT_NODE               = NodeType.DOCUMENT_NODE               = 9;
+var DOCUMENT_TYPE_NODE          = NodeType.DOCUMENT_TYPE_NODE          = 10;
+var DOCUMENT_FRAGMENT_NODE      = NodeType.DOCUMENT_FRAGMENT_NODE      = 11;
+var NOTATION_NODE               = NodeType.NOTATION_NODE               = 12;
+
+// ExceptionCode
+var ExceptionCode = {}
+var ExceptionMessage = {};
+var INDEX_SIZE_ERR              = ExceptionCode.INDEX_SIZE_ERR              = ((ExceptionMessage[1]="Index size error"),1);
+var DOMSTRING_SIZE_ERR          = ExceptionCode.DOMSTRING_SIZE_ERR          = ((ExceptionMessage[2]="DOMString size error"),2);
+var HIERARCHY_REQUEST_ERR       = ExceptionCode.HIERARCHY_REQUEST_ERR       = ((ExceptionMessage[3]="Hierarchy request error"),3);
+var WRONG_DOCUMENT_ERR          = ExceptionCode.WRONG_DOCUMENT_ERR          = ((ExceptionMessage[4]="Wrong document"),4);
+var INVALID_CHARACTER_ERR       = ExceptionCode.INVALID_CHARACTER_ERR       = ((ExceptionMessage[5]="Invalid character"),5);
+var NO_DATA_ALLOWED_ERR         = ExceptionCode.NO_DATA_ALLOWED_ERR         = ((ExceptionMessage[6]="No data allowed"),6);
+var NO_MODIFICATION_ALLOWED_ERR = ExceptionCode.NO_MODIFICATION_ALLOWED_ERR = ((ExceptionMessage[7]="No modification allowed"),7);
+var NOT_FOUND_ERR               = ExceptionCode.NOT_FOUND_ERR               = ((ExceptionMessage[8]="Not found"),8);
+var NOT_SUPPORTED_ERR           = ExceptionCode.NOT_SUPPORTED_ERR           = ((ExceptionMessage[9]="Not supported"),9);
+var INUSE_ATTRIBUTE_ERR         = ExceptionCode.INUSE_ATTRIBUTE_ERR         = ((ExceptionMessage[10]="Attribute in use"),10);
+//level2
+var INVALID_STATE_ERR        	= ExceptionCode.INVALID_STATE_ERR        	= ((ExceptionMessage[11]="Invalid state"),11);
+var SYNTAX_ERR               	= ExceptionCode.SYNTAX_ERR               	= ((ExceptionMessage[12]="Syntax error"),12);
+var INVALID_MODIFICATION_ERR 	= ExceptionCode.INVALID_MODIFICATION_ERR 	= ((ExceptionMessage[13]="Invalid modification"),13);
+var NAMESPACE_ERR            	= ExceptionCode.NAMESPACE_ERR           	= ((ExceptionMessage[14]="Invalid namespace"),14);
+var INVALID_ACCESS_ERR       	= ExceptionCode.INVALID_ACCESS_ERR      	= ((ExceptionMessage[15]="Invalid access"),15);
+
+
+function DOMException(code, message) {
+	if(message instanceof Error){
+		var error = message;
+	}else{
+		error = this;
+		Error.call(this, ExceptionMessage[code]);
+		this.message = ExceptionMessage[code];
+		if(Error.captureStackTrace) Error.captureStackTrace(this, DOMException);
+	}
+	error.code = code;
+	if(message) this.message = this.message + ": " + message;
+	return error;
+};
+DOMException.prototype = Error.prototype;
+copy(ExceptionCode,DOMException)
+/**
+ * @see http://www.w3.org/TR/2000/REC-DOM-Level-2-Core-20001113/core.html#ID-536297177
+ * The NodeList interface provides the abstraction of an ordered collection of nodes, without defining or constraining how this collection is implemented. NodeList objects in the DOM are live.
+ * The items in the NodeList are accessible via an integral index, starting from 0.
+ */
+function NodeList() {
+};
+NodeList.prototype = {
+	/**
+	 * The number of nodes in the list. The range of valid child node indices is 0 to length-1 inclusive.
+	 * @standard level1
+	 */
+	length:0, 
+	/**
+	 * Returns the indexth item in the collection. If index is greater than or equal to the number of nodes in the list, this returns null.
+	 * @standard level1
+	 * @param index  unsigned long 
+	 *   Index into the collection.
+	 * @return Node
+	 * 	The node at the indexth position in the NodeList, or null if that is not a valid index. 
+	 */
+	item: function(index) {
+		return this[index] || null;
+	},
+	toString:function(){
+		for(var buf = [], i = 0;i<this.length;i++){
+			serializeToString(this[i],buf);
+		}
+		return buf.join('');
+	}
+};
+function LiveNodeList(node,refresh){
+	this._node = node;
+	this._refresh = refresh
+	_updateLiveList(this);
+}
+function _updateLiveList(list){
+	var inc = list._node._inc || list._node.ownerDocument._inc;
+	if(list._inc != inc){
+		var ls = list._refresh(list._node);
+		//console.log(ls.length)
+		__set__(list,'length',ls.length);
+		copy(ls,list);
+		list._inc = inc;
+	}
+}
+LiveNodeList.prototype.item = function(i){
+	_updateLiveList(this);
+	return this[i];
+}
+
+_extends(LiveNodeList,NodeList);
+/**
+ * 
+ * Objects implementing the NamedNodeMap interface are used to represent collections of nodes that can be accessed by name. Note that NamedNodeMap does not inherit from NodeList; NamedNodeMaps are not maintained in any particular order. Objects contained in an object implementing NamedNodeMap may also be accessed by an ordinal index, but this is simply to allow convenient enumeration of the contents of a NamedNodeMap, and does not imply that the DOM specifies an order to these Nodes.
+ * NamedNodeMap objects in the DOM are live.
+ * used for attributes or DocumentType entities 
+ */
+function NamedNodeMap() {
+};
+
+function _findNodeIndex(list,node){
+	var i = list.length;
+	while(i--){
+		if(list[i] === node){return i}
+	}
+}
+
+function _addNamedNode(el,list,newAttr,oldAttr){
+	if(oldAttr){
+		list[_findNodeIndex(list,oldAttr)] = newAttr;
+	}else{
+		list[list.length++] = newAttr;
+	}
+	if(el){
+		newAttr.ownerElement = el;
+		var doc = el.ownerDocument;
+		if(doc){
+			oldAttr && _onRemoveAttribute(doc,el,oldAttr);
+			_onAddAttribute(doc,el,newAttr);
+		}
+	}
+}
+function _removeNamedNode(el,list,attr){
+	var i = _findNodeIndex(list,attr);
+	if(i>=0){
+		var lastIndex = list.length-1
+		while(i<lastIndex){
+			list[i] = list[++i]
+		}
+		list.length = lastIndex;
+		if(el){
+			var doc = el.ownerDocument;
+			if(doc){
+				_onRemoveAttribute(doc,el,attr);
+				attr.ownerElement = null;
+			}
+		}
+	}else{
+		throw DOMException(NOT_FOUND_ERR,new Error())
+	}
+}
+NamedNodeMap.prototype = {
+	length:0,
+	item:NodeList.prototype.item,
+	getNamedItem: function(key) {
+//		if(key.indexOf(':')>0 || key == 'xmlns'){
+//			return null;
+//		}
+		var i = this.length;
+		while(i--){
+			var attr = this[i];
+			if(attr.nodeName == key){
+				return attr;
+			}
+		}
+	},
+	setNamedItem: function(attr) {
+		var el = attr.ownerElement;
+		if(el && el!=this._ownerElement){
+			throw new DOMException(INUSE_ATTRIBUTE_ERR);
+		}
+		var oldAttr = this.getNamedItem(attr.nodeName);
+		_addNamedNode(this._ownerElement,this,attr,oldAttr);
+		return oldAttr;
+	},
+	/* returns Node */
+	setNamedItemNS: function(attr) {// raises: WRONG_DOCUMENT_ERR,NO_MODIFICATION_ALLOWED_ERR,INUSE_ATTRIBUTE_ERR
+		var el = attr.ownerElement, oldAttr;
+		if(el && el!=this._ownerElement){
+			throw new DOMException(INUSE_ATTRIBUTE_ERR);
+		}
+		oldAttr = this.getNamedItemNS(attr.namespaceURI,attr.localName);
+		_addNamedNode(this._ownerElement,this,attr,oldAttr);
+		return oldAttr;
+	},
+
+	/* returns Node */
+	removeNamedItem: function(key) {
+		var attr = this.getNamedItem(key);
+		_removeNamedNode(this._ownerElement,this,attr);
+		return attr;
+		
+		
+	},// raises: NOT_FOUND_ERR,NO_MODIFICATION_ALLOWED_ERR
+	
+	//for level2
+	removeNamedItemNS:function(namespaceURI,localName){
+		var attr = this.getNamedItemNS(namespaceURI,localName);
+		_removeNamedNode(this._ownerElement,this,attr);
+		return attr;
+	},
+	getNamedItemNS: function(namespaceURI, localName) {
+		var i = this.length;
+		while(i--){
+			var node = this[i];
+			if(node.localName == localName && node.namespaceURI == namespaceURI){
+				return node;
+			}
+		}
+		return null;
+	}
+};
+/**
+ * @see http://www.w3.org/TR/REC-DOM-Level-1/level-one-core.html#ID-102161490
+ */
+function DOMImplementation(/* Object */ features) {
+	this._features = {};
+	if (features) {
+		for (var feature in features) {
+			 this._features = features[feature];
+		}
+	}
+};
+
+DOMImplementation.prototype = {
+	hasFeature: function(/* string */ feature, /* string */ version) {
+		var versions = this._features[feature.toLowerCase()];
+		if (versions && (!version || version in versions)) {
+			return true;
+		} else {
+			return false;
+		}
+	},
+	// Introduced in DOM Level 2:
+	createDocument:function(namespaceURI,  qualifiedName, doctype){// raises:INVALID_CHARACTER_ERR,NAMESPACE_ERR,WRONG_DOCUMENT_ERR
+		var doc = new Document();
+		doc.implementation = this;
+		doc.childNodes = new NodeList();
+		doc.doctype = doctype;
+		if(doctype){
+			doc.appendChild(doctype);
+		}
+		if(qualifiedName){
+			var root = doc.createElementNS(namespaceURI,qualifiedName);
+			doc.appendChild(root);
+		}
+		return doc;
+	},
+	// Introduced in DOM Level 2:
+	createDocumentType:function(qualifiedName, publicId, systemId){// raises:INVALID_CHARACTER_ERR,NAMESPACE_ERR
+		var node = new DocumentType();
+		node.name = qualifiedName;
+		node.nodeName = qualifiedName;
+		node.publicId = publicId;
+		node.systemId = systemId;
+		// Introduced in DOM Level 2:
+		//readonly attribute DOMString        internalSubset;
+		
+		//TODO:..
+		//  readonly attribute NamedNodeMap     entities;
+		//  readonly attribute NamedNodeMap     notations;
+		return node;
+	}
+};
+
+
+/**
+ * @see http://www.w3.org/TR/2000/REC-DOM-Level-2-Core-20001113/core.html#ID-1950641247
+ */
+
+function Node() {
+};
+
+Node.prototype = {
+	firstChild : null,
+	lastChild : null,
+	previousSibling : null,
+	nextSibling : null,
+	attributes : null,
+	parentNode : null,
+	childNodes : null,
+	ownerDocument : null,
+	nodeValue : null,
+	namespaceURI : null,
+	prefix : null,
+	localName : null,
+	// Modified in DOM Level 2:
+	insertBefore:function(newChild, refChild){//raises 
+		return _insertBefore(this,newChild,refChild);
+	},
+	replaceChild:function(newChild, oldChild){//raises 
+		this.insertBefore(newChild,oldChild);
+		if(oldChild){
+			this.removeChild(oldChild);
+		}
+	},
+	removeChild:function(oldChild){
+		return _removeChild(this,oldChild);
+	},
+	appendChild:function(newChild){
+		return this.insertBefore(newChild,null);
+	},
+	hasChildNodes:function(){
+		return this.firstChild != null;
+	},
+	cloneNode:function(deep){
+		return cloneNode(this.ownerDocument||this,this,deep);
+	},
+	// Modified in DOM Level 2:
+	normalize:function(){
+		var child = this.firstChild;
+		while(child){
+			var next = child.nextSibling;
+			if(next && next.nodeType == TEXT_NODE && child.nodeType == TEXT_NODE){
+				this.removeChild(next);
+				child.appendData(next.data);
+			}else{
+				child.normalize();
+				child = next;
+			}
+		}
+	},
+  	// Introduced in DOM Level 2:
+	isSupported:function(feature, version){
+		return this.ownerDocument.implementation.hasFeature(feature,version);
+	},
+    // Introduced in DOM Level 2:
+    hasAttributes:function(){
+    	return this.attributes.length>0;
+    },
+    lookupPrefix:function(namespaceURI){
+    	var el = this;
+    	while(el){
+    		var map = el._nsMap;
+    		//console.dir(map)
+    		if(map){
+    			for(var n in map){
+    				if(map[n] == namespaceURI){
+    					return n;
+    				}
+    			}
+    		}
+    		el = el.nodeType == 2?el.ownerDocument : el.parentNode;
+    	}
+    	return null;
+    },
+    // Introduced in DOM Level 3:
+    lookupNamespaceURI:function(prefix){
+    	var el = this;
+    	while(el){
+    		var map = el._nsMap;
+    		//console.dir(map)
+    		if(map){
+    			if(prefix in map){
+    				return map[prefix] ;
+    			}
+    		}
+    		el = el.nodeType == 2?el.ownerDocument : el.parentNode;
+    	}
+    	return null;
+    },
+    // Introduced in DOM Level 3:
+    isDefaultNamespace:function(namespaceURI){
+    	var prefix = this.lookupPrefix(namespaceURI);
+    	return prefix == null;
+    }
+};
+
+
+function _xmlEncoder(c){
+	return c == '<' && '&lt;' ||
+         c == '>' && '&gt;' ||
+         c == '&' && '&amp;' ||
+         c == '"' && '&quot;' ||
+         '&#'+c.charCodeAt()+';'
+}
+
+
+copy(NodeType,Node);
+copy(NodeType,Node.prototype);
+
+/**
+ * @param callback return true for continue,false for break
+ * @return boolean true: break visit;
+ */
+function _visitNode(node,callback){
+	if(callback(node)){
+		return true;
+	}
+	if(node = node.firstChild){
+		do{
+			if(_visitNode(node,callback)){return true}
+        }while(node=node.nextSibling)
+    }
+}
+
+
+
+function Document(){
+}
+function _onAddAttribute(doc,el,newAttr){
+	doc && doc._inc++;
+	var ns = newAttr.namespaceURI ;
+	if(ns == 'http://www.w3.org/2000/xmlns/'){
+		//update namespace
+		el._nsMap[newAttr.prefix?newAttr.localName:''] = newAttr.value
+	}
+}
+function _onRemoveAttribute(doc,el,newAttr,remove){
+	doc && doc._inc++;
+	var ns = newAttr.namespaceURI ;
+	if(ns == 'http://www.w3.org/2000/xmlns/'){
+		//update namespace
+		delete el._nsMap[newAttr.prefix?newAttr.localName:'']
+	}
+}
+function _onUpdateChild(doc,el,newChild){
+	if(doc && doc._inc){
+		doc._inc++;
+		//update childNodes
+		var cs = el.childNodes;
+		if(newChild){
+			cs[cs.length++] = newChild;
+		}else{
+			//console.log(1)
+			var child = el.firstChild;
+			var i = 0;
+			while(child){
+				cs[i++] = child;
+				child =child.nextSibling;
+			}
+			cs.length = i;
+		}
+	}
+}
+
+/**
+ * attributes;
+ * children;
+ * 
+ * writeable properties:
+ * nodeValue,Attr:value,CharacterData:data
+ * prefix
+ */
+function _removeChild(parentNode,child){
+	var previous = child.previousSibling;
+	var next = child.nextSibling;
+	if(previous){
+		previous.nextSibling = next;
+	}else{
+		parentNode.firstChild = next
+	}
+	if(next){
+		next.previousSibling = previous;
+	}else{
+		parentNode.lastChild = previous;
+	}
+	_onUpdateChild(parentNode.ownerDocument,parentNode);
+	return child;
+}
+/**
+ * preformance key(refChild == null)
+ */
+function _insertBefore(parentNode,newChild,nextChild){
+	var cp = newChild.parentNode;
+	if(cp){
+		cp.removeChild(newChild);//remove and update
+	}
+	if(newChild.nodeType === DOCUMENT_FRAGMENT_NODE){
+		var newFirst = newChild.firstChild;
+		if (newFirst == null) {
+			return newChild;
+		}
+		var newLast = newChild.lastChild;
+	}else{
+		newFirst = newLast = newChild;
+	}
+	var pre = nextChild ? nextChild.previousSibling : parentNode.lastChild;
+
+	newFirst.previousSibling = pre;
+	newLast.nextSibling = nextChild;
+	
+	
+	if(pre){
+		pre.nextSibling = newFirst;
+	}else{
+		parentNode.firstChild = newFirst;
+	}
+	if(nextChild == null){
+		parentNode.lastChild = newLast;
+	}else{
+		nextChild.previousSibling = newLast;
+	}
+	do{
+		newFirst.parentNode = parentNode;
+	}while(newFirst !== newLast && (newFirst= newFirst.nextSibling))
+	_onUpdateChild(parentNode.ownerDocument||parentNode,parentNode);
+	//console.log(parentNode.lastChild.nextSibling == null)
+	if (newChild.nodeType == DOCUMENT_FRAGMENT_NODE) {
+		newChild.firstChild = newChild.lastChild = null;
+	}
+	return newChild;
+}
+function _appendSingleChild(parentNode,newChild){
+	var cp = newChild.parentNode;
+	if(cp){
+		var pre = parentNode.lastChild;
+		cp.removeChild(newChild);//remove and update
+		var pre = parentNode.lastChild;
+	}
+	var pre = parentNode.lastChild;
+	newChild.parentNode = parentNode;
+	newChild.previousSibling = pre;
+	newChild.nextSibling = null;
+	if(pre){
+		pre.nextSibling = newChild;
+	}else{
+		parentNode.firstChild = newChild;
+	}
+	parentNode.lastChild = newChild;
+	_onUpdateChild(parentNode.ownerDocument,parentNode,newChild);
+	return newChild;
+	//console.log("__aa",parentNode.lastChild.nextSibling == null)
+}
+Document.prototype = {
+	//implementation : null,
+	nodeName :  '#document',
+	nodeType :  DOCUMENT_NODE,
+	doctype :  null,
+	documentElement :  null,
+	_inc : 1,
+	
+	insertBefore :  function(newChild, refChild){//raises 
+		if(newChild.nodeType == DOCUMENT_FRAGMENT_NODE){
+			var child = newChild.firstChild;
+			while(child){
+				var next = child.nextSibling;
+				this.insertBefore(child,refChild);
+				child = next;
+			}
+			return newChild;
+		}
+		if(this.documentElement == null && newChild.nodeType == 1){
+			this.documentElement = newChild;
+		}
+		
+		return _insertBefore(this,newChild,refChild),(newChild.ownerDocument = this),newChild;
+	},
+	removeChild :  function(oldChild){
+		if(this.documentElement == oldChild){
+			this.documentElement = null;
+		}
+		return _removeChild(this,oldChild);
+	},
+	// Introduced in DOM Level 2:
+	importNode : function(importedNode,deep){
+		return importNode(this,importedNode,deep);
+	},
+	// Introduced in DOM Level 2:
+	getElementById :	function(id){
+		var rtv = null;
+		_visitNode(this.documentElement,function(node){
+			if(node.nodeType == 1){
+				if(node.getAttribute('id') == id){
+					rtv = node;
+					return true;
+				}
+			}
+		})
+		return rtv;
+	},
+	
+	//document factory method:
+	createElement :	function(tagName){
+		var node = new Element();
+		node.ownerDocument = this;
+		node.nodeName = tagName;
+		node.tagName = tagName;
+		node.childNodes = new NodeList();
+		var attrs	= node.attributes = new NamedNodeMap();
+		attrs._ownerElement = node;
+		return node;
+	},
+	createDocumentFragment :	function(){
+		var node = new DocumentFragment();
+		node.ownerDocument = this;
+		node.childNodes = new NodeList();
+		return node;
+	},
+	createTextNode :	function(data){
+		var node = new Text();
+		node.ownerDocument = this;
+		node.appendData(data)
+		return node;
+	},
+	createComment :	function(data){
+		var node = new Comment();
+		node.ownerDocument = this;
+		node.appendData(data)
+		return node;
+	},
+	createCDATASection :	function(data){
+		var node = new CDATASection();
+		node.ownerDocument = this;
+		node.appendData(data)
+		return node;
+	},
+	createProcessingInstruction :	function(target,data){
+		var node = new ProcessingInstruction();
+		node.ownerDocument = this;
+		node.tagName = node.target = target;
+		node.nodeValue= node.data = data;
+		return node;
+	},
+	createAttribute :	function(name){
+		var node = new Attr();
+		node.ownerDocument	= this;
+		node.name = name;
+		node.nodeName	= name;
+		node.localName = name;
+		node.specified = true;
+		return node;
+	},
+	createEntityReference :	function(name){
+		var node = new EntityReference();
+		node.ownerDocument	= this;
+		node.nodeName	= name;
+		return node;
+	},
+	// Introduced in DOM Level 2:
+	createElementNS :	function(namespaceURI,qualifiedName){
+		var node = new Element();
+		var pl = qualifiedName.split(':');
+		var attrs	= node.attributes = new NamedNodeMap();
+		node.childNodes = new NodeList();
+		node.ownerDocument = this;
+		node.nodeName = qualifiedName;
+		node.tagName = qualifiedName;
+		node.namespaceURI = namespaceURI;
+		if(pl.length == 2){
+			node.prefix = pl[0];
+			node.localName = pl[1];
+		}else{
+			//el.prefix = null;
+			node.localName = qualifiedName;
+		}
+		attrs._ownerElement = node;
+		return node;
+	},
+	// Introduced in DOM Level 2:
+	createAttributeNS :	function(namespaceURI,qualifiedName){
+		var node = new Attr();
+		var pl = qualifiedName.split(':');
+		node.ownerDocument = this;
+		node.nodeName = qualifiedName;
+		node.name = qualifiedName;
+		node.namespaceURI = namespaceURI;
+		node.specified = true;
+		if(pl.length == 2){
+			node.prefix = pl[0];
+			node.localName = pl[1];
+		}else{
+			//el.prefix = null;
+			node.localName = qualifiedName;
+		}
+		return node;
+	}
+};
+_extends(Document,Node);
+
+
+function Element() {
+	this._nsMap = {};
+};
+Element.prototype = {
+	nodeType : ELEMENT_NODE,
+	hasAttribute : function(name){
+		return this.getAttributeNode(name)!=null;
+	},
+	getAttribute : function(name){
+		var attr = this.getAttributeNode(name);
+		return attr && attr.value || '';
+	},
+	getAttributeNode : function(name){
+		return this.attributes.getNamedItem(name);
+	},
+	setAttribute : function(name, value){
+		var attr = this.ownerDocument.createAttribute(name);
+		attr.value = attr.nodeValue = "" + value;
+		this.setAttributeNode(attr)
+	},
+	removeAttribute : function(name){
+		var attr = this.getAttributeNode(name)
+		attr && this.removeAttributeNode(attr);
+	},
+	
+	//four real opeartion method
+	appendChild:function(newChild){
+		if(newChild.nodeType === DOCUMENT_FRAGMENT_NODE){
+			return this.insertBefore(newChild,null);
+		}else{
+			return _appendSingleChild(this,newChild);
+		}
+	},
+	setAttributeNode : function(newAttr){
+		return this.attributes.setNamedItem(newAttr);
+	},
+	setAttributeNodeNS : function(newAttr){
+		return this.attributes.setNamedItemNS(newAttr);
+	},
+	removeAttributeNode : function(oldAttr){
+		return this.attributes.removeNamedItem(oldAttr.nodeName);
+	},
+	//get real attribute name,and remove it by removeAttributeNode
+	removeAttributeNS : function(namespaceURI, localName){
+		var old = this.getAttributeNodeNS(namespaceURI, localName);
+		old && this.removeAttributeNode(old);
+	},
+	
+	hasAttributeNS : function(namespaceURI, localName){
+		return this.getAttributeNodeNS(namespaceURI, localName)!=null;
+	},
+	getAttributeNS : function(namespaceURI, localName){
+		var attr = this.getAttributeNodeNS(namespaceURI, localName);
+		return attr && attr.value || '';
+	},
+	setAttributeNS : function(namespaceURI, qualifiedName, value){
+		var attr = this.ownerDocument.createAttributeNS(namespaceURI, qualifiedName);
+		attr.value = attr.nodeValue = "" + value;
+		this.setAttributeNode(attr)
+	},
+	getAttributeNodeNS : function(namespaceURI, localName){
+		return this.attributes.getNamedItemNS(namespaceURI, localName);
+	},
+	
+	getElementsByTagName : function(tagName){
+		return new LiveNodeList(this,function(base){
+			var ls = [];
+			_visitNode(base,function(node){
+				if(node !== base && node.nodeType == ELEMENT_NODE && (tagName === '*' || node.tagName == tagName)){
+					ls.push(node);
+				}
+			});
+			return ls;
+		});
+	},
+	getElementsByTagNameNS : function(namespaceURI, localName){
+		return new LiveNodeList(this,function(base){
+			var ls = [];
+			_visitNode(base,function(node){
+				if(node !== base && node.nodeType === ELEMENT_NODE && (namespaceURI === '*' || node.namespaceURI === namespaceURI) && (localName === '*' || node.localName == localName)){
+					ls.push(node);
+				}
+			});
+			return ls;
+		});
+	}
+};
+Document.prototype.getElementsByTagName = Element.prototype.getElementsByTagName;
+Document.prototype.getElementsByTagNameNS = Element.prototype.getElementsByTagNameNS;
+
+
+_extends(Element,Node);
+function Attr() {
+};
+Attr.prototype.nodeType = ATTRIBUTE_NODE;
+_extends(Attr,Node);
+
+
+function CharacterData() {
+};
+CharacterData.prototype = {
+	data : '',
+	substringData : function(offset, count) {
+		return this.data.substring(offset, offset+count);
+	},
+	appendData: function(text) {
+		text = this.data+text;
+		this.nodeValue = this.data = text;
+		this.length = text.length;
+	},
+	insertData: function(offset,text) {
+		this.replaceData(offset,0,text);
+	
+	},
+	appendChild:function(newChild){
+		//if(!(newChild instanceof CharacterData)){
+			throw new Error(ExceptionMessage[3])
+		//}
+		return Node.prototype.appendChild.apply(this,arguments)
+	},
+	deleteData: function(offset, count) {
+		this.replaceData(offset,count,"");
+	},
+	replaceData: function(offset, count, text) {
+		var start = this.data.substring(0,offset);
+		var end = this.data.substring(offset+count);
+		text = start + text + end;
+		this.nodeValue = this.data = text;
+		this.length = text.length;
+	}
+}
+_extends(CharacterData,Node);
+function Text() {
+};
+Text.prototype = {
+	nodeName : "#text",
+	nodeType : TEXT_NODE,
+	splitText : function(offset) {
+		var text = this.data;
+		var newText = text.substring(offset);
+		text = text.substring(0, offset);
+		this.data = this.nodeValue = text;
+		this.length = text.length;
+		var newNode = this.ownerDocument.createTextNode(newText);
+		if(this.parentNode){
+			this.parentNode.insertBefore(newNode, this.nextSibling);
+		}
+		return newNode;
+	}
+}
+_extends(Text,CharacterData);
+function Comment() {
+};
+Comment.prototype = {
+	nodeName : "#comment",
+	nodeType : COMMENT_NODE
+}
+_extends(Comment,CharacterData);
+
+function CDATASection() {
+};
+CDATASection.prototype = {
+	nodeName : "#cdata-section",
+	nodeType : CDATA_SECTION_NODE
+}
+_extends(CDATASection,CharacterData);
+
+
+function DocumentType() {
+};
+DocumentType.prototype.nodeType = DOCUMENT_TYPE_NODE;
+_extends(DocumentType,Node);
+
+function Notation() {
+};
+Notation.prototype.nodeType = NOTATION_NODE;
+_extends(Notation,Node);
+
+function Entity() {
+};
+Entity.prototype.nodeType = ENTITY_NODE;
+_extends(Entity,Node);
+
+function EntityReference() {
+};
+EntityReference.prototype.nodeType = ENTITY_REFERENCE_NODE;
+_extends(EntityReference,Node);
+
+function DocumentFragment() {
+};
+DocumentFragment.prototype.nodeName =	"#document-fragment";
+DocumentFragment.prototype.nodeType =	DOCUMENT_FRAGMENT_NODE;
+_extends(DocumentFragment,Node);
+
+
+function ProcessingInstruction() {
+}
+ProcessingInstruction.prototype.nodeType = PROCESSING_INSTRUCTION_NODE;
+_extends(ProcessingInstruction,Node);
+function XMLSerializer(){}
+XMLSerializer.prototype.serializeToString = function(node,attributeSorter){
+	return node.toString(attributeSorter);
+}
+Node.prototype.toString =function(attributeSorter){
+	var buf = [];
+	serializeToString(this,buf,attributeSorter);
+	return buf.join('');
+}
+function serializeToString(node,buf,attributeSorter,isHTML){
+	switch(node.nodeType){
+	case ELEMENT_NODE:
+		var attrs = node.attributes;
+		var len = attrs.length;
+		var child = node.firstChild;
+		var nodeName = node.tagName;
+		isHTML =  (htmlns === node.namespaceURI) ||isHTML 
+		buf.push('<',nodeName);
+		if(attributeSorter){
+			buf.sort.apply(attrs, attributeSorter);
+		}
+		for(var i=0;i<len;i++){
+			serializeToString(attrs.item(i),buf,attributeSorter,isHTML);
+		}
+		if(child || isHTML && !/^(?:meta|link|img|br|hr|input|button)$/i.test(nodeName)){
+			buf.push('>');
+			//if is cdata child node
+			if(isHTML && /^script$/i.test(nodeName)){
+				if(child){
+					buf.push(child.data);
+				}
+			}else{
+				while(child){
+					serializeToString(child,buf,attributeSorter,isHTML);
+					child = child.nextSibling;
+				}
+			}
+			buf.push('</',nodeName,'>');
+		}else{
+			buf.push('/>');
+		}
+		return;
+	case DOCUMENT_NODE:
+	case DOCUMENT_FRAGMENT_NODE:
+		var child = node.firstChild;
+		while(child){
+			serializeToString(child,buf,attributeSorter,isHTML);
+			child = child.nextSibling;
+		}
+		return;
+	case ATTRIBUTE_NODE:
+		return buf.push(' ',node.name,'="',node.value.replace(/[<&"]/g,_xmlEncoder),'"');
+	case TEXT_NODE:
+		return buf.push(node.data.replace(/[<&]/g,_xmlEncoder));
+	case CDATA_SECTION_NODE:
+		return buf.push( '<![CDATA[',node.data,']]>');
+	case COMMENT_NODE:
+		return buf.push( "<!--",node.data,"-->");
+	case DOCUMENT_TYPE_NODE:
+		var pubid = node.publicId;
+		var sysid = node.systemId;
+		buf.push('<!DOCTYPE ',node.name);
+		if(pubid){
+			buf.push(' PUBLIC "',pubid);
+			if (sysid && sysid!='.') {
+				buf.push( '" "',sysid);
+			}
+			buf.push('">');
+		}else if(sysid && sysid!='.'){
+			buf.push(' SYSTEM "',sysid,'">');
+		}else{
+			var sub = node.internalSubset;
+			if(sub){
+				buf.push(" [",sub,"]");
+			}
+			buf.push(">");
+		}
+		return;
+	case PROCESSING_INSTRUCTION_NODE:
+		return buf.push( "<?",node.target," ",node.data,"?>");
+	case ENTITY_REFERENCE_NODE:
+		return buf.push( '&',node.nodeName,';');
+	//case ENTITY_NODE:
+	//case NOTATION_NODE:
+	default:
+		buf.push('??',node.nodeName);
+	}
+}
+function importNode(doc,node,deep){
+	var node2;
+	switch (node.nodeType) {
+	case ELEMENT_NODE:
+		node2 = node.cloneNode(false);
+		node2.ownerDocument = doc;
+		//var attrs = node2.attributes;
+		//var len = attrs.length;
+		//for(var i=0;i<len;i++){
+			//node2.setAttributeNodeNS(importNode(doc,attrs.item(i),deep));
+		//}
+	case DOCUMENT_FRAGMENT_NODE:
+		break;
+	case ATTRIBUTE_NODE:
+		deep = true;
+		break;
+	//case ENTITY_REFERENCE_NODE:
+	//case PROCESSING_INSTRUCTION_NODE:
+	////case TEXT_NODE:
+	//case CDATA_SECTION_NODE:
+	//case COMMENT_NODE:
+	//	deep = false;
+	//	break;
+	//case DOCUMENT_NODE:
+	//case DOCUMENT_TYPE_NODE:
+	//cannot be imported.
+	//case ENTITY_NODE:
+	//case NOTATION_NODE：
+	//can not hit in level3
+	//default:throw e;
+	}
+	if(!node2){
+		node2 = node.cloneNode(false);//false
+	}
+	node2.ownerDocument = doc;
+	node2.parentNode = null;
+	if(deep){
+		var child = node.firstChild;
+		while(child){
+			node2.appendChild(importNode(doc,child,deep));
+			child = child.nextSibling;
+		}
+	}
+	return node2;
+}
+//
+//var _relationMap = {firstChild:1,lastChild:1,previousSibling:1,nextSibling:1,
+//					attributes:1,childNodes:1,parentNode:1,documentElement:1,doctype,};
+function cloneNode(doc,node,deep){
+	var node2 = new node.constructor();
+	for(var n in node){
+		var v = node[n];
+		if(typeof v != 'object' ){
+			if(v != node2[n]){
+				node2[n] = v;
+			}
+		}
+	}
+	if(node.childNodes){
+		node2.childNodes = new NodeList();
+	}
+	node2.ownerDocument = doc;
+	switch (node2.nodeType) {
+	case ELEMENT_NODE:
+		var attrs	= node.attributes;
+		var attrs2	= node2.attributes = new NamedNodeMap();
+		var len = attrs.length
+		attrs2._ownerElement = node2;
+		for(var i=0;i<len;i++){
+			node2.setAttributeNode(cloneNode(doc,attrs.item(i),true));
+		}
+		break;;
+	case ATTRIBUTE_NODE:
+		deep = true;
+	}
+	if(deep){
+		var child = node.firstChild;
+		while(child){
+			node2.appendChild(cloneNode(doc,child,deep));
+			child = child.nextSibling;
+		}
+	}
+	return node2;
+}
+
+function __set__(object,key,value){
+	object[key] = value
+}
+//do dynamic
+try{
+	if(Object.defineProperty){
+		Object.defineProperty(LiveNodeList.prototype,'length',{
+			get:function(){
+				_updateLiveList(this);
+				return this.$$length;
+			}
+		});
+		Object.defineProperty(Node.prototype,'textContent',{
+			get:function(){
+				return getTextContent(this);
+			},
+			set:function(data){
+				switch(this.nodeType){
+				case 1:
+				case 11:
+					while(this.firstChild){
+						this.removeChild(this.firstChild);
+					}
+					if(data || String(data)){
+						this.appendChild(this.ownerDocument.createTextNode(data));
+					}
+					break;
+				default:
+					//TODO:
+					this.data = data;
+					this.value = value;
+					this.nodeValue = data;
+				}
+			}
+		})
+		
+		function getTextContent(node){
+			switch(node.nodeType){
+			case 1:
+			case 11:
+				var buf = [];
+				node = node.firstChild;
+				while(node){
+					if(node.nodeType!==7 && node.nodeType !==8){
+						buf.push(getTextContent(node));
+					}
+					node = node.nextSibling;
+				}
+				return buf.join('');
+			default:
+				return node.nodeValue;
+			}
+		}
+		__set__ = function(object,key,value){
+			//console.log(value)
+			object['$$'+key] = value
+		}
+	}
+}catch(e){//ie8
+}
+
+if(typeof require == 'function'){
+	exports.DOMImplementation = DOMImplementation;
+	exports.XMLSerializer = XMLSerializer;
+}
+
+},{}],57:[function(require,module,exports){
+//[4]   	NameStartChar	   ::=   	":" | [A-Z] | "_" | [a-z] | [#xC0-#xD6] | [#xD8-#xF6] | [#xF8-#x2FF] | [#x370-#x37D] | [#x37F-#x1FFF] | [#x200C-#x200D] | [#x2070-#x218F] | [#x2C00-#x2FEF] | [#x3001-#xD7FF] | [#xF900-#xFDCF] | [#xFDF0-#xFFFD] | [#x10000-#xEFFFF]
+//[4a]   	NameChar	   ::=   	NameStartChar | "-" | "." | [0-9] | #xB7 | [#x0300-#x036F] | [#x203F-#x2040]
+//[5]   	Name	   ::=   	NameStartChar (NameChar)*
+var nameStartChar = /[A-Z_a-z\xC0-\xD6\xD8-\xF6\u00F8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD]///\u10000-\uEFFFF
+var nameChar = new RegExp("[\\-\\.0-9"+nameStartChar.source.slice(1,-1)+"\u00B7\u0300-\u036F\\u203F-\u2040]");
+var tagNamePattern = new RegExp('^'+nameStartChar.source+nameChar.source+'*(?:\:'+nameStartChar.source+nameChar.source+'*)?$');
+//var tagNamePattern = /^[a-zA-Z_][\w\-\.]*(?:\:[a-zA-Z_][\w\-\.]*)?$/
+//var handlers = 'resolveEntity,getExternalSubset,characters,endDocument,endElement,endPrefixMapping,ignorableWhitespace,processingInstruction,setDocumentLocator,skippedEntity,startDocument,startElement,startPrefixMapping,notationDecl,unparsedEntityDecl,error,fatalError,warning,attributeDecl,elementDecl,externalEntityDecl,internalEntityDecl,comment,endCDATA,endDTD,endEntity,startCDATA,startDTD,startEntity'.split(',')
+
+//S_TAG,	S_ATTR,	S_EQ,	S_V
+//S_ATTR_S,	S_E,	S_S,	S_C
+var S_TAG = 0;//tag name offerring
+var S_ATTR = 1;//attr name offerring 
+var S_ATTR_S=2;//attr name end and space offer
+var S_EQ = 3;//=space?
+var S_V = 4;//attr value(no quot value only)
+var S_E = 5;//attr value end and no space(quot end)
+var S_S = 6;//(attr value end || tag end ) && (space offer)
+var S_C = 7;//closed el<el />
+
+function XMLReader(){
+	
+}
+
+XMLReader.prototype = {
+	parse:function(source,defaultNSMap,entityMap){
+		var domBuilder = this.domBuilder;
+		domBuilder.startDocument();
+		_copy(defaultNSMap ,defaultNSMap = {})
+		parse(source,defaultNSMap,entityMap,
+				domBuilder,this.errorHandler);
+		domBuilder.endDocument();
+	}
+}
+function parse(source,defaultNSMapCopy,entityMap,domBuilder,errorHandler){
+  function fixedFromCharCode(code) {
+		// String.prototype.fromCharCode does not supports
+		// > 2 bytes unicode chars directly
+		if (code > 0xffff) {
+			code -= 0x10000;
+			var surrogate1 = 0xd800 + (code >> 10)
+				, surrogate2 = 0xdc00 + (code & 0x3ff);
+
+			return String.fromCharCode(surrogate1, surrogate2);
+		} else {
+			return String.fromCharCode(code);
+		}
+	}
+	function entityReplacer(a){
+		var k = a.slice(1,-1);
+		if(k in entityMap){
+			return entityMap[k]; 
+		}else if(k.charAt(0) === '#'){
+			return fixedFromCharCode(parseInt(k.substr(1).replace('x','0x')))
+		}else{
+			errorHandler.error('entity not found:'+a);
+			return a;
+		}
+	}
+	function appendText(end){//has some bugs
+		if(end>start){
+			var xt = source.substring(start,end).replace(/&#?\w+;/g,entityReplacer);
+			locator&&position(start);
+			domBuilder.characters(xt,0,end-start);
+			start = end
+		}
+	}
+	function position(p,m){
+		while(p>=lineEnd && (m = linePattern.exec(source))){
+			lineStart = m.index;
+			lineEnd = lineStart + m[0].length;
+			locator.lineNumber++;
+			//console.log('line++:',locator,startPos,endPos)
+		}
+		locator.columnNumber = p-lineStart+1;
+	}
+	var lineStart = 0;
+	var lineEnd = 0;
+	var linePattern = /.+(?:\r\n?|\n)|.*$/g
+	var locator = domBuilder.locator;
+	
+	var parseStack = [{currentNSMap:defaultNSMapCopy}]
+	var closeMap = {};
+	var start = 0;
+	while(true){
+		try{
+			var tagStart = source.indexOf('<',start);
+			if(tagStart<0){
+				if(!source.substr(start).match(/^\s*$/)){
+					var doc = domBuilder.document;
+	    			var text = doc.createTextNode(source.substr(start));
+	    			doc.appendChild(text);
+	    			domBuilder.currentElement = text;
+				}
+				return;
+			}
+			if(tagStart>start){
+				appendText(tagStart);
+			}
+			switch(source.charAt(tagStart+1)){
+			case '/':
+				var end = source.indexOf('>',tagStart+3);
+				var tagName = source.substring(tagStart+2,end);
+				var config = parseStack.pop();
+				var localNSMap = config.localNSMap;
+		        if(config.tagName != tagName){
+		            errorHandler.fatalError("end tag name: "+tagName+' is not match the current start tagName:'+config.tagName );
+		        }
+				domBuilder.endElement(config.uri,config.localName,tagName);
+				if(localNSMap){
+					for(var prefix in localNSMap){
+						domBuilder.endPrefixMapping(prefix) ;
+					}
+				}
+				end++;
+				break;
+				// end elment
+			case '?':// <?...?>
+				locator&&position(tagStart);
+				end = parseInstruction(source,tagStart,domBuilder);
+				break;
+			case '!':// <!doctype,<![CDATA,<!--
+				locator&&position(tagStart);
+				end = parseDCC(source,tagStart,domBuilder,errorHandler);
+				break;
+			default:
+			
+				locator&&position(tagStart);
+				
+				var el = new ElementAttributes();
+				
+				//elStartEnd
+				var end = parseElementStartPart(source,tagStart,el,entityReplacer,errorHandler);
+				var len = el.length;
+				
+				if(locator){
+					if(len){
+						//attribute position fixed
+						for(var i = 0;i<len;i++){
+							var a = el[i];
+							position(a.offset);
+							a.offset = copyLocator(locator,{});
+						}
+					}
+					position(end);
+				}
+				if(!el.closed && fixSelfClosed(source,end,el.tagName,closeMap)){
+					el.closed = true;
+					if(!entityMap.nbsp){
+						errorHandler.warning('unclosed xml attribute');
+					}
+				}
+				appendElement(el,domBuilder,parseStack);
+				
+				
+				if(el.uri === 'http://www.w3.org/1999/xhtml' && !el.closed){
+					end = parseHtmlSpecialContent(source,end,el.tagName,entityReplacer,domBuilder)
+				}else{
+					end++;
+				}
+			}
+		}catch(e){
+			errorHandler.error('element parse error: '+e);
+			end = -1;
+		}
+		if(end>start){
+			start = end;
+		}else{
+			//TODO: 这里有可能sax回退，有位置错误风险
+			appendText(Math.max(tagStart,start)+1);
+		}
+	}
+}
+function copyLocator(f,t){
+	t.lineNumber = f.lineNumber;
+	t.columnNumber = f.columnNumber;
+	return t;
+}
+
+/**
+ * @see #appendElement(source,elStartEnd,el,selfClosed,entityReplacer,domBuilder,parseStack);
+ * @return end of the elementStartPart(end of elementEndPart for selfClosed el)
+ */
+function parseElementStartPart(source,start,el,entityReplacer,errorHandler){
+	var attrName;
+	var value;
+	var p = ++start;
+	var s = S_TAG;//status
+	while(true){
+		var c = source.charAt(p);
+		switch(c){
+		case '=':
+			if(s === S_ATTR){//attrName
+				attrName = source.slice(start,p);
+				s = S_EQ;
+			}else if(s === S_ATTR_S){
+				s = S_EQ;
+			}else{
+				//fatalError: equal must after attrName or space after attrName
+				throw new Error('attribute equal must after attrName');
+			}
+			break;
+		case '\'':
+		case '"':
+			if(s === S_EQ){//equal
+				start = p+1;
+				p = source.indexOf(c,start)
+				if(p>0){
+					value = source.slice(start,p).replace(/&#?\w+;/g,entityReplacer);
+					el.add(attrName,value,start-1);
+					s = S_E;
+				}else{
+					//fatalError: no end quot match
+					throw new Error('attribute value no end \''+c+'\' match');
+				}
+			}else if(s == S_V){
+				value = source.slice(start,p).replace(/&#?\w+;/g,entityReplacer);
+				//console.log(attrName,value,start,p)
+				el.add(attrName,value,start);
+				//console.dir(el)
+				errorHandler.warning('attribute "'+attrName+'" missed start quot('+c+')!!');
+				start = p+1;
+				s = S_E
+			}else{
+				//fatalError: no equal before
+				throw new Error('attribute value must after "="');
+			}
+			break;
+		case '/':
+			switch(s){
+			case S_TAG:
+				el.setTagName(source.slice(start,p));
+			case S_E:
+			case S_S:
+			case S_C:
+				s = S_C;
+				el.closed = true;
+			case S_V:
+			case S_ATTR:
+			case S_ATTR_S:
+				break;
+			//case S_EQ:
+			default:
+				throw new Error("attribute invalid close char('/')")
+			}
+			break;
+		case ''://end document
+			//throw new Error('unexpected end of input')
+			errorHandler.error('unexpected end of input');
+		case '>':
+			switch(s){
+			case S_TAG:
+				el.setTagName(source.slice(start,p));
+			case S_E:
+			case S_S:
+			case S_C:
+				break;//normal
+			case S_V://Compatible state
+			case S_ATTR:
+				value = source.slice(start,p);
+				if(value.slice(-1) === '/'){
+					el.closed  = true;
+					value = value.slice(0,-1)
+				}
+			case S_ATTR_S:
+				if(s === S_ATTR_S){
+					value = attrName;
+				}
+				if(s == S_V){
+					errorHandler.warning('attribute "'+value+'" missed quot(")!!');
+					el.add(attrName,value.replace(/&#?\w+;/g,entityReplacer),start)
+				}else{
+					errorHandler.warning('attribute "'+value+'" missed value!! "'+value+'" instead!!')
+					el.add(value,value,start)
+				}
+				break;
+			case S_EQ:
+				throw new Error('attribute value missed!!');
+			}
+//			console.log(tagName,tagNamePattern,tagNamePattern.test(tagName))
+			return p;
+		/*xml space '\x20' | #x9 | #xD | #xA; */
+		case '\u0080':
+			c = ' ';
+		default:
+			if(c<= ' '){//space
+				switch(s){
+				case S_TAG:
+					el.setTagName(source.slice(start,p));//tagName
+					s = S_S;
+					break;
+				case S_ATTR:
+					attrName = source.slice(start,p)
+					s = S_ATTR_S;
+					break;
+				case S_V:
+					var value = source.slice(start,p).replace(/&#?\w+;/g,entityReplacer);
+					errorHandler.warning('attribute "'+value+'" missed quot(")!!');
+					el.add(attrName,value,start)
+				case S_E:
+					s = S_S;
+					break;
+				//case S_S:
+				//case S_EQ:
+				//case S_ATTR_S:
+				//	void();break;
+				//case S_C:
+					//ignore warning
+				}
+			}else{//not space
+//S_TAG,	S_ATTR,	S_EQ,	S_V
+//S_ATTR_S,	S_E,	S_S,	S_C
+				switch(s){
+				//case S_TAG:void();break;
+				//case S_ATTR:void();break;
+				//case S_V:void();break;
+				case S_ATTR_S:
+					errorHandler.warning('attribute "'+attrName+'" missed value!! "'+attrName+'" instead!!')
+					el.add(attrName,attrName,start);
+					start = p;
+					s = S_ATTR;
+					break;
+				case S_E:
+					errorHandler.warning('attribute space is required"'+attrName+'"!!')
+				case S_S:
+					s = S_ATTR;
+					start = p;
+					break;
+				case S_EQ:
+					s = S_V;
+					start = p;
+					break;
+				case S_C:
+					throw new Error("elements closed character '/' and '>' must be connected to");
+				}
+			}
+		}
+		p++;
+	}
+}
+/**
+ * @return end of the elementStartPart(end of elementEndPart for selfClosed el)
+ */
+function appendElement(el,domBuilder,parseStack){
+	var tagName = el.tagName;
+	var localNSMap = null;
+	var currentNSMap = parseStack[parseStack.length-1].currentNSMap;
+	var i = el.length;
+	while(i--){
+		var a = el[i];
+		var qName = a.qName;
+		var value = a.value;
+		var nsp = qName.indexOf(':');
+		if(nsp>0){
+			var prefix = a.prefix = qName.slice(0,nsp);
+			var localName = qName.slice(nsp+1);
+			var nsPrefix = prefix === 'xmlns' && localName
+		}else{
+			localName = qName;
+			prefix = null
+			nsPrefix = qName === 'xmlns' && ''
+		}
+		//can not set prefix,because prefix !== ''
+		a.localName = localName ;
+		//prefix == null for no ns prefix attribute 
+		if(nsPrefix !== false){//hack!!
+			if(localNSMap == null){
+				localNSMap = {}
+				//console.log(currentNSMap,0)
+				_copy(currentNSMap,currentNSMap={})
+				//console.log(currentNSMap,1)
+			}
+			currentNSMap[nsPrefix] = localNSMap[nsPrefix] = value;
+			a.uri = 'http://www.w3.org/2000/xmlns/'
+			domBuilder.startPrefixMapping(nsPrefix, value) 
+		}
+	}
+	var i = el.length;
+	while(i--){
+		a = el[i];
+		var prefix = a.prefix;
+		if(prefix){//no prefix attribute has no namespace
+			if(prefix === 'xml'){
+				a.uri = 'http://www.w3.org/XML/1998/namespace';
+			}if(prefix !== 'xmlns'){
+				a.uri = currentNSMap[prefix]
+				
+				//{console.log('###'+a.qName,domBuilder.locator.systemId+'',currentNSMap,a.uri)}
+			}
+		}
+	}
+	var nsp = tagName.indexOf(':');
+	if(nsp>0){
+		prefix = el.prefix = tagName.slice(0,nsp);
+		localName = el.localName = tagName.slice(nsp+1);
+	}else{
+		prefix = null;//important!!
+		localName = el.localName = tagName;
+	}
+	//no prefix element has default namespace
+	var ns = el.uri = currentNSMap[prefix || ''];
+	domBuilder.startElement(ns,localName,tagName,el);
+	//endPrefixMapping and startPrefixMapping have not any help for dom builder
+	//localNSMap = null
+	if(el.closed){
+		domBuilder.endElement(ns,localName,tagName);
+		if(localNSMap){
+			for(prefix in localNSMap){
+				domBuilder.endPrefixMapping(prefix) 
+			}
+		}
+	}else{
+		el.currentNSMap = currentNSMap;
+		el.localNSMap = localNSMap;
+		parseStack.push(el);
+	}
+}
+function parseHtmlSpecialContent(source,elStartEnd,tagName,entityReplacer,domBuilder){
+	if(/^(?:script|textarea)$/i.test(tagName)){
+		var elEndStart =  source.indexOf('</'+tagName+'>',elStartEnd);
+		var text = source.substring(elStartEnd+1,elEndStart);
+		if(/[&<]/.test(text)){
+			if(/^script$/i.test(tagName)){
+				//if(!/\]\]>/.test(text)){
+					//lexHandler.startCDATA();
+					domBuilder.characters(text,0,text.length);
+					//lexHandler.endCDATA();
+					return elEndStart;
+				//}
+			}//}else{//text area
+				text = text.replace(/&#?\w+;/g,entityReplacer);
+				domBuilder.characters(text,0,text.length);
+				return elEndStart;
+			//}
+			
+		}
+	}
+	return elStartEnd+1;
+}
+function fixSelfClosed(source,elStartEnd,tagName,closeMap){
+	//if(tagName in closeMap){
+	var pos = closeMap[tagName];
+	if(pos == null){
+		//console.log(tagName)
+		pos = closeMap[tagName] = source.lastIndexOf('</'+tagName+'>')
+	}
+	return pos<elStartEnd;
+	//} 
+}
+function _copy(source,target){
+	for(var n in source){target[n] = source[n]}
+}
+function parseDCC(source,start,domBuilder,errorHandler){//sure start with '<!'
+	var next= source.charAt(start+2)
+	switch(next){
+	case '-':
+		if(source.charAt(start + 3) === '-'){
+			var end = source.indexOf('-->',start+4);
+			//append comment source.substring(4,end)//<!--
+			if(end>start){
+				domBuilder.comment(source,start+4,end-start-4);
+				return end+3;
+			}else{
+				errorHandler.error("Unclosed comment");
+				return -1;
+			}
+		}else{
+			//error
+			return -1;
+		}
+	default:
+		if(source.substr(start+3,6) == 'CDATA['){
+			var end = source.indexOf(']]>',start+9);
+			domBuilder.startCDATA();
+			domBuilder.characters(source,start+9,end-start-9);
+			domBuilder.endCDATA() 
+			return end+3;
+		}
+		//<!DOCTYPE
+		//startDTD(java.lang.String name, java.lang.String publicId, java.lang.String systemId) 
+		var matchs = split(source,start);
+		var len = matchs.length;
+		if(len>1 && /!doctype/i.test(matchs[0][0])){
+			var name = matchs[1][0];
+			var pubid = len>3 && /^public$/i.test(matchs[2][0]) && matchs[3][0]
+			var sysid = len>4 && matchs[4][0];
+			var lastMatch = matchs[len-1]
+			domBuilder.startDTD(name,pubid && pubid.replace(/^(['"])(.*?)\1$/,'$2'),
+					sysid && sysid.replace(/^(['"])(.*?)\1$/,'$2'));
+			domBuilder.endDTD();
+			
+			return lastMatch.index+lastMatch[0].length
+		}
+	}
+	return -1;
+}
+
+
+
+function parseInstruction(source,start,domBuilder){
+	var end = source.indexOf('?>',start);
+	if(end){
+		var match = source.substring(start,end).match(/^<\?(\S*)\s*([\s\S]*?)\s*$/);
+		if(match){
+			var len = match[0].length;
+			domBuilder.processingInstruction(match[1], match[2]) ;
+			return end+2;
+		}else{//error
+			return -1;
+		}
+	}
+	return -1;
+}
+
+/**
+ * @param source
+ */
+function ElementAttributes(source){
+	
+}
+ElementAttributes.prototype = {
+	setTagName:function(tagName){
+		if(!tagNamePattern.test(tagName)){
+			throw new Error('invalid tagName:'+tagName)
+		}
+		this.tagName = tagName
+	},
+	add:function(qName,value,offset){
+		if(!tagNamePattern.test(qName)){
+			throw new Error('invalid attribute:'+qName)
+		}
+		this[this.length++] = {qName:qName,value:value,offset:offset}
+	},
+	length:0,
+	getLocalName:function(i){return this[i].localName},
+	getOffset:function(i){return this[i].offset},
+	getQName:function(i){return this[i].qName},
+	getURI:function(i){return this[i].uri},
+	getValue:function(i){return this[i].value}
+//	,getIndex:function(uri, localName)){
+//		if(localName){
+//			
+//		}else{
+//			var qName = uri
+//		}
+//	},
+//	getValue:function(){return this.getValue(this.getIndex.apply(this,arguments))},
+//	getType:function(uri,localName){}
+//	getType:function(i){},
+}
+
+
+
+
+function _set_proto_(thiz,parent){
+	thiz.__proto__ = parent;
+	return thiz;
+}
+if(!(_set_proto_({},_set_proto_.prototype) instanceof _set_proto_)){
+	_set_proto_ = function(thiz,parent){
+		function p(){};
+		p.prototype = parent;
+		p = new p();
+		for(parent in thiz){
+			p[parent] = thiz[parent];
+		}
+		return p;
+	}
+}
+
+function split(source,start){
+	var match;
+	var buf = [];
+	var reg = /'[^']+'|"[^"]+"|[^\s<>\/=]+=?|(\/?\s*>|<)/g;
+	reg.lastIndex = start;
+	reg.exec(source);//skip <
+	while(match = reg.exec(source)){
+		buf.push(match);
+		if(match[1])return buf;
+	}
+}
+
+if(typeof require == 'function'){
+	exports.XMLReader = XMLReader;
+}
+
+
+},{}],58:[function(require,module,exports){
+(function (process,Buffer){
+/**
+ * Wrapper for built-in http.js to emulate the browser XMLHttpRequest object.
+ *
+ * This can be used with JS designed for browsers to improve reuse of code and
+ * allow the use of existing libraries.
+ *
+ * Usage: include("XMLHttpRequest.js") and use XMLHttpRequest per W3C specs.
+ *
+ * @author Dan DeFelippi <dan@driverdan.com>
+ * @contributor David Ellis <d.f.ellis@ieee.org>
+ * @license MIT
+ */
+
+var Url = require("url");
+var spawn = require("child_process").spawn;
+var fs = require("fs");
+
+exports.XMLHttpRequest = function() {
+  "use strict";
+
+  /**
+   * Private variables
+   */
+  var self = this;
+  var http = require("http");
+  var https = require("https");
+
+  // Holds http.js objects
+  var request;
+  var response;
+
+  // Request settings
+  var settings = {};
+
+  // Disable header blacklist.
+  // Not part of XHR specs.
+  var disableHeaderCheck = false;
+
+  // Set some default headers
+  var defaultHeaders = {
+    "User-Agent": "node-XMLHttpRequest",
+    "Accept": "*/*",
+  };
+
+  var headers = {};
+  var headersCase = {};
+
+  // These headers are not user setable.
+  // The following are allowed but banned in the spec:
+  // * user-agent
+  var forbiddenRequestHeaders = [
+    "accept-charset",
+    "accept-encoding",
+    "access-control-request-headers",
+    "access-control-request-method",
+    "connection",
+    "content-length",
+    "content-transfer-encoding",
+    "cookie",
+    "cookie2",
+    "date",
+    "expect",
+    "host",
+    "keep-alive",
+    "origin",
+    "referer",
+    "te",
+    "trailer",
+    "transfer-encoding",
+    "upgrade",
+    "via"
+  ];
+
+  // These request methods are not allowed
+  var forbiddenRequestMethods = [
+    "TRACE",
+    "TRACK",
+    "CONNECT"
+  ];
+
+  // Send flag
+  var sendFlag = false;
+  // Error flag, used when errors occur or abort is called
+  var errorFlag = false;
+
+  // Event listeners
+  var listeners = {};
+
+  /**
+   * Constants
+   */
+
+  this.UNSENT = 0;
+  this.OPENED = 1;
+  this.HEADERS_RECEIVED = 2;
+  this.LOADING = 3;
+  this.DONE = 4;
+
+  /**
+   * Public vars
+   */
+
+  // Current state
+  this.readyState = this.UNSENT;
+
+  // default ready state change handler in case one is not set or is set late
+  this.onreadystatechange = null;
+
+  // Result & response
+  this.responseText = "";
+  this.responseXML = "";
+  this.status = null;
+  this.statusText = null;
+  
+  // Whether cross-site Access-Control requests should be made using
+  // credentials such as cookies or authorization headers
+  this.withCredentials = false;
+
+  /**
+   * Private methods
+   */
+
+  /**
+   * Check if the specified header is allowed.
+   *
+   * @param string header Header to validate
+   * @return boolean False if not allowed, otherwise true
+   */
+  var isAllowedHttpHeader = function(header) {
+    return disableHeaderCheck || (header && forbiddenRequestHeaders.indexOf(header.toLowerCase()) === -1);
+  };
+
+  /**
+   * Check if the specified method is allowed.
+   *
+   * @param string method Request method to validate
+   * @return boolean False if not allowed, otherwise true
+   */
+  var isAllowedHttpMethod = function(method) {
+    return (method && forbiddenRequestMethods.indexOf(method) === -1);
+  };
+
+  /**
+   * Public methods
+   */
+
+  /**
+   * Open the connection. Currently supports local server requests.
+   *
+   * @param string method Connection method (eg GET, POST)
+   * @param string url URL for the connection.
+   * @param boolean async Asynchronous connection. Default is true.
+   * @param string user Username for basic authentication (optional)
+   * @param string password Password for basic authentication (optional)
+   */
+  this.open = function(method, url, async, user, password) {
+    this.abort();
+    errorFlag = false;
+
+    // Check for valid request method
+    if (!isAllowedHttpMethod(method)) {
+      throw new Error("SecurityError: Request method not allowed");
+    }
+
+    settings = {
+      "method": method,
+      "url": url.toString(),
+      "async": (typeof async !== "boolean" ? true : async),
+      "user": user || null,
+      "password": password || null
+    };
+
+    setState(this.OPENED);
+  };
+
+  /**
+   * Disables or enables isAllowedHttpHeader() check the request. Enabled by default.
+   * This does not conform to the W3C spec.
+   *
+   * @param boolean state Enable or disable header checking.
+   */
+  this.setDisableHeaderCheck = function(state) {
+    disableHeaderCheck = state;
+  };
+
+  /**
+   * Sets a header for the request or appends the value if one is already set.
+   *
+   * @param string header Header name
+   * @param string value Header value
+   */
+  this.setRequestHeader = function(header, value) {
+    if (this.readyState !== this.OPENED) {
+      throw new Error("INVALID_STATE_ERR: setRequestHeader can only be called when state is OPEN");
+    }
+    if (!isAllowedHttpHeader(header)) {
+      console.warn("Refused to set unsafe header \"" + header + "\"");
+      return;
+    }
+    if (sendFlag) {
+      throw new Error("INVALID_STATE_ERR: send flag is true");
+    }
+    header = headersCase[header.toLowerCase()] || header;
+    headersCase[header.toLowerCase()] = header;
+    headers[header] = headers[header] ? headers[header] + ', ' + value : value;
+  };
+
+  /**
+   * Gets a header from the server response.
+   *
+   * @param string header Name of header to get.
+   * @return string Text of the header or null if it doesn't exist.
+   */
+  this.getResponseHeader = function(header) {
+    if (typeof header === "string"
+      && this.readyState > this.OPENED
+      && response
+      && response.headers
+      && response.headers[header.toLowerCase()]
+      && !errorFlag
+    ) {
+      return response.headers[header.toLowerCase()];
+    }
+
+    return null;
+  };
+
+  /**
+   * Gets all the response headers.
+   *
+   * @return string A string with all response headers separated by CR+LF
+   */
+  this.getAllResponseHeaders = function() {
+    if (this.readyState < this.HEADERS_RECEIVED || errorFlag) {
+      return "";
+    }
+    var result = "";
+
+    for (var i in response.headers) {
+      // Cookie headers are excluded
+      if (i !== "set-cookie" && i !== "set-cookie2") {
+        result += i + ": " + response.headers[i] + "\r\n";
+      }
+    }
+    return result.substr(0, result.length - 2);
+  };
+
+  /**
+   * Gets a request header
+   *
+   * @param string name Name of header to get
+   * @return string Returns the request header or empty string if not set
+   */
+  this.getRequestHeader = function(name) {
+    if (typeof name === "string" && headersCase[name.toLowerCase()]) {
+      return headers[headersCase[name.toLowerCase()]];
+    }
+
+    return "";
+  };
+
+  /**
+   * Sends the request to the server.
+   *
+   * @param string data Optional data to send as request body.
+   */
+  this.send = function(data) {
+    if (this.readyState !== this.OPENED) {
+      throw new Error("INVALID_STATE_ERR: connection must be opened before send() is called");
+    }
+
+    if (sendFlag) {
+      throw new Error("INVALID_STATE_ERR: send has already been called");
+    }
+
+    var ssl = false, local = false;
+    var url = Url.parse(settings.url);
+    var host;
+    // Determine the server
+    switch (url.protocol) {
+      case "https:":
+        ssl = true;
+        // SSL & non-SSL both need host, no break here.
+      case "http:":
+        host = url.hostname;
+        break;
+
+      case "file:":
+        local = true;
+        break;
+
+      case undefined:
+      case null:
+      case "":
+        host = "localhost";
+        break;
+
+      default:
+        throw new Error("Protocol not supported.");
+    }
+
+    // Load files off the local filesystem (file://)
+    if (local) {
+      if (settings.method !== "GET") {
+        throw new Error("XMLHttpRequest: Only GET method is supported");
+      }
+
+      if (settings.async) {
+        fs.readFile(url.pathname, "utf8", function(error, data) {
+          if (error) {
+            self.handleError(error);
+          } else {
+            self.status = 200;
+            self.responseText = data;
+            setState(self.DONE);
+          }
         });
+      } else {
+        try {
+          this.responseText = fs.readFileSync(url.pathname, "utf8");
+          this.status = 200;
+          setState(self.DONE);
+        } catch(e) {
+          this.handleError(e);
+        }
+      }
+
+      return;
     }
 
-    // Leak a global regardless of module system
-    root['$rdf'] = $rdf;
+    // Default to port 80. If accessing localhost on another port be sure
+    // to use http://localhost:port/path
+    var port = url.port || (ssl ? 443 : 80);
+    // Add query string if one is used
+    var uri = url.pathname + (url.search ? url.search : "");
+
+    // Set the defaults if they haven't been set
+    for (var name in defaultHeaders) {
+      if (!headersCase[name.toLowerCase()]) {
+        headers[name] = defaultHeaders[name];
+      }
+    }
+
+    // Set the Host header or the server may reject the request
+    headers.Host = host;
+    if (!((ssl && port === 443) || port === 80)) {
+      headers.Host += ":" + url.port;
+    }
+
+    // Set Basic Auth if necessary
+    if (settings.user) {
+      if (typeof settings.password === "undefined") {
+        settings.password = "";
+      }
+      var authBuf = new Buffer(settings.user + ":" + settings.password);
+      headers.Authorization = "Basic " + authBuf.toString("base64");
+    }
+
+    // Set content length header
+    if (settings.method === "GET" || settings.method === "HEAD") {
+      data = null;
+    } else if (data) {
+      headers["Content-Length"] = Buffer.isBuffer(data) ? data.length : Buffer.byteLength(data);
+
+      if (!headers["Content-Type"]) {
+        headers["Content-Type"] = "text/plain;charset=UTF-8";
+      }
+    } else if (settings.method === "POST") {
+      // For a post with no data set Content-Length: 0.
+      // This is required by buggy servers that don't meet the specs.
+      headers["Content-Length"] = 0;
+    }
+
+    var options = {
+      host: host,
+      port: port,
+      path: uri,
+      method: settings.method,
+      headers: headers,
+      agent: false,
+      withCredentials: self.withCredentials
+    };
+
+    // Reset error flag
+    errorFlag = false;
+
+    // Handle async requests
+    if (settings.async) {
+      // Use the proper protocol
+      var doRequest = ssl ? https.request : http.request;
+
+      // Request is being sent, set send flag
+      sendFlag = true;
+
+      // As per spec, this is called here for historical reasons.
+      self.dispatchEvent("readystatechange");
+
+      // Handler for the response
+      var responseHandler = function responseHandler(resp) {
+        // Set response var to the response we got back
+        // This is so it remains accessable outside this scope
+        response = resp;
+        // Check for redirect
+        // @TODO Prevent looped redirects
+        if (response.statusCode === 301 || response.statusCode === 302 || response.statusCode === 303 || response.statusCode === 307) {
+          // Change URL to the redirect location
+          settings.url = response.headers.location;
+          var url = Url.parse(settings.url);
+          // Set host var in case it's used later
+          host = url.hostname;
+          // Options for the new request
+          var newOptions = {
+            hostname: url.hostname,
+            port: url.port,
+            path: url.path,
+            method: response.statusCode === 303 ? "GET" : settings.method,
+            headers: headers,
+            withCredentials: self.withCredentials
+          };
+
+          // Issue the new request
+          request = doRequest(newOptions, responseHandler).on("error", errorHandler);
+          request.end();
+          // @TODO Check if an XHR event needs to be fired here
+          return;
+        }
+
+        response.setEncoding("utf8");
+
+        setState(self.HEADERS_RECEIVED);
+        self.status = response.statusCode;
+
+        response.on("data", function(chunk) {
+          // Make sure there's some data
+          if (chunk) {
+            self.responseText += chunk;
+          }
+          // Don't emit state changes if the connection has been aborted.
+          if (sendFlag) {
+            setState(self.LOADING);
+          }
+        });
+
+        response.on("end", function() {
+          if (sendFlag) {
+            // Discard the end event if the connection has been aborted
+            setState(self.DONE);
+            sendFlag = false;
+          }
+        });
+
+        response.on("error", function(error) {
+          self.handleError(error);
+        });
+      };
+
+      // Error handler for the request
+      var errorHandler = function errorHandler(error) {
+        self.handleError(error);
+      };
+
+      // Create the request
+      request = doRequest(options, responseHandler).on("error", errorHandler);
+
+      // Node 0.4 and later won't accept empty data. Make sure it's needed.
+      if (data) {
+        request.write(data);
+      }
+
+      request.end();
+
+      self.dispatchEvent("loadstart");
+    } else { // Synchronous
+      // Create a temporary file for communication with the other Node process
+      var contentFile = ".node-xmlhttprequest-content-" + process.pid;
+      var syncFile = ".node-xmlhttprequest-sync-" + process.pid;
+      fs.writeFileSync(syncFile, "", "utf8");
+      // The async request the other Node process executes
+      var execString = "var http = require('http'), https = require('https'), fs = require('fs');"
+        + "var doRequest = http" + (ssl ? "s" : "") + ".request;"
+        + "var options = " + JSON.stringify(options) + ";"
+        + "var responseText = '';"
+        + "var req = doRequest(options, function(response) {"
+        + "response.setEncoding('utf8');"
+        + "response.on('data', function(chunk) {"
+        + "  responseText += chunk;"
+        + "});"
+        + "response.on('end', function() {"
+        + "fs.writeFileSync('" + contentFile + "', JSON.stringify({err: null, data: {statusCode: response.statusCode, headers: response.headers, text: responseText}}), 'utf8');"
+        + "fs.unlinkSync('" + syncFile + "');"
+        + "});"
+        + "response.on('error', function(error) {"
+        + "fs.writeFileSync('" + contentFile + "', JSON.stringify({err: error}), 'utf8');"
+        + "fs.unlinkSync('" + syncFile + "');"
+        + "});"
+        + "}).on('error', function(error) {"
+        + "fs.writeFileSync('" + contentFile + "', JSON.stringify({err: error}), 'utf8');"
+        + "fs.unlinkSync('" + syncFile + "');"
+        + "});"
+        + (data ? "req.write('" + JSON.stringify(data).slice(1,-1).replace(/'/g, "\\'") + "');":"")
+        + "req.end();";
+      // Start the other Node Process, executing this string
+      var syncProc = spawn(process.argv[0], ["-e", execString]);
+      while(fs.existsSync(syncFile)) {
+        // Wait while the sync file is empty
+      }
+      var resp = JSON.parse(fs.readFileSync(contentFile, 'utf8'));
+      // Kill the child process once the file has data
+      syncProc.stdin.end();
+      // Remove the temporary file
+      fs.unlinkSync(contentFile);
+
+      if (resp.err) {
+        self.handleError(resp.err);
+      } else {
+        response = resp.data;
+        self.status = resp.data.statusCode;
+        self.responseText = resp.data.text;
+        setState(self.DONE);
+      }
+    }
+  };
+
+  /**
+   * Called when an error is encountered to deal with it.
+   */
+  this.handleError = function(error) {
+    this.status = 0;
+    this.statusText = error;
+    this.responseText = error.stack;
+    errorFlag = true;
+    setState(this.DONE);
+    this.dispatchEvent('error');
+  };
+
+  /**
+   * Aborts a request.
+   */
+  this.abort = function() {
+    if (request) {
+      request.abort();
+      request = null;
+    }
+
+    headers = defaultHeaders;
+    this.status = 0;
+    this.responseText = "";
+    this.responseXML = "";
+
+    errorFlag = true;
+
+    if (this.readyState !== this.UNSENT
+        && (this.readyState !== this.OPENED || sendFlag)
+        && this.readyState !== this.DONE) {
+      sendFlag = false;
+      setState(this.DONE);
+    }
+    this.readyState = this.UNSENT;
+    this.dispatchEvent('abort');
+  };
+
+  /**
+   * Adds an event listener. Preferred method of binding to events.
+   */
+  this.addEventListener = function(event, callback) {
+    if (!(event in listeners)) {
+      listeners[event] = [];
+    }
+    // Currently allows duplicate callbacks. Should it?
+    listeners[event].push(callback);
+  };
+
+  /**
+   * Remove an event callback that has already been bound.
+   * Only works on the matching funciton, cannot be a copy.
+   */
+  this.removeEventListener = function(event, callback) {
+    if (event in listeners) {
+      // Filter will return a new array with the callback removed
+      listeners[event] = listeners[event].filter(function(ev) {
+        return ev !== callback;
+      });
+    }
+  };
+
+  /**
+   * Dispatch any events, including both "on" methods and events attached using addEventListener.
+   */
+  this.dispatchEvent = function(event) {
+    if (typeof self["on" + event] === "function") {
+      self["on" + event]();
+    }
+    if (event in listeners) {
+      for (var i = 0, len = listeners[event].length; i < len; i++) {
+        listeners[event][i].call(self);
+      }
+    }
+  };
+
+  /**
+   * Changes readyState and calls onreadystatechange.
+   *
+   * @param int state New state
+   */
+  var setState = function(state) {
+    if (state == self.LOADING || self.readyState !== state) {
+      self.readyState = state;
+
+      if (settings.async || self.readyState < self.OPENED || self.readyState === self.DONE) {
+        self.dispatchEvent("readystatechange");
+      }
+
+      if (self.readyState === self.DONE && !errorFlag) {
+        self.dispatchEvent("load");
+        // @TODO figure out InspectorInstrumentation::didLoadXHR(cookie)
+        self.dispatchEvent("loadend");
+      }
+    }
+  };
+};
+
+}).call(this,require('_process'),require("buffer").Buffer)
+},{"_process":28,"buffer":6,"child_process":5,"fs":5,"http":44,"https":12,"url":50}],59:[function(require,module,exports){
+module.exports = extend
+
+var hasOwnProperty = Object.prototype.hasOwnProperty;
+
+function extend() {
+    var target = {}
+
+    for (var i = 0; i < arguments.length; i++) {
+        var source = arguments[i]
+
+        for (var key in source) {
+            if (hasOwnProperty.call(source, key)) {
+                target[key] = source[key]
+            }
+        }
+    }
+
+    return target
 }
-$rdf.buildTime = "2016-01-29T14:01:03";
-})(this);
+
+},{}]},{},[1]);
