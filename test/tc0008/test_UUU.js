@@ -4,7 +4,7 @@
 
 if (typeof module !== 'undefined' && module.exports) { // Node.js environment
     var jQuery = require('jquery');
-    var $rdf = require('../../dist/node-rdflib.js').$rdf; // @@
+    var $rdf = require('../../dist/rdflib-node.js'); // @@
     var util = require('util');
     var alert = function(s){util.print('alert:'+s+'\n')};
 }
@@ -46,7 +46,7 @@ var httpGetContents = function httpGetContents(uri,  callback) {
                 xhr.status+", "+xhr.statusText+", body length = "+xhr.responseText.length);
             } else {
                callback(true, xhr.responseText);
-            }    
+            }
         }
     }
 
@@ -57,7 +57,7 @@ var httpGetContents = function httpGetContents(uri,  callback) {
             alert("Failed to get privileges: " + e)
         }
     }
-    
+
     xhr.open('GET', uri, true);  // async=true
     // xhr.setRequestHeader('Content-type', 'application/sparql-query');
     xhr.send();
@@ -71,7 +71,7 @@ function testTC0007(showDetails, callback) {
     var passStyle = 'style="border: solid 2px green; padding: 1px 2px;"';
     //var allResults = "<div><strong>Detailed Results:</strong></div>";
     var tests = [ ];
-    
+
     callback(0, '<p>got here</p>');
 
     var meta = $rdf.graph();
@@ -80,9 +80,9 @@ function testTC0007(showDetails, callback) {
 
 
         callback(0, "<p>Loaded <a href='"+escapeForXML(mainifest_uri)+"'>manifest</a></p>" );
-        
- 
-        
+
+
+
         function loadDataAndRunTest(tests, number){
 
             var test = tests[number];
@@ -92,9 +92,9 @@ function testTC0007(showDetails, callback) {
             test.input = meta.any(test, TD('informationResourceInput'));
             test.expected =  meta.any(test, TD('informationResourceResults'));
             test.purpose = meta.any(test, TD('purpose')).value;
-            
+
             test.inputData = test.expectedData = null;
-            
+
             var tryTest = function() {
                 if (test.inputData != null && test.expectedData != null) {
                     callback(0, "<hr><h2>"+test.no+") <a href='"+test.uri+"'>"+xtitle+"</a></h2>");
@@ -119,17 +119,17 @@ function testTC0007(showDetails, callback) {
                         if (match !== null) {
                             callback(0, "<p>graph expected:"+escapeForXML(match[1])+"</p>")
                         }
-                        
+
 
                     } catch(e) {
 
                         callback(1, "<p style='background-color: #fcc'>Exception for test "
                                 +test.no+": "+e+'</p>')
                         if (typeof e == 'Object') {
-                            var details = ""; 
-                            for (var prop in e) {  
-                               details += '' + prop+ ": '"+ e[prop]+ "';\n"; 
-                            } 
+                            var details = "";
+                            for (var prop in e) {
+                               details += '' + prop+ ": '"+ e[prop]+ "';\n";
+                            }
                             callback(1, "<p style='background-color: #fcc'>Details:"+details+'</p>');
                         }
                         displayTestData();
@@ -148,7 +148,7 @@ function testTC0007(showDetails, callback) {
                     tryTest();
                 }
             });
-            
+
             httpGetContents(test.expected.uri, function(ok, body) {
                 if (!ok) {
                     callback(1, "<p class='error'>Error getting expected <"+test.expected.uri+"> : "+
@@ -160,19 +160,19 @@ function testTC0007(showDetails, callback) {
             });
             return;
         }; // loadDataAndRunTest
-        
-        
+
+
         // var cases = meta.each(undefined, RDF('type'), TD('TestCase'));
         var tests = meta.each(undefined, TD('reviewStatus'), TD('approved'));
-        
+
         // Just try 1 for now
         // oadDataAndRunTest(meta.sym(
         // 'http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/Test0001'), 1);
-        
+
         loadDataAndRunTest(tests, 0);
         // for(var i=0; i < tests.length; i++) loadDataAndRunTest(tests[i], i+1);
 
-    
+
     });
 
 }
@@ -187,4 +187,3 @@ if (typeof module !== 'undefined' && module.exports) { // Node.js environment
     })
     // while(1) {};
 };
-

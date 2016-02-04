@@ -5,7 +5,7 @@
 // See http://www.w3.org/TR/rdfa-syntax/  etc
 //
 
-$rdf = require('./../../dist/rdflib.js');
+$rdf = require('./../../dist/rdflib-node.js');
 var fs = require('fs');
 
 var kb = $rdf.graph();
@@ -39,11 +39,11 @@ var doNext = function(remaining) {
             case '-base':
                 base = $rdf.uri.join(right, base)
                 break;
-                
+
             case '-clear':
                 kb = $rdf.graph();
                 break;
-                
+
             case '-dump':
                 console.log("Serialize " + targetDocument + " as " + contentType);
                 try {
@@ -57,7 +57,7 @@ var doNext = function(remaining) {
             case '-format':
                 contentType = right;
                 break;
-                
+
             case '-in':
                 targetDocument = $rdf.sym($rdf.uri.join(right, base))
                 //console.log("Document is " + targetDocument)
@@ -87,15 +87,15 @@ var doNext = function(remaining) {
                     doNext(remaining);
                 });
                 return;
-            
+
             case '-size':
                 console.log(kb.statements.length + ' triples');
                 break;
-        
+
             case '-version':
                 console.log("rdflib built: " + $rdf.buildTime);
                 break;
-        
+
             default:
                 console.log("Unknown command: " + left);
                 process.exit(1);

@@ -1,5 +1,5 @@
 
-$rdf = require('./../dist/rdflib.js');
+$rdf = require('./../dist/rdflib-node.js');
 // process = require('process');
 
 prefix = 'http://localhost/devel/github.com/linkeddata/tabulator-firefox/content/js/rdf/testSaveRestore/'
@@ -13,9 +13,9 @@ f.nowOrWhenFetched( prefix +'a.ttl', undefined, function(ok, message) {
     f.nowOrWhenFetched( prefix +'b.ttl', undefined, function(ok, message) {
 
         var sz = new $rdf.Serializer(g);
-        
+
         sz.writeStore(console.log);
-    
+
     });
-    
+
 });
