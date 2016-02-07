@@ -145,15 +145,25 @@ $rdf.Fetcher = function(store, timeout, async) {
                 // link rel
                 var links = this.dom.getElementsByTagName('link');
                 for (var x = links.length - 1; x >= 0; x--) { // @@ rev
-                    relation = links[x].getAttribute('rel'); 
+                    relation = links[x].getAttribute('rel');
                     reverse = false;
                     if (!relation) {
-                        relation = links[x].getAttribute('rev'); 
+                        relation = links[x].getAttribute('rev');
                         reverse = true;
                     }
                     if (relation) {
                         sf.linkData(xhr, relation,
                         links[x].getAttribute('href'), xhr.resource, reverse);
+                    }
+                }
+
+                // Data Islands
+
+                var scripts = this.dom.getElementsByTagName('script');
+                for (var i=0; i<scripts.length; i++) {
+                    var contentType = scripts[i].getAttribute('type');
+                    if ($rdf.parsable[contentType]) {
+                        $rdf.parse(scripts[i].textContent, kb, xhr.resource.uri, contentType)
                     }
                 }
 
@@ -628,7 +638,7 @@ $rdf.Fetcher = function(store, timeout, async) {
     }
 
     /* Promise-based load function
-    ** 
+    **
     ** Promise delivers xhr
     **
     ** @@ todo: If p1 is array then sequence or parallel fetch of all
@@ -642,7 +652,7 @@ $rdf.Fetcher = function(store, timeout, async) {
 		} else {
 		    reject(message, xhr);
 		}
-	    
+
 	    });
 	});
 	return p;
@@ -858,7 +868,7 @@ $rdf.Fetcher = function(store, timeout, async) {
         */
         var checkCredentialsRetry = function() {
             if (!xhr.withCredentials) return false; // not dealt with
-            
+
             console.log("@@ Retrying with no credentials for " + xhr.resource)
             xhr.abort();
             delete sf.requested[docuri]; // forget the original request happened
@@ -877,7 +887,7 @@ $rdf.Fetcher = function(store, timeout, async) {
             return function(event) {
                 xhr.onErrorWasCalled = true; // debugging and may need it
                 if  (typeof document !== 'undefined') { // Mashup situation, not node etc
-                    if ($rdf.Fetcher.crossSiteProxyTemplate && document.location && !xhr.proxyUsed) { 
+                    if ($rdf.Fetcher.crossSiteProxyTemplate && document.location && !xhr.proxyUsed) {
                         var hostpart = $rdf.uri.hostpart;
                         var here = '' + document.location;
                         var uri = xhr.resource.uri
@@ -925,11 +935,11 @@ $rdf.Fetcher = function(store, timeout, async) {
                                 }
                             }
                         }
-                        
+
                         if (checkCredentialsRetry(xhr)) {
                             return;
                         }
-                        xhr.status = 999; // 
+                        xhr.status = 999; //
                     }
                 }; // mashu
             } // function of event
@@ -949,9 +959,9 @@ $rdf.Fetcher = function(store, timeout, async) {
                     sf.fireCallbacks('headers', [{uri: docuri, headers: xhr.headers}]);
 
                     // Check for masked errors.
-                    // For "security reasons" theboraser hides errors such as CORS errors from 
+                    // For "security reasons" theboraser hides errors such as CORS errors from
                     // the calling code (2015). oneror() used to be called but is not now.
-                    // 
+                    //
                     if (xhr.status === 0) {
                         console.log("Masked error - status 0 for " + xhr.resource.uri);
                         if (checkCredentialsRetry(xhr)) { // retry is could be credentials flag CORS issue
@@ -1028,7 +1038,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                         if (options.clearPreviousData) { // Before we parse new data clear old but only on 200
                             kb.removeDocument(xhr.resource);
                         };
-                        
+
                     }
                     // application/octet-stream; charset=utf-8
 
@@ -1556,6 +1566,13 @@ $rdf.Fetcher = function(store, timeout, async) {
 $rdf.fetcher = function(store, timeout, async) { return new $rdf.Fetcher(store, timeout, async) };
 
 // Parse a string and put the result into the graph kb
+// Normal method is sync.
+// Unfortunately jsdonld is currently written to need to be called assync.
+// Hence the mess beolow with executeCallback.
+
+$rdf.parsable = {'text/n3': true, 'text/turtle': true, 'application/rdf+xml': true,
+  'application/rdfa':true, 'application/ld+json': true };
+
 $rdf.parse = function parse(str, kb, base, contentType, callback) {
     try {
         if (contentType == 'text/n3' || contentType == 'text/turtle') {

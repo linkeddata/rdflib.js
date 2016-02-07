@@ -9,17 +9,19 @@ targets=$(addprefix dist/, rdflib-node.js)
 
 PATH:=./node_modules/.bin:${PATH}
 
-all: dist $(targets) browserify
+all: dist $(targets) dist/rdflib.js
 
-# support both require('rdflib.js') syntax
-# and also publish a global $rdf variable.
-browserify: dist/rdflib-node.js
+size:
+	wc $R
+
+dist/rdflib.js: dist/rdflib-node.js
 	browserify -r ./dist/rdflib-node.js:rdflib.js --standalone "\$$rdf" > dist/rdflib.js
 
 dist:
 	mkdir -p dist
 
 dist/rdflib-node.js: $R module.js
+# dist/rdflib.js: $R module.js
 	echo "(function(root, undef) {" > $@
 	cat $R module.js >> $@
 	date '+$$rdf.buildTime = "%Y-%m-%dT%H:%M:%S";'  >> $@
