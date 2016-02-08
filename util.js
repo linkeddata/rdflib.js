@@ -18,7 +18,7 @@ if( typeof $rdf == 'undefined' ) {
 
 /**
  * @class a dummy logger
- 
+
  Note to implement this using the Firefox error console see
   https://developer.mozilla.org/en/nsIConsoleService
  */
@@ -29,7 +29,7 @@ if($rdf.log != undefined) {
     throw "Internal Error: $rdf.log already defined,  util.js: " + $rdf.log;
 }
 
-$rdf.log = {    
+$rdf.log = {
     'debug':function(x) {return;},
     'warn':function(x) {return;},
     'info':function(x) {return;},
@@ -38,14 +38,14 @@ $rdf.log = {
     'msg':function(x) {return;}
 }
 
- 
+
 /**
 * @class A utility class
  */
 
 
 $rdf.Util = {
-    /** A simple debugging function */         
+    /** A simple debugging function */
     'output': function (o) {
 	    var k = document.createElement('div')
 	    k.textContent = o
@@ -59,7 +59,7 @@ $rdf.Util = {
      ** They return true if they want to be called again.
      **
      */
-    'callbackify': function (obj,callbacks) {
+    callbackify: function (obj,callbacks) {
         obj.callbacks = {}
         for (var x=callbacks.length-1; x>=0; x--) {
             obj.callbacks[callbacks[x]] = [];
@@ -81,7 +81,7 @@ $rdf.Util = {
                     return true;
                 }
             }
-            return false; 
+            return false;
         }
 
         obj.insertCallback=function (hook,func){
@@ -112,33 +112,36 @@ $rdf.Util = {
         }
 
     },
-    
+
     /**
     * A standard way to create XMLHttpRequest objects
-     */
-	'XMLHTTPFactory': function () {
-        if (typeof module != 'undefined' && module && module.exports) { //Node.js
-            var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
-            return new XMLHttpRequest()
+    */
+    XMLHTTPFactory: function () {
+      // Running inside the Tabulator Firefox extension
+      if (tabulator !== undefined && tabulator.isExtension) {
+        // Cannot use XMLHttpRequest natively, must request it through SDK
+        return Components
+          .classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
+          .createInstance()
+          .QueryInterface(Components.interfaces.nsIXMLHttpRequest)
+      } else if (window !== undefined && 'XMLHttpRequest' in window) {
+        // Running inside the browser
+        var XMLHttpRequest = window.XMLHttpRequest
+        return new XMLHttpRequest()
+      } else if (typeof module != 'undefined' && module && module.exports) {
+        // Running in Node.js
+        var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;
+        return new XMLHttpRequest()
+      } else if (window.ActiveXObject) {
+        try {
+          return new ActiveXObject("Msxml2.XMLHTTP")
+        } catch (e) {
+          return new ActiveXObject("Microsoft.XMLHTTP")
         }
-        if (typeof tabulator != 'undefined' && tabulator.isExtension) {
-            return Components.
-            classes["@mozilla.org/xmlextras/xmlhttprequest;1"].
-            createInstance().QueryInterface(Components.interfaces.nsIXMLHttpRequest);
-        } else if (window.XMLHttpRequest) {
-                return new window.XMLHttpRequest()
-	    }
-	    else if (window.ActiveXObject) {
-                try {
-                    return new ActiveXObject("Msxml2.XMLHTTP")
-                } catch (e) {
-                    return new ActiveXObject("Microsoft.XMLHTTP")
-                }
-	    }
-	    else {
-                return false
-	    }
-	},
+      } else {
+        return false
+      }
+    },
 
 	'DOMParserFactory': function () {
         if(tabulator && tabulator.isExtension) {
@@ -176,7 +179,7 @@ $rdf.Util = {
 	    }
 	    return headers
 	},
-    
+
     'dtstamp': function () {
 	    var now = new Date();
 	    var year  = now.getYear() + 1900;
@@ -193,7 +196,7 @@ $rdf.Util = {
 	    return year + "-" + month + "-" + day + "T"
             + hour + ":" + minute + ":" + second + "Z";
 	},
-    
+
     'enablePrivilege': ((typeof netscape != 'undefined') && (typeof netscape.security.PrivilegeManager != 'undefined') && netscape.security.PrivilegeManager.enablePrivilege) || function() { return; },
     'disablePrivilege': ((typeof netscape != 'undefined') && (typeof netscape.security.PrivilegeManager != 'undefined') && netscape.security.PrivilegeManager.disablePrivilege) || function() { return; },
 
@@ -203,8 +206,8 @@ $rdf.Util = {
         for(var i=0; i<a.length; i++) {
             //TODO: This used to be the following, which didnt always work..why
             //if(a[i] == x)
-            if (a[i].subject.sameTerm( x.subject ) && 
-                a[i].predicate.sameTerm( x.predicate ) && 
+            if (a[i].subject.sameTerm( x.subject ) &&
+                a[i].predicate.sameTerm( x.predicate ) &&
                 a[i].object.sameTerm( x.object ) &&
                 a[i].why.sameTerm( x.why )) {
                 a.splice(i,1);
@@ -218,9 +221,9 @@ $rdf.Util = {
         return (str.slice(0, pref.length) == pref);
     },
 
-    // This is the callback from the kb to the fetcher which is used to 
+    // This is the callback from the kb to the fetcher which is used to
     // load ontologies of the data we load.
-    
+
     'AJAR_handleNewTerm': function(kb, p, requestedBy) {
         var sf = null;
         if( typeof kb.fetcher != 'undefined' ) {
@@ -232,10 +235,10 @@ $rdf.Util = {
         var docuri = $rdf.Util.uri.docpart(p.uri);
         var fixuri;
         if (p.uri.indexOf('#') < 0) { // No hash
-            
+
             // @@ major hack for dbpedia Categories, which spread indefinitely
-            if ($rdf.Util.string_startswith(p.uri, 'http://dbpedia.org/resource/Category:')) return;  
-            
+            if ($rdf.Util.string_startswith(p.uri, 'http://dbpedia.org/resource/Category:')) return;
+
             /*
               if (string_startswith(p.uri, 'http://xmlns.com/foaf/0.1/')) {
               fixuri = "http://dig.csail.mit.edu/2005/ajar/ajaw/test/foaf"
@@ -257,10 +260,10 @@ $rdf.Util = {
             docuri = fixuri
         }
         if (sf && sf.getState(docuri) != 'unrequested') return;
-        
+
         if (fixuri) {   // only give warning once: else happens too often
             $rdf.log.warn("Assuming server still broken, faking redirect of <" + p.uri +
-                               "> to <" + docuri + ">")	
+                               "> to <" + docuri + ">")
                 }
         sf.requestURI(docuri, requestedBy);
     }, //AJAR_handleNewTerm
@@ -272,7 +275,7 @@ $rdf.Util = {
             if (arr[i] === item) return i;
         return -1;
     }
-    
+
 };
 
 
@@ -300,7 +303,7 @@ $rdf.Util.variablesIn = function(g) {
 //   Heavy comparison is for repeatable canonical ordering
 $rdf.Util.heavyCompare = function(x, y, g) {
     var nonBlank = function(x) {
-        return (x.termType === 'bnode') ?  null : x; 
+        return (x.termType === 'bnode') ?  null : x;
     }
     var signature = function(b) {
         var lis = g.statementsMatching(x).map(function(st){
@@ -315,10 +318,10 @@ $rdf.Util.heavyCompare = function(x, y, g) {
     }
     if ((x.termType === 'bnode') || (y.termType === 'bnode')) {
         if (x.compareTerm(y) === 0) return 0; // Same
-        if (signature(x) > signature(y)) return +1; 
+        if (signature(x) > signature(y)) return +1;
         if (signature(x) < signature(y)) return -1;
         return x.compareTerm(y); // Too bad -- this order not canonical.
-        //throw "different bnodes indistinquishable for sorting" 
+        //throw "different bnodes indistinquishable for sorting"
     } else {
         return x.compareTerm(y);
     }
@@ -348,10 +351,10 @@ $rdf.Util.parseXML = function(str, options) {
     } else if (typeof module != 'undefined' && module && module.exports){ // Node.js
         //var libxmljs = require('libxmljs'); // Was jsdom before 2012-01 then libxmljs but that nonstandard
         //return libxmljs.parseXmlString(str);
-        
+
         // var jsdom = require('jsdom');   2012-01 though 2015-08 no worky with new Node
         // var dom = jsdom.jsdom(str, undefined, {} );// html, level, options
-        
+
         var DOMParser = require('xmldom').DOMParser; // 2015-08 on https://github.com/jindw/xmldom
         var dom = new DOMParser().parseFromString(str, options.contentType || 'text/html') // text/xml
         return dom;
@@ -360,7 +363,7 @@ $rdf.Util.parseXML = function(str, options) {
         if (typeof window !== 'undefined' && window.DOMParser ) {
             dparser = new window.DOMParser(); // seems to actually work
         } else {
-            dparser = new DOMParser(); // Doc says this works 
+            dparser = new DOMParser(); // Doc says this works
         }
     }
     return dparser.parseFromString(str, 'application/xml');
@@ -380,7 +383,7 @@ $rdf.Util.string = {
             subs[i] += '';
             result += baseA[i] + subs[i];
         }
-        return result + baseA.slice(subs.length).join(); 
+        return result + baseA.slice(subs.length).join();
     }
 };
 
@@ -457,7 +460,3 @@ $rdf.Util.extend = function () {
     return target;
 };
 */
-
-
-
-
