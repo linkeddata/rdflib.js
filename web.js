@@ -109,7 +109,6 @@ $rdf.Fetcher = function(store, timeout, async) {
             }
         }
     };
-    $rdf.Fetcher.RDFXMLHandler.term = this.store.sym(this.thisURI + ".RDFXMLHandler");
     $rdf.Fetcher.RDFXMLHandler.toString = function() {
         return "RDFXMLHandler"
     };
@@ -199,7 +198,6 @@ $rdf.Fetcher = function(store, timeout, async) {
             }
         }
     };
-    $rdf.Fetcher.XHTMLHandler.term = this.store.sym(this.thisURI + ".XHTMLHandler");
     $rdf.Fetcher.XHTMLHandler.toString = function() {
         return "XHTMLHandler"
     };
@@ -277,7 +275,7 @@ $rdf.Fetcher = function(store, timeout, async) {
             }
         }
     };
-    $rdf.Fetcher.XMLHandler.term = this.store.sym(this.thisURI + ".XMLHandler");
+
     $rdf.Fetcher.XMLHandler.toString = function() {
         return "XMLHandler"
     };
@@ -335,7 +333,7 @@ $rdf.Fetcher = function(store, timeout, async) {
             }
         }
     };
-    $rdf.Fetcher.HTMLHandler.term = this.store.sym(this.thisURI + ".HTMLHandler");
+
     $rdf.Fetcher.HTMLHandler.toString = function() {
         return "HTMLHandler"
     };
@@ -379,7 +377,7 @@ $rdf.Fetcher = function(store, timeout, async) {
             }
         }
     };
-    $rdf.Fetcher.TextHandler.term = this.store.sym(this.thisURI + ".TextHandler");
+
     $rdf.Fetcher.TextHandler.toString = function() {
         return "TextHandler";
     };
@@ -418,7 +416,7 @@ $rdf.Fetcher = function(store, timeout, async) {
             }
         }
     };
-    $rdf.Fetcher.N3Handler.term = this.store.sym(this.thisURI + ".N3Handler");
+
     $rdf.Fetcher.N3Handler.toString = function() {
         return "N3Handler";
     }
@@ -644,18 +642,17 @@ $rdf.Fetcher = function(store, timeout, async) {
     ** @@ todo: If p1 is array then sequence or parallel fetch of all
     */
     this.load = function(uri, options) {
-	uri = uri.uri || uri;
-	var p = new Promise(function(resolve, reject){
-	    this.nowOrWhenFetched(uri, options, function(ok, message, xhr){
-		if (ok) {
-		    resolve(xhr);
-		} else {
-		    reject(message, xhr);
-		}
-
+        uri = uri.uri || uri;
+        var fetcher = this;
+	    return new Promise(function(resolve, reject){
+    	    fetcher.nowOrWhenFetched(uri, options, function(ok, message, xhr){
+        		if (ok) {
+        		    resolve(xhr);
+        		} else {
+        		    reject(message);
+        		}
+            });
 	    });
-	});
-	return p;
     }
 
     /*  Ask for a doc to be loaded if necessary then call back
@@ -848,7 +845,6 @@ $rdf.Fetcher = function(store, timeout, async) {
         } else {
             var req = kb.bnode();
         }
-        var requestHandlers = kb.collection();
         var sf = this;
 
         var now = new Date();
@@ -1074,7 +1070,6 @@ $rdf.Fetcher = function(store, timeout, async) {
                     for (var x = 0; x < sf.handlers.length; x++) {
                         if (xhr.headers['content-type'] && xhr.headers['content-type'].match(sf.handlers[x].pattern)) {
                             handler = new sf.handlers[x]();
-                            requestHandlers.append(sf.handlers[x].term) // FYI
                             break
                         }
                     }
@@ -1173,7 +1168,7 @@ $rdf.Fetcher = function(store, timeout, async) {
                     // Final state for this XHR but may be redirected
                     handleResponse();
                     // Now handle
-                    if (xhr.handle && xhr.responseText) {
+                    if (xhr.handle && xhr.responseText !== undefined) { // can be validly zero length
                         if (sf.requested[xhr.resource.uri] === 'redirected') {
                             break;
                         }
@@ -1393,7 +1388,6 @@ $rdf.Fetcher = function(store, timeout, async) {
                                     var newreq = xhr.req = kb.bnode() // Make NEW reqest for everything else
                                     // xhr.resource = docterm
                                     // xhr.requestedURI = args[0]
-                                    // var requestHandlers = kb.collection()
 
                                     // kb.add(kb.sym(newURI), ns.link("request"), req, this.appNode)
                                     kb.add(oldreq, ns.http('redirectedRequest'), newreq, xhr.req);
@@ -1567,7 +1561,7 @@ $rdf.fetcher = function(store, timeout, async) { return new $rdf.Fetcher(store, 
 
 // Parse a string and put the result into the graph kb
 // Normal method is sync.
-// Unfortunately jsdonld is currently written to need to be called assync.
+// Unfortunately jsdonld is currently written to need to be called async.
 // Hence the mess beolow with executeCallback.
 
 $rdf.parsable = {'text/n3': true, 'text/turtle': true, 'application/rdf+xml': true,
