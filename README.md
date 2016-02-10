@@ -2,15 +2,23 @@
 
 [![Join the chat at https://gitter.im/linkeddata/rdflib.js](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/linkeddata/rdflib.js?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-Javascript RDF library for browsers and NodeJS.
+Javascript RDF library for browsers and Node.js.
 
-- Reads and writes RDF/xml, turtle and N3.
+- Reads and writes RDF/xml, Turtle and N3.
 - Read/Write Linked Data client, using WebDav or SPARQL/Update
-- Parses RDF/a. (rdflib-rdfa.js version only)
-- Local API for querying store
+- Parses RDF/a
+- Local API for querying a store
 - SPARQL queries (not full SPARQL)
-- Smushing of nodes from owl:sameAs, and owl:{f,inverseF}unctionProperty
+- Smushing of nodes from `owl:sameAs`, and `owl:{f,inverseF}unctionProperty`
 - Tracks provence of triples keeps metadata (in RDF) from HTTP accesses
+
+## Documentation
+
+See **[Tutorial for using rdflib.js](https://github.com/solid/solid-tutorial-rdflib.js)**
+for more information.
+
+Possible out of date information is available from here:
+[http://dig.csail.mit.edu/2005/ajar/ajaw/Developer.html](http://dig.csail.mit.edu/2005/ajar/ajaw/Developer.html).
 
 ## Install
 
@@ -24,22 +32,21 @@ Generate the dist directory
 make all
 ```
 
-#### NodeJS
+#### Node.js
 
-Make sure you have NodeJS and Node Package Manager ([npm](https://npmjs.org/)) installed.
+Make sure you have Node.js and Node Package Manager ([npm](https://npmjs.org/))
+installed.
+
 ```bash
 npm install --save rdflib
 ```
-
-## Documentation
-
-Possible out of date information is available from here: [http://dig.csail.mit.edu/2005/ajar/ajaw/Developer.html](http://dig.csail.mit.edu/2005/ajar/ajaw/Developer.html).
 
 ## Contribute
 
 #### Subdirectories
 
-- `dist`, Run 'make' in this directory to generate dist in which libraries are built
+- `dist`, Run 'make' in this directory to generate dist in which libraries are
+  built
 - `test`, Tests are here.
 
 #### Dependencies
