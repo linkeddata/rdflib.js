@@ -119,13 +119,13 @@ $rdf.Util = {
     */
     XMLHTTPFactory: function () {
       // Running inside the Tabulator Firefox extension
-      if (tabulator !== undefined && tabulator.isExtension) {
+      if (typeof tabulator !== 'undefined' && tabulator.isExtension) {
         // Cannot use XMLHttpRequest natively, must request it through SDK
         return Components
           .classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
           .createInstance()
           .QueryInterface(Components.interfaces.nsIXMLHttpRequest)
-      } else if (window !== undefined && 'XMLHttpRequest' in window) {
+      } else if (typeof window !== 'undefined' && 'XMLHttpRequest' in window) {
         // Running inside the browser
         var XMLHttpRequest = window.XMLHttpRequest
         return new XMLHttpRequest()
@@ -10724,5 +10724,5 @@ else {
     // Leak a global regardless of module system
     root['$rdf'] = $rdf;
 }
-$rdf.buildTime = "2016-02-09T10:20:47";
+$rdf.buildTime = "2016-02-19T14:01:03";
 })(this);
