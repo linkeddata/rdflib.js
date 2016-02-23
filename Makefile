@@ -15,7 +15,7 @@ size:
 	wc $R
 
 dist/rdflib.js: dist/rdflib-node.js
-	browserify -r ./dist/rdflib-node.js:rdflib.js --exclude "xmlhttprequest" --standalone "\$$rdf" > dist/rdflib.js
+	browserify -r ./dist/rdflib-node.js:rdflib --exclude "xmlhttprequest" --standalone "\$$rdf" > dist/rdflib.js
 
 dist:
 	mkdir -p dist
