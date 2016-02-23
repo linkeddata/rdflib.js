@@ -118,10 +118,11 @@ $rdf.Fetcher = function(store, timeout, async) {
     $rdf.Fetcher.RDFXMLHandler.pattern = new RegExp("application/rdf\\+xml");
 
     // This would much better use on-board XSLT engine. @@
+    /*  deprocated 2016-02-17  timbl
     $rdf.Fetcher.doGRDDL = function(kb, doc, xslturi, xmluri) {
         sf.requestURI('http://www.w3.org/2005/08/' + 'online_xslt/xslt?' + 'xslfile=' + escape(xslturi) + '&xmlfile=' + escape(xmluri), doc)
     };
-
+*/
     $rdf.Fetcher.XHTMLHandler = function(args) {
         if (args) {
             this.dom = args[0]
@@ -167,25 +168,19 @@ $rdf.Fetcher = function(store, timeout, async) {
                 }
 
                 //GRDDL
+                /*
                 var head = this.dom.getElementsByTagName('head')[0]
                 if (head) {
                     var profile = head.getAttribute('profile');
                     if (profile && $rdf.uri.protocol(profile) == 'http') {
                         // $rdf.log.info("GRDDL: Using generic " + "2003/11/rdf-in-xhtml-processor.");
                          $rdf.Fetcher.doGRDDL(kb, xhr.resource, "http://www.w3.org/2003/11/rdf-in-xhtml-processor", xhr.resource.uri)
-/*			sf.requestURI('http://www.w3.org/2005/08/'
-					  + 'online_xslt/xslt?'
-					  + 'xslfile=http://www.w3.org'
-					  + '/2003/11/'
-					  + 'rdf-in-xhtml-processor'
-					  + '&xmlfile='
-					  + escape(xhr.resource.uri),
-				      xhr.resource)
-                        */
+
                     } else {
                         // $rdf.log.info("GRDDL: No GRDDL profile in " + xhr.resource)
                     }
                 }
+                */
                 if (!xhr.options.noMeta) {
                     kb.add(xhr.resource, ns.rdf('type'), ns.link('WebPage'), sf.appNode);
                 }
@@ -234,12 +229,14 @@ $rdf.Fetcher = function(store, timeout, async) {
                         // it isn't RDF/XML or we can't tell
                         // Are there any GRDDL transforms for this namespace?
                         // @@ assumes ns documents have already been loaded
+                        /*
                         var xforms = kb.each(kb.sym(ns), kb.sym("http://www.w3.org/2003/g/data-view#namespaceTransformation"));
                         for (var i = 0; i < xforms.length; i++) {
                             var xform = xforms[i];
                             // $rdf.log.info(xhr.resource.uri + " namespace " + ns + " has GRDDL ns transform" + xform.uri);
                              $rdf.Fetcher.doGRDDL(kb, xhr.resource, xform.uri, xhr.resource.uri);
                         }
+                        */
                         break
                     }
                 }
@@ -502,6 +499,8 @@ $rdf.Fetcher = function(store, timeout, async) {
         if (rel == 'alternate' || rel == 'seeAlso' || rel == 'meta' || rel == 'describedby') {
             if (obj.uri === xhr.resource.uri) return;
             predicate = ns.rdfs('seeAlso');
+        } else if (rel == 'type') {
+            predicate = tabulator.ns.rdf('type')
         } else {
         // See https://www.iana.org/assignments/link-relations/link-relations.xml
         // Alas not yet in RDF yet for each predicate
@@ -576,6 +575,49 @@ $rdf.Fetcher = function(store, timeout, async) {
     }
 
 
+    // Returns promise of XHR
+    //
+    this.webOperation = function(method, uri, options) {
+        uri = uri.uri || uri; options = options || {}
+        var fetcher = this;
+        return new Promise(function(resolve, reject){
+            var xhr = $rdf.Util.XMLHTTPFactory();
+            xhr.options = options;
+            if (!options.noMeta) {
+                fetcher.saveRequestMetadata(xhr, tabulator.kb, uri);
+            }
+            xhr.onreadystatechange = function (){
+                if (xhr.readyState == 4){ // NOte a 404 can be not afailure
+                    var ok = (!xhr.status || (xhr.status >= 200 && xhr.status < 300));
+                    if (!options.noMeta) {
+                        var response = fetcher.saveResponseMetadata(xhr, tabulator.kb)
+                    }
+                    if (ok) resolve(xhr);
+                    reject(xhr.status + ' ' + xhr.statusText);
+                }
+            };
+            xhr.open(method, uri, true);
+            if (options.contentType) {
+                xhr.setRequestHeader('Content-type', options.contentType);
+            }
+            xhr.send(options.data ? options.data : undefined);
+        });
+    };
+
+
+    this.webCopy = function(here, there, content_type) {
+        var fetcher = this;
+        here = here.uri || here;
+        return new Promise(function(resolve, reject){
+            this.webOperation('GET', here)
+                .then(function(xhr){
+                    fetcher.webOperation('PUT', // @@@ change to binary from text
+                        there, { data: xhr.responseText, contentType: content_type})
+                    })
+                .then(function(xhr){resolve(xhr)})
+                .catch(function(e) {reject(e)});
+        });
+    }
 
 
 
@@ -637,13 +679,19 @@ $rdf.Fetcher = function(store, timeout, async) {
 
     /* Promise-based load function
     **
-    ** Promise delivers xhr
+    ** Symbol -> Promise of xhr
+    ** uri string -> Promise of xhr
+    ** Array of the above -> Promise of array of xhr
     **
     ** @@ todo: If p1 is array then sequence or parallel fetch of all
     */
     this.load = function(uri, options) {
-        uri = uri.uri || uri;
         var fetcher = this;
+        if (uri instanceof Array) {
+            var ps = uri.map(function(x){return fetcher.load(x)})
+            return Promise.all(ps);
+        }
+        uri = uri.uri || uri; // Symbol or URI string
 	    return new Promise(function(resolve, reject){
     	    fetcher.nowOrWhenFetched(uri, options, function(ok, message, xhr){
         		if (ok) {

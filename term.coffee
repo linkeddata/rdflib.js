@@ -24,7 +24,7 @@ class $rdf.Empty extends $rdf.Node
 
 ###
    A named node in an RDF graph
-    todo: badly named. 
+    todo: badly named.
     No, formally a URI is a string, this is a node whose name is a URI.
     Connolly pointed out it isa symbol on the language.
     @param uri the uri as string
@@ -36,6 +36,11 @@ class $rdf.Symbol extends $rdf.Node
     toString: -> "<#{@uri}>"
     toNT: @::toString
     doc: -> if @uri.indexOf('#') < 0 then @ else new $rdf.Symbol(@uri.split('#')[0])
+    dir: ->
+        str = @.doc()
+        p = str.lastIndexOf('/')
+        if p < 0 then throw "dir: No slash in path: " + str
+        return new $rdf.Symbol(str.slice(0,p))
 
     sameTerm: (other) ->
         unless other
@@ -195,7 +200,7 @@ class $rdf.Statement
         @why = why if why?
     toNT: -> [@subject.toNT(), @predicate.toNT(), @object.toNT()].join(' ') + ' .'
     toString: @::toNT
-    
+
     substitute:(bindings) ->
         new $rdf.Statement @subject.substitute(bindings),
             @predicate.substitute(bindings),
@@ -221,7 +226,7 @@ class $rdf.Formula extends $rdf.Node
 
     addStatement: (st) ->
         @statements.push st
-    
+
     substitute: (bindings) ->
         g = new $rdf.Formula
         g.addStatement s.substitute(bindings) for s in @.statements
@@ -496,24 +501,24 @@ class $rdf.Formula extends $rdf.Node
         return bots
 
 #   Serialize to the given format
-# 
+#
     serialize: (base, contentType, provenance) ->
         sz = $rdf.Serializer(this)
         sz.suggestNamespaces(@namespaces)
         sz.setBase(base)
-        
+
         if provenance
             sts = @.statementsMatching(undefined, undefined, undefined, provenance)
         else
             sts = @statements
-                    
+
         switch contentType ? 'text/n3'
             when 'application/rdf+xml'
                 documentString = sz.statementsToXML(sts);
             when 'text/n3', 'text/turtle'
                 documentString = sz.statementsToN3(sts);
             else
-                throw "serialize: Content-type "+contentType +" not supported.";                                                                            
+                throw "serialize: Content-type "+contentType +" not supported.";
 
         return documentString
 
@@ -546,7 +551,7 @@ class $rdf.Variable extends $rdf.Node
         "?#{@uri}"
     toString: @::toNT
     hashString: @::toNT
-    
+
     substitute:(bindings) ->
         bindings[@toNT()] ? this
 

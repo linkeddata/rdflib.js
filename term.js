@@ -54,7 +54,7 @@ $rdf.Empty = (function(superClass) {
 
 /*
    A named node in an RDF graph
-    todo: badly named. 
+    todo: badly named.
     No, formally a URI is a string, this is a node whose name is a URI.
     Connolly pointed out it isa symbol on the language.
     @param uri the uri as string
@@ -81,6 +81,16 @@ $rdf.Symbol = (function(superClass) {
     } else {
       return new $rdf.Symbol(this.uri.split('#')[0]);
     }
+  };
+
+  Symbol.prototype.dir = function() {
+    var p, str;
+    str = this.uri.split('#')[0]
+    p = str.lastIndexOf('/');
+    if (p < 0) {
+      throw "dir: No slash in path: " + str;
+    }
+    return new $rdf.Symbol(str.slice(0, p));
   };
 
   Symbol.prototype.sameTerm = function(other) {
