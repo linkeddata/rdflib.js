@@ -669,638 +669,688 @@ if ((typeof module !== "undefined" && module !== null ? module.exports : void 0)
   module.exports.uri = $rdf.uri;
 }
 /*
- * These are the classes corresponding to the RDF and N3 data models
- *
- * Designed to look like rdflib and cwm
- *
- * This is coffee see http://coffeescript.org
- */
-var $rdf, k, v,
-  extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-  hasProp = {}.hasOwnProperty,
-  indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
-
-if (typeof $rdf === "undefined" || $rdf === null) {
-  $rdf = {};
+* These are the classes corresponding to the RDF and N3 data models
+*
+* Designed to look like rdflib and cwm
+*
+*/
+var $rdf
+var k
+var v
+var extend = function (child, parent) {
+  for (var key in parent) {
+    if (hasProp.call(parent, key)) {
+      child[key] = parent[key]
+    }
+  }
+  function Ctor () {
+    this.constructor = child
+  }
+  Ctor.prototype = parent.prototype
+  child.prototype = new Ctor()
+  child.__super__ = parent.prototype; return child
+}
+var hasProp = {}.hasOwnProperty
+var indexOf = [].indexOf || function (item) {
+  for (var i = 0, l = this.length; i < l; i++) {
+    if (i in this && this[i] === item) return i
+  }
+  return -1
 }
 
+if (typeof $rdf === 'undefined' || $rdf === null) {
+  $rdf = {}
+}
 
 /*
-  the superclass of all RDF Statement objects, that is
-  $rdf.Symbol, $rdf.Literal, $rdf.BlankNode
-  No class extends this yet, but it could be a place to put common behavior.
- */
+the superclass of all RDF Statement objects, that is
+$rdf.RDFSymbol, $rdf.Literal, $rdf.BlankNode
+No class extends this yet, but it could be a place to put common behavior.
+*/
+$rdf.Node = (function () {
+  function Node () {}
 
-$rdf.Node = (function() {
-  function Node() {}
-
-  Node.prototype.substitute = function(bindings) {
-    return this;
-  };
-
-  return Node;
-
-})();
-
-$rdf.Empty = (function(superClass) {
-  extend(Empty, superClass);
-
-  function Empty() {
-    return Empty.__super__.constructor.apply(this, arguments);
+  Node.prototype.substitute = function (bindings) {
+    return this
   }
 
-  Empty.prototype.termType = 'empty';
+  return Node
+})()
 
-  Empty.prototype.toString = function() {
-    return '()';
-  };
+$rdf.Empty = (function (superClass) {
+  extend(Empty, superClass)
 
-  Empty.prototype.toNT = Empty.prototype.toString;
+  function Empty () {
+    return Empty.__super__.constructor.apply(this, arguments)
+  }
 
-  return Empty;
+  Empty.prototype.termType = 'empty'
 
-})($rdf.Node);
+  Empty.prototype.toString = function () {
+    return '()'
+  }
 
+  Empty.prototype.toNT = Empty.prototype.toString
+
+  return Empty
+})($rdf.Node)
 
 /*
-   A named node in an RDF graph
-    todo: badly named.
-    No, formally a URI is a string, this is a node whose name is a URI.
-    Connolly pointed out it isa symbol on the language.
-    @param uri the uri as string
- */
+A named node in an RDF graph
+todo: badly named.
+No, formally a URI is a string, this is a node whose name is a URI.
+Connolly pointed out it isa symbol on the language.
+@param uri the uri as string
+*/
+$rdf.RDFSymbol = (function (superClass) {
+  extend(RDFSymbol, superClass)
 
-$rdf.Symbol = (function(superClass) {
-  extend(Symbol, superClass);
-
-  function Symbol(uri1) {
-    this.uri = uri1;
+  function RDFSymbol (uri1) {
+    this.uri = uri1
   }
 
-  Symbol.prototype.termType = 'symbol';
+  RDFSymbol.prototype.termType = 'symbol'
 
-  Symbol.prototype.toString = function() {
-    return "<" + this.uri + ">";
-  };
+  RDFSymbol.prototype.toString = function () {
+    return '<' + this.uri + '>'
+  }
 
-  Symbol.prototype.toNT = Symbol.prototype.toString;
+  RDFSymbol.prototype.toNT = RDFSymbol.prototype.toString
 
-  Symbol.prototype.doc = function() {
+  RDFSymbol.prototype.doc = function () {
     if (this.uri.indexOf('#') < 0) {
-      return this;
+      return this
     } else {
-      return new $rdf.Symbol(this.uri.split('#')[0]);
+      return new $rdf.RDFSymbol(this.uri.split('#')[0])
     }
-  };
+  }
 
-  Symbol.prototype.dir = function() {
-    var p, str;
+  RDFSymbol.prototype.dir = function () {
+    var p
+    var str
     str = this.uri.split('#')[0]
-    p = str.lastIndexOf('/');
+    p = str.lastIndexOf('/')
     if (p < 0) {
-      throw "dir: No slash in path: " + str;
+      throw 'dir: No slash in path: ' + str
     }
-    return new $rdf.Symbol(str.slice(0, p));
-  };
+    return new $rdf.RDFSymbol(str.slice(0, p))
+  }
 
-  Symbol.prototype.sameTerm = function(other) {
+  RDFSymbol.prototype.sameTerm = function (other) {
     if (!other) {
-      return false;
+      return false
     }
-    return (this.termType === other.termType) && (this.uri === other.uri);
-  };
+    return (this.termType === other.termType) && (this.uri === other.uri)
+  }
 
-  Symbol.prototype.compareTerm = function(other) {
+  RDFSymbol.prototype.compareTerm = function (other) {
     if (this.classOrder < other.classOrder) {
-      return -1;
+      return -1
     }
     if (this.classOrder > other.classOrder) {
-      return +1;
+      return +1
     }
     if (this.uri < other.uri) {
-      return -1;
+      return -1
     }
     if (this.uri > other.uri) {
-      return +1;
+      return +1
     }
-    return 0;
-  };
+    return 0
+  }
 
-  Symbol.prototype.XSDboolean = new Symbol('http://www.w3.org/2001/XMLSchema#boolean');
+  RDFSymbol.prototype.XSDboolean =
+    new RDFSymbol('http://www.w3.org/2001/XMLSchema#boolean')
 
-  Symbol.prototype.XSDdecimal = new Symbol('http://www.w3.org/2001/XMLSchema#decimal');
+  RDFSymbol.prototype.XSDdecimal =
+    new RDFSymbol('http://www.w3.org/2001/XMLSchema#decimal')
 
-  Symbol.prototype.XSDfloat = new Symbol('http://www.w3.org/2001/XMLSchema#float');
+  RDFSymbol.prototype.XSDfloat =
+    new RDFSymbol('http://www.w3.org/2001/XMLSchema#float')
 
-  Symbol.prototype.XSDinteger = new Symbol('http://www.w3.org/2001/XMLSchema#integer');
+  RDFSymbol.prototype.XSDinteger =
+    new RDFSymbol('http://www.w3.org/2001/XMLSchema#integer')
 
-  Symbol.prototype.XSDdateTime = new Symbol('http://www.w3.org/2001/XMLSchema#dateTime');
+  RDFSymbol.prototype.XSDdateTime =
+    new RDFSymbol('http://www.w3.org/2001/XMLSchema#dateTime')
 
-  Symbol.prototype.integer = new Symbol('http://www.w3.org/2001/XMLSchema#integer');
+  RDFSymbol.prototype.integer =
+    new RDFSymbol('http://www.w3.org/2001/XMLSchema#integer')
 
-  return Symbol;
-
-})($rdf.Node);
+  return RDFSymbol
+})($rdf.Node)
 
 if ($rdf.NextId != null) {
-  $rdf.log.error("Attempt to re-zero existing blank node id counter at " + $rdf.NextId);
+  $rdf.log.error('Attempt to re-zero existing blank node id counter at ' + $rdf.NextId)
 } else {
-  $rdf.NextId = 0;
+  $rdf.NextId = 0
 }
 
-$rdf.NTAnonymousNodePrefix = "_:n";
+$rdf.NTAnonymousNodePrefix = '_:n'
 
-$rdf.BlankNode = (function(superClass) {
-  extend(BlankNode, superClass);
+$rdf.BlankNode = (function (superClass) {
+  extend(BlankNode, superClass)
 
-  function BlankNode(id) {
-    this.id = $rdf.NextId++;
-    this.value = id ? id : this.id.toString();
+  function BlankNode (id) {
+    this.id = $rdf.NextId++
+    this.value = id ? id : this.id.toString()
   }
 
-  BlankNode.prototype.termType = 'bnode';
+  BlankNode.prototype.termType = 'bnode'
 
-  BlankNode.prototype.toNT = function() {
-    return $rdf.NTAnonymousNodePrefix + this.id;
-  };
+  BlankNode.prototype.toNT = function () {
+    return $rdf.NTAnonymousNodePrefix + this.id
+  }
 
-  BlankNode.prototype.toString = BlankNode.prototype.toNT;
+  BlankNode.prototype.toString = BlankNode.prototype.toNT
 
-  BlankNode.prototype.sameTerm = function(other) {
+  BlankNode.prototype.sameTerm = function (other) {
     if (!other) {
-      return false;
+      return false
     }
-    return (this.termType === other.termType) && (this.id === other.id);
-  };
+    return (this.termType === other.termType) && (this.id === other.id)
+  }
 
-  BlankNode.prototype.compareTerm = function(other) {
+  BlankNode.prototype.compareTerm = function (other) {
     if (this.classOrder < other.classOrder) {
-      return -1;
+      return -1
     }
     if (this.classOrder > other.classOrder) {
-      return +1;
+      return +1
     }
     if (this.id < other.id) {
-      return -1;
+      return -1
     }
     if (this.id > other.id) {
-      return +1;
+      return +1
     }
-    return 0;
-  };
+    return 0
+  }
 
-  return BlankNode;
+  return BlankNode
+})($rdf.Node)
 
-})($rdf.Node);
+$rdf.Literal = (function (superClass) {
+  extend(Literal, superClass)
 
-$rdf.Literal = (function(superClass) {
-  extend(Literal, superClass);
-
-  function Literal(value1, lang1, datatype) {
-    this.value = value1;
-    this.lang = lang1;
-    this.datatype = datatype;
+  function Literal (value1, lang1, datatype) {
+    this.value = value1
+    this.lang = lang1
+    this.datatype = datatype
     if (this.lang == null) {
-      this.lang = void 0;
+      this.lang = void 0
     }
     if (this.lang === '') {
-      this.lang = void 0;
+      this.lang = void 0
     }
     if (this.datatype == null) {
-      this.datatype = void 0;
+      this.datatype = void 0
     }
   }
 
-  Literal.prototype.termType = 'literal';
+  Literal.prototype.termType = 'literal'
 
-  Literal.prototype.toString = function() {
-    return "" + this.value;
-  };
+  Literal.prototype.toString = function () {
+    return '' + this.value
+  }
 
-  Literal.prototype.toNT = function() {
-    var str;
-    str = this.value;
+  Literal.prototype.toNT = function () {
+    var str
+    str = this.value
     if (typeof str === !'string') {
       if (typeof str === 'number') {
-        return '' + str;
+        return '' + str
       }
-      throw Error("Value of RDF literal is not string: " + str);
+      throw Error('Value of RDF literal is not string: ' + str)
     }
-    str = str.replace(/\\/g, '\\\\');
-    str = str.replace(/\"/g, '\\"');
-    str = str.replace(/\n/g, '\\n');
-    str = "\"" + str + "\"";
+    str = str.replace(/\\/g, '\\\\')
+    str = str.replace(/\"/g, '\\"')
+    str = str.replace(/\n/g, '\\n')
+    str = '"' + str + '"'
     if (this.datatype) {
-      str += '^^' + this.datatype.toNT();
+      str += '^^' + this.datatype.toNT()
     }
     if (this.lang) {
-      str += '@' + this.lang;
+      str += '@' + this.lang
     }
-    return str;
-  };
+    return str
+  }
 
-  Literal.prototype.sameTerm = function(other) {
+  Literal.prototype.sameTerm = function (other) {
     if (!other) {
-      return false;
+      return false
     }
-    return (this.termType === other.termType) && (this.value === other.value) && (this.lang === other.lang) && ((!this.datatype && !other.datatype) || (this.datatype && this.datatype.sameTerm(other.datatype)));
-  };
+    return (this.termType === other.termType) && (this.value === other.value) && (this.lang === other.lang) && ((!this.datatype && !other.datatype) || (this.datatype && this.datatype.sameTerm(other.datatype)))
+  }
 
-  Literal.prototype.compareTerm = function(other) {
+  Literal.prototype.compareTerm = function (other) {
     if (this.classOrder < other.classOrder) {
-      return -1;
+      return -1
     }
     if (this.classOrder > other.classOrder) {
-      return +1;
+      return +1
     }
     if (this.value < other.value) {
-      return -1;
+      return -1
     }
     if (this.value > other.value) {
-      return +1;
+      return +1
     }
-    return 0;
-  };
+    return 0
+  }
 
-  return Literal;
+  return Literal
+})($rdf.Node)
 
-})($rdf.Node);
+$rdf.Collection = (function (superClass) {
+  extend(Collection, superClass)
 
-$rdf.Collection = (function(superClass) {
-  extend(Collection, superClass);
-
-  function Collection(initial) {
-    var i, len, s;
-    this.id = $rdf.NextId++;
-    this.elements = [];
-    this.closed = false;
+  function Collection (initial) {
+    var i
+    var len
+    var s
+    this.id = $rdf.NextId++
+    this.elements = []
+    this.closed = false
     if (typeof initial !== 'undefined') {
       for (i = 0, len = initial.length; i < len; i++) {
-        s = initial[i];
-        this.elements.push($rdf.term(s));
+        s = initial[i]
+        this.elements.push($rdf.term(s))
       }
     }
   }
 
-  Collection.prototype.termType = 'collection';
+  Collection.prototype.termType = 'collection'
 
-  Collection.prototype.toNT = function() {
-    return $rdf.NTAnonymousNodePrefix + this.id;
-  };
+  Collection.prototype.toNT = function () {
+    return $rdf.NTAnonymousNodePrefix + this.id
+  }
 
-  Collection.prototype.toString = function() {
-    return '(' + this.elements.join(' ') + ')';
-  };
+  Collection.prototype.toString = function () {
+    return '(' + this.elements.join(' ') + ')'
+  }
 
-  Collection.prototype.substitute = function(bindings) {
-    var s;
-    return new $rdf.Collection((function() {
-      var i, len, ref, results1;
-      ref = this.elements;
-      results1 = [];
+  Collection.prototype.substitute = function (bindings) {
+    var s
+    return new $rdf.Collection(function () {
+      var i
+      var len
+      var ref
+      var results1
+      ref = this.elements
+      results1 = []
       for (i = 0, len = ref.length; i < len; i++) {
-        s = ref[i];
-        results1.push(s.substitute(bindings));
+        s = ref[i]
+        results1.push(s.substitute(bindings))
       }
-      return results1;
-    }).call(this));
-  };
+      return results1
+    }).call(this)
+  }
 
-  Collection.prototype.append = function(el) {
-    return this.elements.push(el);
-  };
+  Collection.prototype.append = function (el) {
+    return this.elements.push(el)
+  }
 
-  Collection.prototype.unshift = function(el) {
-    return this.elements.unshift(el);
-  };
+  Collection.prototype.unshift = function (el) {
+    return this.elements.unshift(el)
+  }
 
-  Collection.prototype.shift = function() {
-    return this.elements.shift();
-  };
+  Collection.prototype.shift = function () {
+    return this.elements.shift()
+  }
 
-  Collection.prototype.close = function() {
-    return this.closed = true;
-  };
+  Collection.prototype.close = function () {
+    return this.closed = true
+  }
 
-  return Collection;
+  return Collection
+})($rdf.Node)
 
-})($rdf.Node);
+$rdf.Collection.prototype.sameTerm = $rdf.BlankNode.prototype.sameTerm
 
-$rdf.Collection.prototype.sameTerm = $rdf.BlankNode.prototype.sameTerm;
-
-$rdf.Collection.prototype.compareTerm = $rdf.BlankNode.prototype.compareTerm;
-
+$rdf.Collection.prototype.compareTerm = $rdf.BlankNode.prototype.compareTerm
 
 /*
- function to transform a value into an $rdf.Node
- @param val can be an rdf.Node, a date, string, number, boolean, or undefined. RDF Nodes are returned as is,
-   undefined as undefined
- */
-
-$rdf.term = function(val) {
-  var d2, dt, elt, i, len, value, x;
+function to transform a value into an $rdf.Node
+@param val can be an rdf.Node, a date, string, number, boolean, or undefined. RDF Nodes are returned as is,
+undefined as undefined
+*/
+$rdf.term = function (val) {
+  var d2
+  var dt
+  var elt
+  var i
+  var len
+  var value
+  var x
   switch (typeof val) {
     case 'object':
       if (val instanceof Date) {
-        d2 = function(x) {
-          return ('' + (100 + x)).slice(1, 3);
-        };
-        value = '' + val.getUTCFullYear() + '-' + d2(val.getUTCMonth() + 1) + '-' + d2(val.getUTCDate()) + 'T' + d2(val.getUTCHours()) + ':' + d2(val.getUTCMinutes()) + ':' + d2(val.getUTCSeconds()) + 'Z';
-        return new $rdf.Literal(value, void 0, $rdf.Symbol.prototype.XSDdateTime);
-      } else if (val instanceof Array) {
-        x = new $rdf.Collection;
-        for (i = 0, len = val.length; i < len; i++) {
-          elt = val[i];
-          x.append($rdf.term(elt));
+        d2 = function (x) {
+          return ('' + (100 + x)).slice(1, 3)
         }
-        return x;
+        value = '' + val.getUTCFullYear() + '-' + d2(val.getUTCMonth() + 1) + '-' + d2(val.getUTCDate()) + 'T' + d2(val.getUTCHours()) + ':' + d2(val.getUTCMinutes()) + ':' + d2(val.getUTCSeconds()) + 'Z'
+        return new $rdf.Literal(value, void 0, $rdf.RDFSymbol.prototype.XSDdateTime)
+      } else if (val instanceof Array) {
+        x = new $rdf.Collection()
+        for (i = 0, len = val.length; i < len; i++) {
+          elt = val[i]
+          x.append($rdf.term(elt))
+        }
+        return x
       }
-      return val;
+      return val
     case 'string':
-      return new $rdf.Literal(val);
+      return new $rdf.Literal(val)
     case 'number':
       if (('' + val).indexOf('e') >= 0) {
-        dt = $rdf.Symbol.prototype.XSDfloat;
+        dt = $rdf.RDFSymbol.prototype.XSDfloat
       } else if (('' + val).indexOf('.') >= 0) {
-        dt = $rdf.Symbol.prototype.XSDdecimal;
+        dt = $rdf.RDFSymbol.prototype.XSDdecimal
       } else {
-        dt = $rdf.Symbol.prototype.XSDinteger;
+        dt = $rdf.RDFSymbol.prototype.XSDinteger
       }
-      return new $rdf.Literal('' + val, void 0, dt);
+      return new $rdf.Literal('' + val, void 0, dt)
     case 'boolean':
-      return new $rdf.Literal((val ? '1' : '0'), void 0, $rdf.Symbol.prototype.XSDboolean);
+      return new $rdf.Literal((val ? '1' : '0'), void 0, $rdf.RDFSymbol.prototype.XSDboolean)
     case 'undefined':
-      return void 0;
+      return void 0
   }
-  throw ("Can't make term from " + val + " of type ") + typeof val;
-};
+  throw ("Can't make term from " + val + ' of type ') + typeof val
+}
 
-$rdf.Statement = (function() {
-  function Statement(subject, predicate, object, why) {
-    this.subject = $rdf.term(subject);
-    this.predicate = $rdf.term(predicate);
-    this.object = $rdf.term(object);
+$rdf.Statement = (function () {
+  function Statement (subject, predicate, object, why) {
+    this.subject = $rdf.term(subject)
+    this.predicate = $rdf.term(predicate)
+    this.object = $rdf.term(object)
     if (why != null) {
-      this.why = why;
+      this.why = why
     }
   }
 
-  Statement.prototype.toNT = function() {
-    return [this.subject.toNT(), this.predicate.toNT(), this.object.toNT()].join(' ') + ' .';
-  };
-
-  Statement.prototype.toString = Statement.prototype.toNT;
-
-  Statement.prototype.substitute = function(bindings) {
-    return new $rdf.Statement(this.subject.substitute(bindings), this.predicate.substitute(bindings), this.object.substitute(bindings), this.why);
-  };
-
-  return Statement;
-
-})();
-
-$rdf.st = function(subject, predicate, object, why) {
-  return new $rdf.Statement(subject, predicate, object, why);
-};
-
-$rdf.Formula = (function(superClass) {
-  extend(Formula, superClass);
-
-  function Formula() {
-    this.statements = [];
-    this.constraints = [];
-    this.initBindings = [];
-    this.optional = [];
+  Statement.prototype.toNT = function () {
+    return [this.subject.toNT(), this.predicate.toNT(), this.object.toNT()].join(' ') + ' .'
   }
 
-  Formula.prototype.termType = 'formula';
+  Statement.prototype.toString = Statement.prototype.toNT
 
-  Formula.prototype.toNT = function() {
-    return '{' + this.statements.join('\n') + '}';
-  };
+  Statement.prototype.substitute = function (bindings) {
+    return new $rdf.Statement(this.subject.substitute(bindings), this.predicate.substitute(bindings), this.object.substitute(bindings), this.why)
+  }
 
-  Formula.prototype.toString = Formula.prototype.toNT;
+  return Statement
+})()
 
-  Formula.prototype.add = function(s, p, o, why) {
-    return this.statements.push(new $rdf.Statement(s, p, o, why));
-  };
+$rdf.st = function (subject, predicate, object, why) {
+  return new $rdf.Statement(subject, predicate, object, why)
+}
 
-  Formula.prototype.addStatement = function(st) {
-    return this.statements.push(st);
-  };
+$rdf.Formula = (function (superClass) {
+  extend(Formula, superClass)
 
-  Formula.prototype.substitute = function(bindings) {
-    var g, i, len, ref, s;
-    g = new $rdf.Formula;
-    ref = this.statements;
+  function Formula () {
+    this.statements = []
+    this.constraints = []
+    this.initBindings = []
+    this.optional = []
+  }
+
+  Formula.prototype.termType = 'formula'
+
+  Formula.prototype.toNT = function () {
+    return '{' + this.statements.join('\n') + '}'
+  }
+
+  Formula.prototype.toString = Formula.prototype.toNT
+
+  Formula.prototype.add = function (s, p, o, why) {
+    return this.statements.push(new $rdf.Statement(s, p, o, why))
+  }
+
+  Formula.prototype.addStatement = function (st) {
+    return this.statements.push(st)
+  }
+
+  Formula.prototype.substitute = function (bindings) {
+    var g
+    var i
+    var len
+    var ref
+    var s
+    g = new $rdf.Formula()
+    ref = this.statements
     for (i = 0, len = ref.length; i < len; i++) {
-      s = ref[i];
-      g.addStatement(s.substitute(bindings));
+      s = ref[i]
+      g.addStatement(s.substitute(bindings))
     }
-    return g;
-  };
+    return g
+  }
 
-  Formula.prototype.sym = function(uri, name) {
+  Formula.prototype.sym = function (uri, name) {
     if (name != null) {
-      throw 'This feature (kb.sym with 2 args) is removed. Do not assume prefix mappings.';
+      throw 'This feature (kb.sym with 2 args) is removed. Do not assume prefix mappings.'
       if (!$rdf.ns[uri]) {
-        throw "The prefix " + uri + " is not set in the API";
+        throw 'The prefix ' + uri + ' is not set in the API'
       }
-      uri = $rdf.ns[uri] + name;
+      uri = $rdf.ns[uri] + name
     }
-    return new $rdf.Symbol(uri);
-  };
+    return new $rdf.RDFSymbol(uri)
+  }
 
-  Formula.prototype.literal = function(val, lang, dt) {
-    return new $rdf.Literal("" + val, lang, dt);
-  };
+  Formula.prototype.literal = function (val, lang, dt) {
+    return new $rdf.Literal('' + val, lang, dt)
+  }
 
-  Formula.prototype.bnode = function(id) {
-    return new $rdf.BlankNode(id);
-  };
+  Formula.prototype.bnode = function (id) {
+    return new $rdf.BlankNode(id)
+  }
 
-  Formula.prototype.formula = function() {
-    return new $rdf.Formula;
-  };
+  Formula.prototype.formula = function () {
+    return new $rdf.Formula()
+  }
 
-  Formula.prototype.collection = function() {
-    return new $rdf.Collection;
-  };
+  Formula.prototype.collection = function () {
+    return new $rdf.Collection()
+  }
 
-  Formula.prototype.list = function(values) {
-    var elt, i, len, r;
-    r = new $rdf.Collection;
+  Formula.prototype.list = function (values) {
+    var elt
+    var i
+    var len
+    var r
+    r = new $rdf.Collection()
     if (values) {
       for (i = 0, len = values.length; i < len; i++) {
-        elt = values[i];
-        r.append(elt);
+        elt = values[i]
+        r.append(elt)
       }
     }
-    return r;
-  };
+    return r
+  }
 
-  Formula.prototype.variable = function(name) {
-    return new $rdf.Variable(name);
-  };
+  Formula.prototype.variable = function (name) {
+    return new $rdf.Variable(name)
+  }
 
-  Formula.prototype.ns = function(nsuri) {
-    return function(ln) {
-      return new $rdf.Symbol(nsuri + (ln != null ? ln : ''));
-    };
-  };
-
+  Formula.prototype.ns = function (nsuri) {
+    return function (ln) {
+      return new $rdf.RDFSymbol(nsuri + (ln != null ? ln : ''))
+    }
+  }
 
   /*
   transform an NTriples string format into an $rdf.Node
   The bnode bit should not be used on program-external values; designed
   for internal work such as storing a bnode id in an HTML attribute.
   This will only parse the strings generated by the vaious toNT() methods.
-   */
+  */
 
-  Formula.prototype.fromNT = function(str) {
-    var dt, k, lang, x;
+  Formula.prototype.fromNT = function (str) {
+    var dt
+    var k
+    var lang
+    var x
     switch (str[0]) {
       case '<':
-        return $rdf.sym(str.slice(1, -1));
+        return $rdf.sym(str.slice(1, -1))
       case '"':
-        lang = void 0;
-        dt = void 0;
-        k = str.lastIndexOf('"');
+        lang = void 0
+        dt = void 0
+        k = str.lastIndexOf('"')
         if (k < str.length - 1) {
           if (str[k + 1] === '@') {
-            lang = str.slice(k + 2);
+            lang = str.slice(k + 2)
           } else if (str.slice(k + 1, k + 3) === '^^') {
-            dt = $rdf.fromNT(str.slice(k + 3));
+            dt = $rdf.fromNT(str.slice(k + 3))
           } else {
-            throw "Can't convert string from NT: " + str;
+            throw "Can't convert string from NT: " + str
           }
         }
-        str = str.slice(1, k);
-        str = str.replace(/\\"/g, '"');
-        str = str.replace(/\\n/g, '\n');
-        str = str.replace(/\\\\/g, '\\');
-        return $rdf.lit(str, lang, dt);
+        str = str.slice(1, k)
+        str = str.replace(/\\"/g, '"')
+        str = str.replace(/\\n/g, '\n')
+        str = str.replace(/\\\\/g, '\\')
+        return $rdf.lit(str, lang, dt)
       case '_':
-        x = new $rdf.BlankNode;
-        x.id = parseInt(str.slice(3));
-        $rdf.NextId--;
-        return x;
+        x = new $rdf.BlankNode
+        x.id = parseInt(str.slice(3))
+        $rdf.NextId--
+        return x
       case '?':
-        return new $rdf.Variable(str.slice(1));
+        return new $rdf.Variable(str.slice(1))
     }
-    throw "Can't convert from NT: " + str;
-  };
+    throw "Can't convert from NT: " + str
+  }
 
-  Formula.prototype.sameTerm = function(other) {
+  Formula.prototype.sameTerm = function (other) {
     if (!other) {
-      return false;
+      return false
     }
-    return this.hashString() === other.hashString();
-  };
+    return this.hashString() === other.hashString()
+  }
 
-  Formula.prototype.each = function(s, p, o, w) {
-    var elt, i, l, len, len1, len2, len3, m, q, results, sts;
-    results = [];
-    sts = this.statementsMatching(s, p, o, w, false);
+  Formula.prototype.each = function (s, p, o, w) {
+    var elt
+    var i
+    var l
+    var len
+    var len1
+    var len2
+    var len3
+    var m
+    var q
+    var results
+    var sts
+    results = []
+    sts = this.statementsMatching(s, p, o, w, false)
     if (s == null) {
       for (i = 0, len = sts.length; i < len; i++) {
-        elt = sts[i];
-        results.push(elt.subject);
+        elt = sts[i]
+        results.push(elt.subject)
       }
     } else if (p == null) {
       for (l = 0, len1 = sts.length; l < len1; l++) {
-        elt = sts[l];
-        results.push(elt.predicate);
+        elt = sts[l]
+        results.push(elt.predicate)
       }
     } else if (o == null) {
       for (m = 0, len2 = sts.length; m < len2; m++) {
-        elt = sts[m];
-        results.push(elt.object);
+        elt = sts[m]
+        results.push(elt.object)
       }
     } else if (w == null) {
       for (q = 0, len3 = sts.length; q < len3; q++) {
-        elt = sts[q];
-        results.push(elt.why);
+        elt = sts[q]
+        results.push(elt.why)
       }
     }
-    return results;
-  };
+    return results
+  }
 
-  Formula.prototype.any = function(s, p, o, w) {
-    var st;
-    st = this.anyStatementMatching(s, p, o, w);
+  Formula.prototype.any = function (s, p, o, w) {
+    var st
+    st = this.anyStatementMatching(s, p, o, w)
     if (st == null) {
-      return void 0;
+      return void 0
     } else if (s == null) {
-      return st.subject;
+      return st.subject
     } else if (p == null) {
-      return st.predicate;
+      return st.predicate
     } else if (o == null) {
-      return st.object;
+      return st.object
     }
-    return void 0;
-  };
+    return void 0
+  }
 
-  Formula.prototype.holds = function(s, p, o, w) {
-    var st;
-    st = this.anyStatementMatching(s, p, o, w);
-    return st != null;
-  };
+  Formula.prototype.holds = function (s, p, o, w) {
+    var st
+    st = this.anyStatementMatching(s, p, o, w)
+    return st != null
+  }
 
-  Formula.prototype.holdsStatement = function(st) {
-    return this.holds(st.subject, st.predicate, st.object, st.why);
-  };
+  Formula.prototype.holdsStatement = function (st) {
+    return this.holds(st.subject, st.predicate, st.object, st.why)
+  }
 
-  Formula.prototype.the = function(s, p, o, w) {
-    var x;
-    x = this.any(s, p, o, w);
+  Formula.prototype.the = function (s, p, o, w) {
+    var x
+    x = this.any(s, p, o, w)
     if (x == null) {
-      $rdf.log.error("No value found for the() {" + s + " " + p + " " + o + "}.");
+      $rdf.log.error('No value found for the() {' + s + ' ' + p + ' ' + o + '}.')
     }
-    return x;
-  };
+    return x
+  }
 
-  Formula.prototype.whether = function(s, p, o, w) {
-    return this.statementsMatching(s, p, o, w, false).length;
-  };
+  Formula.prototype.whether = function (s, p, o, w) {
+    return this.statementsMatching(s, p, o, w, false).length
+  }
 
-  Formula.prototype.transitiveClosure = function(seeds, predicate, inverse) {
-    var agenda, done, elt, i, k, len, s, sups, t, v;
-    done = {};
-    agenda = {};
+  Formula.prototype.transitiveClosure = function (seeds, predicate, inverse) {
+    var agenda
+    var done
+    var elt
+    var i
+    var k
+    var len
+    var s
+    var sups
+    var t
+    var v
+    done = {}
+    agenda = {}
     for (k in seeds) {
-      if (!hasProp.call(seeds, k)) continue;
-      v = seeds[k];
-      agenda[k] = v;
+      if (!hasProp.call(seeds, k)) continue
+      v = seeds[k]
+      agenda[k] = v
     }
     while (true) {
-      t = (function() {
-        var p;
+      t = (function () {
+        var p
         for (p in agenda) {
-          if (!hasProp.call(agenda, p)) continue;
-          return p;
+          if (!hasProp.call(agenda, p)) continue
+          return p
         }
-      })();
+      })()
       if (t == null) {
-        return done;
+        return done
       }
-      sups = inverse ? this.each(void 0, predicate, this.fromNT(t)) : this.each(this.fromNT(t), predicate);
+      sups = inverse ? this.each(void 0, predicate, this.fromNT(t)) : this.each(this.fromNT(t), predicate)
       for (i = 0, len = sups.length; i < len; i++) {
-        elt = sups[i];
-        s = elt.toNT();
+        elt = sups[i]
+        s = elt.toNT()
         if (s in done) {
-          continue;
+          continue
         }
         if (s in agenda) {
-          continue;
+          continue
         }
-        agenda[s] = agenda[t];
+        agenda[s] = agenda[t]
       }
-      done[t] = agenda[t];
-      delete agenda[t];
+      done[t] = agenda[t]
+      delete agenda[t]
     }
-  };
-
+  }
 
   /*
   For thisClass or any subclass, anything which has it is its type
@@ -1309,72 +1359,90 @@ $rdf.Formula = (function(superClass) {
   We don't bother doing subproperty (yet?)as it doesn't seeem to be used much.
   Get all the Classes of which we can RDFS-infer the subject is a member
   @returns a hash of URIs
-   */
-
-  Formula.prototype.findMembersNT = function(thisClass) {
-    var i, l, len, len1, len2, len3, len4, m, members, pred, q, ref, ref1, ref2, ref3, ref4, ref5, seeds, st, t, u;
-    seeds = {};
-    seeds[thisClass.toNT()] = true;
-    members = {};
-    ref = this.transitiveClosure(seeds, this.sym('http://www.w3.org/2000/01/rdf-schema#subClassOf'), true);
+  */
+  Formula.prototype.findMembersNT = function (thisClass) {
+    var i
+    var l
+    var len
+    var len1
+    var len2
+    var len3
+    var len4
+    var m
+    var members
+    var pred
+    var q
+    var ref
+    var ref1
+    var ref2
+    var ref3
+    var ref4
+    var ref5
+    var seeds
+    var st
+    var t
+    var u
+    seeds = {}
+    seeds[thisClass.toNT()] = true
+    members = {}
+    ref = this.transitiveClosure(seeds, this.sym('http://www.w3.org/2000/01/rdf-schema#subClassOf'), true)
     for (t in ref) {
-      if (!hasProp.call(ref, t)) continue;
-      ref1 = this.statementsMatching(void 0, this.sym('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'), this.fromNT(t));
+      if (!hasProp.call(ref, t)) continue
+      ref1 = this.statementsMatching(void 0, this.sym('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'), this.fromNT(t))
       for (i = 0, len = ref1.length; i < len; i++) {
-        st = ref1[i];
-        members[st.subject.toNT()] = st;
+        st = ref1[i]
+        members[st.subject.toNT()] = st
       }
-      ref2 = this.each(void 0, this.sym('http://www.w3.org/2000/01/rdf-schema#domain'), this.fromNT(t));
+      ref2 = this.each(void 0, this.sym('http://www.w3.org/2000/01/rdf-schema#domain'), this.fromNT(t))
       for (l = 0, len1 = ref2.length; l < len1; l++) {
-        pred = ref2[l];
-        ref3 = this.statementsMatching(void 0, pred);
+        pred = ref2[l]
+        ref3 = this.statementsMatching(void 0, pred)
         for (m = 0, len2 = ref3.length; m < len2; m++) {
-          st = ref3[m];
-          members[st.subject.toNT()] = st;
+          st = ref3[m]
+          members[st.subject.toNT()] = st
         }
       }
-      ref4 = this.each(void 0, this.sym('http://www.w3.org/2000/01/rdf-schema#range'), this.fromNT(t));
+      ref4 = this.each(void 0, this.sym('http://www.w3.org/2000/01/rdf-schema#range'), this.fromNT(t))
       for (q = 0, len3 = ref4.length; q < len3; q++) {
-        pred = ref4[q];
-        ref5 = this.statementsMatching(void 0, pred);
+        pred = ref4[q]
+        ref5 = this.statementsMatching(void 0, pred)
         for (u = 0, len4 = ref5.length; u < len4; u++) {
-          st = ref5[u];
-          members[st.object.toNT()] = st;
+          st = ref5[u]
+          members[st.object.toNT()] = st
         }
       }
     }
-    return members;
-  };
-
+    return members
+  }
 
   /*
   transform a collection of NTriple URIs into their URI strings
   @param t some iterable colletion of NTriple URI strings
   @return a collection of the URIs as strings
   todo: explain why it is important to go through NT
-   */
-
-  Formula.prototype.NTtoURI = function(t) {
-    var k, uris, v;
-    uris = {};
+  */
+  Formula.prototype.NTtoURI = function (t) {
+    var k
+    var uris
+    var v
+    uris = {}
     for (k in t) {
-      if (!hasProp.call(t, k)) continue;
-      v = t[k];
+      if (!hasProp.call(t, k)) continue
+      v = t[k]
       if (k[0] === '<') {
-        uris[k.slice(1, -1)] = v;
+        uris[k.slice(1, -1)] = v
       }
     }
-    return uris;
-  };
+    return uris
+  }
 
-  Formula.prototype.findTypeURIs = function(subject) {
-    return this.NTtoURI(this.findTypesNT(subject));
-  };
+  Formula.prototype.findTypeURIs = function (subject) {
+    return this.NTtoURI(this.findTypesNT(subject))
+  }
 
-  Formula.prototype.findMemberURIs = function(subject) {
-    return this.NTtoURI(this.findMembersNT(subject));
-  };
-
+  Formula.prototype.findMemberURIs = function (subject) {
+    return this.NTtoURI(this.findMembersNT(subject))
+  }
 
   /*
   Get all the Classes of which we can RDFS-infer the subject is a member
@@ -1382,240 +1450,261 @@ $rdf.Formula = (function(superClass) {
   Returns a hash table where key is NT of type and value is statement why we think so.
   Does NOT return terms, returns URI strings.
   We use NT representations in this version because they handle blank nodes.
-   */
-
-  Formula.prototype.findTypesNT = function(subject) {
-    var domain, i, l, len, len1, len2, len3, m, q, range, rdftype, ref, ref1, ref2, ref3, st, types;
-    rdftype = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type';
-    types = [];
-    ref = this.statementsMatching(subject, void 0, void 0);
+  */
+  Formula.prototype.findTypesNT = function (subject) {
+    var domain
+    var i
+    var l
+    var len
+    var len1
+    var len2
+    var len3
+    var m
+    var q
+    var range
+    var rdftype
+    var ref
+    var ref1
+    var ref2
+    var ref3
+    var st
+    var types
+    rdftype = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type'
+    types = []
+    ref = this.statementsMatching(subject, void 0, void 0)
     for (i = 0, len = ref.length; i < len; i++) {
-      st = ref[i];
+      st = ref[i]
       if (st.predicate.uri === rdftype) {
-        types[st.object.toNT()] = st;
+        types[st.object.toNT()] = st
       } else {
-        ref1 = this.each(st.predicate, this.sym('http://www.w3.org/2000/01/rdf-schema#domain'));
+        ref1 = this.each(st.predicate, this.sym('http://www.w3.org/2000/01/rdf-schema#domain'))
         for (l = 0, len1 = ref1.length; l < len1; l++) {
-          range = ref1[l];
-          types[range.toNT()] = st;
+          range = ref1[l]
+          types[range.toNT()] = st
         }
       }
     }
-    ref2 = this.statementsMatching(void 0, void 0, subject);
+    ref2 = this.statementsMatching(void 0, void 0, subject)
     for (m = 0, len2 = ref2.length; m < len2; m++) {
-      st = ref2[m];
-      ref3 = this.each(st.predicate, this.sym('http://www.w3.org/2000/01/rdf-schema#range'));
+      st = ref2[m]
+      ref3 = this.each(st.predicate, this.sym('http://www.w3.org/2000/01/rdf-schema#range'))
       for (q = 0, len3 = ref3.length; q < len3; q++) {
-        domain = ref3[q];
-        types[domain.toNT()] = st;
+        domain = ref3[q]
+        types[domain.toNT()] = st
       }
     }
-    return this.transitiveClosure(types, this.sym('http://www.w3.org/2000/01/rdf-schema#subClassOf'), false);
-  };
-
+    return this.transitiveClosure(types, this.sym('http://www.w3.org/2000/01/rdf-schema#subClassOf'), false)
+  }
 
   /*
   Get all the Classes of which we can RDFS-infer the subject is a subclass
   Returns a hash table where key is NT of type and value is statement why we think so.
   Does NOT return terms, returns URI strings.
   We use NT representations in this version because they handle blank nodes.
-   */
-
-  Formula.prototype.findSuperClassesNT = function(subject) {
-    var types;
-    types = [];
-    types[subject.toNT()] = true;
-    return this.transitiveClosure(types, this.sym('http://www.w3.org/2000/01/rdf-schema#subClassOf'), false);
-  };
-
+  */
+  Formula.prototype.findSuperClassesNT = function (subject) {
+    var types
+    types = []
+    types[subject.toNT()] = true
+    return this.transitiveClosure(types, this.sym('http://www.w3.org/2000/01/rdf-schema#subClassOf'), false)
+  }
 
   /*
   Get all the Classes of which we can RDFS-infer the subject is a superclass
   Returns a hash table where key is NT of type and value is statement why we think so.
   Does NOT return terms, returns URI strings.
   We use NT representations in this version because they handle blank nodes.
-   */
-
-  Formula.prototype.findSubClassesNT = function(subject) {
-    var types;
-    types = [];
-    types[subject.toNT()] = true;
-    return this.transitiveClosure(types, this.sym('http://www.w3.org/2000/01/rdf-schema#subClassOf'), true);
-  };
-
+  */
+  Formula.prototype.findSubClassesNT = function (subject) {
+    var types
+    types = []
+    types[subject.toNT()] = true
+    return this.transitiveClosure(types, this.sym('http://www.w3.org/2000/01/rdf-schema#subClassOf'), true)
+  }
 
   /*
   Find the types in the list which have no *stored* supertypes
   We exclude the universal class, owl:Things and rdf:Resource, as it is information-free.
-   */
-
-  Formula.prototype.topTypeURIs = function(types) {
-    var i, j, k, len, n, ref, tops, v;
-    tops = [];
+  */
+  Formula.prototype.topTypeURIs = function (types) {
+    var i
+    var j
+    var k
+    var len
+    var n
+    var ref
+    var tops
+    var v
+    tops = []
     for (k in types) {
-      if (!hasProp.call(types, k)) continue;
-      v = types[k];
-      n = 0;
-      ref = this.each(this.sym(k), this.sym('http://www.w3.org/2000/01/rdf-schema#subClassOf'));
+      if (!hasProp.call(types, k)) continue
+      v = types[k]
+      n = 0
+      ref = this.each(this.sym(k), this.sym('http://www.w3.org/2000/01/rdf-schema#subClassOf'))
       for (i = 0, len = ref.length; i < len; i++) {
-        j = ref[i];
+        j = ref[i]
         if (j.uri !== 'http://www.w3.org/2000/01/rdf-schema#Resource') {
-          n++;
-          break;
+          n++
+          break
         }
       }
       if (!n) {
-        tops[k] = v;
+        tops[k] = v
       }
     }
     if (tops['http://www.w3.org/2000/01/rdf-schema#Resource']) {
-      delete tops['http://www.w3.org/2000/01/rdf-schema#Resource'];
+      delete tops['http://www.w3.org/2000/01/rdf-schema#Resource']
     }
     if (tops['http://www.w3.org/2002/07/owl#Thing']) {
-      delete tops['http://www.w3.org/2002/07/owl#Thing'];
+      delete tops['http://www.w3.org/2002/07/owl#Thing']
     }
-    return tops;
-  };
-
+    return tops
+  }
 
   /*
   Find the types in the list which have no *stored* subtypes
   These are a set of classes which provide by themselves complete
   information -- the other classes are redundant for those who
   know the class DAG.
-   */
-
-  Formula.prototype.bottomTypeURIs = function(types) {
-    var bots, bottom, elt, i, k, len, ref, subs, v;
-    bots = [];
+  */
+  Formula.prototype.bottomTypeURIs = function (types) {
+    var bots
+    var bottom
+    var elt
+    var i
+    var k
+    var len
+    var ref
+    var subs
+    var v
+    bots = []
     for (k in types) {
-      if (!hasProp.call(types, k)) continue;
-      v = types[k];
-      subs = this.each(void 0, this.sym('http://www.w3.org/2000/01/rdf-schema#subClassOf'), this.sym(k));
-      bottom = true;
+      if (!hasProp.call(types, k)) continue
+      v = types[k]
+      subs = this.each(void 0, this.sym('http://www.w3.org/2000/01/rdf-schema#subClassOf'), this.sym(k))
+      bottom = true
       for (i = 0, len = subs.length; i < len; i++) {
-        elt = subs[i];
+        elt = subs[i]
         if (ref = elt.uri, indexOf.call(types, ref) >= 0) {
-          bottom = false;
-          break;
+          bottom = false
+          break
         }
       }
       if (bottom) {
-        bots[k] = v;
+        bots[k] = v
       }
     }
-    return bots;
-  };
-
-  Formula.prototype.serialize = function(base, contentType, provenance) {
-    var documentString, sts, sz;
-    sz = $rdf.Serializer(this);
-    sz.suggestNamespaces(this.namespaces);
-    sz.setBase(base);
-    if (provenance) {
-      sts = this.statementsMatching(void 0, void 0, void 0, provenance);
-    } else {
-      sts = this.statements;
-    }
-    switch (contentType != null ? contentType : 'text/n3') {
-      case 'application/rdf+xml':
-        documentString = sz.statementsToXML(sts);
-        break;
-      case 'text/n3':
-      case 'text/turtle':
-        documentString = sz.statementsToN3(sts);
-        break;
-      default:
-        throw "serialize: Content-type " + contentType(+" not supported.");
-    }
-    return documentString;
-  };
-
-  return Formula;
-
-})($rdf.Node);
-
-$rdf.sym = function(uri) {
-  return new $rdf.Symbol(uri);
-};
-
-$rdf.lit = $rdf.Formula.prototype.literal;
-
-$rdf.Namespace = $rdf.Formula.prototype.ns;
-
-$rdf.variable = $rdf.Formula.prototype.variable;
-
-
-/*
- * Variable
- *
- * Variables are placeholders used in patterns to be matched.
- * In cwm they are symbols which are the formula's list of quantified variables.
- * In sparl they are not visibily URIs.  Here we compromise, by having
- * a common special base URI for variables. Their names are uris,
- * but the ? nottaion has an implicit base uri of 'varid:'
- */
-
-$rdf.Variable = (function(superClass) {
-  extend(Variable, superClass);
-
-  function Variable(rel) {
-    this.base = 'varid:';
-    this.uri = $rdf.Util.uri.join(rel, this.base);
+    return bots
   }
 
-  Variable.prototype.termType = 'variable';
+  Formula.prototype.serialize = function (base, contentType, provenance) {
+    var documentString
+    var sts
+    var sz
+    sz = $rdf.Serializer(this)
+    sz.suggestNamespaces(this.namespaces)
+    sz.setBase(base)
+    if (provenance) {
+      sts = this.statementsMatching(void 0, void 0, void 0, provenance)
+    } else {
+      sts = this.statements
+    }
+    switch (
+    contentType != null ? contentType : 'text/n3') {
+      case 'application/rdf+xml':
+        documentString = sz.statementsToXML(sts)
+        break
+      case 'text/n3':
+      case 'text/turtle':
+        documentString = sz.statementsToN3(sts)
+        break
+      default:
+        throw 'serialize: Content-type ' + contentType(+' not supported.')
+    }
+    return documentString
+  }
 
-  Variable.prototype.toNT = function() {
+  return Formula
+})($rdf.Node)
+
+$rdf.sym = function (uri) {
+  return new $rdf.RDFSymbol(uri)
+}
+
+$rdf.lit = $rdf.Formula.prototype.literal
+
+$rdf.Namespace = $rdf.Formula.prototype.ns
+
+$rdf.variable = $rdf.Formula.prototype.variable
+
+/*
+* Variable
+*
+* Variables are placeholders used in patterns to be matched.
+* In cwm they are symbols which are the formula's list of quantified variables.
+* In sparl they are not visibily URIs.  Here we compromise, by having
+* a common special base URI for variables. Their names are uris,
+* but the ? nottaion has an implicit base uri of 'varid:'
+*/
+$rdf.Variable = (function (superClass) {
+  extend(Variable, superClass)
+
+  function Variable (rel) {
+    this.base = 'varid:'
+    this.uri = $rdf.Util.uri.join(rel, this.base)
+  }
+
+  Variable.prototype.termType = 'variable'
+
+  Variable.prototype.toNT = function () {
     if (this.uri.slice(0, this.base.length) === this.base) {
-      return '?' + this.uri.slice(this.base.length);
+      return '?' + this.uri.slice(this.base.length)
     }
-    return "?" + this.uri;
-  };
+    return '?' + this.uri
+  }
 
-  Variable.prototype.toString = Variable.prototype.toNT;
+  Variable.prototype.toString = Variable.prototype.toNT
 
-  Variable.prototype.hashString = Variable.prototype.toNT;
+  Variable.prototype.hashString = Variable.prototype.toNT
 
-  Variable.prototype.substitute = function(bindings) {
-    var ref;
-    return (ref = bindings[this.toNT()]) != null ? ref : this;
-  };
+  Variable.prototype.substitute = function (bindings) {
+    var ref
+    return (ref = bindings[this.toNT()]) != null ? ref : this
+  }
 
-  Variable.prototype.sameTerm = function(other) {
+  Variable.prototype.sameTerm = function (other) {
     if (!other) {
-      false;
+      false
     }
-    return (this.termType === other.termType) && (this.uri === other.uri);
-  };
+    return (this.termType === other.termType) && (this.uri === other.uri)
+  }
 
-  return Variable;
+  return Variable
+})($rdf.Node)
 
-})($rdf.Node);
+$rdf.Literal.prototype.classOrder = 1
 
-$rdf.Literal.prototype.classOrder = 1;
+$rdf.Collection.prototype.classOrder = 3
 
-$rdf.Collection.prototype.classOrder = 3;
+$rdf.Formula.prototype.classOrder = 4
 
-$rdf.Formula.prototype.classOrder = 4;
+$rdf.RDFSymbol.prototype.classOrder = 5
 
-$rdf.Symbol.prototype.classOrder = 5;
+$rdf.BlankNode.prototype.classOrder = 6
 
-$rdf.BlankNode.prototype.classOrder = 6;
+$rdf.Variable.prototype.classOrder = 7
 
-$rdf.Variable.prototype.classOrder = 7;
+$rdf.fromNT = $rdf.Formula.prototype.fromNT
 
-$rdf.fromNT = $rdf.Formula.prototype.fromNT;
+$rdf.graph = function () {
+  return new $rdf.IndexedFormula
+}
 
-$rdf.graph = function() {
-  return new $rdf.IndexedFormula;
-};
-
-if ((typeof module !== "undefined" && module !== null ? module.exports : void 0) != null) {
+if ((typeof module !== 'undefined' && module !== null ? module.exports : void 0) != null) {
   for (k in $rdf) {
-    if (!hasProp.call($rdf, k)) continue;
-    v = $rdf[k];
-    module.exports[k] = v;
+    if (!hasProp.call($rdf, k)) continue
+    v = $rdf[k]
+    module.exports[k] = v
   }
 }
 /**
@@ -3676,7 +3765,7 @@ return SinkParser;
 // This file provides  IndexedFormula a formula (set of triples) which
 // indexed by predicate, subject and object.
 //
-// It "smushes"  (merges into a single node) things which are identical 
+// It "smushes"  (merges into a single node) things which are identical
 // according to owl:sameAs or an owl:InverseFunctionalProperty
 // or an owl:FunctionalProperty
 //
@@ -3684,7 +3773,7 @@ return SinkParser;
 //  2005-10 Written Tim Berners-Lee
 //  2007    Changed so as not to munge statements from documents when smushing
 //
-// 
+//
 
 /*jsl:option explicit*/ // Turn on JavaScriptLint variable declaration checking
 
@@ -3698,7 +3787,7 @@ var owl_ns = "http://www.w3.org/2002/07/owl#";
 ** See issue 139.
 */
 $rdf.Literal.prototype.hashString = $rdf.Literal.prototype.toNT;
-$rdf.Symbol.prototype.hashString = $rdf.Symbol.prototype.toNT;
+$rdf.RDFSymbol.prototype.hashString = $rdf.RDFSymbol.prototype.toNT;
 $rdf.BlankNode.prototype.hashString = $rdf.BlankNode.prototype.toNT;
 $rdf.Collection.prototype.hashString = $rdf.Collection.prototype.toNT;
 
@@ -3730,7 +3819,7 @@ $rdf.IndexedFormula = function(features) {
         var x = formula.classActions[obj.hashString()];
         var done = false;
         if (x) {
-            for (var i=0; i<x.length; i++) {                
+            for (var i=0; i<x.length; i++) {
                 done = done || x[i](formula, subj, pred, obj, why);
             }
         }
@@ -3854,9 +3943,9 @@ $rdf.IndexedFormula.prototype.replaceWith = function(big, small) {
         } else {
             ix[newhash] = oldlist.concat(newlist);
         }
-        delete ix[oldhash];    
+        delete ix[oldhash];
     }
-    
+
     // the canonical one carries all the indexes
     for (var i=0; i<4; i++) {
         moveIndex(this.index[i]);
@@ -3868,26 +3957,26 @@ $rdf.IndexedFormula.prototype.replaceWith = function(big, small) {
 	    if (this.aliases[newhash] == undefined)
 	        this.aliases[newhash] = [];
 	    this.aliases[newhash].push(big); // Back link
-        
+
         if( this.aliases[oldhash] ) {
             for( var i = 0; i < this.aliases[oldhash].length; i++ ) {
                 this.redirections[this.aliases[oldhash][i].hashString()] = small;
                 this.aliases[newhash].push(this.aliases[oldhash][i]);
-            }            
+            }
         }
-        
+
 	    this.add(small, this.sym('http://www.w3.org/2007/ont/link#uri'), big.uri)
-        
+
 	    // If two things are equal, and one is requested, we should request the other.
 	    if (this.fetcher) {
 	        this.fetcher.nowKnownAs(big, small)
-	    }    
+	    }
     }
-    
+
     moveIndex(this.classActions);
     moveIndex(this.propertyActions);
 
-    //$rdf.log.debug("Equate done. "+big+" to be known as "+small)    
+    //$rdf.log.debug("Equate done. "+big+" to be known as "+small)
     return true;  // true means the statement does not need to be put in
 };
 
@@ -3954,7 +4043,7 @@ $rdf.IndexedFormula.prototype.add = function(subj, pred, obj, why) {
 
     if (this.predicateCallback != undefined)
 	this.predicateCallback(this, pred, why);
-	
+
     // Action return true if the statement does not need to be added
     var predHash = this.canon(pred).hashString()
     var actions = this.propertyActions[predHash]; // Predicate hash
@@ -3965,7 +4054,7 @@ $rdf.IndexedFormula.prototype.add = function(subj, pred, obj, why) {
             done = done || actions[i](this, subj, pred, obj, why);
         }
     }
-    
+
     //If we are tracking provenanance, every thing should be loaded into the store
     //if (done) return new Statement(subj, pred, obj, why); // Don't put it in the store
                                                              // still return this statement for owl:sameAs input
@@ -3978,7 +4067,7 @@ $rdf.IndexedFormula.prototype.add = function(subj, pred, obj, why) {
         if (ix[h] == undefined) ix[h] = [];
         ix[h].push(st); // Set of things with this as subject, etc
     }
-    
+
     //$rdf.log.debug("ADDING    {"+subj+" "+pred+" "+obj+"} "+why);
     this.statements.push(st);
     return st;
@@ -4013,7 +4102,7 @@ $rdf.IndexedFormula.prototype.anyStatementMatching = function(subj,pred,obj,why)
 // ALL CONVENIENCE LOOKUP FUNCTIONS RELY ON THIS!
 $rdf.IndexedFormula.prototype.statementsMatching = function(subj,pred,obj,why,justOne) {
     //$rdf.log.debug("Matching {"+subj+" "+pred+" "+obj+"}");
-    
+
     var pat = [ subj, pred, obj, why ];
     var pattern = [];
     var hash = [];
@@ -4040,11 +4129,11 @@ $rdf.IndexedFormula.prototype.statementsMatching = function(subj,pred,obj,why,ju
         }
         return list == undefined ? [] : list;
     }
-    
+
     // Now given.length is 2, 3 or 4.
     // We hope that the scale-free nature of the data will mean we tend to get
     // a short index in there somewhere!
-    
+
     var best = 1e10; // really bad
     var best_i;
     for (var i=0; i<given.length; i++) {
@@ -4056,7 +4145,7 @@ $rdf.IndexedFormula.prototype.statementsMatching = function(subj,pred,obj,why,ju
             best_i = i;  // (not p!)
         }
     }
-    
+
     // Ok, we have picked the shortest index but now we have to filter it
     var best_p = given[best_i];
     var possibles = this.index[best_p][hash[best_p]];
@@ -4068,7 +4157,7 @@ $rdf.IndexedFormula.prototype.statementsMatching = function(subj,pred,obj,why,ju
         for (var i=0; i <check.length; i++) { // for each position to be checked
             var p = check[i];
             if (!this.canon(st[parts[p]]).sameTerm(pattern[p])) {
-                st = null; 
+                st = null;
                 break;
             }
         }
@@ -4094,7 +4183,7 @@ $rdf.IndexedFormula.prototype.removeDocument = function (doc) {
 }
 
 
-/** Find a statement object and remove it 
+/** Find a statement object and remove it
 **
 ** Or array of statements or graph
 **/
@@ -4167,8 +4256,8 @@ $rdf.IndexedFormula.prototype.checkStatementList = function(sts, from) {
 
         var arrayContains = function(a, x) {
             for(var i=0; i<a.length; i++) {
-            if (a[i].subject.sameTerm( x.subject ) && 
-                a[i].predicate.sameTerm( x.predicate ) && 
+            if (a[i].subject.sameTerm( x.subject ) &&
+                a[i].predicate.sameTerm( x.predicate ) &&
                 a[i].object.sameTerm( x.object ) &&
                 a[i].why.sameTerm( x.why )) {
                     return true;
@@ -4189,7 +4278,7 @@ $rdf.IndexedFormula.prototype.checkStatementList = function(sts, from) {
         };
         if (!arrayContains(this.statements, st)) {
             throw new Error("Statement list does not statement " + st + "@" + st.why + origin)
-        
+
         }
     };
 }
@@ -4204,7 +4293,7 @@ $rdf.IndexedFormula.prototype.check = function() {
             }
         };
     };
- };   
+ };
 
 
 
@@ -4226,12 +4315,12 @@ $rdf.IndexedFormula.prototype.removeMany = function (subj, pred, obj, why, limit
 
 /*  @method: copyTo
     @description: replace @template with @target and add appropriate triples (no triple removed)
-                  one-direction replication 
-*/ 
+                  one-direction replication
+*/
 $rdf.IndexedFormula.prototype.copyTo = function(template,target,flags){
     if (!flags) flags=[];
     var statList=this.statementsMatching(template);
-    if ($rdf.Util.ArrayIndexOf(flags,'two-direction')!=-1) 
+    if ($rdf.Util.ArrayIndexOf(flags,'two-direction')!=-1)
         statList.concat(this.statementsMatching(undefined,undefined,template));
     for (var i=0;i<statList.length;i++){
         var st=statList[i];
@@ -4248,7 +4337,7 @@ $rdf.IndexedFormula.prototype.copyTo = function(template,target,flags){
     }
 };
 //for the case when you alter this.value (text modified in userinput.js)
-$rdf.Literal.prototype.copy = function(){ 
+$rdf.Literal.prototype.copy = function(){
     return new $rdf.Literal(this.value,this.lang,this.datatype);
 };
 $rdf.BlankNode.prototype.copy = function(formula){ //depends on the formula
@@ -5516,14 +5605,14 @@ $rdf.QuerySource = function() {
             if(this.listeners[i] === listener) {
                 delete this.listeners[i];
             }
-        } 
+        }
     };
 };
 
 $rdf.Variable.prototype.isVar = 1;
 $rdf.BlankNode.prototype.isVar = 1;
 $rdf.BlankNode.prototype.isBlank = 1;
-$rdf.Symbol.prototype.isVar = 0;
+$rdf.RDFSymbol.prototype.isVar = 0;
 $rdf.Literal.prototype.isVar = 0;
 $rdf.Formula.prototype.isVar = 0;
 $rdf.Collection.prototype.isVar = 0;
@@ -5531,18 +5620,18 @@ $rdf.Collection.prototype.isVar = 0;
 
 /**
  * This function will match a pattern to the current kb
- * 
+ *
  * The callback function is called whenever a match is found
- * When fetcher is supplied this will be called to satisfy any resource requests 
+ * When fetcher is supplied this will be called to satisfy any resource requests
  * currently not in the kb. The fetcher function needs to be defined manualy and
- * should call $rdf.Util.AJAR_handleNewTerm to process the requested resource. 
- * 
+ * should call $rdf.Util.AJAR_handleNewTerm to process the requested resource.
+ *
  * @param	myQuery,	a knowledgebase containing a pattern to use as query
- * @param	callback, 	whenever the pattern in myQuery is met this is called with 
+ * @param	callback, 	whenever the pattern in myQuery is met this is called with
  * 						the new bindings as parameter
  * @param	fetcher,	whenever a resource needs to be loaded this gets called  IGNORED OBSOLETE
  *                              f.fetecher is used as a Fetcher instance to do this.
- * @param       onDone          callback when 
+ * @param       onDone          callback when
  */
 $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDone) {
     var kb = this;
@@ -5569,7 +5658,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
     }; //bindingsDebug
 
 
-// Unification: see also 
+// Unification: see also
 //  http://www.w3.org/2000/10/swap/term.py
 // for similar things in python
 //
@@ -5688,7 +5777,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
     // succeed. However, if any of them do succeed, we should not.  (This is what branchCount()
     // tracked. The problem currently is (2011/7) that when several optionals exist, and they
     // all match, multiple sets of bindings are returned, each with one optional filled in.)
-    
+
     var union = function(a,b) {
        var c= {};
        var x;
@@ -5704,7 +5793,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
         }
         return c;
     };
-    
+
     var OptionalBranchJunction = function(originalCallback, trunkBindings) {
         this.trunkBindings = trunkBindings;
         this.originalCallback = originalCallback;
@@ -5724,19 +5813,19 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
         }
         $rdf.log.debug("OPTIONAL BIDNINGS ALL DONE:");
         this.doCallBacks(this.branches.length-1, this.trunkBindings);
-    
+
     };
     // Recrursively generate the cross product of the bindings
     OptionalBranchJunction.prototype.doCallBacks = function(b, bindings) {
         var j;
         if (b < 0) {
-            return this.originalCallback(bindings); 
+            return this.originalCallback(bindings);
         }
         for (j=0; j < this.branches[b].results.length; j++) {
             this.doCallBacks(b-1, union(bindings, this.branches[b].results[j]));
         }
     };
-    
+
     // A mandatory branch is the normal one, where callbacks
     // are made immediately and no junction is needed.
     // Might be useful for onFinsihed callback for query API.
@@ -5751,7 +5840,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
         // junction.branches.push(this);
         return this;
     };
-    
+
     MandatoryBranch.prototype.reportMatch = function(bindings) {
         // $rdf.log.error("@@@@ query.js 1"); // @@
         this.callback(bindings);
@@ -5776,7 +5865,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
         junction.branches.push(this);
         return this;
     };
-    
+
     OptionalBranch.prototype.reportMatch = function(bindings) {
         this.results.push(bindings);
     };
@@ -5804,7 +5893,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
     /** prepare -- sets the index of the item to the possible matches
         * @param f - formula
         * @param item - an Statement, possibly w/ vars in it
-        * @param bindings - 
+        * @param bindings -
     * @returns true if the query fails -- there are no items that match **/
     var prepare = function (f, item, bindings) {
         var t, terms, termIndex, i, ind;
@@ -5813,7 +5902,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
         // if (!f.statements) $rdf.log.warn("@@@ prepare: f is "+f);
     //    $rdf.log.debug("Prepare: f has "+ f.statements.length);
         //$rdf.log.debug("Prepare: Kb size "+f.statements.length+" Preparing "+item);
-        
+
         terms = [item.subject,item.predicate,item.object];
         ind = [f.subjectIndex,f.predicateIndex,f.objectIndex];
         for (i=0; i<3; i++) {
@@ -5827,7 +5916,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
                     t = f.redirections[t.hashString()]; //redirect
                 }
                 termIndex = ind[i][t.hashString()];
-                
+
                 if (!termIndex) {
                     item.index = [];
                     return false; // Query line cannot match
@@ -5837,13 +5926,13 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
                 }
             }
         }
-            
-        if (item.index === null) { // All 3 are variables? 
+
+        if (item.index === null) { // All 3 are variables?
             item.index = f.statements;
         }
         return true;
     }; //prepare
-        
+
     /** sorting function -- negative if self is easier **/
     // We always prefer to start with a URI to be able to browse a graph
     // this is why we put off items with more variables till later.
@@ -5863,7 +5952,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
     * @param level - spaces to indent stuff also lets you know what level of recursion you're at
     * @param fetcher - function (term, requestedBy) - myFetcher / AJAR_handleNewTerm / the sort
     * @param localCallback - function(bindings, pattern, branch) called on sucess
-    * @returns nothing 
+    * @returns nothing
     *
     * Will fetch linked data from the web iff the knowledge base an associated source fetcher (f.fetcher)
     ***/
@@ -5895,7 +5984,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
             $rdf.log.debug("Match ends -- success , Branch count now: "+branch.count+" for "+branch.pattern_debug);
             return; // Success
         }
-        
+
         var item, i, n=pattern.length;
         //$rdf.log.debug(level + "Match "+n+" left, bs so far:"+bindingDebug(bindingsSoFar))
 
@@ -5921,17 +6010,17 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
                     });
                 }
                 fetcher(requestedTerm, id);
-                */    
+                */
             };
             for (i=0; i<n; i++) {
                 item = pattern[i];  //for each of the triples in the query
-                if ((bindingsSoFar[item.subject] !== undefined) 
+                if ((bindingsSoFar[item.subject] !== undefined)
                     && bindingsSoFar[item.subject].uri
                     && sf && sf.getState($rdf.Util.uri.docpart(bindingsSoFar[item.subject].uri)) === "unrequested") {
                     //fetch the subject info and return to id
                     fetchResource(bindingsSoFar[item.subject],id);
                     return; // only look up one per line this time, but we will come back again though match
-                }    
+                }
                 if (bindingsSoFar[item.object] !== undefined
                            && bindingsSoFar[item.object].uri
                            && sf && sf.getState($rdf.Util.uri.docpart(bindingsSoFar[item.object].uri)) === "unrequested") {
@@ -5940,7 +6029,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
                 }
             }
         } // if sf
-        match2(f, g, bindingsSoFar, level, fetcher, localCallback, branch);     
+        match2(f, g, bindingsSoFar, level, fetcher, localCallback, branch);
         return;
     }; // match
 
@@ -5978,14 +6067,14 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
         var rest = f.formula();
         rest.optional = g.optional;
         rest.constraints = g.constraints;
-        rest.statements = pattern.slice(1); // No indexes: we will not query g. 
+        rest.statements = pattern.slice(1); // No indexes: we will not query g.
         $rdf.log.debug(level + "match2 searching "+item.index.length+ " for "+item+
                 "; bindings so far="+bindingDebug(bindingsSoFar));
         //var results = [];
         var c, nc=item.index.length, nbs1, st, onward = 0;
         //var x;
         for (c=0; c<nc; c++) {   // For each candidate statement
-            st = item.index[c]; //for each statement in the item's index, spawn a new match with that binding 
+            st = item.index[c]; //for each statement in the item's index, spawn a new match with that binding
             nbs1 = unifyContents(
                     [item.subject, item.predicate, item.object],
                     [st.subject, st.predicate, st.object], bindingsSoFar, f);
@@ -5995,7 +6084,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
             //$rdf.log.debug("Branch count bumped "+nk+" to: "+branch.count);
             for (k=0; k<nk; k++) {  // For each way that statement binds
                 bindings2 = [];
-                newBindings1 = nbs1[k][0]; 
+                newBindings1 = nbs1[k][0];
                 if (!constraintsSatisfied(newBindings1,g.constraints)) {
                     //branch.count--;
                     $rdf.log.debug("Branch count CS: "+branch.count);
@@ -6010,7 +6099,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
                             bindings2[v] = bindingsSoFar[v]; // copy
                         }
                     }
-                    
+
                     branch.count++;  // Count how many matches we have yet to complete
                     onward ++;
                     match(f, rest, bindings2, level+ '  ', fetcher, callback, branch); //call match
@@ -6037,7 +6126,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
             }
             $rdf.Util.AJAR_handleNewTerm(kb, x, requestedBy);
         };
-    } 
+    }
     */
     //prepare, oncallback: match1
     //match1: fetcher, oncallback: match2
@@ -6045,8 +6134,8 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
     //    $rdf.log.debug("Query F length"+this.statements.length+" G="+myQuery)
     var f = this;
     $rdf.log.debug("Query on "+this.statements.length);
-    
-    
+
+
     //kb.remoteQuery(myQuery,'http://jena.hpl.hp.com:3040/backstage',callback);
     //return;
 
@@ -6054,7 +6143,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
     var trunck = new MandatoryBranch(callback, onDone);
     trunck.count++; // count one branch to complete at the moment
     setTimeout(function() { match(f, myQuery.pat, myQuery.pat.initBindings, '', fetcher, callback, trunck /*branch*/ ); }, 0);
-    
+
     return; //returns nothing; callback does the work
 }; //query
 
@@ -7720,13 +7809,13 @@ $rdf.Serializer = function() {
 var __Serializer = function( store ){
     this.flags = "";
     this.base = null;
-    
+
     this.prefixes = [];    // suggested prefixes
     this.namespaces = []; // complementary indexes
-    
+
     this.suggestPrefix('rdf', 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'); // XML code assumes this!
     this.suggestPrefix('xml', 'reserved:reservedForFutureUse'); // XML reserves xml: in the spec.
-    
+
     this.namespacesUsed = []; // Count actually used and so needed in @prefixes
     this.keywords = ['a']; // The only one we generate at the moment
     this.prefixchars = "abcdefghijklmnopqustuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -7775,7 +7864,7 @@ __Serializer.prototype.suggestPrefix = function(prefix, uri) {
     if (prefix.slice(0,7) === 'default') return; // Try to weed these out
     if (prefix.slice(0,2) === 'ns') return; //  From others inferior algos
     if (!prefix || !uri) return; // empty strings not suitable
-    if (prefix in this.namespaces || uri in this.prefixes) return; // already used 
+    if (prefix in this.namespaces || uri in this.prefixes) return; // already used
     this.prefixes[uri] = prefix;
     this.namespaces[prefix] = uri;
 }
@@ -7791,15 +7880,15 @@ __Serializer.prototype.checkIntegrity = function() {
     var p, ns;
     for (p in this.namespaces) {
         if (this.prefixes[this.namespaces[p]] !== p) {
-            throw "Serializer integity error 1: " + p + ", " + 
+            throw "Serializer integity error 1: " + p + ", " +
                 this.namespaces[p] + ", "+ this.prefixes[this.namespaces[p]] +"!";
         }
     }
     for (ns in this.prefixes) {
         if (this.namespaces[this.prefixes[ns]] !== ns) {
-            throw "Serializer integity error 2: " + ns + ", " + 
+            throw "Serializer integity error 2: " + ns + ", " +
                 this.prefixs[ns] + ", "+ this.namespaces[this.prefixes[ns]] +"!";
-        
+
         }
     }
 }
@@ -7813,7 +7902,7 @@ __Serializer.prototype.makeUpPrefix = function(uri) {
         if (pp === 'ns') return false; // boring
         if (pp in this.namespaces) return false; // already used
         this.prefixes[uri] = pp;
-        this.namespaces[pp] = uri; 
+        this.namespaces[pp] = uri;
         pok = pp;
         return true
     }
@@ -8300,7 +8389,7 @@ __Serializer.prototype.symbolToN3 = function symbolToN3(x) {  // c.f. symbolStri
     }
     if (j >= 0 && this.flags.indexOf('p') < 0 &&
         // Can split at namespace but only if http[s]: URI or file: or ws[s] (why not others?)
-        (uri.indexOf('http') === 0 || uri.indexOf('ws') === 0 || uri.indexOf('file') === 0))  { 
+        (uri.indexOf('http') === 0 || uri.indexOf('ws') === 0 || uri.indexOf('file') === 0))  {
         var canSplit = true;
         for (var k=j+1; k<uri.length; k++) {
             if (__Serializer.prototype._notNameChars.indexOf(uri[k]) >=0) {
@@ -8374,8 +8463,8 @@ __Serializer.prototype.writeStore = function(write) {
     var fetcher = kb.fetcher;
     var session = fetcher && fetcher.appNode;
 
-    // The core data 
-    
+    // The core data
+
     var sources = this.store.index[3];
     for (s in sources) {  // -> assume we can use -> as short for log:semantics
         var source = kb.fromNT(s);
@@ -8392,14 +8481,14 @@ __Serializer.prototype.writeStore = function(write) {
     kb.statementsMatching(undefined,
             kb.sym('http://www.w3.org/2007/ont/link#requestedURI')).map(
                 function(st){
-                    write('\n<' + st.object.value + '> log:metadata {\n'); 
+                    write('\n<' + st.object.value + '> log:metadata {\n');
                     var sts = kb.statementsMatching(undefined, undefined, undefined,  st.subject);
                     write(this.statementsToN3(this.statementsToN3(sts)));
-                    write('}.\n'); 
+                    write('}.\n');
                 });
-                
+
     // Inferences we have made ourselves not attributable to anyone else
-    
+
     if (session) metaSources.push(session);
     var metadata = [];
     metaSources.map(function(source){
@@ -8565,7 +8654,7 @@ __Serializer.prototype.statementsToXML = function(sts) {
           if(number == intNumber.toString()) {
             // was numeric; don't need to worry about ordering since we've already
             // sorted the statements
-            pred = new $rdf.Symbol('http://www.w3.org/1999/02/22-rdf-syntax-ns#li');
+            pred = new $rdf.RDFSymbol('http://www.w3.org/1999/02/22-rdf-syntax-ns#li');
           }
         }
 
@@ -9576,7 +9665,7 @@ $rdf.Fetcher = function(store, timeout, async) {
 
     /* Promise-based load function
     **
-    ** Symbol -> Promise of xhr
+    ** RDFSymbol -> Promise of xhr
     ** uri string -> Promise of xhr
     ** Array of the above -> Promise of array of xhr
     **
@@ -9588,7 +9677,7 @@ $rdf.Fetcher = function(store, timeout, async) {
             var ps = uri.map(function(x){return fetcher.load(x)})
             return Promise.all(ps);
         }
-        uri = uri.uri || uri; // Symbol or URI string
+        uri = uri.uri || uri; // RDFSymbol or URI string
 	    return new Promise(function(resolve, reject){
     	    fetcher.nowOrWhenFetched(uri, options, function(ok, message, xhr){
         		if (ok) {
@@ -9625,7 +9714,7 @@ $rdf.Fetcher = function(store, timeout, async) {
             userCallback = p2;
         } else if (typeof p2 == 'undefined') { // original calling signature
             referingTerm = undefined;
-        } else if (p2 instanceof $rdf.Symbol) {
+        } else if (p2 instanceof $rdf.RDFSymbol) {
             referingTerm = p2;
         } else {
             options = p2;
@@ -9723,7 +9812,7 @@ $rdf.Fetcher = function(store, timeout, async) {
      **              or URI has already been loaded
      */
     this.requestURI = function(docuri, rterm, options, userCallback) { //sources_request_new
-        docuri = docuri.uri || docuri; // Symbol or string
+        docuri = docuri.uri || docuri; // RDFSymbol or string
         // Remove #localid
         docuri = docuri.split('#')[0];
 
@@ -10627,10 +10716,10 @@ $rdf.parse = function parse(str, kb, base, contentType, callback) {
         if (N3Util.isLiteral(termString)) {
             var value = N3Util.getLiteralValue(termString);
             var language = N3Util.getLiteralLanguage(termString);
-            var datatype = new $rdf.Symbol(N3Util.getLiteralType(termString));
+            var datatype = new $rdf.RDFSymbol(N3Util.getLiteralType(termString));
             return new $rdf.Literal(value, language, datatype);
         } else if (N3Util.isIRI(termString)) {
-            return new $rdf.Symbol(termString);
+            return new $rdf.RDFSymbol(termString);
         } else if (N3Util.isBlank(termString)) {
             var value = termString.substring(2, termString.length);
             return new $rdf.BlankNode(value);
@@ -10789,5 +10878,5 @@ else {
     // Leak a global regardless of module system
     root['$rdf'] = $rdf;
 }
-$rdf.buildTime = "2016-02-23T15:43:54";
+$rdf.buildTime = "2016-02-26T18:26:36";
 })(this);

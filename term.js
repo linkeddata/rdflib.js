@@ -34,7 +34,7 @@ if (typeof $rdf === 'undefined' || $rdf === null) {
 
 /*
 the superclass of all RDF Statement objects, that is
-$rdf.Symbol, $rdf.Literal, $rdf.BlankNode
+$rdf.RDFSymbol, $rdf.Literal, $rdf.BlankNode
 No class extends this yet, but it could be a place to put common behavior.
 */
 $rdf.Node = (function () {
@@ -72,30 +72,30 @@ No, formally a URI is a string, this is a node whose name is a URI.
 Connolly pointed out it isa symbol on the language.
 @param uri the uri as string
 */
-$rdf.Symbol = (function (superClass) {
-  extend(Symbol, superClass)
+$rdf.RDFSymbol = (function (superClass) {
+  extend(RDFSymbol, superClass)
 
-  function Symbol (uri1) {
+  function RDFSymbol (uri1) {
     this.uri = uri1
   }
 
-  Symbol.prototype.termType = 'symbol'
+  RDFSymbol.prototype.termType = 'symbol'
 
-  Symbol.prototype.toString = function () {
+  RDFSymbol.prototype.toString = function () {
     return '<' + this.uri + '>'
   }
 
-  Symbol.prototype.toNT = Symbol.prototype.toString
+  RDFSymbol.prototype.toNT = RDFSymbol.prototype.toString
 
-  Symbol.prototype.doc = function () {
+  RDFSymbol.prototype.doc = function () {
     if (this.uri.indexOf('#') < 0) {
       return this
     } else {
-      return new $rdf.Symbol(this.uri.split('#')[0])
+      return new $rdf.RDFSymbol(this.uri.split('#')[0])
     }
   }
 
-  Symbol.prototype.dir = function () {
+  RDFSymbol.prototype.dir = function () {
     var p
     var str
     str = this.uri.split('#')[0]
@@ -103,17 +103,17 @@ $rdf.Symbol = (function (superClass) {
     if (p < 0) {
       throw 'dir: No slash in path: ' + str
     }
-    return new $rdf.Symbol(str.slice(0, p))
+    return new $rdf.RDFSymbol(str.slice(0, p))
   }
 
-  Symbol.prototype.sameTerm = function (other) {
+  RDFSymbol.prototype.sameTerm = function (other) {
     if (!other) {
       return false
     }
     return (this.termType === other.termType) && (this.uri === other.uri)
   }
 
-  Symbol.prototype.compareTerm = function (other) {
+  RDFSymbol.prototype.compareTerm = function (other) {
     if (this.classOrder < other.classOrder) {
       return -1
     }
@@ -129,25 +129,25 @@ $rdf.Symbol = (function (superClass) {
     return 0
   }
 
-  Symbol.prototype.XSDboolean =
-    new Symbol('http://www.w3.org/2001/XMLSchema#boolean')
+  RDFSymbol.prototype.XSDboolean =
+    new RDFSymbol('http://www.w3.org/2001/XMLSchema#boolean')
 
-  Symbol.prototype.XSDdecimal =
-    new Symbol('http://www.w3.org/2001/XMLSchema#decimal')
+  RDFSymbol.prototype.XSDdecimal =
+    new RDFSymbol('http://www.w3.org/2001/XMLSchema#decimal')
 
-  Symbol.prototype.XSDfloat =
-    new Symbol('http://www.w3.org/2001/XMLSchema#float')
+  RDFSymbol.prototype.XSDfloat =
+    new RDFSymbol('http://www.w3.org/2001/XMLSchema#float')
 
-  Symbol.prototype.XSDinteger =
-    new Symbol('http://www.w3.org/2001/XMLSchema#integer')
+  RDFSymbol.prototype.XSDinteger =
+    new RDFSymbol('http://www.w3.org/2001/XMLSchema#integer')
 
-  Symbol.prototype.XSDdateTime =
-    new Symbol('http://www.w3.org/2001/XMLSchema#dateTime')
+  RDFSymbol.prototype.XSDdateTime =
+    new RDFSymbol('http://www.w3.org/2001/XMLSchema#dateTime')
 
-  Symbol.prototype.integer =
-    new Symbol('http://www.w3.org/2001/XMLSchema#integer')
+  RDFSymbol.prototype.integer =
+    new RDFSymbol('http://www.w3.org/2001/XMLSchema#integer')
 
-  return Symbol
+  return RDFSymbol
 })($rdf.Node)
 
 if ($rdf.NextId != null) {
@@ -360,7 +360,7 @@ $rdf.term = function (val) {
           return ('' + (100 + x)).slice(1, 3)
         }
         value = '' + val.getUTCFullYear() + '-' + d2(val.getUTCMonth() + 1) + '-' + d2(val.getUTCDate()) + 'T' + d2(val.getUTCHours()) + ':' + d2(val.getUTCMinutes()) + ':' + d2(val.getUTCSeconds()) + 'Z'
-        return new $rdf.Literal(value, void 0, $rdf.Symbol.prototype.XSDdateTime)
+        return new $rdf.Literal(value, void 0, $rdf.RDFSymbol.prototype.XSDdateTime)
       } else if (val instanceof Array) {
         x = new $rdf.Collection()
         for (i = 0, len = val.length; i < len; i++) {
@@ -374,15 +374,15 @@ $rdf.term = function (val) {
       return new $rdf.Literal(val)
     case 'number':
       if (('' + val).indexOf('e') >= 0) {
-        dt = $rdf.Symbol.prototype.XSDfloat
+        dt = $rdf.RDFSymbol.prototype.XSDfloat
       } else if (('' + val).indexOf('.') >= 0) {
-        dt = $rdf.Symbol.prototype.XSDdecimal
+        dt = $rdf.RDFSymbol.prototype.XSDdecimal
       } else {
-        dt = $rdf.Symbol.prototype.XSDinteger
+        dt = $rdf.RDFSymbol.prototype.XSDinteger
       }
       return new $rdf.Literal('' + val, void 0, dt)
     case 'boolean':
-      return new $rdf.Literal((val ? '1' : '0'), void 0, $rdf.Symbol.prototype.XSDboolean)
+      return new $rdf.Literal((val ? '1' : '0'), void 0, $rdf.RDFSymbol.prototype.XSDboolean)
     case 'undefined':
       return void 0
   }
@@ -465,7 +465,7 @@ $rdf.Formula = (function (superClass) {
       }
       uri = $rdf.ns[uri] + name
     }
-    return new $rdf.Symbol(uri)
+    return new $rdf.RDFSymbol(uri)
   }
 
   Formula.prototype.literal = function (val, lang, dt) {
@@ -505,7 +505,7 @@ $rdf.Formula = (function (superClass) {
 
   Formula.prototype.ns = function (nsuri) {
     return function (ln) {
-      return new $rdf.Symbol(nsuri + (ln != null ? ln : ''))
+      return new $rdf.RDFSymbol(nsuri + (ln != null ? ln : ''))
     }
   }
 
@@ -958,7 +958,7 @@ $rdf.Formula = (function (superClass) {
 })($rdf.Node)
 
 $rdf.sym = function (uri) {
-  return new $rdf.Symbol(uri)
+  return new $rdf.RDFSymbol(uri)
 }
 
 $rdf.lit = $rdf.Formula.prototype.literal
@@ -1018,7 +1018,7 @@ $rdf.Collection.prototype.classOrder = 3
 
 $rdf.Formula.prototype.classOrder = 4
 
-$rdf.Symbol.prototype.classOrder = 5
+$rdf.RDFSymbol.prototype.classOrder = 5
 
 $rdf.BlankNode.prototype.classOrder = 6
 
