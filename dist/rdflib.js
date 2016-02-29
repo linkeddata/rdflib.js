@@ -20035,7 +20035,7 @@ $rdf.RDFSymbol = (function (superClass) {
     str = this.uri.split('#')[0]
     p = str.lastIndexOf('/')
     if (p < 0) {
-      throw 'dir: No slash in path: ' + str
+      throw new Error('dir: No slash in path: ' + str)
     }
     return new $rdf.RDFSymbol(str.slice(0, p))
   }
@@ -20264,7 +20264,8 @@ $rdf.Collection = (function (superClass) {
   }
 
   Collection.prototype.close = function () {
-    return this.closed = true
+    this.closed = true
+    return this.closed
   }
 
   return Collection
@@ -20320,7 +20321,7 @@ $rdf.term = function (val) {
     case 'undefined':
       return void 0
   }
-  throw ("Can't make term from " + val + ' of type ') + typeof val
+  throw new Error("Can't make term from " + val + ' of type ' + typeof val)
 }
 
 $rdf.Statement = (function () {
@@ -20392,12 +20393,12 @@ $rdf.Formula = (function (superClass) {
   }
 
   Formula.prototype.sym = function (uri, name) {
-    if (name != null) {
-      throw 'This feature (kb.sym with 2 args) is removed. Do not assume prefix mappings.'
-      if (!$rdf.ns[uri]) {
-        throw 'The prefix ' + uri + ' is not set in the API'
-      }
-      uri = $rdf.ns[uri] + name
+    if (name !== null) {
+      throw new Error('This feature (kb.sym with 2 args) is removed. Do not assume prefix mappings.')
+      // if (!$rdf.ns[uri]) {
+      //   throw new Error('The prefix ' + uri + ' is not set in the API')
+      // }
+      // uri = $rdf.ns[uri] + name
     }
     return new $rdf.RDFSymbol(uri)
   }
@@ -20468,7 +20469,7 @@ $rdf.Formula = (function (superClass) {
           } else if (str.slice(k + 1, k + 3) === '^^') {
             dt = $rdf.fromNT(str.slice(k + 3))
           } else {
-            throw "Can't convert string from NT: " + str
+            throw new Error("Can't convert string from NT: " + str)
           }
         }
         str = str.slice(1, k)
@@ -20477,14 +20478,14 @@ $rdf.Formula = (function (superClass) {
         str = str.replace(/\\\\/g, '\\')
         return $rdf.lit(str, lang, dt)
       case '_':
-        x = new $rdf.BlankNode
-        x.id = parseInt(str.slice(3))
+        x = new $rdf.BlankNode()
+        x.id = parseInt(str.slice(3), 10)
         $rdf.NextId--
         return x
       case '?':
         return new $rdf.Variable(str.slice(1))
     }
-    throw "Can't convert from NT: " + str
+    throw new Error("Can't convert from NT: " + str)
   }
 
   Formula.prototype.sameTerm = function (other) {
@@ -20847,9 +20848,11 @@ $rdf.Formula = (function (superClass) {
       v = types[k]
       subs = this.each(void 0, this.sym('http://www.w3.org/2000/01/rdf-schema#subClassOf'), this.sym(k))
       bottom = true
-      for (i = 0, len = subs.length; i < len; i++) {
+      i = 0
+      for (len = subs.length; i < len; i++) {
         elt = subs[i]
-        if (ref = elt.uri, indexOf.call(types, ref) >= 0) {
+        ref = elt.uri
+        if (indexOf.call(types, ref) >= 0) {
           bottom = false
           break
         }
@@ -20883,7 +20886,7 @@ $rdf.Formula = (function (superClass) {
         documentString = sz.statementsToN3(sts)
         break
       default:
-        throw 'serialize: Content-type ' + contentType(+' not supported.')
+        throw new Error('serialize: Content-type ' + contentType(+' not supported.'))
     }
     return documentString
   }
@@ -20961,7 +20964,7 @@ $rdf.Variable.prototype.classOrder = 7
 $rdf.fromNT = $rdf.Formula.prototype.fromNT
 
 $rdf.graph = function () {
-  return new $rdf.IndexedFormula
+  return new $rdf.IndexedFormula()
 }
 
 if ((typeof module !== 'undefined' && module !== null ? module.exports : void 0) != null) {
@@ -30142,7 +30145,7 @@ else {
     // Leak a global regardless of module system
     root['$rdf'] = $rdf;
 }
-$rdf.buildTime = "2016-02-26T18:26:36";
+$rdf.buildTime = "2016-02-29T10:40:02";
 })(this);
 
 },{"async":1,"jsonld":14,"n3":15,"xmldom":40,"xmlhttprequest":undefined}]},{},[])("rdflib")
