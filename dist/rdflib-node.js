@@ -1129,7 +1129,7 @@ $rdf.Formula = (function (superClass) {
   }
 
   Formula.prototype.sym = function (uri, name) {
-    if (name !== null) {
+    if (name) {
       throw new Error('This feature (kb.sym with 2 args) is removed. Do not assume prefix mappings.')
       // if (!$rdf.ns[uri]) {
       //   throw new Error('The prefix ' + uri + ' is not set in the API')
@@ -10881,5 +10881,5 @@ else {
     // Leak a global regardless of module system
     root['$rdf'] = $rdf;
 }
-$rdf.buildTime = "2016-02-29T10:40:02";
+$rdf.buildTime = "2016-02-29T11:00:24";
 })(this);
