@@ -25,7 +25,7 @@ var owl_ns = "http://www.w3.org/2002/07/owl#";
 ** See issue 139.
 */
 $rdf.Literal.prototype.hashString = $rdf.Literal.prototype.toNT;
-$rdf.RDFSymbol.prototype.hashString = $rdf.RDFSymbol.prototype.toNT;
+$rdf.NamedNode.prototype.hashString = $rdf.NamedNode.prototype.toNT;
 $rdf.BlankNode.prototype.hashString = $rdf.BlankNode.prototype.toNT;
 $rdf.Collection.prototype.hashString = $rdf.Collection.prototype.toNT;
 

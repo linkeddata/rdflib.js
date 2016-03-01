@@ -679,7 +679,7 @@ $rdf.Fetcher = function(store, timeout, async) {
 
     /* Promise-based load function
     **
-    ** RDFSymbol -> Promise of xhr
+    ** NamedNode -> Promise of xhr
     ** uri string -> Promise of xhr
     ** Array of the above -> Promise of array of xhr
     **
@@ -691,7 +691,7 @@ $rdf.Fetcher = function(store, timeout, async) {
             var ps = uri.map(function(x){return fetcher.load(x)})
             return Promise.all(ps);
         }
-        uri = uri.uri || uri; // RDFSymbol or URI string
+        uri = uri.uri || uri; // NamedNode or URI string
 	    return new Promise(function(resolve, reject){
     	    fetcher.nowOrWhenFetched(uri, options, function(ok, message, xhr){
         		if (ok) {
@@ -728,7 +728,7 @@ $rdf.Fetcher = function(store, timeout, async) {
             userCallback = p2;
         } else if (typeof p2 == 'undefined') { // original calling signature
             referingTerm = undefined;
-        } else if (p2 instanceof $rdf.RDFSymbol) {
+        } else if (p2 instanceof $rdf.NamedNode) {
             referingTerm = p2;
         } else {
             options = p2;
@@ -826,7 +826,7 @@ $rdf.Fetcher = function(store, timeout, async) {
      **              or URI has already been loaded
      */
     this.requestURI = function(docuri, rterm, options, userCallback) { //sources_request_new
-        docuri = docuri.uri || docuri; // RDFSymbol or string
+        docuri = docuri.uri || docuri; // NamedNode or string
         // Remove #localid
         docuri = docuri.split('#')[0];
 
@@ -1730,10 +1730,10 @@ $rdf.parse = function parse(str, kb, base, contentType, callback) {
         if (N3Util.isLiteral(termString)) {
             var value = N3Util.getLiteralValue(termString);
             var language = N3Util.getLiteralLanguage(termString);
-            var datatype = new $rdf.RDFSymbol(N3Util.getLiteralType(termString));
+            var datatype = new $rdf.NamedNode(N3Util.getLiteralType(termString));
             return new $rdf.Literal(value, language, datatype);
         } else if (N3Util.isIRI(termString)) {
-            return new $rdf.RDFSymbol(termString);
+            return new $rdf.NamedNode(termString);
         } else if (N3Util.isBlank(termString)) {
             var value = termString.substring(2, termString.length);
             return new $rdf.BlankNode(value);

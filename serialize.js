@@ -859,7 +859,7 @@ __Serializer.prototype.statementsToXML = function(sts) {
           if(number == intNumber.toString()) {
             // was numeric; don't need to worry about ordering since we've already
             // sorted the statements
-            pred = new $rdf.RDFSymbol('http://www.w3.org/1999/02/22-rdf-syntax-ns#li');
+            pred = new $rdf.NamedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#li');
           }
         }
 
