@@ -14,13 +14,13 @@ $rdf.Serializer = function() {
 var __Serializer = function( store ){
     this.flags = "";
     this.base = null;
-    
+
     this.prefixes = [];    // suggested prefixes
     this.namespaces = []; // complementary indexes
-    
+
     this.suggestPrefix('rdf', 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'); // XML code assumes this!
     this.suggestPrefix('xml', 'reserved:reservedForFutureUse'); // XML reserves xml: in the spec.
-    
+
     this.namespacesUsed = []; // Count actually used and so needed in @prefixes
     this.keywords = ['a']; // The only one we generate at the moment
     this.prefixchars = "abcdefghijklmnopqustuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -69,7 +69,7 @@ __Serializer.prototype.suggestPrefix = function(prefix, uri) {
     if (prefix.slice(0,7) === 'default') return; // Try to weed these out
     if (prefix.slice(0,2) === 'ns') return; //  From others inferior algos
     if (!prefix || !uri) return; // empty strings not suitable
-    if (prefix in this.namespaces || uri in this.prefixes) return; // already used 
+    if (prefix in this.namespaces || uri in this.prefixes) return; // already used
     this.prefixes[uri] = prefix;
     this.namespaces[prefix] = uri;
 }
@@ -85,15 +85,15 @@ __Serializer.prototype.checkIntegrity = function() {
     var p, ns;
     for (p in this.namespaces) {
         if (this.prefixes[this.namespaces[p]] !== p) {
-            throw "Serializer integity error 1: " + p + ", " + 
+            throw "Serializer integity error 1: " + p + ", " +
                 this.namespaces[p] + ", "+ this.prefixes[this.namespaces[p]] +"!";
         }
     }
     for (ns in this.prefixes) {
         if (this.namespaces[this.prefixes[ns]] !== ns) {
-            throw "Serializer integity error 2: " + ns + ", " + 
+            throw "Serializer integity error 2: " + ns + ", " +
                 this.prefixs[ns] + ", "+ this.namespaces[this.prefixes[ns]] +"!";
-        
+
         }
     }
 }
@@ -107,7 +107,7 @@ __Serializer.prototype.makeUpPrefix = function(uri) {
         if (pp === 'ns') return false; // boring
         if (pp in this.namespaces) return false; // already used
         this.prefixes[uri] = pp;
-        this.namespaces[pp] = uri; 
+        this.namespaces[pp] = uri;
         pok = pp;
         return true
     }
@@ -594,7 +594,7 @@ __Serializer.prototype.symbolToN3 = function symbolToN3(x) {  // c.f. symbolStri
     }
     if (j >= 0 && this.flags.indexOf('p') < 0 &&
         // Can split at namespace but only if http[s]: URI or file: or ws[s] (why not others?)
-        (uri.indexOf('http') === 0 || uri.indexOf('ws') === 0 || uri.indexOf('file') === 0))  { 
+        (uri.indexOf('http') === 0 || uri.indexOf('ws') === 0 || uri.indexOf('file') === 0))  {
         var canSplit = true;
         for (var k=j+1; k<uri.length; k++) {
             if (__Serializer.prototype._notNameChars.indexOf(uri[k]) >=0) {
@@ -668,8 +668,8 @@ __Serializer.prototype.writeStore = function(write) {
     var fetcher = kb.fetcher;
     var session = fetcher && fetcher.appNode;
 
-    // The core data 
-    
+    // The core data
+
     var sources = this.store.index[3];
     for (s in sources) {  // -> assume we can use -> as short for log:semantics
         var source = kb.fromNT(s);
@@ -686,14 +686,14 @@ __Serializer.prototype.writeStore = function(write) {
     kb.statementsMatching(undefined,
             kb.sym('http://www.w3.org/2007/ont/link#requestedURI')).map(
                 function(st){
-                    write('\n<' + st.object.value + '> log:metadata {\n'); 
+                    write('\n<' + st.object.value + '> log:metadata {\n');
                     var sts = kb.statementsMatching(undefined, undefined, undefined,  st.subject);
                     write(this.statementsToN3(this.statementsToN3(sts)));
-                    write('}.\n'); 
+                    write('}.\n');
                 });
-                
+
     // Inferences we have made ourselves not attributable to anyone else
-    
+
     if (session) metaSources.push(session);
     var metadata = [];
     metaSources.map(function(source){
@@ -859,7 +859,7 @@ __Serializer.prototype.statementsToXML = function(sts) {
           if(number == intNumber.toString()) {
             // was numeric; don't need to worry about ordering since we've already
             // sorted the statements
-            pred = new $rdf.Symbol('http://www.w3.org/1999/02/22-rdf-syntax-ns#li');
+            pred = new $rdf.NamedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#li');
           }
         }
 

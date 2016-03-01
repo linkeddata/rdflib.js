@@ -8,31 +8,31 @@ $rdf = require('../term.js');
 tests = {
   statement: [
     {
-      s: new $rdf.Symbol("http://example.com/btb"),
-      p: new $rdf.Symbol("http://xmlns.com/foaf/0.1/name"),
+      s: new $rdf.NamedNode("http://example.com/btb"),
+      p: new $rdf.NamedNode("http://xmlns.com/foaf/0.1/name"),
       o: "Bob Builder",
       expect: '<http://example.com/btb> <http://xmlns.com/foaf/0.1/name> "Bob Builder" .'
     }
   ],
   formula: [
     {
-      s: new $rdf.Symbol("http://example.com/btb"),
-      p: new $rdf.Symbol("http://xmlns.com/foaf/0.1/name"),
+      s: new $rdf.NamedNode("http://example.com/btb"),
+      p: new $rdf.NamedNode("http://xmlns.com/foaf/0.1/name"),
       o: "Builder",
       expect: '{<http://example.com/btb> <http://xmlns.com/foaf/0.1/name> "Builder" .}'
     }, {
       s: new $rdf.BlankNode(),
-      p: new $rdf.Symbol("http://xmlns.com/foaf/0.1/firstname"),
+      p: new $rdf.NamedNode("http://xmlns.com/foaf/0.1/firstname"),
       o: "Bob",
       expect: '{_:n0 <http://xmlns.com/foaf/0.1/firstname> "Bob" .}'
     }, {
-      s: new $rdf.Symbol("http://example.com/btb"),
-      p: new $rdf.Symbol("http://xmlns.com/foaf/0.1/lastname"),
+      s: new $rdf.NamedNode("http://example.com/btb"),
+      p: new $rdf.NamedNode("http://xmlns.com/foaf/0.1/lastname"),
       o: new $rdf.Literal("Builder", "en"),
       expect: '{<http://example.com/btb> <http://xmlns.com/foaf/0.1/lastname> "Builder"@en .}'
     }, {
-      s: new $rdf.Symbol("http://example.com/btb"),
-      p: new $rdf.Symbol("http://example.org/vocab#shoeSize"),
+      s: new $rdf.NamedNode("http://example.com/btb"),
+      p: new $rdf.NamedNode("http://example.org/vocab#shoeSize"),
       o: new $rdf.Literal("30", void 0, (new $rdf.Namespace("http://www.w3.org/2001/XMLSchema#"))('integer')),
       expect: '{<http://example.com/btb> <http://example.org/vocab#shoeSize> "30"^^<http://www.w3.org/2001/XMLSchema#integer> .}'
     }

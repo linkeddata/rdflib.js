@@ -111,14 +111,14 @@ $rdf.QuerySource = function() {
             if(this.listeners[i] === listener) {
                 delete this.listeners[i];
             }
-        } 
+        }
     };
 };
 
 $rdf.Variable.prototype.isVar = 1;
 $rdf.BlankNode.prototype.isVar = 1;
 $rdf.BlankNode.prototype.isBlank = 1;
-$rdf.Symbol.prototype.isVar = 0;
+$rdf.NamedNode.prototype.isVar = 0;
 $rdf.Literal.prototype.isVar = 0;
 $rdf.Formula.prototype.isVar = 0;
 $rdf.Collection.prototype.isVar = 0;
@@ -126,18 +126,18 @@ $rdf.Collection.prototype.isVar = 0;
 
 /**
  * This function will match a pattern to the current kb
- * 
+ *
  * The callback function is called whenever a match is found
- * When fetcher is supplied this will be called to satisfy any resource requests 
+ * When fetcher is supplied this will be called to satisfy any resource requests
  * currently not in the kb. The fetcher function needs to be defined manualy and
- * should call $rdf.Util.AJAR_handleNewTerm to process the requested resource. 
- * 
+ * should call $rdf.Util.AJAR_handleNewTerm to process the requested resource.
+ *
  * @param	myQuery,	a knowledgebase containing a pattern to use as query
- * @param	callback, 	whenever the pattern in myQuery is met this is called with 
+ * @param	callback, 	whenever the pattern in myQuery is met this is called with
  * 						the new bindings as parameter
  * @param	fetcher,	whenever a resource needs to be loaded this gets called  IGNORED OBSOLETE
  *                              f.fetecher is used as a Fetcher instance to do this.
- * @param       onDone          callback when 
+ * @param       onDone          callback when
  */
 $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDone) {
     var kb = this;
@@ -164,7 +164,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
     }; //bindingsDebug
 
 
-// Unification: see also 
+// Unification: see also
 //  http://www.w3.org/2000/10/swap/term.py
 // for similar things in python
 //
@@ -283,7 +283,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
     // succeed. However, if any of them do succeed, we should not.  (This is what branchCount()
     // tracked. The problem currently is (2011/7) that when several optionals exist, and they
     // all match, multiple sets of bindings are returned, each with one optional filled in.)
-    
+
     var union = function(a,b) {
        var c= {};
        var x;
@@ -299,7 +299,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
         }
         return c;
     };
-    
+
     var OptionalBranchJunction = function(originalCallback, trunkBindings) {
         this.trunkBindings = trunkBindings;
         this.originalCallback = originalCallback;
@@ -319,19 +319,19 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
         }
         $rdf.log.debug("OPTIONAL BIDNINGS ALL DONE:");
         this.doCallBacks(this.branches.length-1, this.trunkBindings);
-    
+
     };
     // Recrursively generate the cross product of the bindings
     OptionalBranchJunction.prototype.doCallBacks = function(b, bindings) {
         var j;
         if (b < 0) {
-            return this.originalCallback(bindings); 
+            return this.originalCallback(bindings);
         }
         for (j=0; j < this.branches[b].results.length; j++) {
             this.doCallBacks(b-1, union(bindings, this.branches[b].results[j]));
         }
     };
-    
+
     // A mandatory branch is the normal one, where callbacks
     // are made immediately and no junction is needed.
     // Might be useful for onFinsihed callback for query API.
@@ -346,7 +346,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
         // junction.branches.push(this);
         return this;
     };
-    
+
     MandatoryBranch.prototype.reportMatch = function(bindings) {
         // $rdf.log.error("@@@@ query.js 1"); // @@
         this.callback(bindings);
@@ -371,7 +371,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
         junction.branches.push(this);
         return this;
     };
-    
+
     OptionalBranch.prototype.reportMatch = function(bindings) {
         this.results.push(bindings);
     };
@@ -399,7 +399,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
     /** prepare -- sets the index of the item to the possible matches
         * @param f - formula
         * @param item - an Statement, possibly w/ vars in it
-        * @param bindings - 
+        * @param bindings -
     * @returns true if the query fails -- there are no items that match **/
     var prepare = function (f, item, bindings) {
         var t, terms, termIndex, i, ind;
@@ -408,7 +408,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
         // if (!f.statements) $rdf.log.warn("@@@ prepare: f is "+f);
     //    $rdf.log.debug("Prepare: f has "+ f.statements.length);
         //$rdf.log.debug("Prepare: Kb size "+f.statements.length+" Preparing "+item);
-        
+
         terms = [item.subject,item.predicate,item.object];
         ind = [f.subjectIndex,f.predicateIndex,f.objectIndex];
         for (i=0; i<3; i++) {
@@ -422,7 +422,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
                     t = f.redirections[t.hashString()]; //redirect
                 }
                 termIndex = ind[i][t.hashString()];
-                
+
                 if (!termIndex) {
                     item.index = [];
                     return false; // Query line cannot match
@@ -432,13 +432,13 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
                 }
             }
         }
-            
-        if (item.index === null) { // All 3 are variables? 
+
+        if (item.index === null) { // All 3 are variables?
             item.index = f.statements;
         }
         return true;
     }; //prepare
-        
+
     /** sorting function -- negative if self is easier **/
     // We always prefer to start with a URI to be able to browse a graph
     // this is why we put off items with more variables till later.
@@ -458,7 +458,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
     * @param level - spaces to indent stuff also lets you know what level of recursion you're at
     * @param fetcher - function (term, requestedBy) - myFetcher / AJAR_handleNewTerm / the sort
     * @param localCallback - function(bindings, pattern, branch) called on sucess
-    * @returns nothing 
+    * @returns nothing
     *
     * Will fetch linked data from the web iff the knowledge base an associated source fetcher (f.fetcher)
     ***/
@@ -490,7 +490,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
             $rdf.log.debug("Match ends -- success , Branch count now: "+branch.count+" for "+branch.pattern_debug);
             return; // Success
         }
-        
+
         var item, i, n=pattern.length;
         //$rdf.log.debug(level + "Match "+n+" left, bs so far:"+bindingDebug(bindingsSoFar))
 
@@ -516,17 +516,17 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
                     });
                 }
                 fetcher(requestedTerm, id);
-                */    
+                */
             };
             for (i=0; i<n; i++) {
                 item = pattern[i];  //for each of the triples in the query
-                if ((bindingsSoFar[item.subject] !== undefined) 
+                if ((bindingsSoFar[item.subject] !== undefined)
                     && bindingsSoFar[item.subject].uri
                     && sf && sf.getState($rdf.Util.uri.docpart(bindingsSoFar[item.subject].uri)) === "unrequested") {
                     //fetch the subject info and return to id
                     fetchResource(bindingsSoFar[item.subject],id);
                     return; // only look up one per line this time, but we will come back again though match
-                }    
+                }
                 if (bindingsSoFar[item.object] !== undefined
                            && bindingsSoFar[item.object].uri
                            && sf && sf.getState($rdf.Util.uri.docpart(bindingsSoFar[item.object].uri)) === "unrequested") {
@@ -535,7 +535,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
                 }
             }
         } // if sf
-        match2(f, g, bindingsSoFar, level, fetcher, localCallback, branch);     
+        match2(f, g, bindingsSoFar, level, fetcher, localCallback, branch);
         return;
     }; // match
 
@@ -573,14 +573,14 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
         var rest = f.formula();
         rest.optional = g.optional;
         rest.constraints = g.constraints;
-        rest.statements = pattern.slice(1); // No indexes: we will not query g. 
+        rest.statements = pattern.slice(1); // No indexes: we will not query g.
         $rdf.log.debug(level + "match2 searching "+item.index.length+ " for "+item+
                 "; bindings so far="+bindingDebug(bindingsSoFar));
         //var results = [];
         var c, nc=item.index.length, nbs1, st, onward = 0;
         //var x;
         for (c=0; c<nc; c++) {   // For each candidate statement
-            st = item.index[c]; //for each statement in the item's index, spawn a new match with that binding 
+            st = item.index[c]; //for each statement in the item's index, spawn a new match with that binding
             nbs1 = unifyContents(
                     [item.subject, item.predicate, item.object],
                     [st.subject, st.predicate, st.object], bindingsSoFar, f);
@@ -590,7 +590,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
             //$rdf.log.debug("Branch count bumped "+nk+" to: "+branch.count);
             for (k=0; k<nk; k++) {  // For each way that statement binds
                 bindings2 = [];
-                newBindings1 = nbs1[k][0]; 
+                newBindings1 = nbs1[k][0];
                 if (!constraintsSatisfied(newBindings1,g.constraints)) {
                     //branch.count--;
                     $rdf.log.debug("Branch count CS: "+branch.count);
@@ -605,7 +605,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
                             bindings2[v] = bindingsSoFar[v]; // copy
                         }
                     }
-                    
+
                     branch.count++;  // Count how many matches we have yet to complete
                     onward ++;
                     match(f, rest, bindings2, level+ '  ', fetcher, callback, branch); //call match
@@ -632,7 +632,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
             }
             $rdf.Util.AJAR_handleNewTerm(kb, x, requestedBy);
         };
-    } 
+    }
     */
     //prepare, oncallback: match1
     //match1: fetcher, oncallback: match2
@@ -640,8 +640,8 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
     //    $rdf.log.debug("Query F length"+this.statements.length+" G="+myQuery)
     var f = this;
     $rdf.log.debug("Query on "+this.statements.length);
-    
-    
+
+
     //kb.remoteQuery(myQuery,'http://jena.hpl.hp.com:3040/backstage',callback);
     //return;
 
@@ -649,7 +649,7 @@ $rdf.IndexedFormula.prototype.query = function(myQuery, callback, fetcher, onDon
     var trunck = new MandatoryBranch(callback, onDone);
     trunck.count++; // count one branch to complete at the moment
     setTimeout(function() { match(f, myQuery.pat, myQuery.pat.initBindings, '', fetcher, callback, trunck /*branch*/ ); }, 0);
-    
+
     return; //returns nothing; callback does the work
 }; //query
 

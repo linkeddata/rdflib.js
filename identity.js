@@ -3,7 +3,7 @@
 // This file provides  IndexedFormula a formula (set of triples) which
 // indexed by predicate, subject and object.
 //
-// It "smushes"  (merges into a single node) things which are identical 
+// It "smushes"  (merges into a single node) things which are identical
 // according to owl:sameAs or an owl:InverseFunctionalProperty
 // or an owl:FunctionalProperty
 //
@@ -11,7 +11,7 @@
 //  2005-10 Written Tim Berners-Lee
 //  2007    Changed so as not to munge statements from documents when smushing
 //
-// 
+//
 
 /*jsl:option explicit*/ // Turn on JavaScriptLint variable declaration checking
 
@@ -25,7 +25,7 @@ var owl_ns = "http://www.w3.org/2002/07/owl#";
 ** See issue 139.
 */
 $rdf.Literal.prototype.hashString = $rdf.Literal.prototype.toNT;
-$rdf.Symbol.prototype.hashString = $rdf.Symbol.prototype.toNT;
+$rdf.NamedNode.prototype.hashString = $rdf.NamedNode.prototype.toNT;
 $rdf.BlankNode.prototype.hashString = $rdf.BlankNode.prototype.toNT;
 $rdf.Collection.prototype.hashString = $rdf.Collection.prototype.toNT;
 
@@ -57,7 +57,7 @@ $rdf.IndexedFormula = function(features) {
         var x = formula.classActions[obj.hashString()];
         var done = false;
         if (x) {
-            for (var i=0; i<x.length; i++) {                
+            for (var i=0; i<x.length; i++) {
                 done = done || x[i](formula, subj, pred, obj, why);
             }
         }
@@ -181,9 +181,9 @@ $rdf.IndexedFormula.prototype.replaceWith = function(big, small) {
         } else {
             ix[newhash] = oldlist.concat(newlist);
         }
-        delete ix[oldhash];    
+        delete ix[oldhash];
     }
-    
+
     // the canonical one carries all the indexes
     for (var i=0; i<4; i++) {
         moveIndex(this.index[i]);
@@ -195,26 +195,26 @@ $rdf.IndexedFormula.prototype.replaceWith = function(big, small) {
 	    if (this.aliases[newhash] == undefined)
 	        this.aliases[newhash] = [];
 	    this.aliases[newhash].push(big); // Back link
-        
+
         if( this.aliases[oldhash] ) {
             for( var i = 0; i < this.aliases[oldhash].length; i++ ) {
                 this.redirections[this.aliases[oldhash][i].hashString()] = small;
                 this.aliases[newhash].push(this.aliases[oldhash][i]);
-            }            
+            }
         }
-        
+
 	    this.add(small, this.sym('http://www.w3.org/2007/ont/link#uri'), big.uri)
-        
+
 	    // If two things are equal, and one is requested, we should request the other.
 	    if (this.fetcher) {
 	        this.fetcher.nowKnownAs(big, small)
-	    }    
+	    }
     }
-    
+
     moveIndex(this.classActions);
     moveIndex(this.propertyActions);
 
-    //$rdf.log.debug("Equate done. "+big+" to be known as "+small)    
+    //$rdf.log.debug("Equate done. "+big+" to be known as "+small)
     return true;  // true means the statement does not need to be put in
 };
 
@@ -281,7 +281,7 @@ $rdf.IndexedFormula.prototype.add = function(subj, pred, obj, why) {
 
     if (this.predicateCallback != undefined)
 	this.predicateCallback(this, pred, why);
-	
+
     // Action return true if the statement does not need to be added
     var predHash = this.canon(pred).hashString()
     var actions = this.propertyActions[predHash]; // Predicate hash
@@ -292,7 +292,7 @@ $rdf.IndexedFormula.prototype.add = function(subj, pred, obj, why) {
             done = done || actions[i](this, subj, pred, obj, why);
         }
     }
-    
+
     //If we are tracking provenanance, every thing should be loaded into the store
     //if (done) return new Statement(subj, pred, obj, why); // Don't put it in the store
                                                              // still return this statement for owl:sameAs input
@@ -305,7 +305,7 @@ $rdf.IndexedFormula.prototype.add = function(subj, pred, obj, why) {
         if (ix[h] == undefined) ix[h] = [];
         ix[h].push(st); // Set of things with this as subject, etc
     }
-    
+
     //$rdf.log.debug("ADDING    {"+subj+" "+pred+" "+obj+"} "+why);
     this.statements.push(st);
     return st;
@@ -340,7 +340,7 @@ $rdf.IndexedFormula.prototype.anyStatementMatching = function(subj,pred,obj,why)
 // ALL CONVENIENCE LOOKUP FUNCTIONS RELY ON THIS!
 $rdf.IndexedFormula.prototype.statementsMatching = function(subj,pred,obj,why,justOne) {
     //$rdf.log.debug("Matching {"+subj+" "+pred+" "+obj+"}");
-    
+
     var pat = [ subj, pred, obj, why ];
     var pattern = [];
     var hash = [];
@@ -367,11 +367,11 @@ $rdf.IndexedFormula.prototype.statementsMatching = function(subj,pred,obj,why,ju
         }
         return list == undefined ? [] : list;
     }
-    
+
     // Now given.length is 2, 3 or 4.
     // We hope that the scale-free nature of the data will mean we tend to get
     // a short index in there somewhere!
-    
+
     var best = 1e10; // really bad
     var best_i;
     for (var i=0; i<given.length; i++) {
@@ -383,7 +383,7 @@ $rdf.IndexedFormula.prototype.statementsMatching = function(subj,pred,obj,why,ju
             best_i = i;  // (not p!)
         }
     }
-    
+
     // Ok, we have picked the shortest index but now we have to filter it
     var best_p = given[best_i];
     var possibles = this.index[best_p][hash[best_p]];
@@ -395,7 +395,7 @@ $rdf.IndexedFormula.prototype.statementsMatching = function(subj,pred,obj,why,ju
         for (var i=0; i <check.length; i++) { // for each position to be checked
             var p = check[i];
             if (!this.canon(st[parts[p]]).sameTerm(pattern[p])) {
-                st = null; 
+                st = null;
                 break;
             }
         }
@@ -421,7 +421,7 @@ $rdf.IndexedFormula.prototype.removeDocument = function (doc) {
 }
 
 
-/** Find a statement object and remove it 
+/** Find a statement object and remove it
 **
 ** Or array of statements or graph
 **/
@@ -494,8 +494,8 @@ $rdf.IndexedFormula.prototype.checkStatementList = function(sts, from) {
 
         var arrayContains = function(a, x) {
             for(var i=0; i<a.length; i++) {
-            if (a[i].subject.sameTerm( x.subject ) && 
-                a[i].predicate.sameTerm( x.predicate ) && 
+            if (a[i].subject.sameTerm( x.subject ) &&
+                a[i].predicate.sameTerm( x.predicate ) &&
                 a[i].object.sameTerm( x.object ) &&
                 a[i].why.sameTerm( x.why )) {
                     return true;
@@ -516,7 +516,7 @@ $rdf.IndexedFormula.prototype.checkStatementList = function(sts, from) {
         };
         if (!arrayContains(this.statements, st)) {
             throw new Error("Statement list does not statement " + st + "@" + st.why + origin)
-        
+
         }
     };
 }
@@ -531,7 +531,7 @@ $rdf.IndexedFormula.prototype.check = function() {
             }
         };
     };
- };   
+ };
 
 
 
@@ -553,12 +553,12 @@ $rdf.IndexedFormula.prototype.removeMany = function (subj, pred, obj, why, limit
 
 /*  @method: copyTo
     @description: replace @template with @target and add appropriate triples (no triple removed)
-                  one-direction replication 
-*/ 
+                  one-direction replication
+*/
 $rdf.IndexedFormula.prototype.copyTo = function(template,target,flags){
     if (!flags) flags=[];
     var statList=this.statementsMatching(template);
-    if ($rdf.Util.ArrayIndexOf(flags,'two-direction')!=-1) 
+    if ($rdf.Util.ArrayIndexOf(flags,'two-direction')!=-1)
         statList.concat(this.statementsMatching(undefined,undefined,template));
     for (var i=0;i<statList.length;i++){
         var st=statList[i];
@@ -575,7 +575,7 @@ $rdf.IndexedFormula.prototype.copyTo = function(template,target,flags){
     }
 };
 //for the case when you alter this.value (text modified in userinput.js)
-$rdf.Literal.prototype.copy = function(){ 
+$rdf.Literal.prototype.copy = function(){
     return new $rdf.Literal(this.value,this.lang,this.datatype);
 };
 $rdf.BlankNode.prototype.copy = function(formula){ //depends on the formula
