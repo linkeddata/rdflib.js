@@ -207,14 +207,11 @@ $rdf.Literal = (function (superClass) {
     this.value = value1
     this.lang = lang1
     this.datatype = datatype
-    if (this.lang == null) {
-      this.lang = void 0
+    if (!this.lang) {
+      this.lang = void 0  // set to undefined
     }
-    if (this.lang === '') {
-      this.lang = void 0
-    }
-    if (this.datatype == null) {
-      this.datatype = void 0
+    if (!this.datatype) {
+      this.datatype = void 0  // set to undefined
     }
   }
 
