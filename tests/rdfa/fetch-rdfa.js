@@ -1,24 +1,22 @@
-
 // Test rdfa parser
 //
 // See http://www.w3.org/TR/rdfa-syntax/  etc
 //
 
-$rdf = require('./../../dist/rdflib-node.js');
+$rdf = require('./../../dist/rdflib-node.js')
 
-kb = $rdf.graph();
-f = $rdf.fetcher(kb);
-var doc = kb.sym(process.argv[2]);
-f.nowOrWhenFetched(doc,  {'forceContentType': 'application/rdfa'}, function(uri, ok, body) {
-    console.log("DONE FETCH");
-    var out = $rdf.serialize(doc, kb, doc.uri, 'text/n3')
-    console.log(out);
-    console.log("EXIT");
-    process.exit();
+kb = $rdf.graph()
+f = $rdf.fetcher(kb)
+var doc = kb.sym(process.argv[2])
+f.nowOrWhenFetched(doc, {'forceContentType': 'application/rdfa'}, function (uri, ok, body) {
+  console.log('DONE FETCH')
+  var out = $rdf.serialize(doc, kb, doc.uri, 'text/n3')
+  console.log(out)
+  console.log('EXIT')
+  process.exit()
 }); // target, kb, base, contentType, callback
 
-
- // {'forceContentType': 'application/rdfa'}
+// {'forceContentType': 'application/rdfa'}
 
 // http://melvincarvalho.com/
 // http://schema.org/Person
