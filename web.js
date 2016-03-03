@@ -18,7 +18,7 @@
  * needs: util.js uri.js term.js rdfparser.js rdfa.js n3parser.js
  *      identity.js sparql.js jsonparser.js
  *
- * If jQuery is defined, it uses jQuery.ajax, else is independent of jQuery
+ * Independent of jQuery
  */
 
 /**
@@ -883,16 +883,12 @@ $rdf.Fetcher = function (store, timeout, async) {
       kb.add(docterm.uri, ns.link('requestedBy'), rterm.uri, this.appNode)
     }
     var xhr, req
-    var useJQuery = typeof jQuery !== 'undefined'
-    if (!useJQuery) {
-      xhr = $rdf.Util.XMLHTTPFactory()
-      req = xhr.req = kb.bnode()
-      xhr.options = options
-      xhr.resource = docterm
-      xhr.requestedURI = args[0]
-    } else {
-      req = kb.bnode()
-    }
+
+    xhr = $rdf.Util.XMLHTTPFactory()
+    req = xhr.req = kb.bnode()
+    xhr.options = options
+    xhr.resource = docterm
+    xhr.requestedURI = args[0]
     var sf = this
 
     var now = new Date()
@@ -1269,71 +1265,30 @@ $rdf.Fetcher = function (store, timeout, async) {
 
     // Setup the request
     // var xhr
-    if (typeof jQuery !== 'undefined' && jQuery.ajax) {
-      var xhrFields = { withCredentials: withCredentials }
-      xhr = jQuery.ajax({
-        url: actualProxyURI,
-        accepts: {'*': 'text/turtle,text/n3,application/rdf+xml'},
-        processData: false,
-        xhrFields: xhrFields,
-        timeout: sf.timeout,
-        headers: force ? { 'cache-control': 'no-cache' } : {},
-        error: function (xhr, s, e) {
-          xhr.req = req // Add these in case fails before .ajax returns
-          xhr.resource = docterm
-          xhr.options = options
-          xhr.requestedURI = uri2
-          xhr.withCredentials = withCredentials // Somehow gets lost by jq
+    xhr = $rdf.Util.XMLHTTPFactory()
+    xhr.onerror = onerrorFactory(xhr)
+    xhr.onreadystatechange = onreadystatechangeFactory(xhr)
+    xhr.timeout = sf.timeout
+    xhr.withCredentials = withCredentials
+    xhr.actualProxyURI = actualProxyURI
 
-          if (s === 'timeout') {
-            sf.failFetch(xhr, 'requestTimeout')
-          } else {
-            onerrorFactory(xhr)(e)
-          }
-        },
-        success: function (d, s, xhr) {
-          xhr.req = req
-          xhr.resource = docterm
-          xhr.resource = docterm
-          xhr.requestedURI = uri2
+    xhr.req = req
+    xhr.options = options
+    xhr.options = options
+    xhr.resource = docterm
+    xhr.requestedURI = uri2
 
-          onreadystatechangeFactory(xhr)()
-        }
-      })
-
-      xhr.req = req
-      xhr.options = options
-
-      xhr.resource = docterm
-      xhr.options = options
-      xhr.requestedURI = uri2
-      xhr.actualProxyURI = actualProxyURI
-    } else {
-      xhr = $rdf.Util.XMLHTTPFactory()
-      xhr.onerror = onerrorFactory(xhr)
-      xhr.onreadystatechange = onreadystatechangeFactory(xhr)
-      xhr.timeout = sf.timeout
-      xhr.withCredentials = withCredentials
-      xhr.actualProxyURI = actualProxyURI
-
-      xhr.req = req
-      xhr.options = options
-      xhr.options = options
-      xhr.resource = docterm
-      xhr.requestedURI = uri2
-
-      xhr.ontimeout = function () {
-        sf.failFetch(xhr, 'requestTimeout')
-      }
-      try {
-        xhr.open('GET', actualProxyURI, this.async)
-      } catch (er) {
-        return this.failFetch(xhr, 'XHR open for GET failed for <' + uri2 + '>:\n\t' + er)
-      }
-      if (force) { // must happen after open
-        xhr.setRequestHeader('Cache-control', 'no-cache')
-      }
-    } // if not jQuery
+    xhr.ontimeout = function () {
+      sf.failFetch(xhr, 'requestTimeout')
+    }
+    try {
+      xhr.open('GET', actualProxyURI, this.async)
+    } catch (er) {
+      return this.failFetch(xhr, 'XHR open for GET failed for <' + uri2 + '>:\n\t' + er)
+    }
+    if (force) { // must happen after open
+      xhr.setRequestHeader('Cache-control', 'no-cache')
+    }
 
     // Set redirect callback and request headers -- alas Firefox Extension Only
     if (typeof tabulator !== 'undefined' &&
@@ -1524,22 +1479,18 @@ $rdf.Fetcher = function (store, timeout, async) {
     }
 
     // Fire
-    if (!useJQuery) {
-      try {
-        xhr.send(null)
-      } catch (er) {
-        return this.failFetch(xhr, 'XHR send failed:' + er)
-      }
-      setTimeout(function () {
-        if (xhr.readyState !== 4 && sf.isPending(xhr.resource.uri)) {
-          sf.failFetch(xhr, 'requestTimeout')
-        }
-      },
-        this.timeout)
-      this.addStatus(xhr.req, 'HTTP Request sent.')
-    } else {
-      this.addStatus(xhr.req, 'HTTP Request sent (using jQuery)')
+    try {
+      xhr.send(null)
+    } catch (er) {
+      return this.failFetch(xhr, 'XHR send failed:' + er)
     }
+    setTimeout(function () {
+      if (xhr.readyState !== 4 && sf.isPending(xhr.resource.uri)) {
+        sf.failFetch(xhr, 'requestTimeout')
+      }
+    },
+      this.timeout)
+    this.addStatus(xhr.req, 'HTTP Request sent.')
     return xhr
   } // this.requestURI()
 
