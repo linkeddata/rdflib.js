@@ -35,7 +35,7 @@ var N3 = require('n3')
 $rdf.Fetcher = function (store, timeout, async) {
   this.store = store
   this.thisURI = 'http://dig.csail.mit.edu/2005/ajar/ajaw/rdf/sources.js' + '#SourceFetcher' // -- Kenny
-  this.timeout = timeout ? timeout : 30000
+  this.timeout = timeout || 30000
   this.async = async != null ? async : true
   this.appNode = this.store.bnode() // Denoting this session
   this.store.fetcher = this // Bi-linked
@@ -206,7 +206,6 @@ $rdf.Fetcher = function (store, timeout, async) {
   $rdf.Fetcher.XMLHandler = function () {
     this.handlerFactory = function (xhr) {
       xhr.handle = function (cb) {
-        var kb = sf.store
         var dom = $rdf.Util.parseXML(xhr.responseText)
 
         // XML Semantics defined by root element namespace
@@ -389,7 +388,6 @@ $rdf.Fetcher = function (store, timeout, async) {
         // Parse the text of this non-XML file
         $rdf.log.debug('web.js: Parsing as N3 ' + xhr.resource.uri) // @@@@ comment me out
         // sf.addStatus(xhr.req, "N3 not parsed yet...")
-        var rt = xhr.responseText
         var p = $rdf.N3Parser(kb, kb, xhr.resource.uri, xhr.resource.uri, null, null, '', null)
         //                p.loadBuf(xhr.responseText)
         try {
@@ -403,7 +401,7 @@ $rdf.Fetcher = function (store, timeout, async) {
 
         sf.addStatus(xhr.req, 'N3 parsed: ' + p.statementCount + ' triples in ' + p.lines + ' lines.')
         sf.store.add(xhr.resource, ns.rdf('type'), ns.link('RDFDocument'), sf.appNode)
-        args = [xhr.resource.uri] // Other args needed ever?
+        var args = [xhr.resource.uri] // Other args needed ever?
         sf.doneFetch(xhr, args)
       }
     }
@@ -433,21 +431,20 @@ $rdf.Fetcher = function (store, timeout, async) {
   }
 
   this.switchHandler = function (name, xhr, cb, args) {
-    var kb = this.store
-    var handler = null
+    var Handler = null
     for (var i = 0; i < this.handlers.length; i++) {
       if ('' + this.handlers[i] === name) {
-        handler = this.handlers[i]
+        Handler = this.handlers[i]
       }
     }
-    if (!handler) {
+    if (!Handler) {
       throw new Error('web.js: switchHandler: name=' + name + ' , this.handlers =' + this.handlers + '\n' +
-      'switchHandler: switching to ' + handler + '; sf=' + sf +
+      'switchHandler: switching to ' + Handler + '; sf=' + sf +
       '; typeof $rdf.Fetcher=' + typeof $rdf.Fetcher +
       ';\n\t $rdf.Fetcher.HTMLHandler=' + $rdf.Fetcher.HTMLHandler + '\n' +
       '\n\tsf.handlers=' + sf.handlers + '\n')
     }
-    (new handler(args)).handlerFactory(xhr)
+    (new Handler(args)).handlerFactory(xhr)
     xhr.handle(cb)
   }
 
@@ -485,7 +482,6 @@ $rdf.Fetcher = function (store, timeout, async) {
   // in the why part of the quad distinguish between HTML and HTTP header
   // Reverse is set iif the link was rev= as opposed to rel=
   this.linkData = function (xhr, rel, uri, why, reverse) {
-    var x = xhr.resource
     if (!uri) return
     var predicate
     // See http://www.w3.org/TR/powder-dr/#httplink for describedby 2008-12-10
@@ -517,7 +513,6 @@ $rdf.Fetcher = function (store, timeout, async) {
       var paramexp = /[^\(\)<>@,;:"\/\[\]\?={} \t]+=(([^\(\)<>@,;:"\/\[\]\?={} \t]+)|("[^"]*"))/g
 
       var matches = link.match(linkexp)
-      var rels = {}
       for (var i = 0; i < matches.length; i++) {
         var split = matches[i].split('>')
         var href = split[0].substring(1)
@@ -580,7 +575,7 @@ $rdf.Fetcher = function (store, timeout, async) {
         if (xhr.readyState === 4) { // NOte a 404 can be not afailure
           var ok = (!xhr.status || (xhr.status >= 200 && xhr.status < 300))
           if (!options.noMeta) {
-            var response = fetcher.saveResponseMetadata(xhr, tabulator.kb)
+            fetcher.saveResponseMetadata(xhr, tabulator.kb)
           }
           if (ok) resolve(xhr)
           reject(xhr.status + ' ' + xhr.statusText)
@@ -725,9 +720,10 @@ $rdf.Fetcher = function (store, timeout, async) {
       options = {}
       userCallback = p2
     } else if (typeof p2 === 'undefined') { // original calling signature
-      referingTerm = undefined
+      // referingTerm = undefined
     } else if (p2 instanceof $rdf.NamedNode) {
-      referingTerm = p2
+      // referingTerm = p2
+      options = {referingTerm: p2}
     } else {
       options = p2
     }
@@ -886,16 +882,16 @@ $rdf.Fetcher = function (store, timeout, async) {
     if (!options.noMeta && rterm && rterm.uri) {
       kb.add(docterm.uri, ns.link('requestedBy'), rterm.uri, this.appNode)
     }
-
+    var xhr, req
     var useJQuery = typeof jQuery !== 'undefined'
     if (!useJQuery) {
-      var xhr = $rdf.Util.XMLHTTPFactory()
-      var req = xhr.req = kb.bnode()
+      xhr = $rdf.Util.XMLHTTPFactory()
+      req = xhr.req = kb.bnode()
       xhr.options = options
       xhr.resource = docterm
       xhr.requestedURI = args[0]
     } else {
-      var req = kb.bnode()
+      req = kb.bnode()
     }
     var sf = this
 
@@ -1004,7 +1000,7 @@ $rdf.Fetcher = function (store, timeout, async) {
           var thisReq = xhr.req // Might have changes by redirect
           sf.fireCallbacks('recv', args)
           var kb = sf.store
-          var response = sf.saveResponseMetadata(xhr, kb)
+          sf.saveResponseMetadata(xhr, kb)
           sf.fireCallbacks('headers', [{uri: docuri, headers: xhr.headers}])
 
           // Check for masked errors.
@@ -1026,10 +1022,10 @@ $rdf.Fetcher = function (store, timeout, async) {
               kb.fetcher.nonexistant[xhr.resource.uri] = true
             }
             if (xhr.responseText.length > 10) {
-              var response = kb.bnode()
-              kb.add(response, ns.http('content'), kb.literal(xhr.responseText), response)
+              var response2 = kb.bnode()
+              kb.add(response2, ns.http('content'), kb.literal(xhr.responseText), response2)
               if (xhr.statusText) {
-                kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response)
+                kb.add(response2, ns.http('statusText'), kb.literal(xhr.statusText), response2)
               }
             // dump("HTTP >= 400 responseText:\n"+xhr.responseText+"\n"); // @@@@
             }
@@ -1069,7 +1065,7 @@ $rdf.Fetcher = function (store, timeout, async) {
             'html': 'text/html',
             'xml': 'text/xml'
           }
-
+          var guess
           if (xhr.status === 200) {
             addType(ns.link('Document'))
             var ct = xhr.headers['content-type']
@@ -1077,7 +1073,7 @@ $rdf.Fetcher = function (store, timeout, async) {
               xhr.headers['content-type'] = options.forceContentType
             }
             if (!ct || ct.indexOf('application/octet-stream') >= 0) {
-              var guess = extensionToContentType[xhr.resource.uri.split('.').pop()]
+              guess = extensionToContentType[xhr.resource.uri.split('.').pop()]
               if (guess) {
                 xhr.headers['content-type'] = guess
               }
@@ -1095,7 +1091,7 @@ $rdf.Fetcher = function (store, timeout, async) {
             if (options.forceContentType) {
               xhr.headers['content-type'] = options.forceContentType
             } else {
-              var guess = extensionToContentType[xhr.resource.uri.split('.').pop()]
+              guess = extensionToContentType[xhr.resource.uri.split('.').pop()]
               if (guess) {
                 xhr.headers['content-type'] = guess
               } else {
@@ -1272,9 +1268,10 @@ $rdf.Fetcher = function (store, timeout, async) {
     var actualProxyURI = this.proxyIfNecessary(uri2)
 
     // Setup the request
+    // var xhr
     if (typeof jQuery !== 'undefined' && jQuery.ajax) {
       var xhrFields = { withCredentials: withCredentials }
-      var xhr = jQuery.ajax({
+      xhr = jQuery.ajax({
         url: actualProxyURI,
         accepts: {'*': 'text/turtle,text/n3,application/rdf+xml'},
         processData: false,
@@ -1312,7 +1309,7 @@ $rdf.Fetcher = function (store, timeout, async) {
       xhr.requestedURI = uri2
       xhr.actualProxyURI = actualProxyURI
     } else {
-      var xhr = $rdf.Util.XMLHTTPFactory()
+      xhr = $rdf.Util.XMLHTTPFactory()
       xhr.onerror = onerrorFactory(xhr)
       xhr.onreadystatechange = onreadystatechangeFactory(xhr)
       xhr.timeout = sf.timeout
@@ -1404,14 +1401,14 @@ $rdf.Fetcher = function (store, timeout, async) {
 
                   var hash = newURI.indexOf('#')
                   if (hash >= 0) {
-                    var msg = ('Warning: ' + xhr.resource + ' HTTP redirects to' + newURI + ' which should not contain a "#" sign')
                     if (!xhr.options.noMeta) {
-                      kb.add(xhr.resource, kb.sym('http://www.w3.org/2007/ont/link#warning'), msg)
+                      kb.add(xhr.resource, kb.sym('http://www.w3.org/2007/ont/link#warning'),
+                      'Warning: ' + xhr.resource + ' HTTP redirects to' + newURI + ' which should not contain a "#" sign')
                     }
                     newURI = newURI.slice(0, hash)
                   }
                   var xhr2 = sf.requestURI(newURI, xhr.resource)
-                  if (xhr2 && xhr2.req && !noMeta) {
+                  if (xhr2 && xhr2.req && !options.noMeta) {
                     kb.add(
                       xhr.req,
                       kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'),
@@ -1470,17 +1467,16 @@ $rdf.Fetcher = function (store, timeout, async) {
 
                   var hash = newURI.indexOf('#')
                   if (hash >= 0) {
-                    var msg = ('Warning: ' + xhr.resource + ' HTTP redirects to' + newURI + ' which should not contain a "#" sign')
+                    var msg2 = ('Warning: ' + xhr.resource + ' HTTP redirects to' + newURI + ' which should not contain a "#" sign')
                     // dump(msg+"\n")
-                    kb.add(xhr.resource, kb.sym('http://www.w3.org/2007/ont/link#warning'), msg)
+                    kb.add(xhr.resource, kb.sym('http://www.w3.org/2007/ont/link#warning'), msg2)
                     newURI = newURI.slice(0, hash)
                   }
-
                   if (sf.fetchCallbacks[xhr.resource.uri]) {
                     if (!sf.fetchCallbacks[newURI]) {
                       sf.fetchCallbacks[newURI] = []
                     }
-                    sf.fetchCallbacks[newURI] === sf.fetchCallbacks[newURI].concat(sf.fetchCallbacks[xhr.resource.uri])
+                    sf.fetchCallbacks[newURI] = sf.fetchCallbacks[newURI].concat(sf.fetchCallbacks[xhr.resource.uri])
                     delete sf.fetchCallbacks[xhr.resource.uri]
                   }
 
@@ -1622,7 +1618,7 @@ $rdf.parse = function parse (str, kb, base, contentType, callback) {
       $rdf.parseDOM_RDFa($rdf.Util.parseXML(str), kb, base)
       executeCallback()
     } else if (contentType === 'application/sparql-update') { // @@ we handle a subset
-      sparqlUpdateParser(store, str, base)
+      $rdf.sparqlUpdateParser(str, kb, base)
       executeCallback()
     } else if (contentType === 'application/ld+json' ||
       contentType === 'application/nquads' ||
@@ -1630,12 +1626,11 @@ $rdf.parse = function parse (str, kb, base, contentType, callback) {
       var n3Parser = N3.Parser()
       var N3Util = N3.Util
       var triples = []
-      var prefixes = {}
+
       if (contentType === 'application/ld+json') {
         var jsonDocument
         try {
           jsonDocument = JSON.parse(str)
-          setJsonLdBase(jsonDocument, base)
         } catch (parseErr) {
           callback(parseErr, null)
         }
@@ -1672,7 +1667,7 @@ $rdf.parse = function parse (str, kb, base, contentType, callback) {
       }
     }
   }
-
+/*
   function setJsonLdBase (doc, base) {
     if (doc instanceof Array) {
       return
@@ -1682,7 +1677,7 @@ $rdf.parse = function parse (str, kb, base, contentType, callback) {
     }
     doc['@context']['@base'] = base
   }
-
+*/
   function nquadCallback (err, nquads) {
     if (err) {
       callback(err, kb)
@@ -1756,7 +1751,6 @@ $rdf.serialize = function (target, kb, base, contentType, callback) {
       case 'application/rdf+xml':
         documentString = sz.statementsToXML(newSts)
         return executeCallback(null, documentString)
-        break
       case 'text/n3':
       case 'text/turtle':
       case 'application/x-turtle': // Legacy
