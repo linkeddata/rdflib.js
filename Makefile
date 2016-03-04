@@ -17,6 +17,9 @@ size:
 dist/rdflib.js: dist/rdflib-node.js
 	browserify -r ./dist/rdflib-node.js:rdflib --exclude "xmlhttprequest" --standalone "\$$rdf" > dist/rdflib.js
 
+dist/rdflib.min.js: dist/rdflib-node.js
+	browserify -r ./dist/rdflib-node.js:rdflib --exclude "xmlhttprequest" --standalone "\$$rdf" -d -p [minifyify --no-map] > dist/rdflib.min.js
+
 dist:
 	mkdir -p dist
 
