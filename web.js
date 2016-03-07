@@ -49,13 +49,13 @@ $rdf.Fetcher = function (store, timeout, async) {
   //   'redirected'  In attempt to counter CORS problems retried.
   //   other strings mean various other erros, such as parse errros.
   //
-
+  this.redirectedTo = {} // Wehn 'redireced'
   this.fetchCallbacks = {} // fetchCallbacks[uri].push(callback)
 
   this.nonexistant = {} // keep track of explict 404s -> we can overwrite etc
   this.lookedUp = {}
   this.handlers = []
-  this.mediatypes = {}
+  this.mediatypes = { }
   var sf = this
   var kb = this.store
   var ns = {} // Convenience namespaces needed in this module:
@@ -69,6 +69,10 @@ $rdf.Fetcher = function (store, timeout, async) {
   ns.rdf = $rdf.Namespace('http://www.w3.org/1999/02/22-rdf-syntax-ns#')
   ns.rdfs = $rdf.Namespace('http://www.w3.org/2000/01/rdf-schema#')
   ns.dc = $rdf.Namespace('http://purl.org/dc/elements/1.1/')
+
+  sf.mediatypes['image/*'] = {
+    'q': 0.9
+  }
 
   $rdf.Fetcher.crossSiteProxy = function (uri) {
     if ($rdf.Fetcher.crossSiteProxyTemplate) {
@@ -101,7 +105,12 @@ $rdf.Fetcher = function (store, timeout, async) {
         }
         var parser = new $rdf.RDFParser(kb)
         // sf.addStatus(xhr.req, 'parsing as RDF/XML...')
-        parser.parse(this.dom, lastRequested.uri, lastRequested)
+        try {
+          parser.parse(this.dom, lastRequested.uri, lastRequested)
+        } catch(e) {
+          sf.addStatus(xhr.req, 'Syntax error parsing RDF/XML! ' + e);
+          cnsole.log('Syntax error parsing RDF/XML! ' + e)
+        }
         if (!xhr.options.noMeta) {
           kb.add(lastRequested, ns.rdf('type'), ns.link('RDFDocument'), sf.appNode)
         }
@@ -197,9 +206,7 @@ $rdf.Fetcher = function (store, timeout, async) {
     return 'XHTMLHandler'
   }
   $rdf.Fetcher.XHTMLHandler.register = function (sf) {
-    sf.mediatypes['application/xhtml+xml'] = {
-      'q': 0.3
-    }
+    sf.mediatypes['application/xhtml+xml'] = {}
   }
   $rdf.Fetcher.XHTMLHandler.pattern = new RegExp('application/xhtml')
 
@@ -909,7 +916,11 @@ $rdf.Fetcher = function (store, timeout, async) {
     var checkCredentialsRetry = function () {
       if (!xhr.withCredentials) return false // not dealt with
 
-      console.log('@@ Retrying with no credentials for ' + xhr.resource)
+      if (xhr.retriedWithCredentials) {
+        return true;
+      }
+      xhr.retriedWithCredentials = true; // protect against called twice
+      console.log('web: Retrying with no credentials for ' + xhr.resource)
       xhr.abort()
       delete sf.requested[docuri] // forget the original request happened
       var newopt = {}
@@ -932,11 +943,17 @@ $rdf.Fetcher = function (store, timeout, async) {
             var hostpart = $rdf.uri.hostpart
             var here = '' + document.location
             var uri = xhr.resource.uri
-            if (hostpart(here) && hostpart(uri) && hostpart(here) !== hostpart(uri)) {
+            if (hostpart(here) && hostpart(uri) && hostpart(here) !== hostpart(uri)) { // If cross-site
               if (xhr.status === 401 || xhr.status === 403 || xhr.status === 404) {
                 onreadystatechangeFactory(xhr)()
               } else {
+                // IT IS A PAIN THAT NO PROPER ERROR REPORTING
+                if (checkCredentialsRetry(xhr)) { // If credentials flag set, retry without,
+                  return
+                }
+                // If it wasn't, or we already tried that
                 var newURI = $rdf.Fetcher.crossSiteProxy(uri)
+                console.log('web: Direct failed so trying proxy ' + newURI)
                 sf.addStatus(xhr.req, 'BLOCKED -> Cross-site Proxy to <' + newURI + '>')
                 if (xhr.aborted) return
 
@@ -952,6 +969,7 @@ $rdf.Fetcher = function (store, timeout, async) {
                 // the callback throws an exception when called from xhr.onerror (so removed)
                 // sf.fireCallbacks('done', args) // Are these args right? @@@   Not done yet! done means success
                 sf.requested[xhr.resource.uri] = 'redirected'
+                sf.redirectedTo[xhr.resource.uri] = newURI;
 
                 if (sf.fetchCallbacks[xhr.resource.uri]) {
                   if (!sf.fetchCallbacks[newURI]) {
@@ -977,9 +995,6 @@ $rdf.Fetcher = function (store, timeout, async) {
               }
             }
 
-            if (checkCredentialsRetry(xhr)) {
-              return
-            }
             xhr.status = 999 //
           }
         } // mashu
@@ -1353,6 +1368,7 @@ $rdf.Fetcher = function (store, timeout, async) {
                   sf.addStatus(oldreq, 'redirected') // why
                   sf.fireCallbacks('redirected', args) // Are these args right? @@@
                   sf.requested[xhr.resource.uri] = 'redirected'
+                  sf.redirectedTo[xhr.ressource.uri] = newURI
 
                   var hash = newURI.indexOf('#')
                   if (hash >= 0) {
@@ -1472,6 +1488,7 @@ $rdf.Fetcher = function (store, timeout, async) {
         }
       }
       xhr.setRequestHeader('Accept', acceptstring)
+      this.addStatus(xhr.req, 'Accept: ' + acceptstring)
 
     // if (requester) { xhr.setRequestHeader('Referer',requester) }
     } catch (err) {
@@ -1530,6 +1547,8 @@ $rdf.Fetcher = function (store, timeout, async) {
       return 'requested'
     } else if (this.requested[docuri] === 'done') {
       return 'fetched'
+    } else if (this.requested[docuri] === 'redirected') {
+      return this.getState(this.redirectedTo[docuri])
     } else { // An non-200 HTTP error status
       return 'failed'
     }
