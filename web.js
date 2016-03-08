@@ -109,7 +109,7 @@ $rdf.Fetcher = function (store, timeout, async) {
           parser.parse(this.dom, lastRequested.uri, lastRequested)
         } catch(e) {
           sf.addStatus(xhr.req, 'Syntax error parsing RDF/XML! ' + e);
-          cnsole.log('Syntax error parsing RDF/XML! ' + e)
+          console.log('Syntax error parsing RDF/XML! ' + e)
         }
         if (!xhr.options.noMeta) {
           kb.add(lastRequested, ns.rdf('type'), ns.link('RDFDocument'), sf.appNode)
