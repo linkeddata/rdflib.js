@@ -107,9 +107,9 @@ $rdf.Fetcher = function (store, timeout, async) {
         // sf.addStatus(xhr.req, 'parsing as RDF/XML...')
         try {
           parser.parse(this.dom, lastRequested.uri, lastRequested)
-        } catch(e) {
-          sf.addStatus(xhr.req, 'Syntax error parsing RDF/XML! ' + e);
-          cnsole.log('Syntax error parsing RDF/XML! ' + e)
+        } catch (e) {
+          sf.addStatus(xhr.req, 'Syntax error parsing RDF/XML! ' + e)
+          console.log('Syntax error parsing RDF/XML! ' + e)
         }
         if (!xhr.options.noMeta) {
           kb.add(lastRequested, ns.rdf('type'), ns.link('RDFDocument'), sf.appNode)
@@ -332,8 +332,9 @@ $rdf.Fetcher = function (store, timeout, async) {
           cb() // doneFetch, not failed
           return
         }
-
-        sf.failFetch(xhr, "Sorry, can't yet parse non-XML HTML")
+        sf.addStatus(xhr.req, 'non-XML HTML document, not parsed for data.')
+        sf.doneFetch(xhr, [xhr.resource.uri])
+        // sf.failFetch(xhr, "Sorry, can't yet parse non-XML HTML")
       }
     }
   }
@@ -476,6 +477,7 @@ $rdf.Fetcher = function (store, timeout, async) {
     if (!xhr.options.noMeta) {
       kb.add(xhr.resource, ns.link('error'), status)
     }
+    console.log('@@ Recording failure for ' + xhr.resource + ': ' + xhr.status)
     this.requested[$rdf.uri.docpart(xhr.resource.uri)] = xhr.status // changed 2015 was false
     while (this.fetchCallbacks[xhr.resource.uri] && this.fetchCallbacks[xhr.resource.uri].length) {
       this.fetchCallbacks[xhr.resource.uri].shift()(false, 'Fetch of <' + xhr.resource.uri + '> failed: ' + status, xhr)
@@ -917,9 +919,9 @@ $rdf.Fetcher = function (store, timeout, async) {
       if (!xhr.withCredentials) return false // not dealt with
 
       if (xhr.retriedWithCredentials) {
-        return true;
+        return true
       }
-      xhr.retriedWithCredentials = true; // protect against called twice
+      xhr.retriedWithCredentials = true // protect against called twice
       console.log('web: Retrying with no credentials for ' + xhr.resource)
       xhr.abort()
       delete sf.requested[docuri] // forget the original request happened
@@ -969,7 +971,7 @@ $rdf.Fetcher = function (store, timeout, async) {
                 // the callback throws an exception when called from xhr.onerror (so removed)
                 // sf.fireCallbacks('done', args) // Are these args right? @@@   Not done yet! done means success
                 sf.requested[xhr.resource.uri] = 'redirected'
-                sf.redirectedTo[xhr.resource.uri] = newURI;
+                sf.redirectedTo[xhr.resource.uri] = newURI
 
                 if (sf.fetchCallbacks[xhr.resource.uri]) {
                   if (!sf.fetchCallbacks[newURI]) {
