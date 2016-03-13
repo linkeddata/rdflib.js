@@ -83,17 +83,17 @@ $rdf.queryToSPARQL = function (query) {
 
 /**
  * @SPARQL: SPARQL text that is converted to a query object which is returned.
- * @testMode: testing flag. Prevents loading of sources.
+ * @fetcher: (optional) a fetcher instance when remote resources should be loaded
  */
 
-$rdf.SPARQLToQuery = function (SPARQL, testMode, kb) {
+$rdf.SPARQLToQuery = function (SPARQL, fetcher) {
   // AJAR_ClearTable()
   var variableHash = []
   function makeVar (name) {
     if (variableHash[name]) {
       return variableHash[name]
     }
-    var newVar = kb.variable(name)
+    var newVar = new $rdf.Variable(name)
     variableHash[name] = newVar
     return newVar
   }
@@ -178,10 +178,10 @@ $rdf.SPARQLToQuery = function (SPARQL, testMode, kb) {
     if (str.slice(end + ind + 2).match(/^\^\^/)) {
       end2 = str.slice(end + ind + 2).indexOf(' ')
       // alert(end2)
-      res[1] = kb.literal(
+      res[1] = new $rdf.Literal(
         str.slice(ind + 1, ind + 1 + end),
         '',
-        kb.sym(removeBrackets(
+        new $rdf.NamedNode(removeBrackets(
           str.slice(ind + 4 + end, ind + 2 + end + end2))
         )
       )
@@ -190,7 +190,7 @@ $rdf.SPARQLToQuery = function (SPARQL, testMode, kb) {
     } else if (str.slice(end + ind + 2).match(/^@/)) {
       end2 = str.slice(end + ind + 2).indexOf(' ')
       // alert(end2)
-      res[1] = kb.literal(
+      res[1] = new $rdf.Literal(
         str.slice(ind + 1, ind + 1 + end),
         str.slice(ind + 3 + end, ind + 2 + end + end2), null
       )
@@ -199,7 +199,7 @@ $rdf.SPARQLToQuery = function (SPARQL, testMode, kb) {
         parseLiterals(str.slice(end + ind + 2 + end2))
       )
     } else {
-      res[1] = kb.literal(str.slice(ind + 1, ind + 1 + end), '', null)
+      res[1] = new $rdf.Literal(str.slice(ind + 1, ind + 1 + end), '', null)
       $rdf.log.info('Literal found: ' + res[1])
       res = res.concat(parseLiterals(str.slice(end + ind + 2))) // finds any other literals
     }
@@ -257,14 +257,14 @@ $rdf.SPARQLToQuery = function (SPARQL, testMode, kb) {
         res[x] = makeVar(input[x].slice(1))
       } else if (isBnode(input[x])) {
         $rdf.log.info(input[x] + ' was identified as a bnode.')
-        res[x] = kb.bnode()
+        res[x] = new $rdf.BlankNode()
       } else if (isSymbol(input[x])) {
         $rdf.log.info(input[x] + ' was identified as a symbol.')
-        res[x] = kb.sym(removeBrackets(input[x]))
+        res[x] = new $rdf.NamedNode(removeBrackets(input[x]))
       } else if (isPrefixedSymbol(input[x])) {
         $rdf.log.info(input[x] + ' was identified as a prefixed symbol')
         if (prefixes[getPrefix(input[x])]) {
-          res[x] = kb.sym(input[x] = prefixes[getPrefix(input[x])] +
+          res[x] = new $rdf.NamedNode(input[x] = prefixes[getPrefix(input[x])] +
             getSuffix(input[x]))
         } else {
           $rdf.log.error('SPARQL error: ' + input[x] + ' with prefix ' +
@@ -457,7 +457,7 @@ $rdf.SPARQLToQuery = function (SPARQL, testMode, kb) {
 
   function setOptional (terms, pat) {
     $rdf.log.debug('Optional query: ' + terms + ' not yet implemented.')
-    var opt = kb.formula()
+    var opt = new $rdf.Formula()
     setWhere(terms, opt)
     pat.optional.push(opt)
   }
@@ -564,24 +564,14 @@ $rdf.SPARQLToQuery = function (SPARQL, testMode, kb) {
 
   setWhere(sp.slice(whereLoc + 2, sp.length - 1), q.pat)
 
-  if (testMode) {
-    return q
-  }
-
-  for (var x in q.pat.statements) {
-    var st = q.pat.statements[x]
-    if (st.subject.termType === 'symbol') {
-      /* && sf.isPending(st.subject.uri) */ // This doesn't work.
-      // sf.requestURI(st.subject.uri,"sparql:"+st.subject) Kenny: I remove these two
-      if ($rdf.fetcher) {
-        $rdf.fetcher.lookUpThing(st.subject, 'sparql:' + st.subject)
+  if (fetcher) {
+    for (var x in q.pat.statements) {
+      var st = q.pat.statements[x]
+      if (st.subject.termType === 'symbol') {
+        fetcher.lookUpThing(st.subject, 'sparql:' + st.subject)
       }
-    }
-    if (st.object.termType === 'symbol') {
-      /* && sf.isPending(st.object.uri) */
-      // sf.requestURI(st.object.uri,"sparql:"+st.object)
-      if ($rdf.fetcher) {
-        $rdf.fetcher.lookUpThing(st.object, 'sparql:' + st.object)
+      if (st.object.termType === 'symbol') {
+        fetcher.lookUpThing(st.object, 'sparql:' + st.object)
       }
     }
   }
