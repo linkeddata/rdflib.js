@@ -1,57 +1,31 @@
 # rdflib.js Makefile
 
-R=util.js uri.js term.js rdfparser.js n3parser.js identity.js \
-	patchParser.js query.js sparql.js update.js jsonparser.js serialize.js updatesVia.js web_browserify.js
+R=util.js uri.js term.js rdfparser.js n3parser.js identity.js parseRDFa.js  \
+	patchParser.js query.js sparql.js update.js jsonparser.js serialize.js \
+	updatesVia.js web.js
 
-A=util.js uri.js term.js rdfparser.js n3parser.js identity.js \
-	parseRDFa.js  \
-	patchParser.js query.js sparql.js update.js jsonparser.js serialize.js updatesVia.js web_browserify.js
-
-targets=$(addprefix dist/, rdflib.js rdflib-rdfa.js)
-coffeejs=$(patsubst %.coffee,%.js,$(wildcard *.coffee))
+targets=$(addprefix dist/, rdflib-node.js)
+# coffeejs=$(patsubst %.coffee,%.js,$(wildcard *.coffee))
 
 PATH:=./node_modules/.bin:${PATH}
 
-all: web_browserify.js dist $(targets)
+all: dist $(targets) dist/rdflib.js
 
-web_browserify.js: web.js
-	browserify web.js -o web_browserify.js
+size:
+	wc $R
+
+dist/rdflib.js: dist/rdflib-node.js
+	browserify -r ./dist/rdflib-node.js:rdflib --exclude "xmlhttprequest" --standalone "\$$rdf" > dist/rdflib.js
 
 dist:
 	mkdir -p dist
 
-alpha: dist/rdflib-alpha.js
-	echo
-
-dist/rdflib-alpha.js: $R module.js
+dist/rdflib-node.js: $R module.js
+# dist/rdflib.js: $R module.js
 	echo "(function(root, undef) {" > $@
 	cat $R module.js >> $@
 	date '+$$rdf.buildTime = "%Y-%m-%dT%H:%M:%S";'  >> $@
-	echo "})(this);" >> $@
-
-dist/rdflib.js: $R module.js
-	echo "(function(root, undef) {" > $@
-	cat $R module.js >> $@
-	date '+$$rdf.buildTime = "%Y-%m-%dT%H:%M:%S";'  >> $@
-	echo "})(this);" >> $@
-
-J=dist
-# X=jquery.uri.js jquery.xmlns.js
-
-dist/rdflib-rdfa.js: $X $A module.js
-	echo "(function(root, undef) {" > $@
-	date '+$$rdf.buildTime = "%Y-%m-%dT%H:%M:%S";'  >> $@
-	cat $A module.js >> $@
-	echo "})(this);" >> $@
-
-# This URL rotted and we don't update this anymore 2015-02
-#jquery.uri.js:
-#	wget http://rdfquery.googlecode.com/svn-history/trunk/jquery.uri.js -O $@
-#
-#jquery.xmlns.js:
-#	wget http://rdfquery.googlecode.com/svn-history/trunk/jquery.xmlns.js -O $@
-
-upstream: jquery.uri.js jquery.xmlns.js
+	echo '})(this);' >> $@
 
 .PHONY: detach gh-pages
 
@@ -71,8 +45,8 @@ gh-pages: detach
 	git checkout master
 
 clean:
-	rm -f $(targets) $(coffeejs)
-	rm -f web_browserify.js
+	rm -f $(targets)
+	rm -f dist/rdflib.js
 
 status:
 	@pwd
@@ -84,17 +58,16 @@ writable:
 
 # npm install -g coffee-script nodeunit
 
-SRC=$(wildcard *.coffee */*.coffee)
-LIB=$(SRC:%.coffee=%.js)
+# SRC=$(wildcard *.coffee */*.coffee)
+# LIB=$(SRC:%.coffee=%.js)
 
-%.js: %.coffee
-	coffee -bp $< > $@
+# %.js: %.coffee
+# 	coffee -bp $< > $@
 
-.PHONY: coffee
-coffee: $(LIB)
+# .PHONY: coffee
+# coffee: $(LIB)
 
 .PHONY: test
-test: $(LIB)
+test: # $(LIB)
 	@nodeunit tests/*.js
 	make -C tests/serialize
-
