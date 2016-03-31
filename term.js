@@ -95,15 +95,13 @@ $rdf.NamedNode = (function (superClass) {
     }
   }
 
+  // $rdf node for the containing directory, ending in slash.
   NamedNode.prototype.dir = function () {
-    var p
-    var str
-    str = this.uri.split('#')[0]
-    p = str.lastIndexOf('/')
-    if (p < 0) {
-      throw new Error('dir: No slash in path: ' + str)
-    }
-    return new $rdf.NamedNode(str.slice(0, p))
+    var str = this.uri.split('#')[0]
+    var p = str.slice(0, -1).lastIndexOf('/')
+    var q = str.indexOf('//')
+    if ((q >= 0 && p < q + 2) || p < 0) return null
+    return new $rdf.NamedNode(str.slice(0, p + 1))
   }
 
   NamedNode.prototype.sameTerm = function (other) {
@@ -163,7 +161,7 @@ $rdf.BlankNode = (function (superClass) {
 
   function BlankNode (id) {
     this.id = $rdf.NextId++
-    this.value = id ? id : this.id.toString()
+    this.value = id || this.id.toString()
   }
 
   BlankNode.prototype.termType = 'bnode'
