@@ -483,7 +483,7 @@ $rdf.Fetcher = function (store, timeout, async) {
       if (obj.uri === xhr.original.uri) return
       predicate = ns.rdfs('seeAlso')
     } else if (rel === 'type') {
-      predicate = tabulator.ns.rdf('type')
+      predicate = $rdf.sym('http://www.w3.org/1999/02/22-rdf-syntax-ns#type')
     } else {
       // See https://www.iana.org/assignments/link-relations/link-relations.xml
       // Alas not yet in RDF yet for each predicate
@@ -560,13 +560,13 @@ $rdf.Fetcher = function (store, timeout, async) {
     return new Promise(function (resolve, reject) {
       var xhr = $rdf.Util.XMLHTTPFactory()
       xhr.options = options
-      if (!options.noMeta) {
+      if (!options.noMeta && typeof tabulator !== 'undefined') {
         fetcher.saveRequestMetadata(xhr, tabulator.kb, uri)
       }
       xhr.onreadystatechange = function () {
         if (xhr.readyState === 4) { // NOte a 404 can be not afailure
           var ok = (!xhr.status || (xhr.status >= 200 && xhr.status < 300))
-          if (!options.noMeta) {
+          if (!options.noMeta && typeof tabulator !== 'undefined') {
             fetcher.saveResponseMetadata(xhr, tabulator.kb)
           }
           if (ok) resolve(xhr)
