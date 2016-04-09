@@ -3,18 +3,12 @@
 * Utility functions for $rdf and the $rdf object itself
  */
 
-if (typeof tabulator !== 'undefined' &&
-  typeof tabulator.isExtension === 'undefined') {
+if (typeof tabulator !== 'undefined' && tabulator.isExtension) {
   tabulator.isExtension = false // stand-alone library
 }
 if (typeof $rdf === 'undefined') {
   var $rdf = {}
 } else {
-  // dump("Internal error: RDF libray has already been loaded\n")
-  // dump("Internal error: $rdf type is "+typeof $rdf+"\n")
-  // dump("Internal error: $rdf.log type is "+typeof $rdf.log+"\n")
-  // dump("Internal error: $rdf.log.error type is "+typeof $rdf.log.error+"\n")
-  // return $rdf
   throw new Error('Internal error: RDF libray has already been loaded: $rdf already exists')
 }
 
@@ -1168,10 +1162,6 @@ $rdf.Formula = (function (superClass) {
   Formula.prototype.sym = function (uri, name) {
     if (name) {
       throw new Error('This feature (kb.sym with 2 args) is removed. Do not assume prefix mappings.')
-      // if (!$rdf.ns[uri]) {
-      //   throw new Error('The prefix ' + uri + ' is not set in the API')
-      // }
-      // uri = $rdf.ns[uri] + name
     }
     return new $rdf.NamedNode(uri)
   }
@@ -6952,7 +6942,7 @@ $rdf.SPARQLResultsInterpreter = function (xml, callback, doneCallback) {
 // 2010-08-08 TimBL folded in Kenny's WEBDAV
 // 2010-12-07 TimBL addred local file write code
 
-$rdf.sparqlUpdate = (function () {
+$rdf.UpdateManager = (function () {
   var sparql = function (store) {
     this.store = store
     this.ifps = {}
@@ -7089,7 +7079,7 @@ $rdf.sparqlUpdate = (function () {
   // A list of all bnodes occuring in a list of statements
   sparql.prototype._statement_array_bnodes = function (sts) {
     var bnodes = []
-    for (var i = 0; i < sts.length;i++) {
+    for (var i = 0; i < sts.length; i++) {
       bnodes = bnodes.concat(this._statement_bnodes(sts[i]))
     }
     bnodes.sort() // in place sort - result may have duplicates
@@ -7285,7 +7275,7 @@ $rdf.sparqlUpdate = (function () {
 
     if (st instanceof Array) {
       var stText = ''
-      for (var i = 0;i < st.length;i++) stText += st[i] + '\n'
+      for (var i = 0; i < st.length; i++) stText += st[i] + '\n'
       query += 'INSERT DATA { ' + stText + ' }\n'
     } else {
       query += 'INSERT DATA { ' +
@@ -7303,7 +7293,7 @@ $rdf.sparqlUpdate = (function () {
 
     if (st instanceof Array) {
       var stText = ''
-      for (var i = 0;i < st.length;i++) stText += st[i] + '\n'
+      for (var i = 0; i < st.length; i++) stText += st[i] + '\n'
       query += 'DELETE DATA { ' + stText + ' }\n'
     } else {
       query += 'DELETE DATA { ' +
@@ -7345,8 +7335,8 @@ $rdf.sparqlUpdate = (function () {
     control.upstreamCount = 0
   }
 
-  sparql.prototype.getUpdatesVia = function (doc) {
-    var linkHeaders = tabulator.fetcher.getHeader(doc, 'updates-via')
+  sparql.prototype.getUpdatesVia = function (doc, kb) {
+    var linkHeaders = kb.fetcher.getHeader(doc, 'updates-via')
     if (!linkHeaders || !linkHeaders.length) return null
     return linkHeaders[0].trim()
   }
@@ -7404,8 +7394,10 @@ $rdf.sparqlUpdate = (function () {
   // Alternative is addDownstreamChangeListener(), where you do not
   // have to do the reload yourslf. Do mot mix them.
   //
-  sparql.prototype.setRefreshHandler = function (doc, handler) {
-    var wssURI = this.getUpdatesVia(doc) // relative
+  //  kb contains the HTTP  metadata from prefvious operations
+  //
+  sparql.prototype.setRefreshHandler = function (doc, kb, handler) {
+    var wssURI = this.getUpdatesVia(doc, kb) // relative
     var theHandler = handler
     var self = this
     var updater = this
@@ -7497,294 +7489,278 @@ $rdf.sparqlUpdate = (function () {
   //  - callback is called as callback(uri, success, errorbody)
   //
   sparql.prototype.update = function (deletions, insertions, callback) {
-    var kb = this.store
-    var ds = !deletions ? []
-      : deletions instanceof $rdf.IndexedFormula ? deletions.statements
-        : deletions instanceof Array ? deletions : [ deletions ]
-    var is = !insertions ? []
-      : insertions instanceof $rdf.IndexedFormula ? insertions.statements
-        : insertions instanceof Array ? insertions : [ insertions ]
-    if (!(ds instanceof Array)) {
-      throw new Error('Type Error ' + (typeof ds) + ': ' + ds)
-    }
-    if (!(is instanceof Array)) {
-      throw new Error('Type Error ' + (typeof is) + ': ' + is)
-    }
-    if (ds.length === 0 && is.length === 0) {
-      return callback(null, true) // success -- nothing needed to be done.
-    }
-    var doc = ds.length ? ds[0].why : is[0].why
-    var control = this.patchControlFor(doc)
-    var startTime = Date.now()
+    try {
+      var kb = this.store
+      var ds = !deletions ? []
+        : deletions instanceof $rdf.IndexedFormula ? deletions.statements
+          : deletions instanceof Array ? deletions : [ deletions ]
+      var is = !insertions ? []
+        : insertions instanceof $rdf.IndexedFormula ? insertions.statements
+          : insertions instanceof Array ? insertions : [ insertions ]
+      if (!(ds instanceof Array)) {
+        throw new Error('Type Error ' + (typeof ds) + ': ' + ds)
+      }
+      if (!(is instanceof Array)) {
+        throw new Error('Type Error ' + (typeof is) + ': ' + is)
+      }
+      if (ds.length === 0 && is.length === 0) {
+        return callback(null, true) // success -- nothing needed to be done.
+      }
+      var doc = ds.length ? ds[0].why : is[0].why
+      var control = this.patchControlFor(doc)
+      var startTime = Date.now()
 
-    var props = ['subject', 'predicate', 'object', 'why']
-    var verbs = ['insert', 'delete']
-    var clauses = { 'delete': ds, 'insert': is }
-    verbs.map(function (verb) {
-      clauses[verb].map(function (st) {
-        if (!doc.sameTerm(st.why)) {
-          throw new Error('update: destination ' + doc +
-            ' inconsistent with delete quad ' + st.why)
-        }
-        props.map(function (prop) {
-          if (typeof st[prop] === 'undefined') {
-            throw new Error('update: undefined ' + prop + ' of statement.')
+      var props = ['subject', 'predicate', 'object', 'why']
+      var verbs = ['insert', 'delete']
+      var clauses = { 'delete': ds, 'insert': is }
+      verbs.map(function (verb) {
+        clauses[verb].map(function (st) {
+          if (!doc.sameTerm(st.why)) {
+            throw new Error('update: destination ' + doc +
+              ' inconsistent with delete quad ' + st.why)
           }
+          props.map(function (prop) {
+            if (typeof st[prop] === 'undefined') {
+              throw new Error('update: undefined ' + prop + ' of statement.')
+            }
+          })
         })
       })
-    })
 
-    /*
-    })
-
-    ds.map(function(st){
-        if (!doc.sameTerm(st.why)) {
-            throw "Update: destination "+doc+" inconsistent with delete quad "+st.why
-        }
-        props.map(function(prop){
-            if (typeof ds[prop] === 'undefined') {
-                throw "Update: undefined "+prop+" of statement."
+      var protocol = this.editable(doc.uri, kb)
+      if (!protocol) {
+        throw new Error("Can't make changes in uneditable " + doc)
+      }
+      var i
+      var newSts
+      var documentString
+      var sz
+      if (protocol.indexOf('SPARQL') >= 0) {
+        var bnodes = []
+        if (ds.length) bnodes = this._statement_array_bnodes(ds)
+        if (is.length) bnodes = bnodes.concat(this._statement_array_bnodes(is))
+        var context = this._bnode_context(bnodes, doc)
+        var whereClause = this._context_where(context)
+        var query = ''
+        if (whereClause.length) { // Is there a WHERE clause?
+          if (ds.length) {
+            query += 'DELETE { '
+            for (i = 0; i < ds.length; i++) {
+              query += this.anonymizeNT(ds[i]) + '\n'
             }
-        })
-
-    })
-    is.map(function(st){i
-        f (!doc.sameTerm(st.why))
-            throw "sparql update: destination = "+doc+" inconsistent with insert st.why ="+st.why
-        }
-    })
-    */
-
-    var protocol = this.editable(doc.uri, kb)
-    if (!protocol) {
-      throw new Error("Can't make changes in uneditable " + doc)
-    }
-    var i
-    var newSts
-    var documentString
-    var sz
-    if (protocol.indexOf('SPARQL') >= 0) {
-      var bnodes = []
-      if (ds.length) bnodes = this._statement_array_bnodes(ds)
-      if (is.length) bnodes = bnodes.concat(this._statement_array_bnodes(is))
-      var context = this._bnode_context(bnodes, doc)
-      var whereClause = this._context_where(context)
-      var query = ''
-      if (whereClause.length) { // Is there a WHERE clause?
-        if (ds.length) {
-          query += 'DELETE { '
-          for (i = 0; i < ds.length; i++) {
-            query += this.anonymizeNT(ds[i]) + '\n'
+            query += ' }\n'
           }
-          query += ' }\n'
-        }
-        if (is.length) {
-          query += 'INSERT { '
-          for (i = 0; i < is.length; i++) {
-            query += this.anonymizeNT(is[i]) + '\n'
-          }
-          query += ' }\n'
-        }
-        query += whereClause
-      } else { // no where clause
-        if (ds.length) {
-          query += 'DELETE DATA { '
-          for (i = 0; i < ds.length; i++) {
-            query += this.anonymizeNT(ds[i]) + '\n'
-          }
-          query += ' } \n'
-        }
-        if (is.length) {
-          if (ds.length) query += ' ; '
-          query += 'INSERT DATA { '
-          for (i = 0; i < is.length; i++) {
-            query += this.anonymizeNT(is[i]) + '\n'
-          }
-          query += ' }\n'
-        }
-      }
-      // Track pending upstream patches until they have fnished their callback
-      control.pendingUpstream = control.pendingUpstream ? control.pendingUpstream + 1 : 1
-      if (typeof control.upstreamCount !== 'undefined') {
-        control.upstreamCount += 1 // count changes we originated ourselves
-      }
-
-      this._fire(doc.uri, query,
-        function (uri, success, body, xhr) {
-          xhr.elapsedTime_ms = Date.now() - startTime
-          console.log('    sparql: Return ' + (success ? 'success' : 'FAILURE ' + xhr.status) +
-            ' elapsed ' + xhr.elapsedTime_ms + 'ms')
-          if (success) {
-            try {
-              kb.remove(ds)
-            } catch (e) {
-              success = false
-              body = 'Remote Ok BUT error deleting ' + ds.length + ' from store!!! ' + e
-            } // Add in any case -- help recover from weirdness??
-            for (var i = 0; i < is.length;i++) {
-              kb.add(is[i].subject, is[i].predicate, is[i].object, doc)
+          if (is.length) {
+            query += 'INSERT { '
+            for (i = 0; i < is.length; i++) {
+              query += this.anonymizeNT(is[i]) + '\n'
             }
+            query += ' }\n'
           }
-
-          callback(uri, success, body, xhr)
-          control.pendingUpstream -= 1
-          // When upstream patches have been sent, reload state if downstream waiting
-          if (control.pendingUpstream === 0 && control.downstreamAction) {
-            var downstreamAction = control.downstreamAction
-            delete control.downstreamAction
-            console.log('delayed downstream action:')
-            downstreamAction(doc)
+          query += whereClause
+        } else { // no where clause
+          if (ds.length) {
+            query += 'DELETE DATA { '
+            for (i = 0; i < ds.length; i++) {
+              query += this.anonymizeNT(ds[i]) + '\n'
+            }
+            query += ' } \n'
           }
-        })
-    } else if (protocol.indexOf('DAV') >= 0) {
-      // The code below is derived from Kenny's UpdateCenter.js
-      documentString
-      var request = kb.any(doc, this.ns.link('request'))
-      if (!request) {
-        throw new Error('No record of our HTTP GET request for document: ' +
-          doc)
-      } // should not happen
-      var response = kb.any(request, this.ns.link('response'))
-      if (!response) {
-        return null // throw "No record HTTP GET response for document: "+doc
-      }
-      var content_type = kb.the(response, this.ns.httph('content-type')).value
+          if (is.length) {
+            if (ds.length) query += ' ; '
+            query += 'INSERT DATA { '
+            for (i = 0; i < is.length; i++) {
+              query += this.anonymizeNT(is[i]) + '\n'
+            }
+            query += ' }\n'
+          }
+        }
+        // Track pending upstream patches until they have fnished their callback
+        control.pendingUpstream = control.pendingUpstream ? control.pendingUpstream + 1 : 1
+        if (typeof control.upstreamCount !== 'undefined') {
+          control.upstreamCount += 1 // count changes we originated ourselves
+        }
 
-      // prepare contents of revised document
-      newSts = kb.statementsMatching(undefined, undefined, undefined, doc).slice() // copy!
-      for (i = 0; i < ds.length; i++) {
-        $rdf.Util.RDFArrayRemove(newSts, ds[i])
-      }
-      for (i = 0; i < is.length; i++) {
-        newSts.push(is[i])
-      }
+        this._fire(doc.uri, query,
+          function (uri, success, body, xhr) {
+            xhr.elapsedTime_ms = Date.now() - startTime
+            console.log('    sparql: Return ' + (success ? 'success' : 'FAILURE ' + xhr.status) +
+              ' elapsed ' + xhr.elapsedTime_ms + 'ms')
+            if (success) {
+              try {
+                kb.remove(ds)
+              } catch (e) {
+                success = false
+                body = 'Remote Ok BUT error deleting ' + ds.length + ' from store!!! ' + e
+              } // Add in any case -- help recover from weirdness??
+              for (var i = 0; i < is.length; i++) {
+                kb.add(is[i].subject, is[i].predicate, is[i].object, doc)
+              }
+            }
 
-      // serialize to te appropriate format
-      sz = $rdf.Serializer(kb)
-      sz.suggestNamespaces(kb.namespaces)
-      sz.setBase(doc.uri) // ?? beware of this - kenny (why? tim)
-      switch (content_type) {
-        case 'application/rdf+xml':
-          documentString = sz.statementsToXML(newSts)
-          break
-        case 'text/n3':
-        case 'text/turtle':
-        case 'application/x-turtle': // Legacy
-        case 'application/n3': // Legacy
-          documentString = sz.statementsToN3(newSts)
-          break
-        default:
-          throw new Error('Content-type ' + content_type + ' not supported for data write')
-      }
+            callback(uri, success, body, xhr)
+            control.pendingUpstream -= 1
+            // When upstream patches have been sent, reload state if downstream waiting
+            if (control.pendingUpstream === 0 && control.downstreamAction) {
+              var downstreamAction = control.downstreamAction
+              delete control.downstreamAction
+              console.log('delayed downstream action:')
+              downstreamAction(doc)
+            }
+          })
+      } else if (protocol.indexOf('DAV') >= 0) {
+        // The code below is derived from Kenny's UpdateCenter.js
+        documentString
+        var request = kb.any(doc, this.ns.link('request'))
+        if (!request) {
+          throw new Error('No record of our HTTP GET request for document: ' +
+            doc)
+        } // should not happen
+        var response = kb.any(request, this.ns.link('response'))
+        if (!response) {
+          return null // throw "No record HTTP GET response for document: "+doc
+        }
+        var content_type = kb.the(response, this.ns.httph('content-type')).value
 
-      // Write the new version back
+        // prepare contents of revised document
+        newSts = kb.statementsMatching(undefined, undefined, undefined, doc).slice() // copy!
+        for (i = 0; i < ds.length; i++) {
+          $rdf.Util.RDFArrayRemove(newSts, ds[i])
+        }
+        for (i = 0; i < is.length; i++) {
+          newSts.push(is[i])
+        }
 
-      var candidateTarget = kb.the(response, this.ns.httph('content-location'))
-      if (candidateTarget) {
-        targetURI = $rdf.uri.join(candidateTarget.value, targetURI)
-      }
-      var xhr = $rdf.Util.XMLHTTPFactory()
-      xhr.options = {}
-      xhr.onreadystatechange = function () {
-        if (xhr.readyState === 4) {
-          // formula from sparqlUpdate.js, what about redirects?
-          var success = (!xhr.status || (xhr.status >= 200 && xhr.status < 300))
-          if (success) {
-            for (var i = 0; i < ds.length; i++) {
+        // serialize to te appropriate format
+        sz = $rdf.Serializer(kb)
+        sz.suggestNamespaces(kb.namespaces)
+        sz.setBase(doc.uri) // ?? beware of this - kenny (why? tim)
+        switch (content_type) {
+          case 'application/rdf+xml':
+            documentString = sz.statementsToXML(newSts)
+            break
+          case 'text/n3':
+          case 'text/turtle':
+          case 'application/x-turtle': // Legacy
+          case 'application/n3': // Legacy
+            documentString = sz.statementsToN3(newSts)
+            break
+          default:
+            throw new Error('Content-type ' + content_type + ' not supported for data write')
+        }
+
+        // Write the new version back
+
+        var candidateTarget = kb.the(response, this.ns.httph('content-location'))
+        var targetURI
+        if (candidateTarget) {
+          targetURI = $rdf.uri.join(candidateTarget.value, targetURI)
+        }
+        var xhr = $rdf.Util.XMLHTTPFactory()
+        xhr.options = {}
+        xhr.onreadystatechange = function () {
+          if (xhr.readyState === 4) {
+            // formula from sparqlUpdate.js, what about redirects?
+            var success = (!xhr.status || (xhr.status >= 200 && xhr.status < 300))
+            if (success) {
+              for (var i = 0; i < ds.length; i++) {
+                kb.remove(ds[i])
+              }
+              for (i = 0; i < is.length; i++) {
+                kb.add(is[i].subject, is[i].predicate, is[i].object, doc)
+              }
+            }
+            callback(doc.uri, success, xhr.responseText)
+          }
+        }
+        xhr.open('PUT', targetURI, true)
+        // assume the server does PUT content-negotiation.
+        xhr.setRequestHeader('Content-type', content_type) // OK?
+        xhr.send(documentString)
+      } else {
+        if (protocol.indexOf('LOCALFILE') >= 0) {
+          try {
+            console.log('Writing back to local file\n')
+            // See http://simon-jung.blogspot.com/2007/10/firefox-extension-file-io.html
+            // prepare contents of revised document
+            newSts = kb.statementsMatching(undefined, undefined, undefined, doc).slice() // copy!
+            for (i = 0; i < ds.length; i++) {
+              $rdf.Util.RDFArrayRemove(newSts, ds[i])
+            }
+            for (i = 0; i < is.length; i++) {
+              newSts.push(is[i])
+            }
+            // serialize to the appropriate format
+            documentString
+            sz = $rdf.Serializer(kb)
+            sz.suggestNamespaces(kb.namespaces)
+            sz.setBase(doc.uri) // ?? beware of this - kenny (why? tim)
+            var dot = doc.uri.lastIndexOf('.')
+            if (dot < 1) {
+              throw new Error('Rewriting file: No filename extension: ' + doc.uri)
+            }
+            var ext = doc.uri.slice(dot + 1)
+            switch (ext) {
+              case 'rdf':
+              case 'owl': // Just my experence   ...@@ we should keep the format in which it was parsed
+              case 'xml':
+                documentString = sz.statementsToXML(newSts)
+                break
+              case 'n3':
+              case 'nt':
+              case 'ttl':
+                documentString = sz.statementsToN3(newSts)
+                break
+              default:
+                throw new Error('File extension .' + ext + ' not supported for data write')
+            }
+            // Write the new version back
+            // create component for file writing
+            console.log('Writing back: <<<' + documentString + '>>>')
+            var filename = doc.uri.slice(7) // chop off   file://  leaving /path
+            // console.log("Writeback: Filename: "+filename+"\n")
+            var file = Components.classes['@mozilla.org/file/local;1']
+              .createInstance(Components.interfaces.nsILocalFile)
+            file.initWithPath(filename)
+            if (!file.exists()) {
+              throw new Error('Rewriting file <' + doc.uri +
+                '> but it does not exist!')
+            }
+            // {
+            // file.create( Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 420)
+            // }
+            // create file output stream and use write/create/truncate mode
+            // 0x02 writing, 0x08 create file, 0x20 truncate length if exist
+            var stream = Components.classes['@mozilla.org/network/file-output-stream;1']
+              .createInstance(Components.interfaces.nsIFileOutputStream)
+
+            // Various JS systems object to 0666 in struct mode as dangerous
+            stream.init(file, 0x02 | 0x08 | 0x20, parseInt('0666', 8), 0)
+
+            // write data to file then close output stream
+            stream.write(documentString, documentString.length)
+            stream.close()
+
+            for (i = 0; i < ds.length; i++) {
               kb.remove(ds[i])
             }
             for (i = 0; i < is.length; i++) {
               kb.add(is[i].subject, is[i].predicate, is[i].object, doc)
             }
+            callback(doc.uri, true, '') // success!
+          } catch (e) {
+            callback(doc.uri, false,
+              'Exception trying to write back file <' + doc.uri + '>\n' +
+              tabulator.Util.stackString(e))
           }
-          callback(doc.uri, success, xhr.responseText)
+        } else {
+          throw new Error("Unhandled edit method: '" + protocol + "' for " + doc)
         }
       }
-      xhr.open('PUT', targetURI, true)
-      // assume the server does PUT content-negotiation.
-      xhr.setRequestHeader('Content-type', content_type) // OK?
-      xhr.send(documentString)
-    } else {
-      if (protocol.indexOf('LOCALFILE') >= 0) {
-        try {
-          console.log('Writing back to local file\n')
-          // See http://simon-jung.blogspot.com/2007/10/firefox-extension-file-io.html
-          // prepare contents of revised document
-          newSts = kb.statementsMatching(undefined, undefined, undefined, doc).slice() // copy!
-          for (i = 0; i < ds.length; i++) {
-            $rdf.Util.RDFArrayRemove(newSts, ds[i])
-          }
-          for (i = 0; i < is.length; i++) {
-            newSts.push(is[i])
-          }
-          // serialize to the appropriate format
-          documentString
-          sz = $rdf.Serializer(kb)
-          sz.suggestNamespaces(kb.namespaces)
-          sz.setBase(doc.uri) // ?? beware of this - kenny (why? tim)
-          var dot = doc.uri.lastIndexOf('.')
-          if (dot < 1) {
-            throw new Error('Rewriting file: No filename extension: ' + doc.uri)
-          }
-          var ext = doc.uri.slice(dot + 1)
-          switch (ext) {
-            case 'rdf':
-            case 'owl': // Just my experence   ...@@ we should keep the format in which it was parsed
-            case 'xml':
-              documentString = sz.statementsToXML(newSts)
-              break
-            case 'n3':
-            case 'nt':
-            case 'ttl':
-              documentString = sz.statementsToN3(newSts)
-              break
-            default:
-              throw new Error('File extension .' + ext + ' not supported for data write')
-          }
-          // Write the new version back
-          // create component for file writing
-          dump('Writing back: <<<' + documentString + '>>>\n')
-          var filename = doc.uri.slice(7) // chop off   file://  leaving /path
-          // console.log("Writeback: Filename: "+filename+"\n")
-          var file = Components.classes['@mozilla.org/file/local;1']
-            .createInstance(Components.interfaces.nsILocalFile)
-          file.initWithPath(filename)
-          if (!file.exists()) {
-            throw new Error('Rewriting file <' + doc.uri +
-              '> but it does not exist!')
-          }
-          // {
-          // file.create( Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 420)
-          // }
-          // create file output stream and use write/create/truncate mode
-          // 0x02 writing, 0x08 create file, 0x20 truncate length if exist
-          var stream = Components.classes['@mozilla.org/network/file-output-stream;1']
-            .createInstance(Components.interfaces.nsIFileOutputStream)
-
-          // Various JS systems object to 0666 in struct mode as dangerous
-          stream.init(file, 0x02 | 0x08 | 0x20, parseInt('0666', 8), 0)
-
-          // write data to file then close output stream
-          stream.write(documentString, documentString.length)
-          stream.close()
-
-          for (i = 0; i < ds.length; i++) {
-            kb.remove(ds[i])
-          }
-          for (i = 0; i < is.length; i++) {
-            kb.add(is[i].subject, is[i].predicate, is[i].object, doc)
-          }
-          callback(doc.uri, true, '') // success!
-        } catch (e) {
-          callback(doc.uri, false,
-            'Exception trying to write back file <' + doc.uri + '>\n' +
-            tabulator.Util.stackString(e))
-        }
-      } else {
-        throw new Error("Unhandled edit method: '" + protocol + "' for " + doc)
-      }
+    } catch (e) {
+      callback(undefined, false, 'Exception in update: ' + e)
     }
-  }
+  } // wnd update
 
   // This suitable for an inital creation of a document
   //
@@ -7861,7 +7837,7 @@ $rdf.sparqlUpdate = (function () {
           xhr.onErrorWasCalled + ' status: ' + xhr.status)
         callback(false, 'Non-HTTP error reloading data: ' + body, xhr)
       } else {
-        elapsedTime_ms = Date.now() - startTime
+        var elapsedTime_ms = Date.now() - startTime
         if (!doc.reloadTime_total) doc.reloadTime_total = 0
         if (!doc.reloadTime_count) doc.reloadTime_count = 0
         doc.reloadTime_total += elapsedTime_ms
@@ -7894,7 +7870,7 @@ $rdf.sparqlUpdate = (function () {
           ' out of total statements ' + kb.statements.length)
         kb.remove(sts1)
         kb.add(sts2)
-        elapsedTime_ms = Date.now() - startTime
+        var elapsedTime_ms = Date.now() - startTime
         if (sts2.length === 0) {
           console.log('????????????????? 0000000')
         }
@@ -9654,7 +9630,7 @@ $rdf.Fetcher = function (store, timeout, async) {
       if (obj.uri === xhr.original.uri) return
       predicate = ns.rdfs('seeAlso')
     } else if (rel === 'type') {
-      predicate = tabulator.ns.rdf('type')
+      predicate = $rdf.sym('http://www.w3.org/1999/02/22-rdf-syntax-ns#type')
     } else {
       // See https://www.iana.org/assignments/link-relations/link-relations.xml
       // Alas not yet in RDF yet for each predicate
@@ -9731,13 +9707,13 @@ $rdf.Fetcher = function (store, timeout, async) {
     return new Promise(function (resolve, reject) {
       var xhr = $rdf.Util.XMLHTTPFactory()
       xhr.options = options
-      if (!options.noMeta) {
+      if (!options.noMeta && typeof tabulator !== 'undefined') {
         fetcher.saveRequestMetadata(xhr, tabulator.kb, uri)
       }
       xhr.onreadystatechange = function () {
         if (xhr.readyState === 4) { // NOte a 404 can be not afailure
           var ok = (!xhr.status || (xhr.status >= 200 && xhr.status < 300))
-          if (!options.noMeta) {
+          if (!options.noMeta && typeof tabulator !== 'undefined') {
             fetcher.saveResponseMetadata(xhr, tabulator.kb)
           }
           if (ok) resolve(xhr)
@@ -11007,5 +10983,5 @@ if (typeof exports !== 'undefined') {
   // Leak a global regardless of module system
   root['$rdf'] = $rdf
 }
-$rdf.buildTime = "2016-03-21T17:46:08";
+$rdf.buildTime = "2016-04-09T08:32:18";
 })(this);

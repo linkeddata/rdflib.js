@@ -2,18 +2,12 @@
 * Utility functions for $rdf and the $rdf object itself
  */
 
-if (typeof tabulator !== 'undefined' &&
-  typeof tabulator.isExtension === 'undefined') {
+if (typeof tabulator !== 'undefined' && tabulator.isExtension) {
   tabulator.isExtension = false // stand-alone library
 }
 if (typeof $rdf === 'undefined') {
   var $rdf = {}
 } else {
-  // dump("Internal error: RDF libray has already been loaded\n")
-  // dump("Internal error: $rdf type is "+typeof $rdf+"\n")
-  // dump("Internal error: $rdf.log type is "+typeof $rdf.log+"\n")
-  // dump("Internal error: $rdf.log.error type is "+typeof $rdf.log.error+"\n")
-  // return $rdf
   throw new Error('Internal error: RDF libray has already been loaded: $rdf already exists')
 }
 
