@@ -9,13 +9,16 @@ targets=$(addprefix dist/, rdflib-node.js)
 
 PATH:=./node_modules/.bin:${PATH}
 
-all: dist $(targets) dist/rdflib.js
+all: dist $(targets) dist/rdflib.js dist/rdflib.min.js
 
 size:
 	wc $R
 
 dist/rdflib.js: dist/rdflib-node.js
 	browserify -r ./dist/rdflib-node.js:rdflib --exclude "xmlhttprequest" --standalone "\$$rdf" > dist/rdflib.js
+
+dist/rdflib.min.js: dist/rdflib-node.js
+	browserify -r ./dist/rdflib-node.js:rdflib --exclude "xmlhttprequest" --standalone "\$$rdf" -d -p [minifyify --no-map] > dist/rdflib.min.js
 
 dist:
 	mkdir -p dist
@@ -46,12 +49,15 @@ gh-pages: detach
 
 clean:
 	rm -f $(targets)
-	rm -f dist/rdflib.js
+	rm -f dist/*
+
 
 status:
 	@pwd
 	@git branch -v
 	@git status -s
+
+minify: dist/rdflib.min.js
 
 writable:
 	@sed -i -re 's/git:\/\/github.com\//git@github.com:/' .git/config

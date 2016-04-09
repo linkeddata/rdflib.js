@@ -23,6 +23,7 @@
   },
   "devDependencies": {
     "browserify": "^13.0.0",
+    "minifyify": "^7.3.2",
     "nodeunit": "^0.9.1"
   },
   "scripts": {
