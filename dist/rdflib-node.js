@@ -3,9 +3,6 @@
 * Utility functions for $rdf and the $rdf object itself
  */
 
-if (typeof tabulator !== 'undefined' && tabulator.isExtension) {
-  tabulator.isExtension = false // stand-alone library
-}
 if (typeof $rdf === 'undefined') {
   var $rdf = {}
 } else {
@@ -6945,6 +6942,10 @@ $rdf.SPARQLResultsInterpreter = function (xml, callback, doneCallback) {
 $rdf.UpdateManager = (function () {
   var sparql = function (store) {
     this.store = store
+    if (store.updater){
+      throw("You can't have two UpdateManagers for the same store")
+    }
+    store.updater = this
     this.ifps = {}
     this.fps = {}
     this.ns = {}
@@ -6977,11 +6978,12 @@ $rdf.UpdateManager = (function () {
       return false // Eg subject is bnode, no known doc to write to
     }
     if (!kb) {
-      kb = tabulator.kb
+      kb = this.store
     }
 
     if (uri.slice(0, 8) === 'file:///') {
-      if (kb.holds(kb.sym(uri), tabulator.ns.rdf('type'), tabulator.ns.link('MachineEditableDocument'))) {
+      if (kb.holds(kb.sym(uri), $rdf.sym('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
+        $rdf.sym('http://www.w3.org/2007/ont/link#MachineEditableDocument'))) {
         return 'LOCALFILE'
       }
 
@@ -7335,8 +7337,8 @@ $rdf.UpdateManager = (function () {
     control.upstreamCount = 0
   }
 
-  sparql.prototype.getUpdatesVia = function (doc, kb) {
-    var linkHeaders = kb.fetcher.getHeader(doc, 'updates-via')
+  sparql.prototype.getUpdatesVia = function (doc) {
+    var linkHeaders = this.store.fetcher.getHeader(doc, 'updates-via')
     if (!linkHeaders || !linkHeaders.length) return null
     return linkHeaders[0].trim()
   }
@@ -7349,7 +7351,7 @@ $rdf.UpdateManager = (function () {
   }
 
   sparql.prototype.reloadAndSync = function (doc) {
-    var control = tabulator.sparql.patchControlFor(doc)
+    var control = this.patchControlFor(doc)
 
     if (control.reloading) {
       console.log('   Already reloading - stop')
@@ -7359,7 +7361,7 @@ $rdf.UpdateManager = (function () {
     var retryTimeout = 1000 // ms
     var tryReload = function () {
       console.log('try reload - timeout = ' + retryTimeout)
-      tabulator.sparql.reload(tabulator.kb, doc, function (ok, message, xhr) {
+      this.reload(this.store, doc, function (ok, message, xhr) {
         control.reloading = false
         if (ok) {
           if (control.downstreamChangeListeners) {
@@ -7396,8 +7398,9 @@ $rdf.UpdateManager = (function () {
   //
   //  kb contains the HTTP  metadata from prefvious operations
   //
-  sparql.prototype.setRefreshHandler = function (doc, kb, handler) {
-    var wssURI = this.getUpdatesVia(doc, kb) // relative
+  sparql.prototype.setRefreshHandler = function (doc, handler) {
+    var wssURI = this.getUpdatesVia(doc) // relative
+    var kb = this.store
     var theHandler = handler
     var self = this
     var updater = this
@@ -7750,8 +7753,9 @@ $rdf.UpdateManager = (function () {
             callback(doc.uri, true, '') // success!
           } catch (e) {
             callback(doc.uri, false,
-              'Exception trying to write back file <' + doc.uri + '>\n' +
-              tabulator.Util.stackString(e))
+              'Exception trying to write back file <' + doc.uri + '>\n'
+              // + tabulator.Util.stackString(e))
+            )
           }
         } else {
           throw new Error("Unhandled edit method: '" + protocol + "' for " + doc)
@@ -10983,5 +10987,5 @@ if (typeof exports !== 'undefined') {
   // Leak a global regardless of module system
   root['$rdf'] = $rdf
 }
-$rdf.buildTime = "2016-04-09T12:04:30";
+$rdf.buildTime = "2016-04-22T21:53:52";
 })(this);

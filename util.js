@@ -2,9 +2,6 @@
 * Utility functions for $rdf and the $rdf object itself
  */
 
-if (typeof tabulator !== 'undefined' && tabulator.isExtension) {
-  tabulator.isExtension = false // stand-alone library
-}
 if (typeof $rdf === 'undefined') {
   var $rdf = {}
 } else {
