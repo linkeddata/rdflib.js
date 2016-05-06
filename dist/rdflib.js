@@ -15335,6 +15335,8 @@ Object.keys(exports).forEach(function (submodule) {
   });
 });
 
+require = globalRequire;
+
 },{"./lib/N3Lexer":33,"./lib/N3Parser":34,"./lib/N3Store":35,"./lib/N3StreamParser":36,"./lib/N3StreamWriter":37,"./lib/N3Util":38,"./lib/N3Writer":39}],33:[function(require,module,exports){
 // **N3Lexer** tokenizes N3 documents.
 var fromCharCode = String.fromCharCode;
