@@ -27,8 +27,7 @@
     "nodeunit": "^0.9.1"
   },
   "scripts": {
-    "test": "make test",
-    "prepublish": "make clean all"
+    "test": "make test"
   },
   "files": [
     "dist",

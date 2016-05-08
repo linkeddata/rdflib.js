@@ -28693,7 +28693,7 @@ $rdf.Fetcher = function (store, timeout, async) {
       xhr.handle = function (cb) {
         // Parse the text of this non-XML file
 
-        console.log('web.js: Parsing as N3 ' + xhr.resource.uri + ' base: ' + xhr.original.uri) // @@@@ comment me out
+        // console.log('web.js: Parsing as N3 ' + xhr.resource.uri + ' base: ' + xhr.original.uri) // @@@@ comment me out
         // sf.addStatus(xhr.req, "N3 not parsed yet...")
         var p = $rdf.N3Parser(kb, kb, xhr.original.uri, xhr.original.uri, null, null, '', null)
         //                p.loadBuf(xhr.responseText)
@@ -29203,7 +29203,7 @@ $rdf.Fetcher = function (store, timeout, async) {
     var xhr = $rdf.Util.XMLHTTPFactory()
     var req = xhr.req = kb.bnode()
     xhr.original = $rdf.sym(baseURI)
-    console.log('XHR original: ' + xhr.original)
+    // console.log('XHR original: ' + xhr.original)
     xhr.options = options
     xhr.resource = docterm  // This might be proxified
     var sf = this
@@ -30155,7 +30155,7 @@ if (typeof exports !== 'undefined') {
   // Leak a global regardless of module system
   root['$rdf'] = $rdf
 }
-$rdf.buildTime = "2016-04-22T21:53:52";
+$rdf.buildTime = "2016-05-08T12:52:21";
 })(this);
 
 },{"async":1,"jsonld":30,"n3":32,"xmldom":40,"xmlhttprequest":undefined}]},{},[])("rdflib")
