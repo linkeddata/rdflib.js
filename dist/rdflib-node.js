@@ -370,7 +370,8 @@ $rdf.Util.parseXML = function (str, options) {
     // var dom = jsdom.jsdom(str, undefined, {} );// html, level, options
 
     var DOMParser = require('xmldom').DOMParser // 2015-08 on https://github.com/jindw/xmldom
-    var dom = new DOMParser().parseFromString(str, options.contentType || 'application/xhtml+xml' || 'text/html') // text/xml
+    var dom = new DOMParser().parseFromString(str, options.contentType || 'application/xhtml+xml')
+    console.log(dom)
     return dom
   } else {
     if (typeof window !== 'undefined' && window.DOMParser) {
@@ -419,6 +420,7 @@ $rdf.Util.domToString = function(node, options) {
 
   var dumpNode = function(node) {
     var out = ''
+    if (typeof node.nodeType === 'undefined') return out
     if (1 === node.nodeType) {
       if (node.hasAttribute('class') && 'classWithChildText' in options && node.matches(options.classWithChildText.class)) {
         out += node.querySelector(options.classWithChildText.element).textContent
@@ -4486,7 +4488,7 @@ $rdf.IndexedFormula = (function () {
   return $rdf.IndexedFormula
 })()
 // ends
-//  RDF/A Parser for rdflib.js
+//  RDFa Parser for rdflib.js
 
 // Originally by: Alex Milowski
 // From https://github.com/alexmilowski/green-turtle
@@ -4835,7 +4837,7 @@ $rdf.RDFaProcessor.prototype.toRDFNodeObject = function(x) {
   switch(x.type) {
     case $rdf.RDFaProcessor.objectURI:
       if (x.value.substring(0,2) == "_:") {
-        if (typeof this.blankNodes[x.value.substring(2)] == 'undefined') {
+        if (typeof this.blankNodes[x.value.substring(2)] === 'undefined') {
           this.blankNodes[x.value.substring(2)] = new $rdf.BlankNode(x.value.substring(2))
         }
         return this.blankNodes[x.value.substring(2)]
@@ -4847,7 +4849,7 @@ $rdf.RDFaProcessor.prototype.toRDFNodeObject = function(x) {
     case $rdf.RDFaProcessor.HTMLLiteralURI:
       var string = ''
       Object.keys(x.value).forEach(function(i) {
-          string += $rdf.Util.domToString(x.value[i], this.htmlOptions)
+        string += $rdf.Util.domToString(x.value[i], this.htmlOptions)
       });
       return new $rdf.Literal(string, '', new $rdf.NamedNode(x.type))
     default:
@@ -4908,14 +4910,12 @@ $rdf.RDFaProcessor.prototype.process = function (node, options) {
   var queue = []
 
   // Fix for Firefox that includes the hash in the base URI
-  // var removeHash = function (baseURI) {
-  //   return baseURI.split('#')[0]
-  // }
   var removeHash = function(baseURI) {
     // Fix for undefined baseURI property
     if (!baseURI && options && options.baseURI) {
       return options.baseURI;
     }
+
     var hash = baseURI.indexOf("#");
     if (hash>=0) {
       baseURI = baseURI.substring(0,hash);
@@ -5421,8 +5421,7 @@ $rdf.parseRDFaDOM = function (dom, kb, base) {
   dom.baseURI = base
   p.process(dom)
 }
-// /////////////////
-// Parse a simple SPARL-Update subset syntax for patches.
+// /////////////////// Parse a simple SPARL-Update subset syntax for patches.
 //
 //  This parses
 //   WHERE {xxx} DELETE {yyy} INSERT DATA {zzz}
@@ -10825,11 +10824,13 @@ $rdf.parse = function parse (str, kb, base, contentType, callback) {
       executeCallback()
     } else if (contentType === 'application/rdf+xml') {
       var parser = new $rdf.RDFParser(kb)
-      parser.parse($rdf.Util.parseXML(str), base, kb.sym(base))
+      parser.parse($rdf.Util.parseXML(str, {contentType: 'application/rdf+xml'}), base, kb.sym(base))
       executeCallback()
-    } else if (contentType === 'application/xhtml+xml' ||
-      contentType === 'text/html') {
-      $rdf.parseRDFaDOM($rdf.Util.parseXML(str), kb, base)
+    } else if (contentType === 'application/xhtml+xml') {
+      $rdf.parseRDFaDOM($rdf.Util.parseXML(str, {contentType: 'application/xhtml+xml'}), kb, base)
+      executeCallback()
+    } else if (contentType === 'text/html') {
+      $rdf.parseRDFaDOM($rdf.Util.parseXML(str, {contentType: 'text/html'}), kb, base)
       executeCallback()
     } else if (contentType === 'application/sparql-update') { // @@ we handle a subset
       $rdf.sparqlUpdateParser(str, kb, base)
@@ -11089,5 +11090,5 @@ if (typeof exports !== 'undefined') {
   // Leak a global regardless of module system
   root['$rdf'] = $rdf
 }
-$rdf.buildTime = "2016-05-09T19:01:58";
+$rdf.buildTime = "2016-05-10T18:00:41";
 })(this);

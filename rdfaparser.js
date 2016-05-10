@@ -1,4 +1,4 @@
-//  RDF/A Parser for rdflib.js
+//  RDFa Parser for rdflib.js
 
 // Originally by: Alex Milowski
 // From https://github.com/alexmilowski/green-turtle
@@ -359,7 +359,7 @@ $rdf.RDFaProcessor.prototype.toRDFNodeObject = function(x) {
     case $rdf.RDFaProcessor.HTMLLiteralURI:
       var string = ''
       Object.keys(x.value).forEach(function(i) {
-          string += $rdf.Util.domToString(x.value[i], this.htmlOptions)
+        string += $rdf.Util.domToString(x.value[i], this.htmlOptions)
       });
       return new $rdf.Literal(string, '', new $rdf.NamedNode(x.type))
     default:

@@ -369,7 +369,8 @@ $rdf.Util.parseXML = function (str, options) {
     // var dom = jsdom.jsdom(str, undefined, {} );// html, level, options
 
     var DOMParser = require('xmldom').DOMParser // 2015-08 on https://github.com/jindw/xmldom
-    var dom = new DOMParser().parseFromString(str, options.contentType || 'application/xhtml+xml' || 'text/html') // text/xml
+    var dom = new DOMParser().parseFromString(str, options.contentType || 'application/xhtml+xml')
+    console.log(dom)
     return dom
   } else {
     if (typeof window !== 'undefined' && window.DOMParser) {
@@ -418,6 +419,7 @@ $rdf.Util.domToString = function(node, options) {
 
   var dumpNode = function(node) {
     var out = ''
+    if (typeof node.nodeType === 'undefined') return out
     if (1 === node.nodeType) {
       if (node.hasAttribute('class') && 'classWithChildText' in options && node.matches(options.classWithChildText.class)) {
         out += node.querySelector(options.classWithChildText.element).textContent
