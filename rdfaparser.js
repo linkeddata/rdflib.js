@@ -347,7 +347,7 @@ $rdf.RDFaProcessor.prototype.toRDFNodeObject = function(x) {
   switch(x.type) {
     case $rdf.RDFaProcessor.objectURI:
       if (x.value.substring(0,2) == "_:") {
-        if (typeof this.blankNodes[x.value.substring(2)] == 'undefined') {
+        if (typeof this.blankNodes[x.value.substring(2)] === 'undefined') {
           this.blankNodes[x.value.substring(2)] = new $rdf.BlankNode(x.value.substring(2))
         }
         return this.blankNodes[x.value.substring(2)]
@@ -420,14 +420,12 @@ $rdf.RDFaProcessor.prototype.process = function (node, options) {
   var queue = []
 
   // Fix for Firefox that includes the hash in the base URI
-  // var removeHash = function (baseURI) {
-  //   return baseURI.split('#')[0]
-  // }
   var removeHash = function(baseURI) {
     // Fix for undefined baseURI property
     if (!baseURI && options && options.baseURI) {
       return options.baseURI;
     }
+
     var hash = baseURI.indexOf("#");
     if (hash>=0) {
       baseURI = baseURI.substring(0,hash);
