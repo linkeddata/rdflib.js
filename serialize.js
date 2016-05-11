@@ -427,8 +427,12 @@ __Serializer.prototype.statementsToN3 = function(sts) {
                     results=results.concat([objects]).concat([';']);
                     objects = [];
                 }
-                results.push(predMap[st.predicate.uri] ?
-                            predMap[st.predicate.uri] : termToN3(st.predicate, stats));
+                if (!options.noPredMap && predMap[st.predicate.uri]) {
+                  results.push(predMap[st.predicate.uri]);
+                }
+                else {
+                  results.push(termToN3(st.predicate, stats));
+                }
             }
             lastPred = st.predicate.uri;
             objects.push(objectTree(st.object, stats));

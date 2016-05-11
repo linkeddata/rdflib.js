@@ -707,11 +707,13 @@ $rdf.UpdateManager = (function () {
             documentString = sz.statementsToXML(newSts)
             break
           case 'text/n3':
-          case 'text/turtle':
-          case 'application/x-turtle': // Legacy
           case 'application/n3': // Legacy
             documentString = sz.statementsToN3(newSts)
             break
+          case 'text/turtle':
+          case 'application/x-turtle': // Legacy
+            documentString = sz.statementsToN3(newSts, {noPredMap: true})
+            break;
           default:
             throw new Error('Content-type ' + content_type + ' not supported for data write')
         }
@@ -774,9 +776,11 @@ $rdf.UpdateManager = (function () {
                 documentString = sz.statementsToXML(newSts)
                 break
               case 'n3':
+                documentString = sz.statementsToN3(newSts)
+                break
               case 'nt':
               case 'ttl':
-                documentString = sz.statementsToN3(newSts)
+                documentString = sz.statementsToN3(newSts, {noPredMap: true})
                 break
               default:
                 throw new Error('File extension .' + ext + ' not supported for data write')
@@ -850,10 +854,12 @@ $rdf.UpdateManager = (function () {
           documentString = sz.statementsToXML(data)
           break
         case 'text/n3':
-        case 'text/turtle':
-        case 'application/x-turtle': // Legacy
         case 'application/n3': // Legacy
           documentString = sz.statementsToN3(data)
+          break;
+        case 'text/turtle':
+        case 'application/x-turtle': // Legacy
+          documentString = sz.statementsToN3(data, {noPredMap: true})
           break
         default:
           throw new Error('Content-type ' + content_type +
