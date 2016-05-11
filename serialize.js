@@ -295,9 +295,10 @@ __Serializer.prototype._notNameChars =
                     ( __Serializer.prototype._notQNameChars + ":" ) ;
 
 
-__Serializer.prototype.statementsToN3 = function(sts) {
+__Serializer.prototype.statementsToN3 = function(sts, options) {
     var indent = 4;
     var width = 80;
+    var options = options || {};
 
     var predMap = {
         'http://www.w3.org/2002/07/owl#sameAs': '=',
@@ -427,8 +428,12 @@ __Serializer.prototype.statementsToN3 = function(sts) {
                     results=results.concat([objects]).concat([';']);
                     objects = [];
                 }
-                results.push(predMap[st.predicate.uri] ?
-                            predMap[st.predicate.uri] : termToN3(st.predicate, stats));
+                if (!options.noPredMap && predMap[st.predicate.uri]) {
+                  results.push(predMap[st.predicate.uri]);
+                }
+                else {
+                  results.push(termToN3(st.predicate, stats));
+                }
             }
             lastPred = st.predicate.uri;
             objects.push(objectTree(st.object, stats));

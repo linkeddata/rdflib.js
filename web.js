@@ -1713,10 +1713,12 @@ $rdf.serialize = function (target, kb, base, contentType, callback) {
         documentString = sz.statementsToXML(newSts)
         return executeCallback(null, documentString)
       case 'text/n3':
-      case 'text/turtle':
-      case 'application/x-turtle': // Legacy
       case 'application/n3': // Legacy
         documentString = sz.statementsToN3(newSts)
+        return executeCallback(null, documentString)
+      case 'text/turtle':
+      case 'application/x-turtle': // Legacy
+        documentString = sz.statementsToN3(newSts, {noPredMap: true})
         return executeCallback(null, documentString)
       case 'application/ld+json':
         n3String = sz.statementsToN3(newSts)

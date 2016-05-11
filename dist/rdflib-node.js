@@ -1642,8 +1642,10 @@ $rdf.Formula = (function (superClass) {
         documentString = sz.statementsToXML(sts)
         break
       case 'text/n3':
-      case 'text/turtle':
         documentString = sz.statementsToN3(sts)
+        break
+      case 'text/turtle':
+        documentString = sz.statementsToN3(sts, {noPredMap: true})
         break
       default:
         throw new Error('serialize: Content-type ' + contentType(+' not supported.'))
@@ -7643,11 +7645,13 @@ $rdf.UpdateManager = (function () {
             documentString = sz.statementsToXML(newSts)
             break
           case 'text/n3':
-          case 'text/turtle':
-          case 'application/x-turtle': // Legacy
           case 'application/n3': // Legacy
             documentString = sz.statementsToN3(newSts)
             break
+          case 'text/turtle':
+          case 'application/x-turtle': // Legacy
+            documentString = sz.statementsToN3(newSts, {noPredMap: true})
+            break;
           default:
             throw new Error('Content-type ' + content_type + ' not supported for data write')
         }
@@ -7710,9 +7714,11 @@ $rdf.UpdateManager = (function () {
                 documentString = sz.statementsToXML(newSts)
                 break
               case 'n3':
+                documentString = sz.statementsToN3(newSts)
+                break
               case 'nt':
               case 'ttl':
-                documentString = sz.statementsToN3(newSts)
+                documentString = sz.statementsToN3(newSts, {noPredMap: true})
                 break
               default:
                 throw new Error('File extension .' + ext + ' not supported for data write')
@@ -7786,10 +7792,12 @@ $rdf.UpdateManager = (function () {
           documentString = sz.statementsToXML(data)
           break
         case 'text/n3':
-        case 'text/turtle':
-        case 'application/x-turtle': // Legacy
         case 'application/n3': // Legacy
           documentString = sz.statementsToN3(data)
+          break;
+        case 'text/turtle':
+        case 'application/x-turtle': // Legacy
+          documentString = sz.statementsToN3(data, {noPredMap: true})
           break
         default:
           throw new Error('Content-type ' + content_type +
@@ -8240,9 +8248,10 @@ __Serializer.prototype._notNameChars =
                     ( __Serializer.prototype._notQNameChars + ":" ) ;
 
 
-__Serializer.prototype.statementsToN3 = function(sts) {
+__Serializer.prototype.statementsToN3 = function(sts, options) {
     var indent = 4;
     var width = 80;
+    var options = options || {};
 
     var predMap = {
         'http://www.w3.org/2002/07/owl#sameAs': '=',
@@ -8372,8 +8381,12 @@ __Serializer.prototype.statementsToN3 = function(sts) {
                     results=results.concat([objects]).concat([';']);
                     objects = [];
                 }
-                results.push(predMap[st.predicate.uri] ?
-                            predMap[st.predicate.uri] : termToN3(st.predicate, stats));
+                if (!options.noPredMap && predMap[st.predicate.uri]) {
+                  results.push(predMap[st.predicate.uri]);
+                }
+                else {
+                  results.push(termToN3(st.predicate, stats));
+                }
             }
             lastPred = st.predicate.uri;
             objects.push(objectTree(st.object, stats));
@@ -10864,10 +10877,12 @@ $rdf.serialize = function (target, kb, base, contentType, callback) {
         documentString = sz.statementsToXML(newSts)
         return executeCallback(null, documentString)
       case 'text/n3':
-      case 'text/turtle':
-      case 'application/x-turtle': // Legacy
       case 'application/n3': // Legacy
         documentString = sz.statementsToN3(newSts)
+        return executeCallback(null, documentString)
+      case 'text/turtle':
+      case 'application/x-turtle': // Legacy
+        documentString = sz.statementsToN3(newSts, {noPredMap: true})
         return executeCallback(null, documentString)
       case 'application/ld+json':
         n3String = sz.statementsToN3(newSts)
@@ -10987,5 +11002,5 @@ if (typeof exports !== 'undefined') {
   // Leak a global regardless of module system
   root['$rdf'] = $rdf
 }
-$rdf.buildTime = "2016-05-08T12:52:21";
+$rdf.buildTime = "2016-05-10T21:31:51";
 })(this);

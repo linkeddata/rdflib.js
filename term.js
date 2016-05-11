@@ -939,8 +939,10 @@ $rdf.Formula = (function (superClass) {
         documentString = sz.statementsToXML(sts)
         break
       case 'text/n3':
-      case 'text/turtle':
         documentString = sz.statementsToN3(sts)
+        break
+      case 'text/turtle':
+        documentString = sz.statementsToN3(sts, {noPredMap: true})
         break
       default:
         throw new Error('serialize: Content-type ' + contentType(+' not supported.'))
