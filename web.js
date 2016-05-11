@@ -1571,7 +1571,7 @@ $rdf.parse = function parse (str, kb, base, contentType, callback) {
       executeCallback()
     } else if (contentType === 'application/rdf+xml') {
       var parser = new $rdf.RDFParser(kb)
-      parser.parse($rdf.Util.parseXML(str, {contentType: 'application/rdf+xml'}), base, kb.sym(base))
+      parser.parse($rdf.Util.parseXML(str), base, kb.sym(base))
       executeCallback()
     } else if (contentType === 'application/xhtml+xml') {
       $rdf.parseRDFaDOM($rdf.Util.parseXML(str, {contentType: 'application/xhtml+xml'}), kb, base)

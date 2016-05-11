@@ -371,7 +371,6 @@ $rdf.Util.parseXML = function (str, options) {
 
     var DOMParser = require('xmldom').DOMParser // 2015-08 on https://github.com/jindw/xmldom
     var dom = new DOMParser().parseFromString(str, options.contentType || 'application/xhtml+xml')
-    console.log(dom)
     return dom
   } else {
     if (typeof window !== 'undefined' && window.DOMParser) {
@@ -10824,7 +10823,7 @@ $rdf.parse = function parse (str, kb, base, contentType, callback) {
       executeCallback()
     } else if (contentType === 'application/rdf+xml') {
       var parser = new $rdf.RDFParser(kb)
-      parser.parse($rdf.Util.parseXML(str, {contentType: 'application/rdf+xml'}), base, kb.sym(base))
+      parser.parse($rdf.Util.parseXML(str), base, kb.sym(base))
       executeCallback()
     } else if (contentType === 'application/xhtml+xml') {
       $rdf.parseRDFaDOM($rdf.Util.parseXML(str, {contentType: 'application/xhtml+xml'}), kb, base)
@@ -11090,5 +11089,5 @@ if (typeof exports !== 'undefined') {
   // Leak a global regardless of module system
   root['$rdf'] = $rdf
 }
-$rdf.buildTime = "2016-05-10T18:00:41";
+$rdf.buildTime = "2016-05-11T17:28:02";
 })(this);

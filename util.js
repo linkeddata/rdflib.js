@@ -370,7 +370,6 @@ $rdf.Util.parseXML = function (str, options) {
 
     var DOMParser = require('xmldom').DOMParser // 2015-08 on https://github.com/jindw/xmldom
     var dom = new DOMParser().parseFromString(str, options.contentType || 'application/xhtml+xml')
-    console.log(dom)
     return dom
   } else {
     if (typeof window !== 'undefined' && window.DOMParser) {
