@@ -370,7 +370,8 @@ $rdf.Util.parseXML = function (str, options) {
     // var dom = jsdom.jsdom(str, undefined, {} );// html, level, options
 
     var DOMParser = require('xmldom').DOMParser // 2015-08 on https://github.com/jindw/xmldom
-    var dom = new DOMParser().parseFromString(str, options.contentType || 'text/html') // text/xml
+    var dom = new DOMParser().parseFromString(str, options.contentType || 'application/xhtml+xml')
+    console.log(dom)
     return dom
   } else {
     if (typeof window !== 'undefined' && window.DOMParser) {
@@ -397,6 +398,88 @@ $rdf.Util.string = {
     }
     return result + baseA.slice(subs.length).join()
   }
+}
+
+//From https://github.com/linkeddata/dokieli
+$rdf.Util.domToString = function(node, options) {
+  var options = options || {}
+  var selfClosing = []
+  if ('selfClosing' in options) {
+    options.selfClosing.split(' ').forEach(function (n) {
+      selfClosing[n] = true
+    })
+  }
+  var skipAttributes = [];
+  if ('skipAttributes' in options) {
+    options.skipAttributes.split(' ').forEach(function (n) {
+      skipAttributes[n] = true
+    })
+  }
+
+  var noEsc = [false];
+
+  var dumpNode = function(node) {
+    var out = ''
+    if (typeof node.nodeType === 'undefined') return out
+    if (1 === node.nodeType) {
+      if (node.hasAttribute('class') && 'classWithChildText' in options && node.matches(options.classWithChildText.class)) {
+        out += node.querySelector(options.classWithChildText.element).textContent
+      }
+      else if (!('skipNodeWithClass' in options && node.matches('.' + options.skipNodeWithClass))) {
+        var ename = node.nodeName.toLowerCase()
+        out += "<" + ename
+
+        var attrList = []
+        for (var i = node.attributes.length - 1; i >= 0; i--) {
+          var atn = node.attributes[i]
+          if (skipAttributes.length > 0 && skipAttributes[atn.name]) continue
+          if (/^\d+$/.test(atn.name)) continue
+          if (atn.name == 'class' && 'replaceClassItemWith' in options && (atn.value.split(' ').indexOf(options.replaceClassItemWith.source) > -1)) {
+            var re = new RegExp(options.replaceClassItemWith.source, 'g')
+            atn.value = atn.value.replace(re, options.replaceClassItemWith.target).trim()
+          }
+          if (!(atn.name == 'class' && 'skipClassWithValue' in options && options.skipClassWithValue == atn.value)) {
+            attrList.push(atn.name + "=\"" + atn.value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;') + "\"")
+          }
+        }
+
+        if (attrList.length > 0) {
+          if('sortAttributes' in options && options.sortAttributes) {
+            attrList.sort(function (a, b) {
+              return a.toLowerCase().localeCompare(b.toLowerCase())
+            })
+          }
+          out += ' ' + attrList.join(' ')
+        }
+
+        if (selfClosing[ename]) { out += " />"; }
+        else {
+          out += '>';
+          out += (ename == 'html') ? "\n  " : ''
+          noEsc.push(ename === "style" || ename === "script");
+          for (var i = 0; i < node.childNodes.length; i++) out += dumpNode(node.childNodes[i])
+          noEsc.pop()
+          out += (ename == 'body') ? '</' + ename + '>' + "\n" : '</' + ename + '>'
+        }
+      }
+    }
+    else if (8 === node.nodeType) {
+      //FIXME: If comments are not tabbed in source, a new line is not prepended
+      out += "<!--" + node.nodeValue + "-->"
+    }
+    else if (3 === node.nodeType || 4 === node.nodeType) {
+      //XXX: Remove new lines which were added after DOM ready
+      var nl = node.nodeValue.replace(/\n+$/, '')
+      out += noEsc[noEsc.length - 1] ? nl : nl.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    }
+    else {
+      console.log("Warning; Cannot handle serialising nodes of type: " + node.nodeType)
+      console.log(node)
+    }
+    return out
+  };
+
+  return dumpNode(node)
 }
 
 // Reomved 2015-08-05 timbl - unused and depended on jQuery!
@@ -4405,13 +4488,12 @@ $rdf.IndexedFormula = (function () {
   return $rdf.IndexedFormula
 })()
 // ends
-//  RDF/A Parser for rdflib.js
+//  RDFa Parser for rdflib.js
 
 // Originally by: Alex Milowski
+// From https://github.com/alexmilowski/green-turtle
 // Converted: timbl 2015-08-25 not yet working
-// Was taken from:  https://github.com/alexmilowski/green-turtle
-
-// See http://www.w3.org/TR/rdfa-syntax/  etc
+// Added wrapper: csarven 2016-05-09 working
 
 // $rdf.RDFaProcessor.prototype = new Object() // Was URIResolver
 
@@ -4450,11 +4532,12 @@ $rdf.RDFaProcessor = function RDFaProcessor (kb, options) {
       }
   }
 
-  console.log('base URI ' + this.options.base)
-  var mode = options.mode || 'html'
-  this.inXHTMLMode = false
-  this.inHTMLMode = false
-
+  //XXX: Added to track bnodes
+  this.blankNodes = []
+  //XXX: Added for normalisation
+  this.htmlOptions = {
+    'selfClosing': "br img input area base basefont col colgroup source wbr isindex link meta param hr"
+  }
   this.theOne = '_:' + (new Date()).getTime()
   this.language = null
   this.vocabulary = null
@@ -4720,47 +4803,62 @@ $rdf.RDFaProcessor.prototype.setXHTMLContext = function () {
   this.target.graph.terms['transformation'] = 'http://www.w3.org/1999/xhtml/vocab#transformation'
 }
 
-$rdf.RDFaProcessor.prototype.init = function () {}
+$rdf.RDFaProcessor.prototype.init = function () {
+}
 
 $rdf.RDFaProcessor.prototype.newSubjectOrigin = function (origin, subject) {
-  console.log('@@@@ newSubjectOrigin @@ what should this do? ')
 }
 
 $rdf.RDFaProcessor.prototype.addTriple = function (origin, subject, predicate, object) {
-  function convert (x) {
-    console.log('convert term ' + typeof x)
-    if (typeof x === 'string') {
-      console.log('    string is ' + x)
-      console.log('    sym is ' + $rdf.sym(x))
-      return $rdf.sym(x)
-    }
-    if (typeof x === 'undefined') return undefined
-    console.log('    type is ' + x.type)
-    switch (object.type) {
-      case $rdf.RDFaProcessor.objectURI:
-        return $rdf.sym(x.value)
-      case $rdf.RDFaProcessor.PlainLiteralURI:
-        return $rdf.term(x.value); // @@ types?
-      default:
-    }
-    throw 'internal type ' + x.type
-  }
   var su, ob, pr, or
   if (typeof subject === 'undefined') {
-    su = $rdf.sym(this.options.base); // this document is default sub???
+    su = $rdf.sym(this.options.base)
   } else {
-    su = convert(subject)
+    su = this.toRDFNodeObject(subject)
   }
-  pr = convert(predicate)
-  ob = convert(object)
-  // or = convert(origin)
+  pr = this.toRDFNodeObject(predicate)
+  ob = this.toRDFNodeObject(object)
   or = $rdf.sym(this.options.base)
-  console.log('Adding { ' + su + ' ' + pr + ' ' + ob + ' ' + or + ' }')
+  //console.log('Adding { ' + su + ' ' + pr + ' ' + ob + ' ' + or + ' }')
   this.kb.add(su, pr, ob, or)
 }
 
-$rdf.RDFaProcessor.prototype.resolveAndNormalize = function (uri, base) {
-  // console.log("Joining " + uri + " to " + uri + " making " +  $rdf.uri.join(uri, base))
+$rdf.RDFaProcessor.prototype.toRDFNodeObject = function(x) {
+  if (typeof x === 'undefined') return undefined
+  if (typeof x === 'string') {
+    if (x.substring(0,2) == "_:") {
+      if (typeof this.blankNodes[x.substring(2)] === 'undefined') {
+        this.blankNodes[x.substring(2)] = new $rdf.BlankNode(x.substring(2))
+      }
+      return this.blankNodes[x.substring(2)]
+    }
+    return $rdf.sym(x)
+  }
+  switch(x.type) {
+    case $rdf.RDFaProcessor.objectURI:
+      if (x.value.substring(0,2) == "_:") {
+        if (typeof this.blankNodes[x.value.substring(2)] === 'undefined') {
+          this.blankNodes[x.value.substring(2)] = new $rdf.BlankNode(x.value.substring(2))
+        }
+        return this.blankNodes[x.value.substring(2)]
+      }
+      return $rdf.sym(x.value)
+    case $rdf.RDFaProcessor.PlainLiteralURI:
+      return new $rdf.Literal(x.value, x.language || '')
+    case $rdf.RDFaProcessor.XMLLiteralURI:
+    case $rdf.RDFaProcessor.HTMLLiteralURI:
+      var string = ''
+      Object.keys(x.value).forEach(function(i) {
+        string += $rdf.Util.domToString(x.value[i], this.htmlOptions)
+      });
+      return new $rdf.Literal(string, '', new $rdf.NamedNode(x.type))
+    default:
+      return new $rdf.Literal(x.value, '', new $rdf.NamedNode(x.type))
+  }
+}
+
+$rdf.RDFaProcessor.prototype.resolveAndNormalize = function (base, uri) {
+  // console.log("Joining " + uri + " to " + base + " making " +  $rdf.uri.join(uri, base))
   return $rdf.uri.join(uri, base); // @@ normalize?
 }
 
@@ -4795,9 +4893,7 @@ $rdf.RDFaProcessor.deriveDateTimeType = function (value) {
   return null
 }
 
-$rdf.RDFaProcessor.prototype.process = function (node, processOptions) {
-  console.log('node.baseURI 0 ' + node.baseURI)
-
+$rdf.RDFaProcessor.prototype.process = function (node, options) {
   /*
   if (!window.console) {
      window.console = { log: function() {} }
@@ -4814,11 +4910,22 @@ $rdf.RDFaProcessor.prototype.process = function (node, processOptions) {
   var queue = []
 
   // Fix for Firefox that includes the hash in the base URI
-  var removeHash = function (baseURI) {
-    return baseURI.split('#')[0]
+  var removeHash = function(baseURI) {
+    // Fix for undefined baseURI property
+    if (!baseURI && options && options.baseURI) {
+      return options.baseURI;
+    }
+
+    var hash = baseURI.indexOf("#");
+    if (hash>=0) {
+      baseURI = baseURI.substring(0,hash);
+    }
+    if (options && options.baseURIMap) {
+      baseURI = options.baseURIMap(baseURI);
+    }
+    return baseURI;
   }
 
-  console.log('node.baseURI 1 ' + node.baseURI)
   queue.push({ current: node, context: this.push(null, removeHash(node.baseURI))})
   while (queue.length > 0) {
     var item = queue.shift()
@@ -4867,7 +4974,6 @@ $rdf.RDFaProcessor.prototype.process = function (node, processOptions) {
     var vocabulary = context.vocabulary
 
     // TODO: the "base" element may be used for HTML+RDFa 1.1
-    // console.log("sdf current.baseURI "+current.baseURI)
     var base = this.parseURI(removeHash(current.baseURI))
     current.item = null
 
@@ -4979,11 +5085,9 @@ $rdf.RDFaProcessor.prototype.process = function (node, processOptions) {
       }
       if (!newSubject) {
         if (current.parentNode.nodeType == Node.DOCUMENT_NODE) {
-          console.log('kjkhk current.baseURI ' + current.baseURI)
           newSubject = removeHash(current.baseURI)
         } else if (context.parentObject) {
           // TODO: Verify: If the xml:base has been set and the parentObject is the baseURI of the parent, then the subject needs to be the new base URI
-          console.log('zxcv current.baseURI ' + current.parentNode.baseURI)
           newSubject = removeHash(current.parentNode.baseURI) == context.parentObject ? removeHash(current.baseURI) : context.parentObject
         }
       }
@@ -5086,7 +5190,7 @@ $rdf.RDFaProcessor.prototype.process = function (node, processOptions) {
         if (typeofAtt && !aboutAtt && !resourceAtt && currentObjectResource) {
           id = currentObjectResource
         }
-        console.log('Setting data attribute for ' + current.localName + ' for subject ' + id)
+        //console.log("Setting data attribute for "+current.localName+" for subject "+id)
         this.newSubjectOrigin(current, id)
       }
     }
@@ -5274,7 +5378,7 @@ $rdf.RDFaProcessor.prototype.process = function (node, processOptions) {
       childContext.vocabulary = vocabulary
     }
     if (listMappingDifferent) {
-      console.log('Pushing list parent ' + current.localName)
+      //console.log("Pushing list parent "+current.localName)
       queue.unshift({ parent: current, context: context, subject: listSubject, listMapping: listMapping})
     }
     for (var child = current.lastChild; child; child = child.previousSibling) {
@@ -5312,14 +5416,12 @@ $rdf.RDFaProcessor.prototype.push = function (parent, subject) {
 }
 // ///////////////
 
-$rdf.parseDOM_RDFa = function (dom, kb, base) {
+$rdf.parseRDFaDOM = function (dom, kb, base) {
   var p = new $rdf.RDFaProcessor(kb, { 'base': base })
-  dom.baseURI = base // @@ weird
-  console.log(' $rdf.parseDOM_RDFa dom.baseURI = ' + dom.baseURI)
+  dom.baseURI = base
   p.process(dom)
 }
-// /////////////////
-// Parse a simple SPARL-Update subset syntax for patches.
+// /////////////////// Parse a simple SPARL-Update subset syntax for patches.
 //
 //  This parses
 //   WHERE {xxx} DELETE {yyy} INSERT DATA {zzz}
@@ -9322,11 +9424,9 @@ $rdf.Fetcher = function (store, timeout, async) {
         if (!xhr.options.noMeta) {
           kb.add(xhr.resource, ns.rdf('type'), ns.link('WebPage'), sf.appNode)
         }
-        // Do RDFa here
 
-        // Warning the RDFa parser in NOT working yet 2016-03
-        if (xhr.options.doRDFa && $rdf.parseDOM_RDFa) {
-          $rdf.parseDOM_RDFa(this.dom, kb, xhr.original)
+        if (xhr.options.doRDFa && $rdf.parseRDFaDOM) {
+          $rdf.parseRDFaDOM(this.dom, kb, xhr.original)
         }
         cb() // Fire done callbacks
       }
@@ -10714,7 +10814,7 @@ $rdf.fetcher = function (store, timeout, async) { return new $rdf.Fetcher(store,
 // Hence the mess beolow with executeCallback.
 
 $rdf.parsable = {'text/n3': true, 'text/turtle': true, 'application/rdf+xml': true,
-'application/rdfa': true, 'application/ld+json': true }
+'application/xhtml+xml': true, 'text/html': true, 'application/ld+json': true }
 
 $rdf.parse = function parse (str, kb, base, contentType, callback) {
   try {
@@ -10724,10 +10824,13 @@ $rdf.parse = function parse (str, kb, base, contentType, callback) {
       executeCallback()
     } else if (contentType === 'application/rdf+xml') {
       var parser = new $rdf.RDFParser(kb)
-      parser.parse($rdf.Util.parseXML(str), base, kb.sym(base))
+      parser.parse($rdf.Util.parseXML(str, {contentType: 'application/rdf+xml'}), base, kb.sym(base))
       executeCallback()
-    } else if (contentType === 'application/rdfa') { // @@ not really a valid mime type
-      $rdf.parseDOM_RDFa($rdf.Util.parseXML(str), kb, base)
+    } else if (contentType === 'application/xhtml+xml') {
+      $rdf.parseRDFaDOM($rdf.Util.parseXML(str, {contentType: 'application/xhtml+xml'}), kb, base)
+      executeCallback()
+    } else if (contentType === 'text/html') {
+      $rdf.parseRDFaDOM($rdf.Util.parseXML(str, {contentType: 'text/html'}), kb, base)
       executeCallback()
     } else if (contentType === 'application/sparql-update') { // @@ we handle a subset
       $rdf.sparqlUpdateParser(str, kb, base)
@@ -10987,5 +11090,5 @@ if (typeof exports !== 'undefined') {
   // Leak a global regardless of module system
   root['$rdf'] = $rdf
 }
-$rdf.buildTime = "2016-05-08T12:52:21";
+$rdf.buildTime = "2016-05-10T18:00:41";
 })(this);

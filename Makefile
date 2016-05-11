@@ -1,6 +1,6 @@
 # rdflib.js Makefile
 
-R=util.js uri.js term.js rdfparser.js n3parser.js identity.js parseRDFa.js  \
+R=util.js uri.js term.js rdfparser.js n3parser.js identity.js rdfaparser.js  \
 	patchParser.js query.js sparql.js update.js jsonparser.js serialize.js \
 	updatesVia.js web.js
 

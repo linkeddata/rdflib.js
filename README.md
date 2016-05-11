@@ -4,9 +4,9 @@
 
 Javascript RDF library for browsers and Node.js.
 
-- Reads and writes RDF/xml, Turtle and N3.
+- Reads and writes RDF/XML, Turtle and N3.
 - Read/Write Linked Data client, using WebDav or SPARQL/Update
-- Parses RDF/a
+- Parses RDFa
 - Local API for querying a store
 - SPARQL queries (not full SPARQL)
 - Smushing of nodes from `owl:sameAs`, and `owl:{f,inverseF}unctionProperty`
@@ -51,7 +51,6 @@ npm install --save rdflib
 
 #### Dependencies
 
-    - jQuery   (rdfa version only)
     - jQuery, XMLHTTPRequest (Node.js version)
 
 ## Thanks
