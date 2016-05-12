@@ -171,11 +171,9 @@ $rdf.Fetcher = function (store, timeout, async) {
         if (!xhr.options.noMeta) {
           kb.add(xhr.resource, ns.rdf('type'), ns.link('WebPage'), sf.appNode)
         }
-        // Do RDFa here
 
-        // Warning the RDFa parser in NOT working yet 2016-03
-        if (xhr.options.doRDFa && $rdf.parseDOM_RDFa) {
-          $rdf.parseDOM_RDFa(this.dom, kb, xhr.original)
+        if (xhr.options.doRDFa && $rdf.parseRDFaDOM) {
+          $rdf.parseRDFaDOM(this.dom, kb, xhr.original)
         }
         cb() // Fire done callbacks
       }
@@ -1563,7 +1561,7 @@ $rdf.fetcher = function (store, timeout, async) { return new $rdf.Fetcher(store,
 // Hence the mess beolow with executeCallback.
 
 $rdf.parsable = {'text/n3': true, 'text/turtle': true, 'application/rdf+xml': true,
-'application/rdfa': true, 'application/ld+json': true }
+'application/xhtml+xml': true, 'text/html': true, 'application/ld+json': true }
 
 $rdf.parse = function parse (str, kb, base, contentType, callback) {
   try {
@@ -1575,8 +1573,11 @@ $rdf.parse = function parse (str, kb, base, contentType, callback) {
       var parser = new $rdf.RDFParser(kb)
       parser.parse($rdf.Util.parseXML(str), base, kb.sym(base))
       executeCallback()
-    } else if (contentType === 'application/rdfa') { // @@ not really a valid mime type
-      $rdf.parseDOM_RDFa($rdf.Util.parseXML(str), kb, base)
+    } else if (contentType === 'application/xhtml+xml') {
+      $rdf.parseRDFaDOM($rdf.Util.parseXML(str, {contentType: 'application/xhtml+xml'}), kb, base)
+      executeCallback()
+    } else if (contentType === 'text/html') {
+      $rdf.parseRDFaDOM($rdf.Util.parseXML(str, {contentType: 'text/html'}), kb, base)
       executeCallback()
     } else if (contentType === 'application/sparql-update') { // @@ we handle a subset
       $rdf.sparqlUpdateParser(str, kb, base)
