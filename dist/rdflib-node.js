@@ -8345,13 +8345,17 @@ __Serializer.prototype.statementsToN3 = function(sts) {
     var indent = 4;
     var width = 80;
 
-    var predMap = {
-        'http://www.w3.org/2002/07/owl#sameAs': '=',
-        'http://www.w3.org/2000/10/swap/log#implies': '=>',
-        'http://www.w3.org/1999/02/22-rdf-syntax-ns#type': 'a'
+    var predMap = {}
+
+    if (this.flags.indexOf('s') < 0 ){
+      predMap['http://www.w3.org/2002/07/owl#sameAs'] = '='
     }
-
-
+    if (this.flags.indexOf('t') < 0 ){
+      predMap['http://www.w3.org/1999/02/22-rdf-syntax-ns#type'] = 'a'
+    }
+    if (this.flags.indexOf('i') < 0 ){
+      predMap['http://www.w3.org/2000/10/swap/log#implies'] = '=>'
+    }
 
 
     ////////////////////////// Arrange the bits of text
@@ -10965,12 +10969,16 @@ $rdf.serialize = function (target, kb, base, contentType, callback) {
       case 'application/rdf+xml':
         documentString = sz.statementsToXML(newSts)
         return executeCallback(null, documentString)
-      case 'text/n3':
-      case 'text/turtle':
-      case 'application/x-turtle': // Legacy
-      case 'application/n3': // Legacy
-        documentString = sz.statementsToN3(newSts)
-        return executeCallback(null, documentString)
+        case 'text/n3':
+        case 'application/n3': // Legacy
+          documentString = sz.statementsToN3(newSts)
+          return executeCallback(null, documentString)
+
+          case 'text/turtle':
+          case 'application/x-turtle': // Legacy
+            sz.setFlags('si') // Suppress = for sameAs and => for implies
+            documentString = sz.statementsToN3(newSts)
+            return executeCallback(null, documentString)
       case 'application/ld+json':
         n3String = sz.statementsToN3(newSts)
         $rdf.convert.convertToJson(n3String, callback)
@@ -11089,5 +11097,5 @@ if (typeof exports !== 'undefined') {
   // Leak a global regardless of module system
   root['$rdf'] = $rdf
 }
-$rdf.buildTime = "2016-05-11T17:28:02";
+$rdf.buildTime = "2016-05-12T15:09:38";
 })(this);
