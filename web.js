@@ -172,8 +172,15 @@ $rdf.Fetcher = function (store, timeout, async) {
           kb.add(xhr.resource, ns.rdf('type'), ns.link('WebPage'), sf.appNode)
         }
 
-        if (xhr.options.doRDFa && $rdf.parseRDFaDOM) {
-          $rdf.parseRDFaDOM(this.dom, kb, xhr.original)
+        if (!xhr.options.noRDFa && $rdf.parseRDFaDOM) { // enable by default
+          try {
+            $rdf.parseRDFaDOM(this.dom, kb, xhr.original.uri)
+          } catch (e){
+            var msg = ('Error trying to parse ' + xhr.resource + ' as RDFa:\n' + e + ':\n' + e.stack)
+            // dump(msg+"\n")
+            sf.failFetch(xhr, msg)
+            return
+          }
         }
         cb() // Fire done callbacks
       }

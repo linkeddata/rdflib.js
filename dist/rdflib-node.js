@@ -9428,8 +9428,15 @@ $rdf.Fetcher = function (store, timeout, async) {
           kb.add(xhr.resource, ns.rdf('type'), ns.link('WebPage'), sf.appNode)
         }
 
-        if (xhr.options.doRDFa && $rdf.parseRDFaDOM) {
-          $rdf.parseRDFaDOM(this.dom, kb, xhr.original)
+        if (!xhr.options.noRDFa && $rdf.parseRDFaDOM) { // enable by default
+          try {
+            $rdf.parseRDFaDOM(this.dom, kb, xhr.original.uri)
+          } catch (e){
+            var msg = ('Error trying to parse ' + xhr.resource + ' as RDFa:\n' + e + ':\n' + e.stack)
+            // dump(msg+"\n")
+            sf.failFetch(xhr, msg)
+            return
+          }
         }
         cb() // Fire done callbacks
       }
@@ -11097,5 +11104,5 @@ if (typeof exports !== 'undefined') {
   // Leak a global regardless of module system
   root['$rdf'] = $rdf
 }
-$rdf.buildTime = "2016-05-12T15:09:38";
+$rdf.buildTime = "2016-06-01T15:36:17";
 })(this);
