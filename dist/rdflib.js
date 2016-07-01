@@ -29324,17 +29324,21 @@ $rdf.Fetcher = function (store, timeout, async) {
     return new Promise(function (resolve, reject) {
       var xhr = $rdf.Util.XMLHTTPFactory()
       xhr.options = options
+      xhr.original = $rdf.sym(uri)
       if (!options.noMeta && typeof tabulator !== 'undefined') {
-        fetcher.saveRequestMetadata(xhr, tabulator.kb, uri)
+        fetcher.saveRequestMetadata(xhr, fetcher.store, uri)
       }
       xhr.onreadystatechange = function () {
         if (xhr.readyState === 4) { // NOte a 404 can be not afailure
           var ok = (!xhr.status || (xhr.status >= 200 && xhr.status < 300))
           if (!options.noMeta && typeof tabulator !== 'undefined') {
-            fetcher.saveResponseMetadata(xhr, tabulator.kb)
+            fetcher.saveResponseMetadata(xhr, fetcher.store)
           }
-          if (ok) resolve(xhr)
-          reject(xhr.status + ' ' + xhr.statusText)
+          if (ok) {
+            resolve(xhr)
+          } else {
+            reject(xhr.status + ' ' + xhr.statusText)
+          }
         }
       }
       xhr.open(method, uri, true)
@@ -29349,13 +29353,16 @@ $rdf.Fetcher = function (store, timeout, async) {
     var fetcher = this
     here = here.uri || here
     return new Promise(function (resolve, reject) {
-      this.webOperation('GET', here)
+      fetcher.webOperation('GET', here)
         .then(function (xhr) {
           fetcher.webOperation('PUT', // @@@ change to binary from text
             there, { data: xhr.responseText, contentType: content_type })
-        })
-        .then(function (xhr) {
-          resolve(xhr)
+              .then(function (xhr) {
+                resolve(xhr)
+              })
+              .catch(function (e) {
+                reject(e)
+              })
         })
         .catch(function (e) {
           reject(e)
@@ -30607,7 +30614,7 @@ if (typeof exports !== 'undefined') {
   // Leak a global regardless of module system
   root['$rdf'] = $rdf
 }
-$rdf.buildTime = "2016-06-01T15:36:17";
+$rdf.buildTime = "2016-06-29T21:56:52";
 })(this);
 
 },{"async":1,"jsonld":30,"n3":32,"xmldom":40,"xmlhttprequest":undefined}]},{},[])("rdflib")
