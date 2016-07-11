@@ -6,6 +6,10 @@
 $rdf.UpdateManager = (function () {
   var sparql = function (store) {
     this.store = store
+
+    if (!store.fetcher){ // The store must also/already have a fetcher
+      $rdf.fetcher(store)
+    }
     if (store.updater){
       throw("You can't have two UpdateManagers for the same store")
     }

@@ -7043,6 +7043,10 @@ $rdf.SPARQLResultsInterpreter = function (xml, callback, doneCallback) {
 $rdf.UpdateManager = (function () {
   var sparql = function (store) {
     this.store = store
+
+    if (!store.fetcher){ // The store must also/already have a fetcher
+      $rdf.fetcher(store)
+    }
     if (store.updater){
       throw("You can't have two UpdateManagers for the same store")
     }
@@ -11111,5 +11115,5 @@ if (typeof exports !== 'undefined') {
   // Leak a global regardless of module system
   root['$rdf'] = $rdf
 }
-$rdf.buildTime = "2016-06-29T21:56:52";
+$rdf.buildTime = "2016-07-11T13:33:01";
 })(this);
