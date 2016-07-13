@@ -1978,6 +1978,8 @@ $rdf.RDFParser = function (store) {
     return true
   }
 
+  var XMLSerializer = require('xmldom').XMLSerializer
+
   this.parseDOM = function (frame) {
     // a DOM utility function used in parsing
     var rdfid
@@ -2079,7 +2081,14 @@ $rdf.RDFParser = function (store) {
               frame.datatype = RDFParser.ns.RDF + 'XMLLiteral' // (this.buildFrame(frame)).addLiteral(dom)
               // should work but doesn't
               frame = this.buildFrame(frame)
-              frame.addLiteral(dom)
+              // The property value should be an XML string
+              // TODO: The DOM should be normalized to support === before serializing 
+              var serializer = new XMLSerializer()
+              var value=''
+              for (var c=0; c<dom.childNodes.length; c++) {
+                  value += serializer.serializeToString(dom.childNodes[c])
+              }
+              frame.addLiteral(value)
               dig = false
             } else if (nv === 'Resource') {
               frame = this.buildFrame(frame, frame.element)
@@ -2196,14 +2205,13 @@ $rdf.RDFParser = function (store) {
           if (this.base) uri = $rdf.Util.uri.join(uri, this.base)
           this.store.setPrefixForURI(attrs[x].name.slice(6), uri)
         }
-        //		alert('rdfparser: xml atribute: '+attrs[x].name) //@@
+        //    alert('rdfparser: xml atribute: '+attrs[x].name) //@@
         element.removeAttributeNode(attrs[x])
       }
     }
     return frame
   }
-}
-/**
+}/**
 *
 *  UTF-8 data encode / decode
 *  http://www.webtoolkit.info/
@@ -11054,5 +11062,5 @@ if (typeof exports !== 'undefined') {
   // Leak a global regardless of module system
   root['$rdf'] = $rdf
 }
-$rdf.buildTime = "2016-03-02T14:11:16";
+$rdf.buildTime = "2016-07-13T10:33:48";
 })(this);
