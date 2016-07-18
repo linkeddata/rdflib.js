@@ -1971,7 +1971,18 @@ $rdf.RDFParser = function (store) {
         this.addSymbol(this.ARC, uri)
       },         /** Add a literal to this frame */'addLiteral': function (value) {
         if (this.parent.datatype) {
-          this.node = this.store.literal(value, '', this.store.sym(this.parent.datatype))
+          if (this.parent.datatype === RDFParser.ns.RDF + 'XMLLiteral' ) {
+              // The property value should be an XML string
+              // TODO: The DOM should be normalized to support === before serializing 
+              var serializer = new XMLSerializer()
+              var lit=''
+              for (var c=0; c<value.childNodes.length; c++) {
+                  lit += serializer.serializeToString(value.childNodes[c])
+              }
+            this.node = this.store.literal(lit, "", this.store.sym(this.parent.datatype))
+          } else {
+            this.node = this.store.literal(value, "", this.store.sym(this.parent.datatype))
+          }
         } else {
           this.node = this.store.literal(value, this.lang)
         }
@@ -1982,6 +1993,8 @@ $rdf.RDFParser = function (store) {
       }
     }
   }
+
+  var XMLSerializer = require('xmldom').XMLSerializer
 
   // from the OpenLayers source .. needed to get around IE problems.
   this.getAttributeNodeNS = function (node, uri, name) {
@@ -11104,5 +11117,5 @@ if (typeof exports !== 'undefined') {
   // Leak a global regardless of module system
   root['$rdf'] = $rdf
 }
-$rdf.buildTime = "2016-06-01T15:36:17";
+$rdf.buildTime = "2016-07-18T16:58:31";
 })(this);
