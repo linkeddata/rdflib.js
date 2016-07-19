@@ -47,6 +47,7 @@ $rdf.Node = (function () {
   return Node
 })()
 
+// Singleton subclass of an empty Collection
 $rdf.Empty = (function (superClass) {
   extend(Empty, superClass)
 

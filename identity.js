@@ -100,6 +100,8 @@ $rdf.IndexedFormula = (function () {
         }
       ] // FP => handleFP, do add to index
     }
+
+    // Handle Inverse Functional Property
     function handle_IFP (formula, subj, pred, obj) {
       var s1 = formula.any(undefined, pred, obj)
       if (!s1) {
@@ -110,6 +112,7 @@ $rdf.IndexedFormula = (function () {
       return true
     } // handle_IFP
 
+    // Handle Functional Property
     function handle_FP (formula, subj, pred, obj) {
       var o1 = formula.any(subj, pred, undefined)
       if (!o1) {
@@ -621,6 +624,7 @@ $rdf.IndexedFormula = (function () {
   }
   /**  Full N3 bits  -- placeholders only to allow parsing, no functionality! **/
 
+  // Universals are Variables
   $rdf.IndexedFormula.prototype.newUniversal = function (uri) {
     var x = this.sym(uri)
     if (!this._universalVariables) this._universalVariables = []
@@ -628,6 +632,7 @@ $rdf.IndexedFormula = (function () {
     return x
   }
 
+  // Existentials are BNodes - something exists without naming
   $rdf.IndexedFormula.prototype.newExistential = function (uri) {
     if (!uri) return this.bnode()
     var x = this.sym(uri)

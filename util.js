@@ -201,17 +201,6 @@ $rdf.Util = {
       hour + ':' + minute + ':' + second + 'Z'
   },
 
-  enablePrivilege: ((typeof netscape !== 'undefined') &&
-    (typeof netscape.security.PrivilegeManager !== 'undefined') &&
-    netscape.security.PrivilegeManager.enablePrivilege) ||
-    function () {
-      return
-    },
-
-  disablePrivilege: ((typeof netscape !== 'undefined') && (typeof netscape.security.PrivilegeManager !== 'undefined') && netscape.security.PrivilegeManager.disablePrivilege) || function () {
-    return
-  },
-
   // removes all statements equal to x from a
   RDFArrayRemove: function (a, x) {
     for (var i = 0; i < a.length; i++) {
