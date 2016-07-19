@@ -387,51 +387,51 @@ $rdf.Util.string = {
   }
 }
 
-//From https://github.com/linkeddata/dokieli
-$rdf.Util.domToString = function(node, options) {
-  var options = options || {}
+// From https://github.com/linkeddata/dokieli
+$rdf.Util.domToString = function (node, options) {
+  options = options || {}
   var selfClosing = []
   if ('selfClosing' in options) {
     options.selfClosing.split(' ').forEach(function (n) {
       selfClosing[n] = true
     })
   }
-  var skipAttributes = [];
+  var skipAttributes = []
   if ('skipAttributes' in options) {
     options.skipAttributes.split(' ').forEach(function (n) {
       skipAttributes[n] = true
     })
   }
 
-  var noEsc = [false];
+  var noEsc = [false]
 
-  var dumpNode = function(node) {
+  var dumpNode = function (node) {
+    var i
     var out = ''
     if (typeof node.nodeType === 'undefined') return out
-    if (1 === node.nodeType) {
+    if (node.nodeType === 1) {
       if (node.hasAttribute('class') && 'classWithChildText' in options && node.matches(options.classWithChildText.class)) {
         out += node.querySelector(options.classWithChildText.element).textContent
-      }
-      else if (!('skipNodeWithClass' in options && node.matches('.' + options.skipNodeWithClass))) {
+      } else if (!('skipNodeWithClass' in options && node.matches('.' + options.skipNodeWithClass))) {
         var ename = node.nodeName.toLowerCase()
-        out += "<" + ename
+        out += '<' + ename
 
         var attrList = []
-        for (var i = node.attributes.length - 1; i >= 0; i--) {
+        for (i = node.attributes.length - 1; i >= 0; i--) {
           var atn = node.attributes[i]
           if (skipAttributes.length > 0 && skipAttributes[atn.name]) continue
           if (/^\d+$/.test(atn.name)) continue
-          if (atn.name == 'class' && 'replaceClassItemWith' in options && (atn.value.split(' ').indexOf(options.replaceClassItemWith.source) > -1)) {
+          if (atn.name === 'class' && 'replaceClassItemWith' in options && (atn.value.split(' ').indexOf(options.replaceClassItemWith.source) > -1)) {
             var re = new RegExp(options.replaceClassItemWith.source, 'g')
             atn.value = atn.value.replace(re, options.replaceClassItemWith.target).trim()
           }
-          if (!(atn.name == 'class' && 'skipClassWithValue' in options && options.skipClassWithValue == atn.value)) {
-            attrList.push(atn.name + "=\"" + atn.value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;') + "\"")
+          if (!(atn.name === 'class' && 'skipClassWithValue' in options && options.skipClassWithValue === atn.value)) {
+            attrList.push(atn.name + '=\'' + atn.value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/'/g, '&quot;') + '\'')
           }
         }
 
         if (attrList.length > 0) {
-          if('sortAttributes' in options && options.sortAttributes) {
+          if ('sortAttributes' in options && options.sortAttributes) {
             attrList.sort(function (a, b) {
               return a.toLowerCase().localeCompare(b.toLowerCase())
             })
@@ -439,33 +439,30 @@ $rdf.Util.domToString = function(node, options) {
           out += ' ' + attrList.join(' ')
         }
 
-        if (selfClosing[ename]) { out += " />"; }
-        else {
-          out += '>';
-          out += (ename == 'html') ? "\n  " : ''
-          noEsc.push(ename === "style" || ename === "script");
-          for (var i = 0; i < node.childNodes.length; i++) out += dumpNode(node.childNodes[i])
+        if (selfClosing[ename]) {
+          out += ' />'
+        } else {
+          out += '>'
+          out += (ename === 'html') ? '\n  ' : ''
+          noEsc.push(ename === 'style' || ename === 'script')
+          for (i = 0; i < node.childNodes.length; i++) out += dumpNode(node.childNodes[i])
           noEsc.pop()
-          out += (ename == 'body') ? '</' + ename + '>' + "\n" : '</' + ename + '>'
+          out += (ename === 'body') ? '</' + ename + '>' + '\n' : '</' + ename + '>'
         }
       }
-    }
-    else if (8 === node.nodeType) {
-      //FIXME: If comments are not tabbed in source, a new line is not prepended
-      out += "<!--" + node.nodeValue + "-->"
-    }
-    else if (3 === node.nodeType || 4 === node.nodeType) {
-      //XXX: Remove new lines which were added after DOM ready
+    } else if (node.nodeType === 8) {
+      // FIXME: If comments are not tabbed in source, a new line is not prepended
+      out += '<!--' + node.nodeValue + '-->'
+    } else if (node.nodeType === 3 || node.nodeType === 4) {
+      // XXX: Remove new lines which were added after DOM ready
       var nl = node.nodeValue.replace(/\n+$/, '')
-      out += noEsc[noEsc.length - 1] ? nl : nl.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-    }
-    else {
-      console.log("Warning; Cannot handle serialising nodes of type: " + node.nodeType)
+      out += noEsc[noEsc.length - 1] ? nl : nl.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    } else {
+      console.log('Warning; Cannot handle serialising nodes of type: ' + node.nodeType)
       console.log(node)
     }
     return out
-  };
-
+  }
   return dumpNode(node)
 }
 
