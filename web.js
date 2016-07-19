@@ -175,7 +175,7 @@ $rdf.Fetcher = function (store, timeout, async) {
         if (!xhr.options.noRDFa && $rdf.parseRDFaDOM) { // enable by default
           try {
             $rdf.parseRDFaDOM(this.dom, kb, xhr.original.uri)
-          } catch (e){
+          } catch (e) {
             var msg = ('Error trying to parse ' + xhr.resource + ' as RDFa:\n' + e + ':\n' + e.stack)
             // dump(msg+"\n")
             sf.failFetch(xhr, msg)
@@ -394,7 +394,7 @@ $rdf.Fetcher = function (store, timeout, async) {
 
         sf.addStatus(xhr.req, 'N3 parsed: ' + p.statementCount + ' triples in ' + p.lines + ' lines.')
         sf.store.add(xhr.original, ns.rdf('type'), ns.link('RDFDocument'), sf.appNode)
-        var args = [xhr.original.uri] // Other args needed ever?
+        // var args = [xhr.original.uri] // Other args needed ever?
         sf.doneFetch(xhr)
       }
     }
@@ -1720,16 +1720,15 @@ $rdf.serialize = function (target, kb, base, contentType, callback) {
       case 'application/rdf+xml':
         documentString = sz.statementsToXML(newSts)
         return executeCallback(null, documentString)
-        case 'text/n3':
-        case 'application/n3': // Legacy
-          documentString = sz.statementsToN3(newSts)
-          return executeCallback(null, documentString)
-
-          case 'text/turtle':
-          case 'application/x-turtle': // Legacy
-            sz.setFlags('si') // Suppress = for sameAs and => for implies
-            documentString = sz.statementsToN3(newSts)
-            return executeCallback(null, documentString)
+      case 'text/n3':
+      case 'application/n3': // Legacy
+        documentString = sz.statementsToN3(newSts)
+        return executeCallback(null, documentString)
+      case 'text/turtle':
+      case 'application/x-turtle': // Legacy
+        sz.setFlags('si') // Suppress = for sameAs and => for implies
+        documentString = sz.statementsToN3(newSts)
+        return executeCallback(null, documentString)
       case 'application/ld+json':
         n3String = sz.statementsToN3(newSts)
         $rdf.convert.convertToJson(n3String, callback)
@@ -1744,7 +1743,7 @@ $rdf.serialize = function (target, kb, base, contentType, callback) {
     }
   } catch (err) {
     if (callback) {
-      return (err)
+      return callback(err)
     }
     throw err // Don't hide problems from caller in sync mode
   }
