@@ -21,6 +21,7 @@ module.exports.RDFArrayRemove = rdfArrayRemove
 module.exports.string_startswith = stringStartsWith
 module.exports.string = {}
 module.exports.string.template = stringTemplate
+module.exports.uri = require('./uri')  // TODO: Remove this mixed usage
 // module.exports.variablesIn = variablesIn
 module.exports.XMLHTTPFactory = xhr
 module.exports.log = log
