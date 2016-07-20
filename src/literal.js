@@ -11,6 +11,9 @@ class Literal extends Node {
     this.language = language  // rdfjs property
     this.datatype = datatype
   }
+  copy () {
+    return new Literal(this.value, this.lang, this.datatype)
+  }
   equals (other) {
     if (!other) {
       return false

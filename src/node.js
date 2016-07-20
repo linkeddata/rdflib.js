@@ -30,6 +30,9 @@ class Node {
     return (this.termType === other.termType) &&
       (this.value === other.value)
   }
+  hashString () {
+    return this.toCanonical()
+  }
   sameTerm (other) {
     return this.equals(other)
   }

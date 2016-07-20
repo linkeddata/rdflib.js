@@ -24,6 +24,11 @@ class BlankNode extends Node {
     }
     return 0
   }
+  copy (formula) { // depends on the formula
+    var bnodeNew = new BlankNode()
+    formula.copyTo(this, bnodeNew)
+    return bnodeNew
+  }
   toString () {
     return BlankNode.NTAnonymousNodePrefix + this.id
   }
