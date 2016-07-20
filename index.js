@@ -7,6 +7,7 @@ var $rdf = {
   'IndexedFormula': require('./src/indexed-formula'),
   'Literal': require('./src/literal'),
   log: require('./src/log'),
+  'N3Parser': require('./src/n3parser'),
   'NamedNode': require('./src/named-node'),
   'Node': require('./src/node'),
   'RDFParser': require('./src/rdfparser'),

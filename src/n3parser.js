@@ -4,15 +4,16 @@
 *  http://www.webtoolkit.info/
 *
 **/
+const uri = require('./uri')
+const ArrayIndexOf = require('./util').ArrayIndexOf
 
-$rdf.N3Parser = function () {
+var N3Parser = (function () {
 
 function hexify(str) { // also used in parser
   return encodeURI(str);
 }
 
 var Utf8 = {
-
     // public method for url encoding
     encode : function (string) {
         string = string.replace(/\r\n/g,"\n");
@@ -39,7 +40,6 @@ var Utf8 = {
 
         return utftext;
     },
-
     // public method for url decoding
     decode : function (utftext) {
         var string = "";
@@ -66,7 +66,6 @@ var Utf8 = {
         }
         return string;
     }
-
 }// Things we need to define to make converted pythn code work in js
 // environment of $rdf
 
@@ -90,7 +89,7 @@ var pyjslib_len = function(s) { return s.length }
 
 var pyjslib_slice = function(str, i, j) {
     if (typeof str.slice == 'undefined')
-        throw '@@ mising.js: No .slice function for '+str+' of type '+(typeof str) 
+        throw '@@ mising.js: No .slice function for '+str+' of type '+(typeof str)
     if ((typeof j == 'undefined') || (j ==null)) return str.slice(i);
     return str.slice(i, j) // @ exactly the same spec?
 }
@@ -117,7 +116,7 @@ var string_find = function(str, s) {
 var assertFudge = function(condition, desc) {
     if (condition) return;
     if (desc) throw "python Assertion failed: "+desc;
-    throw "(python) Assertion failed.";  
+    throw "(python) Assertion failed.";
 }
 
 
@@ -139,7 +138,7 @@ String.prototype.decode = function(encoding) {
 
 
 var uripath_join = function(base, given) {
-    return $rdf.Util.uri.join(given, base)  // sad but true
+    return uri.join(given, base)  // sad but true
 }
 
 var becauseSubexpression = null; // No reason needed
@@ -230,7 +229,7 @@ function __SinkParser(store, openFormula, thisDoc, baseURI, genPrefix, metaURI, 
     /*
     note: namespace names should *not* end in #;
     the # will get added during qname processing */
-    
+
     this._bindings = new pyjslib_Dict([]);
     this._flags = flags;
     if ((thisDoc != "")) {
@@ -304,7 +303,7 @@ __SinkParser.prototype.loadStream = function(stream) {
 __SinkParser.prototype.loadBuf = function(buf) {
     /*
     Parses a buffer and returns its top level formula*/
-    
+
     this.startDoc();
     this.feed(buf);
     return this.endDoc();
@@ -312,13 +311,13 @@ __SinkParser.prototype.loadBuf = function(buf) {
 __SinkParser.prototype.feed = function(octets) {
     /*
     Feed an octet stream tothe parser
-    
+
     if BadSyntax is raised, the string
     passed in the exception object is the
     remainder after any statements have been parsed.
     So if there is more data to feed to the
     parser, it should be straightforward to recover.*/
-    
+
     var str = octets.decode("utf-8");
     var i = 0;
     while ((i >= 0)) {
@@ -356,7 +355,7 @@ __SinkParser.prototype.tok = function(tok, str, i) {
         var i =  ( i + 1 ) ;
     }
     else {
-        if (($rdf.Util.ArrayIndexOf(this.keywords,tok) < 0)) {
+        if ((ArrayIndexOf(this.keywords,tok) < 0)) {
             return -1;
         }
     }
@@ -396,24 +395,24 @@ __SinkParser.prototype.directive = function(str, i) {
         if ((i < 0)) {
             throw BadSyntax(this._thisDoc, this.lines, str, i, "Bad variable list after @forAll");
         }
-        
+
         var __x = new pyjslib_Iterator(res);
         try {
             while (true) {
                 var x = __x.next();
-                
-                
-                if ($rdf.Util.ArrayIndexOf(this._variables,x) < 0 || ($rdf.Util.ArrayIndexOf(this._parentVariables,x) >= 0)) {
+
+
+                if (ArrayIndexOf(this._variables,x) < 0 || (ArrayIndexOf(this._parentVariables,x) >= 0)) {
                     this._variables[x] = ( this._context.newUniversal(x));
                 }
-                
+
             }
         } catch (e) {
             if (e != StopIteration) {
                 throw e;
             }
         }
-        
+
         return i;
     }
     var j = this.tok("forSome", str, i);
@@ -422,22 +421,22 @@ __SinkParser.prototype.directive = function(str, i) {
         if ((i < 0)) {
             throw BadSyntax(this._thisDoc, this.lines, str, i, "Bad variable list after @forSome");
         }
-        
+
         var __x = new pyjslib_Iterator(res);
         try {
             while (true) {
                 var x = __x.next();
-                
-                
+
+
                 this._context.declareExistential(x);
-                
+
             }
         } catch (e) {
             if (e != StopIteration) {
                 throw e;
             }
         }
-        
+
         return i;
     }
     var j = this.tok("prefix", str, i);
@@ -460,7 +459,7 @@ __SinkParser.prototype.directive = function(str, i) {
         }
         assertFudge((ns.indexOf(":") >= 0));
         this._bindings[t[0][0]] = ( ns);
-        
+
         this.bind(t[0][0], hexify(ns));
         return j;
     }
@@ -494,7 +493,7 @@ __SinkParser.prototype.bind = function(qn, uri) {
 __SinkParser.prototype.setKeywords = function(k) {
     /*
     Takes a list of strings*/
-    
+
     if ((k == null)) {
         this.keywordsSet = 0;
     }
@@ -508,7 +507,7 @@ __SinkParser.prototype.startDoc = function() {
 __SinkParser.prototype.endDoc = function() {
     /*
     Signal end of document and stop parsing. returns formula*/
-    
+
     return this._formula;
 };
 __SinkParser.prototype.makeStatement = function(quad) {
@@ -540,7 +539,7 @@ __SinkParser.prototype.verb = function(str, i, res) {
     >- prop ->
     <- prop -<
     _operator_*/
-    
+
     var j = this.skipSpace(str, i);
     if ((j < 0)) {
         return j;
@@ -618,7 +617,7 @@ __SinkParser.prototype.path = function(str, i, res) {
     /*
     Parse the path production.
     */
-    
+
     var j = this.nodeOrLiteral(str, i, res);
     if ((j < 0)) {
         return j;
@@ -651,7 +650,7 @@ __SinkParser.prototype.path = function(str, i, res) {
 __SinkParser.prototype.anonymousNode = function(ln) {
     /*
     Remember or generate a term for one of these _: anonymous nodes*/
-    
+
     var term = this._anonymousNodes[ln];
     if (term) {
         return term;
@@ -667,7 +666,7 @@ __SinkParser.prototype.node = function(str, i, res, subjectAlready) {
     Space is now skipped once at the beginning
     instead of in multipe calls to self.skipSpace().
     */
-    
+
     var subj = subjectAlready;
     var j = this.skipSpace(str, i);
     if ((j < 0)) {
@@ -685,26 +684,26 @@ __SinkParser.prototype.node = function(str, i, res, subjectAlready) {
             var i =  ( j + 1 ) ;
             var objs = new pyjslib_List([]);
             var j = this.objectList(str, i, objs);
-            
+
             if ((j >= 0)) {
                 var subj = objs[0];
                 if ((pyjslib_len(objs) > 1)) {
-                    
+
                     var __obj = new pyjslib_Iterator(objs);
                     try {
                         while (true) {
                             var obj = __obj.next();
-                            
-                            
+
+
                             this.makeStatement(new pyjslib_Tuple([this._context, this._store.sym(DAML_sameAs_URI), subj, obj]));
-                            
+
                         }
                     } catch (e) {
                         if (e != StopIteration) {
                             throw e;
                         }
                     }
-                    
+
                 }
                 var j = this.skipSpace(str, j);
                 if ((j < 0)) {
@@ -868,7 +867,7 @@ __SinkParser.prototype.property_list = function(str, i, subj) {
     Parse property list
     Leaves the terminating punctuation in the buffer
     */
-    
+
     while (1) {
         var j = this.skipSpace(str, i);
         if ((j < 0)) {
@@ -896,13 +895,13 @@ __SinkParser.prototype.property_list = function(str, i, subj) {
         if ((i < 0)) {
             throw BadSyntax(this._thisDoc, this.lines, str, j, "objectList expected");
         }
-        
+
         var __obj = new pyjslib_Iterator(objs);
         try {
             while (true) {
                 var obj = __obj.next();
-                
-                
+
+
                 var pairFudge = v[0];
                 var dir = pairFudge[0];
                 var sym = pairFudge[1];
@@ -912,14 +911,14 @@ __SinkParser.prototype.property_list = function(str, i, subj) {
                 else {
                     this.makeStatement(new pyjslib_Tuple([this._context, sym, obj, subj]));
                 }
-                
+
             }
         } catch (e) {
             if (e != StopIteration) {
                 throw e;
             }
         }
-        
+
         var j = this.skipSpace(str, i);
         if ((j < 0)) {
             throw BadSyntax(this._thisDoc, this.lines, str, j, "EOF found in list of objects");
@@ -935,11 +934,11 @@ __SinkParser.prototype.commaSeparatedList = function(str, j, res, ofUris) {
     /*
     return value: -1 bad syntax; >1 new position in str
     res has things found appended
-    
+
     Used to use a final value of the function to be called, e.g. this.bareWord
     but passing the function didn't work fo js converion pyjs
     */
-    
+
     var i = this.skipSpace(str, j);
     if ((i < 0)) {
         throw BadSyntax(this._thisDoc, this.lines, str, i, "EOF found expecting comma sep list");
@@ -1021,12 +1020,12 @@ __SinkParser.prototype.checkDot = function(str, i) {
 __SinkParser.prototype.uri_ref2 = function(str, i, res) {
     /*
     Generate uri from n3 representation.
-    
+
     Note that the RDF convention of directly concatenating
     NS and local name is now used though I prefer inserting a '#'
     to make the namesapces look more like what XML folks expect.
     */
-    
+
     var qn = new pyjslib_List([]);
     var j = this.qname(str, i, qn);
     if ((j >= 0)) {
@@ -1048,7 +1047,7 @@ __SinkParser.prototype.uri_ref2 = function(str, i, res) {
             }
         }
         var symb = this._store.sym( ( ns + ln ) );
-        if (($rdf.Util.ArrayIndexOf(this._variables, symb) >= 0)) {
+        if ((ArrayIndexOf(this._variables, symb) >= 0)) {
             res.push(this._variables[symb]);
         }
         else {
@@ -1085,7 +1084,7 @@ __SinkParser.prototype.uri_ref2 = function(str, i, res) {
                     var uref =  ( uref + "#" ) ;
                 }
                 var symb = this._store.sym(uref);
-                if (($rdf.Util.ArrayIndexOf(this._variables,symb) >= 0)) {
+                if ((ArrayIndexOf(this._variables,symb) >= 0)) {
                     res.push(this._variables[symb]);
                 }
                 else {
@@ -1103,7 +1102,7 @@ __SinkParser.prototype.uri_ref2 = function(str, i, res) {
         if ((j < 0)) {
             return -1;
         }
-        if (($rdf.Util.ArrayIndexOf(this.keywords, v[0]) >= 0)) {
+        if ((ArrayIndexOf(this.keywords, v[0]) >= 0)) {
             throw BadSyntax(this._thisDoc, this.lines, str, i,  (  ( "Keyword \"" + v[0] )  + "\" not allowed here." ) );
         }
         res.push(this._store.sym( ( this._bindings[""] + v[0] ) ));
@@ -1135,7 +1134,7 @@ __SinkParser.prototype.skipSpace = function(str, i) {
                         this.lines = this.lines + 1;
                         break;
                     }
-                }; 
+                };
             } else { // Not hash - something interesting
                 // console.log(" skipspace 3 ch <" + ch + ">");
                 return j
@@ -1154,7 +1153,7 @@ __SinkParser.prototype.variable = function(str, i, res) {
     /*
     ?abc -> variable(:abc)
     */
-    
+
     var j = this.skipSpace(str, i);
     if ((j < 0)) {
         return -1;
@@ -1181,7 +1180,7 @@ __SinkParser.prototype.bareWord = function(str, i, res) {
     /*
     abc -> :abc
     */
-    
+
     var j = this.skipSpace(str, i);
     if ((j < 0)) {
         return -1;
@@ -1202,12 +1201,12 @@ __SinkParser.prototype.bareWord = function(str, i, res) {
 };
 __SinkParser.prototype.qname = function(str, i, res) {
     /*
-    
+
     xyz:def -> ('xyz', 'def')
     If not in keywords and keywordsSet: def -> ('', 'def')
-    :def -> ('', 'def')    
+    :def -> ('', 'def')
     */
-    
+
     var i = this.skipSpace(str, i);
     if ((i < 0)) {
         return -1;
@@ -1251,7 +1250,7 @@ __SinkParser.prototype.qname = function(str, i, res) {
         return i;
     }
     else {
-        if (ln && this.keywordsSet && ($rdf.Util.ArrayIndexOf(this.keywords, ln) < 0)) {
+        if (ln && this.keywordsSet && (ArrayIndexOf(this.keywords, ln) < 0)) {
             res.push(new pyjslib_Tuple(["", ln]));
             return i;
         }
@@ -1306,7 +1305,7 @@ __SinkParser.prototype.nodeOrLiteral = function(str, i, res) {
         }
         var ch = str.charAt(i);
         if (("-+0987654321".indexOf(ch) >= 0)) {
-	
+
 	    datetime_syntax.lastIndex = 0;
             var m = datetime_syntax.exec(str.slice(i));
             if ((m != null)) {
@@ -1317,8 +1316,8 @@ __SinkParser.prototype.nodeOrLiteral = function(str, i, res) {
 		    res.push(this._store.literal(val, undefined, this._store.sym(DATETIME_DATATYPE)));
 		} else {
 		    res.push(this._store.literal(val, undefined, this._store.sym(DATE_DATATYPE)));
-		}	
-	
+		}
+
 	    } else {
 		number_syntax.lastIndex = 0;
 		var m = number_syntax.exec(str.slice(i));
@@ -1354,13 +1353,13 @@ __SinkParser.prototype.nodeOrLiteral = function(str, i, res) {
             var lang = null;
             if ((pyjslib_slice(str, j,  ( j + 1 ) ) == "@")) {
                 langcode.lastIndex = 0;
-                
+
                 var m = langcode.exec(str.slice( ( j + 1 ) ));
                 if ((m == null)) {
                     throw BadSyntax(this._thisDoc, startline, str, i, "Bad language code syntax on string literal, after @");
                 }
                 var i =  (  ( langcode.lastIndex + j )  + 1 ) ;
-                
+
                 var lang = pyjslib_slice(str,  ( j + 1 ) , i);
                 var j = i;
             }
@@ -1382,7 +1381,7 @@ __SinkParser.prototype.strconst = function(str, i, delim) {
     parse an N3 string constant delimited by delim.
     return index, val
     */
-    
+
     var j = i;
     var ustr = "";
     var startline = this.lines;
@@ -1532,24 +1531,24 @@ function BadSyntax(uri, lines, str, i, why) {
 
 function stripCR(str) {
     var res = "";
-    
+
     var __ch = new pyjslib_Iterator(str);
     try {
         while (true) {
             var ch = __ch.next();
-            
-            
+
+
             if ((ch != "\r")) {
                 var res =  ( res + ch ) ;
             }
-            
+
         }
     } catch (e) {
         if (e != StopIteration) {
             throw e;
         }
     }
-    
+
     return res;
 }
 
@@ -1559,4 +1558,6 @@ function dummyWrite(x) {
 
 return SinkParser;
 
-}();
+})();
+
+module.exports = N3Parser
