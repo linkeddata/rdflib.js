@@ -10,6 +10,7 @@ var $rdf = {
   'N3Parser': require('./src/n3parser'),
   'NamedNode': require('./src/named-node'),
   'Node': require('./src/node'),
+  'RDFaProcessor': require('./src/rdfparser'),
   'RDFParser': require('./src/rdfparser'),
   'Serializer': require('./src/serialize'),
   'Statement': require('./src/statement'),
