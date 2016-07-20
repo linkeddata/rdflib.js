@@ -9,6 +9,7 @@ var $rdf = {
   log: require('./src/log'),
   'NamedNode': require('./src/named-node'),
   'Node': require('./src/node'),
+  'RDFParser': require('./src/rdfparser'),
   'Serializer': require('./src/serialize'),
   'Statement': require('./src/statement'),
   term: require('./src/term'),
