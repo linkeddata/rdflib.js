@@ -15,6 +15,8 @@
 /* jsl:option explicit */
 const ArrayIndexOf = require('./util').ArrayIndexOf
 const Formula = require('./formula')
+// const log = require('./log')
+const Query = require('./query')
 const RDFArrayRemove = require('./util').RDFArrayRemove
 const Statement = require('./statement')
 const term = require('./term')
@@ -28,7 +30,7 @@ function handle_FP (formula, subj, pred, obj) {
   if (!o1) {
     return false // First time with this value
   }
-  // $rdf.log.warn("Equating "+o1.uri+" and "+obj.uri + " because FP "+pred.uri);  //@@
+  // log.warn("Equating "+o1.uri+" and "+obj.uri + " because FP "+pred.uri);  //@@
   formula.equate(o1, obj)
   return true
 } // handle_FP
@@ -39,7 +41,7 @@ function handle_IFP (formula, subj, pred, obj) {
   if (!s1) {
     return false // First time with this value
   }
-  // $rdf.log.warn("Equating "+s1.uri+" and "+subj.uri + " because IFP "+pred.uri);  //@@
+  // log.warn("Equating "+s1.uri+" and "+subj.uri + " because IFP "+pred.uri);  //@@
   formula.equate(s1, subj)
   return true
 } // handle_IFP
@@ -89,6 +91,78 @@ class IndexedFormula extends Formula {
     this.initPropertyActions(features)
   }
 
+  applyPatch (patch, target, patchCallback) { // patchCallback(err)
+    var targetKB = this
+    var ds
+    var doPatch = function (onDonePatch) {
+      // log.info("doPatch ...")
+      if (patch['delete']) {
+        // log.info("doPatch delete "+patch['delete'])
+        ds = patch['delete']
+        if (bindings) ds = ds.substitute(bindings)
+        ds = ds.statements
+        var bad = []
+        var ds2 = ds.map(function (st) { // Find the actual statemnts in the store
+          var sts = targetKB.statementsMatching(st.subject, st.predicate, st.object, target)
+          if (sts.length === 0) {
+            // log.info("NOT FOUND deletable " + st)
+            bad.push(st)
+            return null
+          } else {
+            // log.info("Found deletable " + st)
+            return sts[0]
+          }
+        })
+        if (bad.length) {
+          return patchCallback("Couldn't find to delete: " + bad[0])
+        }
+        ds2.map(function (st) {
+          targetKB.remove(st)
+        })
+      }
+      if (patch['insert']) {
+        // log.info("doPatch insert "+patch['insert'])
+        ds = patch['insert']
+        if (bindings) ds = ds.substitute(bindings)
+        ds = ds.statements
+        ds.map(function (st) {
+          st.why = target
+          targetKB.add(st.subject, st.predicate, st.object, st.why)
+        })
+      }
+      onDonePatch()
+    }
+    var bindings = null
+    if (patch.where) {
+      // log.info("Processing WHERE: " + patch.where + '\n')
+      var query = new Query('patch')
+      query.pat = patch.where
+      query.pat.statements.map(function (st) {
+        st.why = target
+      })
+
+      var bindingsFound = []
+      // log.info("Processing WHERE - launching query: " + query.pat)
+
+      targetKB.query(query, function onBinding (binding) {
+        bindingsFound.push(binding)
+      },
+        targetKB.fetcher,
+        function onDone () {
+          if (bindingsFound.length === 0) {
+            return patchCallback('No match found to be patched:' + patch.where)
+          }
+          if (bindingsFound.length > 1) {
+            return patchCallback('Patch ambiguous. No patch done.')
+          }
+          bindings = bindingsFound[0]
+          doPatch(patchCallback)
+        })
+    } else {
+      doPatch(patchCallback)
+    }
+  }
+
   declareExistential (x) {
     if (!this._existentialVariables) this._existentialVariables = []
     this._existentialVariables.push(x)
@@ -104,7 +178,7 @@ class IndexedFormula extends Formula {
     if (ArrayIndexOf(features, 'sameAs') >= 0) {
       this.propertyActions['<http://www.w3.org/2002/07/owl#sameAs>'] = [
         function (formula, subj, pred, obj, why) {
-          // $rdf.log.warn("Equating "+subj.uri+" sameAs "+obj.uri);  //@@
+          // log.warn("Equating "+subj.uri+" sameAs "+obj.uri);  //@@
           formula.equate(subj, obj)
           return true // true if statement given is NOT needed in the store
         }
@@ -175,7 +249,7 @@ class IndexedFormula extends Formula {
     // still return this statement for owl:sameAs input
     var hash = [ this.canon(subj).hashString(), predHash,
       this.canon(obj).hashString(), this.canon(why).hashString()]
-    st = new $rdf.Statement(subj, pred, obj, why)
+    st = new Statement(subj, pred, obj, why)
     for (i = 0; i < 4; i++) {
       var ix = this.index[i]
       var h = hash[i]
@@ -185,7 +259,7 @@ class IndexedFormula extends Formula {
       ix[h].push(st) // Set of things with this as subject, etc
     }
 
-    // $rdf.log.debug("ADDING    {"+subj+" "+pred+" "+obj+"} "+why)
+    // log.debug("ADDING    {"+subj+" "+pred+" "+obj+"} "+why)
     this.statements.push(st)
     return st
   }
@@ -300,7 +374,7 @@ class IndexedFormula extends Formula {
    * We replace the bigger with the smaller.
    */
   equate (u1, u2) {
-    // $rdf.log.warn("Equating "+u1+" and "+u2); // @@
+    // log.warn("Equating "+u1+" and "+u2); // @@
     // @@JAMBO Must canonicalize the uris to prevent errors from a=b=c
     // 03-21-2010
     u1 = this.canon(u1)
@@ -340,7 +414,7 @@ class IndexedFormula extends Formula {
   }
 
   newPropertyAction (pred, action) {
-    // $rdf.log.debug("newPropertyAction:  "+pred)
+    // log.debug("newPropertyAction:  "+pred)
     var hash = pred.hashString()
     if (!this.propertyActions[hash]) {
       this.propertyActions[hash] = []
@@ -411,7 +485,7 @@ class IndexedFormula extends Formula {
    * remove all statements matching args (within limit) *
    */
   removeMany (subj, pred, obj, why, limit) {
-    // $rdf.log.debug("entering removeMany w/ subj,pred,obj,why,limit = " + subj +", "+ pred+", " + obj+", " + why+", " + limit)
+    // log.debug("entering removeMany w/ subj,pred,obj,why,limit = " + subj +", "+ pred+", " + obj+", " + why+", " + limit)
     var sts = this.statementsMatching(subj, pred, obj, why, false)
     // This is a subtle bug that occcured in updateCenter.js too.
     // The fact is, this.statementsMatching returns this.whyIndex instead of a copy of it
@@ -437,13 +511,13 @@ class IndexedFormula extends Formula {
    *    Otherwise, you should use remove() above.
    */
   removeStatement (st) {
-    // $rdf.log.debug("entering remove w/ st=" + st)
+    // log.debug("entering remove w/ st=" + st)
     var term = [ st.subject, st.predicate, st.object, st.why ]
     for (var p = 0; p < 4; p++) {
       var c = this.canon(term[p])
       var h = c.hashString()
       if (!this.index[p][h]) {
-        // $rdf.log.warn ("Statement removal: no index '+p+': "+st)
+        // log.warn ("Statement removal: no index '+p+': "+st)
       } else {
         RDFArrayRemove(this.index[p][h], st)
       }
@@ -463,7 +537,7 @@ class IndexedFormula extends Formula {
    * Replace big with small, obsoleted with obsoleting.
    */
   replaceWith (big, small) {
-    // $rdf.log.debug("Replacing "+big+" with "+small) // @@
+    // log.debug("Replacing "+big+" with "+small) // @@
     var oldhash = big.hashString()
     var newhash = small.hashString()
     var moveIndex = function (ix) {
@@ -504,7 +578,7 @@ class IndexedFormula extends Formula {
     }
     moveIndex(this.classActions)
     moveIndex(this.propertyActions)
-    // $rdf.log.debug("Equate done. "+big+" to be known as "+small)
+    // log.debug("Equate done. "+big+" to be known as "+small)
     return true // true means the statement does not need to be put in
   }
 
@@ -542,7 +616,7 @@ class IndexedFormula extends Formula {
    * ALL CONVENIENCE LOOKUP FUNCTIONS RELY ON THIS!
    */
   statementsMatching (subj, pred, obj, why, justOne) {
-    // $rdf.log.debug("Matching {"+subj+" "+pred+" "+obj+"}")
+    // log.debug("Matching {"+subj+" "+pred+" "+obj+"}")
     var pat = [ subj, pred, obj, why ]
     var pattern = []
     var hash = []
