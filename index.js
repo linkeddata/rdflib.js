@@ -22,6 +22,8 @@ var $rdf = {
   Statement: require('./src/statement'),
   term: require('./src/term'),
   UpdateManager: require('./src/update-manager'),
+  UpdatesSocket: require('./src/updates-via').UpdatesSocket,
+  UpdatesVia: require('./src/updates-via').UpdatesVia,
   uri: require('./src/uri'),
   Util: require('./src/util'),
   Variable: require('./src/variable')

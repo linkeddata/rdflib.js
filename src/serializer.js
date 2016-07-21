@@ -6,9 +6,11 @@
 ** Bug: can't serialize  http://data.semanticweb.org/person/abraham-bernstein/rdf
 ** in XML (from mhausenblas)
 */
-
 // @@@ Check the whole toStr thing tosee whetehr it still makes sense -- tbl
-//
+const NamedNode = require('./named-node')
+const Uri = require('./uri')
+const Util = require('./util')
+
 var Serializer = function() {
 var __Serializer = function( store ){
     this.flags = "";
@@ -399,7 +401,7 @@ __Serializer.prototype.statementsToN3 = function(sts) {
         }
 
         var SPO = function(x, y) {
-            return $rdf.Util.heavyCompareSPO(x, y, this.store)
+            return Util.heavyCompareSPO(x, y, this.store)
         }
         sts.sort(); // 2014-09-30
 //        sts.sort(SPO); // 2014-09-30
@@ -464,7 +466,7 @@ __Serializer.prototype.statementsToN3 = function(sts) {
             if (!this.prefixes.hasOwnProperty(ns)) continue;
             if (!this.namespacesUsed[ns]) continue;
             str += '@prefix ' + this.prefixes[ns] + ': <' +
-                 $rdf.uri.refTo(this.base, ns) + '>.\n';
+                 Uri.refTo(this.base, ns) + '>.\n';
         }
         return str + '\n';
     }
@@ -605,7 +607,7 @@ __Serializer.prototype.symbolToN3 = function symbolToN3(x) {  // c.f. symbolStri
         }
     }
     if (this.flags.indexOf('r') < 0 && this.base)
-        uri = $rdf.uri.refTo(this.base, uri);
+        uri = Uri.refTo(this.base, uri);
     else if (this.flags.indexOf('u') >= 0)
         uri = backslashUify(uri);
     else uri = hexify(uri);
@@ -780,7 +782,7 @@ __Serializer.prototype.statementsToXML = function(sts) {
     }
 
     function relURI(term) {
-        return escapeForXML((this.base) ? $rdf.Util.uri.refTo(this.base, term.uri) : term.uri);
+        return escapeForXML((this.base) ? .Util.uri.refTo(this.base, term.uri) : term.uri);
     }
     relURI = relURI.bind(this);
 
@@ -838,7 +840,7 @@ __Serializer.prototype.statementsToXML = function(sts) {
           if(number == intNumber.toString()) {
             // was numeric; don't need to worry about ordering since we've already
             // sorted the statements
-            pred = new $rdf.NamedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#li');
+            pred = new NamedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#li');
           }
         }
 
