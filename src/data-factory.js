@@ -1,6 +1,7 @@
 'use strict'
 const BlankNode = require('./blank-node')
 const Collection = require('./collection')
+const IndexedFormula = require('./indexed-formula')
 const Literal = require('./literal')
 const NamedNode = require('./named-node')
 const Statement = require('./statement')
@@ -11,6 +12,9 @@ function blankNode (value) {
 }
 function collection (elements) {
   return new Collection(elements)
+}
+function graph () {
+  return new IndexedFormula()
 }
 function lit (val, lang, dt) {
   return new Literal('' + val, lang, dt)
@@ -32,6 +36,9 @@ function namedNode (value) {
 function quad (subject, predicate, object, graph) {
   return new Statement(subject, predicate, object, graph)
 }
+function st (subject, predicate, object, graph) {
+  return new Statement(subject, predicate, object, graph)
+}
 function triple (subject, predicate, object) {
   return quad(subject, predicate, object)
 }
@@ -41,9 +48,11 @@ function variable (name) {
 
 // rdfjs spec factory methods
 module.exports.blankNode = blankNode
+module.exports.graph = graph
 module.exports.literal = literal
 module.exports.namedNode = namedNode
 module.exports.quad = quad
+module.exports.st = st
 module.exports.triple = triple
 module.exports.variable = variable
 

@@ -9,16 +9,18 @@ var $rdf = {
   log: require('./src/log'),
   N3Parser: require('./src/n3parser'),
   NamedNode: require('./src/named-node'),
+  Namespace: require('./src/namespace'),
   Node: require('./src/node'),
   Query: require('./src/query').Query,
   queryToSPARQL: require('./src/query-to-sparql'),
   RDFaProcessor: require('./src/rdfaparser'),
   RDFParser: require('./src/rdfparser'),
-  Serializer: require('./src/serialize'),
+  Serializer: require('./src/serializer'),
   SPARQLToQuery: require('./src/sparql-to-query'),
   sparqlUpdateParser: require('./patch-parser'),
   Statement: require('./src/statement'),
   term: require('./src/term'),
+  UpdateManager: require('./src/update-manager'),
   uri: require('./src/uri'),
   Util: require('./src/util'),
   Variable: require('./src/variable')
@@ -26,15 +28,10 @@ var $rdf = {
 
 $rdf.NextId = $rdf.BlankNode.nextId
 
-$rdf.st = function st (subject, predicate, object, graph) {
-  return new $rdf.Statement(subject, predicate, object, graph)
-}
-$rdf.graph = function graph () {
-  return new $rdf.IndexedFormula()
-}
 $rdf.fromNT = $rdf.Formula.prototype.fromNT
+$rdf.graph = $rdf.DataFactory.graph
 $rdf.lit = $rdf.DataFactory.lit
-$rdf.Namespace = $rdf.Formula.prototype.ns
+$rdf.st = $rdf.DataFactory.st
 $rdf.sym = $rdf.DataFactory.namedNode
-$rdf.variable = $rdf.Formula.prototype.variable
+$rdf.variable = $rdf.DataFactory.variable
 module.exports = $rdf

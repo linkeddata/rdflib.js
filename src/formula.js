@@ -480,9 +480,6 @@ class Formula extends Node {
   toString () {
     return '{' + this.statements.join('\n') + '}'
   }
-  variable (name) {
-    return new Variable(name)
-  }
   whether (s, p, o, g) {
     return this.statementsMatching(s, p, o, g, false).length
   }
@@ -492,10 +489,7 @@ Formula.termType = 'formula'
 Formula.prototype.classOrder = ClassOrder['Formula']
 Formula.prototype.isVar = 0
 
-Formula.prototype.ns = function (nsuri) {
-  return function (ln) {
-    return new NamedNode(nsuri + (ln || ''))
-  }
-}
+Formula.prototype.ns = require('./namespace')
+Formula.prototype.variable = require('./data-factory').variable
 
 module.exports = Formula

@@ -2,13 +2,24 @@
 // 2007-07-15
 // 2010-08-08 TimBL folded in Kenny's WEBDAV
 // 2010-12-07 TimBL addred local file write code
+const docpart = require('./uri').docpart
+const fetcher = require('./fetcher')
+const graph = require('./data-factory').graph
+const IndexedFormula = require('./indexed-formula')
+const namedNode = require('./data-factory').namedNode
+const Namespace = require('./namespace')
+const Serializer = require('./serializer')
+const uriJoin = require('./uri').join
+const Util = require('./util')
 
-$rdf.UpdateManager = (function () {
+var UpdateManager = (function () {
   var sparql = function (store) {
     this.store = store
+    if (store.updater) {
+      throw new Error("You can't have two UpdateManagers for the same store")
 
     if (!store.fetcher){ // The store must also/already have a fetcher
-      $rdf.fetcher(store)
+      fetcher(store)
     }
     if (store.updater){
       throw("You can't have two UpdateManagers for the same store")
@@ -17,14 +28,14 @@ $rdf.UpdateManager = (function () {
     this.ifps = {}
     this.fps = {}
     this.ns = {}
-    this.ns.link = $rdf.Namespace('http://www.w3.org/2007/ont/link#')
-    this.ns.http = $rdf.Namespace('http://www.w3.org/2007/ont/http#')
-    this.ns.httph = $rdf.Namespace('http://www.w3.org/2007/ont/httph#')
-    this.ns.ldp = $rdf.Namespace('http://www.w3.org/ns/ldp#')
-    this.ns.rdf = $rdf.Namespace('http://www.w3.org/1999/02/22-rdf-syntax-ns#')
-    this.ns.rdfs = $rdf.Namespace('http://www.w3.org/2000/01/rdf-schema#')
-    this.ns.rdf = $rdf.Namespace('http://www.w3.org/1999/02/22-rdf-syntax-ns#')
-    this.ns.owl = $rdf.Namespace('http://www.w3.org/2002/07/owl#')
+    this.ns.link = Namespace('http://www.w3.org/2007/ont/link#')
+    this.ns.http = Namespace('http://www.w3.org/2007/ont/http#')
+    this.ns.httph = Namespace('http://www.w3.org/2007/ont/httph#')
+    this.ns.ldp = Namespace('http://www.w3.org/ns/ldp#')
+    this.ns.rdf = Namespace('http://www.w3.org/1999/02/22-rdf-syntax-ns#')
+    this.ns.rdfs = Namespace('http://www.w3.org/2000/01/rdf-schema#')
+    this.ns.rdf = Namespace('http://www.w3.org/1999/02/22-rdf-syntax-ns#')
+    this.ns.owl = Namespace('http://www.w3.org/2002/07/owl#')
 
     this.patchControl = [] // index of objects fro coordinating incomng and outgoing patches
   }
@@ -50,8 +61,11 @@ $rdf.UpdateManager = (function () {
     }
 
     if (uri.slice(0, 8) === 'file:///') {
-      if (kb.holds(kb.sym(uri), $rdf.sym('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
-        $rdf.sym('http://www.w3.org/2007/ont/link#MachineEditableDocument'))) {
+      if (kb.holds(
+            kb.sym(uri),
+            namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
+            namedNode('http://www.w3.org/2007/ont/link#MachineEditableDocument')
+          )) {
         return 'LOCALFILE'
       }
 
@@ -68,10 +82,11 @@ $rdf.UpdateManager = (function () {
 
     var request
     var definitive = false
-    var requests = kb.each(undefined, this.ns.link('requestedURI'), $rdf.uri.docpart(uri))
+    var requests = kb.each(undefined, this.ns.link('requestedURI'),
+      docpart(uri))
 
     // Hack for the moment @@@@ 2016-02-12
-    if (kb.holds($rdf.sym(uri), this.ns.rdf('type'), this.ns.ldp('Resource'))) {
+    if (kb.holds(namedNode(uri), this.ns.rdf('type'), this.ns.ldp('Resource'))) {
       return 'SPARQL'
     }
     var i
@@ -288,7 +303,7 @@ $rdf.UpdateManager = (function () {
       throw new Error('No URI given for remote editing operation: ' + query)
     }
     console.log('sparql: sending update to <' + uri + '>')
-    var xhr = $rdf.Util.XMLHTTPFactory()
+    var xhr = .Util.XMLHTTPFactory()
     xhr.options = {}
 
     xhr.onreadystatechange = function () {
@@ -468,7 +483,7 @@ $rdf.UpdateManager = (function () {
   //
   sparql.prototype.setRefreshHandler = function (doc, handler) {
     var wssURI = this.getUpdatesVia(doc) // relative
-    var kb = this.store
+    // var kb = this.store
     var theHandler = handler
     var self = this
     var updater = this
@@ -480,7 +495,7 @@ $rdf.UpdateManager = (function () {
       return false
     }
 
-    wssURI = $rdf.uri.join(wssURI, doc.uri)
+    wssURI = uriJoin(wssURI, doc.uri)
     wssURI = wssURI.replace(/^http:/, 'ws:').replace(/^https:/, 'wss:')
     console.log('Web socket URI ' + wssURI)
 
@@ -563,10 +578,10 @@ $rdf.UpdateManager = (function () {
     try {
       var kb = this.store
       var ds = !deletions ? []
-        : deletions instanceof $rdf.IndexedFormula ? deletions.statements
+        : deletions instanceof IndexedFormula ? deletions.statements
           : deletions instanceof Array ? deletions : [ deletions ]
       var is = !insertions ? []
-        : insertions instanceof $rdf.IndexedFormula ? insertions.statements
+        : insertions instanceof IndexedFormula ? insertions.statements
           : insertions instanceof Array ? insertions : [ insertions ]
       if (!(ds instanceof Array)) {
         throw new Error('Type Error ' + (typeof ds) + ': ' + ds)
@@ -696,14 +711,14 @@ $rdf.UpdateManager = (function () {
         // prepare contents of revised document
         newSts = kb.statementsMatching(undefined, undefined, undefined, doc).slice() // copy!
         for (i = 0; i < ds.length; i++) {
-          $rdf.Util.RDFArrayRemove(newSts, ds[i])
+          .Util.RDFArrayRemove(newSts, ds[i])
         }
         for (i = 0; i < is.length; i++) {
           newSts.push(is[i])
         }
 
         // serialize to te appropriate format
-        sz = $rdf.Serializer(kb)
+        sz = Serializer(kb)
         sz.suggestNamespaces(kb.namespaces)
         sz.setBase(doc.uri) // ?? beware of this - kenny (why? tim)
         switch (content_type) {
@@ -725,9 +740,9 @@ $rdf.UpdateManager = (function () {
         var candidateTarget = kb.the(response, this.ns.httph('content-location'))
         var targetURI
         if (candidateTarget) {
-          targetURI = $rdf.uri.join(candidateTarget.value, targetURI)
+          targetURI = uriJoin(candidateTarget.value, targetURI)
         }
-        var xhr = $rdf.Util.XMLHTTPFactory()
+        var xhr = Util.XMLHTTPFactory()
         xhr.options = {}
         xhr.onreadystatechange = function () {
           if (xhr.readyState === 4) {
@@ -756,14 +771,14 @@ $rdf.UpdateManager = (function () {
             // prepare contents of revised document
             newSts = kb.statementsMatching(undefined, undefined, undefined, doc).slice() // copy!
             for (i = 0; i < ds.length; i++) {
-              $rdf.Util.RDFArrayRemove(newSts, ds[i])
+              Util.RDFArrayRemove(newSts, ds[i])
             }
             for (i = 0; i < is.length; i++) {
               newSts.push(is[i])
             }
             // serialize to the appropriate format
             documentString
-            sz = $rdf.Serializer(kb)
+            sz = Serializer(kb)
             sz.suggestNamespaces(kb.namespaces)
             sz.setBase(doc.uri) // ?? beware of this - kenny (why? tim)
             var dot = doc.uri.lastIndexOf('.')
@@ -846,7 +861,7 @@ $rdf.UpdateManager = (function () {
       documentString = data
     } else {
       // serialize to te appropriate format
-      var sz = $rdf.Serializer(kb)
+      var sz = Serializer(kb)
       sz.suggestNamespaces(kb.namespaces)
       sz.setBase(doc.uri)
       switch (content_type) {
@@ -864,7 +879,7 @@ $rdf.UpdateManager = (function () {
             ' not supported for data PUT')
       }
     }
-    var xhr = $rdf.Util.XMLHTTPFactory()
+    var xhr = Util.XMLHTTPFactory()
     xhr.options = {}
     xhr.onreadystatechange = function () {
       if (xhr.readyState === 4) {
@@ -923,8 +938,8 @@ $rdf.UpdateManager = (function () {
   }
 
   sparql.prototype.oldReload = function (kb, doc, callback) {
-    var g2 = $rdf.graph() // A separate store to hold the data as we load it
-    var f2 = $rdf.fetcher(g2)
+    var g2 = graph() // A separate store to hold the data as we load it
+    var f2 = fetcher(g2)
     var startTime = Date.now()
     // force sets no-cache and
     f2.nowOrWhenFetched(doc.uri, {force: true, noMeta: true, clearPreviousData: true}, function (ok, body, xhr) {
@@ -958,3 +973,5 @@ $rdf.UpdateManager = (function () {
   }
   return sparql
 })()
+
+module.exports = UpdateManager
