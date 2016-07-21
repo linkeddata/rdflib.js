@@ -202,17 +202,6 @@ $rdf.Util = {
       hour + ':' + minute + ':' + second + 'Z'
   },
 
-  enablePrivilege: ((typeof netscape !== 'undefined') &&
-    (typeof netscape.security.PrivilegeManager !== 'undefined') &&
-    netscape.security.PrivilegeManager.enablePrivilege) ||
-    function () {
-      return
-    },
-
-  disablePrivilege: ((typeof netscape !== 'undefined') && (typeof netscape.security.PrivilegeManager !== 'undefined') && netscape.security.PrivilegeManager.disablePrivilege) || function () {
-    return
-  },
-
   // removes all statements equal to x from a
   RDFArrayRemove: function (a, x) {
     for (var i = 0; i < a.length; i++) {
@@ -832,6 +821,7 @@ $rdf.Node = (function () {
   return Node
 })()
 
+// Singleton subclass of an empty Collection
 $rdf.Empty = (function (superClass) {
   extend(Empty, superClass)
 
@@ -3934,6 +3924,8 @@ $rdf.IndexedFormula = (function () {
         }
       ] // FP => handleFP, do add to index
     }
+
+    // Handle Inverse Functional Property
     function handle_IFP (formula, subj, pred, obj) {
       var s1 = formula.any(undefined, pred, obj)
       if (!s1) {
@@ -3944,6 +3936,7 @@ $rdf.IndexedFormula = (function () {
       return true
     } // handle_IFP
 
+    // Handle Functional Property
     function handle_FP (formula, subj, pred, obj) {
       var o1 = formula.any(subj, pred, undefined)
       if (!o1) {
@@ -4455,6 +4448,7 @@ $rdf.IndexedFormula = (function () {
   }
   /**  Full N3 bits  -- placeholders only to allow parsing, no functionality! **/
 
+  // Universals are Variables
   $rdf.IndexedFormula.prototype.newUniversal = function (uri) {
     var x = this.sym(uri)
     if (!this._universalVariables) this._universalVariables = []
@@ -4462,6 +4456,7 @@ $rdf.IndexedFormula = (function () {
     return x
   }
 
+  // Existentials are BNodes - something exists without naming
   $rdf.IndexedFormula.prototype.newExistential = function (uri) {
     if (!uri) return this.bnode()
     var x = this.sym(uri)
@@ -9435,7 +9430,7 @@ $rdf.Fetcher = function (store, timeout, async) {
         if (!xhr.options.noRDFa && $rdf.parseRDFaDOM) { // enable by default
           try {
             $rdf.parseRDFaDOM(this.dom, kb, xhr.original.uri)
-          } catch (e){
+          } catch (e) {
             var msg = ('Error trying to parse ' + xhr.resource + ' as RDFa:\n' + e + ':\n' + e.stack)
             // dump(msg+"\n")
             sf.failFetch(xhr, msg)
@@ -9654,7 +9649,7 @@ $rdf.Fetcher = function (store, timeout, async) {
 
         sf.addStatus(xhr.req, 'N3 parsed: ' + p.statementCount + ' triples in ' + p.lines + ' lines.')
         sf.store.add(xhr.original, ns.rdf('type'), ns.link('RDFDocument'), sf.appNode)
-        var args = [xhr.original.uri] // Other args needed ever?
+        // var args = [xhr.original.uri] // Other args needed ever?
         sf.doneFetch(xhr)
       }
     }
@@ -10987,16 +10982,15 @@ $rdf.serialize = function (target, kb, base, contentType, callback) {
       case 'application/rdf+xml':
         documentString = sz.statementsToXML(newSts)
         return executeCallback(null, documentString)
-        case 'text/n3':
-        case 'application/n3': // Legacy
-          documentString = sz.statementsToN3(newSts)
-          return executeCallback(null, documentString)
-
-          case 'text/turtle':
-          case 'application/x-turtle': // Legacy
-            sz.setFlags('si') // Suppress = for sameAs and => for implies
-            documentString = sz.statementsToN3(newSts)
-            return executeCallback(null, documentString)
+      case 'text/n3':
+      case 'application/n3': // Legacy
+        documentString = sz.statementsToN3(newSts)
+        return executeCallback(null, documentString)
+      case 'text/turtle':
+      case 'application/x-turtle': // Legacy
+        sz.setFlags('si') // Suppress = for sameAs and => for implies
+        documentString = sz.statementsToN3(newSts)
+        return executeCallback(null, documentString)
       case 'application/ld+json':
         n3String = sz.statementsToN3(newSts)
         $rdf.convert.convertToJson(n3String, callback)
@@ -11011,7 +11005,7 @@ $rdf.serialize = function (target, kb, base, contentType, callback) {
     }
   } catch (err) {
     if (callback) {
-      return (err)
+      return callback(err)
     }
     throw err // Don't hide problems from caller in sync mode
   }
@@ -11115,5 +11109,5 @@ if (typeof exports !== 'undefined') {
   // Leak a global regardless of module system
   root['$rdf'] = $rdf
 }
-$rdf.buildTime = "2016-07-11T13:33:01";
+$rdf.buildTime = "2016-07-21T15:21:41";
 })(this);
