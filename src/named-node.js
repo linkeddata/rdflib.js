@@ -58,5 +58,6 @@ NamedNode.prototype.integer =
   new NamedNode('http://www.w3.org/2001/XMLSchema#integer')
 
 NamedNode.prototype.classOrder = ClassOrder['NamedNode']
+NamedNode.prototype.isVar = 0
 
 module.exports = NamedNode

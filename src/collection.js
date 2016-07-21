@@ -48,5 +48,6 @@ class Collection extends Node {
 Collection.termType = 'collection'
 Collection.prototype.classOrder = ClassOrder['Collection']
 Collection.prototype.compareTerm = BlankNode.prototype.compareTerm
+Collection.prototype.isVar = 0
 
 module.exports = Collection

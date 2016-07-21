@@ -50,5 +50,6 @@ class Literal extends Node {
 }
 Literal.termType = 'literal'
 Literal.prototype.classOrder = ClassOrder['Literal']
+Literal.prototype.isVar = 0
 
 module.exports = Literal

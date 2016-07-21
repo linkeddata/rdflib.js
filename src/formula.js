@@ -490,6 +490,7 @@ class Formula extends Node {
 Formula.termType = 'formula'
 
 Formula.prototype.classOrder = ClassOrder['Formula']
+Formula.prototype.isVar = 0
 
 Formula.prototype.ns = function (nsuri) {
   return function (ln) {

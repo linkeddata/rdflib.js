@@ -37,5 +37,7 @@ BlankNode.nextId = 0
 BlankNode.termType = 'bnode'
 BlankNode.NTAnonymousNodePrefix = '_:n'
 BlankNode.prototype.classOrder = ClassOrder['BlankNode']
+BlankNode.prototype.isBlank = 1
+BlankNode.prototype.isVar = 1
 
 module.exports = BlankNode

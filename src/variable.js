@@ -41,5 +41,6 @@ class Variable extends Node {
 
 Variable.termType = 'variable'
 Variable.prototype.classOrder = ClassOrder['Variable']
+Variable.prototype.isVar = 1
 
 module.exports = Variable

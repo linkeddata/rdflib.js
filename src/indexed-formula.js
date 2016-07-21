@@ -705,5 +705,7 @@ class IndexedFormula extends Formula {
   }
 }
 
+IndexedFormula.prototype.query = require('./query').indexedFormulaQuery
+
 module.exports = IndexedFormula
 module.exports.handleRDFType = handleRDFType
