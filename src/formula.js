@@ -377,7 +377,8 @@ class Formula extends Node {
         documentString = sz.statementsToN3(sts)
         break
       default:
-        throw new Error('serialize: Content-type ' + contentType(+' not supported.'))
+        throw new Error('serialize: Content-type ' + contentType +
+          ' not supported.')
     }
     return documentString
   }
