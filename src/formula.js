@@ -410,7 +410,8 @@ class Formula extends Node {
    */
   transitiveClosure (seeds, predicate, inverse) {
     var elt, i, len, s, sups, t
-    var agenda = Object.assign(agenda, seeds)  // make a copy
+    var agenda = {}
+    Object.assign(agenda, seeds)  // make a copy
     var done = {}  // classes we have looked up
     while (true) {
       t = (function () {
