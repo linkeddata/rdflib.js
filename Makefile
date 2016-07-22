@@ -35,6 +35,8 @@ gh-pages: detach
 
 clean:
 	rm -f dist/*
+
+cleantest:
 	rm tests/serialize/,t1.xml
 	rm tests/serialize/,t2.xml
 	rm tests/serialize/,t3.xml
