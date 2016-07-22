@@ -88,7 +88,7 @@ class IndexedFormula extends Formula {
       'InverseFunctionalProperty',
       'FunctionalProperty'
     ]
-    this.initPropertyActions(features)
+    this.initPropertyActions(this.features)
   }
 
   applyPatch (patch, target, patchCallback) { // patchCallback(err)

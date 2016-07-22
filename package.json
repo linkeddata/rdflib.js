@@ -36,7 +36,7 @@
     "dist",
     "dist/rdflib.js"
   ],
-  "main": "dist/rdflib-node.js",
+  "main": "index.js",
   "keywords": [
     "linkeddata",
     "linked data",

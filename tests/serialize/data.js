@@ -5,7 +5,7 @@
 // See http://www.w3.org/TR/rdfa-syntax/  etc
 //
 
-$rdf = require('./../../dist/rdflib-node.js')
+$rdf = require('./../../index.js')
 var fs = require('fs')
 
 var kb = $rdf.graph()

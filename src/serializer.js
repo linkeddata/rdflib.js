@@ -782,7 +782,7 @@ __Serializer.prototype.statementsToXML = function(sts) {
     }
 
     function relURI(term) {
-        return escapeForXML((this.base) ? .Util.uri.refTo(this.base, term.uri) : term.uri);
+        return escapeForXML((this.base) ? Util.uri.refTo(this.base, term.uri) : term.uri);
     }
     relURI = relURI.bind(this);
 

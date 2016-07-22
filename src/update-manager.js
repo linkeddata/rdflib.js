@@ -17,12 +17,12 @@ var UpdateManager = (function () {
     this.store = store
     if (store.updater) {
       throw new Error("You can't have two UpdateManagers for the same store")
-
-    if (!store.fetcher){ // The store must also/already have a fetcher
+    }
+    if (!store.fetcher) { // The store must also/already have a fetcher
       fetcher(store)
     }
-    if (store.updater){
-      throw("You can't have two UpdateManagers for the same store")
+    if (store.updater) {
+      throw new Error("You can't have two UpdateManagers for the same store")
     }
     store.updater = this
     this.ifps = {}
@@ -62,10 +62,10 @@ var UpdateManager = (function () {
 
     if (uri.slice(0, 8) === 'file:///') {
       if (kb.holds(
-            kb.sym(uri),
-            namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
-            namedNode('http://www.w3.org/2007/ont/link#MachineEditableDocument')
-          )) {
+          kb.sym(uri),
+          namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
+          namedNode('http://www.w3.org/2007/ont/link#MachineEditableDocument')
+        )) {
         return 'LOCALFILE'
       }
 
@@ -293,9 +293,9 @@ var UpdateManager = (function () {
     return (!context || context.length === 0)
       ? ''
       : 'WHERE { ' +
-        context.map(function (x) {
-          return sparql.anonymizeNT(x)
-        }).join('\n') + ' }\n'
+      context.map(function (x) {
+        return sparql.anonymizeNT(x)
+      }).join('\n') + ' }\n'
   }
 
   sparql.prototype._fire = function (uri, query, callback) {
@@ -303,7 +303,7 @@ var UpdateManager = (function () {
       throw new Error('No URI given for remote editing operation: ' + query)
     }
     console.log('sparql: sending update to <' + uri + '>')
-    var xhr = .Util.XMLHTTPFactory()
+    var xhr = Util.XMLHTTPFactory()
     xhr.options = {}
 
     xhr.onreadystatechange = function () {
@@ -312,7 +312,7 @@ var UpdateManager = (function () {
         var success = (!xhr.status || (xhr.status >= 200 && xhr.status < 300))
         if (!success) {
           console.log('sparql: update failed for <' + uri + '> status=' +
-              xhr.status + ', ' + xhr.statusText + ', body length=' + xhr.responseText.length + '\n   for query: ' + query)
+            xhr.status + ', ' + xhr.statusText + ', body length=' + xhr.responseText.length + '\n   for query: ' + query)
         } else {
           console.log('sparql: update Ok for <' + uri + '>')
         }
@@ -711,7 +711,7 @@ var UpdateManager = (function () {
         // prepare contents of revised document
         newSts = kb.statementsMatching(undefined, undefined, undefined, doc).slice() // copy!
         for (i = 0; i < ds.length; i++) {
-          .Util.RDFArrayRemove(newSts, ds[i])
+          Util.RDFArrayRemove(newSts, ds[i])
         }
         for (i = 0; i < is.length; i++) {
           newSts.push(is[i])
@@ -837,7 +837,7 @@ var UpdateManager = (function () {
           } catch (e) {
             callback(doc.uri, false,
               'Exception trying to write back file <' + doc.uri + '>\n'
-              // + tabulator.Util.stackString(e))
+            // + tabulator.Util.stackString(e))
             )
           }
         } else {

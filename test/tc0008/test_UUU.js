@@ -2,10 +2,10 @@
 //
 
 if (typeof module !== 'undefined' && module.exports) { // Node.js environment
-  var jQuery = require('jquery')
-  var $rdf = require('../../dist/rdflib-node.js'); // @@
+  // var jQuery = require('jquery')
+  var $rdf = require('../../index.js') // @@
   var util = require('util')
-  var alert = function (s) {util.print('alert:' + s + '\n')}
+  var alert = function (s) { util.print('alert:' + s + '\n') }
 }
 
 var tc0007Passed = true

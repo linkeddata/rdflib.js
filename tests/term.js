@@ -1,9 +1,9 @@
 /*
  * nodeunit tests for term.js
  */
-var $rdf, expect, formulaTest, i, j, len, len1, o, p, ref, ref1, ref2, ref3, s, statementTest, tests
+var expect, formulaTest, i, j, len, len1, o, p, ref, ref1, ref2, ref3, s, statementTest, tests
 
-$rdf = require('../term.js')
+var $rdf = require('../index.js')
 
 tests = {
   statement: [
