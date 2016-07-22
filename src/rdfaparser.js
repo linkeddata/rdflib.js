@@ -172,7 +172,7 @@ class RDFaProcessor {
     }
   }
 
-  parseRDFaDOM (dom, kb, base) {
+  static parseRDFaDOM (dom, kb, base) {
     var p = new RDFaProcessor(kb, { 'base': base })
     dom.baseURI = base
     p.process(dom)

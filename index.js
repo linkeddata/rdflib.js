@@ -1,8 +1,10 @@
 var $rdf = {
   BlankNode: require('./src/blank-node'),
   Collection: require('./src/collection'),
+  convert: require('./src/convert'),
   DataFactory: require('./src/data-factory'),
   Empty: require('./src/empty'),
+  Fetcher: require('./src/fetcher'),
   Formula: require('./src/formula'),
   IndexedFormula: require('./src/indexed-formula'),
   jsonParser: require('./src/jsonparser'),
@@ -12,13 +14,15 @@ var $rdf = {
   NamedNode: require('./src/named-node'),
   Namespace: require('./src/namespace'),
   Node: require('./src/node'),
+  parse: require('./src/parse'),
   Query: require('./src/query').Query,
   queryToSPARQL: require('./src/query-to-sparql'),
   RDFaProcessor: require('./src/rdfaparser'),
   RDFParser: require('./src/rdfparser'),
+  serialize: require('./src/serialize'),
   Serializer: require('./src/serializer'),
   SPARQLToQuery: require('./src/sparql-to-query'),
-  sparqlUpdateParser: require('./patch-parser'),
+  sparqlUpdateParser: require('./src/patch-parser'),
   Statement: require('./src/statement'),
   term: require('./src/term'),
   UpdateManager: require('./src/update-manager'),
@@ -32,6 +36,7 @@ var $rdf = {
 $rdf.NextId = $rdf.BlankNode.nextId
 
 $rdf.fromNT = $rdf.Formula.prototype.fromNT
+$rdf.fetcher = $rdf.DataFactory.fetcher
 $rdf.graph = $rdf.DataFactory.graph
 $rdf.lit = $rdf.DataFactory.lit
 $rdf.st = $rdf.DataFactory.st

@@ -1,6 +1,7 @@
 'use strict'
 const BlankNode = require('./blank-node')
 const Collection = require('./collection')
+const Fetcher = require('./fetcher')
 const IndexedFormula = require('./indexed-formula')
 const Literal = require('./literal')
 const NamedNode = require('./named-node')
@@ -12,6 +13,9 @@ function blankNode (value) {
 }
 function collection (elements) {
   return new Collection(elements)
+}
+function fetcher (store, timeout, async) {
+  return new Fetcher(store, timeout, async)
 }
 function graph () {
   return new IndexedFormula()
@@ -48,6 +52,7 @@ function variable (name) {
 
 // rdfjs spec factory methods
 module.exports.blankNode = blankNode
+module.exports.fetcher = fetcher
 module.exports.graph = graph
 module.exports.literal = literal
 module.exports.namedNode = namedNode
