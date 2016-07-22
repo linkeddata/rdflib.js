@@ -8,10 +8,10 @@ size:
 	wc $R
 
 dist/rdflib.js:
-	browserify -r ./index.js:rdflib --exclude "xmlhttprequest" --standalone "\$$rdf" > dist/rdflib.js
+	browserify -r ./index.js:rdflib --exclude "xmlhttprequest" --standalone "\$$rdf" -t [ babelify --presets [ es2015 ] ] -o dist/rdflib.js
 
 dist/rdflib.min.js:
-	browserify -r ./index.js:rdflib --exclude "xmlhttprequest" --standalone "\$$rdf" -d -p [minifyify --no-map] > dist/rdflib.min.js
+	browserify -r ./index.js:rdflib --exclude "xmlhttprequest" --standalone "\$$rdf" -d -t [ babelify --presets [ es2015 ] ] -p [ minifyify --no-map --uglify [ --compress [ --dead_code --conditionals --unused --if_return ] --mangle --screw-ie8 ] ] -o dist/rdflib.min.js
 
 dist:
 	mkdir -p dist
@@ -28,7 +28,7 @@ gh-pages: detach
 	git branch -D gh-pages ||:
 	git checkout -b gh-pages
 	make -B
-	git add -f dist/*.js *.js
+	git add -f dist/*.js src/*.js *.js
 	git commit -m 'gh-pages: update to latest'
 	git push -f origin gh-pages
 	git checkout master
