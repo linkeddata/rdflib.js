@@ -1,7 +1,7 @@
 'use strict'
 const ClassOrder = require('./class-order')
 const Node = require('./node')
-const uri = require('./uri')
+const Uri = require('./uri')
 
 /**
  * @class Variable
@@ -16,7 +16,7 @@ class Variable extends Node {
     super()
     this.termType = Variable.termType
     this.base = 'varid:'
-    this.uri = uri.join(rel, this.base)
+    this.uri = Uri.join(rel, this.base)
   }
   equals (other) {
     if (!other) {

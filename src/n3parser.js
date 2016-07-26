@@ -4,12 +4,12 @@
 *  http://www.webtoolkit.info/
 *
 **/
-const uri = require('./uri')
+const Uri = require('./uri')
 const ArrayIndexOf = require('./util').ArrayIndexOf
 
 var N3Parser = (function () {
 
-function hexify(str) { // also used in parser
+function hexify (str) { // also used in parser
   return encodeURI(str);
 }
 
@@ -138,7 +138,7 @@ String.prototype.decode = function(encoding) {
 
 
 var uripath_join = function(base, given) {
-    return uri.join(given, base)  // sad but true
+    return Uri.join(given, base)  // sad but true
 }
 
 var becauseSubexpression = null; // No reason needed
