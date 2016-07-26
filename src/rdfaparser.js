@@ -5,14 +5,19 @@
 // Converted: timbl 2015-08-25 not yet working
 // Added wrapper: csarven 2016-05-09 working
 
-// $rdf.RDFaProcessor.prototype = new Object() // Was URIResolver
+// RDFaProcessor.prototype = new Object() // Was URIResolver
 
-// $rdf.RDFaProcessor.prototype.constructor=$rdf.RDFaProcessor
+// RDFaProcessor.prototype.constructor=RDFaProcessor
 
 // options.base = base URI    not really an option, shopuld always be set.
 //
 
-const uri = require('./uri')
+const BlankNode = require('./blank-node')
+const Literal = require('./literal')
+const rdf = require('./data-factory')
+const NamedNode = require('./named-node')
+const Uri = require('./uri')
+const Util = require('./util')
 
 if (typeof Node === 'undefined') { //  @@@@@@ Global. Interface to xmldom.
   var Node = {
@@ -62,13 +67,13 @@ class RDFaProcessor {
   addTriple (origin, subject, predicate, object) {
     var su, ob, pr, or
     if (typeof subject === 'undefined') {
-      su = $rdf.sym(this.options.base)
+      su = rdf.namedNode(this.options.base)
     } else {
       su = this.toRDFNodeObject(subject)
     }
     pr = this.toRDFNodeObject(predicate)
     ob = this.toRDFNodeObject(object)
-    or = $rdf.sym(this.options.base)
+    or = rdf.namedNode(this.options.base)
     // console.log('Adding { ' + su + ' ' + pr + ' ' + ob + ' ' + or + ' }')
     this.kb.add(su, pr, ob, or)
   }
@@ -95,7 +100,7 @@ class RDFaProcessor {
 
   deriveDateTimeType (value) {
     for (var i = 0; i < RDFaProcessor.dateTimeTypes.length; i++) {
-      // console.log("Checking "+value+" against "+$rdf.RDFaProcessor.dateTimeTypes[i].type)
+      // console.log("Checking "+value+" against "+RDFaProcessor.dateTimeTypes[i].type)
       var matched = RDFaProcessor.dateTimeTypes[i].pattern.exec(value)
       if (matched && matched[0].length === value.length) {
         // console.log("Matched!")
@@ -166,7 +171,7 @@ class RDFaProcessor {
       if (values[i][values[i].length - 1] === ':') {
         prefix = values[i].substring(0, values[i].length - 1)
       } else if (prefix) {
-        target[prefix] = this.options.base ? uri.join(values[i], this.options.base) : values[i]
+        target[prefix] = this.options.base ? Uri.join(values[i], this.options.base) : values[i]
         prefix = null
       }
     }
@@ -354,8 +359,8 @@ class RDFaProcessor {
           }
           var prefix = att.nodeName.substring(6)
           // TODO: resolve relative?
-          var ref = $rdf.RDFaProcessor.trim(att.value)
-          prefixes[prefix] = this.options.base ? $rdf.uri.join(ref, this.options.base) : ref
+          var ref = RDFaProcessor.trim(att.value)
+          prefixes[prefix] = this.options.base ? Uri.join(ref, this.options.base) : ref
         }
       }
       // Handle prefix mappings (@prefix)
@@ -373,7 +378,7 @@ class RDFaProcessor {
         xmlLangAtt = current.getAttributeNodeNS(this.langAttributes[i].namespaceURI, this.langAttributes[i].localName)
       }
       if (xmlLangAtt) {
-        let value = $rdf.RDFaProcessor.trim(xmlLangAtt.value)
+        let value = RDFaProcessor.trim(xmlLangAtt.value)
         if (value.length > 0) {
           language = value
         } else {
@@ -609,20 +614,20 @@ class RDFaProcessor {
         var datatype = null
         var content = null
         if (datatypeAtt) {
-          datatype = datatypeAtt.value === '' ? $rdf.RDFaProcessor.PlainLiteralURI : this.parseTermOrCURIEOrAbsURI(datatypeAtt.value, vocabulary, context.terms, prefixes, base)
+          datatype = datatypeAtt.value === '' ? RDFaProcessor.PlainLiteralURI : this.parseTermOrCURIEOrAbsURI(datatypeAtt.value, vocabulary, context.terms, prefixes, base)
           if (datetimeAtt && !contentAtt) {
             content = datetimeAtt.value
           } else {
-            content = datatype === $rdf.RDFaProcessor.XMLLiteralURI || datatype === $rdf.RDFaProcessor.HTMLLiteralURI ? null : (contentAtt ? contentAtt.value : current.textContent)
+            content = datatype === RDFaProcessor.XMLLiteralURI || datatype === RDFaProcessor.HTMLLiteralURI ? null : (contentAtt ? contentAtt.value : current.textContent)
           }
         } else if (contentAtt) {
-          datatype = $rdf.RDFaProcessor.PlainLiteralURI
+          datatype = RDFaProcessor.PlainLiteralURI
           content = contentAtt.value
         } else if (datetimeAtt) {
           content = datetimeAtt.value
-          datatype = $rdf.RDFaProcessor.deriveDateTimeType(content)
+          datatype = RDFaProcessor.deriveDateTimeType(content)
           if (!datatype) {
-            datatype = $rdf.RDFaProcessor.PlainLiteralURI
+            datatype = RDFaProcessor.PlainLiteralURI
           }
         } else if (!relAtt && !revAtt) {
           if (resourceAtt) {
@@ -644,10 +649,10 @@ class RDFaProcessor {
           } else {
             content = current.textContent
             if (this.inHTMLMode && current.localName === 'time') {
-              datatype = $rdf.RDFaProcessor.deriveDateTimeType(content)
+              datatype = RDFaProcessor.deriveDateTimeType(content)
             }
             if (!datatype) {
-              datatype = $rdf.RDFaProcessor.PlainLiteralURI
+              datatype = RDFaProcessor.PlainLiteralURI
             }
           }
         }
@@ -661,12 +666,12 @@ class RDFaProcessor {
                 list = []
                 listMapping[predicate] = list
               }
-              list.push((datatype === $rdf.RDFaProcessor.XMLLiteralURI || datatype === $rdf.RDFaProcessor.HTMLLiteralURI) ? { type: datatype, value: current.childNodes } : { type: datatype ? datatype : $rdf.RDFaProcessor.PlainLiteralURI, value: content, language: language })
+              list.push((datatype === RDFaProcessor.XMLLiteralURI || datatype === RDFaProcessor.HTMLLiteralURI) ? { type: datatype, value: current.childNodes } : { type: datatype ? datatype : RDFaProcessor.PlainLiteralURI, value: content, language: language })
             } else {
-              if (datatype === $rdf.RDFaProcessor.XMLLiteralURI || datatype === $rdf.RDFaProcessor.HTMLLiteralURI) {
+              if (datatype === RDFaProcessor.XMLLiteralURI || datatype === RDFaProcessor.HTMLLiteralURI) {
                 this.addTriple(current, newSubject, predicate, { type: datatype, value: current.childNodes })
               } else {
-                this.addTriple(current, newSubject, predicate, { type: datatype ? datatype : $rdf.RDFaProcessor.PlainLiteralURI, value: content, language: language })
+                this.addTriple(current, newSubject, predicate, { type: datatype ? datatype : RDFaProcessor.PlainLiteralURI, value: content, language: language })
               // console.log(newSubject+" "+predicate+"="+content)
               }
             }
@@ -751,8 +756,8 @@ class RDFaProcessor {
   }
 
   resolveAndNormalize (base, uri) {
-    // console.log("Joining " + uri + " to " + base + " making " +  $rdf.uri.join(uri, base))
-    return uri.join(uri, base) // @@ normalize?
+    // console.log("Joining " + uri + " to " + base + " making " +  Uri.join(uri, base))
+    return Uri.join(uri, base) // @@ normalize?
   }
 
   setContext (node) {
@@ -858,32 +863,32 @@ class RDFaProcessor {
     if (typeof x === 'string') {
       if (x.substring(0, 2) === '_:') {
         if (typeof this.blankNodes[x.substring(2)] === 'undefined') {
-          this.blankNodes[x.substring(2)] = new $rdf.BlankNode(x.substring(2))
+          this.blankNodes[x.substring(2)] = new BlankNode(x.substring(2))
         }
         return this.blankNodes[x.substring(2)]
       }
-      return $rdf.sym(x)
+      return rdf.namedNode(x)
     }
     switch (x.type) {
       case RDFaProcessor.objectURI:
         if (x.value.substring(0, 2) === '_:') {
           if (typeof this.blankNodes[x.value.substring(2)] === 'undefined') {
-            this.blankNodes[x.value.substring(2)] = new $rdf.BlankNode(x.value.substring(2))
+            this.blankNodes[x.value.substring(2)] = new BlankNode(x.value.substring(2))
           }
           return this.blankNodes[x.value.substring(2)]
         }
-        return $rdf.sym(x.value)
-      case $rdf.RDFaProcessor.PlainLiteralURI:
-        return new $rdf.Literal(x.value, x.language || '')
-      case $rdf.RDFaProcessor.XMLLiteralURI:
-      case $rdf.RDFaProcessor.HTMLLiteralURI:
+        return rdf.namedNode(x.value)
+      case RDFaProcessor.PlainLiteralURI:
+        return new Literal(x.value, x.language || '')
+      case RDFaProcessor.XMLLiteralURI:
+      case RDFaProcessor.HTMLLiteralURI:
         var string = ''
         Object.keys(x.value).forEach(function (i) {
-          string += $rdf.Util.domToString(x.value[i], this.htmlOptions)
+          string += Util.domToString(x.value[i], this.htmlOptions)
         })
-        return new $rdf.Literal(string, '', new $rdf.NamedNode(x.type))
+        return new Literal(string, '', new NamedNode(x.type))
       default:
-        return new $rdf.Literal(x.value, '', new $rdf.NamedNode(x.type))
+        return new Literal(x.value, '', new NamedNode(x.type))
     }
   }
 
@@ -907,7 +912,7 @@ RDFaProcessor.NCNAME = new RegExp('^' + RDFaProcessor.nameStartChar +
   RDFaProcessor.nameChar + '*$')
 
 /*
-$rdf.RDFaProcessor.prototype.resolveAndNormalize = function(base,href) {
+RDFaProcessor.prototype.resolveAndNormalize = function(base,href) {
    var u = base.resolve(href)
    var parsed = this.parseURI(u)
    parsed.normalize()
