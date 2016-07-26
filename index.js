@@ -42,4 +42,12 @@ $rdf.lit = $rdf.DataFactory.lit
 $rdf.st = $rdf.DataFactory.st
 $rdf.sym = $rdf.DataFactory.namedNode
 $rdf.variable = $rdf.DataFactory.variable
+
+// RDFJS DataFactory interface
+$rdf.blankNode = $rdf.DataFactory.blankNode
+$rdf.literal = $rdf.DataFactory.literal
+$rdf.namedNode = $rdf.DataFactory.namedNode
+$rdf.quad = $rdf.DataFactory.quad
+$rdf.triple = $rdf.DataFactory.triple
+
 module.exports = $rdf
