@@ -19652,7 +19652,7 @@ var NamedNode = require('./named-node');
 var Namespace = require('./namespace');
 var rdfParse = require('./parse');
 var parseRDFaDOM = require('./rdfaparser').parseRDFaDOM;
-var RDFParser = require('./rdfparser');
+var RDFParser = require('./rdfxmlparser');
 var Uri = require('./uri');
 var Util = require('./util');
 
@@ -21176,7 +21176,7 @@ var Fetcher = function Fetcher(store, timeout, async) {
 
 module.exports = Fetcher;
 
-},{"./log":54,"./n3parser":55,"./named-node":56,"./namespace":57,"./parse":59,"./rdfaparser":63,"./rdfparser":64,"./uri":72,"./util":73}],50:[function(require,module,exports){
+},{"./log":54,"./n3parser":55,"./named-node":56,"./namespace":57,"./parse":59,"./rdfaparser":63,"./rdfxmlparser":64,"./uri":72,"./util":73}],50:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -21614,7 +21614,7 @@ var Formula = function (_Node) {
           documentString = sz.statementsToN3(sts);
           break;
         default:
-          throw new Error('serialize: Content-type ' + contentType(+' not supported.'));
+          throw new Error('serialize: Content-type ' + contentType + ' not supported.');
       }
       return documentString;
     }
@@ -21656,7 +21656,8 @@ var Formula = function (_Node) {
     key: 'transitiveClosure',
     value: function transitiveClosure(seeds, predicate, inverse) {
       var elt, i, len, s, sups, t;
-      var agenda = Object.assign(agenda, seeds); // make a copy
+      var agenda = {};
+      Object.assign(agenda, seeds); // make a copy
       var done = {}; // classes we have looked up
       while (true) {
         t = function () {
@@ -22707,7 +22708,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 *  http://www.webtoolkit.info/
 *
 **/
-var uri = require('./uri');
+var Uri = require('./uri');
 var ArrayIndexOf = require('./util').ArrayIndexOf;
 
 var N3Parser = function () {
@@ -22834,7 +22835,7 @@ var N3Parser = function () {
     };
 
     var uripath_join = function uripath_join(base, given) {
-        return uri.join(given, base); // sad but true
+        return Uri.join(given, base); // sad but true
     };
 
     var becauseSubexpression = null; // No reason needed
@@ -24377,7 +24378,7 @@ var N3 = require('n3'); // @@ Goal: remove this dependency
 var N3Parser = require('./n3parser');
 var NamedNode = require('./named-node');
 var parseRDFaDOM = require('./rdfaparser').parseRDFaDOM;
-var RDFParser = require('./rdfparser');
+var RDFParser = require('./rdfxmlparser');
 var sparqlUpdateParser = require('./patch-parser');
 var Util = require('./util');
 
@@ -24510,7 +24511,7 @@ function parse(str, kb, base, contentType, callback) {
   }
 }
 
-},{"./blank-node":43,"./literal":53,"./n3parser":55,"./named-node":56,"./patch-parser":60,"./rdfaparser":63,"./rdfparser":64,"./util":73,"jsonld":14,"n3":15}],60:[function(require,module,exports){
+},{"./blank-node":43,"./literal":53,"./n3parser":55,"./named-node":56,"./patch-parser":60,"./rdfaparser":63,"./rdfxmlparser":64,"./util":73,"jsonld":14,"n3":15}],60:[function(require,module,exports){
 'use strict';
 
 // Parse a simple SPARL-Update subset syntax for patches.
@@ -24522,93 +24523,96 @@ function parse(str, kb, base, contentType, callback) {
 //   <#query> patch:where {xxx}; patch:delete {yyy}; patch:insert {zzz}.
 module.exports = sparqlUpdateParser;
 
+var N3Parser = require('./n3parser');
+var Namespace = require('./namespace');
+
 function sparqlUpdateParser(str, kb, base) {
-    var i, j, k;
-    var keywords = ['INSERT', 'DELETE', 'WHERE'];
-    var SQNS = $rdf.Namespace('http://www.w3.org/ns/pim/patch#');
-    var p = $rdf.N3Parser(kb, kb, base, base, null, null, "", null);
-    var clauses = {};
+  var i, j, k;
+  var keywords = ['INSERT', 'DELETE', 'WHERE'];
+  var SQNS = Namespace('http://www.w3.org/ns/pim/patch#');
+  var p = N3Parser(kb, kb, base, base, null, null, '', null);
+  var clauses = {};
 
-    var badSyntax = function badSyntax(uri, lines, str, i, why) {
-        return "Line " + (lines + 1) + " of <" + uri + ">: Bad syntax:\n   " + why + "\n   at: \"" + str.slice(i, i + 30) + "\"";
-    };
+  var badSyntax = function badSyntax(uri, lines, str, i, why) {
+    return 'Line ' + (lines + 1) + ' of <' + uri + '>: Bad syntax:\n   ' + why + '\n   at: "' + str.slice(i, i + 30) + '"';
+  };
 
-    var check = function check(next, last, message) {
-        if (next < 0) {
-            throw badSyntax(p._thisDoc, p.lines, str, j, last, message);
-        };
-        return next;
-    };
-    i = 0;
-    var query = kb.sym(base + '#query'); // Invent a URI for the query
-    clauses['query'] = query; // A way of accessing it in its N3 model.
+  // var check = function (next, last, message) {
+  //   if (next < 0) {
+  //     throw badSyntax(p._thisDoc, p.lines, str, j, last, message)
+  //   }
+  //   return next
+  // }
+  i = 0;
+  var query = kb.sym(base + '#query'); // Invent a URI for the query
+  clauses['query'] = query; // A way of accessing it in its N3 model.
 
-    while (true) {
-        // console.log("A Now at i = " + i)
-        var j = p.skipSpace(str, i);
+  while (true) {
+    // console.log("A Now at i = " + i)
+    j = p.skipSpace(str, i);
+    if (j < 0) {
+      return clauses;
+    }
+    // console.log("B After space at j= " + j)
+    if (str[j] === ';') {
+      i = p.skipSpace(str, j + 1);
+      if (i < 0) {
+        return clauses; // Allow end in a
+      }
+      j = i;
+    }
+    var found = false;
+    for (k = 0; k < keywords.length; k++) {
+      var key = keywords[k];
+      if (str.slice(j, j + key.length) === key) {
+        // console.log("C got one " + key)
+        i = p.skipSpace(str, j + key.length);
+        // console.log("D after space at i= " + i)
+        if (i < 0) {
+          throw badSyntax(p._thisDoc, p.lines, str, j + key.length, 'found EOF, needed {...} after ' + key);
+        }
+        if ((key === 'INSERT' || key === 'DELETE') && str.slice(i, i + 4) === 'DATA') {
+          // Some wanted 'DATA'. Whatever
+          j = p.skipSpace(str, i + 4);
+          if (j < 0) {
+            throw badSyntax(p._thisDoc, p.lines, str, i + 4, 'needed {...} after INSERT DATA ' + key);
+          }
+          i = j;
+        }
+        var res2 = [];
+        j = p.node(str, i, res2);
+        // console.log("M Now at j= " + j + " i= " + i)
+
         if (j < 0) {
-            return clauses;
+          throw badSyntax(p._thisDoc, p.lines, str, i, 'bad syntax or EOF in {...} after ' + key);
         }
-        // console.log("B After space at j= " + j)
-        if (str[j] === ';') {
-            i = p.skipSpace(str, j + 1);
-            if (i < 0) {
-                return clauses; // Allow end in a ;
-            }
-            j = i;
-        }
-        var found = false;
-        for (k = 0; k < keywords.length; k++) {
-            var key = keywords[k];
-            if (str.slice(j, j + key.length) === key) {
-                // console.log("C got one " + key);
-                i = p.skipSpace(str, j + key.length);
-                // console.log("D after space at i= " + i);
-                if (i < 0) {
-                    throw badSyntax(p._thisDoc, p.lines, str, j + key.length, "found EOF, needed {...} after " + key);
-                };
-                if ((key === 'INSERT' || key === 'DELETE') && str.slice(i, i + 4) === 'DATA') {
-                    // Some wanted 'DATA'. Whatever
-                    j = p.skipSpace(str, i + 4);
-                    if (j < 0) {
-                        throw badSyntax(p._thisDoc, p.lines, str, i + 4, "needed {...} after INSERT DATA " + key);
-                    };
-                    i = j;
-                }
-                var res2 = [];
-                j = p.node(str, i, res2);
-                // console.log("M Now at j= " + j + " i= " + i)
-
-                if (j < 0) {
-                    throw badSyntax(p._thisDoc, p.lines, str, i, "bad syntax or EOF in {...} after " + key);
-                }
-                clauses[key.toLowerCase()] = res2[0];
-                // print("res2[0] for "+key+ " is " + res2[0]);  //   @@ debug @@@@@@
-                kb.add(query, SQNS(key.toLowerCase()), res2[0]);
-                // key is the keyword and res2 has the contents
-                found = true;
-                i = j;
-            }
-        };
-        if (!found && str.slice(j, j + 7) === '@prefix') {
-            var i = p.directive(str, j);
-            if (i < 0) {
-                throw badSyntax(p._thisDoc, p.lines, str, i, "bad syntax or EOF after @prefix ");
-            }
-            // console.log("P before dot i= " + i)
-            i = p.checkDot(str, i);
-            // console.log("Q after dot i= " + i)
-            found = true;
-        }
-        if (!found) {
-            // console.log("Bad syntax " + j)
-            throw badSyntax(p._thisDoc, p.lines, str, j, "Unknown syntax at start of statememt: '" + str.slice(j).slice(0, 20) + "'");
-        }
-    } // while
-    //return clauses
+        clauses[key.toLowerCase()] = res2[0];
+        // print("res2[0] for "+key+ " is " + res2[0]);  //   @@ debug @@@@@@
+        kb.add(query, SQNS(key.toLowerCase()), res2[0]);
+        // key is the keyword and res2 has the contents
+        found = true;
+        i = j;
+      }
+    }
+    if (!found && str.slice(j, j + 7) === '@prefix') {
+      i = p.directive(str, j);
+      if (i < 0) {
+        throw badSyntax(p._thisDoc, p.lines, str, i, 'bad syntax or EOF after @prefix ');
+      }
+      // console.log("P before dot i= " + i)
+      i = p.checkDot(str, i);
+      // console.log("Q after dot i= " + i)
+      found = true;
+    }
+    if (!found) {
+      // console.log("Bad syntax " + j)
+      throw badSyntax(p._thisDoc, p.lines, str, j, "Unknown syntax at start of statememt: '" + str.slice(j).slice(0, 20) + "'");
+    }
+  } // while
+  // return clauses
 }
 
-},{}],61:[function(require,module,exports){
+},{"./n3parser":55,"./namespace":57}],61:[function(require,module,exports){
 'use strict';
 
 var log = require('./log');
@@ -25269,14 +25273,19 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 // Converted: timbl 2015-08-25 not yet working
 // Added wrapper: csarven 2016-05-09 working
 
-// $rdf.RDFaProcessor.prototype = new Object() // Was URIResolver
+// RDFaProcessor.prototype = new Object() // Was URIResolver
 
-// $rdf.RDFaProcessor.prototype.constructor=$rdf.RDFaProcessor
+// RDFaProcessor.prototype.constructor=RDFaProcessor
 
 // options.base = base URI    not really an option, shopuld always be set.
 //
 
-var uri = require('./uri');
+var BlankNode = require('./blank-node');
+var Literal = require('./literal');
+var rdf = require('./data-factory');
+var NamedNode = require('./named-node');
+var Uri = require('./uri');
+var Util = require('./util');
 
 if (typeof Node === 'undefined') {
   //  @@@@@@ Global. Interface to xmldom.
@@ -25331,13 +25340,13 @@ var RDFaProcessor = function () {
     value: function addTriple(origin, subject, predicate, object) {
       var su, ob, pr, or;
       if (typeof subject === 'undefined') {
-        su = $rdf.sym(this.options.base);
+        su = rdf.namedNode(this.options.base);
       } else {
         su = this.toRDFNodeObject(subject);
       }
       pr = this.toRDFNodeObject(predicate);
       ob = this.toRDFNodeObject(object);
-      or = $rdf.sym(this.options.base);
+      or = rdf.namedNode(this.options.base);
       // console.log('Adding { ' + su + ' ' + pr + ' ' + ob + ' ' + or + ' }')
       this.kb.add(su, pr, ob, or);
     }
@@ -25367,7 +25376,7 @@ var RDFaProcessor = function () {
     key: 'deriveDateTimeType',
     value: function deriveDateTimeType(value) {
       for (var i = 0; i < RDFaProcessor.dateTimeTypes.length; i++) {
-        // console.log("Checking "+value+" against "+$rdf.RDFaProcessor.dateTimeTypes[i].type)
+        // console.log("Checking "+value+" against "+RDFaProcessor.dateTimeTypes[i].type)
         var matched = RDFaProcessor.dateTimeTypes[i].pattern.exec(value);
         if (matched && matched[0].length === value.length) {
           // console.log("Matched!")
@@ -25442,7 +25451,7 @@ var RDFaProcessor = function () {
         if (values[i][values[i].length - 1] === ':') {
           prefix = values[i].substring(0, values[i].length - 1);
         } else if (prefix) {
-          target[prefix] = this.options.base ? uri.join(values[i], this.options.base) : values[i];
+          target[prefix] = this.options.base ? Uri.join(values[i], this.options.base) : values[i];
           prefix = null;
         }
       }
@@ -25629,8 +25638,8 @@ var RDFaProcessor = function () {
             }
             var prefix = att.nodeName.substring(6);
             // TODO: resolve relative?
-            var ref = $rdf.RDFaProcessor.trim(att.value);
-            prefixes[prefix] = this.options.base ? $rdf.uri.join(ref, this.options.base) : ref;
+            var ref = RDFaProcessor.trim(att.value);
+            prefixes[prefix] = this.options.base ? Uri.join(ref, this.options.base) : ref;
           }
         }
         // Handle prefix mappings (@prefix)
@@ -25648,7 +25657,7 @@ var RDFaProcessor = function () {
           xmlLangAtt = current.getAttributeNodeNS(this.langAttributes[_i3].namespaceURI, this.langAttributes[_i3].localName);
         }
         if (xmlLangAtt) {
-          var _value = $rdf.RDFaProcessor.trim(xmlLangAtt.value);
+          var _value = RDFaProcessor.trim(xmlLangAtt.value);
           if (_value.length > 0) {
             language = _value;
           } else {
@@ -25882,20 +25891,20 @@ var RDFaProcessor = function () {
           var datatype = null;
           var content = null;
           if (datatypeAtt) {
-            datatype = datatypeAtt.value === '' ? $rdf.RDFaProcessor.PlainLiteralURI : this.parseTermOrCURIEOrAbsURI(datatypeAtt.value, vocabulary, context.terms, prefixes, base);
+            datatype = datatypeAtt.value === '' ? RDFaProcessor.PlainLiteralURI : this.parseTermOrCURIEOrAbsURI(datatypeAtt.value, vocabulary, context.terms, prefixes, base);
             if (datetimeAtt && !contentAtt) {
               content = datetimeAtt.value;
             } else {
-              content = datatype === $rdf.RDFaProcessor.XMLLiteralURI || datatype === $rdf.RDFaProcessor.HTMLLiteralURI ? null : contentAtt ? contentAtt.value : current.textContent;
+              content = datatype === RDFaProcessor.XMLLiteralURI || datatype === RDFaProcessor.HTMLLiteralURI ? null : contentAtt ? contentAtt.value : current.textContent;
             }
           } else if (contentAtt) {
-            datatype = $rdf.RDFaProcessor.PlainLiteralURI;
+            datatype = RDFaProcessor.PlainLiteralURI;
             content = contentAtt.value;
           } else if (datetimeAtt) {
             content = datetimeAtt.value;
-            datatype = $rdf.RDFaProcessor.deriveDateTimeType(content);
+            datatype = RDFaProcessor.deriveDateTimeType(content);
             if (!datatype) {
-              datatype = $rdf.RDFaProcessor.PlainLiteralURI;
+              datatype = RDFaProcessor.PlainLiteralURI;
             }
           } else if (!relAtt && !revAtt) {
             if (resourceAtt) {
@@ -25917,10 +25926,10 @@ var RDFaProcessor = function () {
             } else {
               content = current.textContent;
               if (this.inHTMLMode && current.localName === 'time') {
-                datatype = $rdf.RDFaProcessor.deriveDateTimeType(content);
+                datatype = RDFaProcessor.deriveDateTimeType(content);
               }
               if (!datatype) {
-                datatype = $rdf.RDFaProcessor.PlainLiteralURI;
+                datatype = RDFaProcessor.PlainLiteralURI;
               }
             }
           }
@@ -25934,12 +25943,12 @@ var RDFaProcessor = function () {
                   _list3 = [];
                   listMapping[_predicate2] = _list3;
                 }
-                _list3.push(datatype === $rdf.RDFaProcessor.XMLLiteralURI || datatype === $rdf.RDFaProcessor.HTMLLiteralURI ? { type: datatype, value: current.childNodes } : { type: datatype ? datatype : $rdf.RDFaProcessor.PlainLiteralURI, value: content, language: language });
+                _list3.push(datatype === RDFaProcessor.XMLLiteralURI || datatype === RDFaProcessor.HTMLLiteralURI ? { type: datatype, value: current.childNodes } : { type: datatype ? datatype : RDFaProcessor.PlainLiteralURI, value: content, language: language });
               } else {
-                if (datatype === $rdf.RDFaProcessor.XMLLiteralURI || datatype === $rdf.RDFaProcessor.HTMLLiteralURI) {
+                if (datatype === RDFaProcessor.XMLLiteralURI || datatype === RDFaProcessor.HTMLLiteralURI) {
                   this.addTriple(current, newSubject, _predicate2, { type: datatype, value: current.childNodes });
                 } else {
-                  this.addTriple(current, newSubject, _predicate2, { type: datatype ? datatype : $rdf.RDFaProcessor.PlainLiteralURI, value: content, language: language });
+                  this.addTriple(current, newSubject, _predicate2, { type: datatype ? datatype : RDFaProcessor.PlainLiteralURI, value: content, language: language });
                   // console.log(newSubject+" "+predicate+"="+content)
                 }
               }
@@ -26026,8 +26035,8 @@ var RDFaProcessor = function () {
   }, {
     key: 'resolveAndNormalize',
     value: function resolveAndNormalize(base, uri) {
-      // console.log("Joining " + uri + " to " + base + " making " +  $rdf.uri.join(uri, base))
-      return uri.join(uri, base); // @@ normalize?
+      // console.log("Joining " + uri + " to " + base + " making " +  Uri.join(uri, base))
+      return Uri.join(uri, base); // @@ normalize?
     }
   }, {
     key: 'setContext',
@@ -26132,32 +26141,32 @@ var RDFaProcessor = function () {
       if (typeof x === 'string') {
         if (x.substring(0, 2) === '_:') {
           if (typeof this.blankNodes[x.substring(2)] === 'undefined') {
-            this.blankNodes[x.substring(2)] = new $rdf.BlankNode(x.substring(2));
+            this.blankNodes[x.substring(2)] = new BlankNode(x.substring(2));
           }
           return this.blankNodes[x.substring(2)];
         }
-        return $rdf.sym(x);
+        return rdf.namedNode(x);
       }
       switch (x.type) {
         case RDFaProcessor.objectURI:
           if (x.value.substring(0, 2) === '_:') {
             if (typeof this.blankNodes[x.value.substring(2)] === 'undefined') {
-              this.blankNodes[x.value.substring(2)] = new $rdf.BlankNode(x.value.substring(2));
+              this.blankNodes[x.value.substring(2)] = new BlankNode(x.value.substring(2));
             }
             return this.blankNodes[x.value.substring(2)];
           }
-          return $rdf.sym(x.value);
-        case $rdf.RDFaProcessor.PlainLiteralURI:
-          return new $rdf.Literal(x.value, x.language || '');
-        case $rdf.RDFaProcessor.XMLLiteralURI:
-        case $rdf.RDFaProcessor.HTMLLiteralURI:
+          return rdf.namedNode(x.value);
+        case RDFaProcessor.PlainLiteralURI:
+          return new Literal(x.value, x.language || '');
+        case RDFaProcessor.XMLLiteralURI:
+        case RDFaProcessor.HTMLLiteralURI:
           var string = '';
           Object.keys(x.value).forEach(function (i) {
-            string += $rdf.Util.domToString(x.value[i], this.htmlOptions);
+            string += Util.domToString(x.value[i], this.htmlOptions);
           });
-          return new $rdf.Literal(string, '', new $rdf.NamedNode(x.type));
+          return new Literal(string, '', new NamedNode(x.type));
         default:
-          return new $rdf.Literal(x.value, '', new $rdf.NamedNode(x.type));
+          return new Literal(x.value, '', new NamedNode(x.type));
       }
     }
   }, {
@@ -26187,7 +26196,7 @@ RDFaProcessor.nameStartChar = '[A-Za-zÀ-ÖØ-öø-ÿĀ-ıĴ-ľŁ-ňŊ-žƀ-ǃǍ
 RDFaProcessor.NCNAME = new RegExp('^' + RDFaProcessor.nameStartChar + RDFaProcessor.nameChar + '*$');
 
 /*
-$rdf.RDFaProcessor.prototype.resolveAndNormalize = function(base,href) {
+RDFaProcessor.prototype.resolveAndNormalize = function(base,href) {
    var u = base.resolve(href)
    var parsed = this.parseURI(u)
    parsed.normalize()
@@ -26205,7 +26214,7 @@ RDFaProcessor.dateTimeTypes = [{ pattern: /-?P(?:[0-9]+Y)?(?:[0-9]+M)?(?:[0-9]+D
 
 module.exports = RDFaProcessor;
 
-},{"./uri":72}],64:[function(require,module,exports){
+},{"./blank-node":43,"./data-factory":47,"./literal":53,"./named-node":56,"./uri":72,"./util":73}],64:[function(require,module,exports){
 'use strict';
 
 /**
@@ -29436,6 +29445,8 @@ module.exports.join = join;
 module.exports.protocol = protocol;
 module.exports.refTo = refTo;
 
+var namedNode = require('./data-factory').namedNode;
+
 function docpart(uri) {
   var i;
   i = uri.indexOf('#');
@@ -29447,7 +29458,7 @@ function docpart(uri) {
 }
 
 function document(x) {
-  return $rdf.sym(docpart(x.uri));
+  return namedNode(docpart(x.uri));
 }
 
 function hostpart(u) {
@@ -29600,7 +29611,7 @@ function refTo(base, uri) {
   return s + uri.slice(i);
 }
 
-},{}],73:[function(require,module,exports){
+},{"./data-factory":47}],73:[function(require,module,exports){
 'use strict';
 
 /**
@@ -30061,7 +30072,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 var ClassOrder = require('./class-order');
 var Node = require('./node');
-var uri = require('./uri');
+var Uri = require('./uri');
 
 /**
  * @class Variable
@@ -30082,7 +30093,7 @@ var Variable = function (_Node) {
 
     _this.termType = Variable.termType;
     _this.base = 'varid:';
-    _this.uri = uri.join(rel, _this.base);
+    _this.uri = Uri.join(rel, _this.base);
     return _this;
   }
 
@@ -30147,7 +30158,7 @@ var $rdf = {
   Query: require('./src/query').Query,
   queryToSPARQL: require('./src/query-to-sparql'),
   RDFaProcessor: require('./src/rdfaparser'),
-  RDFParser: require('./src/rdfparser'),
+  RDFParser: require('./src/rdfxmlparser'),
   serialize: require('./src/serialize'),
   Serializer: require('./src/serializer'),
   SPARQLToQuery: require('./src/sparql-to-query'),
@@ -30173,5 +30184,5 @@ $rdf.sym = $rdf.DataFactory.namedNode;
 $rdf.variable = $rdf.DataFactory.variable;
 module.exports = $rdf;
 
-},{"./src/blank-node":43,"./src/collection":45,"./src/convert":46,"./src/data-factory":47,"./src/empty":48,"./src/fetcher":49,"./src/formula":50,"./src/indexed-formula":51,"./src/jsonparser":52,"./src/literal":53,"./src/log":54,"./src/n3parser":55,"./src/named-node":56,"./src/namespace":57,"./src/node":58,"./src/parse":59,"./src/patch-parser":60,"./src/query":62,"./src/query-to-sparql":61,"./src/rdfaparser":63,"./src/rdfparser":64,"./src/serialize":65,"./src/serializer":66,"./src/sparql-to-query":67,"./src/statement":68,"./src/term":69,"./src/update-manager":70,"./src/updates-via":71,"./src/uri":72,"./src/util":73,"./src/variable":74}]},{},[])("rdflib")
+},{"./src/blank-node":43,"./src/collection":45,"./src/convert":46,"./src/data-factory":47,"./src/empty":48,"./src/fetcher":49,"./src/formula":50,"./src/indexed-formula":51,"./src/jsonparser":52,"./src/literal":53,"./src/log":54,"./src/n3parser":55,"./src/named-node":56,"./src/namespace":57,"./src/node":58,"./src/parse":59,"./src/patch-parser":60,"./src/query":62,"./src/query-to-sparql":61,"./src/rdfaparser":63,"./src/rdfxmlparser":64,"./src/serialize":65,"./src/serializer":66,"./src/sparql-to-query":67,"./src/statement":68,"./src/term":69,"./src/update-manager":70,"./src/updates-via":71,"./src/uri":72,"./src/util":73,"./src/variable":74}]},{},[])("rdflib")
 });
