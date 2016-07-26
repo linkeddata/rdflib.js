@@ -7,11 +7,14 @@
 //   <#query> patch:where {xxx}; patch:delete {yyy}; patch:insert {zzz}.
 module.exports = sparqlUpdateParser
 
+const N3Parser = require('./n3parser')
+const Namespace = require('./namespace')
+
 function sparqlUpdateParser (str, kb, base) {
     var i, j, k
     var keywords = [ 'INSERT', 'DELETE', 'WHERE' ]
-    var SQNS = $rdf.Namespace('http://www.w3.org/ns/pim/patch#');
-    var p = $rdf.N3Parser(kb, kb, base, base, null, null, "", null);
+    var SQNS = Namespace('http://www.w3.org/ns/pim/patch#');
+    var p = N3Parser(kb, kb, base, base, null, null, "", null);
     var clauses = {};
 
     var badSyntax = function (uri, lines, str, i, why) {
