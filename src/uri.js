@@ -17,6 +17,8 @@ module.exports.join = join
 module.exports.protocol = protocol
 module.exports.refTo = refTo
 
+const namedNode = require('./data-factory').namedNode
+
 function docpart (uri) {
   var i
   i = uri.indexOf('#')
@@ -28,7 +30,7 @@ function docpart (uri) {
 }
 
 function document (x) {
-  return $rdf.sym(docpart(x.uri))
+  return namedNode(docpart(x.uri))
 }
 
 function hostpart (u) {
