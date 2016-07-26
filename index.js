@@ -18,7 +18,7 @@ var $rdf = {
   Query: require('./src/query').Query,
   queryToSPARQL: require('./src/query-to-sparql'),
   RDFaProcessor: require('./src/rdfaparser'),
-  RDFParser: require('./src/rdfparser'),
+  RDFParser: require('./src/rdfxmlparser'),
   serialize: require('./src/serialize'),
   Serializer: require('./src/serializer'),
   SPARQLToQuery: require('./src/sparql-to-query'),

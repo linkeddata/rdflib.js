@@ -33,7 +33,7 @@ const NamedNode = require('./named-node')
 const Namespace = require('./namespace')
 const rdfParse = require('./parse')
 const parseRDFaDOM = require('./rdfaparser').parseRDFaDOM
-const RDFParser = require('./rdfparser')
+const RDFParser = require('./rdfxmlparser')
 const Uri = require('./uri')
 const Util = require('./util')
 

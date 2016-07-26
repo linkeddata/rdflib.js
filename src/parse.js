@@ -7,7 +7,7 @@ const N3 = require('n3')  // @@ Goal: remove this dependency
 const N3Parser = require('./n3parser')
 const NamedNode = require('./named-node')
 const parseRDFaDOM = require('./rdfaparser').parseRDFaDOM
-const RDFParser = require('./rdfparser')
+const RDFParser = require('./rdfxmlparser')
 const sparqlUpdateParser = require('./patch-parser')
 const Util = require('./util')
 
