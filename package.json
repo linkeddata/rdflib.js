@@ -10,6 +10,12 @@
     "name": "Tim BL",
     "email": "timbl@w3.org"
   },
+  "contributors": [
+    {
+      "name": "Dmitri Zagidulin",
+      "url": "https://github.com/dmitrizagidulin/"
+    }
+  ],
   "license": "MIT",
   "repository": {
     "type": "git",
