@@ -16,7 +16,6 @@
 const ArrayIndexOf = require('./util').ArrayIndexOf
 const Formula = require('./formula')
 // const log = require('./log')
-const Query = require('./query')
 const RDFArrayRemove = require('./util').RDFArrayRemove
 const Statement = require('./statement')
 const term = require('./term')
@@ -92,6 +91,7 @@ class IndexedFormula extends Formula {
   }
 
   applyPatch (patch, target, patchCallback) { // patchCallback(err)
+    const Query = require('./query')
     var targetKB = this
     var ds
     var doPatch = function (onDonePatch) {
@@ -448,6 +448,11 @@ class IndexedFormula extends Formula {
     }
   }
 
+  query (myQuery, callback, fetcher, onDone) {
+    let indexedFormulaQuery = require('./query').indexedFormulaQuery
+    return indexedFormulaQuery(myQuery, callback, fetcher, onDone)
+  }
+
   /**
    * Finds a statement object and removes it
    */
@@ -704,8 +709,6 @@ class IndexedFormula extends Formula {
     return res
   }
 }
-
-IndexedFormula.prototype.query = require('./query').indexedFormulaQuery
 
 module.exports = IndexedFormula
 module.exports.handleRDFType = handleRDFType
