@@ -42,7 +42,8 @@
   },
   "files": [
     "dist",
-    "dist/rdflib.js"
+    "dist/rdflib.js",
+    "src"
   ],
   "main": "index.js",
   "keywords": [
