@@ -2,7 +2,7 @@
  * A Dummy log
  * @module log
  */
-module.exports.log = {
+module.exports = {
   debug: function debug (x) {
     return
   },
