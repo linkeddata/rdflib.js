@@ -395,6 +395,7 @@ var UpdateManager = (function () {
   // This is designed to allow the system to re-request the server version,
   // when a websocket has pinged to say there are changes.
   // If thewebsocket, by contrast, has sent a patch, then this may not be necessary.
+  // This may be called out of context so *this* cannot be used.
 
   sparql.prototype.requestDownstreamAction = function (doc, action) {
     var control = this.patchControlFor(doc)
@@ -430,11 +431,15 @@ var UpdateManager = (function () {
     var control = this.patchControlFor(doc)
     if (!control.downstreamChangeListeners) control.downstreamChangeListeners = []
     control.downstreamChangeListeners.push(listener)
-    this.setRefreshHandler(doc, this.reloadAndSync)
+    var self = this
+    this.setRefreshHandler(doc, function(doc){ // a function not a method
+      self.reloadAndSync(doc)
+    })
   }
 
   sparql.prototype.reloadAndSync = function (doc) {
     var control = this.patchControlFor(doc)
+    var updater = this
 
     if (control.reloading) {
       console.log('   Already reloading - stop')
@@ -444,7 +449,7 @@ var UpdateManager = (function () {
     var retryTimeout = 1000 // ms
     var tryReload = function () {
       console.log('try reload - timeout = ' + retryTimeout)
-      this.reload(this.store, doc, function (ok, message, xhr) {
+      updater.reload(updater.store, doc, function (ok, message, xhr) {
         control.reloading = false
         if (ok) {
           if (control.downstreamChangeListeners) {

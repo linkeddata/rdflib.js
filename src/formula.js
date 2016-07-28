@@ -67,7 +67,7 @@ class Formula extends Node {
       for (len = subs.length; i < len; i++) {
         elt = subs[i]
         ref = elt.uri
-        if (types.indexOf(ref) >= 0) {
+        if (ref in types) { // the subclass is one we know
           bottom = false
           break
         }

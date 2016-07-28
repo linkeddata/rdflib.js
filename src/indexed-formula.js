@@ -450,7 +450,7 @@ class IndexedFormula extends Formula {
 
   query (myQuery, callback, fetcher, onDone) {
     let indexedFormulaQuery = require('./query').indexedFormulaQuery
-    return indexedFormulaQuery(myQuery, callback, fetcher, onDone)
+    return indexedFormulaQuery.call(this, myQuery, callback, fetcher, onDone)
   }
 
   /**
