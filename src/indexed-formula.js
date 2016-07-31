@@ -503,7 +503,7 @@ class IndexedFormula extends Formula {
   }
 
   removeMatches (subject, predicate, object, why) {
-    this.removeStatements(this.staementsMatching(subject, predicate, object,
+    this.removeStatements(this.statementsMatching(subject, predicate, object,
       why))
     return this
   }
