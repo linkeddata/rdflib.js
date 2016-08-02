@@ -3,10 +3,10 @@
 // See http://www.w3.org/TR/rdfa-syntax/  etc
 //
 
-$rdf = require('./../../dist/rdflib-node.js')
+var $rdf = require('./../../index.js')
 
-kb = $rdf.graph()
-f = $rdf.fetcher(kb)
+var kb = $rdf.graph()
+var f = $rdf.fetcher(kb)
 var doc = kb.sym(process.argv[2])
 f.nowOrWhenFetched(doc, {'forceContentType': 'application/rdfa'}, function (uri, ok, body) {
   console.log('DONE FETCH')
@@ -14,7 +14,7 @@ f.nowOrWhenFetched(doc, {'forceContentType': 'application/rdfa'}, function (uri,
   console.log(out)
   console.log('EXIT')
   process.exit()
-}); // target, kb, base, contentType, callback
+}) // target, kb, base, contentType, callback
 
 // {'forceContentType': 'application/rdfa'}
 

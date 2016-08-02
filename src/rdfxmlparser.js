@@ -60,8 +60,9 @@
  * @constructor
  * @param {RDFStore} store An RDFStore object
  */
+const uriUtil = require('./uri')
 
-$rdf.RDFParser = function (store) {
+var RDFParser = function (store) {
   var RDFParser = {}
 
   /** Standard namespaces that we know how to handle @final
@@ -94,7 +95,7 @@ $rdf.RDFParser = function (store) {
           this.node.close()
         }
       },         /** Add a symbol of a certain type to the this frame */'addSymbol': function (type, uri) {
-        uri = $rdf.Util.uri.join(uri, this.base)
+        uri = uriUtil.join(uri, this.base)
         this.node = this.store.sym(uri)
 
         this.nodeType = type
@@ -106,7 +107,7 @@ $rdf.RDFParser = function (store) {
         }
         if (this.parent.rdfid != null) {
           // reify
-          var triple = this.store.sym($rdf.Util.uri.join('#' + this.parent.rdfid, this.base))
+          var triple = this.store.sym(uriUtil.join('#' + this.parent.rdfid, this.base))
           this.store.add(triple, this.store.sym(RDFParser.ns.RDF + 'type'), this.store.sym(RDFParser.ns.RDF + 'Statement'), this.parser.why)
           this.store.add(triple, this.store.sym(RDFParser.ns.RDF + 'subject'), this.parent.parent.node, this.parser.why)
           this.store.add(triple, this.store.sym(RDFParser.ns.RDF + 'predicate'), this.parent.node, this.parser.why)
@@ -295,7 +296,7 @@ $rdf.RDFParser = function (store) {
             rdftype = {'nodeValue': elementURI(dom)}
           }
           if (rdftype != null) {
-            this.store.add(frame.node, this.store.sym(RDFParser.ns.RDF + 'type'), this.store.sym($rdf.Util.uri.join(rdftype.nodeValue,
+            this.store.add(frame.node, this.store.sym(RDFParser.ns.RDF + 'type'), this.store.sym(uriUtil.join(rdftype.nodeValue,
               frame.base)), this.why)
             if (rdftype.nodeName) {
               dom.removeAttributeNode(rdftype)
@@ -442,7 +443,7 @@ $rdf.RDFParser = function (store) {
       if (attrs[x].nodeName.substr(0, 3) === 'xml') {
         if (attrs[x].name.slice(0, 6) === 'xmlns:') {
           var uri = attrs[x].nodeValue // alert('base for namespac attr:'+this.base)
-          if (this.base) uri = $rdf.Util.uri.join(uri, this.base)
+          if (this.base) uri = uriUtil.join(uri, this.base)
           this.store.setPrefixForURI(attrs[x].name.slice(6), uri)
         }
         //		alert('rdfparser: xml atribute: '+attrs[x].name) //@@
@@ -452,3 +453,5 @@ $rdf.RDFParser = function (store) {
     return frame
   }
 }
+
+module.exports = RDFParser

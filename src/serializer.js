@@ -6,11 +6,12 @@
 ** Bug: can't serialize  http://data.semanticweb.org/person/abraham-bernstein/rdf
 ** in XML (from mhausenblas)
 */
-
 // @@@ Check the whole toStr thing tosee whetehr it still makes sense -- tbl
-//
-$rdf.Serializer = function() {
+const NamedNode = require('./named-node')
+const Uri = require('./uri')
+const Util = require('./util')
 
+var Serializer = function() {
 var __Serializer = function( store ){
     this.flags = "";
     this.base = null;
@@ -54,17 +55,11 @@ __Serializer.prototype.fromStr = function(s) {
     }
     return this.store.fromNT(s);
 };
-
-
-
-
-
 /* Accumulate Namespaces
 **
 ** These are only hints.  If two overlap, only one gets used
 ** There is therefore no guarantee in general.
 */
-
 __Serializer.prototype.suggestPrefix = function(prefix, uri) {
     if (prefix.slice(0,7) === 'default') return; // Try to weed these out
     if (prefix.slice(0,2) === 'ns') return; //  From others inferior algos
@@ -134,9 +129,6 @@ __Serializer.prototype.makeUpPrefix = function(uri) {
     }
     for (var i=0;; i++) if (canUse(p.slice(0,3)+i)) return pok;
 }
-
-
-
 // Todo:
 //  - Sort the statements by subject, pred, object
 //  - do stuff about the docu first and then (or first) about its primary topic.
@@ -153,8 +145,6 @@ __Serializer.prototype.rootSubjects = function(sts) {
 ** This should be kept linear time with repect to the number of statements.
 ** Note it does not use any indexing of the store.
 */
-
-
     // $rdf.log.debug('serialize.js Find bnodes with only one incoming arc\n')
     for (var i = 0; i<sts.length; i++) {
         var st = sts[i];
@@ -310,8 +300,6 @@ __Serializer.prototype.statementsToN3 = function(sts) {
     if (this.flags.indexOf('i') < 0 ){
       predMap['http://www.w3.org/2000/10/swap/log#implies'] = '=>'
     }
-
-
     ////////////////////////// Arrange the bits of text
 
     var spaces=function(n) {
@@ -381,8 +369,6 @@ __Serializer.prototype.statementsToN3 = function(sts) {
     };
 
     ////////////////////////////////////////////// Structure for N3
-
-
     // Convert a set of statements into a nested tree of lists and strings
     function statementListToTree(statements) {
         // print('Statement tree for '+statements.length);
@@ -404,8 +390,6 @@ __Serializer.prototype.statementsToN3 = function(sts) {
             return objectTree(subject, stats, true).concat(['.']); // Anonymous bnode subject
         return [ termToN3(subject, stats) ].concat([propertyTree(subject, stats)]).concat(['.']);
     }
-
-
     // The property tree for a single subject or anonymous node
     function propertyTree(subject, stats) {
         // print('Proprty tree for '+subject);
@@ -417,7 +401,7 @@ __Serializer.prototype.statementsToN3 = function(sts) {
         }
 
         var SPO = function(x, y) {
-            return $rdf.Util.heavyCompareSPO(x, y, this.store)
+            return Util.heavyCompareSPO(x, y, this.store)
         }
         sts.sort(); // 2014-09-30
 //        sts.sort(SPO); // 2014-09-30
@@ -482,7 +466,7 @@ __Serializer.prototype.statementsToN3 = function(sts) {
             if (!this.prefixes.hasOwnProperty(ns)) continue;
             if (!this.namespacesUsed[ns]) continue;
             str += '@prefix ' + this.prefixes[ns] + ': <' +
-                 $rdf.uri.refTo(this.base, ns) + '>.\n';
+                 Uri.refTo(this.base, ns) + '>.\n';
         }
         return str + '\n';
     }
@@ -494,13 +478,9 @@ __Serializer.prototype.statementsToN3 = function(sts) {
     return prefixDirectives() + treeToString(tree, -1);
 
 }
-
-
 ////////////////////////////////////////////// Atomic Terms
 
 //  Deal with term level things and nesting with no bnode structure
-
-
 __Serializer.prototype.atomicTermToN3 = function atomicTermToN3(expr, stats) {
     switch(expr.termType) {
         case 'bnode':
@@ -584,9 +564,6 @@ __Serializer.prototype.stringToN3 = function stringToN3(str, flags) {
     }
     return delim + res + str.slice(i) + delim
 }
-
-
-
 //  A single symbol, either in  <> or namespace notation
 
 
@@ -630,7 +607,7 @@ __Serializer.prototype.symbolToN3 = function symbolToN3(x) {  // c.f. symbolStri
         }
     }
     if (this.flags.indexOf('r') < 0 && this.base)
-        uri = $rdf.uri.refTo(this.base, uri);
+        uri = Uri.refTo(this.base, uri);
     else if (this.flags.indexOf('u') >= 0)
         uri = backslashUify(uri);
     else uri = hexify(uri);
@@ -805,7 +782,7 @@ __Serializer.prototype.statementsToXML = function(sts) {
     }
 
     function relURI(term) {
-        return escapeForXML((this.base) ? $rdf.Util.uri.refTo(this.base, term.uri) : term.uri);
+        return escapeForXML((this.base) ? Util.uri.refTo(this.base, term.uri) : term.uri);
     }
     relURI = relURI.bind(this);
 
@@ -863,7 +840,7 @@ __Serializer.prototype.statementsToXML = function(sts) {
           if(number == intNumber.toString()) {
             // was numeric; don't need to worry about ordering since we've already
             // sorted the statements
-            pred = new $rdf.NamedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#li');
+            pred = new NamedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#li');
           }
         }
 
@@ -1017,5 +994,6 @@ __Serializer.prototype.statementsToXML = function(sts) {
 
 var Serializer = function( store ) {return new __Serializer( store )};
 return Serializer;
-
 }();
+
+module.exports = Serializer

@@ -4,19 +4,21 @@
 
 // load('../../dist/rdflib.js')
 
-load('../../util.js')
-load('../../uri.js')
-load('../../term.js')
-load('../../rdfparser.js')
-load('../../rdfa.js')
-load('../../n3parser.js')
-load('../../identity.js')
-load('../../query.js')
-load('../../sparql.js')
-load('../../sparqlUpdate.js')
-load('../../jsonparser.js')
-load('../../serialize.js')
-load('../../web.js')
+// load('../../util.js')
+// load('../../uri.js')
+// load('../../term.js')
+// load('../../rdfparser.js')
+// load('../../rdfa.js')
+// load('../../n3parser.js')
+// load('../../identity.js')
+// load('../../query.js')
+// load('../../sparql.js')
+// load('../../sparqlUpdate.js')
+// load('../../jsonparser.js')
+// load('../../serialize.js')
+// load('../../web.js')
+
+var $rdf = require('../../index')
 
 if (dump == undefined) {
   var dump = function (str) { print('----  ' + str);}

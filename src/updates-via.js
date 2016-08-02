@@ -1,49 +1,27 @@
 /*
  * Updates-Via
  */
-var $rdf
-var k
-var v
-var bind = function (fn, me) {
-  return function () {
-    return fn.apply(me, arguments)
-  }
-}
-var hasProp = {}.hasOwnProperty
+const namedNode = require('./data-factory').namedNode
 
-if (typeof $rdf === 'undefined' || $rdf === null) {
-  $rdf = {}
-}
-
-$rdf.UpdatesSocket = (function () {
-  function UpdatesSocket (parent, via1) {
-    var error
+class UpdatesSocket {
+  constructor (parent, via) {
     this.parent = parent
-    this.via = via1
-    this.subscribe = bind(this.subscribe, this)
-    this.onError = bind(this.onError, this)
-    this.onMessage = bind(this.onMessage, this)
-    this.onClose = bind(this.onClose, this)
-    this.onOpen = bind(this.onOpen, this)
-    this._subscribe = bind(this._subscribe, this)
-    this._send = bind(this._send, this)
+    this.via = via
     this.connected = false
     this.pending = {}
     this.subscribed = {}
     this.socket = {}
     try {
-      this.socket = new WebSocket(via1)
+      this.socket = new WebSocket(via)
       this.socket.onopen = this.onOpen
       this.socket.onclose = this.onClose
       this.socket.onmessage = this.onMessage
       this.socket.onerror = this.onError
-    } catch (error1) {
-      error = error1
+    } catch (error) {
       this.onError(error)
     }
   }
-
-  UpdatesSocket.prototype._decode = function (q) {
+  _decode (q) {
     var elt
     var i
     var k
@@ -74,20 +52,38 @@ $rdf.UpdatesSocket = (function () {
     }
     return r
   }
-
-  UpdatesSocket.prototype._send = function (method, uri, data) {
+  _send (method, uri, data) {
     var base, message
     message = [method, uri, data].join(' ')
     return typeof (base = this.socket).send === 'function' ? base.send(message) : void 0
   }
-
-  UpdatesSocket.prototype._subscribe = function (uri) {
+  _subscribe (uri) {
     this._send('sub', uri, '')
     this.subscribed[uri] = true
     return this.subscribed[uri]
   }
-
-  UpdatesSocket.prototype.onOpen = function (e) {
+  onClose (e) {
+    var uri
+    this.connected = false
+    for (uri in this.subscribed) {
+      this.pending[uri] = true
+    }
+    this.subscribed = {}
+    return this.subscribed
+  }
+  onError (e) {
+    throw new Error('onError' + e)
+  }
+  onMessage (e) {
+    var base, message
+    message = e.data.split(' ')
+    if (message[0] === 'ping') {
+      return typeof (base = this.socket).send === 'function' ? base.send('pong ' + message.slice(1).join(' ')) : void 0
+    } else if (message[0] === 'pub') {
+      return this.parent.onUpdate(message[1], this._decode(message[2]))
+    }
+  }
+  onOpen (e) {
     var results, uri
     this.connected = true
     results = []
@@ -97,32 +93,7 @@ $rdf.UpdatesSocket = (function () {
     }
     return results
   }
-
-  UpdatesSocket.prototype.onClose = function (e) {
-    var uri
-    this.connected = false
-    for (uri in this.subscribed) {
-      this.pending[uri] = true
-    }
-    this.subscribed = {}
-    return this.subscribed
-  }
-
-  UpdatesSocket.prototype.onMessage = function (e) {
-    var base, message
-    message = e.data.split(' ')
-    if (message[0] === 'ping') {
-      return typeof (base = this.socket).send === 'function' ? base.send('pong ' + message.slice(1).join(' ')) : void 0
-    } else if (message[0] === 'pub') {
-      return this.parent.onUpdate(message[1], this._decode(message[2]))
-    }
-  }
-
-  UpdatesSocket.prototype.onError = function (e) {
-    throw new Error('onError' + e)
-  }
-
-  UpdatesSocket.prototype.subscribe = function (uri) {
+  subscribe (uri) {
     if (this.connected) {
       return this._subscribe(uri)
     } else {
@@ -130,29 +101,16 @@ $rdf.UpdatesSocket = (function () {
       return this.pending[uri]
     }
   }
+}
 
-  return UpdatesSocket
-})()
-
-$rdf.UpdatesVia = (function () {
-  function UpdatesVia (fetcher) {
+class UpdatesVia {
+  constructor (fetcher) {
     this.fetcher = fetcher
-    this.onUpdate = bind(this.onUpdate, this)
-    this.onHeaders = bind(this.onHeaders, this)
-    this.register = bind(this.register, this)
     this.graph = {}
     this.via = {}
     this.fetcher.addCallback('headers', this.onHeaders)
   }
-
-  UpdatesVia.prototype.register = function (via, uri) {
-    if (this.via[via] == null) {
-      this.via[via] = new $rdf.UpdatesSocket(this, via)
-    }
-    return this.via[via].subscribe(uri)
-  }
-
-  UpdatesVia.prototype.onHeaders = function (d) {
+  onHeaders (d) {
     var etag, uri, via
     if (d.headers == null) {
       return true
@@ -172,18 +130,16 @@ $rdf.UpdatesVia = (function () {
     }
     return true
   }
-
-  UpdatesVia.prototype.onUpdate = function (uri, d) {
-    return this.fetcher.refresh($rdf.sym(uri))
+  onUpdate (uri, d) {
+    return this.fetcher.refresh(namedNode(uri))
   }
-
-  return UpdatesVia
-})()
-
-if ((typeof module !== 'undefined' && module !== null ? module.exports : void 0) != null) {
-  for (k in $rdf) {
-    if (!hasProp.call($rdf, k)) continue
-    v = $rdf[k]
-    module.exports[k] = v
+  register (via, uri) {
+    if (this.via[via] == null) {
+      this.via[via] = new UpdatesSocket(this, via)
+    }
+    return this.via[via].subscribe(uri)
   }
 }
+
+module.exports.UpdatesSocket = UpdatesSocket
+module.exports.UpdatesVia = UpdatesVia

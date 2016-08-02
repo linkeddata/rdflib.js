@@ -5,11 +5,11 @@
 
 // var jQuery = require('jquery')
 
-var $rdf = require('../../dist/rdflib-node.js')
+var $rdf = require('../../index.js')
 var util = require('util')
 var print = util.print
 var k = $rdf.graph()
-var f = $rdf.fetcher(k)
+// var f = $rdf.fetcher(k)
 var z = $rdf.Serializer(k)
 z.writeStore(print)
 

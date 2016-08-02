@@ -1,7 +1,6 @@
 // Matching a formula against another formula
 // Assync as well as Synchronously
 //
-//
 // W3C open source licence 2005.
 //
 // This builds on term.js, match.js (and identity.js?)
@@ -16,119 +15,24 @@
 // Compare with BlankNode.  They are similar, but a variable
 // stands for something whose value is to be returned.
 // Also, users name variables and want the same name back when stuff is printed
-
 /* jsl:option explicit*/ // Turn on JavaScriptLint variable declaration checking
 
-// The Query object.  Should be very straightforward.
-//
-// This if for tracking queries the user has in the UI.
-//
-$rdf.Query = function (name, id) {
-  this.pat = new $rdf.IndexedFormula() // The pattern to search for
-  this.vars = [] // Used by UI code but not in query.js
-  //    this.orderBy = [] // Not used yet
-  this.name = name
-  this.id = id
-}
+const IndexedFormula = require('./indexed-formula')
+const log = require('./log')
+const docpart = require('./uri').docpart
 
 /**
- * The QuerySource object stores a set of listeners and a set of queries.
- * It keeps the listeners aware of those queries that the source currently
- * contains, and it is then up to the listeners to decide what to do with
- * those queries in terms of displays.
- * Not used 2010-08 -- TimBL
- * @constructor
- * @author jambo
+ * Query class, for tracking queries the user has in the UI.
  */
-$rdf.QuerySource = function () {
-  /**
-   * stores all of the queries currently held by this source,
-   * indexed by ID number.
-   */
-  this.queries = []
-  /**
-   * stores the listeners for a query object.
-   * @see TabbedContainer
-   */
-  this.listeners = []
-
-  /**
-   * add a Query object to the query source--It will be given an ID number
-   * and a name, if it doesn't already have one. This subsequently adds the
-   * query to all of the listeners the QuerySource knows about.
-   */
-  this.addQuery = function (q) {
-    var i
-    if (q.name === null || q.name === '') {
-      q.name = 'Query #' + (this.queries.length + 1)
-    }
-    q.id = this.queries.length
-    this.queries.push(q)
-    for (i = 0; i < this.listeners.length; i++) {
-      if (this.listeners[i] !== null) {
-        this.listeners[i].addQuery(q)
-      }
-    }
-  }
-
-  /**
-   * Remove a Query object from the source.  Tells all listeners to also
-   * remove the query.
-   */
-  this.removeQuery = function (q) {
-    var i
-    for (i = 0; i < this.listeners.length; i++) {
-      if (this.listeners[i] !== null) {
-        this.listeners[i].removeQuery(q)
-      }
-    }
-    if (this.queries[q.id] !== null) {
-      delete this.queries[q.id]
-    }
-  }
-
-  /**
-   * adds a "Listener" to this QuerySource - that is, an object
-   * which is capable of both adding and removing queries.
-   * Currently, only the TabbedContainer class is added.
-   * also puts all current queries into the listener to be used.
-   */
-  this.addListener = function (listener) {
-    var i
-    this.listeners.push(listener)
-    for (i = 0; i < this.queries.length; i++) {
-      if (this.queries[i] !== null) {
-        listener.addQuery(this.queries[i])
-      }
-    }
-  }
-  /**
-   * removes listener from the array of listeners, if it exists! Also takes
-   * all of the queries from this source out of the listener.
-   */
-  this.removeListener = function (listener) {
-    var i
-    for (i = 0; i < this.queries.length; i++) {
-      if (this.queries[i] !== null) {
-        listener.removeQuery(this.queries[i])
-      }
-    }
-
-    for (i = 0; i < this.listeners.length; i++) {
-      if (this.listeners[i] === listener) {
-        delete this.listeners[i]
-      }
-    }
+class Query {
+  constructor (name, id) {
+    this.pat = new IndexedFormula() // The pattern to search for
+    this.vars = [] // Used by UI code but not in query.js
+    //    this.orderBy = [] // Not used yet
+    this.name = name
+    this.id = id
   }
 }
-
-$rdf.Variable.prototype.isVar = 1
-$rdf.BlankNode.prototype.isVar = 1
-$rdf.BlankNode.prototype.isBlank = 1
-$rdf.NamedNode.prototype.isVar = 0
-$rdf.Literal.prototype.isVar = 0
-$rdf.Formula.prototype.isVar = 0
-$rdf.Collection.prototype.isVar = 0
 
 /**
  * This function will match a pattern to the current kb
@@ -145,11 +49,9 @@ $rdf.Collection.prototype.isVar = 0
  *                              f.fetecher is used as a Fetcher instance to do this.
  * @param       onDone          callback when
  */
-$rdf.IndexedFormula.prototype.query = function (myQuery, callback, fetcher, onDone) {
-  var kb = this
-
+function indexedFormulaQuery (myQuery, callback, fetcher, onDone) {
+  // var kb = this
   // /////////// Debug strings
-
   var bindingDebug = function (b) {
     var str = ''
     var v
@@ -319,7 +221,7 @@ $rdf.IndexedFormula.prototype.query = function (myQuery, callback, fetcher, onDo
         return
       }
     }
-    $rdf.log.debug('OPTIONAL BIDNINGS ALL DONE:')
+    log.debug('OPTIONAL BIDNINGS ALL DONE:')
     this.doCallBacks(this.branches.length - 1, this.trunkBindings)
   }
   // Recrursively generate the cross product of the bindings
@@ -349,14 +251,14 @@ $rdf.IndexedFormula.prototype.query = function (myQuery, callback, fetcher, onDo
   }
 
   MandatoryBranch.prototype.reportMatch = function (bindings) {
-    // $rdf.log.error("@@@@ query.js 1"); // @@
+    // log.error("@@@@ query.js 1"); // @@
     this.callback(bindings)
     this.success = true
   }
 
   MandatoryBranch.prototype.reportDone = function () {
     this.done = true
-    $rdf.log.info('Mandatory query branch finished.***')
+    log.info('Mandatory query branch finished.***')
     if (this.onDone !== undefined) {
       this.onDone()
     }
@@ -377,10 +279,10 @@ $rdf.IndexedFormula.prototype.query = function (myQuery, callback, fetcher, onDo
   }
 
   OptionalBranch.prototype.reportDone = function () {
-    $rdf.log.debug('Optional branch finished - results.length = ' + this.results.length)
+    log.debug('Optional branch finished - results.length = ' + this.results.length)
     if (this.results.length === 0) { // This is what optional means: if no hits,
       this.results.push({}) // mimic success, but with no bindings
-      $rdf.log.debug("Optional branch FAILED - that's OK.")
+      log.debug("Optional branch FAILED - that's OK.")
     }
     this.done = true
     this.junction.checkAllDone()
@@ -395,9 +297,9 @@ $rdf.IndexedFormula.prototype.query = function (myQuery, callback, fetcher, onDo
     var t, terms, termIndex, i, ind
     item.nvars = 0
     item.index = null
-    // if (!f.statements) $rdf.log.warn("@@@ prepare: f is "+f)
-    //    $rdf.log.debug("Prepare: f has "+ f.statements.length)
-    // $rdf.log.debug("Prepare: Kb size "+f.statements.length+" Preparing "+item)
+    // if (!f.statements) log.warn("@@@ prepare: f is "+f)
+    //    log.debug("Prepare: f has "+ f.statements.length)
+    // log.debug("Prepare: Kb size "+f.statements.length+" Preparing "+item)
 
     terms = [item.subject, item.predicate, item.object]
     ind = [f.subjectIndex, f.predicateIndex, f.objectIndex]
@@ -453,16 +355,16 @@ $rdf.IndexedFormula.prototype.query = function (myQuery, callback, fetcher, onDo
   * Will fetch linked data from the web iff the knowledge base an associated source fetcher (f.fetcher)
   ***/
   var match = function (f, g, bindingsSoFar, level, fetcher, localCallback, branch) {
-    $rdf.log.debug('Match begins, Branch count now: ' + branch.count + ' for ' + branch.pattern_debug)
+    log.debug('Match begins, Branch count now: ' + branch.count + ' for ' + branch.pattern_debug)
     var sf = f.fetcher ? f.fetcher : null
-    // $rdf.log.debug("match: f has "+f.statements.length+", g has "+g.statements.length)
+    // log.debug("match: f has "+f.statements.length+", g has "+g.statements.length)
     var pattern = g.statements
     if (pattern.length === 0) { // when it's satisfied all the pattern triples
-      $rdf.log.debug('FOUND MATCH WITH BINDINGS:' + bindingDebug(bindingsSoFar))
+      log.debug('FOUND MATCH WITH BINDINGS:' + bindingDebug(bindingsSoFar))
       if (g.optional.length === 0) {
         branch.reportMatch(bindingsSoFar)
       } else {
-        $rdf.log.debug('OPTIONAL: ' + g.optional)
+        log.debug('OPTIONAL: ' + g.optional)
         var junction = new OptionalBranchJunction(callback, bindingsSoFar) // @@ won't work with nested optionals? nest callbacks
         var br = []
         var b
@@ -476,14 +378,14 @@ $rdf.IndexedFormula.prototype.query = function (myQuery, callback, fetcher, onDo
         }
       }
       branch.count--
-      $rdf.log.debug('Match ends -- success , Branch count now: ' + branch.count + ' for ' + branch.pattern_debug)
+      log.debug('Match ends -- success , Branch count now: ' + branch.count + ' for ' + branch.pattern_debug)
       return // Success
     }
 
     var item
     var i
     var n = pattern.length
-    // $rdf.log.debug(level + "Match "+n+" left, bs so far:"+bindingDebug(bindingsSoFar))
+    // log.debug(level + "Match "+n+" left, bs so far:"+bindingDebug(bindingsSoFar))
 
     // Follow links from variables in query
     if (sf) { // Fetcher is used to fetch URIs, function first term is a URI term, second is the requester
@@ -513,14 +415,14 @@ $rdf.IndexedFormula.prototype.query = function (myQuery, callback, fetcher, onDo
         item = pattern[i] // for each of the triples in the query
         if (bindingsSoFar[item.subject] !== undefined &&
             bindingsSoFar[item.subject].uri && sf &&
-            sf.getState($rdf.Util.uri.docpart(bindingsSoFar[item.subject].uri)) === 'unrequested') {
+            sf.getState(docpart(bindingsSoFar[item.subject].uri)) === 'unrequested') {
           // fetch the subject info and return to id
           fetchResource(bindingsSoFar[item.subject], id)
           return // only look up one per line this time, but we will come back again though match
         }
         if (bindingsSoFar[item.object] !== undefined &&
             bindingsSoFar[item.object].uri && sf &&
-            sf.getState($rdf.Util.uri.docpart(bindingsSoFar[item.object].uri)) === 'unrequested') {
+            sf.getState(docpart(bindingsSoFar[item.object].uri)) === 'unrequested') {
           fetchResource(bindingsSoFar[item.object], id)
           return
         }
@@ -560,17 +462,17 @@ $rdf.IndexedFormula.prototype.query = function (myQuery, callback, fetcher, onDo
     var item
     for (i = 0; i < n; i++) { // For each statement left in the query, run prepare
       item = pattern[i]
-      $rdf.log.info('match2: item=' + item + ', bindingsSoFar=' + bindingDebug(bindingsSoFar))
+      log.info('match2: item=' + item + ', bindingsSoFar=' + bindingDebug(bindingsSoFar))
       prepare(f, item, bindingsSoFar)
     }
     pattern.sort(easiestQuery)
     item = pattern[0]
-    // $rdf.log.debug("Sorted pattern:\n"+pattern)
+    // log.debug("Sorted pattern:\n"+pattern)
     var rest = f.formula()
     rest.optional = g.optional
     rest.constraints = g.constraints
     rest.statements = pattern.slice(1) // No indexes: we will not query g.
-    $rdf.log.debug(level + 'match2 searching ' + item.index.length + ' for ' + item +
+    log.debug(level + 'match2 searching ' + item.index.length + ' for ' + item +
       '; bindings so far=' + bindingDebug(bindingsSoFar))
     // var results = []
     var c
@@ -584,16 +486,16 @@ $rdf.IndexedFormula.prototype.query = function (myQuery, callback, fetcher, onDo
       nbs1 = unifyContents(
         [item.subject, item.predicate, item.object],
         [st.subject, st.predicate, st.object], bindingsSoFar, f)
-      $rdf.log.info(level + ' From first: ' + nbs1.length + ': ' + bindingsDebug(nbs1))
+      log.info(level + ' From first: ' + nbs1.length + ': ' + bindingsDebug(nbs1))
       nk = nbs1.length
       // branch.count += nk
-      // $rdf.log.debug("Branch count bumped "+nk+" to: "+branch.count)
+      // log.debug("Branch count bumped "+nk+" to: "+branch.count)
       for (k = 0; k < nk; k++) { // For each way that statement binds
         bindings2 = []
         newBindings1 = nbs1[k][0]
         if (!constraintsSatisfied(newBindings1, g.constraints)) {
           // branch.count--
-          $rdf.log.debug('Branch count CS: ' + branch.count)
+          log.debug('Branch count CS: ' + branch.count)
         } else {
           for (v in newBindings1) {
             if (newBindings1.hasOwnProperty(v)) {
@@ -614,15 +516,14 @@ $rdf.IndexedFormula.prototype.query = function (myQuery, callback, fetcher, onDo
     }
     branch.count--
     if (onward === 0) {
-      $rdf.log.debug('Match2 fails completely on ' + item)
+      log.debug('Match2 fails completely on ' + item)
     }
-    $rdf.log.debug('Match2 ends, Branch count: ' + branch.count + ' for ' + branch.pattern_debug)
+    log.debug('Match2 ends, Branch count: ' + branch.count + ' for ' + branch.pattern_debug)
     if (branch.count === 0) {
-      $rdf.log.debug('Branch finished.')
+      log.debug('Branch finished.')
       branch.reportDone()
     }
   } // match2
-
   // ////////////////////////// Body of query()  ///////////////////////
   /*
   if(!fetcher) {
@@ -637,13 +538,11 @@ $rdf.IndexedFormula.prototype.query = function (myQuery, callback, fetcher, onDo
   // prepare, oncallback: match1
   // match1: fetcher, oncallback: match2
   // match2, oncallback: populatetable
-  //    $rdf.log.debug("Query F length"+this.statements.length+" G="+myQuery)
+  //    log.debug("Query F length"+this.statements.length+" G="+myQuery)
   var f = this
-  $rdf.log.debug('Query on ' + this.statements.length)
-
+  log.debug('Query on ' + this.statements.length)
   // kb.remoteQuery(myQuery,'http://jena.hpl.hp.com:3040/backstage',callback)
   // return
-
   var trunck = new MandatoryBranch(callback, onDone)
   trunck.count++ // count one branch to complete at the moment
   setTimeout(function () {
@@ -654,4 +553,5 @@ $rdf.IndexedFormula.prototype.query = function (myQuery, callback, fetcher, onDo
   return // returns nothing; callback does the work
 } // query
 
-// ENDS
+module.exports.Query = Query
+module.exports.indexedFormulaQuery = indexedFormulaQuery

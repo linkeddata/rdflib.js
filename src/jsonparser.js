@@ -1,4 +1,4 @@
-$rdf.jsonParser = (function () {
+var jsonParser = (function () {
   return {
     parseJSON: function (data, source, store) {
       var subject, predicate, object
@@ -33,7 +33,7 @@ $rdf.jsonParser = (function () {
               }
               store.add(subject, predicate, object, why)
             } else if (obj.type === 'literal') {
-              var datatype
+              // var datatype
               if (obj.datatype) {
                 object = store.literal(obj.value, undefined, store.sym(obj.datatype))
               } else if (obj.lang) {
@@ -51,3 +51,5 @@ $rdf.jsonParser = (function () {
     }
   }
 })()
+
+module.exports = jsonParser
