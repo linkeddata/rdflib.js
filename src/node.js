@@ -42,6 +42,9 @@ class Node {
   toNT () {
     return this.toString()
   }
+  toString () {
+    throw new Error('Node.toString() is abstract - see the subclasses instead')
+  }
 }
 
 module.exports = Node
