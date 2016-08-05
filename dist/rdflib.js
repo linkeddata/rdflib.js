@@ -22606,6 +22606,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 var ClassOrder = require('./class-order');
 var Node = require('./node');
+var XSD = require('./xsd');
 
 var Literal = function (_Node) {
   _inherits(Literal, _Node);
@@ -22673,7 +22674,7 @@ var Literal = function (_Node) {
     key: 'fromBoolean',
     value: function fromBoolean(value) {
       var strValue = value ? '1' : '0';
-      return new Literal(strValue, void 0, NamedNode.prototype.XSDboolean);
+      return new Literal(strValue, void 0, XSD.boolean);
     }
     /**
      * @method fromDate
@@ -22692,7 +22693,7 @@ var Literal = function (_Node) {
         return ('' + (100 + x)).slice(1, 3);
       };
       var date = '' + value.getUTCFullYear() + '-' + d2(value.getUTCMonth() + 1) + '-' + d2(value.getUTCDate()) + 'T' + d2(value.getUTCHours()) + ':' + d2(value.getUTCMinutes()) + ':' + d2(value.getUTCSeconds()) + 'Z';
-      return new Literal(date, void 0, NamedNode.prototype.XSDdateTime);
+      return new Literal(date, void 0, XSD.dateTime);
     }
     /**
      * @method fromNumber
@@ -22709,11 +22710,11 @@ var Literal = function (_Node) {
       }
       var datatype = void 0;
       if (('' + value).indexOf('e') >= 0) {
-        datatype = NamedNode.prototype.XSDfloat;
+        datatype = XSD.float;
       } else if (('' + value).indexOf('.') >= 0) {
-        datatype = NamedNode.prototype.XSDdecimal;
+        datatype = XSD.decimal;
       } else {
-        datatype = NamedNode.prototype.XSDinteger;
+        datatype = XSD.integer;
       }
       return new Literal('' + value, void 0, datatype);
     }
@@ -22754,7 +22755,7 @@ Literal.prototype.isVar = 0;
 
 module.exports = Literal;
 
-},{"./class-order":44,"./node":58}],54:[function(require,module,exports){
+},{"./class-order":44,"./node":58,"./xsd":74}],54:[function(require,module,exports){
 "use strict";
 
 /**
@@ -24347,18 +24348,6 @@ var NamedNode = function (_Node) {
 }(Node);
 
 NamedNode.termType = 'symbol';
-NamedNode.prototype.XSDboolean = new NamedNode('http://www.w3.org/2001/XMLSchema#boolean');
-
-NamedNode.prototype.XSDdecimal = new NamedNode('http://www.w3.org/2001/XMLSchema#decimal');
-
-NamedNode.prototype.XSDfloat = new NamedNode('http://www.w3.org/2001/XMLSchema#float');
-
-NamedNode.prototype.XSDinteger = new NamedNode('http://www.w3.org/2001/XMLSchema#integer');
-
-NamedNode.prototype.XSDdateTime = new NamedNode('http://www.w3.org/2001/XMLSchema#dateTime');
-
-NamedNode.prototype.integer = new NamedNode('http://www.w3.org/2001/XMLSchema#integer');
-
 NamedNode.prototype.classOrder = ClassOrder['NamedNode'];
 NamedNode.prototype.isVar = 0;
 
@@ -30212,7 +30201,26 @@ Variable.prototype.isVar = 1;
 
 module.exports = Variable;
 
-},{"./class-order":44,"./node":58,"./uri":71}],"rdflib":[function(require,module,exports){
+},{"./class-order":44,"./node":58,"./uri":71}],74:[function(require,module,exports){
+'use strict';
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var NamedNode = require('./named-node');
+
+var XSD = function XSD() {
+  _classCallCheck(this, XSD);
+};
+
+XSD.boolean = new NamedNode('http://www.w3.org/2001/XMLSchema#boolean');
+XSD.dateTime = new NamedNode('http://www.w3.org/2001/XMLSchema#dateTime');
+XSD.decimal = new NamedNode('http://www.w3.org/2001/XMLSchema#decimal');
+XSD.float = new NamedNode('http://www.w3.org/2001/XMLSchema#float');
+XSD.integer = new NamedNode('http://www.w3.org/2001/XMLSchema#integer');
+
+module.exports = XSD;
+
+},{"./named-node":56}],"rdflib":[function(require,module,exports){
 'use strict';
 
 var $rdf = {

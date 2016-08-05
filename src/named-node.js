@@ -39,24 +39,6 @@ class NamedNode extends Node {
   }
 }
 NamedNode.termType = 'symbol'
-NamedNode.prototype.XSDboolean =
-  new NamedNode('http://www.w3.org/2001/XMLSchema#boolean')
-
-NamedNode.prototype.XSDdecimal =
-  new NamedNode('http://www.w3.org/2001/XMLSchema#decimal')
-
-NamedNode.prototype.XSDfloat =
-  new NamedNode('http://www.w3.org/2001/XMLSchema#float')
-
-NamedNode.prototype.XSDinteger =
-  new NamedNode('http://www.w3.org/2001/XMLSchema#integer')
-
-NamedNode.prototype.XSDdateTime =
-  new NamedNode('http://www.w3.org/2001/XMLSchema#dateTime')
-
-NamedNode.prototype.integer =
-  new NamedNode('http://www.w3.org/2001/XMLSchema#integer')
-
 NamedNode.prototype.classOrder = ClassOrder['NamedNode']
 NamedNode.prototype.isVar = 0
 

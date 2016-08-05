@@ -1,6 +1,7 @@
 'use strict'
 const ClassOrder = require('./class-order')
 const Node = require('./node')
+const XSD = require('./xsd')
 
 class Literal extends Node {
   constructor (value, language, datatype) {
@@ -55,7 +56,7 @@ class Literal extends Node {
    */
   static fromBoolean (value) {
     let strValue = value ? '1' : '0'
-    return new Literal(strValue, void 0, NamedNode.prototype.XSDboolean)
+    return new Literal(strValue, void 0, XSD.boolean)
   }
   /**
    * @method fromDate
@@ -73,7 +74,7 @@ class Literal extends Node {
     let date = '' + value.getUTCFullYear() + '-' + d2(value.getUTCMonth() + 1) +
       '-' + d2(value.getUTCDate()) + 'T' + d2(value.getUTCHours()) + ':' +
       d2(value.getUTCMinutes()) + ':' + d2(value.getUTCSeconds()) + 'Z'
-    return new Literal(date, void 0, NamedNode.prototype.XSDdateTime)
+    return new Literal(date, void 0, XSD.dateTime)
   }
   /**
    * @method fromNumber
@@ -87,11 +88,11 @@ class Literal extends Node {
     }
     let datatype
     if (('' + value).indexOf('e') >= 0) {
-      datatype = NamedNode.prototype.XSDfloat
+      datatype = XSD.float
     } else if (('' + value).indexOf('.') >= 0) {
-      datatype = NamedNode.prototype.XSDdecimal
+      datatype = XSD.decimal
     } else {
-      datatype = NamedNode.prototype.XSDinteger
+      datatype = XSD.integer
     }
     return new Literal('' + value, void 0, datatype)
   }
