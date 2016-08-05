@@ -52,15 +52,15 @@ function variable (name) {
 
 // rdfjs spec factory methods
 module.exports.blankNode = blankNode
-module.exports.fetcher = fetcher
 module.exports.graph = graph
 module.exports.literal = literal
 module.exports.namedNode = namedNode
 module.exports.quad = quad
-module.exports.st = st
 module.exports.triple = triple
 module.exports.variable = variable
 
 // rdflib only
 module.exports.collection = collection
+module.exports.fetcher = fetcher
 module.exports.lit = lit
+module.exports.st = st

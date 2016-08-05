@@ -46,5 +46,24 @@ class Node {
     throw new Error('Node.toString() is abstract - see the subclasses instead')
   }
 }
-
 module.exports = Node
+
+/**
+ * Creates an RDF Node from a native javascript value.
+ * RDF Nodes are returned unchanged, undefined returned as itself.
+ * @method fromValue
+ * @static
+ * @param value {Node|Date|String|Number|Boolean|Undefined}
+ * @return {Node|Collection}
+ */
+Node.fromValue = function fromValue (value) {
+  const Collection = require('./collection')
+  const Literal = require('./literal')
+  if (!value || value instanceof Node || value instanceof Collection) {
+    return value
+  }
+  if (Array.isArray(value)) {
+    return new Collection(value)
+  }
+  return Literal.fromValue(value)
+}

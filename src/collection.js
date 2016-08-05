@@ -2,21 +2,18 @@
 const BlankNode = require('./blank-node')
 const ClassOrder = require('./class-order')
 const Node = require('./node')
-const term = require('./term')
 
 class Collection extends Node {
   constructor (initial) {
     super()
-    var i, len, s
     this.termType = Collection.termType
     this.id = BlankNode.nextId++
     this.elements = []
     this.closed = false
-    if (typeof initial !== 'undefined') {
-      for (i = 0, len = initial.length; i < len; i++) {
-        s = initial[i]
-        this.elements.push(term(s))
-      }
+    if (initial && initial.length > 0) {
+      initial.forEach(element => {
+        this.elements.push(Node.fromValue(element))
+      })
     }
   }
   append (element) {

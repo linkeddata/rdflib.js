@@ -1,11 +1,11 @@
 'use strict'
-const term = require('./term')
+const Node = require('./node')
 
 class Statement {
   constructor (subject, predicate, object, graph) {
-    this.subject = term(subject)
-    this.predicate = term(predicate)
-    this.object = term(object)
+    this.subject = Node.fromValue(subject)
+    this.predicate = Node.fromValue(predicate)
+    this.object = Node.fromValue(object)
     this.why = graph  // property currently used by rdflib
   }
   get graph () {
