@@ -7,7 +7,16 @@ class Statement {
     this.predicate = term(predicate)
     this.object = term(object)
     this.why = graph  // property currently used by rdflib
-    this.graph = graph  // rdfjs property
+  }
+  get graph () {
+    return this.why
+  }
+  set graph (g) {
+    this.why = g
+  }
+  equals (other) {
+    return other.subject.equals(this.subject) && other.predicate.equals(this.predicate) &&
+      other.object.equals(this.object) && other.graph.equals(this.graph)
   }
   substitute (bindings) {
     return new Statement(
@@ -15,6 +24,9 @@ class Statement {
       this.predicate.substitute(bindings),
       this.object.substitute(bindings),
       this.why)
+  }
+  toCanonical () {
+    return this.toNT()
   }
   toNT () {
     return [this.subject.toNT(), this.predicate.toNT(),
