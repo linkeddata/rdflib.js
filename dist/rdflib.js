@@ -22727,7 +22727,10 @@ var Literal = function (_Node) {
   }, {
     key: 'fromValue',
     value: function fromValue(value) {
-      if (!value || value instanceof Node) {
+      if (value instanceof Node) {
+        return value;
+      }
+      if (typeof value === 'undefined' || value === null) {
         return value;
       }
       switch (typeof value === 'undefined' ? 'undefined' : _typeof(value)) {
@@ -22736,9 +22739,9 @@ var Literal = function (_Node) {
             return Literal.fromDate(value);
           }
         case 'boolean':
-          return new Literal.fromBoolean(value);
+          return Literal.fromBoolean(value);
         case 'number':
-          return new Literal.fromNumber(value);
+          return Literal.fromNumber(value);
         case 'string':
           return new Literal(value);
       }
@@ -24456,7 +24459,10 @@ module.exports = Node;
 Node.fromValue = function fromValue(value) {
   var Collection = require('./collection');
   var Literal = require('./literal');
-  if (!value || value instanceof Node || value instanceof Collection) {
+  if (value instanceof Node || value instanceof Collection) {
+    return value;
+  }
+  if (typeof value === 'undefined' || value === null) {
     return value;
   }
   if (Array.isArray(value)) {
