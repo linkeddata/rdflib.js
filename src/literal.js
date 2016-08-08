@@ -111,9 +111,9 @@ class Literal extends Node {
           return Literal.fromDate(value)
         }
       case 'boolean':
-        return new Literal.fromBoolean(value)
+        return Literal.fromBoolean(value)
       case 'number':
-        return new Literal.fromNumber(value)
+        return Literal.fromNumber(value)
       case 'string':
         return new Literal(value)
     }
