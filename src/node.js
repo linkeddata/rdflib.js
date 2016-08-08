@@ -59,7 +59,10 @@ module.exports = Node
 Node.fromValue = function fromValue (value) {
   const Collection = require('./collection')
   const Literal = require('./literal')
-  if (!value || value instanceof Node || value instanceof Collection) {
+  if (value instanceof Node || value instanceof Collection) {
+    return value
+  }
+  if (typeof value === 'undefined' || value === null) {
     return value
   }
   if (Array.isArray(value)) {
