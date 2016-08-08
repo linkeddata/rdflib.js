@@ -24,7 +24,7 @@ var $rdf = {
   SPARQLToQuery: require('./src/sparql-to-query'),
   sparqlUpdateParser: require('./src/patch-parser'),
   Statement: require('./src/statement'),
-  term: require('./src/term'),
+  term: require('./src/node').fromValue,
   UpdateManager: require('./src/update-manager'),
   UpdatesSocket: require('./src/updates-via').UpdatesSocket,
   UpdatesVia: require('./src/updates-via').UpdatesVia,

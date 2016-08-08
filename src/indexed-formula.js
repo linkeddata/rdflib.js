@@ -18,7 +18,7 @@ const Formula = require('./formula')
 // const log = require('./log')
 const RDFArrayRemove = require('./util').RDFArrayRemove
 const Statement = require('./statement')
-const term = require('./term')
+const Node = require('./node')
 
 const owl_ns = 'http://www.w3.org/2002/07/owl#'
 // var link_ns = 'http://www.w3.org/2007/ont/link#'
@@ -226,11 +226,10 @@ class IndexedFormula extends Formula {
       // system generated
       why = this.fetcher ? this.fetcher.appNode : this.sym('chrome:theSession')
     }
-    // defined in source.js, is this OK with identity.js only user?
-    subj = term(subj)
-    pred = term(pred)
-    obj = term(obj)
-    why = term(why)
+    subj = Node.fromValue(subj)
+    pred = Node.fromValue(pred)
+    obj = Node.fromValue(obj)
+    why = Node.fromValue(why)
     if (this.predicateCallback) {
       this.predicateCallback(this, pred, why)
     }
@@ -244,8 +243,9 @@ class IndexedFormula extends Formula {
         done = done || actions[i](this, subj, pred, obj, why)
       }
     }
-    // If we are tracking provenanance, every thing should be loaded into the store
-    // if (done) return new Statement(subj, pred, obj, why); // Don't put it in the store
+    // If we are tracking provenance, every thing should be loaded into the store
+    // if (done) return new Statement(subj, pred, obj, why);
+    // Don't put it in the store
     // still return this statement for owl:sameAs input
     var hash = [ this.canon(subj).hashString(), predHash,
       this.canon(obj).hashString(), this.canon(why).hashString()]
@@ -630,7 +630,7 @@ class IndexedFormula extends Formula {
     var p
     var list
     for (p = 0; p < 4; p++) {
-      pattern[p] = this.canon(term(pat[p]))
+      pattern[p] = this.canon(Node.fromValue(pat[p]))
       if (!pattern[p]) {
         wild.push(p)
       } else {
