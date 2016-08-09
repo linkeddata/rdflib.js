@@ -22,6 +22,7 @@ const triple4 = rdf.triple(s1, p2, o3)
 test('empty .match()', t => {
   let kb = rdf.graph()
   kb.addAll([ triple1, triple2, triple3 ])
+  t.equals(kb.length, 3)
   let matches = kb.match()
   t.equals(matches.length, 3, 'An empty .match() should return all triples')
   t.end()

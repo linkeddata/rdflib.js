@@ -403,6 +403,20 @@ class IndexedFormula extends Formula {
   }
 
   /**
+   * Returns the number of statements contained in this IndexedFormula.
+   * (Getter proxy to this.statements).
+   * Usage:
+   *    ```
+   *    var kb = rdf.graph()
+   *    kb.length  // -> 0
+   *    ```
+   * @return {Number}
+   */
+  get length () {
+    return this.statements.length
+  }
+
+  /**
    * Returns any quads matching the given arguments.
    * Standard RDFJS Taskforce method for Source objects, implemented as an
    * alias to `statementsMatching()`
