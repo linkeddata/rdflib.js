@@ -35,7 +35,8 @@
     "babelify": "^7.3.0",
     "browserify": "^13.0.0",
     "minifyify": "^7.3.2",
-    "nodeunit": "^0.9.1"
+    "nodeunit": "^0.9.1",
+    "tape": "^4.6.0"
   },
   "scripts": {
     "test": "make test"

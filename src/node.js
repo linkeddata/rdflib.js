@@ -59,6 +59,7 @@ module.exports = Node
 Node.fromValue = function fromValue (value) {
   const Collection = require('./collection')
   const Literal = require('./literal')
+  const NamedNode = require('./named-node')
   if (value instanceof Node || value instanceof Collection) {
     return value
   }
@@ -67,6 +68,9 @@ Node.fromValue = function fromValue (value) {
   }
   if (Array.isArray(value)) {
     return new Collection(value)
+  }
+  if (typeof value === 'string' && value.includes('//')) {
+    return new NamedNode(value)
   }
   return Literal.fromValue(value)
 }
