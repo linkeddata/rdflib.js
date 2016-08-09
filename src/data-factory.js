@@ -1,6 +1,7 @@
 'use strict'
 const BlankNode = require('./blank-node')
 const Collection = require('./collection')
+const DefaultGraph = require('./default-graph')
 const Fetcher = require('./fetcher')
 const IndexedFormula = require('./indexed-formula')
 const Literal = require('./literal')
@@ -13,6 +14,9 @@ function blankNode (value) {
 }
 function collection (elements) {
   return new Collection(elements)
+}
+function defaultGraph () {
+  return new DefaultGraph()
 }
 function fetcher (store, timeout, async) {
   return new Fetcher(store, timeout, async)
@@ -38,6 +42,7 @@ function namedNode (value) {
   return new NamedNode(value)
 }
 function quad (subject, predicate, object, graph) {
+  graph = graph || new DefaultGraph()
   return new Statement(subject, predicate, object, graph)
 }
 function st (subject, predicate, object, graph) {
@@ -52,6 +57,7 @@ function variable (name) {
 
 // rdfjs spec factory methods
 module.exports.blankNode = blankNode
+module.exports.defaultGraph = defaultGraph
 module.exports.graph = graph
 module.exports.literal = literal
 module.exports.namedNode = namedNode
