@@ -500,7 +500,7 @@ __Serializer.prototype.atomicTermToN3 = function atomicTermToN3(expr, stats) {
             var str = this.stringToN3(expr.value);
             if (expr.lang && expr.lang !== ''){
                 str+= '@' + expr.lang;
-            } else if (expr.datatype) {
+            } else if (expr.hasDatatype()) {
                 str+= '^^' + this.termToN3(expr.datatype, stats);
             }
             return str;
@@ -861,11 +861,13 @@ __Serializer.prototype.statementsToXML = function(sts) {
               + relURI(st.object)+'"/>']);
           break;
           case 'Literal':
-            results = results.concat(['<'+ t
-              + (st.object.datatype ? ' rdf:datatype="'+escapeForXML(st.object.datatype.uri)+'"' : '')
-              + (st.object.lang ? ' xml:lang="'+st.object.lang+'"' : '')
-              + '>' + escapeForXML(st.object.value)
-              + '</'+ t +'>']);
+            results = results.concat(['<'+ t +
+                (st.object.hasDatatype()
+                    ? ' rdf:datatype="'+escapeForXML(st.object.datatype.uri)+'"'
+                    : '') +
+              (st.object.lang ? ' xml:lang="'+st.object.lang+'"' : '') +
+              '>' + escapeForXML(st.object.value) +
+              '</'+ t +'>']);
           break;
           case 'collection':
             results = results.concat(['<'+ t +' rdf:parseType="Collection">',
@@ -926,7 +928,7 @@ __Serializer.prototype.statementsToXML = function(sts) {
                     break;
                 case 'Literal':
                     results = results.concat(['<'+qname(st.predicate)
-                        + (st.object.datatype ? ' rdf:datatype="'+escapeForXML(st.object.datatype.uri)+'"' : '')
+                        + (st.object.hasDatatype() ? ' rdf:datatype="'+escapeForXML(st.object.datatype.uri)+'"' : '')
                         + (st.object.lang ? ' xml:lang="'+st.object.lang+'"' : '')
                         + '>' + escapeForXML(st.object.value)
                         + '</'+qname(st.predicate)+'>']);
