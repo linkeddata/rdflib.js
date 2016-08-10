@@ -361,8 +361,8 @@ function SPARQLToQuery (SPARQL, testMode, kb) {
   }
 
   function setConstraint (input, pat) {
-    if (input.length === 3 && input[0].termType === 'variable' &&
-      (input[2].termType === 'symbol' || input[2].termType === 'literal')) {
+    if (input.length === 3 && input[0].termType === 'Variable' &&
+      (input[2].termType === 'NamedNode' || input[2].termType === 'Literal')) {
       if (input[1] === '=') {
         log.debug('Constraint added: ' + input)
         pat.constraints[input[0]] = new ConstraintEqualTo(input[2])
@@ -378,7 +378,7 @@ function SPARQLToQuery (SPARQL, testMode, kb) {
     } else if (input.length === 6 && typeof input[0] === 'string' &&
       input[0].toLowerCase() === 'regexp' &&
       input[1] === '(' && input[5] === ')' && input[3] === ',' &&
-      input[4].termType === 'variable' && input[2].termType === 'literal') {
+      input[4].termType === 'Variable' && input[2].termType === 'Literal') {
       log.debug('Constraint added: ' + input)
       pat.constraints[input[4]] = new ConstraintRegexp(input[2].value)
     }
@@ -501,14 +501,14 @@ function SPARQLToQuery (SPARQL, testMode, kb) {
 
   for (var x in q.pat.statements) {
     var st = q.pat.statements[x]
-    if (st.subject.termType === 'symbol') {
+    if (st.subject.termType === 'NamedNode') {
       /* && sf.isPending(st.subject.uri) */ // This doesn't work.
       // sf.requestURI(st.subject.uri,"sparql:"+st.subject) Kenny: I remove these two
       if (fetcher) {
         fetcher.lookUpThing(st.subject, 'sparql:' + st.subject)
       }
     }
-    if (st.object.termType === 'symbol') {
+    if (st.object.termType === 'NamedNode') {
       /* && sf.isPending(st.object.uri) */
       // sf.requestURI(st.object.uri,"sparql:"+st.object)
       if (fetcher) {

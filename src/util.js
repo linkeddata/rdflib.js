@@ -37,7 +37,7 @@ function ajarHandleNewTerm (kb, p, requestedBy) {
   } else {
     return
   }
-  if (p.termType !== 'symbol') return
+  if (p.termType !== 'NamedNode') return
   var docuri = docpart(p.uri)
   var fixuri
   if (p.uri.indexOf('#') < 0) { // No hash
@@ -290,7 +290,7 @@ function getHTTPHeaders (xhr) {
  */
 function heavyCompare (x, y, g) {
   var nonBlank = function (x) {
-    return (x.termType === 'bnode') ? null : x
+    return (x.termType === 'BlankNode') ? null : x
   }
   var signature = function (b) {
     var lis = g.statementsMatching(x).map(function (st) {
@@ -303,7 +303,7 @@ function heavyCompare (x, y, g) {
     lis.sort()
     return lis.join('\n')
   }
-  if ((x.termType === 'bnode') || (y.termType === 'bnode')) {
+  if ((x.termType === 'BlankNode') || (y.termType === 'BlankNode')) {
     if (x.compareTerm(y) === 0) return 0 // Same
     if (signature(x) > signature(y)) return +1
     if (signature(x) < signature(y)) return -1

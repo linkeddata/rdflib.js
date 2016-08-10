@@ -37,8 +37,18 @@ class NamedNode extends Node {
   toString () {
     return '<' + this.uri + '>'
   }
+  static fromValue (value) {
+    const Collection = require('./collection')
+    if (value instanceof Node || value instanceof Collection) {
+      return value
+    }
+    if (typeof value === 'undefined' || value === null) {
+      return value
+    }
+    return new NamedNode(value)
+  }
 }
-NamedNode.termType = 'symbol'
+NamedNode.termType = 'NamedNode'
 NamedNode.prototype.classOrder = ClassOrder['NamedNode']
 NamedNode.prototype.isVar = 0
 

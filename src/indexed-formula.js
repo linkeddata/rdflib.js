@@ -361,11 +361,11 @@ class IndexedFormula extends Formula {
     for (var i = 0;i < statList.length;i++) {
       var st = statList[i]
       switch (st.object.termType) {
-        case 'symbol':
+        case 'NamedNode':
           this.add(target, st.predicate, st.object)
           break
-        case 'literal':
-        case 'bnode':
+        case 'Literal':
+        case 'BlankNode':
         case 'collection':
           this.add(target, st.predicate, st.object.copy(this))
       }

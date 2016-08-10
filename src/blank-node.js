@@ -29,12 +29,15 @@ class BlankNode extends Node {
     formula.copyTo(this, bnodeNew)
     return bnodeNew
   }
+  toCanonical () {
+    return '_:' + this.value
+  }
   toString () {
     return BlankNode.NTAnonymousNodePrefix + this.id
   }
 }
 BlankNode.nextId = 0
-BlankNode.termType = 'bnode'
+BlankNode.termType = 'BlankNode'
 BlankNode.NTAnonymousNodePrefix = '_:n'
 BlankNode.prototype.classOrder = ClassOrder['BlankNode']
 BlankNode.prototype.isBlank = 1

@@ -1,5 +1,6 @@
 'use strict'
 const ClassOrder = require('./class-order')
+const NamedNode = require('./named-node')
 const Node = require('./node')
 const XSD = require('./xsd')
 
@@ -8,9 +9,13 @@ class Literal extends Node {
     super()
     this.termType = Literal.termType
     this.value = value
-    this.lang = language  // property currently used by rdflib
-    this.language = language  // rdfjs property
-    this.datatype = datatype
+    this.lang = language || ''  // property currently used by rdflib
+    if (language) {
+      datatype = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#langString'
+    } else {
+      datatype = datatype || XSD.string
+    }
+    this.datatype = NamedNode.fromValue(datatype)
   }
   copy () {
     return new Literal(this.value, this.lang, this.datatype)
@@ -24,6 +29,12 @@ class Literal extends Node {
       (this.language === other.language) &&
       ((!this.datatype && !other.datatype) ||
         (this.datatype && this.datatype.equals(other.datatype)))
+  }
+  get language () {
+    return this.lang
+  }
+  set language (language) {
+    this.lang = language || ''
   }
   toNT () {
     if (typeof this.value === 'number') {
@@ -40,7 +51,7 @@ class Literal extends Node {
     if (this.datatype) {
       str += '^^' + this.datatype.toNT()
     }
-    if (this.language) {
+    if (this.language && this.language !== '') {
       str += '@' + this.language
     }
     return str
@@ -125,7 +136,7 @@ class Literal extends Node {
 
   }
 }
-Literal.termType = 'literal'
+Literal.termType = 'Literal'
 Literal.prototype.classOrder = ClassOrder['Literal']
 Literal.prototype.isVar = 0
 

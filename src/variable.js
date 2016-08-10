@@ -7,12 +7,12 @@ const Uri = require('./uri')
  * @class Variable
  * Variables are placeholders used in patterns to be matched.
  * In cwm they are symbols which are the formula's list of quantified variables.
- * In sparl they are not visibily URIs.  Here we compromise, by having
+ * In sparql they are not visibly URIs.  Here we compromise, by having
  * a common special base URI for variables. Their names are uris,
- * but the ? nottaion has an implicit base uri of 'varid:'
+ * but the ? notation has an implicit base uri of 'varid:'
  */
 class Variable extends Node {
-  constructor (rel) {
+  constructor (rel = '') {
     super()
     this.termType = Variable.termType
     this.base = 'varid:'
@@ -39,7 +39,7 @@ class Variable extends Node {
   }
 }
 
-Variable.termType = 'variable'
+Variable.termType = 'Variable'
 Variable.prototype.classOrder = ClassOrder['Variable']
 Variable.prototype.isVar = 1
 
