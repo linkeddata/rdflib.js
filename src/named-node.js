@@ -14,7 +14,6 @@ class NamedNode extends Node {
   constructor (iri) {
     super()
     this.termType = NamedNode.termType
-    this.uri = iri
     this.value = iri
   }
   /**
@@ -36,6 +35,16 @@ class NamedNode extends Node {
   }
   toString () {
     return '<' + this.uri + '>'
+  }
+
+  /**
+   * Legacy getter and setter alias, node.uri
+   */
+  get uri () {
+    return this.value
+  }
+  set uri (uri) {
+    this.value = uri
   }
   static fromValue (value) {
     if (typeof value === 'undefined' || value === null) {

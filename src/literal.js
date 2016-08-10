@@ -20,7 +20,11 @@ class Literal extends Node {
     }
   }
   copy () {
-    return new Literal(this.value, this.lang, this.datatype)
+    return new Literal(
+      this.value,
+      this.lang,
+      this.hasDatatype() ? this.datatype : null
+    )
   }
   equals (other) {
     if (!other) {
@@ -43,6 +47,15 @@ class Literal extends Node {
   hasDatatype () {
     return this.datatype && this.hasOwnProperty('datatype')
   }
+
+  /**
+   * Returns whether or not this literal has a language explicitly set.
+   * Used by various serialization methods.
+   * @returns {Boolean}
+   */
+  hasLanguage () {
+    return this.lang && this.lang !== ''
+  }
   get language () {
     return this.lang
   }
@@ -62,7 +75,7 @@ class Literal extends Node {
     str = str.replace(/\n/g, '\\n')
     str = '"' + str + '"'
 
-    if (this.language && this.language !== '') {
+    if (this.hasLanguage()) {
       str += '@' + this.language
     } else if (this.hasDatatype()) {
       // Only add datatype if it's explicitly set (non-default)

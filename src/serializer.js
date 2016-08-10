@@ -498,7 +498,7 @@ __Serializer.prototype.atomicTermToN3 = function atomicTermToN3(expr, stats) {
                 }
             }
             var str = this.stringToN3(expr.value);
-            if (expr.lang && expr.lang !== ''){
+            if (expr.hasLanguage()){
                 str+= '@' + expr.lang;
             } else if (expr.hasDatatype()) {
                 str+= '^^' + this.termToN3(expr.datatype, stats);
@@ -865,7 +865,7 @@ __Serializer.prototype.statementsToXML = function(sts) {
                 (st.object.hasDatatype()
                     ? ' rdf:datatype="'+escapeForXML(st.object.datatype.uri)+'"'
                     : '') +
-              (st.object.lang ? ' xml:lang="'+st.object.lang+'"' : '') +
+              (st.object.hasLanguage() ? ' xml:lang="'+st.object.lang+'"' : '') +
               '>' + escapeForXML(st.object.value) +
               '</'+ t +'>']);
           break;
@@ -929,7 +929,7 @@ __Serializer.prototype.statementsToXML = function(sts) {
                 case 'Literal':
                     results = results.concat(['<'+qname(st.predicate)
                         + (st.object.hasDatatype() ? ' rdf:datatype="'+escapeForXML(st.object.datatype.uri)+'"' : '')
-                        + (st.object.lang ? ' xml:lang="'+st.object.lang+'"' : '')
+                        + (st.object.hasLanguage() ? ' xml:lang="'+st.object.lang+'"' : '')
                         + '>' + escapeForXML(st.object.value)
                         + '</'+qname(st.predicate)+'>']);
                     break;
