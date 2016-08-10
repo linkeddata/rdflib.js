@@ -113,10 +113,10 @@ class Literal extends Node {
    * @return {Literal}
    */
   static fromValue (value) {
-    if (value instanceof Node) {
+    if (typeof value === 'undefined' || value === null) {
       return value
     }
-    if (typeof value === 'undefined' || value === null) {
+    if (value && value.termType) {  // this is a Node instance
       return value
     }
     switch (typeof value) {

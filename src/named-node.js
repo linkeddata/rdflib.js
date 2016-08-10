@@ -38,11 +38,11 @@ class NamedNode extends Node {
     return '<' + this.uri + '>'
   }
   static fromValue (value) {
-    const Collection = require('./collection')
-    if (value instanceof Node || value instanceof Collection) {
+    if (typeof value === 'undefined' || value === null) {
       return value
     }
-    if (typeof value === 'undefined' || value === null) {
+    const isNode = value && value.termType
+    if (isNode) {
       return value
     }
     return new NamedNode(value)
