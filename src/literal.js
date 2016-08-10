@@ -9,13 +9,15 @@ class Literal extends Node {
     super()
     this.termType = Literal.termType
     this.value = value
-    this.lang = language || ''  // property currently used by rdflib
+    this.lang = language || ''
     if (language) {
       datatype = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#langString'
-    } else {
-      datatype = datatype || XSD.string
     }
-    this.datatype = NamedNode.fromValue(datatype)
+    // If not passed in in the constructor, the datatype defaults to xsd.string
+    // (note the default Literal.prototype.datatype at the end of this module)
+    if (datatype) {
+      this.datatype = NamedNode.fromValue(datatype)
+    }
   }
   copy () {
     return new Literal(this.value, this.lang, this.datatype)
@@ -48,7 +50,8 @@ class Literal extends Node {
     str = str.replace(/\"/g, '\\"')
     str = str.replace(/\n/g, '\\n')
     str = '"' + str + '"'
-    if (this.datatype) {
+    // Only add datatype if it's explicitly set (non-default)
+    if (this.datatype && Object.hasOwnProperty('datatype')) {
       str += '^^' + this.datatype.toNT()
     }
     if (this.language && this.language !== '') {
@@ -138,6 +141,7 @@ class Literal extends Node {
 }
 Literal.termType = 'Literal'
 Literal.prototype.classOrder = ClassOrder['Literal']
+Literal.prototype.datatype = XSD.string
 Literal.prototype.isVar = 0
 
 module.exports = Literal
