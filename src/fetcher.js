@@ -332,7 +332,7 @@ var Fetcher = function Fetcher (store, timeout, async) {
         }
         sf.addStatus(xhr.req, 'non-XML HTML document, not parsed for data.')
         sf.doneFetch(xhr)
-        // sf.failFetch(xhr, "Sorry, can't yet parse non-XML HTML")
+      // sf.failFetch(xhr, "Sorry, can't yet parse non-XML HTML")
       }
     }
   }
@@ -372,8 +372,8 @@ var Fetcher = function Fetcher (store, timeout, async) {
         // We give up finding semantics - this is not an error, just no data
         sf.addStatus(xhr.req, 'Plain text document, no known RDF semantics.')
         sf.doneFetch(xhr)
-        //                sf.failFetch(xhr, "unparseable - text/plain not visibly XML")
-        //                dump(xhr.resource + " unparseable - text/plain not visibly XML, starts:\n" + rt.slice(0, 500)+"\n")
+      //                sf.failFetch(xhr, "unparseable - text/plain not visibly XML")
+      //                dump(xhr.resource + " unparseable - text/plain not visibly XML, starts:\n" + rt.slice(0, 500)+"\n")
       }
     }
   }
@@ -446,10 +446,10 @@ var Fetcher = function Fetcher (store, timeout, async) {
     }
     if (!Handler) {
       throw new Error('web.js: switchHandler: name=' + name + ' , this.handlers =' + this.handlers + '\n' +
-      'switchHandler: switching to ' + Handler + '; sf=' + sf +
-      '; typeof Fetcher=' + typeof Fetcher +
-      ';\n\t Fetcher.HTMLHandler=' + Fetcher.HTMLHandler + '\n' +
-      '\n\tsf.handlers=' + sf.handlers + '\n')
+        'switchHandler: switching to ' + Handler + '; sf=' + sf +
+        '; typeof Fetcher=' + typeof Fetcher +
+        ';\n\t Fetcher.HTMLHandler=' + Fetcher.HTMLHandler + '\n' +
+        '\n\tsf.handlers=' + sf.handlers + '\n')
     }
     (new Handler(args)).handlerFactory(xhr)
     xhr.handle(cb)
@@ -612,12 +612,12 @@ var Fetcher = function Fetcher (store, timeout, async) {
         .then(function (xhr) {
           fetcher.webOperation('PUT', // @@@ change to binary from text
             there, { data: xhr.responseText, contentType: content_type })
-              .then(function (xhr) {
-                resolve(xhr)
-              })
-              .catch(function (e) {
-                reject(e)
-              })
+            .then(function (xhr) {
+              resolve(xhr)
+            })
+            .catch(function (e) {
+              reject(e)
+            })
         })
         .catch(function (e) {
           reject(e)
@@ -780,14 +780,31 @@ var Fetcher = function Fetcher (store, timeout, async) {
 
   this.proxyIfNecessary = function (uri) {
     if (typeof tabulator !== 'undefined' && tabulator.isExtension) return uri // Extenstion does not need proxy
+
+    if (typeof $SolidTestEnvironment !== 'undefined' && $SolidTestEnvironment.localSiteMap) { // nested dictionaries of URI parts from origin down
+      var hostpath = uri.split('/').slice(2) // the bit after the //
+      var lookup = function (parts, index) {
+        var z = index[parts.shift()]
+        if (!z) return null
+        if (typeof z === 'string') {
+          return z + parts.join('/')
+        }
+        if (!parts) return null
+        return lookup(parts, z)
+      }
+      var y = lookup(hostpath, $SolidTestEnvironment.localSiteMap)
+      if (y) {
+        return y
+      }
+    }
     // browser does 2014 on as https browser script not trusted
     // If the web app origin is https: then the mixed content rules
     // prevent it loading insecure http: stuff so we need proxy.
     if (Fetcher.crossSiteProxyTemplate &&
-        (typeof document !== 'undefined') &&
-        document.location &&
-        ('' + document.location).slice(0, 6) === 'https:' && // origin is secure
-        uri.slice(0, 5) === 'http:') { // requested data is not
+      (typeof document !== 'undefined') &&
+      document.location &&
+      ('' + document.location).slice(0, 6) === 'https:' && // origin is secure
+      uri.slice(0, 5) === 'http:') { // requested data is not
       return Fetcher.crossSiteProxyTemplate.replace('{uri}', encodeURIComponent(uri))
     }
     return uri
@@ -842,7 +859,6 @@ var Fetcher = function Fetcher (store, timeout, async) {
    **              or URI has already been loaded
    */
   this.requestURI = function (docuri, rterm, options, userCallback) { // sources_request_new
-
     // Various calling conventions
     docuri = docuri.uri || docuri // NamedNode or string
     docuri = docuri.split('#')[0]
@@ -854,7 +870,7 @@ var Fetcher = function Fetcher (store, timeout, async) {
     var force = !!options.force
     var kb = this.store
     var args = arguments
-    var baseURI = options.baseURI || docuri  // Preseve though proxying etc
+    var baseURI = options.baseURI || docuri // Preseve though proxying etc
     options.userCallback = userCallback
 
     var pcol = Uri.protocol(docuri)
@@ -862,7 +878,7 @@ var Fetcher = function Fetcher (store, timeout, async) {
       // "No look-up operation on these, but they are not errors?"
       console.log('Unsupported protocol in: ' + docuri)
       return userCallback(false, 'Unsupported protocol', { 'status': 900 }) ||
-        undefined
+      undefined
     }
     var docterm = kb.sym(docuri)
 
@@ -874,7 +890,7 @@ var Fetcher = function Fetcher (store, timeout, async) {
       if (sta === 'failed') {
         return userCallback
           ? userCallback(false, 'Previously failed. ' + this.requested[docuri],
-              {'status': this.requested[docuri]})
+            {'status': this.requested[docuri]})
           : undefined // An xhr standin
       }
     // if (sta === 'requested') return userCallback? userCallback(false, "Sorry already requested - pending already.", {'status': 999 }) : undefined
@@ -912,7 +928,7 @@ var Fetcher = function Fetcher (store, timeout, async) {
     xhr.original = kb.sym(baseURI)
     // console.log('XHR original: ' + xhr.original)
     xhr.options = options
-    xhr.resource = docterm  // This might be proxified
+    xhr.resource = docterm // This might be proxified
     var sf = this
 
     var now = new Date()
@@ -1127,7 +1143,7 @@ var Fetcher = function Fetcher (store, timeout, async) {
           if (loc) {
             var udoc = Uri.join(xhr.resource.uri, loc)
             if (!force && udoc !== xhr.resource.uri &&
-                sf.requested[udoc] && sf.requested[udoc] === 'done') { // we have already fetched this in fact.
+              sf.requested[udoc] && sf.requested[udoc] === 'done') { // we have already fetched this in fact.
               // should we smush too?
               // log.info("HTTP headers indicate we have already" + " retrieved " + xhr.resource + " as " + udoc + ". Aborting.")
               sf.doneFetch(xhr)
@@ -1319,9 +1335,9 @@ var Fetcher = function Fetcher (store, timeout, async) {
 
     // Set redirect callback and request headers -- alas Firefox Extension Only
     if (typeof tabulator !== 'undefined' &&
-        tabulator.isExtension && xhr.channel &&
-        (Uri.protocol(xhr.resource.uri) === 'http' ||
-        Uri.protocol(xhr.resource.uri) === 'https')) {
+      tabulator.isExtension && xhr.channel &&
+      (Uri.protocol(xhr.resource.uri) === 'http' ||
+      Uri.protocol(xhr.resource.uri) === 'https')) {
       try {
         xhr.channel.notificationCallbacks = {
           getInterface: function (iid) {
@@ -1386,7 +1402,7 @@ var Fetcher = function Fetcher (store, timeout, async) {
                   if (hash >= 0) {
                     if (!xhr.options.noMeta) {
                       kb.add(xhr.resource, kb.sym('http://www.w3.org/2007/ont/link#warning'),
-                      'Warning: ' + xhr.resource + ' HTTP redirects to' + newURI + ' which should not contain a "#" sign')
+                        'Warning: ' + xhr.resource + ' HTTP redirects to' + newURI + ' which should not contain a "#" sign')
                     }
                     newURI = newURI.slice(0, hash)
                   }
@@ -1469,7 +1485,7 @@ var Fetcher = function Fetcher (store, timeout, async) {
 
                   var xhr2 = sf.requestURI(newURI, xhr.resource, xhr.options, xhr.userCallback)
                   if (xhr2) { // may be no XHR is other URI already loaded
-                    xhr2.original = xhr.original  // use this for finding base
+                    xhr2.original = xhr.original // use this for finding base
                     if (xhr2.req) {
                       kb.add(
                         xhr.req,
@@ -1576,9 +1592,9 @@ var Fetcher = function Fetcher (store, timeout, async) {
     // if it's not pending: false -> flailed 'done' -> done 'redirected' -> redirected
     return this.requested[docuri] === true
   }
-  // var updatesVia = new $rdf.UpdatesVia(this) // Subscribe to headers
-  // @@@@@@@@ This is turned off because it causes a websocket to be set up for ANY fetch
-  // whether we want to track it ot not. including ontologies loaed though the XSSproxy
+// var updatesVia = new $rdf.UpdatesVia(this) // Subscribe to headers
+// @@@@@@@@ This is turned off because it causes a websocket to be set up for ANY fetch
+// whether we want to track it ot not. including ontologies loaed though the XSSproxy
 } // End of fetcher
 
 module.exports = Fetcher
