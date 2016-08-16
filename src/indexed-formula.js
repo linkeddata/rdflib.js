@@ -264,6 +264,12 @@ class IndexedFormula extends Formula {
     return st
   }
 
+  addAll (statements) {
+    statements.forEach(quad => {
+      this.add(quad.subject, quad.predicate, quad.object, quad.graph)
+    })
+  }
+
   anyStatementMatching (subj, pred, obj, why) {
     var x = this.statementsMatching(subj, pred, obj, why, true)
     if (!x || x.length === 0) {
@@ -394,6 +400,39 @@ class IndexedFormula extends Formula {
 
   formula (features) {
     return new IndexedFormula(features)
+  }
+
+  /**
+   * Returns the number of statements contained in this IndexedFormula.
+   * (Getter proxy to this.statements).
+   * Usage:
+   *    ```
+   *    var kb = rdf.graph()
+   *    kb.length  // -> 0
+   *    ```
+   * @return {Number}
+   */
+  get length () {
+    return this.statements.length
+  }
+
+  /**
+   * Returns any quads matching the given arguments.
+   * Standard RDFJS Taskforce method for Source objects, implemented as an
+   * alias to `statementsMatching()`
+   * @method match
+   * @param subject {Node|String|Object}
+   * @param predicate {Node|String|Object}
+   * @param object {Node|String|Object}
+   * @param graph {NamedNode|String}
+   */
+  match (subject, predicate, object, graph) {
+    return this.statementsMatching(
+      Node.fromValue(subject),
+      Node.fromValue(predicate),
+      Node.fromValue(object),
+      Node.fromValue(graph)
+    )
   }
 
   /**
