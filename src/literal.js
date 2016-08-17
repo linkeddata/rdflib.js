@@ -9,12 +9,14 @@ class Literal extends Node {
     super()
     this.termType = Literal.termType
     this.value = value
-    this.lang = language || ''
     if (language) {
+      this.lang = language
       datatype = XSD.langString
     }
     // If not specified, a literal has the implied XSD.string default datatype
-    this.datatype = NamedNode.fromValue(datatype) || XSD.string
+    if (datatype) {
+      this.datatype = NamedNode.fromValue(datatype)
+    }
   }
   copy () {
     return new Literal(this.value, this.lang, this.datatype)
@@ -28,14 +30,6 @@ class Literal extends Node {
       (this.language === other.language) &&
       ((!this.datatype && !other.datatype) ||
         (this.datatype && this.datatype.equals(other.datatype)))
-  }
-  /**
-   * Returns whether or not this literal has a language explicitly set.
-   * Used by various serialization methods.
-   * @returns {Boolean}
-   */
-  hasLanguage () {
-    return this.lang && this.lang !== ''
   }
   get language () {
     return this.lang
@@ -56,11 +50,11 @@ class Literal extends Node {
     str = str.replace(/\n/g, '\\n')
     str = '"' + str + '"'
 
-    if (this.hasLanguage()) {
+    if (this.language) {
       str += '@' + this.language
     } else if (!this.datatype.equals(XSD.string)) {
       // Only add datatype if it's not a string
-      str += '^^' + this.datatype.toNT()
+      str += '^^' + this.datatype.toCanonical()
     }
     return str
   }
@@ -147,6 +141,7 @@ class Literal extends Node {
 Literal.termType = 'Literal'
 Literal.prototype.classOrder = ClassOrder['Literal']
 Literal.prototype.datatype = XSD.string
+Literal.prototype.lang = ''
 Literal.prototype.isVar = 0
 
 module.exports = Literal
