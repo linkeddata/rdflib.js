@@ -11,20 +11,13 @@ class Literal extends Node {
     this.value = value
     this.lang = language || ''
     if (language) {
-      datatype = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#langString'
+      datatype = XSD.langString
     }
-    // If not passed in in the constructor, the datatype defaults to xsd.string
-    // (note the default Literal.prototype.datatype at the end of this module)
-    if (datatype) {
-      this.datatype = NamedNode.fromValue(datatype)
-    }
+    // If not specified, a literal has the implied XSD.string default datatype
+    this.datatype = NamedNode.fromValue(datatype) || XSD.string
   }
   copy () {
-    return new Literal(
-      this.value,
-      this.lang,
-      this.hasDatatype() ? this.datatype : null
-    )
+    return new Literal(this.value, this.lang, this.datatype)
   }
   equals (other) {
     if (!other) {
@@ -38,14 +31,14 @@ class Literal extends Node {
   }
 
   /**
-   * Returns whether or not the literal has an explicit datatype set
-   * (as opposed to the implicit default XSD.string type, for example).
+   * Returns whether or not the literal has a non-default datatype set
+   * (as opposed to the implicit default XSD.string type).
    * Used by various serialization methods.
    * @method hasDatatype
    * @return {Boolean}
    */
   hasDatatype () {
-    return this.datatype && this.hasOwnProperty('datatype')
+    return this.datatype && !this.datatype.equals(XSD.string)
   }
 
   /**
@@ -78,7 +71,7 @@ class Literal extends Node {
     if (this.hasLanguage()) {
       str += '@' + this.language
     } else if (this.hasDatatype()) {
-      // Only add datatype if it's explicitly set (non-default)
+      // Only add datatype if it's non-default
       str += '^^' + this.datatype.toNT()
     }
     return str
@@ -94,7 +87,7 @@ class Literal extends Node {
    */
   static fromBoolean (value) {
     let strValue = value ? '1' : '0'
-    return new Literal(strValue, void 0, XSD.boolean)
+    return new Literal(strValue, null, XSD.boolean)
   }
   /**
    * @method fromDate
@@ -112,7 +105,7 @@ class Literal extends Node {
     let date = '' + value.getUTCFullYear() + '-' + d2(value.getUTCMonth() + 1) +
       '-' + d2(value.getUTCDate()) + 'T' + d2(value.getUTCHours()) + ':' +
       d2(value.getUTCMinutes()) + ':' + d2(value.getUTCSeconds()) + 'Z'
-    return new Literal(date, void 0, XSD.dateTime)
+    return new Literal(date, null, XSD.dateTime)
   }
   /**
    * @method fromNumber
@@ -132,7 +125,7 @@ class Literal extends Node {
     } else {
       datatype = XSD.integer
     }
-    return new Literal('' + value, void 0, datatype)
+    return new Literal('' + value, null, datatype)
   }
   /**
    * @method fromValue
