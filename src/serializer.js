@@ -10,6 +10,7 @@
 const NamedNode = require('./named-node')
 const Uri = require('./uri')
 const Util = require('./util')
+const XSD = require('./xsd')
 
 var Serializer = function() {
 var __Serializer = function( store ){
@@ -500,7 +501,7 @@ __Serializer.prototype.atomicTermToN3 = function atomicTermToN3(expr, stats) {
             var str = this.stringToN3(expr.value);
             if (expr.hasLanguage()){
                 str+= '@' + expr.lang;
-            } else if (expr.hasDatatype()) {
+            } else if (!expr.datatype.equals(XSD.string)) {
                 str+= '^^' + this.termToN3(expr.datatype, stats);
             }
             return str;
@@ -862,9 +863,9 @@ __Serializer.prototype.statementsToXML = function(sts) {
           break;
           case 'Literal':
             results = results.concat(['<'+ t +
-                (st.object.hasDatatype()
-                    ? ' rdf:datatype="'+escapeForXML(st.object.datatype.uri)+'"'
-                    : '') +
+                (st.object.datatype.equals(XSD.string)
+                    ? ''
+                    : ' rdf:datatype="'+escapeForXML(st.object.datatype.uri)+'"') +
               (st.object.hasLanguage() ? ' xml:lang="'+st.object.lang+'"' : '') +
               '>' + escapeForXML(st.object.value) +
               '</'+ t +'>']);
@@ -928,7 +929,7 @@ __Serializer.prototype.statementsToXML = function(sts) {
                     break;
                 case 'Literal':
                     results = results.concat(['<'+qname(st.predicate)
-                        + (st.object.hasDatatype() ? ' rdf:datatype="'+escapeForXML(st.object.datatype.uri)+'"' : '')
+                        + (st.object.datatype.equals(XSD.string) ? '' : ' rdf:datatype="'+escapeForXML(st.object.datatype.value)+'"')
                         + (st.object.hasLanguage() ? ' xml:lang="'+st.object.lang+'"' : '')
                         + '>' + escapeForXML(st.object.value)
                         + '</'+qname(st.predicate)+'>']);

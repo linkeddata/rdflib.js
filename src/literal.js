@@ -29,18 +29,6 @@ class Literal extends Node {
       ((!this.datatype && !other.datatype) ||
         (this.datatype && this.datatype.equals(other.datatype)))
   }
-
-  /**
-   * Returns whether or not the literal has a non-default datatype set
-   * (as opposed to the implicit default XSD.string type).
-   * Used by various serialization methods.
-   * @method hasDatatype
-   * @return {Boolean}
-   */
-  hasDatatype () {
-    return this.datatype && !this.datatype.equals(XSD.string)
-  }
-
   /**
    * Returns whether or not this literal has a language explicitly set.
    * Used by various serialization methods.
@@ -70,8 +58,8 @@ class Literal extends Node {
 
     if (this.hasLanguage()) {
       str += '@' + this.language
-    } else if (this.hasDatatype()) {
-      // Only add datatype if it's non-default
+    } else if (!this.datatype.equals(XSD.string)) {
+      // Only add datatype if it's not a string
       str += '^^' + this.datatype.toNT()
     }
     return str
