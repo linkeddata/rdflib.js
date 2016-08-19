@@ -269,7 +269,19 @@ class IndexedFormula extends Formula {
       this.add(quad.subject, quad.predicate, quad.object, quad.graph)
     })
   }
-
+  any (s, p, o, g) {
+    var st = this.anyStatementMatching(s, p, o, g)
+    if (st == null) {
+      return void 0
+    } else if (s == null) {
+      return st.subject
+    } else if (p == null) {
+      return st.predicate
+    } else if (o == null) {
+      return st.object
+    }
+    return void 0
+  }
   anyStatementMatching (subj, pred, obj, why) {
     var x = this.statementsMatching(subj, pred, obj, why, true)
     if (!x || x.length === 0) {
