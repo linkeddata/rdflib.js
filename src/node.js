@@ -69,8 +69,5 @@ Node.fromValue = function fromValue (value) {
   if (Array.isArray(value)) {
     return new Collection(value)
   }
-  if (typeof value === 'string' && value.includes('//')) {
-    return new NamedNode(value)
-  }
   return Literal.fromValue(value)
 }

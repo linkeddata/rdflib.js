@@ -575,6 +575,7 @@ var Fetcher = function Fetcher (store, timeout, async) {
   //
   this.webOperation = function (method, uri, options) {
     uri = uri.uri || uri; options = options || {}
+    uri = this.proxyIfNecessary(uri)
     var fetcher = this
     return new Promise(function (resolve, reject) {
       var xhr = Util.XMLHTTPFactory()
