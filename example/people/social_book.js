@@ -23,7 +23,7 @@ var cardTemplate = ""
 
 /**
  * run on initialization
- */ 
+ */
 function initialize() {
     cardTemplate = $("#user_wrapper").clone()
     //todo: place the proxy default somewhere else ( where?) so it can be easy to configure
@@ -39,7 +39,7 @@ function card(who,kb) {
     /** mailboxes in foaf are usually written as <mailto:henry.story@bblfish.net> . This
      * function removes the 'mailto:' part, if it exists */
     function removeProtocol(uri) {
-        if (uri && uri.termType === 'symbol') {
+        if (uri && uri.termType === 'NamedNode') {
           var parts= uri.split(":")
           if (parts.length > 1) return parts[1]
           else return "unset"
@@ -145,7 +145,7 @@ function friends (person,kb,col) {
 
     for (i = 0; i < n; i++) {
         friend = friends[i];
-        if (friend && friend.termType === 'symbol') { //only show people with a WebID for the moment.
+        if (friend && friend.termType === 'NamedNode') { //only show people with a WebID for the moment.
             var name = kb.any(friend, FOAF('name'))
             if (!name) {
                 name = friend.uri
@@ -164,9 +164,9 @@ function friends (person,kb,col) {
 }
 
 /**
- *  redraw the screen when the selected user identified by webid is pressed in 
+ *  redraw the screen when the selected user identified by webid is pressed in
  *  explorer column col
- */ 
+ */
 function redraw(webid, col) {
     if (!col) col = 0
     var person = $rdf.sym(webid);
@@ -176,7 +176,7 @@ function redraw(webid, col) {
         docURI = webid.slice(0, indexOf)
     else  docURI = webid
     var kb = graphs[docURI]
-    if (!kb) { 
+    if (!kb) {
         //if the knowledge base was not initialised fetch info from the web (if need CORS go through CORS proxy)
         kb = graphs[docURI] = new $rdf.IndexedFormula();
         var fetch = $rdf.fetcher(kb);

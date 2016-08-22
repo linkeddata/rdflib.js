@@ -45,6 +45,7 @@ $rdf.variable = $rdf.DataFactory.variable
 
 // RDFJS DataFactory interface
 $rdf.blankNode = $rdf.DataFactory.blankNode
+$rdf.defaultGraph = $rdf.DataFactory.defaultGraph
 $rdf.literal = $rdf.DataFactory.literal
 $rdf.namedNode = $rdf.DataFactory.namedNode
 $rdf.quad = $rdf.DataFactory.quad

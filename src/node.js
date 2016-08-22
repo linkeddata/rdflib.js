@@ -60,10 +60,11 @@ Node.fromValue = function fromValue (value) {
   const Collection = require('./collection')
   const Literal = require('./literal')
   const NamedNode = require('./named-node')
-  if (value instanceof Node || value instanceof Collection) {
+  if (typeof value === 'undefined' || value === null) {
     return value
   }
-  if (typeof value === 'undefined' || value === null) {
+  const isNode = value && value.termType
+  if (isNode) {  // a Node subclass or a Collection
     return value
   }
   if (Array.isArray(value)) {

@@ -24,7 +24,7 @@ var jsonParser = (function () {
             if (obj.type === 'uri') {
               object = store.sym(obj.value)
               store.add(subject, predicate, object, why)
-            } else if (obj.type === 'bnode') {
+            } else if (obj.type === 'BlankNode') {
               if (bnodes[obj.value]) {
                 object = bnodes[obj.value]
               } else {
@@ -32,7 +32,7 @@ var jsonParser = (function () {
                 bnodes[obj.value] = object
               }
               store.add(subject, predicate, object, why)
-            } else if (obj.type === 'literal') {
+            } else if (obj.type === 'Literal') {
               // var datatype
               if (obj.datatype) {
                 object = store.literal(obj.value, undefined, store.sym(obj.datatype))

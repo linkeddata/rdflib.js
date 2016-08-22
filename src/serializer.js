@@ -10,6 +10,7 @@
 const NamedNode = require('./named-node')
 const Uri = require('./uri')
 const Util = require('./util')
+const XSD = require('./xsd')
 
 var Serializer = function() {
 var __Serializer = function( store ){
@@ -149,7 +150,7 @@ __Serializer.prototype.rootSubjects = function(sts) {
     for (var i = 0; i<sts.length; i++) {
         var st = sts[i];
         [ st.subject, st.predicate, st.object].map(function(y){
-            if (y.termType =='bnode'){allBnodes[y.toNT()] = true}});
+            if (y.termType =='BlankNode'){allBnodes[y.toNT()] = true}});
         var x = sts[i].object;
         if (!incoming.hasOwnProperty(x)) incoming[x] = [];
         incoming[x].push(st.subject) // List of things which will cause this to be printed
@@ -164,7 +165,7 @@ __Serializer.prototype.rootSubjects = function(sts) {
     for (var xNT in subjects) {
         if (!subjects.hasOwnProperty(xNT)) continue;
         var x = this.fromStr(xNT);
-        if ((x.termType != 'bnode') || !incoming[x] || (incoming[x].length != 1)){
+        if ((x.termType != 'BlankNode') || !incoming[x] || (incoming[x].length != 1)){
             roots.push(x);
             //$rdf.log.debug(' sz actual subject -: ' + x)
             continue;
@@ -195,7 +196,7 @@ __Serializer.prototype.rootSubjects = function(sts) {
     // @param force,    "we know this is a root, do it anyway. It isn't a loop."
     function dummyObjectTree(obj, subjects, rootsHash, force) {
         // dump('dummyObjectTree('+obj+'...)\n');
-        if (obj.termType == 'bnode' && (subjects[sz.toStr(obj)]  &&
+        if (obj.termType == 'BlankNode' && (subjects[sz.toStr(obj)]  &&
             (force || (rootsHash[obj.toNT()] == undefined )))) {// and there are statements
             if (doneBnodesNT[obj.toNT()]) { // Ah-ha! a loop
                 throw "Serializer: Should be no loops "+obj;
@@ -208,11 +209,11 @@ __Serializer.prototype.rootSubjects = function(sts) {
 
     // Scan for bnodes nested inside lists too
     function dummyTermToN3(expr, subjects, rootsHash) {
-        if (expr.termType == 'bnode') doneBnodesNT[expr.toNT()] = true;
+        if (expr.termType == 'BlankNode') doneBnodesNT[expr.toNT()] = true;
         // $rdf.log.debug('serialize: seen '+expr);
         if (expr.termType == 'collection') {
             for (i=0; i<expr.elements.length; i++) {
-                if (expr.elements[i].termType == 'bnode')
+                if (expr.elements[i].termType == 'BlankNode')
                     dummyObjectTree(expr.elements[i], subjects, rootsHash);
             }
         return;
@@ -222,7 +223,7 @@ __Serializer.prototype.rootSubjects = function(sts) {
     // The tree for a subject
     function dummySubjectTree(subject, subjects, rootsHash) {
         // dump('dummySubjectTree('+subject+'...)\n');
-        if (subject.termType == 'bnode' && !incoming[subject])
+        if (subject.termType == 'BlankNode' && !incoming[subject])
             return dummyObjectTree(subject, subjects, rootsHash, true); // Anonymous bnode subject
         dummyTermToN3(subject, subjects, rootsHash);
         dummyPropertyTree(subject, subjects, rootsHash);
@@ -386,7 +387,7 @@ __Serializer.prototype.statementsToN3 = function(sts) {
 
     // The tree for a subject
     function subjectTree(subject, stats) {
-        if (subject.termType == 'bnode' && !stats.incoming[subject])
+        if (subject.termType == 'BlankNode' && !stats.incoming[subject])
             return objectTree(subject, stats, true).concat(['.']); // Anonymous bnode subject
         return [ termToN3(subject, stats) ].concat([propertyTree(subject, stats)]).concat(['.']);
     }
@@ -427,7 +428,7 @@ __Serializer.prototype.statementsToN3 = function(sts) {
     propertyTree = propertyTree.bind(this);
 
     function objectTree(obj, stats, force) {
-        if (obj.termType == 'bnode' &&
+        if (obj.termType == 'BlankNode' &&
                 stats.subjects[this.toStr(obj)] && // and there are statements
                 (force || stats.rootsHash[obj.toNT()] == undefined)) // and not a root
             return  ['['].concat(propertyTree(obj, stats)).concat([']']);
@@ -483,9 +484,9 @@ __Serializer.prototype.statementsToN3 = function(sts) {
 //  Deal with term level things and nesting with no bnode structure
 __Serializer.prototype.atomicTermToN3 = function atomicTermToN3(expr, stats) {
     switch(expr.termType) {
-        case 'bnode':
-        case 'variable':  return expr.toNT();
-        case 'literal':
+        case 'BlankNode':
+        case 'Variable':  return expr.toNT();
+        case 'Literal':
             if (expr.datatype) {
                 switch (expr.datatype.uri) {
                 case 'http://www.w3.org/2001/XMLSchema#integer':
@@ -498,13 +499,13 @@ __Serializer.prototype.atomicTermToN3 = function atomicTermToN3(expr, stats) {
                 }
             }
             var str = this.stringToN3(expr.value);
-            if (expr.lang){
-                str+= '@' + expr.lang;
-            } else if (expr.datatype) {
+            if (expr.language){
+                str+= '@' + expr.language;
+            } else if (!expr.datatype.equals(XSD.string)) {
                 str+= '^^' + this.termToN3(expr.datatype, stats);
             }
             return str;
-        case 'symbol':
+        case 'NamedNode':
             return this.symbolToN3(expr);
        default:
             throw "Internal: atomicTermToN3 cannot handle "+expr+" of termType+"+expr.termType
@@ -846,7 +847,7 @@ __Serializer.prototype.statementsToXML = function(sts) {
 
         t = qname(pred);
         switch (st.object.termType) {
-          case 'bnode':
+          case 'BlankNode':
             if(stats.incoming[st.object].length == 1) {	//there should always be something in the incoming array for a bnode
               results = results.concat(['<'+ t +'>',
                 subjectXMLTree(st.object, stats),
@@ -856,16 +857,18 @@ __Serializer.prototype.statementsToXML = function(sts) {
                 +st.object.toNT().slice(2)+'"/>']);
             }
           break;
-          case 'symbol':
+          case 'NamedNode':
             results = results.concat(['<'+ t +' rdf:resource="'
               + relURI(st.object)+'"/>']);
           break;
-          case 'literal':
-            results = results.concat(['<'+ t
-              + (st.object.datatype ? ' rdf:datatype="'+escapeForXML(st.object.datatype.uri)+'"' : '')
-              + (st.object.lang ? ' xml:lang="'+st.object.lang+'"' : '')
-              + '>' + escapeForXML(st.object.value)
-              + '</'+ t +'>']);
+          case 'Literal':
+            results = results.concat(['<'+ t +
+                (st.object.datatype.equals(XSD.string)
+                    ? ''
+                    : ' rdf:datatype="'+escapeForXML(st.object.datatype.uri)+'"') +
+              (st.object.language ? ' xml:lang="'+st.object.language+'"' : '') +
+              '>' + escapeForXML(st.object.value) +
+              '</'+ t +'>']);
           break;
           case 'collection':
             results = results.concat(['<'+ t +' rdf:parseType="Collection">',
@@ -880,7 +883,7 @@ __Serializer.prototype.statementsToXML = function(sts) {
       var tag = type ? qname(type) : 'rdf:Description';
 
       var attrs = '';
-      if (subject.termType == 'bnode') {
+      if (subject.termType == 'BlankNode') {
           if(!stats.incoming[subject] || stats.incoming[subject].length != 1) { // not an anonymous bnode
               attrs = ' rdf:nodeID="'+subject.toNT().slice(2)+'"';
           }
@@ -910,7 +913,7 @@ __Serializer.prototype.statementsToXML = function(sts) {
         for (var i=0; i<sts.length; i++) {
             var st = sts[i];
             switch (st.object.termType) {
-                case 'bnode':
+                case 'BlankNode':
                     if(stats.rootsHash[st.object.toNT()]) { // This bnode has been done as a root -- no content here @@ what bout first time
                         results = results.concat(['<'+qname(st.predicate)+' rdf:nodeID="'+st.object.toNT().slice(2)+'">',
                         '</'+qname(st.predicate)+'>']);
@@ -920,14 +923,14 @@ __Serializer.prototype.statementsToXML = function(sts) {
                         '</'+qname(st.predicate)+'>']);
                     }
                     break;
-                case 'symbol':
+                case 'NamedNode':
                     results = results.concat(['<'+qname(st.predicate)+' rdf:resource="'
                             + relURI(st.object)+'"/>']);
                     break;
-                case 'literal':
+                case 'Literal':
                     results = results.concat(['<'+qname(st.predicate)
-                        + (st.object.datatype ? ' rdf:datatype="'+escapeForXML(st.object.datatype.uri)+'"' : '')
-                        + (st.object.lang ? ' xml:lang="'+st.object.lang+'"' : '')
+                        + (st.object.datatype.equals(XSD.string) ? '' : ' rdf:datatype="'+escapeForXML(st.object.datatype.value)+'"')
+                        + (st.object.language ? ' xml:lang="'+st.object.language+'"' : '')
                         + '>' + escapeForXML(st.object.value)
                         + '</'+qname(st.predicate)+'>']);
                     break;

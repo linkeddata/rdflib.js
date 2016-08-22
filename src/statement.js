@@ -26,7 +26,15 @@ class Statement {
       this.why)
   }
   toCanonical () {
-    return this.toNT()
+    let terms = [
+      this.subject.toCanonical(),
+      this.predicate.toCanonical(),
+      this.object.toCanonical()
+    ]
+    if (this.graph && this.graph.termType !== 'DefaultGraph') {
+        terms.push(this.graph.toCanonical())
+    }
+    return terms.join(' ') + ' .'
   }
   toNT () {
     return [this.subject.toNT(), this.predicate.toNT(),

@@ -25,19 +25,6 @@ class Formula extends Node {
   addStatement (st) {
     return this.statements.push(st)
   }
-  any (s, p, o, g) {
-    var st = this.anyStatementMatching(s, p, o, g)
-    if (st == null) {
-      return void 0
-    } else if (s == null) {
-      return st.subject
-    } else if (p == null) {
-      return st.predicate
-    } else if (o == null) {
-      return st.object
-    }
-    return void 0
-  }
   bnode (id) {
     return new BlankNode(id)
   }

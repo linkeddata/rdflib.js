@@ -1,5 +1,6 @@
 'use strict'
 const ClassOrder = require('./class-order')
+const NamedNode = require('./named-node')
 const Node = require('./node')
 const XSD = require('./xsd')
 
@@ -8,9 +9,14 @@ class Literal extends Node {
     super()
     this.termType = Literal.termType
     this.value = value
-    this.lang = language  // property currently used by rdflib
-    this.language = language  // rdfjs property
-    this.datatype = datatype
+    if (language) {
+      this.lang = language
+      datatype = XSD.langString
+    }
+    // If not specified, a literal has the implied XSD.string default datatype
+    if (datatype) {
+      this.datatype = NamedNode.fromValue(datatype)
+    }
   }
   copy () {
     return new Literal(this.value, this.lang, this.datatype)
@@ -25,6 +31,12 @@ class Literal extends Node {
       ((!this.datatype && !other.datatype) ||
         (this.datatype && this.datatype.equals(other.datatype)))
   }
+  get language () {
+    return this.lang
+  }
+  set language (language) {
+    this.lang = language || ''
+  }
   toNT () {
     if (typeof this.value === 'number') {
       return this.toString()
@@ -37,11 +49,12 @@ class Literal extends Node {
     str = str.replace(/\"/g, '\\"')
     str = str.replace(/\n/g, '\\n')
     str = '"' + str + '"'
-    if (this.datatype) {
-      str += '^^' + this.datatype.toNT()
-    }
+
     if (this.language) {
       str += '@' + this.language
+    } else if (!this.datatype.equals(XSD.string)) {
+      // Only add datatype if it's not a string
+      str += '^^' + this.datatype.toCanonical()
     }
     return str
   }
@@ -56,7 +69,7 @@ class Literal extends Node {
    */
   static fromBoolean (value) {
     let strValue = value ? '1' : '0'
-    return new Literal(strValue, void 0, XSD.boolean)
+    return new Literal(strValue, null, XSD.boolean)
   }
   /**
    * @method fromDate
@@ -74,7 +87,7 @@ class Literal extends Node {
     let date = '' + value.getUTCFullYear() + '-' + d2(value.getUTCMonth() + 1) +
       '-' + d2(value.getUTCDate()) + 'T' + d2(value.getUTCHours()) + ':' +
       d2(value.getUTCMinutes()) + ':' + d2(value.getUTCSeconds()) + 'Z'
-    return new Literal(date, void 0, XSD.dateTime)
+    return new Literal(date, null, XSD.dateTime)
   }
   /**
    * @method fromNumber
@@ -94,7 +107,7 @@ class Literal extends Node {
     } else {
       datatype = XSD.integer
     }
-    return new Literal('' + value, void 0, datatype)
+    return new Literal('' + value, null, datatype)
   }
   /**
    * @method fromValue
@@ -102,10 +115,10 @@ class Literal extends Node {
    * @return {Literal}
    */
   static fromValue (value) {
-    if (value instanceof Node) {
+    if (typeof value === 'undefined' || value === null) {
       return value
     }
-    if (typeof value === 'undefined' || value === null) {
+    if (value && value.termType) {  // this is a Node instance
       return value
     }
     switch (typeof value) {
@@ -125,8 +138,10 @@ class Literal extends Node {
 
   }
 }
-Literal.termType = 'literal'
+Literal.termType = 'Literal'
 Literal.prototype.classOrder = ClassOrder['Literal']
+Literal.prototype.datatype = XSD.string
+Literal.prototype.lang = ''
 Literal.prototype.isVar = 0
 
 module.exports = Literal

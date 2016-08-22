@@ -31,7 +31,7 @@ test('empty .match()', t => {
 test('match on S', t => {
   let kb = rdf.graph()
   kb.addAll([ triple1, triple2, triple3, triple4 ])
-  let s = 'https://example.com/subject1'
+  let s = rdf.namedNode('https://example.com/subject1')
   let matches = kb.match(s)
   t.equals(matches.length, 2, 'match(subject) should return 2 triples')
   matches.sort()
@@ -56,9 +56,9 @@ test('match on SO', t => {
   let kb = rdf.graph()
   kb.addAll([ triple1, triple2, triple3, triple4 ])
   let matches = kb.match(
-    'https://example.com/subject1',
+    rdf.namedNode('https://example.com/subject1'),
     null,
-    'https://example.com/object1'
+    rdf.namedNode('https://example.com/object1')
   )
   t.equals(matches.length, 1, 'match(s, null, o) should return 1 triple')
   t.equals(matches[0].subject, s1)
