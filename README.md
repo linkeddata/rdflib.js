@@ -51,7 +51,7 @@ npm install --save rdflib
 
 #### Dependencies
 
-    - jQuery, XMLHTTPRequest (Node.js version)
+    - XMLHTTPRequest (Node.js version)
 
 ## Thanks
 
