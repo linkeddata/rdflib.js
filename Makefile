@@ -2,8 +2,6 @@
 
 PATH:=./node_modules/.bin:${PATH}
 
-.PHONY: lib detach gh-pages test
-
 all: dist dist/rdflib.js dist/rdflib.min.js
 
 size:
@@ -18,15 +16,18 @@ dist/rdflib.min.js:
 dist:
 	mkdir -p dist
 
+.PHONY: lib
 lib:
 	babel src -d lib
 
+.PHONY: detach
 detach:
 	git checkout origin/master
 	git reset --hard HEAD
 
 #   WARNING  .. don't do this if you have uncommitted local changes
 #
+.PHONY: gh-pages
 gh-pages: detach
 	git branch -D gh-pages ||:
 	git checkout -b gh-pages
@@ -58,6 +59,7 @@ minify: dist/rdflib.min.js
 writable:
 	@sed -i -re 's/git:\/\/github.com\//git@github.com:/' .git/config
 
+.PHONY: test
 test:
 	@nodeunit tests/*.js
 	make -C tests/serialize
