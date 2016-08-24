@@ -2,21 +2,24 @@
 
 PATH:=./node_modules/.bin:${PATH}
 
+.PHONY: lib detach gh-pages test
+
 all: dist dist/rdflib.js dist/rdflib.min.js
 
 size:
 	wc $R
 
 dist/rdflib.js:
-	browserify -r ./index.js:rdflib --exclude "xmlhttprequest" --standalone "\$$rdf" -t [ babelify --presets [ es2015 ] ] -o dist/rdflib.js
+	browserify -r ./src/index.js:rdflib --exclude "xmlhttprequest" --standalone "\$$rdf" -t [ babelify --presets [ es2015 ] ] -o dist/rdflib.js
 
 dist/rdflib.min.js:
-	browserify -r ./index.js:rdflib --exclude "xmlhttprequest" --standalone "\$$rdf" -d -t [ babelify --presets [ es2015 ] ] -p [ minifyify --no-map --uglify [ --compress [ --dead_code --conditionals --unused --if_return ] --mangle --screw-ie8 ] ] -o dist/rdflib.min.js
+	browserify -r ./src/index.js:rdflib --exclude "xmlhttprequest" --standalone "\$$rdf" -d -t [ babelify --presets [ es2015 ] ] -p [ minifyify --no-map --uglify [ --compress [ --dead_code --conditionals --unused --if_return ] --mangle --screw-ie8 ] ] -o dist/rdflib.min.js
 
 dist:
 	mkdir -p dist
 
-.PHONY: detach gh-pages
+lib:
+	babel src -d lib
 
 detach:
 	git checkout origin/master
@@ -35,6 +38,7 @@ gh-pages: detach
 
 clean:
 	rm -f dist/*
+	rm -f lib/*
 
 cleantest:
 	rm tests/serialize/,t1.xml
@@ -54,7 +58,6 @@ minify: dist/rdflib.min.js
 writable:
 	@sed -i -re 's/git:\/\/github.com\//git@github.com:/' .git/config
 
-.PHONY: test
 test:
 	@nodeunit tests/*.js
 	make -C tests/serialize

@@ -18,7 +18,7 @@
 // load('../../serialize.js')
 // load('../../web.js')
 
-var $rdf = require('../../index')
+var $rdf = require('../../src')
 
 if (dump == undefined) {
   var dump = function (str) { print('----  ' + str);}
