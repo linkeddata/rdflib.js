@@ -5,7 +5,7 @@
 // See http://www.w3.org/TR/rdfa-syntax/  etc
 //
 
-$rdf = require('./../../index.js')
+$rdf = require('../../src')
 var fs = require('fs')
 
 var kb = $rdf.graph()

@@ -1,6 +1,6 @@
 'use strict'
 const test = require('tape')
-const rdf = require('../../index')
+const rdf = require('../../src')
 
 const s1 = rdf.namedNode('https://example.com/subject1')
 const p1 = rdf.namedNode('https://example.com/predicate1')

@@ -1,3 +1,4 @@
 parsers/*.js
 node_modules
 dist/rdflib.min.js
+lib/

@@ -5,7 +5,7 @@
 
 // var jQuery = require('jquery')
 
-var $rdf = require('../../index.js')
+var $rdf = require('../../src')
 var util = require('util')
 var print = util.print
 var k = $rdf.graph()
