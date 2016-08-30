@@ -642,11 +642,11 @@ class IndexedFormula extends Formula {
    * Return all equivalent URIs by which this is known
    */
   allAliases (x){
-    var a = this.aliases[this.canon(x).hashString()]
-    a.push(this.canon(subject))
+    var a = this.aliases[this.canon(x).hashString()] || []
+    a.push(this.canon(x))
     return a
   }
-  
+
   /**
    * Compare by canonical URI as smushed
    */
