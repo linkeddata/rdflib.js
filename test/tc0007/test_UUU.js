@@ -3,7 +3,7 @@
 
 if (typeof module !== 'undefined' && module.exports) { // Node.js environment
   // var jQuery = require('jquery')
-  var $rdf = require('../../index.js')
+  var $rdf = require('../../src')
   var util = require('util')
   var alert = function (s) { util.print('alert:' + s + '\n') }
   var kludgeForOfflineUse = function kludgeForOfflineUse (uri) {

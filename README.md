@@ -8,6 +8,7 @@ Javascript RDF library for browsers and Node.js.
 - Read/Write Linked Data client, using WebDav or SPARQL/Update
 - Parses RDFa
 - Local API for querying a store
+- Compatible with [RDFJS task force spec](https://github.com/rdfjs/representation-task-force/blob/master/interface-spec.md)
 - SPARQL queries (not full SPARQL)
 - Smushing of nodes from `owl:sameAs`, and `owl:{f,inverseF}unctionProperty`
 - Tracks provence of triples keeps metadata (in RDF) from HTTP accesses
@@ -45,13 +46,14 @@ npm install --save rdflib
 
 #### Subdirectories
 
-- `dist`, Run 'make' in this directory to generate dist in which libraries are
-  built
-- `test`, Tests are here.
+- `dist`: Where the bundled libraries are built.  Run 'make' to generate them.
+- `test`: Tests are here.
+- `lib`: Transpiled, non-bundled library is built here when the library is
+  published to npm.
 
 #### Dependencies
 
-    - jQuery, XMLHTTPRequest (Node.js version)
+    - XMLHTTPRequest (Node.js version)
 
 ## Thanks
 

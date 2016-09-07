@@ -1,7 +1,7 @@
 {
   "name": "rdflib",
   "description": "an RDF library for node.js. Suitable for client and server side.",
-  "version": "0.11.0",
+  "version": "0.12.1",
   "engines": {
     "node": "^6.0"
   },
@@ -14,6 +14,10 @@
     {
       "name": "Dmitri Zagidulin",
       "url": "https://github.com/dmitrizagidulin/"
+    },
+    {
+      "name": "Daniel Friedman",
+      "url": "https://github.com/dan-f/"
     }
   ],
   "license": "MIT",
@@ -31,6 +35,7 @@
     "xmlhttprequest": "^1.7.0"
   },
   "devDependencies": {
+    "babel-cli": "^6.11.4",
     "babel-preset-es2015": "^6.9.0",
     "babelify": "^7.3.0",
     "browserify": "^13.0.0",
@@ -39,14 +44,16 @@
     "tape": "^4.6.0"
   },
   "scripts": {
-    "test": "make test"
+    "test": "make test",
+    "prepublish": "make lib"
   },
   "files": [
     "dist",
     "dist/rdflib.js",
+    "lib",
     "src"
   ],
-  "main": "index.js",
+  "main": "lib/index.js",
   "keywords": [
     "linkeddata",
     "linked data",
