@@ -19,6 +19,7 @@ const Formula = require('./formula')
 const RDFArrayRemove = require('./util').RDFArrayRemove
 const Statement = require('./statement')
 const Node = require('./node')
+const Variable = require('./variable')
 
 const owl_ns = 'http://www.w3.org/2002/07/owl#'
 // var link_ns = 'http://www.w3.org/2007/ont/link#'
@@ -486,6 +487,11 @@ class IndexedFormula extends Formula {
     if (!this._universalVariables) this._universalVariables = []
     this._universalVariables.push(x)
     return x
+  }
+
+  // convenience function used by N3 parser
+  variable (name) {
+    return new Variable(name)
   }
 
   /**

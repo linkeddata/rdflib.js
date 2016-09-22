@@ -11,7 +11,7 @@ SQuery.prototype.add = function (str) {this.terms.push()}*/
 
 const log = require('./log')
 const Query = require('./query').Query
-const fetcher = require('./fetcher')
+// const Fetcher = require('./fetcher')
 
 /**
  * @SPARQL: SPARQL text that is converted to a query object which is returned.
@@ -474,7 +474,7 @@ function SPARQLToQuery (SPARQL, testMode, kb) {
     }
   }
 
-  // *******************************THE ACTUAL CODE***************************//
+  // ******************************* Body of SPARQLToQuery ***************************//
   log.info('SPARQL input: \n' + SPARQL)
   var q = new Query()
   var sp = tokenize(SPARQL) // first tokenize everything
@@ -504,15 +504,15 @@ function SPARQLToQuery (SPARQL, testMode, kb) {
     if (st.subject.termType === 'NamedNode') {
       /* && sf.isPending(st.subject.uri) */ // This doesn't work.
       // sf.requestURI(st.subject.uri,"sparql:"+st.subject) Kenny: I remove these two
-      if (fetcher) {
-        fetcher.lookUpThing(st.subject, 'sparql:' + st.subject)
+      if (kb.fetcher) {
+        kb.fetcher.lookUpThing(st.subject, 'sparql:' + st.subject)
       }
     }
     if (st.object.termType === 'NamedNode') {
       /* && sf.isPending(st.object.uri) */
       // sf.requestURI(st.object.uri,"sparql:"+st.object)
-      if (fetcher) {
-        fetcher.lookUpThing(st.object, 'sparql:' + st.object)
+      if (kb.fetcher) {
+        kb.fetcher.lookUpThing(st.object, 'sparql:' + st.object)
       }
     }
   }

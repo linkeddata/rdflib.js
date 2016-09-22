@@ -88,6 +88,10 @@ var Fetcher = function Fetcher (store, timeout, async) {
     'q': 0.9
   }
 
+  sf.mediatypes['*/*'] = { // Must allow access to random content
+    'q': 0.1
+  }
+
   Fetcher.crossSiteProxy = function (uri) {
     if (Fetcher.crossSiteProxyTemplate) {
       return Fetcher.crossSiteProxyTemplate.replace('{uri}', encodeURIComponent(uri))
@@ -279,10 +283,10 @@ var Fetcher = function Fetcher (store, timeout, async) {
   }
   Fetcher.XMLHandler.register = function (sf) {
     sf.mediatypes['text/xml'] = {
-      'q': 0.2
+      'q': 0.5
     }
     sf.mediatypes['application/xml'] = {
-      'q': 0.2
+      'q': 0.5
     }
   }
   Fetcher.XMLHandler.pattern = new RegExp('(text|application)/(.*)xml')
@@ -342,7 +346,7 @@ var Fetcher = function Fetcher (store, timeout, async) {
   }
   Fetcher.HTMLHandler.register = function (sf) {
     sf.mediatypes['text/html'] = {
-      'q': 0.3
+      'q': 0.9
     }
   }
   Fetcher.HTMLHandler.pattern = new RegExp('text/html')
@@ -383,7 +387,7 @@ var Fetcher = function Fetcher (store, timeout, async) {
   }
   Fetcher.TextHandler.register = function (sf) {
     sf.mediatypes['text/plain'] = {
-      'q': 0.1
+      'q': 0.5
     }
   }
   Fetcher.TextHandler.pattern = new RegExp('text/plain')
@@ -421,12 +425,14 @@ var Fetcher = function Fetcher (store, timeout, async) {
     sf.mediatypes['text/n3'] = {
       'q': '1.0'
     } // as per 2008 spec
+    /*
     sf.mediatypes['application/x-turtle'] = {
       'q': 1.0
     } // pre 2008
+    */
     sf.mediatypes['text/turtle'] = {
       'q': 1.0
-    } // pre 2008
+    } // post 2008
   }
   Fetcher.N3Handler.pattern = new RegExp('(application|text)/(x-)?(rdf\\+)?(n3|turtle)')
 

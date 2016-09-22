@@ -3,7 +3,7 @@
 // 2010-08-08 TimBL folded in Kenny's WEBDAV
 // 2010-12-07 TimBL addred local file write code
 const docpart = require('./uri').docpart
-const fetcher = require('./fetcher')
+const Fetcher = require('./fetcher')
 const graph = require('./data-factory').graph
 const IndexedFormula = require('./indexed-formula')
 const namedNode = require('./data-factory').namedNode
@@ -19,7 +19,7 @@ var UpdateManager = (function () {
       throw new Error("You can't have two UpdateManagers for the same store")
     }
     if (!store.fetcher) { // The store must also/already have a fetcher
-      fetcher(store)
+      new Fetcher(store)
     }
     if (store.updater) {
       throw new Error("You can't have two UpdateManagers for the same store")
