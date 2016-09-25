@@ -1029,8 +1029,8 @@ var Fetcher = function Fetcher (store, timeout, async) {
                 }
               }
             }
-
-            xhr.status = 999 //
+            xhr.CORS_status = 999
+            // xhr.status = 999     forbidden - read-only
           }
         } // mashu
       } // function of event
@@ -1058,7 +1058,7 @@ var Fetcher = function Fetcher (store, timeout, async) {
             if (checkCredentialsRetry(xhr)) { // retry is could be credentials flag CORS issue
               return
             }
-            xhr.status = 900 // unknown masked error
+            xhr.CORS_status = 900 // unknown masked error
             return
           }
           if (xhr.status >= 400) { // For extra dignostics, keep the reply

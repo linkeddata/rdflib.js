@@ -283,6 +283,12 @@ class IndexedFormula extends Formula {
     }
     return void 0
   }
+
+  anyValue(s, p, o, g) {
+    var y = this.any(s, p, o, g)
+    return y ? y.value : void 0
+  }
+  
   anyStatementMatching (subj, pred, obj, why) {
     var x = this.statementsMatching(subj, pred, obj, why, true)
     if (!x || x.length === 0) {

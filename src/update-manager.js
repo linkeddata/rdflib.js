@@ -21,9 +21,6 @@ var UpdateManager = (function () {
     if (!store.fetcher) { // The store must also/already have a fetcher
       new Fetcher(store)
     }
-    if (store.updater) {
-      throw new Error("You can't have two UpdateManagers for the same store")
-    }
     store.updater = this
     this.ifps = {}
     this.fps = {}
@@ -576,8 +573,9 @@ var UpdateManager = (function () {
   // This high-level function updates the local store iff the web is changed successfully.
   //
   //  - deletions, insertions may be undefined or single statements or lists or formulae.
+  //      (may contain bnodes which can be indirectly identified by a where clause)
   //
-  //  - callback is called as callback(uri, success, errorbody)
+  //  - callback is called as callback(uri, success, errorbody, xhr)
   //
   sparql.prototype.update = function (deletions, insertions, callback) {
     try {
