@@ -401,7 +401,7 @@ var UpdateManager = (function () {
     } else {
       if (control.downstreamAction) {
         if (control.downstreamAction === action) {
-          return this
+          return
         } else {
           throw new Error("Can't wait for > 1 differnt downstream actions")
         }
