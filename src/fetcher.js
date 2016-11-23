@@ -132,7 +132,9 @@ var Fetcher = function Fetcher (store, timeout, async) {
     return 'RDFXMLHandler'
   }
   Fetcher.RDFXMLHandler.register = function (sf) {
-    sf.mediatypes['application/rdf+xml'] = {}
+    sf.mediatypes['application/rdf+xml'] = {
+      'q': 0.9
+    }
   }
   Fetcher.RDFXMLHandler.pattern = new RegExp('application/rdf\\+xml')
 
