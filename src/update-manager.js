@@ -552,15 +552,15 @@ var UpdateManager = (function () {
       }
       socket.onmessage = function (msg) {
         if (msg.data && msg.data.slice(0, 3) === 'pub') {
-          if (control.upstreamCount) {
+          if ('upstreamCount' in control) {
             control.upstreamCount -= 1
             if (control.upstreamCount >= 0) {
-              console.log('just an echo')
+              console.log('just an echo: ' + control.upstreamCount)
               return // Just an echo
             }
           }
+          console.log('Assume a real downstream change: ' + control.upstreamCount + ' -> 0')
           control.upstreamCount = 0
-          console.log('Assume a real downstream change')
           self.requestDownstreamAction(doc, theHandler)
         }
       }
@@ -666,8 +666,9 @@ var UpdateManager = (function () {
         }
         // Track pending upstream patches until they have fnished their callback
         control.pendingUpstream = control.pendingUpstream ? control.pendingUpstream + 1 : 1
-        if (typeof control.upstreamCount !== 'undefined') {
+        if ('upstreamCount' in control) {
           control.upstreamCount += 1 // count changes we originated ourselves
+          console.log('upstream count up to : ' + control.upstreamCount)
         }
 
         this._fire(doc.uri, query,

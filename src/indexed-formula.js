@@ -244,6 +244,10 @@ class IndexedFormula extends Formula {
         done = done || actions[i](this, subj, pred, obj, why)
       }
     }
+    if (this.holds(subj, pred, obj, why)){ // Takes time but saves duplicates
+      console.log('rdflib: Ignoring dup! {' + subj + ' ' + pred+ ' '  + obj+ ' '  + why+ '}')
+      return null // @@better to return self in all cases?
+    }
     // If we are tracking provenance, every thing should be loaded into the store
     // if (done) return new Statement(subj, pred, obj, why);
     // Don't put it in the store
@@ -288,7 +292,7 @@ class IndexedFormula extends Formula {
     var y = this.any(s, p, o, g)
     return y ? y.value : void 0
   }
-  
+
   anyStatementMatching (subj, pred, obj, why) {
     var x = this.statementsMatching(subj, pred, obj, why, true)
     if (!x || x.length === 0) {
