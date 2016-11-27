@@ -26,6 +26,10 @@ module.exports.uri = require('./uri')  // TODO: Remove this mixed usage
 module.exports.XMLHTTPFactory = xhr
 module.exports.log = log
 
+module.exports.mediaTypeClass = function(mediaType){
+  return $rdf.sym('http://www.w3.org/ns/iana/media-types/' + mediaType + '#Resource')
+}
+
 /**
  * Loads ontologies of the data we load (this is the callback from the kb to
  * the fetcher). Exports as `AJAR_handleNewTerm`

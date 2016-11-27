@@ -1,8 +1,8 @@
 /**
  *
- * Project: rdflib.js, originally part of Tabulator project
+ * Project: rdflib.js
  *
- * File: web.js
+ * File: fetcher.js
  *
  * Description: contains functions for requesting/fetching/retracting
  *  This implements quite a lot of the web architecture.
@@ -858,7 +858,12 @@ var Fetcher = function Fetcher (store, timeout, async) {
     if (Uri.protocol(xhr.resource.uri) === 'http' || Uri.protocol(xhr.resource.uri) === 'https') {
       xhr.headers = Util.getHTTPHeaders(xhr)
       for (var h in xhr.headers) { // trim below for Safari - adds a CR!
-        kb.add(response, ns.httph(h.toLowerCase()), xhr.headers[h].trim(), response)
+        var value = xhr.headers[h].trim()
+        var h2 = h.toLowerCase()
+        kb.add(response, ns.httph(h2), value, response)
+        if (h2 === 'content-type'){ // Convert to RDF type
+          kb.add(xhr.resource, ns.rdf('type'), $rdf.Util.mediaTypeClass(value), response)
+        }
       }
     }
     return response
