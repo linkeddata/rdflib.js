@@ -284,6 +284,51 @@ var Serializer = function () {
   __Serializer.prototype._notNameChars =
     (__Serializer.prototype._notQNameChars + ':')
 
+  __Serializer.prototype.explicitURI = function(uri) {
+    if (this.flags.indexOf('r') < 0 && this.base)
+      uri = Uri.refTo(this.base, uri)
+    else if (this.flags.indexOf('u') >= 0) // Unicode encoding NTriples style
+      uri = backslashUify(uri)
+    else uri = hexify(uri)
+    return '<' + uri + '>'
+  }
+
+  __Serializer.prototype.statementsToNTriples = function (sts) {
+    var sorted = sts.slice()
+    sorted.sort()
+    var str = ''
+    var rdfns = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'
+    var self = this
+    var kb = this.store
+    var termToNT = function(x){
+      if (x.termType !== 'collection'){
+        return self.atomicTermToN3(x)
+      }
+      var list = x.elements
+      var rest = kb.sym(rdfns + 'nill')
+      for(var i = list.length - 1; i >= 0 ; i--){
+        var bnode = new $rdf.BlankNode()
+        str += termToNT(bnode) + ' ' + termToNT(kb.sym(rdfns + 'first')) + ' ' + termToNT(list[i]) + '.\n'
+        str += termToNT(bnode) + ' ' + termToNT(kb.sym(rdfns + 'rest')) + ' ' + termToNT(rest) + '.\n'
+        rest = bnode
+      }
+      return self.atomicTermToN3(rest)
+    }
+    for (var i=0; i< sorted.length; i++){
+      var st = sorted[i]
+      var s = ''
+      s += termToNT(st.subject) + ' '
+      s += termToNT(st.predicate) + ' '
+      s += termToNT(st.object) + ' '
+      if (this.flags.indexOf('q') >= 0){ // Do quads not nrtiples
+        s += termToNT(st.why) + ' '
+      }
+      s += '.\n'
+      str += s
+    }
+    return str
+  }
+
   __Serializer.prototype.statementsToN3 = function (sts) {
     var indent = 4
     var width = 80
@@ -464,12 +509,12 @@ var Serializer = function () {
       for (var ns in this.prefixes) {
         if (!this.prefixes.hasOwnProperty(ns)) continue
         if (!this.namespacesUsed[ns]) continue
-        str += '@prefix ' + this.prefixes[ns] + ': <' +
-          Uri.refTo(this.base, ns) + '>.\n'
+        str += '@prefix ' + this.prefixes[ns] + ': ' + this.explicitURI(ns)
+         + '.\n'
       }
       return str + '\n'
     }
-    prefixDirectives = prefixDirectives.bind(this)
+    var prefixDirectives = prefixDirectives.bind(this)
 
     // Body of statementsToN3:
 
@@ -485,7 +530,7 @@ var Serializer = function () {
       case 'BlankNode':
       case 'Variable':  return expr.toNT()
       case 'Literal':
-        if (expr.datatype) {
+        if (expr.datatype && this.flags.indexOf('x') < 0) { // Supress native numbers
           switch (expr.datatype.uri) {
             case 'http://www.w3.org/2001/XMLSchema#integer':
               return expr.value.toString()
@@ -500,13 +545,13 @@ var Serializer = function () {
         if (expr.language) {
           str += '@' + expr.language
         } else if (!expr.datatype.equals(XSD.string)) {
-          str += '^^' + this.termToN3(expr.datatype, stats)
+          str += '^^' + this.atomicTermToN3(expr.datatype, stats)
         }
         return str
       case 'NamedNode':
         return this.symbolToN3(expr)
       default:
-        throw 'Internal: atomicTermToN3 cannot handle ' + expr + ' of termType+' + expr.termType
+        throw 'Internal: atomicTermToN3 cannot handle ' + expr + ' of termType: ' + expr.termType + '\n'
         return '' + expr
     }
   }
@@ -547,7 +592,7 @@ var Serializer = function () {
         if (k >= 0) {
           res += '\\' + 'bfrtvn\\"'[k]
         } else {
-          if (flags.indexOf('e') >= 0) {
+          if (flags.indexOf('e') >= 0) { // Unicode escaping in strings not unix style
             res += '\\u' + ('000' +
               ch.charCodeAt(0).toString(16).toLowerCase()).slice(-4)
           } else { // no 'e' flag
@@ -602,12 +647,7 @@ var Serializer = function () {
       // Fall though if can't do qname
       }
     }
-    if (this.flags.indexOf('r') < 0 && this.base)
-      uri = Uri.refTo(this.base, uri)
-    else if (this.flags.indexOf('u') >= 0)
-      uri = backslashUify(uri)
-    else uri = hexify(uri)
-    return '<' + uri + '>'
+    return this.explicitURI(uri)
   }
 
   // String escaping utilities

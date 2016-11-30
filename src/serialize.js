@@ -29,14 +29,23 @@ function serialize (target, kb, base, contentType, callback) {
         sz.setFlags('si') // Suppress = for sameAs and => for implies
         documentString = sz.statementsToN3(newSts)
         return executeCallback(null, documentString)
+      case 'application/n-triples':
+        sz.setFlags('deinprstux') // Suppress nice parts of N3 to make ntriples
+        documentString = sz.statementsToNTriples(newSts)
+        return executeCallback(null, documentString)
       case 'application/ld+json':
-        n3String = sz.statementsToN3(newSts)
+        sz.setFlags('deinprstux') // Suppress nice parts of N3 to make ntriples
+        n3String = sz.statementsToNTriples(newSts)
+        // n3String = sz.statementsToN3(newSts)
         convert.convertToJson(n3String, callback)
         break
       case 'application/n-quads':
       case 'application/nquads': // @@@ just outpout the quads? Does not work for collections
-        n3String = sz.statementsToN3(newSts)
-        documentString = convert.convertToNQuads(n3String, callback)
+        sz.setFlags('deinprstux q') // Suppress nice parts of N3 to make ntriples
+        documentString = sz.statementsToNTriples(newSts) // q in flag means actually quads
+        return executeCallback(null, documentString)
+        // n3String = sz.statementsToN3(newSts)
+        // documentString = convert.convertToNQuads(n3String, callback)
         break
       default:
         throw new Error('Serialize: Content-type ' + contentType + ' not supported for data write.')

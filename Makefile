@@ -48,6 +48,7 @@ cleantest:
 	rm tests/serialize/,t4.ttl
 	rm tests/serialize/,t5.ttl
 	rm tests/serialize/,t6.n3
+	rm tests/serialize/,t7.nt
 
 status:
 	@pwd

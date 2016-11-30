@@ -1,6 +1,6 @@
 # Crude tests for particular serializer bugs
 
-all: t1 t2 t3 t4 t5 t6
+all: t1 t2 t3 t4 t5 t6 t7
 
 clean:
 	rm ,* || echo ok
@@ -29,3 +29,12 @@ t5:
 t6:
 	node ./data.js -in=t5.n3 -format=text/n3 -out=,t6.n3
 	diff ,t6.n3 t6-ref.n3
+
+t7:
+	node ./data.js -in=t7.n3 -format=application/n-triples -out=,t7.nt
+	diff ,t7.nt t7-ref.nt
+
+	# t8 ends up including todays datetime in data so not reproducable
+t8:
+	node ./data.js -in=t5.n3  -format=application/n-quads -dump=,t8.nq
+	diff ,t8.nq t8-ref.nq

@@ -23,6 +23,34 @@ var check = function (ok, message, status) {
   }
 }
 
+var stackString = function (e) {
+  var str = '' + e + '\n'
+  if (!e.stack) {
+    return str + 'No stack available.\n'
+  }
+  var lines = e.stack.toString().split('\n')
+  var toprint = []
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i]
+    if (line.indexOf('ecmaunit.js') > -1) {
+      // remove useless bit of traceback
+      break
+    }
+    if (line.charAt(0) == '(') {
+      line = 'function' + line
+    }
+    var chunks = line.split('@')
+    toprint.push(chunks)
+  }
+  // toprint.reverse();  No - I prefer the latest at the top by the error message -tbl
+
+  for (var i = 0; i < toprint.length; i++) {
+    str += '  ' + toprint[i][1] + '\n    ' + toprint[i][0]
+  }
+  return str
+}
+
+
 var exitMessage = function (message) {
   console.log(message)
   process.exit(4)
@@ -44,16 +72,6 @@ var doNext = function (remaining) {
         kb = $rdf.graph()
         break
 
-      case '-dump':
-        console.log('Serialize ' + targetDocument + ' as ' + contentType)
-        try {
-          var out = $rdf.serialize(targetDocument, kb, targetDocument.uri, contentType)
-        } catch(e) {
-          exitMessage('Error in serializer: ' + e)
-        }
-        console.log('Result: ' + out)
-        break
-
       case '-format':
         contentType = right
         break
@@ -68,25 +86,50 @@ var doNext = function (remaining) {
         }); // target, kb, base, contentType, callback
         return // STOP processing at this level
 
-      case '-out':
-        doc = $rdf.sym($rdf.uri.join(right, base))
-        try {
-          var out = $rdf.serialize(targetDocument, kb, targetDocument.uri, contentType)
-        } catch(e) {
-          exitMessage('Error in serializer: ' + e)
-        }
-        if (doc.uri.slice(0, 8) !== 'file:///') {
-          exitMessage('Can only write files just now, sorry: ' + doc.uri)
-        }
-        var fileName = doc.uri.slice(7) //
-        fs.writeFile(fileName, out, function (err) {
-          if (err) {
-            exitMessage('Error writing file <' + right + '> :' + err)
+        case '-out':
+          try {
+            var out = $rdf.serialize(targetDocument, kb, targetDocument.uri, contentType)
+          } catch(e) {
+            exitMessage('Error in serializer: ' + e + stackString(e))
           }
-          console.log('Written ' + fileName)
-          doNext(remaining)
-        })
-        return
+          if (!right){
+            console.log('Result: ' + out)
+            doNext(remaining)
+            return
+          }
+          doc = $rdf.sym($rdf.uri.join(right, base))
+          if (doc.uri.slice(0, 8) !== 'file:///') {
+            exitMessage('Can only write files just now, sorry: ' + doc.uri)
+          }
+          var fileName = doc.uri.slice(7) //
+          fs.writeFile(fileName, out, function (err) {
+            if (err) {
+              exitMessage('Error writing file <' + right + '> :' + err)
+            }
+            console.log('Written ' + fileName)
+            doNext(remaining)
+          })
+          return
+
+          case '-dump':
+            doc = $rdf.sym($rdf.uri.join(right, base))
+            try {
+              var out = $rdf.serialize(null, kb, targetDocument.uri, 'application/n-quads') // whole store
+            } catch(e) {
+              exitMessage('Error in serializer: ' + e + stackString(e))
+            }
+            if (doc.uri.slice(0, 8) !== 'file:///') {
+              exitMessage('Can only write files just now, sorry: ' + doc.uri)
+            }
+            var fileName = doc.uri.slice(7) //
+            fs.writeFile(fileName, out, function (err) {
+              if (err) {
+                exitMessage('Error writing file <' + right + '> :' + err)
+              }
+              console.log('Written ' + fileName)
+              doNext(remaining)
+            })
+            return
 
       case '-size':
         console.log(kb.statements.length + ' triples')
