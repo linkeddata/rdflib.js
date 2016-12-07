@@ -58,5 +58,4 @@ writable:
 test:
 	@nodeunit tests/*.js
 	make -C tests/serialize
-	tape tests/unit/*.js
 	make cleantest

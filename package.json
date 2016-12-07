@@ -43,13 +43,12 @@
     "chai": "^3.5.0",
     "minifyify": "^7.3.2",
     "mocha": "^3.2.0",
-    "nodeunit": "^0.9.1",
-    "tape": "^4.6.0"
+    "nodeunit": "^0.9.1"
   },
   "scripts": {
-    "test": "npm run test:mocha && make test",
-    "test:mocha": "mocha --growl --require babel-register tests/mocha",
-    "test:mocha:dev": "mocha --watch --growl --require babel-register tests/mocha",
+    "test": "npm run test:unit && make test",
+    "test:unit": "mocha --growl --require babel-register tests/unit/**-test.js",
+    "test:unit:dev": "mocha --watch --growl --require babel-register tests/unit/**-test.js",
     "prepublish": "make lib"
   },
   "files": [
