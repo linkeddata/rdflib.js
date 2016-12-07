@@ -14,7 +14,7 @@ class NamedNode extends Node {
   constructor (iri) {
     super()
     this.termType = NamedNode.termType
-    if (iri.indexOf(':') < 0){
+    if (iri.indexOf(':') < 0) {
       console.log('Warning: NamedNode URI must be absolute. Relative URIs will fail in future versions')
     }
     this.value = iri

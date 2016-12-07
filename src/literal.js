@@ -100,14 +100,13 @@ class Literal extends Node {
       throw new TypeError('Invalid argument to Literal.fromNumber()')
     }
     let datatype
-    if (('' + value).indexOf('e') >= 0) {
-      datatype = XSD.float
-    } else if (('' + value).indexOf('.') >= 0) {
-      datatype = XSD.decimal
+    const strValue = value.toString()
+    if (strValue.indexOf('e') < 0 && Math.abs(value) <= Number.MAX_SAFE_INTEGER) {
+      datatype = Number.isInteger(value) ? XSD.integer : XSD.decimal
     } else {
-      datatype = XSD.integer
+      datatype = XSD.double
     }
-    return new Literal('' + value, null, datatype)
+    return new Literal(strValue, null, datatype)
   }
   /**
    * @method fromValue
@@ -118,7 +117,7 @@ class Literal extends Node {
     if (typeof value === 'undefined' || value === null) {
       return value
     }
-    if (value && value.termType) {  // this is a Node instance
+    if (typeof value === 'object' && value.termType) {  // this is a Node instance
       return value
     }
     switch (typeof value) {
