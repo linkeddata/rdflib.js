@@ -9,6 +9,8 @@ const Serializer = require('./serializer')
  * through mutiple conversions.
  */
 function serialize (target, kb, base, contentType, callback) {
+  base = base || target.uri
+  contentType = contentType || 'text/turtle' // text/n3 if complex?
   var documentString = null
   try {
     var sz = Serializer(kb)
@@ -34,7 +36,7 @@ function serialize (target, kb, base, contentType, callback) {
         documentString = sz.statementsToNTriples(newSts)
         return executeCallback(null, documentString)
       case 'application/ld+json':
-        sz.setFlags('deinprstux') // Suppress nice parts of N3 to make ntriples
+        sz.setFlags('deinprstux') // Use adapters to connect to incmpatible parser
         n3String = sz.statementsToNTriples(newSts)
         // n3String = sz.statementsToN3(newSts)
         convert.convertToJson(n3String, callback)
