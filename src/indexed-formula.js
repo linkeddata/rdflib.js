@@ -62,7 +62,7 @@ function handleRDFType (formula, subj, pred, obj, why) {
 }
 
 class IndexedFormula extends Formula {
-  constructor (features) {
+  constructor(features) {
     super()
     this.statements = [] // As in Formula
     this.optional = []
@@ -84,15 +84,15 @@ class IndexedFormula extends Formula {
     ]
     this.namespaces = {} // Dictionary of namespace prefixes
     this.features = features || [
-      'sameAs',
-      'InverseFunctionalProperty',
-      'FunctionalProperty'
+        'sameAs',
+        'InverseFunctionalProperty',
+        'FunctionalProperty'
     ]
     this.initPropertyActions(this.features)
   }
 
-  applyPatch (patch, target, patchCallback) { // patchCallback(err)
-    const Query = require('./query')
+  applyPatch(patch, target, patchCallback) { // patchCallback(err)
+    const Query = require('./query').Query
     var targetKB = this
     var ds
     var doPatch = function (onDonePatch) {
@@ -115,7 +115,9 @@ class IndexedFormula extends Formula {
           }
         })
         if (bad.length) {
-          return patchCallback("Couldn't find to delete: " + bad[0])
+          console.log('Could not find to delete ' + bad.length + 'statements')
+          console.log('despite ' + targetKB.statementsMatching(bad[0].subject, bad[0].predicate)[0])
+          return patchCallback('Could not find to delete: ' + bad.join('\n or '))
         }
         ds2.map(function (st) {
           targetKB.remove(st)
@@ -164,13 +166,13 @@ class IndexedFormula extends Formula {
     }
   }
 
-  declareExistential (x) {
+  declareExistential(x) {
     if (!this._existentialVariables) this._existentialVariables = []
     this._existentialVariables.push(x)
     return x
   }
 
-  initPropertyActions (features) {
+  initPropertyActions(features) {
     // If the predicate is #type, use handleRDFType to create a typeCallback on the object
     this.propertyActions['<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>'] =
       [ handleRDFType ]
@@ -207,7 +209,7 @@ class IndexedFormula extends Formula {
    * Returns the statement added
    * (would it be better to return the original formula for chaining?)
    */
-  add (subj, pred, obj, why) {
+  add(subj, pred, obj, why) {
     var i
     if (arguments.length === 1) {
       if (subj instanceof Array) {
@@ -244,12 +246,12 @@ class IndexedFormula extends Formula {
         done = done || actions[i](this, subj, pred, obj, why)
       }
     }
-    if (this.holds(subj, pred, obj, why)){ // Takes time but saves duplicates
-      console.log('rdflib: Ignoring dup! {' + subj + ' ' + pred+ ' '  + obj+ ' '  + why+ '}')
+    if (this.holds(subj, pred, obj, why)) { // Takes time but saves duplicates
+      console.log('rdflib: Ignoring dup! {' + subj + ' ' + pred + ' ' + obj + ' ' + why + '}')
       return null // @@better to return self in all cases?
     }
     // If we are tracking provenance, every thing should be loaded into the store
-    // if (done) return new Statement(subj, pred, obj, why);
+    // if (done) return new Statement(subj, pred, obj, why)
     // Don't put it in the store
     // still return this statement for owl:sameAs input
     var hash = [ this.canon(subj).hashString(), predHash,
@@ -269,12 +271,12 @@ class IndexedFormula extends Formula {
     return st
   }
 
-  addAll (statements) {
+  addAll(statements) {
     statements.forEach(quad => {
       this.add(quad.subject, quad.predicate, quad.object, quad.graph)
     })
   }
-  any (s, p, o, g) {
+  any(s, p, o, g) {
     var st = this.anyStatementMatching(s, p, o, g)
     if (st == null) {
       return void 0
@@ -293,7 +295,7 @@ class IndexedFormula extends Formula {
     return y ? y.value : void 0
   }
 
-  anyStatementMatching (subj, pred, obj, why) {
+  anyStatementMatching(subj, pred, obj, why) {
     var x = this.statementsMatching(subj, pred, obj, why, true)
     if (!x || x.length === 0) {
       return undefined
@@ -304,7 +306,7 @@ class IndexedFormula extends Formula {
   /**
    * Returns the symbol with canonical URI as smushed
    */
-  canon (term) {
+  canon(term) {
     if (!term) {
       return term
     }
@@ -315,7 +317,7 @@ class IndexedFormula extends Formula {
     return y
   }
 
-  check () {
+  check() {
     this.checkStatementList(this.statements)
     for (var p = 0; p < 4; p++) {
       var ix = this.index[p]
@@ -331,7 +333,7 @@ class IndexedFormula extends Formula {
    * Self-consistency checking for diagnostis only
    * Is each statement properly indexed?
    */
-  checkStatementList (sts, from) {
+  checkStatementList(sts, from) {
     var names = ['subject', 'predicate', 'object', 'why']
     var origin = ' found in ' + names[from] + ' index.'
     var st
@@ -365,7 +367,7 @@ class IndexedFormula extends Formula {
     }
   }
 
-  close () {
+  close() {
     return this
   }
 
@@ -375,7 +377,7 @@ class IndexedFormula extends Formula {
    * one-direction replication
    * @method copyTo
    */
-  copyTo (template, target, flags) {
+  copyTo(template, target, flags) {
     if (!flags) flags = []
     var statList = this.statementsMatching(template)
     if (ArrayIndexOf(flags, 'two-direction') !== -1) {
@@ -402,7 +404,7 @@ class IndexedFormula extends Formula {
    * simplify graph in store when we realize two identifiers are equivalent
    * We replace the bigger with the smaller.
    */
-  equate (u1, u2) {
+  equate(u1, u2) {
     // log.warn("Equating "+u1+" and "+u2); // @@
     // @@JAMBO Must canonicalize the uris to prevent errors from a=b=c
     // 03-21-2010
@@ -421,7 +423,7 @@ class IndexedFormula extends Formula {
     }
   }
 
-  formula (features) {
+  formula(features) {
     return new IndexedFormula(features)
   }
 
@@ -435,7 +437,7 @@ class IndexedFormula extends Formula {
    *    ```
    * @return {Number}
    */
-  get length () {
+  get length() {
     return this.statements.length
   }
 
@@ -449,7 +451,7 @@ class IndexedFormula extends Formula {
    * @param object {Node|String|Object}
    * @param graph {NamedNode|String}
    */
-  match (subject, predicate, object, graph) {
+  match(subject, predicate, object, graph) {
     return this.statementsMatching(
       Node.fromValue(subject),
       Node.fromValue(predicate),
@@ -461,21 +463,21 @@ class IndexedFormula extends Formula {
   /**
    * Find out whether a given URI is used as symbol in the formula
    */
-  mentionsURI (uri) {
+  mentionsURI(uri) {
     var hash = '<' + uri + '>'
     return (!!this.subjectIndex[hash] ||
-      !!this.objectIndex[hash] ||
-      !!this.predicateIndex[hash])
+    !!this.objectIndex[hash] ||
+    !!this.predicateIndex[hash])
   }
 
   // Existentials are BNodes - something exists without naming
-  newExistential (uri) {
+  newExistential(uri) {
     if (!uri) return this.bnode()
     var x = this.sym(uri)
     return this.declareExistential(x)
   }
 
-  newPropertyAction (pred, action) {
+  newPropertyAction(pred, action) {
     // log.debug("newPropertyAction:  "+pred)
     var hash = pred.hashString()
     if (!this.propertyActions[hash]) {
@@ -492,7 +494,7 @@ class IndexedFormula extends Formula {
   }
 
   // Universals are Variables
-  newUniversal (uri) {
+  newUniversal(uri) {
     var x = this.sym(uri)
     if (!this._universalVariables) this._universalVariables = []
     this._universalVariables.push(x)
@@ -500,7 +502,7 @@ class IndexedFormula extends Formula {
   }
 
   // convenience function used by N3 parser
-  variable (name) {
+  variable(name) {
     return new Variable(name)
   }
 
@@ -508,14 +510,14 @@ class IndexedFormula extends Formula {
    * Find an unused id for a file being edited: return a symbol
    * (Note: Slow iff a lot of them -- could be O(log(k)) )
    */
-  nextSymbol (doc) {
+  nextSymbol(doc) {
     for (var i = 0;;i++) {
       var uri = doc.uri + '#n' + i
       if (!this.mentionsURI(uri)) return this.sym(uri)
     }
   }
 
-  query (myQuery, callback, fetcher, onDone) {
+  query(myQuery, callback, fetcher, onDone) {
     let indexedFormulaQuery = require('./query').indexedFormulaQuery
     return indexedFormulaQuery.call(this, myQuery, callback, fetcher, onDone)
   }
@@ -523,7 +525,7 @@ class IndexedFormula extends Formula {
   /**
    * Finds a statement object and removes it
    */
-  remove (st) {
+  remove(st) {
     if (st instanceof Array) {
       for (var i = 0; i < st.length; i++) {
         this.remove(st[i])
@@ -545,7 +547,7 @@ class IndexedFormula extends Formula {
   /**
    * Removes all statemnts in a doc
    */
-  removeDocument (doc) {
+  removeDocument(doc) {
     var sts = this.statementsMatching(undefined, undefined, undefined, doc).slice() // Take a copy as this is the actual index
     for (var i = 0; i < sts.length; i++) {
       this.removeStatement(sts[i])
@@ -556,7 +558,7 @@ class IndexedFormula extends Formula {
   /**
    * remove all statements matching args (within limit) *
    */
-  removeMany (subj, pred, obj, why, limit) {
+  removeMany(subj, pred, obj, why, limit) {
     // log.debug("entering removeMany w/ subj,pred,obj,why,limit = " + subj +", "+ pred+", " + obj+", " + why+", " + limit)
     var sts = this.statementsMatching(subj, pred, obj, why, false)
     // This is a subtle bug that occcured in updateCenter.js too.
@@ -569,7 +571,7 @@ class IndexedFormula extends Formula {
     for (i = 0; i < statements.length; i++) this.remove(statements[i])
   }
 
-  removeMatches (subject, predicate, object, why) {
+  removeMatches(subject, predicate, object, why) {
     this.removeStatements(this.statementsMatching(subject, predicate, object,
       why))
     return this
@@ -582,7 +584,7 @@ class IndexedFormula extends Formula {
    *      Make sure you only use this for these.
    *    Otherwise, you should use remove() above.
    */
-  removeStatement (st) {
+  removeStatement(st) {
     // log.debug("entering remove w/ st=" + st)
     var term = [ st.subject, st.predicate, st.object, st.why ]
     for (var p = 0; p < 4; p++) {
@@ -598,7 +600,7 @@ class IndexedFormula extends Formula {
     return this
   }
 
-  removeStatements (sts) {
+  removeStatements(sts) {
     for (var i = 0; i < sts.length; i++) {
       this.remove(sts[i])
     }
@@ -608,7 +610,7 @@ class IndexedFormula extends Formula {
   /**
    * Replace big with small, obsoleted with obsoleting.
    */
-  replaceWith (big, small) {
+  replaceWith(big, small) {
     // log.debug("Replacing "+big+" with "+small) // @@
     var oldhash = big.hashString()
     var newhash = small.hashString()
@@ -657,7 +659,7 @@ class IndexedFormula extends Formula {
   /**
    * Return all equivalent URIs by which this is known
    */
-  allAliases (x){
+  allAliases(x) {
     var a = this.aliases[this.canon(x).hashString()] || []
     a.push(this.canon(x))
     return a
@@ -666,7 +668,7 @@ class IndexedFormula extends Formula {
   /**
    * Compare by canonical URI as smushed
    */
-  sameThings (x, y) {
+  sameThings(x, y) {
     if (x.sameTerm(y)) {
       return true
     }
@@ -679,7 +681,7 @@ class IndexedFormula extends Formula {
     return (x1.uri === y1.uri)
   }
 
-  setPrefixForURI (prefix, nsuri) {
+  setPrefixForURI(prefix, nsuri) {
     // TODO: This is a hack for our own issues, which ought to be fixed
     // post-release
     // See http://dig.csail.mit.edu/cgi-bin/roundup.cgi/$rdf/issue227
@@ -696,7 +698,7 @@ class IndexedFormula extends Formula {
    * Return statements matching a pattern
    * ALL CONVENIENCE LOOKUP FUNCTIONS RELY ON THIS!
    */
-  statementsMatching (subj, pred, obj, why, justOne) {
+  statementsMatching(subj, pred, obj, why, justOne) {
     // log.debug("Matching {"+subj+" "+pred+" "+obj+"}")
     var pat = [ subj, pred, obj, why ]
     var pattern = []
@@ -772,7 +774,7 @@ class IndexedFormula extends Formula {
   /**
    *  A list of all the URIs by which this thing is known
    */
-  uris (term) {
+  uris(term) {
     var cterm = this.canon(term)
     var terms = this.aliases[cterm.hashString()]
     if (!cterm.uri) return []

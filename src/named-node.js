@@ -15,20 +15,32 @@ class NamedNode extends Node {
     super()
     this.termType = NamedNode.termType
     if (iri.indexOf(':') < 0){
-      console.log('Warning: NamedNode URI must be absolute. Relative URIs will fail in future versions')
+      console.log('Warning: NamedNode IRI "' + iri + '" must be absolute. Relative URIs will fail in future versions')
     }
     this.value = iri
   }
   /**
    * Returns an $rdf node for the containing directory, ending in slash.
    */
-  dir () {
-    var str = this.uri.split('#')[0]
-    var p = str.slice(0, -1).lastIndexOf('/')
-    var q = str.indexOf('//')
-    if ((q >= 0 && p < q + 2) || p < 0) return null
-    return new NamedNode(str.slice(0, p + 1))
-  }
+   dir () {
+     var str = this.uri.split('#')[0]
+     var p = str.slice(0, -1).lastIndexOf('/')
+     var q = str.indexOf('//')
+     if ((q >= 0 && p < q + 2) || p < 0) return null
+     return new NamedNode(str.slice(0, p + 1))
+   }
+   /**
+    * Returns an NN for the whole web site, ending in slash.
+    * Contrast with the "origin" which does NOT have a trailing slash
+    */
+   site () {
+     var str = this.uri.split('#')[0]
+     var p = str.indexOf('//')
+     if (p < 0) throw new Error('This URI does not have a web site part (origin)')
+     var q = str.indexOf('/', p+2)
+     if (q < 0) throw new Error('This URI does not have a web site part. (origin)')
+     return new NamedNode(str.slice(0, q + 1))
+   }
   doc () {
     if (this.uri.indexOf('#') < 0) {
       return this

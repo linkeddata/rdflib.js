@@ -1,3 +1,4 @@
+/* global $SolidTestEnvironment */
 /**
  *
  * Project: rdflib.js
@@ -585,7 +586,7 @@ var Fetcher = function Fetcher (store, timeout, async) {
   this.putBack = function (uri, options) {
     uri = uri.uri || uri // Accept object or string
     var doc = $rdf.sym(uri).doc() // strip off #
-    options.data = $rdf.serialize(doc, this.store, doc.uri, options.contentType ||  'text/turtle')
+    options.data = $rdf.serialize(doc, this.store, doc.uri, options.contentType || 'text/turtle')
     return this.webOperation('PUT', uri, options)
   }
 
@@ -861,7 +862,7 @@ var Fetcher = function Fetcher (store, timeout, async) {
         var value = xhr.headers[h].trim()
         var h2 = h.toLowerCase()
         kb.add(response, ns.httph(h2), value, response)
-        if (h2 === 'content-type'){ // Convert to RDF type
+        if (h2 === 'content-type') { // Convert to RDF type
           kb.add(xhr.resource, ns.rdf('type'), $rdf.Util.mediaTypeClass(value), response)
         }
       }

@@ -33,9 +33,9 @@ var Serializer = function () {
   /* pass */
   }
 
-  __Serializer.prototype.setBase = function (base) { this.base = base }
+  __Serializer.prototype.setBase = function (base) { this.base = base ; return this}
 
-  __Serializer.prototype.setFlags = function (flags) { this.flags = flags ? flags : '' }
+  __Serializer.prototype.setFlags = function (flags) { this.flags = flags ? flags : '' ; return this}
 
   __Serializer.prototype.toStr = function (x) {
     var s = x.toNT()
@@ -71,6 +71,7 @@ var Serializer = function () {
   __Serializer.prototype.suggestNamespaces = function (namespaces) {
     for (var px in namespaces) {
       this.suggestPrefix(px, namespaces[px])
+      return this
     }
   }
 

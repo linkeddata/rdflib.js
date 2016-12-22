@@ -14,7 +14,7 @@ var fetcher = $rdf.fetcher(kb)
 var contentType = 'text/turtle'
 var base = 'file://' + process.cwd() + '/'
 var uri
-var targetDocument
+var targetDocument = $rdf.sym(base + 'stdin') // defaul URI of test data
 
 var check = function (ok, message, status) {
   if (!ok) {

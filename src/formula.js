@@ -265,6 +265,45 @@ class Formula extends Node {
   findTypeURIs (subject) {
     return this.NTtoURI(this.findTypesNT(subject))
   }
+  // Trace the statements which connect directly, or through bnodes
+  // Returns an array of statements
+  // doc param may be null to search all documents in store
+  connectedStatements (subject, doc, excludePredicateURIs) {
+    excludePredicateURIs = excludePredicateURIs || []
+    var todo = [subject]
+    var done = []
+    var doneArcs = []
+    var result = []
+    var follow = function (x) {
+      var queue = function (x) {
+        if (x.termType === 'BlankNode' && !done[x.value]) {
+          done[x.value] = true
+          todo.push(x)
+        }
+      }
+      var sts = this.statementsMatching(null, null, x, doc)
+        .concat(this.statementsMatching(x, null, null, doc))
+      sts = sts.filter(function (st) {
+        if (excludePredicateURIs[st.predicate.uri]) return false
+        var hash = st.toNT()
+        if (doneArcs[hash]) return false
+        doneArcs[hash] = true
+        return true
+      }
+      )
+      sts.forEach(function (st, i) {
+        queue(st.subject)
+        queue(st.object)
+      })
+      result = result.concat(sts)
+    }
+    while (todo.length) {
+      follow(todo.shift())
+    }
+    // console.log('' + result.length + ' statements about ' + subject)
+    return result
+  }
+
   formula () {
     return new Formula()
   }
@@ -307,7 +346,27 @@ class Formula extends Node {
     }
     throw new Error("Can't convert from NT: " + str)
   }
+
   holds (s, p, o, g) {
+    var i
+    if (arguments.length === 1) {
+      if (!s) {
+        return true
+      }
+      if (s instanceof Array) {
+        for (i = 0; i < s.length; i++) {
+          if (!this.holds(s[i])) {
+            return false
+          }
+        }
+        return true
+      } else if (s instanceof Statement) {
+        return this.holds(s.subject, s.predicate, s.object, s.why)
+      } else if (s.statements) {
+        return this.holds(s.statements)
+      }
+    }
+
     var st = this.anyStatementMatching(s, p, o, g)
     return st != null
   }
