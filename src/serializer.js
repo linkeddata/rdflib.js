@@ -8,6 +8,7 @@
 */
 // @@@ Check the whole toStr thing tosee whetehr it still makes sense -- tbl
 const NamedNode = require('./named-node')
+const BlankNode = require('./blank-node')
 const Uri = require('./uri')
 const Util = require('./util')
 const XSD = require('./xsd')
@@ -308,7 +309,7 @@ var Serializer = function () {
       var list = x.elements
       var rest = kb.sym(rdfns + 'nill')
       for(var i = list.length - 1; i >= 0 ; i--){
-        var bnode = new $rdf.BlankNode()
+        var bnode = new BlankNode()
         str += termToNT(bnode) + ' ' + termToNT(kb.sym(rdfns + 'first')) + ' ' + termToNT(list[i]) + '.\n'
         str += termToNT(bnode) + ' ' + termToNT(kb.sym(rdfns + 'rest')) + ' ' + termToNT(rest) + '.\n'
         rest = bnode

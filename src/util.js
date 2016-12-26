@@ -4,6 +4,7 @@
  */
 var docpart = require('./uri').docpart
 var log = require('./log')
+var NamedNode = require('./named-node')
 
 module.exports.AJAR_handleNewTerm = ajarHandleNewTerm
 module.exports.ArrayIndexOf = arrayIndexOf
@@ -27,7 +28,7 @@ module.exports.XMLHTTPFactory = xhr
 module.exports.log = log
 
 module.exports.mediaTypeClass = function(mediaType){
-  return $rdf.sym('http://www.w3.org/ns/iana/media-types/' + mediaType + '#Resource')
+  return new NamedNode('http://www.w3.org/ns/iana/media-types/' + mediaType + '#Resource')
 }
 
 /**
