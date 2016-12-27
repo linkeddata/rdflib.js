@@ -19,11 +19,13 @@ class Statement {
       other.object.equals(this.object) && other.graph.equals(this.graph)
   }
   substitute (bindings) {
-    return new Statement(
+    const y = new Statement(
       this.subject.substitute(bindings),
       this.predicate.substitute(bindings),
       this.object.substitute(bindings),
-      this.why)
+      this.why.substitute(bindings)) // 2016
+    console.log('@@@ statement substitute:' + y)
+    return y
   }
   toCanonical () {
     let terms = [

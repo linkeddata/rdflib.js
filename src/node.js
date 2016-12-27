@@ -6,6 +6,7 @@
  */
 class Node {
   substitute (bindings) {
+    console.log('@@@ node substitute' + this)
     return this
   }
   compareTerm (other) {

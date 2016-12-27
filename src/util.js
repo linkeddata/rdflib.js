@@ -18,6 +18,7 @@ module.exports.heavyCompareSPO = heavyCompareSPO
 module.exports.output = output
 module.exports.parseXML = parseXML
 module.exports.RDFArrayRemove = rdfArrayRemove
+module.exports.stackString = stackString
 module.exports.string_startswith = stringStartsWith
 module.exports.string = {}
 module.exports.string.template = stringTemplate
@@ -401,6 +402,37 @@ function stringTemplate (base, subs) {
   }
   return result + baseA.slice(subs.length).join()
 }
+
+
+// Stack dump on errors - to pass errors back
+
+function stackString (e) {
+  var str = '' + e + '\n'
+  if (!e.stack) {
+    return str + 'No stack available.\n'
+  }
+  var lines = e.stack.toString().split('\n')
+  var toprint = []
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i]
+    if (line.indexOf('ecmaunit.js') > -1) {
+      // remove useless bit of traceback
+      break
+    }
+    if (line.charAt(0) == '(') {
+      line = 'function' + line
+    }
+    var chunks = line.split('@')
+    toprint.push(chunks)
+  }
+  // toprint.reverse();  No - I prefer the latest at the top by the error message -tbl
+
+  for (var i = 0; i < toprint.length; i++) {
+    str += '  ' + toprint[i][1] + '\n    ' + toprint[i][0]
+  }
+  return str
+}
+
 
 /**
  * Finds the variables in a graph (shallow).
