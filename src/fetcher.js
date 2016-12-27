@@ -617,9 +617,7 @@ var Fetcher = function Fetcher (store, timeout, async) {
         }
       }
       xhr.open(method, uri, true)
-      if (options.contentType) {
-        xhr.setRequestHeader('Content-type', options.contentType)
-      }
+      xhr.setRequestHeader('Content-type', options.contentType || 'text/turtle')
       xhr.send(options.data ? options.data : undefined)
     })
   }

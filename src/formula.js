@@ -274,6 +274,7 @@ class Formula extends Node {
     var done = []
     var doneArcs = []
     var result = []
+    var self = this
     var follow = function (x) {
       var queue = function (x) {
         if (x.termType === 'BlankNode' && !done[x.value]) {
@@ -281,8 +282,8 @@ class Formula extends Node {
           todo.push(x)
         }
       }
-      var sts = this.statementsMatching(null, null, x, doc)
-        .concat(this.statementsMatching(x, null, null, doc))
+      var sts = self.statementsMatching(null, null, x, doc)
+        .concat(self.statementsMatching(x, null, null, doc))
       sts = sts.filter(function (st) {
         if (excludePredicateURIs[st.predicate.uri]) return false
         var hash = st.toNT()
@@ -430,9 +431,13 @@ class Formula extends Node {
   }
   substitute (bindings) {
     var statementsCopy = this.statements.map(function (ea) {
-      ea.substitute(bindings)
+      return ea.substitute(bindings)
     })
-    return new Formula(statementsCopy)
+    console.log('formula subs statmnts:' + statementsCopy)
+    var y = new Formula()
+    y.add(statementsCopy)
+    console.log('indexed-form subs formula:' + y)
+    return y
   }
   sym (uri, name) {
     if (name) {

@@ -50,9 +50,7 @@ function sparqlUpdateParser (str, kb, base) {
     for (k = 0; k < keywords.length; k++) {
       var key = keywords[k]
       if (str.slice(j, j + key.length) === key) {
-        // console.log("C got one " + key)
         i = p.skipSpace(str, j + key.length)
-        // console.log("D after space at i= " + i)
         if (i < 0) {
           throw badSyntax(p._thisDoc, p.lines, str, j + key.length, 'found EOF, needed {...} after ' + key)
         }
@@ -64,16 +62,14 @@ function sparqlUpdateParser (str, kb, base) {
           i = j
         }
         var res2 = []
-        j = p.node(str, i, res2)
-        // console.log("M Now at j= " + j + " i= " + i)
+        j = p.node(str, i, res2) // Parse all the complexity of the clause
 
         if (j < 0) {
           throw badSyntax(p._thisDoc, p.lines, str, i,
             'bad syntax or EOF in {...} after ' + key)
         }
         clauses[key.toLowerCase()] = res2[0]
-        // print("res2[0] for "+key+ " is " + res2[0]);  //   @@ debug @@@@@@
-        kb.add(query, SQNS(key.toLowerCase()), res2[0])
+        kb.add(query, SQNS(key.toLowerCase()), res2[0]) // , kb.sym(base)
         // key is the keyword and res2 has the contents
         found = true
         i = j
