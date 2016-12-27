@@ -56,7 +56,6 @@ writable:
 
 .PHONY: test
 test:
-	@nodeunit tests/*.js
+	@nodeunit tests/unit/nodeunit/*.js
 	make -C tests/serialize
-	tape tests/unit/*.js
 	make cleantest

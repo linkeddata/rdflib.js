@@ -3,7 +3,7 @@
  */
 var expect, formulaTest, i, j, len, len1, o, p, ref, ref1, ref2, ref3, s, statementTest, tests
 
-var $rdf = require('../src')
+var $rdf = require('../../../src')
 
 tests = {
   statement: [

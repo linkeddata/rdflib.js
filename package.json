@@ -37,14 +37,18 @@
   "devDependencies": {
     "babel-cli": "^6.11.4",
     "babel-preset-es2015": "^6.9.0",
+    "babel-register": "^6.18.0",
     "babelify": "^7.3.0",
     "browserify": "^13.0.0",
+    "chai": "^3.5.0",
     "minifyify": "^7.3.2",
-    "nodeunit": "^0.9.1",
-    "tape": "^4.6.0"
+    "mocha": "^3.2.0",
+    "nodeunit": "^0.9.1"
   },
   "scripts": {
-    "test": "make test",
+    "test": "npm run test:unit && make test",
+    "test:unit": "mocha --growl --require babel-register tests/unit/**-test.js",
+    "test:unit:dev": "mocha --watch --growl --require babel-register tests/unit/**-test.js",
     "prepublish": "make lib"
   },
   "files": [
