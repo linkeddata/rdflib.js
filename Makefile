@@ -55,6 +55,6 @@ writable:
 	@sed -i -re 's/git:\/\/github.com\//git@github.com:/' .git/config
 
 .PHONY: test
-test:
+test:	lib
 	make -C tests/serialize
 	make cleantest
