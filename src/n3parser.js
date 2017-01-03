@@ -214,7 +214,7 @@ var datetime_syntax = new RegExp('^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9](T[
 
 var digitstring = new RegExp("^[0-9]+", 'g');
 var interesting = new RegExp("[\\\\\\r\\n\\\"]", 'g');
-var langcode = new RegExp("^[a-zA-Z0-9]+(-[a-zA-Z0-9]+)?", 'g');
+var langcode = new RegExp("^[a-zA-Z0-9]+(-[a-zA-Z0-9]+)*", 'g');
 function SinkParser(store, openFormula, thisDoc, baseURI, genPrefix, metaURI, flags, why) {
     return new __SinkParser(store, openFormula, thisDoc, baseURI, genPrefix, metaURI, flags, why);
 }
