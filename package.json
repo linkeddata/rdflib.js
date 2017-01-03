@@ -42,8 +42,7 @@
     "browserify": "^13.0.0",
     "chai": "^3.5.0",
     "minifyify": "^7.3.2",
-    "mocha": "^3.2.0",
-    "nodeunit": "^0.9.1"
+    "mocha": "^3.2.0"
   },
   "scripts": {
     "test": "npm run test:unit && make test",
