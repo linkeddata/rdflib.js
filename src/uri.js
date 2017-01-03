@@ -17,7 +17,7 @@ module.exports.join = join
 module.exports.protocol = protocol
 module.exports.refTo = refTo
 
-const namedNode = require('./data-factory').namedNode
+const NamedNode = require('./named-node')
 
 function docpart (uri) {
   var i
@@ -30,7 +30,7 @@ function docpart (uri) {
 }
 
 function document (x) {
-  return namedNode(docpart(x.uri))
+  return new NamedNode(docpart(x.uri))
 }
 
 function hostpart (u) {

@@ -61,7 +61,7 @@ function handleRDFType (formula, subj, pred, obj, why) {
   return done // statement given is not needed if true
 }
 
-class IndexedFormula extends Formula { // IN future - allow pass array of statements to constructor
+export default class IndexedFormula extends Formula { // IN future - allow pass array of statements to constructor
   constructor (features) {
     super()
     // this.statements = [] // As in Formula NO don't overwrite inherited
@@ -815,5 +815,4 @@ class IndexedFormula extends Formula { // IN future - allow pass array of statem
   }
 }
 
-module.exports = IndexedFormula
-module.exports.handleRDFType = handleRDFType
+IndexedFormula.handleRDFType = handleRDFType

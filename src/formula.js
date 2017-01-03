@@ -543,6 +543,6 @@ Formula.prototype.classOrder = ClassOrder['Formula']
 Formula.prototype.isVar = 0
 
 Formula.prototype.ns = require('./namespace')
-Formula.prototype.variable = require('./data-factory').variable
+Formula.prototype.variable = name => new Variable(name)
 
 module.exports = Formula

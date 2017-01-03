@@ -55,7 +55,6 @@ writable:
 	@sed -i -re 's/git:\/\/github.com\//git@github.com:/' .git/config
 
 .PHONY: test
-test:
-	@nodeunit tests/unit/nodeunit/*.js
+test:	lib
 	make -C tests/serialize
 	make cleantest
