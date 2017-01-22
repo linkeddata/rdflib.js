@@ -15,7 +15,13 @@ class NamedNode extends Node {
     super()
     this.termType = NamedNode.termType
     if (iri.indexOf(':') < 0) {
-      console.log('Warning: NamedNode IRI "' + iri + '" must be absolute. Relative URIs will fail in future versions')
+      console.log('Error: NamedNode IRI "' + iri + '" must be absolute. Relative URIs will fail in future versions')
+    }
+    if (iri.indexOf(' ') >= 0) {
+      var message = 'Error: NamedNode IRI "' + iri + '" must not contain unencoded spaces.'
+      console.log(message)
+      // throw new Error(message)
+      iri = encodeURI(iri)
     }
     this.value = iri
   }
