@@ -584,9 +584,8 @@ var Fetcher = function Fetcher (store, timeout, async) {
   // Returns promise of XHR
   //
   //  Writes back to the web what we have in the store for this uri
-  this.putBack = function (uri, options) {
+  this.putBack = function (uri, options = {}) {
     uri = uri.uri || uri // Accept object or string
-    options = options || {}
     var doc = new NamedNode(uri).doc() // strip off #
     options.data = serialize(doc, this.store, doc.uri, options.contentType || 'text/turtle')
     return this.webOperation('PUT', uri, options)
@@ -594,8 +593,8 @@ var Fetcher = function Fetcher (store, timeout, async) {
 
   // Returns promise of XHR
   //
-  this.webOperation = function (method, uri, options) {
-    uri = uri.uri || uri; options = options || {}
+  this.webOperation = function (method, uri, options = {}) {
+    uri = uri.uri || uri
     uri = this.proxyIfNecessary(uri)
     var fetcher = this
     return new Promise(function (resolve, reject) {
