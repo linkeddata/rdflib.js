@@ -29,6 +29,7 @@ module.exports.XMLHTTPFactory = xhr
 module.exports.log = log
 
 module.exports.mediaTypeClass = function(mediaType){
+  mediaType = mediaType.split(';')[0].trim()  // remove media type parameters
   return new NamedNode('http://www.w3.org/ns/iana/media-types/' + mediaType + '#Resource')
 }
 
