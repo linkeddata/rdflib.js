@@ -15,7 +15,7 @@ class NamedNode extends Node {
     super()
     this.termType = NamedNode.termType
     if (!iri.includes(':')) {
-      throw new Error('NamedNode IRI "' + iri + '" must be absolute. Relative URIs will fail in future versions')
+      throw new Error('NamedNode IRI "' + iri + '" must be absolute.')
     }
     if (iri.includes(' ')) {
       var message = 'Error: NamedNode IRI "' + iri + '" must not contain unencoded spaces.'
