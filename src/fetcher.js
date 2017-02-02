@@ -586,6 +586,7 @@ var Fetcher = function Fetcher (store, timeout, async) {
   //  Writes back to the web what we have in the store for this uri
   this.putBack = function (uri, options) {
     uri = uri.uri || uri // Accept object or string
+    options = options || {}
     var doc = new NamedNode(uri).doc() // strip off #
     options.data = serialize(doc, this.store, doc.uri, options.contentType || 'text/turtle')
     return this.webOperation('PUT', uri, options)
