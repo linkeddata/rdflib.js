@@ -14,14 +14,12 @@ class NamedNode extends Node {
   constructor (iri) {
     super()
     this.termType = NamedNode.termType
-    if (iri.indexOf(':') < 0) {
-      console.log('Error: NamedNode IRI "' + iri + '" must be absolute. Relative URIs will fail in future versions')
+    if (!iri.includes(':')) {
+      throw new Error('NamedNode IRI "' + iri + '" must be absolute. Relative URIs will fail in future versions')
     }
-    if (iri.indexOf(' ') >= 0) {
+    if (iri.includes(' ')) {
       var message = 'Error: NamedNode IRI "' + iri + '" must not contain unencoded spaces.'
-      console.log(message)
-      // throw new Error(message)
-      iri = encodeURI(iri)
+      throw new Error(message)
     }
     this.value = iri
   }
