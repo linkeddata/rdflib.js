@@ -41,14 +41,32 @@
     "babelify": "^7.3.0",
     "browserify": "^13.0.0",
     "chai": "^3.5.0",
+    "grep-cli": "^0.2.1",
     "minifyify": "^7.3.2",
-    "mocha": "^3.2.0"
+    "mocha": "^3.2.0",
+    "node-mkdirp": "0.0.1",
+    "rimraf": "^2.6.1",
+    "jsdiff-cli": "^0.1.2"
   },
   "scripts": {
-    "test": "npm run test:unit && make test",
+    "test": "npm run test:unit && npm run test:serialize",
     "test:unit": "mocha --growl --require babel-register tests/unit/**-test.js",
     "test:unit:dev": "mocha --watch --growl --require babel-register tests/unit/**-test.js",
-    "prepublish": "make lib"
+    "test:serialize": "npm run lib  && cd tests/serialize && npm run all && cd ../.. && npm run cleantest",
+    "dist": "mkdirp dist",
+    "dist/rdflib.js": "browserify -r ./src/index.js:rdflib --exclude 'xmlhttprequest' --standalone '$rdf' -t [ babelify --presets [ es2015 ] ] -o dist/rdflib.js",
+    "dist/rdflib.min.js": "browserify -r ./src/index.js:rdflib --exclude 'xmlhttprequest' --standalone '$$rdf' -d -t [ babelify --presets [ es2015 ] ] -p [ minifyify --no-map --uglify [ --compress [ --dead_code --conditionals --unused --if_return ] --mangle --screw-ie8 ] ] -o dist/rdflib.min.js",
+    "all": "npm run dist && npm run dist/rdflib.js && npm run dist/rdflib.min.js",
+    "lib": "babel src -d lib",
+    "detach": "git checkout origin/master &&  git reset--hard HEAD",
+    "clean": "rimraf dist/* lib/*",
+    "cleantest": "rimraf tests/serialize/,*",
+    "status": "@git branch -v && @git status -s",
+    "minify": "npm run dist/rdflib.min.js",
+    "size": "node-line-counter .",
+    "gh-pages": "npm run detach && git branch - D gh - pages ||: && git checkout - b gh - pages && npm run all && git add - f dist /*.js src/*.js *.js && git commit -m 'gh-pages: update to latest' && git push -f origin gh-pages && git checkout master",
+    "prepublish": "npm run lib",
+    "greptest": "type package.json | grep test > greptest.ttl"
   },
   "files": [
     "dist",
