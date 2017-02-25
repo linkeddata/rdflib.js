@@ -13,7 +13,7 @@ const Uri = require('./uri')
 const Util = require('./util')
 const XSD = require('./xsd')
 
-var Serializer = function () {
+var Serializer = (function () {
   var __Serializer = function (store) {
     this.flags = ''
     this.base = null
@@ -21,10 +21,10 @@ var Serializer = function () {
     this.prefixes = [] // suggested prefixes
     this.namespaces = [] // complementary indexes
 
-    this.suggestPrefix('rdf', 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'); // XML code assumes this!
-    this.suggestPrefix('xml', 'reserved:reservedForFutureUse'); // XML reserves xml: in the spec.
+    this.suggestPrefix('rdf', 'http://www.w3.org/1999/02/22-rdf-syntax-ns#') // XML code assumes this!
+    this.suggestPrefix('xml', 'reserved:reservedForFutureUse') // XML reserves xml: in the spec.
 
-    this.namespacesUsed = []; // Count actually used and so needed in @prefixes
+    this.namespacesUsed = [] // Count actually used and so needed in @prefixes
     this.keywords = ['a'] // The only one we generate at the moment
     this.prefixchars = 'abcdefghijklmnopqustuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
     this.incoming = null // Array not calculated yet
@@ -34,9 +34,9 @@ var Serializer = function () {
   /* pass */
   }
 
-  __Serializer.prototype.setBase = function (base) { this.base = base ; return this}
+  __Serializer.prototype.setBase = function (base) { this.base = base; return this }
 
-  __Serializer.prototype.setFlags = function (flags) { this.flags = flags ? flags : '' ; return this}
+  __Serializer.prototype.setFlags = function (flags) { this.flags = flags || ''; return this }
 
   __Serializer.prototype.toStr = function (x) {
     var s = x.toNT()
@@ -80,15 +80,14 @@ var Serializer = function () {
     var p, ns
     for (p in this.namespaces) {
       if (this.prefixes[this.namespaces[p]] !== p) {
-        throw 'Serializer integity error 1: ' + p + ', ' +
-        this.namespaces[p] + ', ' + this.prefixes[this.namespaces[p]] + '!'
+        throw new Error('Serializer integity error 1: ' + p + ', ' +
+        this.namespaces[p] + ', ' + this.prefixes[this.namespaces[p]] + '!')
       }
     }
     for (ns in this.prefixes) {
       if (this.namespaces[this.prefixes[ns]] !== ns) {
-        throw 'Serializer integity error 2: ' + ns + ', ' +
-        this.prefixs[ns] + ', ' + this.namespaces[this.prefixes[ns]] + '!'
-
+        throw new Error('Serializer integity error 2: ' + ns + ', ' +
+        this.prefixs[ns] + ', ' + this.namespaces[this.prefixes[ns]] + '!')
       }
     }
   }
@@ -97,8 +96,8 @@ var Serializer = function () {
   __Serializer.prototype.makeUpPrefix = function (uri) {
     var p = uri
     var pok
-    function canUse (pp) {
-      if (! __Serializer.prototype.validPrefix.test(pp)) return false // bad format
+    function canUseMethod (pp) {
+      if (!__Serializer.prototype.validPrefix.test(pp)) return false // bad format
       if (pp === 'ns') return false // boring
       if (pp in this.namespaces) return false // already used
       this.prefixes[uri] = pp
@@ -106,18 +105,19 @@ var Serializer = function () {
       pok = pp
       return true
     }
-    canUse = canUse.bind(this)
-    /*    for (var ns in this.prefixes) {
-            namespaces[this.prefixes[ns]] = ns // reverse index foo
-        }
-        */
+    var canUse = canUseMethod.bind(this)
+
     if ('#/'.indexOf(p[p.length - 1]) >= 0) p = p.slice(0, -1)
     var slash = p.lastIndexOf('/')
     if (slash >= 0) p = p.slice(slash + 1)
     var i = 0
-    while (i < p.length)
-    if (this.prefixchars.indexOf(p[i])) i++; else
+    while (i < p.length) {
+      if (this.prefixchars.indexOf(p[i])) {
+        i++
+      } else {
         break
+      }
+    }
     p = p.slice(0, i)
     if (p.length < 6 && canUse(p)) return pok // exact i sbest
     if (canUse(p.slice(0, 3))) return pok
@@ -125,10 +125,10 @@ var Serializer = function () {
     if (canUse(p.slice(0, 4))) return pok
     if (canUse(p.slice(0, 1))) return pok
     if (canUse(p.slice(0, 5))) return pok
-    if (! __Serializer.prototype.validPrefix.test(p)) {
+    if (!__Serializer.prototype.validPrefix.test(p)) {
       p = 'n' // Otherwise the loop below may never termimnate
     }
-    for (var i = 0;; i++) if (canUse(p.slice(0, 3) + i)) return pok
+    for (var j = 0; ; j++) if (canUse(p.slice(0, 3) + j)) return pok
   }
   // Todo:
   //  - Sort the statements by subject, pred, object
@@ -148,31 +148,31 @@ var Serializer = function () {
     */
     // $rdf.log.debug('serialize.js Find bnodes with only one incoming arc\n')
     for (var i = 0; i < sts.length; i++) {
-      var st = sts[i];
-      var st2 = [ st.subject, st.predicate, st.object]
+      var st = sts[i]
+      var st2 = [st.subject, st.predicate, st.object]
       st2.map(function (y) {
-        if (y.termType === 'BlankNode') {allBnodes[y.toNT()] = true}})
+        if (y.termType === 'BlankNode') { allBnodes[y.toNT()] = true }
+      })
       var x = sts[i].object
       if (!incoming.hasOwnProperty(x)) incoming[x] = []
       incoming[x].push(st.subject) // List of things which will cause this to be printed
       var ss = subjects[this.toStr(st.subject)] // Statements with this as subject
       if (!ss) ss = []
       ss.push(st)
-      subjects[this.toStr(st.subject)] = ss; // Make hash. @@ too slow for formula?
+      subjects[this.toStr(st.subject)] = ss // Make hash. @@ too slow for formula?
     // $rdf.log.debug(' sz potential subject: '+sts[i].subject)
     }
 
     var roots = []
     for (var xNT in subjects) {
       if (!subjects.hasOwnProperty(xNT)) continue
-      var x = this.fromStr(xNT)
-      if ((x.termType != 'BlankNode') || !incoming[x] || (incoming[x].length != 1)) {
-        roots.push(x)
-        // $rdf.log.debug(' sz actual subject -: ' + x)
+      var y = this.fromStr(xNT)
+      if ((y.termType !== 'BlankNode') || !incoming[y] || (incoming[y].length !== 1)) {
+        roots.push(y)
         continue
       }
     }
-    this.incoming = incoming; // Keep for serializing @@ Bug for nested formulas
+    this.incoming = incoming // Keep for serializing @@ Bug for nested formulas
 
     // ////////// New bit for CONNECTED bnode loops:frootshash
 
@@ -233,7 +233,9 @@ var Serializer = function () {
     // Now do the scan using existing roots
     // $rdf.log.debug('serialize.js Dummy serialize to check for missing nodes')
     var rootsHash = {}
-    for (var i = 0; i < roots.length; i++) rootsHash[roots[i].toNT()] = true
+    for (var k = 0; k < roots.length; k++) {
+      rootsHash[roots[k].toNT()] = true
+    }
     /*
         for (var i=0; i<roots.length; i++) {
             var root = roots[i]
@@ -286,12 +288,14 @@ var Serializer = function () {
   __Serializer.prototype._notNameChars =
     (__Serializer.prototype._notQNameChars + ':')
 
-  __Serializer.prototype.explicitURI = function(uri) {
-    if (this.flags.indexOf('r') < 0 && this.base)
+  __Serializer.prototype.explicitURI = function (uri) {
+    if (this.flags.indexOf('r') < 0 && this.base) {
       uri = Uri.refTo(this.base, uri)
-    else if (this.flags.indexOf('u') >= 0) // Unicode encoding NTriples style
+    } else if (this.flags.indexOf('u') >= 0) { // Unicode encoding NTriples style
       uri = backslashUify(uri)
-    else uri = hexify(uri)
+    } else {
+      uri = hexify(uri)
+    }
     return '<' + uri + '>'
   }
 
@@ -302,13 +306,13 @@ var Serializer = function () {
     var rdfns = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'
     var self = this
     var kb = this.store
-    var termToNT = function(x){
-      if (x.termType !== 'collection'){
+    var termToNT = function (x) {
+      if (x.termType !== 'collection') {
         return self.atomicTermToN3(x)
       }
       var list = x.elements
       var rest = kb.sym(rdfns + 'nill')
-      for(var i = list.length - 1; i >= 0 ; i--){
+      for (var i = list.length - 1; i >= 0; i--) {
         var bnode = new BlankNode()
         str += termToNT(bnode) + ' ' + termToNT(kb.sym(rdfns + 'first')) + ' ' + termToNT(list[i]) + '.\n'
         str += termToNT(bnode) + ' ' + termToNT(kb.sym(rdfns + 'rest')) + ' ' + termToNT(rest) + '.\n'
@@ -316,13 +320,13 @@ var Serializer = function () {
       }
       return self.atomicTermToN3(rest)
     }
-    for (var i=0; i< sorted.length; i++){
+    for (var i = 0; i < sorted.length; i++) {
       var st = sorted[i]
       var s = ''
       s += termToNT(st.subject) + ' '
       s += termToNT(st.predicate) + ' '
       s += termToNT(st.object) + ' '
-      if (this.flags.indexOf('q') >= 0){ // Do quads not nrtiples
+      if (this.flags.indexOf('q') >= 0) { // Do quads not nrtiples
         s += termToNT(st.why) + ' '
       }
       s += '.\n'
@@ -360,7 +364,9 @@ var Serializer = function () {
         var branch = tree[i]
         var s2 = (typeof branch === 'string') ? branch : treeToLine(branch)
         // Note the space before the dot in case statement ends 123. which is in fact allowed but be conservative.
-        if (i != 0 && s2 != ',' && s2 != ';') str += ' '; // was also:  && s2 != '.'
+        if (i !== 0 && s2 !== ',' && s2 !== ';') {
+          str += ' ' // was also:  && s2 !== '.'
+        }
         str += s2
       }
       return str
@@ -373,14 +379,14 @@ var Serializer = function () {
       if (!level) level = 0
       for (var i = 0; i < tree.length; i++) {
         var branch = tree[i]
-        if (typeof branch != 'string') {
+        if (typeof branch !== 'string') {
           var substr = treeToString(branch, level + 1)
           if (
-            substr.length < 10 * (width - indent * level)
-            && substr.indexOf('"""') < 0) { // Don't mess up multiline strings
+            substr.length < 10 * (width - indent * level) &&
+              substr.indexOf('"""') < 0) { // Don't mess up multiline strings
             var line = treeToLine(branch)
             if (line.length < (width - indent * level)) {
-              branch = '   ' + line; //   @@ Hack: treat as string below
+              branch = '   ' + line //   @@ Hack: treat as string below
               substr = ''
             }
           }
@@ -390,7 +396,7 @@ var Serializer = function () {
         if (typeof branch === 'string') {
           if (branch.length === '1' && str.slice(-1) === '\n') {
             if (',.;'.indexOf(branch) >= 0) {
-              str = str.slice(0, -1) + branch + '\n'; //  slip punct'n on end
+              str = str.slice(0, -1) + branch + '\n' //  slip punct'n on end
               lastLength += 1
               continue
             } else if ('])}'.indexOf(branch) >= 0) {
@@ -403,11 +409,10 @@ var Serializer = function () {
             str = str.slice(0, -1) + ' ' + branch + '\n'
             lastLength += branch.length + 1
           } else {
-            var line = spaces(indent * level) + branch
+            let line = spaces(indent * level) + branch
             str += line + '\n'
             lastLength = line.length
           }
-
         } else { // not string
         }
       }
@@ -416,9 +421,7 @@ var Serializer = function () {
 
     // //////////////////////////////////////////// Structure for N3
     // Convert a set of statements into a nested tree of lists and strings
-    function statementListToTree (statements) {
-      // print('Statement tree for '+statements.length)
-      var res = []
+    function statementListToTreeMethod (statements) {
       var stats = this.rootSubjects(statements)
       var roots = stats.roots
       var results = []
@@ -428,28 +431,30 @@ var Serializer = function () {
       }
       return results
     }
-    statementListToTree = statementListToTree.bind(this)
+    var statementListToTree = statementListToTreeMethod.bind(this)
 
     // The tree for a subject
     function subjectTree (subject, stats) {
-      if (subject.termType === 'BlankNode' && !stats.incoming[subject])
+      if (subject.termType === 'BlankNode' && !stats.incoming[subject]) {
         return objectTree(subject, stats, true).concat(['.']) // Anonymous bnode subject
+      }
       return [ termToN3(subject, stats) ].concat([propertyTree(subject, stats)]).concat(['.'])
     }
     // The property tree for a single subject or anonymous node
-    function propertyTree (subject, stats) {
+    function propertyTreeMethod (subject, stats) {
       // print('Proprty tree for '+subject)
       var results = []
       var lastPred = null
       var sts = stats.subjects[this.toStr(subject)] // relevant statements
       if (typeof sts === 'undefined') {
-        throw('Cant find statements for ' + subject)
+        throw new Error('Cant find statements for ' + subject)
       }
-
+      /*
       var SPO = function (x, y) {
         return Util.heavyCompareSPO(x, y, this.store)
       }
-      sts.sort(); // 2014-09-30
+      */
+      sts.sort() // 2014-09-30
       //        sts.sort(SPO); // 2014-09-30
       var objects = []
       for (var i = 0; i < sts.length; i++) {
@@ -461,8 +466,8 @@ var Serializer = function () {
             results = results.concat([objects]).concat([';'])
             objects = []
           }
-          results.push(predMap[st.predicate.uri] ?
-            predMap[st.predicate.uri] : termToN3(st.predicate, stats))
+          results.push(predMap[st.predicate.uri]
+            ? predMap[st.predicate.uri] : termToN3(st.predicate, stats))
         }
         lastPred = st.predicate.uri
         objects.push(objectTree(st.object, stats))
@@ -470,27 +475,28 @@ var Serializer = function () {
       results = results.concat([objects])
       return results
     }
-    propertyTree = propertyTree.bind(this)
+    var propertyTree = propertyTreeMethod.bind(this)
 
-    function objectTree (obj, stats, force) {
+    function objectTreeMethod (obj, stats, force) {
       if (obj.termType === 'BlankNode' &&
         stats.subjects[this.toStr(obj)] && // and there are statements
-        (force || stats.rootsHash[obj.toNT()] === undefined)) // and not a root
+        (force || stats.rootsHash[obj.toNT()] === undefined)) {// and not a root
         return ['['].concat(propertyTree(obj, stats)).concat([']'])
+      }
       return termToN3(obj, stats)
     }
-    objectTree = objectTree.bind(this)
+    var objectTree = objectTreeMethod.bind(this)
 
-    function termToN3 (expr, stats) { //
-      var i
+    function termToN3Method (expr, stats) { //
+      var i, res
       switch (expr.termType) {
         case 'formula':
-          var res = ['{']
+          res = ['{']
           res = res.concat(statementListToTree(expr.statements))
           return res.concat(['}'])
 
         case 'collection':
-          var res = ['(']
+          res = ['(']
           for (i = 0; i < expr.elements.length; i++) {
             res.push([ objectTree(expr.elements[i], stats) ])
           }
@@ -502,27 +508,25 @@ var Serializer = function () {
       }
     }
     __Serializer.prototype.termToN3 = termToN3
-    termToN3 = termToN3.bind(this)
+    var termToN3 = termToN3Method.bind(this)
 
-    function prefixDirectives () {
+    function prefixDirectivesMethod () {
       var str = ''
-      if (this.defaultNamespace)
+      if (this.defaultNamespace) {
         str += '@prefix : <' + this.defaultNamespace + '>.\n'
+      }
       for (var ns in this.prefixes) {
         if (!this.prefixes.hasOwnProperty(ns)) continue
         if (!this.namespacesUsed[ns]) continue
-        str += '@prefix ' + this.prefixes[ns] + ': ' + this.explicitURI(ns)
-         + '.\n'
+        str += '@prefix ' + this.prefixes[ns] + ': ' + this.explicitURI(ns) +
+          '.\n'
       }
       return str + '\n'
     }
-    var prefixDirectives = prefixDirectives.bind(this)
-
+    var prefixDirectives = prefixDirectivesMethod.bind(this)
     // Body of statementsToN3:
-
     var tree = statementListToTree(sts)
     return prefixDirectives() + treeToString(tree, -1)
-
   }
   // //////////////////////////////////////////// Atomic Terms
 
@@ -530,7 +534,8 @@ var Serializer = function () {
   __Serializer.prototype.atomicTermToN3 = function atomicTermToN3 (expr, stats) {
     switch (expr.termType) {
       case 'BlankNode':
-      case 'Variable':  return expr.toNT()
+      case 'Variable':
+        return expr.toNT()
       case 'Literal':
         if (expr.datatype && this.flags.indexOf('x') < 0) { // Supress native numbers
           switch (expr.datatype.uri) {
@@ -553,8 +558,7 @@ var Serializer = function () {
       case 'NamedNode':
         return this.symbolToN3(expr)
       default:
-        throw 'Internal: atomicTermToN3 cannot handle ' + expr + ' of termType: ' + expr.termType + '\n'
-        return '' + expr
+        throw new Error('Internal: atomicTermToN3 cannot handle ' + expr + ' of termType: ' + expr.termType)
     }
   }
 
@@ -566,31 +570,31 @@ var Serializer = function () {
   __Serializer.prototype.forbidden3 = new RegExp(/[\\"\b\f\r\v\u0080-\uffff]/gm)
   __Serializer.prototype.stringToN3 = function stringToN3 (str, flags) {
     if (!flags) flags = 'e'
-    var res = '', i = 0, j = 0
+    var res = ''
+    var i, j, k
     var delim
     var forbidden
-    if (str.length > 20 // Long enough to make sense
-      && str.slice(-1) != '"' // corner case'
-      && flags.indexOf('n') < 0 // Force single line
-      && (str.indexOf('\n') > 0 || str.indexOf('"') > 0)) {
+    if (str.length > 20 && // Long enough to make sense
+        str.slice(-1) !== '"' && // corner case'
+        flags.indexOf('n') < 0 && // Force single line
+        (str.indexOf('\n') > 0 || str.indexOf('"') > 0)) {
       delim = '"""'
       forbidden = __Serializer.prototype.forbidden3
     } else {
       delim = '"'
       forbidden = __Serializer.prototype.forbidden1
     }
-    for (var i = 0; i < str.length;) {
+    for (i = 0; i < str.length;) {
       forbidden.lastIndex = 0
       var m = forbidden.exec(str.slice(i))
       if (m == null) break
       j = i + forbidden.lastIndex - 1
       res += str.slice(i, j)
       var ch = str[j]
-      if (ch === '"' && delim === '"""' && str.slice(j, j + 3) != '"""') {
+      if (ch === '"' && delim === '"""' && str.slice(j, j + 3) !== '"""') {
         res += ch
-
       } else {
-        var k = '\b\f\r\t\v\n\\"'.indexOf(ch); // No escaping of bell (7)?
+        k = '\b\f\r\t\v\n\\"'.indexOf(ch) // No escaping of bell (7)?
         if (k >= 0) {
           res += '\\' + 'bfrtvn\\"'[k]
         } else {
@@ -599,7 +603,6 @@ var Serializer = function () {
               ch.charCodeAt(0).toString(16).toLowerCase()).slice(-4)
           } else { // no 'e' flag
             res += ch
-
           }
         }
       }
@@ -632,14 +635,15 @@ var Serializer = function () {
       if (canSplit) {
         var localid = uri.slice(j + 1)
         var namesp = uri.slice(0, j + 1)
-        if (this.defaultNamespace && this.defaultNamespace === namesp
-          && this.flags.indexOf('d') < 0) { // d -> suppress default
+        if (this.defaultNamespace && this.defaultNamespace === namesp &&
+            this.flags.indexOf('d') < 0) { // d -> suppress default
           if (this.flags.indexOf('k') >= 0 &&
-            this.keyords.indexOf(localid) < 0)
+            this.keyords.indexOf(localid) < 0) {
             return localid
+          }
           return ':' + localid
         }
-        this.checkIntegrity(); //  @@@ Remove when not testing
+        this.checkIntegrity() //  @@@ Remove when not testing
         var prefix = this.prefixes[namesp]
         if (!prefix) prefix = this.makeUpPrefix(namesp)
         if (prefix) {
@@ -651,7 +655,6 @@ var Serializer = function () {
     }
     return this.explicitURI(uri)
   }
-
   // String escaping utilities
 
   function hexify (str) { // also used in parser
@@ -659,15 +662,17 @@ var Serializer = function () {
   }
 
   function backslashUify (str) {
-    var res = '', k
+    var res = ''
+    var k
     for (var i = 0; i < str.length; i++) {
       k = str.charCodeAt(i)
-      if (k > 65535)
-        res += '\\U' + ('00000000' + k.toString(16)).slice(-8); // convert to upper?
-      else if (k > 126)
+      if (k > 65535) {
+        res += '\\U' + ('00000000' + k.toString(16)).slice(-8) // convert to upper?
+      } else if (k > 126) {
         res += '\\u' + ('0000' + k.toString(16)).slice(-4)
-      else
+      } else {
         res += str[i]
+      }
     }
     return res
   }
@@ -688,8 +693,8 @@ var Serializer = function () {
       var source = kb.fromNT(s)
       if (session && source.sameTerm(session)) continue
       write('\n' + this.atomicTermToN3(source) + ' ' +
-        this.atomicTermToN3(kb.sym('http://www.w3.org/2000/10/swap/log#semantics'))
-        + ' { ' + this.statementsToN3(kb.statementsMatching(
+        this.atomicTermToN3(kb.sym('http://www.w3.org/2000/10/swap/log#semantics')) +
+          ' { ' + this.statementsToN3(kb.statementsMatching(
           undefined, undefined, undefined, source)) + ' }.\n')
     }
 
@@ -713,7 +718,6 @@ var Serializer = function () {
       metadata = metadata.concat(kb.statementsMatching(undefined, undefined, undefined, source))
     })
     write(this.statementsToN3(metadata))
-
   }
 
   // ////////////////////////////////////////////// XML serialization
@@ -748,18 +752,19 @@ var Serializer = function () {
     // Convert a nested tree of lists and strings to a string
     var XMLtreeToString = function (tree, level) {
       var str = ''
+      var line
       var lastLength = 100000
       if (!level) level = 0
       for (var i = 0; i < tree.length; i++) {
         var branch = tree[i]
-        if (typeof branch != 'string') {
+        if (typeof branch !== 'string') {
           var substr = XMLtreeToString(branch, level + 1)
           if (
-            substr.length < 10 * (width - indent * level)
-            && substr.indexOf('"""') < 0) { // Don't mess up multiline strings
-            var line = XMLtreeToLine(branch)
+            substr.length < 10 * (width - indent * level) &&
+            substr.indexOf('"""') < 0) { // Don't mess up multiline strings
+            line = XMLtreeToLine(branch)
             if (line.length < (width - indent * level)) {
-              branch = '   ' + line; //   @@ Hack: treat as string below
+              branch = '   ' + line //   @@ Hack: treat as string below
               substr = ''
             }
           }
@@ -771,18 +776,17 @@ var Serializer = function () {
             str = str.slice(0, -1) + ' ' + branch + '\n'
             lastLength += branch.length + 1
           } else {
-            var line = spaces(indent * level) + branch
+            line = spaces(indent * level) + branch
             str += line + '\n'
             lastLength = line.length
           }
-
         } else { // not string
         }
       }
       return str
     }
 
-    function statementListToXMLTree (statements) {
+    function statementListToXMLTreeMethod (statements) {
       this.suggestPrefix('rdf', 'http://www.w3.org/1999/02/22-rdf-syntax-ns#')
       var stats = this.rootSubjects(statements)
       var roots = stats.roots
@@ -793,7 +797,7 @@ var Serializer = function () {
       }
       return results
     }
-    statementListToXMLTree = statementListToXMLTree.bind(this)
+    var statementListToXMLTree = statementListToXMLTreeMethod.bind(this)
 
     function escapeForXML (str) {
       if (typeof str === 'undefined') return '@@@undefined@@@@'
@@ -804,23 +808,23 @@ var Serializer = function () {
           case '<':
             return '&lt;'
           case '"':
-            return '&quot;'; // '
+            return '&quot;' // '
         }
       })
     }
 
-    function relURI (term) {
+    function relURIMethod (term) {
       return escapeForXML((this.base) ? Util.uri.refTo(this.base, term.uri) : term.uri)
     }
-    relURI = relURI.bind(this)
+    var relURI = relURIMethod.bind(this)
 
     // The tree for a subject
-    function subjectXMLTree (subject, stats) {
+    function subjectXMLTreeMethod (subject, stats) {
       var results = []
       var type, t, st, pred
       var sts = stats.subjects[this.toStr(subject)] // relevant statements
       if (typeof sts === 'undefined') {
-        throw('Serializing XML - Cant find statements for ' + subject)
+        throw new Error('Serializing XML - Cant find statements for ' + subject)
       }
 
       // Sort only on the predicate, leave the order at object
@@ -839,10 +843,10 @@ var Serializer = function () {
 
         var as = ap.substring(liPrefix.length)
         var bs = bp.substring(liPrefix.length)
-        var an = parseInt(as)
-        var bn = parseInt(bs)
+        var an = parseInt(as, 10)
+        var bn = parseInt(bs, 10)
         if (isNaN(an) || isNaN(bn) ||
-          an != as || bn != bs) { // we only care about integers
+          an !== as || bn !== bs) { // we only care about integers
           return ap.localeCompare(bp)
         }
 
@@ -854,7 +858,7 @@ var Serializer = function () {
         // look for a type
         if (st.predicate.uri === 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type' && !type && st.object.termType === 'symbol') {
           type = st.object
-          continue; // don't include it as a child element
+          continue // don't include it as a child element
         }
 
         // see whether predicate can be replaced with "li"
@@ -862,7 +866,7 @@ var Serializer = function () {
         if (pred.uri.substr(0, liPrefix.length) === liPrefix) {
           var number = pred.uri.substr(liPrefix.length)
           // make sure these are actually numeric list items
-          var intNumber = parseInt(number)
+          var intNumber = parseInt(number, 10)
           if (number === intNumber.toString()) {
             // was numeric; don't need to worry about ordering since we've already
             // sorted the statements
@@ -878,13 +882,13 @@ var Serializer = function () {
                 subjectXMLTree(st.object, stats),
                 '</' + t + '>'])
             } else {
-              results = results.concat(['<' + t + ' rdf:nodeID="'
-              + st.object.toNT().slice(2) + '"/>'])
+              results = results.concat(['<' + t + ' rdf:nodeID="' +
+                st.object.toNT().slice(2) + '"/>'])
             }
             break
           case 'NamedNode':
-            results = results.concat(['<' + t + ' rdf:resource="'
-            + relURI(st.object) + '"/>'])
+            results = results.concat(['<' + t + ' rdf:resource="' +
+              relURI(st.object) + '"/>'])
             break
           case 'Literal':
             results = results.concat(['<' + t +
@@ -901,7 +905,7 @@ var Serializer = function () {
               '</' + t + '>'])
             break
           default:
-            throw "Can't serialize object of type " + st.object.termType + ' into XML'
+            throw new Error("Can't serialize object of type " + st.object.termType + ' into XML')
         } // switch
       }
 
@@ -909,7 +913,7 @@ var Serializer = function () {
 
       var attrs = ''
       if (subject.termType === 'BlankNode') {
-        if (!stats.incoming[subject] || stats.incoming[subject].length != 1) { // not an anonymous bnode
+        if (!stats.incoming[subject] || stats.incoming[subject].length !== 1) { // not an anonymous bnode
           attrs = ' rdf:nodeID="' + subject.toNT().slice(2) + '"'
         }
       } else {
@@ -919,7 +923,7 @@ var Serializer = function () {
       return [ '<' + tag + attrs + '>' ].concat([results]).concat(['</' + tag + '>'])
     }
 
-    subjectXMLTree = subjectXMLTree.bind(this)
+    var subjectXMLTree = subjectXMLTreeMethod.bind(this)
 
     function collectionXMLTree (subject, stats) {
       var res = []
@@ -930,10 +934,10 @@ var Serializer = function () {
     }
 
     // The property tree for a single subject or anonymos node
-    function propertyXMLTree (subject, stats) {
+    function propertyXMLTreeMethod (subject, stats) {
       var results = []
       var sts = stats.subjects[this.toStr(subject)] // relevant statements
-      if (sts == undefined) return results // No relevant statements
+      if (!sts) return results // No relevant statements
       sts.sort()
       for (var i = 0; i < sts.length; i++) {
         var st = sts[i]
@@ -949,15 +953,15 @@ var Serializer = function () {
             }
             break
           case 'NamedNode':
-            results = results.concat(['<' + qname(st.predicate) + ' rdf:resource="'
-            + relURI(st.object) + '"/>'])
+            results = results.concat(['<' + qname(st.predicate) + ' rdf:resource="' +
+              relURI(st.object) + '"/>'])
             break
           case 'Literal':
-            results = results.concat(['<' + qname(st.predicate)
-            + (st.object.datatype.equals(XSD.string) ? '' : ' rdf:datatype="' + escapeForXML(st.object.datatype.value) + '"')
-            + (st.object.language ? ' xml:lang="' + st.object.language + '"' : '')
-            + '>' + escapeForXML(st.object.value)
-            + '</' + qname(st.predicate) + '>'])
+            results = results.concat(['<' + qname(st.predicate) +
+              (st.object.datatype.equals(XSD.string) ? '' : ' rdf:datatype="' + escapeForXML(st.object.datatype.value) + '"') +
+              (st.object.language ? ' xml:lang="' + st.object.language + '"' : '') +
+              '>' + escapeForXML(st.object.value) +
+              '</' + qname(st.predicate) + '>'])
             break
           case 'collection':
             results = results.concat(['<' + qname(st.predicate) + ' rdf:parseType="Collection">',
@@ -965,62 +969,59 @@ var Serializer = function () {
               '</' + qname(st.predicate) + '>'])
             break
           default:
-            throw "Can't serialize object of type " + st.object.termType + ' into XML'
-
+            throw new Error("Can't serialize object of type " + st.object.termType + ' into XML')
         } // switch
       }
       return results
     }
-    propertyXMLTree = propertyXMLTree.bind(this)
+    var propertyXMLTree = propertyXMLTreeMethod.bind(this)
 
-    function qname (term) {
+    function qnameMethod (term) {
       var uri = term.uri
 
       var j = uri.indexOf('#')
       if (j < 0 && this.flags.indexOf('/') < 0) {
         j = uri.lastIndexOf('/')
       }
-      if (j < 0) throw ('Cannot make qname out of <' + uri + '>')
+      if (j < 0) throw new Error('Cannot make qname out of <' + uri + '>')
 
-      var canSplit = true
       for (var k = j + 1; k < uri.length; k++) {
         if (__Serializer.prototype._notNameChars.indexOf(uri[k]) >= 0) {
-          throw ('Invalid character "' + uri[k] + '" cannot be in XML qname for URI: ' + uri)
+          throw new Error('Invalid character "' + uri[k] + '" cannot be in XML qname for URI: ' + uri)
         }
       }
       var localid = uri.slice(j + 1)
       var namesp = uri.slice(0, j + 1)
-      if (this.defaultNamespace && this.defaultNamespace === namesp
-        && this.flags.indexOf('d') < 0) { // d -> suppress default
+      if (this.defaultNamespace && this.defaultNamespace === namesp &&
+        this.flags.indexOf('d') < 0) { // d -> suppress default
         return localid
       }
       var prefix = this.prefixes[namesp]
       if (!prefix) prefix = this.makeUpPrefix(namesp)
       namespaceCounts[namesp] = true
       return prefix + ':' + localid
-    //        throw ('No prefix for namespace "'+namesp +'" for XML qname for '+uri+', namespaces: '+sz.prefixes+' sz='+sz)
     }
-    qname = qname.bind(this)
+    var qname = qnameMethod.bind(this)
 
     // Body of toXML:
 
     var tree = statementListToXMLTree(sts)
     var str = '<rdf:RDF'
-    if (this.defaultNamespace)
+    if (this.defaultNamespace) {
       str += ' xmlns="' + escapeForXML(this.defaultNamespace) + '"'
+    }
     for (var ns in namespaceCounts) {
       if (!namespaceCounts.hasOwnProperty(ns)) continue
       str += '\n xmlns:' + this.prefixes[ns] + '="' + escapeForXML(ns) + '"'
     }
     str += '>'
 
-    var tree2 = [str, tree, '</rdf:RDF>']; // @@ namespace declrations
+    var tree2 = [str, tree, '</rdf:RDF>'] // @@ namespace declrations
     return XMLtreeToString(tree2, -1)
-
   } // End @@ body
 
-  var Serializer = function (store) {return new __Serializer(store)}
+  var Serializer = function (store) { return new __Serializer(store) }
   return Serializer
-}()
+}())
 
 module.exports = Serializer
