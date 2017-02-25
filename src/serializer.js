@@ -40,14 +40,14 @@ var Serializer = function () {
 
   __Serializer.prototype.toStr = function (x) {
     var s = x.toNT()
-    if (x.termType == 'formula') {
+    if (x.termType === 'formula') {
       this.formulas[s] = x // remember as reverse does not work
     }
     return s
   }
 
   __Serializer.prototype.fromStr = function (s) {
-    if (s[0] == '{') {
+    if (s[0] === '{') {
       var x = this.formulas[s]
       if (!x) console.log('No formula object for ' + s)
       return x
@@ -151,7 +151,7 @@ var Serializer = function () {
       var st = sts[i];
       var st2 = [ st.subject, st.predicate, st.object]
       st2.map(function (y) {
-        if (y.termType == 'BlankNode') {allBnodes[y.toNT()] = true}})
+        if (y.termType === 'BlankNode') {allBnodes[y.toNT()] = true}})
       var x = sts[i].object
       if (!incoming.hasOwnProperty(x)) incoming[x] = []
       incoming[x].push(st.subject) // List of things which will cause this to be printed
@@ -197,8 +197,8 @@ var Serializer = function () {
         // @param force,    "we know this is a root, do it anyway. It isn't a loop."
         function dummyObjectTree(obj, subjects, rootsHash, force) {
             // dump('dummyObjectTree('+obj+'...)\n')
-            if (obj.termType == 'BlankNode' && (subjects[sz.toStr(obj)]  &&
-                (force || (rootsHash[obj.toNT()] == undefined )))) {// and there are statements
+            if (obj.termType === 'BlankNode' && (subjects[sz.toStr(obj)]  &&
+                (force || (rootsHash[obj.toNT()] === undefined )))) {// and there are statements
                 if (doneBnodesNT[obj.toNT()]) { // Ah-ha! a loop
                     throw "Serializer: Should be no loops "+obj
                 }
@@ -210,11 +210,11 @@ var Serializer = function () {
 
         // Scan for bnodes nested inside lists too
         function dummy  subjects, rootsHash) {
-            if (expr.termType == 'BlankNode') doneBnodesNT[expr.toNT()] = true
+            if (expr.termType === 'BlankNode') doneBnodesNT[expr.toNT()] = true
             // $rdf.log.debug('serialize: seen '+expr)
-            if (expr.termType == 'collection') {
+            if (expr.termType === 'collection') {
                 for (i=0; i<expr.elements.length; i++) {
-                    if (expr.elements[i].termType == 'BlankNode')
+                    if (expr.elements[i].termType === 'BlankNode')
                         dummyObjectTree(expr.elements[i], subjects, rootsHash)
                 }
             return
@@ -224,7 +224,7 @@ var Serializer = function () {
         // The tree for a subject
         function dummySubjectTree(subject, subjects, rootsHash) {
             // dump('dummySubjectTree('+subject+'...)\n')
-            if (subject.termType == 'BlankNode' && !incoming[subject])
+            if (subject.termType === 'BlankNode' && !incoming[subject])
                 return dummyObjectTree(subject, subjects, rootsHash, true) // Anonymous bnode subject
             dummyTermToN3(subject, subjects, rootsHash)
             dummyPropertyTree(subject, subjects, rootsHash)
@@ -255,14 +255,14 @@ var Serializer = function () {
                 found = bnt; // Ah-ha! not covered
                 break
             }
-            if (found == null) break; // All done - no bnodes left out/
+            if (found === null) break; // All done - no bnodes left out/
             // dump('Found isolated bnode:'+found+'\n')
             doneBnodesNT[bnt] = true
             var root = this.store.fromNT(found)
             roots.push(root) // Add a new root
             rootsHash[found] = true
             // $rdf.log.debug('isolated bnode:'+found+', subjects[found]:'+subjects[found]+'\n')
-            if (subjects[found] == undefined) {
+            if (subjects[found] === undefined) {
                 for (var i=0; i<sts.length; i++) {
                     // dump('\t'+sts[i]+'\n')
                 }
@@ -358,7 +358,7 @@ var Serializer = function () {
       var str = ''
       for (var i = 0; i < tree.length; i++) {
         var branch = tree[i]
-        var s2 = (typeof branch == 'string') ? branch : treeToLine(branch)
+        var s2 = (typeof branch === 'string') ? branch : treeToLine(branch)
         // Note the space before the dot in case statement ends 123. which is in fact allowed but be conservative.
         if (i != 0 && s2 != ',' && s2 != ';') str += ' '; // was also:  && s2 != '.'
         str += s2
@@ -387,8 +387,8 @@ var Serializer = function () {
           if (substr) lastLength = 10000
           str += substr
         }
-        if (typeof branch == 'string') {
-          if (branch.length == '1' && str.slice(-1) == '\n') {
+        if (typeof branch === 'string') {
+          if (branch.length === '1' && str.slice(-1) === '\n') {
             if (',.;'.indexOf(branch) >= 0) {
               str = str.slice(0, -1) + branch + '\n'; //  slip punct'n on end
               lastLength += 1
@@ -432,7 +432,7 @@ var Serializer = function () {
 
     // The tree for a subject
     function subjectTree (subject, stats) {
-      if (subject.termType == 'BlankNode' && !stats.incoming[subject])
+      if (subject.termType === 'BlankNode' && !stats.incoming[subject])
         return objectTree(subject, stats, true).concat(['.']) // Anonymous bnode subject
       return [ termToN3(subject, stats) ].concat([propertyTree(subject, stats)]).concat(['.'])
     }
@@ -442,7 +442,7 @@ var Serializer = function () {
       var results = []
       var lastPred = null
       var sts = stats.subjects[this.toStr(subject)] // relevant statements
-      if (typeof sts == 'undefined') {
+      if (typeof sts === 'undefined') {
         throw('Cant find statements for ' + subject)
       }
 
@@ -454,7 +454,7 @@ var Serializer = function () {
       var objects = []
       for (var i = 0; i < sts.length; i++) {
         var st = sts[i]
-        if (st.predicate.uri == lastPred) {
+        if (st.predicate.uri === lastPred) {
           objects.push(',')
         } else {
           if (lastPred) {
@@ -473,9 +473,9 @@ var Serializer = function () {
     propertyTree = propertyTree.bind(this)
 
     function objectTree (obj, stats, force) {
-      if (obj.termType == 'BlankNode' &&
+      if (obj.termType === 'BlankNode' &&
         stats.subjects[this.toStr(obj)] && // and there are statements
-        (force || stats.rootsHash[obj.toNT()] == undefined)) // and not a root
+        (force || stats.rootsHash[obj.toNT()] === undefined)) // and not a root
         return ['['].concat(propertyTree(obj, stats)).concat([']'])
       return termToN3(obj, stats)
     }
@@ -586,7 +586,7 @@ var Serializer = function () {
       j = i + forbidden.lastIndex - 1
       res += str.slice(i, j)
       var ch = str[j]
-      if (ch == '"' && delim == '"""' && str.slice(j, j + 3) != '"""') {
+      if (ch === '"' && delim === '"""' && str.slice(j, j + 3) != '"""') {
         res += ch
 
       } else {
@@ -626,13 +626,13 @@ var Serializer = function () {
         }
       }
 
-      if (uri.slice(0, j + 1) == this.base + '#') { // base-relative
+      if (uri.slice(0, j + 1) === this.base + '#') { // base-relative
         return '<#' + uri.slice(j + 1) + '>'
       }
       if (canSplit) {
         var localid = uri.slice(j + 1)
         var namesp = uri.slice(0, j + 1)
-        if (this.defaultNamespace && this.defaultNamespace == namesp
+        if (this.defaultNamespace && this.defaultNamespace === namesp
           && this.flags.indexOf('d') < 0) { // d -> suppress default
           if (this.flags.indexOf('k') >= 0 &&
             this.keyords.indexOf(localid) < 0)
@@ -739,7 +739,7 @@ var Serializer = function () {
       var str = ''
       for (var i = 0; i < tree.length; i++) {
         var branch = tree[i]
-        var s2 = (typeof branch == 'string') ? branch : XMLtreeToLine(branch)
+        var s2 = (typeof branch === 'string') ? branch : XMLtreeToLine(branch)
         str += s2
       }
       return str
@@ -766,7 +766,7 @@ var Serializer = function () {
           if (substr) lastLength = 10000
           str += substr
         }
-        if (typeof branch == 'string') {
+        if (typeof branch === 'string') {
           if (lastLength < (indent * level + 4)) { // continue
             str = str.slice(0, -1) + ' ' + branch + '\n'
             lastLength += branch.length + 1
@@ -788,7 +788,7 @@ var Serializer = function () {
       var roots = stats.roots
       var results = []
       for (var i = 0; i < roots.length; i++) {
-        root = roots[i]
+        var root = roots[i]
         results.push(subjectXMLTree(root, stats))
       }
       return results
@@ -796,7 +796,7 @@ var Serializer = function () {
     statementListToXMLTree = statementListToXMLTree.bind(this)
 
     function escapeForXML (str) {
-      if (typeof str == 'undefined') return '@@@undefined@@@@'
+      if (typeof str === 'undefined') return '@@@undefined@@@@'
       return str.replace(/[&<"]/g, function (m) {
         switch (m[0]) {
           case '&':
@@ -819,7 +819,7 @@ var Serializer = function () {
       var results = []
       var type, t, st, pred
       var sts = stats.subjects[this.toStr(subject)] // relevant statements
-      if (typeof sts == 'undefined') {
+      if (typeof sts === 'undefined') {
         throw('Serializing XML - Cant find statements for ' + subject)
       }
 
@@ -833,7 +833,7 @@ var Serializer = function () {
       sts.sort(function (a, b) {
         var ap = a.predicate.uri
         var bp = b.predicate.uri
-        if (ap.substring(0, liPrefix.length) == liPrefix || bp.substring(0, liPrefix.length) == liPrefix) { // we're only interested in sorting list items
+        if (ap.substring(0, liPrefix.length) === liPrefix || bp.substring(0, liPrefix.length) === liPrefix) { // we're only interested in sorting list items
           return ap.localeCompare(bp)
         }
 
@@ -852,18 +852,18 @@ var Serializer = function () {
       for (var i = 0; i < sts.length; i++) {
         st = sts[i]
         // look for a type
-        if (st.predicate.uri == 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type' && !type && st.object.termType == 'symbol') {
+        if (st.predicate.uri === 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type' && !type && st.object.termType === 'symbol') {
           type = st.object
           continue; // don't include it as a child element
         }
 
         // see whether predicate can be replaced with "li"
         pred = st.predicate
-        if (pred.uri.substr(0, liPrefix.length) == liPrefix) {
+        if (pred.uri.substr(0, liPrefix.length) === liPrefix) {
           var number = pred.uri.substr(liPrefix.length)
           // make sure these are actually numeric list items
           var intNumber = parseInt(number)
-          if (number == intNumber.toString()) {
+          if (number === intNumber.toString()) {
             // was numeric; don't need to worry about ordering since we've already
             // sorted the statements
             pred = new NamedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#li')
@@ -873,7 +873,7 @@ var Serializer = function () {
         t = qname(pred)
         switch (st.object.termType) {
           case 'BlankNode':
-            if (stats.incoming[st.object].length == 1) { // there should always be something in the incoming array for a bnode
+            if (stats.incoming[st.object].length === 1) { // there should always be something in the incoming array for a bnode
               results = results.concat(['<' + t + '>',
                 subjectXMLTree(st.object, stats),
                 '</' + t + '>'])
@@ -908,7 +908,7 @@ var Serializer = function () {
       var tag = type ? qname(type) : 'rdf:Description'
 
       var attrs = ''
-      if (subject.termType == 'BlankNode') {
+      if (subject.termType === 'BlankNode') {
         if (!stats.incoming[subject] || stats.incoming[subject].length != 1) { // not an anonymous bnode
           attrs = ' rdf:nodeID="' + subject.toNT().slice(2) + '"'
         }
@@ -990,7 +990,7 @@ var Serializer = function () {
       }
       var localid = uri.slice(j + 1)
       var namesp = uri.slice(0, j + 1)
-      if (this.defaultNamespace && this.defaultNamespace == namesp
+      if (this.defaultNamespace && this.defaultNamespace === namesp
         && this.flags.indexOf('d') < 0) { // d -> suppress default
         return localid
       }
