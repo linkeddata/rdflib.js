@@ -516,7 +516,8 @@ var Fetcher = function Fetcher (store, timeout, async) {
     } else {
       // See https://www.iana.org/assignments/link-relations/link-relations.xml
       // Alas not yet in RDF yet for each predicate
-      predicate = kb.sym(Uri.join(rel, 'http://www.iana.org/assignments/link-relations/'))
+      /// encode space in e.g. rel="shortcut icon"
+      predicate = kb.sym(Uri.join(encodeURIComponent(rel), 'http://www.iana.org/assignments/link-relations/'))
     }
     if (reverse) {
       kb.add(obj, predicate, xhr.original, why)
