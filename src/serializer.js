@@ -30,8 +30,6 @@ var Serializer = (function () {
     this.incoming = null // Array not calculated yet
     this.formulas = [] // remebering original formulae from hashes
     this.store = store
-
-  /* pass */
   }
 
   __Serializer.prototype.setBase = function (base) { this.base = base; return this }
@@ -95,15 +93,13 @@ var Serializer = (function () {
   // Make up an unused prefix for a random namespace
   __Serializer.prototype.makeUpPrefix = function (uri) {
     var p = uri
-    var pok
     function canUseMethod (pp) {
       if (!__Serializer.prototype.validPrefix.test(pp)) return false // bad format
       if (pp === 'ns') return false // boring
       if (pp in this.namespaces) return false // already used
       this.prefixes[uri] = pp
       this.namespaces[pp] = uri
-      pok = pp
-      return true
+      return pp
     }
     var canUse = canUseMethod.bind(this)
 
@@ -119,16 +115,17 @@ var Serializer = (function () {
       }
     }
     p = p.slice(0, i)
-    if (p.length < 6 && canUse(p)) return pok // exact i sbest
-    if (canUse(p.slice(0, 3))) return pok
-    if (canUse(p.slice(0, 2))) return pok
-    if (canUse(p.slice(0, 4))) return pok
-    if (canUse(p.slice(0, 1))) return pok
-    if (canUse(p.slice(0, 5))) return pok
+
+    if (p.length < 6 && (canUse(p))) return p // exact is best
+    if (canUse(p.slice(0, 3))) return p.slice(0, 3)
+    if (canUse(p.slice(0, 2))) return p.slice(0, 2)
+    if (canUse(p.slice(0, 4))) return p.slice(0, 4)
+    if (canUse(p.slice(0, 1))) return p.slice(0, 1)
+    if (canUse(p.slice(0, 5))) return p.slice(0, 5)
     if (!__Serializer.prototype.validPrefix.test(p)) {
       p = 'n' // Otherwise the loop below may never termimnate
     }
-    for (var j = 0; ; j++) if (canUse(p.slice(0, 3) + j)) return pok
+    for (var j = 0; ; j++) if (canUse(p.slice(0, 3) + j)) return p.slice(0, 3) + j
   }
   // Todo:
   //  - Sort the statements by subject, pred, object
@@ -174,106 +171,12 @@ var Serializer = (function () {
     }
     this.incoming = incoming // Keep for serializing @@ Bug for nested formulas
 
-    // ////////// New bit for CONNECTED bnode loops:frootshash
-
-    // This scans to see whether the serialization is gpoing to lead to a bnode loop
-    // and at the same time accumulates a list of all bnodes mentioned.
-    // This is in fact a cut down N3 serialization
-    /*
-        // $rdf.log.debug('serialize.js Looking for connected bnode loops\n')
-        for (var i=0; i<sts.length; i++) { // @@TBL
-            // dump('\t'+sts[i]+'\n')
-        }
-        var doneBnodesNT = {}
-        function dummyPropertyTree(subject, subjects, rootsHash) {
-            // dump('dummyPropertyTree('+subject+'...)\n')
-            var sts = subjects[sz.toStr(subject)] // relevant statements
-            for (var i=0; i<sts.length; i++) {
-                dummyObjectTree(sts[i].object, subjects, rootsHash)
-            }
-        }
-
-        // Convert a set of statements into a nested tree of lists and strings
-        // @param force,    "we know this is a root, do it anyway. It isn't a loop."
-        function dummyObjectTree(obj, subjects, rootsHash, force) {
-            // dump('dummyObjectTree('+obj+'...)\n')
-            if (obj.termType === 'BlankNode' && (subjects[sz.toStr(obj)]  &&
-                (force || (rootsHash[obj.toNT()] === undefined )))) {// and there are statements
-                if (doneBnodesNT[obj.toNT()]) { // Ah-ha! a loop
-                    throw "Serializer: Should be no loops "+obj
-                }
-                doneBnodesNT[obj.toNT()] = true
-                return  dummyPropertyTree(obj, subjects, rootsHash)
-            }
-            return dummyTermToN3(obj, subjects, rootsHash)
-        }
-
-        // Scan for bnodes nested inside lists too
-        function dummy  subjects, rootsHash) {
-            if (expr.termType === 'BlankNode') doneBnodesNT[expr.toNT()] = true
-            // $rdf.log.debug('serialize: seen '+expr)
-            if (expr.termType === 'collection') {
-                for (i=0; i<expr.elements.length; i++) {
-                    if (expr.elements[i].termType === 'BlankNode')
-                        dummyObjectTree(expr.elements[i], subjects, rootsHash)
-                }
-            return
-            }
-        }
-
-        // The tree for a subject
-        function dummySubjectTree(subject, subjects, rootsHash) {
-            // dump('dummySubjectTree('+subject+'...)\n')
-            if (subject.termType === 'BlankNode' && !incoming[subject])
-                return dummyObjectTree(subject, subjects, rootsHash, true) // Anonymous bnode subject
-            dummyTermToN3(subject, subjects, rootsHash)
-            dummyPropertyTree(subject, subjects, rootsHash)
-        }
-    */
     // Now do the scan using existing roots
     // $rdf.log.debug('serialize.js Dummy serialize to check for missing nodes')
     var rootsHash = {}
     for (var k = 0; k < roots.length; k++) {
       rootsHash[roots[k].toNT()] = true
     }
-    /*
-        for (var i=0; i<roots.length; i++) {
-            var root = roots[i]
-            dummySubjectTree(root, subjects, rootsHash)
-        }
-        // dump('Looking for mising bnodes...\n')
-
-    // Now in new roots for anythig not acccounted for
-    // Now we check for any bndoes which have not been covered.
-    // Such bnodes must be in isolated rings of pure bnodes.
-    // They each have incoming link of 1.
-
-        // $rdf.log.debug('serialize.js Looking for connected bnode loops\n')
-        for (;;) {
-            var bnt
-            var found = null
-            for (bnt in allBnodes) { // @@ Note: not repeatable. No canonicalisation
-                if (doneBnodesNT[bnt]) continue
-                found = bnt; // Ah-ha! not covered
-                break
-            }
-            if (found === null) break; // All done - no bnodes left out/
-            // dump('Found isolated bnode:'+found+'\n')
-            doneBnodesNT[bnt] = true
-            var root = this.store.fromNT(found)
-            roots.push(root) // Add a new root
-            rootsHash[found] = true
-            // $rdf.log.debug('isolated bnode:'+found+', subjects[found]:'+subjects[found]+'\n')
-            if (subjects[found] === undefined) {
-                for (var i=0; i<sts.length; i++) {
-                    // dump('\t'+sts[i]+'\n')
-                }
-                throw "Isolated node should be a subject" +found
-            }
-            dummySubjectTree(root, subjects, rootsHash) // trace out the ring
-        }
-        // dump('Done bnode adjustments.\n')
-    */
     return {'roots': roots, 'subjects': subjects,
     'rootsHash': rootsHash, 'incoming': incoming}
   }
