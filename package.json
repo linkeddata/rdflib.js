@@ -41,7 +41,7 @@
     "babelify": "^7.3.0",
     "browserify": "^13.0.0",
     "chai": "^3.5.0",
-    "grep-cli": "^0.2.1",
+    "fs-grep": "^0.0.5",
     "minifyify": "^7.3.2",
     "mocha": "^3.2.0",
     "node-mkdirp": "0.0.1",
@@ -65,8 +65,7 @@
     "minify": "npm run dist/rdflib.min.js",
     "size": "node-line-counter .",
     "gh-pages": "npm run detach && git branch - D gh - pages ||: && git checkout - b gh - pages && npm run all && git add - f dist /*.js src/*.js *.js && git commit -m 'gh-pages: update to latest' && git push -f origin gh-pages && git checkout master",
-    "prepublish": "npm run lib",
-    "greptest": "type package.json | grep test > greptest.ttl"
+    "prepublish": "npm run lib"
   },
   "files": [
     "dist",

@@ -1,17 +1,15 @@
 {
-    "name": "serialize",
-    "scripts": {
-        "all": "npm run t1 && npm run t2 && npm run t3 && npm run t4 && npm run t5 && npm run t6 && npm run t7",
-        "t1": "node ./data.js -in=t1.ttl -format=application/rdf+xml -out=,t1.xml && grep http://www.w3.org/2001/XMLSchema#integer < \",t1.xml\" ",
-        "t2": "node ./data.js -in=t2.ttl -format=application/rdf+xml  -out=,t2.xml && jsdiff ,t2.xml t2-ref.xml",
-        "t3": "node ./data.js -in=t3.ttl -format=application/rdf+xml  -out=,t3.xml && jsdiff ,t3.xml t3-ref.xml",
-        "t4": "node ./data.js -in=t3.ttl -out=,t4.ttl && jsdiff ,t4.ttl t4-ref.ttl",
-        "t5": "node ./data.js -in=t5.n3 -format=text/turtle -out=,t5.ttl && jsdiff ,t5.ttl t5-ref.ttl",
-        "t6": "node ./data.js -in=t5.n3 -format=text/n3 -out=,t6.n3 && jsdiff ,t6.n3 t6-ref.n3",
-        "t7": "node ./data.js -in=t7.n3 -format=application/n-triples -out=,t7.nt && jsdiff ,t7.nt t7-ref.nt",
-        "t8": "node ./data.js -in=t5.n3  -format=application/n-quads -dump=,t8.nq && jsdiff ,t8.nq t8-ref.nq",
-        "t9": "node ./data.js -in=t7.n3 -format=application/ld+json -out=,t9.json && jsdiff ,t9.json t9-ref.json",
-        "difftest": "jsdiff t2-ref.xml ,t2.xml",
-        "greptest": " grep http://www.w3.org/2001/XMLSchema#integer < \",t1.xml\""
-    }
+  "name": "serialize",
+  "scripts": {
+    "all": "npm run t1 && npm run t2 && npm run t3 && npm run t4 && npm run t5 && npm run t6 && npm run t7",
+    "t1": "node ./data.js -in=t1.ttl -format=application/rdf+xml -out=,t1.xml && fs-grep http://www.w3.org/2001/XMLSchema#integer ,t1.xml",
+    "t2": "node ./data.js -in=t2.ttl -format=application/rdf+xml  -out=,t2.xml && jsdiff ,t2.xml t2-ref.xml",
+    "t3": "node ./data.js -in=t3.ttl -format=application/rdf+xml  -out=,t3.xml && jsdiff ,t3.xml t3-ref.xml",
+    "t4": "node ./data.js -in=t3.ttl -out=,t4.ttl && jsdiff ,t4.ttl t4-ref.ttl",
+    "t5": "node ./data.js -in=t5.n3 -format=text/turtle -out=,t5.ttl && jsdiff ,t5.ttl t5-ref.ttl",
+    "t6": "node ./data.js -in=t5.n3 -format=text/n3 -out=,t6.n3 && jsdiff ,t6.n3 t6-ref.n3",
+    "t7": "node ./data.js -in=t7.n3 -format=application/n-triples -out=,t7.nt && jsdiff ,t7.nt t7-ref.nt",
+    "t8": "node ./data.js -in=t5.n3  -format=application/n-quads -dump=,t8.nq && jsdiff ,t8.nq t8-ref.nq",
+    "t9": "node ./data.js -in=t7.n3 -format=application/ld+json -out=,t9.json && jsdiff ,t9.json t9-ref.json"
+  }
 }

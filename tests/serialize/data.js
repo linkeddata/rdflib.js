@@ -100,7 +100,8 @@ var doNext = function (remaining) {
             return
           }
           doc = $rdf.sym($rdf.uri.join(right, base))
-          if (doc.uri.slice(0, 8) !== 'file:///') {
+          console.log(doc.uri);
+          if (doc.uri.slice(0, 7) !== 'file://') {
             exitMessage('Can only write files just now, sorry: ' + doc.uri)
           }
           var fileName = doc.uri.slice(7) //
@@ -120,7 +121,7 @@ var doNext = function (remaining) {
             } catch(e) {
               exitMessage('Error in serializer: ' + e + stackString(e))
             }
-            if (doc.uri.slice(0, 8) !== 'file:///') {
+            if (doc.uri.slice(0, 7) !== 'file://') {
               exitMessage('Can only write files just now, sorry: ' + doc.uri)
             }
             var fileName = doc.uri.slice(7) //
