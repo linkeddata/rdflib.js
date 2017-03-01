@@ -100,7 +100,6 @@ var doNext = function (remaining) {
             return
           }
           doc = $rdf.sym($rdf.uri.join(right, base))
-          console.log(doc.uri);
           if (doc.uri.slice(0, 7) !== 'file://') {
             exitMessage('Can only write files just now, sorry: ' + doc.uri)
           }
