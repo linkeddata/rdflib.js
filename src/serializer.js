@@ -297,7 +297,7 @@ var Serializer = (function () {
           str += substr
         }
         if (typeof branch === 'string') {
-          if (branch.length === '1' && str.slice(-1) === '\n') {
+          if (branch.length === 1 && str.slice(-1) === '\n') {
             if (',.;'.indexOf(branch) >= 0) {
               str = str.slice(0, -1) + branch + '\n' //  slip punct'n on end
               lastLength += 1
