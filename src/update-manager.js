@@ -578,7 +578,7 @@ var UpdateManager = (function () {
   //  - deletions, insertions may be undefined or single statements or lists or formulae.
   //      (may contain bnodes which can be indirectly identified by a where clause)
   //
-  //  - callback is called as callback(uri, success, errorbody, xhr)
+  //  - callback is called as callback(uri, success, errorbody)
   //
   sparql.prototype.update = function (deletions, insertions, callback) {
     try {

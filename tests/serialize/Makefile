@@ -43,3 +43,9 @@ t8:
 t9:
 		node ./data.js -in=t7.n3 -format=application/ld+json -out=,t9.json
 		diff ,t9.json t9-ref.json
+
+ 	# More conmplex Turtle layout
+
+t10:
+	node ./data.js -in=details.ttl -format=text/turtle -out=,t10.ttl
+	diff ,t10.ttl t10-ref.ttl
