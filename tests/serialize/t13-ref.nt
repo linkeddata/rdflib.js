@@ -1,0 +1,34 @@
+<file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/structures.n3#DSK> <file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/structures.n3#name> "Dexter Scott King" .
+<file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/structures.n3#MLK3> <file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/structures.n3#name> "Martin Luther King III" .
+<file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/structures.n3#MLK> <file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/structures.n3#born> "1929-01-17"^^<http://www.w3.org/2001/XMLSchema#date> .
+<file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/structures.n3#MLK> <file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/structures.n3#died> "1968-01-15"^^<http://www.w3.org/2001/XMLSchema#date> .
+<file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/structures.n3#MLK> <file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/structures.n3#name> "Martin Luther King, Jr" .
+<file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/structures.n3#MLK> <file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/structures.n3#spouse> _:n4 .
+<file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/structures.n3#MLK> <file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/structures.n3#wikipediapage> <https://en.wikipedia.org/wiki/Martin_Luther_King_Jr.> .
+<file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/structures.n3#YK> <file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/structures.n3#name> "Yolanda King" .
+<file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/structures.n3#ZooReading1> <file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/structures.n3#count> "16"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/structures.n3#ZooReading1> <file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/structures.n3#date> "2015-02-28"^^<http://www.w3.org/2001/XMLSchema#date> .
+<file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/structures.n3#ZooReading1> <file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/structures.n3#disabled> "0"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+<file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/structures.n3#ZooReading1> <file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/structures.n3#dollars> "-12.3"^^<http://www.w3.org/2001/XMLSchema#decimal> .
+<file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/structures.n3#ZooReading1> <file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/structures.n3#enabled> "1"^^<http://www.w3.org/2001/XMLSchema#boolean> .
+<file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/structures.n3#ZooReading1> <file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/structures.n3#sensitivity> "-0.0000016507"^^<http://www.w3.org/2001/XMLSchema#double> .
+<file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/structures.n3#ZooReading1> <file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/structures.n3#temp> "25.3"^^<http://www.w3.org/2001/XMLSchema#decimal> .
+<file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/structures.n3#ZooReading1> <file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/structures.n3#time> "2015-03-16T17:53Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> .
+_:n4 <file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/structures.n3#name> "Coretta Scott King" .
+_:n9 <http://www.w3.org/1999/02/22-rdf-syntax-ns#first> _:n6.
+_:n9 <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest> <http://www.w3.org/1999/02/22-rdf-syntax-ns#nill>.
+_:n10 <http://www.w3.org/1999/02/22-rdf-syntax-ns#first> <file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/structures.n3#YK>.
+_:n10 <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest> _:n9.
+_:n11 <http://www.w3.org/1999/02/22-rdf-syntax-ns#first> <file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/structures.n3#DSK>.
+_:n11 <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest> _:n10.
+_:n12 <http://www.w3.org/1999/02/22-rdf-syntax-ns#first> <file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/structures.n3#MLK3>.
+_:n12 <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest> _:n11.
+_:n5 <file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/structures.n3#offspring> _:n12 .
+_:n5 <file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/structures.n3#spouse> <file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/structures.n3#MLK> .
+_:n5 <file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/structures.n3#spouse> _:n4 .
+_:n5 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/structures.n3#Marriage> .
+_:n6 <file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/structures.n3#name> "Bernice King" .
+_:n8 <file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/structures.n3#author> <file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/structures.n3#MLK> .
+_:n8 <file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/structures.n3#date> "1963-08-23"^^<http://www.w3.org/2001/XMLSchema#date> .
+_:n8 <file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/structures.n3#title> "I have a dream" .
+_:n8 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/structures.n3#Speech> .

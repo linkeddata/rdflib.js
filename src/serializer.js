@@ -286,8 +286,15 @@ var Serializer = (function () {
         var branch = tree[i]
         var s2 = (typeof branch === 'string') ? branch : treeToLine(branch)
         // Note the space before the dot in case statement ends 123. which is in fact allowed but be conservative.
-        if (i !== 0 && s2 !== ',' && s2 !== ';') {
-          str += ' ' // was also:  && s2 !== '.'
+        if (i !== 0){
+          var ch = str.slice(-1) || ' '
+          if (s2 === ',' || s2 === ';') {
+            // no gap
+          } else if (s2 === '.' && !('0123456789.'.includes(ch))) { // no gap except after number
+            // no gap
+          } else {
+            str += ' ' // separate from previous token
+          }
         }
         str += s2
       }

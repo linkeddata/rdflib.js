@@ -3,5 +3,7 @@
 @prefix n2: <https://example.org/67890#>.
 @prefix n3: <https://example.org/88888#>.
 
-   n0:foo n0:bar n1:baz .
-   n2:foo n2:bar n3:baz .
+n0:foo n0:bar n1:baz.
+
+n2:foo n2:bar n3:baz.
+

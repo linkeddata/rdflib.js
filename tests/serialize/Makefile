@@ -60,4 +60,4 @@ t11:
 	 	diff ,structures.ttl t12-ref.ttl
 t13:
 	 	node ./data.js -in=structures.n3 -format=application/n-triples  -out=,structures.nt
-	 	diff ,structures.nt t13-ref.ttl
+	 	diff ,structures.nt t13-ref.nt

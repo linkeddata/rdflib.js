@@ -48,9 +48,13 @@
         <str:title>I have a dream</str:title>
         <rdf:type rdf:resource="#Speech"/>
     </rdf:Description>
-    <rdf:Description rdf:about="#Reading1">
-        <str:age rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1650700</str:age>
-        <str:dollars rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">12.3</str:dollars>
+    <rdf:Description rdf:about="#ZooReading1">
+        <str:count rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">16</str:count>
+        <str:date rdf:datatype="http://www.w3.org/2001/XMLSchema#date">2015-02-28</str:date>
+        <str:disabled rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">0</str:disabled>
+        <str:dollars rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">-12.3</str:dollars>
+        <str:enabled rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">1</str:enabled>
+        <str:sensitivity rdf:datatype="http://www.w3.org/2001/XMLSchema#double">-0.0000016507</str:sensitivity>
         <str:temp rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">25.3</str:temp>
         <str:time rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2015-03-16T17:53Z</str:time>
     </rdf:Description>
