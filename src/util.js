@@ -295,11 +295,11 @@ function getHTTPHeaders (xhr) {
 /**
  * Compares statements (heavy comparison for repeatable canonical ordering)
  */
-function heavyCompare (x, y, g) {
+function heavyCompare (x, y, g, uriMap) {
   var nonBlank = function (x) {
     return (x.termType === 'BlankNode') ? null : x
   }
-  var signature = function (b) {
+  var signature = function (x) {
     var lis = g.statementsMatching(x).map(function (st) {
       return ('' + nonBlank(st.subject) + ' ' + nonBlank(st.predicate) +
         ' ' + nonBlank(st.object))
@@ -310,23 +310,24 @@ function heavyCompare (x, y, g) {
     lis.sort()
     return lis.join('\n')
   }
-  if ((x.termType === 'BlankNode') || (y.termType === 'BlankNode')) {
+  if ((x.termType === 'BlankNode') && (y.termType === 'BlankNode')) {
     if (x.compareTerm(y) === 0) return 0 // Same
     if (signature(x) > signature(y)) return +1
     if (signature(x) < signature(y)) return -1
     return x.compareTerm(y)  // Too bad -- this order not canonical.
     // throw "different bnodes indistinquishable for sorting"
   } else {
+    if (uriMap && x.uri && y.uri){
+      return (uriMap[x.uri] || x.uri).localeCompare(uriMap[y.uri] || y.uri)
+    }
     return x.compareTerm(y)
   }
 }
 
-function heavyCompareSPO (x, y, g) {
-  var d = heavyCompare(x.subject, y.subject, g)
-  if (d) return d
-  d = heavyCompare(x.predicate, y.predicate, g)
-  if (d) return d
-  return heavyCompare(x.object, y.object, g)
+function heavyCompareSPO (x, y, g, uriMap) {
+  return heavyCompare(x.subject, y.subject, g, uriMap) ||
+    heavyCompare(x.predicate, y.predicate, g, uriMap) ||
+    heavyCompare(x.object, y.object, g, uriMap)
 }
 
 /**

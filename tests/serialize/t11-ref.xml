@@ -1,0 +1,57 @@
+<rdf:RDF
+ xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+ xmlns:str="file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/structures.n3#">
+    <rdf:Description rdf:about="#MLK">
+        <str:born rdf:datatype="http://www.w3.org/2001/XMLSchema#date">1929-01-17</str:born>
+        <str:died rdf:datatype="http://www.w3.org/2001/XMLSchema#date">1968-01-15</str:died>
+        <str:name>Martin Luther King, Jr</str:name>
+        <str:spouse rdf:nodeID="n4"/>
+        <str:wikipediapage rdf:resource="https://en.wikipedia.org/wiki/Martin_Luther_King_Jr."/>
+    </rdf:Description>
+    <rdf:Description rdf:nodeID="n4">
+       <str:name>Coretta Scott King</str:name>
+    </rdf:Description>
+    <rdf:Description rdf:nodeID="n5">
+        <str:offspring rdf:parseType="Collection">
+                <rdf:Description rdf:about="#MLK3">
+                   <str:name>Martin Luther King III</str:name>
+                </rdf:Description>
+                <rdf:Description rdf:about="#DSK">
+                   <str:name>Dexter Scott King</str:name>
+                </rdf:Description>
+                <rdf:Description rdf:about="#YK">
+                   <str:name>Yolanda King</str:name>
+                </rdf:Description>
+                <rdf:Description rdf:nodeID="n6">
+                   <str:name>Bernice King</str:name>
+                </rdf:Description>
+        </str:offspring>
+        <str:spouse rdf:resource="#MLK"/>
+        <str:spouse rdf:nodeID="n4"/>
+        <rdf:type rdf:resource="#Marriage"/>
+    </rdf:Description>
+    <rdf:Description rdf:nodeID="n6">
+       <str:name>Bernice King</str:name>
+    </rdf:Description>
+    <rdf:Description rdf:about="#MLK3">
+       <str:name>Martin Luther King III</str:name>
+    </rdf:Description>
+    <rdf:Description rdf:about="#DSK">
+       <str:name>Dexter Scott King</str:name>
+    </rdf:Description>
+    <rdf:Description rdf:about="#YK">
+       <str:name>Yolanda King</str:name>
+    </rdf:Description>
+    <rdf:Description rdf:nodeID="n8">
+        <str:author rdf:resource="#MLK"/>
+        <str:date rdf:datatype="http://www.w3.org/2001/XMLSchema#date">1963-08-23</str:date>
+        <str:title>I have a dream</str:title>
+        <rdf:type rdf:resource="#Speech"/>
+    </rdf:Description>
+    <rdf:Description rdf:about="#Reading1">
+        <str:age rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1650700</str:age>
+        <str:dollars rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">12.3</str:dollars>
+        <str:temp rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">25.3</str:temp>
+        <str:time rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2015-03-16T17:53Z</str:time>
+    </rdf:Description>
+</rdf:RDF>

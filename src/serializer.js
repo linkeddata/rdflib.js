@@ -5,6 +5,9 @@
 **
 ** Bug: can't serialize  http://data.semanticweb.org/person/abraham-bernstein/rdf
 ** in XML (from mhausenblas)
+**
+** Todo: repeatable order of statments, with rdf:type as first pred.
+**
 */
 // @@@ Check the whole toStr thing tosee whetehr it still makes sense -- tbl
 const NamedNode = require('./named-node')
@@ -146,13 +149,20 @@ var Serializer = (function () {
     // $rdf.log.debug('serialize.js Find bnodes with only one incoming arc\n')
     for (var i = 0; i < sts.length; i++) {
       var st = sts[i]
+      var checkMentions = function(x){
+        if (!incoming.hasOwnProperty(x)) incoming[x] = []
+        incoming[x].push(st.subject) // List of things which will cause this to be printed
+      }
       var st2 = [st.subject, st.predicate, st.object]
       st2.map(function (y) {
         if (y.termType === 'BlankNode') { allBnodes[y.toNT()] = true }
+        else if (y.termType === 'Collection') {
+          y.elements.forAll(function(z){
+            checkMentions(z) // bnodes in collections important
+          })
+        }
       })
-      var x = sts[i].object
-      if (!incoming.hasOwnProperty(x)) incoming[x] = []
-      incoming[x].push(st.subject) // List of things which will cause this to be printed
+      checkMentions(sts[i].object)
       var ss = subjects[this.toStr(st.subject)] // Statements with this as subject
       if (!ss) ss = []
       ss.push(st)
@@ -241,6 +251,15 @@ var Serializer = (function () {
   __Serializer.prototype.statementsToN3 = function (sts) {
     var indent = 4
     var width = 80
+    var kb = this.store
+    // A URI Map alows us to put the type statemnts at the top.
+    var uriMap = {'http://www.w3.org/1999/02/22-rdf-syntax-ns#type': 'aaa:00'}
+    var SPO = function (x, y) { // Do limited canonicalization of bnodes
+      return Util.heavyCompareSPO(x, y, kb, uriMap)
+    }
+    sts.sort(SPO)
+
+    // this.suggestPrefix('', this.base)
 
     var predMap = {}
 
@@ -279,7 +298,7 @@ var Serializer = (function () {
     var treeToString = function (tree, level) {
       var str = ''
       var lastLength = 100000
-      if (!level) level = 0
+      if (level === undefined) level = -1
       for (var i = 0; i < tree.length; i++) {
         var branch = tree[i]
         if (typeof branch !== 'string') {
@@ -289,7 +308,7 @@ var Serializer = (function () {
               substr.indexOf('"""') < 0) { // Don't mess up multiline strings
             var line = treeToLine(branch)
             if (line.length < (width - indent * level)) {
-              branch = '   ' + line //   @@ Hack: treat as string below
+              branch =  line //   @@ Hack: treat as string below // was '   ' + line
               substr = ''
             }
           }
@@ -302,21 +321,21 @@ var Serializer = (function () {
               str = str.slice(0, -1) + branch + '\n' //  slip punct'n on end
               lastLength += 1
               continue
-            } else if ('])}'.indexOf(branch) >= 0) {
-              str = str.slice(0, -1) + ' ' + branch + '\n'
-              lastLength += 2
-              continue
             }
           }
-          if (lastLength < (indent * level + 4)) { // continue
-            str = str.slice(0, -1) + ' ' + branch + '\n'
+          if (lastLength < (indent * level + 4) ||  // if new line not necessary
+            lastLength + branch.length + 1 < width && ';.'.indexOf(str[str.length-2]) < 0) { // or the string fits on last line
+            str = str.slice(0, -1) + ' ' + branch + '\n' // then continue on this line
             lastLength += branch.length + 1
           } else {
             let line = spaces(indent * level) + branch
             str += line + '\n'
             lastLength = line.length
+            if (level < 0) {
+              str += '\n' // extra blank line
+              lastLength = 100000 // don't touch
+            }
           }
-        } else { // not string
         }
       }
       return str
@@ -352,13 +371,7 @@ var Serializer = (function () {
       if (typeof sts === 'undefined') {
         throw new Error('Cant find statements for ' + subject)
       }
-      /*
-      var SPO = function (x, y) {
-        return Util.heavyCompareSPO(x, y, this.store)
-      }
-      */
-      sts.sort() // 2014-09-30
-      //        sts.sort(SPO); // 2014-09-30
+
       var objects = []
       for (var i = 0; i < sts.length; i++) {
         var st = sts[i]
@@ -384,7 +397,8 @@ var Serializer = (function () {
       if (obj.termType === 'BlankNode' &&
         stats.subjects[this.toStr(obj)] && // and there are statements
         (force || stats.rootsHash[obj.toNT()] === undefined)) {// and not a root
-        return ['['].concat(propertyTree(obj, stats)).concat([']'])
+          return ['[', propertyTree(obj, stats), ']']
+          // return ['['].concat(propertyTree(obj, stats)).concat([']'])
       }
       return termToN3(obj, stats)
     }
@@ -429,7 +443,8 @@ var Serializer = (function () {
     var prefixDirectives = prefixDirectivesMethod.bind(this)
     // Body of statementsToN3:
     var tree = statementListToTree(sts)
-    return prefixDirectives() + treeToString(tree, -1)
+    // console.log("Tree: " + JSON.stringify(tree))
+    return prefixDirectives() + treeToString(tree)
   }
   // //////////////////////////////////////////// Atomic Terms
 
@@ -440,12 +455,21 @@ var Serializer = (function () {
       case 'Variable':
         return expr.toNT()
       case 'Literal':
+        var val = expr.value.toString() // should be a string already
         if (expr.datatype && this.flags.indexOf('x') < 0) { // Supress native numbers
           switch (expr.datatype.uri) {
-            case 'http://www.w3.org/2001/XMLSchema#integer':
-              return expr.value.toString()
 
-            // case 'http://www.w3.org/2001/XMLSchema#double': // Must force use of 'e'
+            case 'http://www.w3.org/2001/XMLSchema#integer':
+              return val
+
+            case 'http://www.w3.org/2001/XMLSchema#decimal': // In urtle must have dot
+              if (val.indexOf('.')  < 0) val += '.0'
+              return val
+
+            case 'http://www.w3.org/2001/XMLSchema#double': // Must force use of 'e'
+            if (val.indexOf('.')  < 0) val += '.0'
+            if (val.indexOf('e')  < 0) val += 'e0'
+            return val
 
             case 'http://www.w3.org/2001/XMLSchema#boolean':
               return expr.value ? 'true' : 'false'
@@ -533,7 +557,11 @@ var Serializer = (function () {
       }
 
       if (uri.slice(0, j + 1) === this.base + '#') { // base-relative
-        return '<#' + uri.slice(j + 1) + '>'
+        if (canSplit){
+          return ':' + uri.slice(j + 1) // assume deafult ns is local
+        } else {
+          return '<#' + uri.slice(j + 1) + '>'
+        }
       }
       if (canSplit) {
         var localid = uri.slice(j + 1)

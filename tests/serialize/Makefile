@@ -1,6 +1,6 @@
 # Crude tests for particular serializer bugs
 
-all: t1 t2 t3 t4 t5 t6 t7
+all: t1 t2 t3 t4 t5 t6 t7  t10 t11 t12 t13
 
 clean:
 	rm ,* || echo ok
@@ -36,10 +36,12 @@ t7:
 	diff ,t7.nt t7-ref.nt
 
 	# NQUADS t8 ends up including todays datetime in data so not reproducable
-t8:
-	node ./data.js -in=t5.n3  -format=application/n-quads -dump=,t8.nq
-	diff ,t8.nq t8-ref.nq
-	#   NTriple output
+#t8:
+#	node ./data.js -in=t5.n3  -format=application/n-quads -dump=,t8.nq
+#	diff ,t8.nq t8-ref.nq
+#	#   NTriple output
+
+#    We can't at the moment serialize json?
 t9:
 		node ./data.js -in=t7.n3 -format=application/ld+json -out=,t9.json
 		diff ,t9.json t9-ref.json
@@ -49,3 +51,13 @@ t9:
 t10:
 	node ./data.js -in=details.ttl -format=text/turtle -out=,t10.ttl
 	diff ,t10.ttl t10-ref.ttl
+
+t11:
+	 node ./data.js -in=structures.n3 -format=application/rdf+xml  -out=,structures.xml
+	 diff ,structures.xml t11-ref.xml
+ t12:
+		node ./data.js -in=structures.n3 -format=text/turtle  -out=,structures.ttl
+	 	diff ,structures.ttl t12-ref.ttl
+t13:
+	 	node ./data.js -in=structures.n3 -format=application/n-triples  -out=,structures.nt
+	 	diff ,structures.nt t13-ref.ttl
