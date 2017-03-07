@@ -1,99 +1,108 @@
 {
-  "name": "rdflib",
-  "description": "an RDF library for node.js. Suitable for client and server side.",
-  "version": "0.15.0",
-  "engines": {
-    "node": ">=6.0"
-  },
-  "private": false,
-  "author": {
-    "name": "Tim BL",
-    "email": "timbl@w3.org"
-  },
-  "contributors": [
-    {
-      "name": "Dmitri Zagidulin",
-      "url": "https://github.com/dmitrizagidulin/"
+    "name": "rdflib",
+    "description": "an RDF library for node.js. Suitable for client and server side.",
+    "version": "0.14.0",
+    "engines": {
+        "node": ">=^6.0"
     },
-    {
-      "name": "Daniel Friedman",
-      "url": "https://github.com/dan-f/"
+    "private": false,
+    "author": {
+        "name": "Tim BL",
+        "email": "timbl@w3.org"
+    },
+    "contributors": [ {
+            "name": "Dmitri Zagidulin",
+            "url": "https://github.com/dmitrizagidulin/"
+        },
+        {
+            "name": "Daniel Friedman",
+            "url": "https://github.com/dan-f/"
+        }
+    ],
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/linkeddata/rdflib.js.git"
+    },
+    "homepage": "http://github.com/linkeddata/rdflib.js",
+    "bugs": "http://github.com/linkeddata/rdflib.js/issues",
+    "dependencies": {
+        "async": "^0.9.x",
+        "jsonld": "^0.4.5",
+        "n3": "^0.4.1",
+        "xmldom": "^0.1.22",
+        "xmlhttprequest": "^1.7.0"
+    },
+    "devDependencies": {
+        "babel-cli": "^6.11.4",
+        "babel-preset-es2015": "^6.9.0",
+        "babel-register": "^6.18.0",
+        "babelify": "^7.3.0",
+        "browserify": "^13.0.0",
+        "chai": "^3.5.0",
+        "fs-grep": "^0.0.5",
+        "minifyify": "^7.3.2",
+        "mocha": "^3.2.0",
+        "node-mkdirp": "0.0.1",
+        "rimraf": "^2.6.1",
+        "jsdiff-cli": "^0.1.2"
+    },
+    "scripts": {
+        "test": "npm run test:unit && npm run test:serialize",
+        "test:unit": "mocha --growl --require babel-register tests/unit/**-test.js",
+        "test:unit:dev": "mocha --watch --growl --require babel-register tests/unit/**-test.js",
+        "test:serialize": "npm run lib  && npm run serialize-tests && npm run cleantest",
+        "dist": "mkdirp dist",
+        "dist/rdflib.js": "browserify -r ./src/index.js:rdflib --exclude 'xmlhttprequest' --standalone '$rdf' -t [ babelify --presets [ es2015 ] ] -o dist/rdflib.js",
+        "dist/rdflib.min.js": "browserify -r ./src/index.js:rdflib --exclude 'xmlhttprequest' --standalone '$$rdf' -d -t [ babelify --presets [ es2015 ] ] -p [ minifyify --no-map --uglify [ --compress [ --dead_code --conditionals --unused --if_return ] --mangle --screw-ie8 ] ] -o dist/rdflib.min.js",
+        "all": "npm run dist && npm run dist/rdflib.js && npm run dist/rdflib.min.js",
+        "lib": "babel src -d lib",
+        "detach": "git checkout origin/master &&  git reset--hard HEAD",
+        "clean": "rimraf dist/* lib/*",
+        "cleantest": "rimraf tests/serialize/,*",
+        "status": "@git branch -v && @git status -s",
+        "minify": "npm run dist/rdflib.min.js",
+        "size": "node-line-counter .",
+        "gh-pages": "npm run detach && git branch - D gh - pages ||: && git checkout - b gh - pages && npm run all && git add - f dist /*.js src/*.js *.js && git commit -m 'gh-pages: update to latest' && git push -f origin gh-pages && git checkout master",
+        "prepublish": "npm run lib",
+        "serialize-tests": "npm run t1 && npm run t2 && npm run t3 && npm run t4 && npm run t5 && npm run t6 && npm run t7",
+        "t1": "cd tests/serialize && node ./data.js -in=t1.ttl -format=application/rdf+xml -out=,t1.xml && fs-grep http://www.w3.org/2001/XMLSchema#integer ,t1.xml",
+        "t2": "cd tests/serialize && node ./data.js -in=t2.ttl -format=application/rdf+xml  -out=,t2.xml && jsdiff ,t2.xml t2-ref.xml",
+        "t3": "cd tests/serialize && node ./data.js -in=t3.ttl -format=application/rdf+xml  -out=,t3.xml && jsdiff ,t3.xml t3-ref.xml",
+        "t4": "cd tests/serialize && node ./data.js -in=t3.ttl -out=,t4.ttl && jsdiff ,t4.ttl t4-ref.ttl",
+        "t5": "cd tests/serialize && node ./data.js -in=t5.n3 -format=text/turtle -out=,t5.ttl && jsdiff ,t5.ttl t5-ref.ttl",
+        "t6": "cd tests/serialize && node ./data.js -in=t5.n3 -format=text/n3 -out=,t6.n3 && jsdiff ,t6.n3 t6-ref.n3",
+        "t7": "cd tests/serialize && node ./data.js -in=t7.n3 -format=application/n-triples -out=,t7.nt && jsdiff ,t7.nt t7-ref.nt",
+        "t8": "cd tests/serialize && node ./data.js -in=t5.n3  -format=application/n-quads -dump=,t8.nq && jsdiff ,t8.nq t8-ref.nq",
+        "t9": "cd tests/serialize && node ./data.js -in=t7.n3 -format=application/ld+json -out=,t9.json && jsdiff ,t9.json t9-ref.json"
+    },
+    "files": [
+        "dist",
+        "dist/rdflib.js",
+        "lib",
+        "src"
+    ],
+    "main": "lib/index.js",
+    "keywords": [
+        "linkeddata",
+        "linked data",
+        "rdf",
+        "rdfa",
+        "turtle",
+        "semantic",
+        "web",
+        "read-write web"
+    ],
+    "standard": {
+        "globals": [
+            "ActiveXObject",
+            "Components",
+            "DOMParser",
+            "netscape",
+            "$rdf",
+            "Services",
+            "tabulator",
+            "WebSocket"
+        ]
     }
-  ],
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/linkeddata/rdflib.js.git"
-  },
-  "homepage": "http://github.com/linkeddata/rdflib.js",
-  "bugs": "http://github.com/linkeddata/rdflib.js/issues",
-  "dependencies": {
-    "async": "^0.9.x",
-    "jsonld": "^0.4.5",
-    "n3": "^0.4.1",
-    "xmldom": "^0.1.22",
-    "xmlhttprequest": "^1.7.0"
-  },
-  "devDependencies": {
-    "babel-cli": "^6.11.4",
-    "babel-preset-es2015": "^6.9.0",
-    "babel-register": "^6.18.0",
-    "babelify": "^7.3.0",
-    "browserify": "^13.0.0",
-    "chai": "^3.5.0",
-    "fs-grep": "^0.0.5",
-    "minifyify": "^7.3.2",
-    "mocha": "^3.2.0",
-    "node-mkdirp": "0.0.1",
-    "rimraf": "^2.6.1",
-    "jsdiff-cli": "^0.1.2"
-  },
-  "scripts": {
-    "test": "npm run test:unit && npm run test:serialize",
-    "test:unit": "mocha --growl --require babel-register tests/unit/**-test.js",
-    "test:unit:dev": "mocha --watch --growl --require babel-register tests/unit/**-test.js",
-    "test:serialize": "npm run lib  && cd tests/serialize && npm run all && cd ../.. && npm run cleantest",
-    "dist": "mkdirp dist",
-    "dist/rdflib.js": "browserify -r ./src/index.js:rdflib --exclude 'xmlhttprequest' --standalone '$rdf' -t [ babelify --presets [ es2015 ] ] -o dist/rdflib.js",
-    "dist/rdflib.min.js": "browserify -r ./src/index.js:rdflib --exclude 'xmlhttprequest' --standalone '$$rdf' -d -t [ babelify --presets [ es2015 ] ] -p [ minifyify --no-map --uglify [ --compress [ --dead_code --conditionals --unused --if_return ] --mangle --screw-ie8 ] ] -o dist/rdflib.min.js",
-    "all": "npm run dist && npm run dist/rdflib.js && npm run dist/rdflib.min.js",
-    "lib": "babel src -d lib",
-    "detach": "git checkout origin/master &&  git reset--hard HEAD",
-    "clean": "rimraf dist/* lib/*",
-    "cleantest": "rimraf tests/serialize/,*",
-    "status": "@git branch -v && @git status -s",
-    "minify": "npm run dist/rdflib.min.js",
-    "size": "node-line-counter .",
-    "gh-pages": "npm run detach && git branch - D gh - pages ||: && git checkout - b gh - pages && npm run all && git add - f dist /*.js src/*.js *.js && git commit -m 'gh-pages: update to latest' && git push -f origin gh-pages && git checkout master",
-    "prepublish": "npm run lib"
-  },
-  "files": [
-    "dist",
-    "dist/rdflib.js",
-    "lib",
-    "src"
-  ],
-  "main": "lib/index.js",
-  "keywords": [
-    "linkeddata",
-    "linked data",
-    "rdf",
-    "rdfa",
-    "turtle",
-    "semantic",
-    "web",
-    "read-write web"
-  ],
-  "standard": {
-    "globals": [
-      "ActiveXObject",
-      "Components",
-      "DOMParser",
-      "netscape",
-      "$rdf",
-      "Services",
-      "tabulator",
-      "WebSocket"
-    ]
-  }
 }
