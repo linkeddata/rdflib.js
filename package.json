@@ -66,7 +66,7 @@
     "size": "node-line-counter .",
     "gh-pages": "npm run detach && git branch - D gh - pages ||: && git checkout - b gh - pages && npm run all && git add - f dist /*.js src/*.js *.js && git commit -m 'gh-pages: update to latest' && git push -f origin gh-pages && git checkout master",
     "prepublish": "npm run lib",
-    "serialize-tests": "npm run t1 && npm run t2 && npm run t3 && npm run t4 && npm run t5 && npm run t6 && npm run t7",
+    "serialize-tests": "npm run serialize-test-1 && npm run serialize-test-2 && npm run serialize-test-3 && npm run serialize-test-4 && npm run serialize-test-5 && npm run serialize-test-6 && npm run serialize-test-7",
     "serialize-test-1": "cd tests/serialize && node ./data.js -in=t1.ttl -format=application/rdf+xml -out=,t1.xml && fs-grep http://www.w3.org/2001/XMLSchema#integer ,t1.xml",
     "serialize-test-2": "cd tests/serialize && node ./data.js -in=t2.ttl -format=application/rdf+xml  -out=,t2.xml && jsdiff ,t2.xml t2-ref.xml",
     "serialize-test-3": "cd tests/serialize && node ./data.js -in=t3.ttl -format=application/rdf+xml  -out=,t3.xml && jsdiff ,t3.xml t3-ref.xml",
