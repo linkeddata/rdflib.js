@@ -42,7 +42,7 @@ class Collection extends Node {
     return this.elements.unshift(element)
   }
 }
-Collection.termType = 'collection'
+Collection.termType = 'Collection'
 Collection.prototype.classOrder = ClassOrder['Collection']
 Collection.prototype.compareTerm = BlankNode.prototype.compareTerm
 Collection.prototype.isVar = 0

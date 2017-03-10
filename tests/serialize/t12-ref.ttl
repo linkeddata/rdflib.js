@@ -25,7 +25,8 @@ _:n4 :name "Coretta Scott King".
 
 [ a :Speech; :author :MLK; :date "1963-08-23"^^XML:date; :title "I have a dream" ].
 
-[ :name "Bernice King" ].
-
-[ a :Marriage; :offspring ( :MLK3 :DSK :YK _:n6 ); :spouse :MLK, _:n4 ].
-
+[
+    a :Marriage;
+    :offspring ( :MLK3 :DSK :YK [ :name "Bernice King" ] );
+    :spouse :MLK, _:n4
+].

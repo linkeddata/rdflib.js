@@ -22,16 +22,13 @@
                 <rdf:Description rdf:about="#YK">
                    <str:name>Yolanda King</str:name>
                 </rdf:Description>
-                <rdf:Description rdf:nodeID="n6">
+                <rdf:Description>
                    <str:name>Bernice King</str:name>
                 </rdf:Description>
         </str:offspring>
         <str:spouse rdf:resource="#MLK"/>
         <str:spouse rdf:nodeID="n4"/>
         <rdf:type rdf:resource="#Marriage"/>
-    </rdf:Description>
-    <rdf:Description rdf:nodeID="n6">
-       <str:name>Bernice King</str:name>
     </rdf:Description>
     <rdf:Description rdf:about="#MLK3">
        <str:name>Martin Luther King III</str:name>

@@ -41,7 +41,7 @@ var Serializer = (function () {
 
   __Serializer.prototype.toStr = function (x) {
     var s = x.toNT()
-    if (x.termType === 'formula') {
+    if (x.termType === 'Graph') {
       this.formulas[s] = x // remember as reverse does not work
     }
     return s
@@ -157,7 +157,7 @@ var Serializer = (function () {
       st2.map(function (y) {
         if (y.termType === 'BlankNode') { allBnodes[y.toNT()] = true }
         else if (y.termType === 'Collection') {
-          y.elements.forAll(function(z){
+          y.elements.forEach(function(z){
             checkMentions(z) // bnodes in collections important
           })
         }
@@ -220,7 +220,7 @@ var Serializer = (function () {
     var self = this
     var kb = this.store
     var termToNT = function (x) {
-      if (x.termType !== 'collection') {
+      if (x.termType !== 'Collection') {
         return self.atomicTermToN3(x)
       }
       var list = x.elements
@@ -414,12 +414,12 @@ var Serializer = (function () {
     function termToN3Method (expr, stats) { //
       var i, res
       switch (expr.termType) {
-        case 'formula':
+        case 'Graph':
           res = ['{']
           res = res.concat(statementListToTree(expr.statements))
           return res.concat(['}'])
 
-        case 'collection':
+        case 'Collection':
           res = ['(']
           for (i = 0; i < expr.elements.length; i++) {
             res.push([ objectTree(expr.elements[i], stats) ])
@@ -837,7 +837,7 @@ var Serializer = (function () {
             '>' + escapeForXML(st.object.value) +
             '</' + t + '>'])
             break
-          case 'collection':
+          case 'Collection':
             results = results.concat(['<' + t + ' rdf:parseType="Collection">',
               collectionXMLTree(st.object, stats),
               '</' + t + '>'])
@@ -901,7 +901,7 @@ var Serializer = (function () {
               '>' + escapeForXML(st.object.value) +
               '</' + qname(st.predicate) + '>'])
             break
-          case 'collection':
+          case 'Collection':
             results = results.concat(['<' + qname(st.predicate) + ' rdf:parseType="Collection">',
               collectionXMLTree(st.object, stats),
               '</' + qname(st.predicate) + '>'])
