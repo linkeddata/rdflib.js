@@ -761,8 +761,9 @@ var Serializer = (function () {
       var results = []
       var type, t, st, pred
       var sts = stats.subjects[this.toStr(subject)] // relevant statements
-      if (typeof sts === 'undefined') {
-        throw new Error('Serializing XML - Cant find statements for ' + subject)
+      if (typeof sts === 'undefined') { // empty bnode
+        return propertyXMLTree(subject, stats)
+        // throw new Error('Serializing XML - Cant find statements for ' + subject)
       }
 
       // Sort only on the predicate, leave the order at object
@@ -816,7 +817,7 @@ var Serializer = (function () {
         switch (st.object.termType) {
           case 'BlankNode':
             if (stats.incoming[st.object].length === 1) { // there should always be something in the incoming array for a bnode
-              results = results.concat(['<' + t + '>',
+              results = results.concat(['<' + t + ' rdf:parseType="Resource">',
                 subjectXMLTree(st.object, stats),
                 '</' + t + '>'])
             } else {
