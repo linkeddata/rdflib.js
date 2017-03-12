@@ -4,6 +4,8 @@
     <rdf:Description rdf:about="#MLK">
         <str:born rdf:datatype="http://www.w3.org/2001/XMLSchema#date">1929-01-17</str:born>
         <str:died rdf:datatype="http://www.w3.org/2001/XMLSchema#date">1968-01-15</str:died>
+        <str:friend rdf:parseType="Resource">
+            </str:friend>
         <str:name>Martin Luther King, Jr</str:name>
         <str:spouse rdf:nodeID="n4"/>
         <str:wikipediapage rdf:resource="https://en.wikipedia.org/wiki/Martin_Luther_King_Jr."/>
@@ -39,7 +41,13 @@
     <rdf:Description rdf:about="#YK">
        <str:name>Yolanda King</str:name>
     </rdf:Description>
-    <rdf:Description rdf:nodeID="n8">
+    <rdf:Description rdf:nodeID="n9">
+       <str:friend rdf:resource="#MLK"/>
+    </rdf:Description>
+    <rdf:Description rdf:nodeID="n10">
+       <str:loves rdf:parseType="Resource"></str:loves>
+    </rdf:Description>
+    <rdf:Description rdf:nodeID="n12">
         <str:author rdf:resource="#MLK"/>
         <str:date rdf:datatype="http://www.w3.org/2001/XMLSchema#date">1963-08-23</str:date>
         <str:title>I have a dream</str:title>

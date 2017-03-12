@@ -17,6 +17,10 @@
 :DSK :name "Dexter Scott King".
 :YK :name "Yolanda King".
 
+:MLK :friend [].  # bnode with only one incoming arc
+[] :friend :MLK.  # bnode with only one outgoing arc
+
+[] :loves [].  # A floating arc between two bnodes
 
 :MLK is :author of  [a :Speech ; :date 1963-08-23; :title "I have a dream"] .
 

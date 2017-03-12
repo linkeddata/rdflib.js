@@ -374,7 +374,7 @@ var Serializer = (function () {
       // print('Proprty tree for '+subject)
       var results = []
       var lastPred = null
-      var sts = stats.subjects[this.toStr(subject)] // relevant statements
+      var sts = stats.subjects[this.toStr(subject)] || [] // relevant statements
       if (typeof sts === 'undefined') {
         throw new Error('Cant find statements for ' + subject)
       }
@@ -402,9 +402,13 @@ var Serializer = (function () {
 
     function objectTreeMethod (obj, stats, force) {
       if (obj.termType === 'BlankNode' &&
-        stats.subjects[this.toStr(obj)] && // and there are statements
+        // stats.subjects[this.toStr(obj)] && // and there are statements 20170312
         (force || stats.rootsHash[obj.toNT()] === undefined)) {// and not a root
-          return ['[', propertyTree(obj, stats), ']']
+          if (stats.subjects[this.toStr(obj)]){
+            return ['[', propertyTree(obj, stats), ']']
+          } else {
+            return '[]'
+          }
           // return ['['].concat(propertyTree(obj, stats)).concat([']'])
       }
       return termToN3(obj, stats)
