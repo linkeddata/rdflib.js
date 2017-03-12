@@ -58,6 +58,8 @@ t11:
  t12:
 		node ./data.js -in=structures.n3 -format=text/turtle  -out=,structures.ttl
 	 	diff ,structures.ttl t12-ref.ttl
+#  We can't just test for nt because
 t13:
-	 	node ./data.js -in=structures.n3 -format=application/n-triples  -out=,structures.nt
-	 	diff ,structures.nt t13-ref.nt
+		node ./data.js -in=structures.n3 -format=application/n-triples  -out=,structures.nt
+		node ./data.js -format=application/n-triples -in=,structures.nt -format=text/turtle -out=,structures.nt.ttl
+	 	diff ,structures.nt.ttl t13-ref.ttl
