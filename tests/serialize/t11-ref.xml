@@ -1,6 +1,6 @@
 <rdf:RDF
  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
- xmlns:str="file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/structures.n3#">
+ xmlns:str="#">
     <rdf:Description rdf:about="#MLK">
         <str:born rdf:datatype="http://www.w3.org/2001/XMLSchema#date">1929-01-17</str:born>
         <str:died rdf:datatype="http://www.w3.org/2001/XMLSchema#date">1968-01-15</str:died>

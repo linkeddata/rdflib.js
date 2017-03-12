@@ -955,7 +955,9 @@ var Serializer = (function () {
     }
     for (var ns in namespaceCounts) {
       if (!namespaceCounts.hasOwnProperty(ns)) continue
-      str += '\n xmlns:' + this.prefixes[ns] + '="' + escapeForXML(ns) + '"'
+      // Rel uris in xml ns is not strictly allowed in the spec but needed in practice often
+      var ns2 = (this.base && this.flags.indexOf('Z') < 0) ? Util.uri.refTo(this.base, ns) : ns
+      str += '\n xmlns:' + this.prefixes[ns] + '="' + escapeForXML(ns2) + '"'
     }
     str += '>'
 
