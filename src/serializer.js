@@ -767,7 +767,6 @@ var Serializer = (function () {
       var sts = stats.subjects[this.toStr(subject)] // relevant statements
       if (typeof sts === 'undefined') { // empty bnode
         return propertyXMLTree(subject, stats)
-        // throw new Error('Serializing XML - Cant find statements for ' + subject)
       }
 
       // Sort only on the predicate, leave the order at object
