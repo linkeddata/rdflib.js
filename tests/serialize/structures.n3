@@ -26,10 +26,22 @@
 
 # Datatypes
 :ZooReading1
-  :enabled true;
-  :disabled false;
-  :count 16;
-  :sensitivity -1.6507e-6;
-  :temp 25.30;  :dollars  -12.30;
+  :boolEnabled true;
+  :boolDisabled false;
+
+  :intCount 16;
+  :intNegative -123;
+  :intBig  1234567890;
+
+  :decWithPoint 10.0;
+  :decBig  1234567890.99;
+  :decWithPointNegative -10.0;
+  :decBigNegative  -1234567890.99;
+
+  :floatSmallNegative -1.6507e-6;
+  :floatTen   10.0e0;
+  :floatOne 1e0;
+  :floatBig 3.14159e100;
+
   :time 2015-03-16T17:53Z;
   :date 2015-02-28 .

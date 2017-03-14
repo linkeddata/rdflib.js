@@ -16,13 +16,20 @@ str:MLK3 str:name "Martin Luther King III".
 str:YK str:name "Yolanda King".
 
 str:ZooReading1
-    str:count 16;
+    str:boolDisabled true;
+    str:boolEnabled true;
     str:date "2015-02-28"^^XML:date;
-    str:disabled true;
-    str:dollars -12.3;
-    str:enabled true;
-    str:sensitivity -0.0000016507e0;
-    str:temp 25.3;
+    str:decBig 1234567890.99;
+    str:decBigNegative -1234567890.99;
+    str:decWithPoint 10.0;
+    str:decWithPointNegative -10.0;
+    str:floatBig 3.14159e+100;
+    str:floatOne 1.0e0;
+    str:floatSmallNegative -0.0000016507e0;
+    str:floatTen 10.0e0;
+    str:intBig 1234567890;
+    str:intCount 16;
+    str:intNegative -123;
     str:time "2015-03-16T17:53Z"^^XML:dateTime.
 _:n5 str:name "Coretta Scott King".
 

@@ -54,13 +54,20 @@
         <rdf:type rdf:resource="#Speech"/>
     </rdf:Description>
     <rdf:Description rdf:about="#ZooReading1">
-        <str:count rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">16</str:count>
+        <str:boolDisabled rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">0</str:boolDisabled>
+        <str:boolEnabled rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">1</str:boolEnabled>
         <str:date rdf:datatype="http://www.w3.org/2001/XMLSchema#date">2015-02-28</str:date>
-        <str:disabled rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">0</str:disabled>
-        <str:dollars rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">-12.3</str:dollars>
-        <str:enabled rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">1</str:enabled>
-        <str:sensitivity rdf:datatype="http://www.w3.org/2001/XMLSchema#double">-0.0000016507</str:sensitivity>
-        <str:temp rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">25.3</str:temp>
+        <str:decBig rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1234567890.99</str:decBig>
+        <str:decBigNegative rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">-1234567890.99</str:decBigNegative>
+        <str:decWithPoint rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">10</str:decWithPoint>
+        <str:decWithPointNegative rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">-10</str:decWithPointNegative>
+        <str:floatBig rdf:datatype="http://www.w3.org/2001/XMLSchema#double">3.14159e+100</str:floatBig>
+        <str:floatOne rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1</str:floatOne>
+        <str:floatSmallNegative rdf:datatype="http://www.w3.org/2001/XMLSchema#double">-0.0000016507</str:floatSmallNegative>
+        <str:floatTen rdf:datatype="http://www.w3.org/2001/XMLSchema#double">10</str:floatTen>
+        <str:intBig rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1234567890</str:intBig>
+        <str:intCount rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">16</str:intCount>
+        <str:intNegative rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">-123</str:intNegative>
         <str:time rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2015-03-16T17:53Z</str:time>
     </rdf:Description>
 </rdf:RDF>

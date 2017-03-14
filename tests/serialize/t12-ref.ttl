@@ -14,13 +14,20 @@
 :YK :name "Yolanda King".
 
 :ZooReading1
-    :count 16;
+    :boolDisabled true;
+    :boolEnabled true;
     :date "2015-02-28"^^XML:date;
-    :disabled true;
-    :dollars -12.3;
-    :enabled true;
-    :sensitivity -0.0000016507e0;
-    :temp 25.3;
+    :decBig 1234567890.99;
+    :decBigNegative -1234567890.99;
+    :decWithPoint 10.0;
+    :decWithPointNegative -10.0;
+    :floatBig 3.14159e+100;
+    :floatOne 1.0e0;
+    :floatSmallNegative -0.0000016507e0;
+    :floatTen 10.0e0;
+    :intBig 1234567890;
+    :intCount 16;
+    :intNegative -123;
     :time "2015-03-16T17:53Z"^^XML:dateTime.
 _:n4 :name "Coretta Scott King".
 
