@@ -89,7 +89,8 @@ var doNext = function (remaining) {
 
         case '-out':
           try {
-            var out = $rdf.serialize(targetDocument, kb, targetDocument.uri, contentType)
+            var options = {flags: 'z'} // Only applies to RDF/XML
+            var out = $rdf.serialize(targetDocument, kb, targetDocument.uri, contentType, undefined, options)
           } catch(e) {
             exitMessage('Error in serializer: ' + e + stackString(e))
           }
