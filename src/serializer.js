@@ -249,8 +249,11 @@ var Serializer = (function () {
     }
     sts.sort(SPO)
 
-    var predMap = {}
+    if (this.base && !this.defaultNamespace){
+      this.defaultNamespace = this.base + '#'
+    }
 
+    var predMap = {}
     if (this.flags.indexOf('s') < 0) {
       predMap['http://www.w3.org/2002/07/owl#sameAs'] = '='
     }
@@ -426,7 +429,7 @@ var Serializer = (function () {
     function prefixDirectivesMethod () {
       var str = ''
       if (this.defaultNamespace) {
-        str += '@prefix : <' + this.defaultNamespace + '>.\n'
+        str += '@prefix : ' + this.explicitURI(this.defaultNamespace) + '.\n'
       }
       for (var ns in this.prefixes) {
         if (!this.prefixes.hasOwnProperty(ns)) continue
@@ -550,7 +553,7 @@ var Serializer = (function () {
           break
         }
       }
-
+/*
       if (uri.slice(0, j + 1) === this.base + '#') { // base-relative
         if (canSplit) {
           return ':' + uri.slice(j + 1) // assume deafult ns is local
@@ -558,6 +561,7 @@ var Serializer = (function () {
           return '<#' + uri.slice(j + 1) + '>'
         }
       }
+*/
       if (canSplit) {
         var localid = uri.slice(j + 1)
         var namesp = uri.slice(0, j + 1)

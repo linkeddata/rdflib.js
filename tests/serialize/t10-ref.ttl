@@ -1,3 +1,4 @@
+@prefix : <#>.
 @prefix dc: <http://purl.org/dc/elements/1.1/>.
 @prefix sch: <http://www.w3.org/ns/pim/schedule#>.
 @prefix c: <https://www.w3.org/People/Berners-Lee/card#>.

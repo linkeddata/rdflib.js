@@ -1,3 +1,4 @@
+@prefix : <#>.
 @prefix n0: <https://example.net/67890#>.
 @prefix n1: <https://example.net/88888#>.
 @prefix n2: <https://example.org/67890#>.

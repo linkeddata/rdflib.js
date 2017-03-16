@@ -1,3 +1,4 @@
+@prefix : <#>.
 
 :subj a :TestCase; = :other.
 
