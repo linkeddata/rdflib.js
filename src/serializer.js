@@ -1,15 +1,10 @@
 /*      Serialization of RDF Graphs
 **
 ** Tim Berners-Lee 2006
-** This is or was http://dig.csail.mit.edu/2005/ajar/ajaw/js/rdf/serialize.js
-**
-** Bug: can't serialize  http://data.semanticweb.org/person/abraham-bernstein/rdf
-** in XML (from mhausenblas)
-**
-** Todo: repeatable order of statments, with rdf:type as first pred.
-**
+** This is was http://dig.csail.mit.edu/2005/ajar/ajaw/js/rdf/serialize.js
+** This is or was https://github.com/linkeddata/rdflib.js/blob/master/src/serializer.js
+** Licence: MIT
 */
-// @@@ Check the whole toStr thing tosee whetehr it still makes sense -- tbl
 const NamedNode = require('./named-node')
 const BlankNode = require('./blank-node')
 const Uri = require('./uri')
@@ -130,9 +125,6 @@ var Serializer = (function () {
     }
     for (var j = 0; ; j++) if (canUse(p.slice(0, 3) + j)) return p.slice(0, 3) + j
   }
-  // Todo:
-  //  - Sort the statements by subject, pred, object
-  //  - do stuff about the docu first and then (or first) about its primary topic.
 
   __Serializer.prototype.rootSubjects = function (sts) {
     var incoming = {}
@@ -146,7 +138,6 @@ var Serializer = (function () {
     ** This should be kept linear time with repect to the number of statements.
     ** Note it does not use any indexing of the store.
     */
-    // $rdf.log.debug('serialize.js Find bnodes with only one incoming arc\n')
     for (var i = 0; i < sts.length; i++) {
       var st = sts[i]
       var checkMentions = function (x) {
@@ -168,7 +159,6 @@ var Serializer = (function () {
       if (!ss) ss = []
       ss.push(st)
       subjects[this.toStr(st.subject)] = ss // Make hash. @@ too slow for formula?
-    // $rdf.log.debug(' sz potential subject: '+sts[i].subject)
     }
 
     var roots = []
@@ -183,7 +173,6 @@ var Serializer = (function () {
     this.incoming = incoming // Keep for serializing @@ Bug for nested formulas
 
     // Now do the scan using existing roots
-    // $rdf.log.debug('serialize.js Dummy serialize to check for missing nodes')
     var rootsHash = {}
     for (var k = 0; k < roots.length; k++) {
       rootsHash[roots[k].toNT()] = true
@@ -260,8 +249,6 @@ var Serializer = (function () {
     }
     sts.sort(SPO)
 
-    // this.suggestPrefix('', this.base)
-
     var predMap = {}
 
     if (this.flags.indexOf('s') < 0) {
@@ -316,7 +303,7 @@ var Serializer = (function () {
               substr.indexOf('"""') < 0) { // Don't mess up multiline strings
             var line = treeToLine(branch)
             if (line.length < (width - indent * level)) {
-              branch = line //   @@ Hack: treat as string below // was '   ' + line
+              branch = line //   Note! treat as string below
               substr = ''
             }
           }
@@ -372,7 +359,6 @@ var Serializer = (function () {
     }
     // The property tree for a single subject or anonymous node
     function propertyTreeMethod (subject, stats) {
-      // print('Proprty tree for '+subject)
       var results = []
       var lastPred = null
       var sts = stats.subjects[this.toStr(subject)] || [] // relevant statements
@@ -403,14 +389,12 @@ var Serializer = (function () {
 
     function objectTreeMethod (obj, stats, force) {
       if (obj.termType === 'BlankNode' &&
-        // stats.subjects[this.toStr(obj)] && // and there are statements 20170312
-        (force || stats.rootsHash[obj.toNT()] === undefined)) {// and not a root
+        (force || stats.rootsHash[obj.toNT()] === undefined)) {// if not a root
         if (stats.subjects[this.toStr(obj)]) {
           return ['[', propertyTree(obj, stats), ']']
         } else {
           return '[]'
         }
-          // return ['['].concat(propertyTree(obj, stats)).concat([']'])
       }
       return termToN3(obj, stats)
     }
@@ -455,7 +439,6 @@ var Serializer = (function () {
     var prefixDirectives = prefixDirectivesMethod.bind(this)
     // Body of statementsToN3:
     var tree = statementListToTree(sts)
-    // console.log("Tree: " + JSON.stringify(tree))
     return prefixDirectives() + treeToString(tree)
   }
   // //////////////////////////////////////////// Atomic Terms
@@ -586,7 +569,7 @@ var Serializer = (function () {
           }
           return ':' + localid
         }
-        this.checkIntegrity() //  @@@ Remove when not testing
+        // this.checkIntegrity() //  @@@ Remove when not testing
         var prefix = this.prefixes[namesp]
         if (!prefix) prefix = this.makeUpPrefix(namesp)
         if (prefix) {
