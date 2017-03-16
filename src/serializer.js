@@ -1,12 +1,10 @@
 /*      Serialization of RDF Graphs
 **
 ** Tim Berners-Lee 2006
-** This is or was http://dig.csail.mit.edu/2005/ajar/ajaw/js/rdf/serialize.js
-**
-** Bug: can't serialize  http://data.semanticweb.org/person/abraham-bernstein/rdf
-** in XML (from mhausenblas)
+** This is was http://dig.csail.mit.edu/2005/ajar/ajaw/js/rdf/serialize.js
+** This is or was https://github.com/linkeddata/rdflib.js/blob/master/src/serializer.js
+** Licence: MIT
 */
-// @@@ Check the whole toStr thing tosee whetehr it still makes sense -- tbl
 const NamedNode = require('./named-node')
 const BlankNode = require('./blank-node')
 const Uri = require('./uri')
@@ -38,7 +36,7 @@ var Serializer = (function () {
 
   __Serializer.prototype.toStr = function (x) {
     var s = x.toNT()
-    if (x.termType === 'formula') {
+    if (x.termType === 'Graph') {
       this.formulas[s] = x // remember as reverse does not work
     }
     return s
@@ -127,9 +125,6 @@ var Serializer = (function () {
     }
     for (var j = 0; ; j++) if (canUse(p.slice(0, 3) + j)) return p.slice(0, 3) + j
   }
-  // Todo:
-  //  - Sort the statements by subject, pred, object
-  //  - do stuff about the docu first and then (or first) about its primary topic.
 
   __Serializer.prototype.rootSubjects = function (sts) {
     var incoming = {}
@@ -143,21 +138,27 @@ var Serializer = (function () {
     ** This should be kept linear time with repect to the number of statements.
     ** Note it does not use any indexing of the store.
     */
-    // $rdf.log.debug('serialize.js Find bnodes with only one incoming arc\n')
     for (var i = 0; i < sts.length; i++) {
       var st = sts[i]
+      var checkMentions = function (x) {
+        if (!incoming.hasOwnProperty(x)) incoming[x] = []
+        incoming[x].push(st.subject) // List of things which will cause this to be printed
+      }
       var st2 = [st.subject, st.predicate, st.object]
       st2.map(function (y) {
-        if (y.termType === 'BlankNode') { allBnodes[y.toNT()] = true }
+        if (y.termType === 'BlankNode') {
+          allBnodes[y.toNT()] = true
+        } else if (y.termType === 'Collection') {
+          y.elements.forEach(function (z) {
+            checkMentions(z) // bnodes in collections important
+          })
+        }
       })
-      var x = sts[i].object
-      if (!incoming.hasOwnProperty(x)) incoming[x] = []
-      incoming[x].push(st.subject) // List of things which will cause this to be printed
+      checkMentions(sts[i].object)
       var ss = subjects[this.toStr(st.subject)] // Statements with this as subject
       if (!ss) ss = []
       ss.push(st)
       subjects[this.toStr(st.subject)] = ss // Make hash. @@ too slow for formula?
-    // $rdf.log.debug(' sz potential subject: '+sts[i].subject)
     }
 
     var roots = []
@@ -172,7 +173,6 @@ var Serializer = (function () {
     this.incoming = incoming // Keep for serializing @@ Bug for nested formulas
 
     // Now do the scan using existing roots
-    // $rdf.log.debug('serialize.js Dummy serialize to check for missing nodes')
     var rootsHash = {}
     for (var k = 0; k < roots.length; k++) {
       rootsHash[roots[k].toNT()] = true
@@ -210,7 +210,7 @@ var Serializer = (function () {
     var self = this
     var kb = this.store
     var termToNT = function (x) {
-      if (x.termType !== 'collection') {
+      if (x.termType !== 'Collection') {
         return self.atomicTermToN3(x)
       }
       var list = x.elements
@@ -241,9 +241,19 @@ var Serializer = (function () {
   __Serializer.prototype.statementsToN3 = function (sts) {
     var indent = 4
     var width = 80
+    var kb = this.store
+    // A URI Map alows us to put the type statemnts at the top.
+    var uriMap = {'http://www.w3.org/1999/02/22-rdf-syntax-ns#type': 'aaa:00'}
+    var SPO = function (x, y) { // Do limited canonicalization of bnodes
+      return Util.heavyCompareSPO(x, y, kb, uriMap)
+    }
+    sts.sort(SPO)
+
+    if (this.base && !this.defaultNamespace){
+      this.defaultNamespace = this.base + '#'
+    }
 
     var predMap = {}
-
     if (this.flags.indexOf('s') < 0) {
       predMap['http://www.w3.org/2002/07/owl#sameAs'] = '='
     }
@@ -267,8 +277,15 @@ var Serializer = (function () {
         var branch = tree[i]
         var s2 = (typeof branch === 'string') ? branch : treeToLine(branch)
         // Note the space before the dot in case statement ends 123. which is in fact allowed but be conservative.
-        if (i !== 0 && s2 !== ',' && s2 !== ';') {
-          str += ' ' // was also:  && s2 !== '.'
+        if (i !== 0) {
+          var ch = str.slice(-1) || ' '
+          if (s2 === ',' || s2 === ';') {
+            // no gap
+          } else if (s2 === '.' && !('0123456789.'.includes(ch))) { // no gap except after number
+            // no gap
+          } else {
+            str += ' ' // separate from previous token
+          }
         }
         str += s2
       }
@@ -279,7 +296,7 @@ var Serializer = (function () {
     var treeToString = function (tree, level) {
       var str = ''
       var lastLength = 100000
-      if (!level) level = 0
+      if (level === undefined) level = -1
       for (var i = 0; i < tree.length; i++) {
         var branch = tree[i]
         if (typeof branch !== 'string') {
@@ -289,7 +306,7 @@ var Serializer = (function () {
               substr.indexOf('"""') < 0) { // Don't mess up multiline strings
             var line = treeToLine(branch)
             if (line.length < (width - indent * level)) {
-              branch = '   ' + line //   @@ Hack: treat as string below
+              branch = line //   Note! treat as string below
               substr = ''
             }
           }
@@ -302,21 +319,21 @@ var Serializer = (function () {
               str = str.slice(0, -1) + branch + '\n' //  slip punct'n on end
               lastLength += 1
               continue
-            } else if ('])}'.indexOf(branch) >= 0) {
-              str = str.slice(0, -1) + ' ' + branch + '\n'
-              lastLength += 2
-              continue
             }
           }
-          if (lastLength < (indent * level + 4)) { // continue
-            str = str.slice(0, -1) + ' ' + branch + '\n'
+          if (lastLength < (indent * level + 4) ||  // if new line not necessary
+            lastLength + branch.length + 1 < width && ';.'.indexOf(str[str.length - 2]) < 0) { // or the string fits on last line
+            str = str.slice(0, -1) + ' ' + branch + '\n' // then continue on this line
             lastLength += branch.length + 1
           } else {
             let line = spaces(indent * level) + branch
             str += line + '\n'
             lastLength = line.length
+            if (level < 0) {
+              str += '\n' // extra blank line
+              lastLength = 100000 // don't touch
+            }
           }
-        } else { // not string
         }
       }
       return str
@@ -345,20 +362,13 @@ var Serializer = (function () {
     }
     // The property tree for a single subject or anonymous node
     function propertyTreeMethod (subject, stats) {
-      // print('Proprty tree for '+subject)
       var results = []
       var lastPred = null
-      var sts = stats.subjects[this.toStr(subject)] // relevant statements
+      var sts = stats.subjects[this.toStr(subject)] || [] // relevant statements
       if (typeof sts === 'undefined') {
         throw new Error('Cant find statements for ' + subject)
       }
-      /*
-      var SPO = function (x, y) {
-        return Util.heavyCompareSPO(x, y, this.store)
-      }
-      */
-      sts.sort() // 2014-09-30
-      //        sts.sort(SPO); // 2014-09-30
+
       var objects = []
       for (var i = 0; i < sts.length; i++) {
         var st = sts[i]
@@ -382,9 +392,12 @@ var Serializer = (function () {
 
     function objectTreeMethod (obj, stats, force) {
       if (obj.termType === 'BlankNode' &&
-        stats.subjects[this.toStr(obj)] && // and there are statements
-        (force || stats.rootsHash[obj.toNT()] === undefined)) {// and not a root
-        return ['['].concat(propertyTree(obj, stats)).concat([']'])
+        (force || stats.rootsHash[obj.toNT()] === undefined)) {// if not a root
+        if (stats.subjects[this.toStr(obj)]) {
+          return ['[', propertyTree(obj, stats), ']']
+        } else {
+          return '[]'
+        }
       }
       return termToN3(obj, stats)
     }
@@ -393,12 +406,12 @@ var Serializer = (function () {
     function termToN3Method (expr, stats) { //
       var i, res
       switch (expr.termType) {
-        case 'formula':
+        case 'Graph':
           res = ['{']
           res = res.concat(statementListToTree(expr.statements))
           return res.concat(['}'])
 
-        case 'collection':
+        case 'Collection':
           res = ['(']
           for (i = 0; i < expr.elements.length; i++) {
             res.push([ objectTree(expr.elements[i], stats) ])
@@ -416,7 +429,7 @@ var Serializer = (function () {
     function prefixDirectivesMethod () {
       var str = ''
       if (this.defaultNamespace) {
-        str += '@prefix : <' + this.defaultNamespace + '>.\n'
+        str += '@prefix : ' + this.explicitURI(this.defaultNamespace) + '.\n'
       }
       for (var ns in this.prefixes) {
         if (!this.prefixes.hasOwnProperty(ns)) continue
@@ -429,7 +442,7 @@ var Serializer = (function () {
     var prefixDirectives = prefixDirectivesMethod.bind(this)
     // Body of statementsToN3:
     var tree = statementListToTree(sts)
-    return prefixDirectives() + treeToString(tree, -1)
+    return prefixDirectives() + treeToString(tree)
   }
   // //////////////////////////////////////////// Atomic Terms
 
@@ -440,12 +453,21 @@ var Serializer = (function () {
       case 'Variable':
         return expr.toNT()
       case 'Literal':
+        var val = expr.value.toString() // should be a string already
         if (expr.datatype && this.flags.indexOf('x') < 0) { // Supress native numbers
           switch (expr.datatype.uri) {
-            case 'http://www.w3.org/2001/XMLSchema#integer':
-              return expr.value.toString()
 
-            // case 'http://www.w3.org/2001/XMLSchema#double': // Must force use of 'e'
+            case 'http://www.w3.org/2001/XMLSchema#integer':
+              return val
+
+            case 'http://www.w3.org/2001/XMLSchema#decimal': // In urtle must have dot
+              if (val.indexOf('.') < 0) val += '.0'
+              return val
+
+            case 'http://www.w3.org/2001/XMLSchema#double': // Must force use of 'e'
+              if (val.indexOf('.') < 0) val += '.0'
+              if (val.indexOf('e') < 0) val += 'e0'
+              return val
 
             case 'http://www.w3.org/2001/XMLSchema#boolean':
               return expr.value ? 'true' : 'false'
@@ -531,10 +553,15 @@ var Serializer = (function () {
           break
         }
       }
-
+/*
       if (uri.slice(0, j + 1) === this.base + '#') { // base-relative
-        return '<#' + uri.slice(j + 1) + '>'
+        if (canSplit) {
+          return ':' + uri.slice(j + 1) // assume deafult ns is local
+        } else {
+          return '<#' + uri.slice(j + 1) + '>'
+        }
       }
+*/
       if (canSplit) {
         var localid = uri.slice(j + 1)
         var namesp = uri.slice(0, j + 1)
@@ -546,7 +573,7 @@ var Serializer = (function () {
           }
           return ':' + localid
         }
-        this.checkIntegrity() //  @@@ Remove when not testing
+        // this.checkIntegrity() //  @@@ Remove when not testing
         var prefix = this.prefixes[namesp]
         if (!prefix) prefix = this.makeUpPrefix(namesp)
         if (prefix) {
@@ -726,8 +753,8 @@ var Serializer = (function () {
       var results = []
       var type, t, st, pred
       var sts = stats.subjects[this.toStr(subject)] // relevant statements
-      if (typeof sts === 'undefined') {
-        throw new Error('Serializing XML - Cant find statements for ' + subject)
+      if (typeof sts === 'undefined') { // empty bnode
+        return propertyXMLTree(subject, stats)
       }
 
       // Sort only on the predicate, leave the order at object
@@ -781,7 +808,7 @@ var Serializer = (function () {
         switch (st.object.termType) {
           case 'BlankNode':
             if (stats.incoming[st.object].length === 1) { // there should always be something in the incoming array for a bnode
-              results = results.concat(['<' + t + '>',
+              results = results.concat(['<' + t + ' rdf:parseType="Resource">',
                 subjectXMLTree(st.object, stats),
                 '</' + t + '>'])
             } else {
@@ -802,7 +829,7 @@ var Serializer = (function () {
             '>' + escapeForXML(st.object.value) +
             '</' + t + '>'])
             break
-          case 'collection':
+          case 'Collection':
             results = results.concat(['<' + t + ' rdf:parseType="Collection">',
               collectionXMLTree(st.object, stats),
               '</' + t + '>'])
@@ -866,7 +893,7 @@ var Serializer = (function () {
               '>' + escapeForXML(st.object.value) +
               '</' + qname(st.predicate) + '>'])
             break
-          case 'collection':
+          case 'Collection':
             results = results.concat(['<' + qname(st.predicate) + ' rdf:parseType="Collection">',
               collectionXMLTree(st.object, stats),
               '</' + qname(st.predicate) + '>'])
@@ -915,7 +942,9 @@ var Serializer = (function () {
     }
     for (var ns in namespaceCounts) {
       if (!namespaceCounts.hasOwnProperty(ns)) continue
-      str += '\n xmlns:' + this.prefixes[ns] + '="' + escapeForXML(ns) + '"'
+      // Rel uris in xml ns is not strictly allowed in the XMLNS spec but needed in practice often
+      var ns2 = (this.base && this.flags.includes('z')) ? Util.uri.refTo(this.base, ns) : ns
+      str += '\n xmlns:' + this.prefixes[ns] + '="' + escapeForXML(ns2) + '"'
     }
     str += '>'
 

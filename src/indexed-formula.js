@@ -418,7 +418,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
           break
         case 'Literal':
         case 'BlankNode':
-        case 'collection':
+        case 'Collection':
           this.add(target, st.predicate, st.object.copy(this))
       }
       if (ArrayIndexOf(flags, 'delete') !== -1) {

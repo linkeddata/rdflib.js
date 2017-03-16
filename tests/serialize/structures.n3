@@ -1,0 +1,47 @@
+
+
+:MLK :name "Martin Luther King, Jr";
+  :born 1929-01-17; :died 1968-01-15;
+  :spouse [
+    :name "Coretta Scott King";
+    is :spouse of [
+      a :Marriage;
+      :spouse :MLK;
+      :offspring ( :MLK3 :DSK :YK [:name "Bernice King"]);
+    ]
+  ];
+
+  :wikipediapage <https://en.wikipedia.org/wiki/Martin_Luther_King_Jr.>.
+
+:MLK3 :name "Martin Luther King III".
+:DSK :name "Dexter Scott King".
+:YK :name "Yolanda King".
+
+:MLK :friend [].  # bnode with only one incoming arc
+[] :friend :MLK.  # bnode with only one outgoing arc
+
+[] :loves [].  # A floating arc between two bnodes
+
+:MLK is :author of  [a :Speech ; :date 1963-08-23; :title "I have a dream"] .
+
+# Datatypes
+:ZooReading1
+  :boolEnabled true;
+  :boolDisabled false;
+
+  :intCount 16;
+  :intNegative -123;
+  :intBig  1234567890;
+
+  :decWithPoint 10.0;
+  :decBig  1234567890.99;
+  :decWithPointNegative -10.0;
+  :decBigNegative  -1234567890.99;
+
+  :floatSmallNegative -1.6507e-6;
+  :floatTen   10.0e0;
+  :floatOne 1e0;
+  :floatBig 3.14159e100;
+
+  :time 2015-03-16T17:53Z;
+  :date 2015-02-28 .

@@ -1,0 +1,68 @@
+@prefix : <#>.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix str: <structures.n3#>.
+@prefix XML: <http://www.w3.org/2001/XMLSchema#>.
+
+str:DSK str:name "Dexter Scott King".
+
+str:MLK
+    str:born "1929-01-17"^^XML:date;
+    str:died "1968-01-15"^^XML:date;
+    str:friend [];
+    str:name "Martin Luther King, Jr";
+    str:spouse _:n5;
+    str:wikipediapage <https://en.wikipedia.org/wiki/Martin_Luther_King_Jr.>.
+str:MLK3 str:name "Martin Luther King III".
+
+str:YK str:name "Yolanda King".
+
+str:ZooReading1
+    str:boolDisabled true;
+    str:boolEnabled true;
+    str:date "2015-02-28"^^XML:date;
+    str:decBig 1234567890.99;
+    str:decBigNegative -1234567890.99;
+    str:decWithPoint 10.0;
+    str:decWithPointNegative -10.0;
+    str:floatBig 3.14159e+100;
+    str:floatOne 1.0e0;
+    str:floatSmallNegative -0.0000016507e0;
+    str:floatTen 10.0e0;
+    str:intBig 1234567890;
+    str:intCount 16;
+    str:intNegative -123;
+    str:time "2015-03-16T17:53Z"^^XML:dateTime.
+_:n5 str:name "Coretta Scott King".
+
+[ str:loves [] ].
+
+[
+    a str:Speech;
+    str:author str:MLK;
+    str:date "1963-08-23"^^XML:date;
+    str:title "I have a dream"
+].
+[
+    a str:Marriage;
+    str:offspring
+            [
+                rdf:first str:MLK3;
+                rdf:rest
+                        [
+                            rdf:first str:DSK;
+                            rdf:rest
+                                    [
+                                        rdf:first str:YK;
+                                        rdf:rest
+                                                [
+                                                    rdf:first
+                                                    [ str:name "Bernice King" ];
+                                                    rdf:rest rdf:nill
+                                                ]
+                                    ]
+                        ]
+            ];
+    str:spouse str:MLK, _:n5
+].
+[ str:friend str:MLK ].
+

@@ -1,0 +1,73 @@
+<rdf:RDF
+ xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+ xmlns:str="#">
+    <rdf:Description rdf:about="#MLK">
+        <str:born rdf:datatype="http://www.w3.org/2001/XMLSchema#date">1929-01-17</str:born>
+        <str:died rdf:datatype="http://www.w3.org/2001/XMLSchema#date">1968-01-15</str:died>
+        <str:friend rdf:parseType="Resource">
+            </str:friend>
+        <str:name>Martin Luther King, Jr</str:name>
+        <str:spouse rdf:nodeID="n4"/>
+        <str:wikipediapage rdf:resource="https://en.wikipedia.org/wiki/Martin_Luther_King_Jr."/>
+    </rdf:Description>
+    <rdf:Description rdf:nodeID="n4">
+       <str:name>Coretta Scott King</str:name>
+    </rdf:Description>
+    <rdf:Description rdf:nodeID="n5">
+        <str:offspring rdf:parseType="Collection">
+                <rdf:Description rdf:about="#MLK3">
+                   <str:name>Martin Luther King III</str:name>
+                </rdf:Description>
+                <rdf:Description rdf:about="#DSK">
+                   <str:name>Dexter Scott King</str:name>
+                </rdf:Description>
+                <rdf:Description rdf:about="#YK">
+                   <str:name>Yolanda King</str:name>
+                </rdf:Description>
+                <rdf:Description>
+                   <str:name>Bernice King</str:name>
+                </rdf:Description>
+        </str:offspring>
+        <str:spouse rdf:resource="#MLK"/>
+        <str:spouse rdf:nodeID="n4"/>
+        <rdf:type rdf:resource="#Marriage"/>
+    </rdf:Description>
+    <rdf:Description rdf:about="#MLK3">
+       <str:name>Martin Luther King III</str:name>
+    </rdf:Description>
+    <rdf:Description rdf:about="#DSK">
+       <str:name>Dexter Scott King</str:name>
+    </rdf:Description>
+    <rdf:Description rdf:about="#YK">
+       <str:name>Yolanda King</str:name>
+    </rdf:Description>
+    <rdf:Description rdf:nodeID="n9">
+       <str:friend rdf:resource="#MLK"/>
+    </rdf:Description>
+    <rdf:Description rdf:nodeID="n10">
+       <str:loves rdf:parseType="Resource"></str:loves>
+    </rdf:Description>
+    <rdf:Description rdf:nodeID="n12">
+        <str:author rdf:resource="#MLK"/>
+        <str:date rdf:datatype="http://www.w3.org/2001/XMLSchema#date">1963-08-23</str:date>
+        <str:title>I have a dream</str:title>
+        <rdf:type rdf:resource="#Speech"/>
+    </rdf:Description>
+    <rdf:Description rdf:about="#ZooReading1">
+        <str:boolDisabled rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">0</str:boolDisabled>
+        <str:boolEnabled rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">1</str:boolEnabled>
+        <str:date rdf:datatype="http://www.w3.org/2001/XMLSchema#date">2015-02-28</str:date>
+        <str:decBig rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1234567890.99</str:decBig>
+        <str:decBigNegative rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">-1234567890.99</str:decBigNegative>
+        <str:decWithPoint rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">10</str:decWithPoint>
+        <str:decWithPointNegative rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">-10</str:decWithPointNegative>
+        <str:floatBig rdf:datatype="http://www.w3.org/2001/XMLSchema#double">3.14159e+100</str:floatBig>
+        <str:floatOne rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1</str:floatOne>
+        <str:floatSmallNegative rdf:datatype="http://www.w3.org/2001/XMLSchema#double">-0.0000016507</str:floatSmallNegative>
+        <str:floatTen rdf:datatype="http://www.w3.org/2001/XMLSchema#double">10</str:floatTen>
+        <str:intBig rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1234567890</str:intBig>
+        <str:intCount rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">16</str:intCount>
+        <str:intNegative rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">-123</str:intNegative>
+        <str:time rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2015-03-16T17:53Z</str:time>
+    </rdf:Description>
+</rdf:RDF>

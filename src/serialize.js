@@ -8,12 +8,14 @@ const Serializer = require('./serializer')
  * @@ Currently NQuads and JSON/LD are deal with extrelemently inefficiently
  * through mutiple conversions.
  */
-function serialize (target, kb, base, contentType, callback) {
+function serialize (target, kb, base, contentType, callback, options) {
   base = base || target.uri
+  options = options || {}
   contentType = contentType || 'text/turtle' // text/n3 if complex?
   var documentString = null
   try {
     var sz = Serializer(kb)
+    if (options.flags) sz.setFlags(options.flags)
     var newSts = kb.statementsMatching(undefined, undefined, undefined, target)
     var n3String
     sz.suggestNamespaces(kb.namespaces)
