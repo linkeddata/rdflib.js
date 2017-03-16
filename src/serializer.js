@@ -149,15 +149,16 @@ var Serializer = (function () {
     // $rdf.log.debug('serialize.js Find bnodes with only one incoming arc\n')
     for (var i = 0; i < sts.length; i++) {
       var st = sts[i]
-      var checkMentions = function(x){
+      var checkMentions = function (x) {
         if (!incoming.hasOwnProperty(x)) incoming[x] = []
         incoming[x].push(st.subject) // List of things which will cause this to be printed
       }
       var st2 = [st.subject, st.predicate, st.object]
       st2.map(function (y) {
-        if (y.termType === 'BlankNode') { allBnodes[y.toNT()] = true }
-        else if (y.termType === 'Collection') {
-          y.elements.forEach(function(z){
+        if (y.termType === 'BlankNode') {
+          allBnodes[y.toNT()] = true
+        } else if (y.termType === 'Collection') {
+          y.elements.forEach(function (z) {
             checkMentions(z) // bnodes in collections important
           })
         }
@@ -286,7 +287,7 @@ var Serializer = (function () {
         var branch = tree[i]
         var s2 = (typeof branch === 'string') ? branch : treeToLine(branch)
         // Note the space before the dot in case statement ends 123. which is in fact allowed but be conservative.
-        if (i !== 0){
+        if (i !== 0) {
           var ch = str.slice(-1) || ' '
           if (s2 === ',' || s2 === ';') {
             // no gap
@@ -315,7 +316,7 @@ var Serializer = (function () {
               substr.indexOf('"""') < 0) { // Don't mess up multiline strings
             var line = treeToLine(branch)
             if (line.length < (width - indent * level)) {
-              branch =  line //   @@ Hack: treat as string below // was '   ' + line
+              branch = line //   @@ Hack: treat as string below // was '   ' + line
               substr = ''
             }
           }
@@ -331,7 +332,7 @@ var Serializer = (function () {
             }
           }
           if (lastLength < (indent * level + 4) ||  // if new line not necessary
-            lastLength + branch.length + 1 < width && ';.'.indexOf(str[str.length-2]) < 0) { // or the string fits on last line
+            lastLength + branch.length + 1 < width && ';.'.indexOf(str[str.length - 2]) < 0) { // or the string fits on last line
             str = str.slice(0, -1) + ' ' + branch + '\n' // then continue on this line
             lastLength += branch.length + 1
           } else {
@@ -404,11 +405,11 @@ var Serializer = (function () {
       if (obj.termType === 'BlankNode' &&
         // stats.subjects[this.toStr(obj)] && // and there are statements 20170312
         (force || stats.rootsHash[obj.toNT()] === undefined)) {// and not a root
-          if (stats.subjects[this.toStr(obj)]){
-            return ['[', propertyTree(obj, stats), ']']
-          } else {
-            return '[]'
-          }
+        if (stats.subjects[this.toStr(obj)]) {
+          return ['[', propertyTree(obj, stats), ']']
+        } else {
+          return '[]'
+        }
           // return ['['].concat(propertyTree(obj, stats)).concat([']'])
       }
       return termToN3(obj, stats)
@@ -474,13 +475,13 @@ var Serializer = (function () {
               return val
 
             case 'http://www.w3.org/2001/XMLSchema#decimal': // In urtle must have dot
-              if (val.indexOf('.')  < 0) val += '.0'
+              if (val.indexOf('.') < 0) val += '.0'
               return val
 
             case 'http://www.w3.org/2001/XMLSchema#double': // Must force use of 'e'
-            if (val.indexOf('.')  < 0) val += '.0'
-            if (val.indexOf('e')  < 0) val += 'e0'
-            return val
+              if (val.indexOf('.') < 0) val += '.0'
+              if (val.indexOf('e') < 0) val += 'e0'
+              return val
 
             case 'http://www.w3.org/2001/XMLSchema#boolean':
               return expr.value ? 'true' : 'false'
@@ -568,7 +569,7 @@ var Serializer = (function () {
       }
 
       if (uri.slice(0, j + 1) === this.base + '#') { // base-relative
-        if (canSplit){
+        if (canSplit) {
           return ':' + uri.slice(j + 1) // assume deafult ns is local
         } else {
           return '<#' + uri.slice(j + 1) + '>'
