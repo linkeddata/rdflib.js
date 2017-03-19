@@ -1,9 +1,9 @@
 {
   "name": "rdflib",
   "description": "an RDF library for node.js. Suitable for client and server side.",
-  "version": "0.14.0",
+  "version": "0.15.0",
   "engines": {
-    "node": "^6.0"
+    "node": ">=6.0"
   },
   "private": false,
   "author": {
@@ -66,7 +66,7 @@
     "size": "node-line-counter .",
     "gh-pages": "npm run detach && git branch - D gh - pages ||: && git checkout - b gh - pages && npm run all && git add - f dist /*.js src/*.js *.js && git commit -m 'gh-pages: update to latest' && git push -f origin gh-pages && git checkout master",
     "prepublish": "npm run lib",
-    "serialize-tests": "npm run serialize-test-1 && npm run serialize-test-2 && npm run serialize-test-3 && npm run serialize-test-4 && npm run serialize-test-5 && npm run serialize-test-6 && npm run serialize-test-7",
+    "serialize-tests": "npm run serialize-test-1 && npm run serialize-test-2 && npm run serialize-test-3 && npm run serialize-test-4 && npm run serialize-test-5 && npm run serialize-test-6 && npm run serialize-test-7 && npm run serialize-test-10 && npm run serialize-test-11 && npm run serialize-test-12 && npm run serialize-test-13",
     "serialize-test-1": "cd tests/serialize && node ./data.js -in=t1.ttl -format=application/rdf+xml -out=,t1.xml && fs-grep http://www.w3.org/2001/XMLSchema#integer ,t1.xml",
     "serialize-test-2": "cd tests/serialize && node ./data.js -in=t2.ttl -format=application/rdf+xml  -out=,t2.xml && jsdiff ,t2.xml t2-ref.xml",
     "serialize-test-3": "cd tests/serialize && node ./data.js -in=t3.ttl -format=application/rdf+xml  -out=,t3.xml && jsdiff ,t3.xml t3-ref.xml",
@@ -75,7 +75,11 @@
     "serialize-test-6": "cd tests/serialize && node ./data.js -in=t5.n3 -format=text/n3 -out=,t6.n3 && jsdiff ,t6.n3 t6-ref.n3",
     "serialize-test-7": "cd tests/serialize && node ./data.js -in=t7.n3 -format=application/n-triples -out=,t7.nt && jsdiff ,t7.nt t7-ref.nt",
     "serialize-test-8": "cd tests/serialize && node ./data.js -in=t5.n3  -format=application/n-quads -dump=,t8.nq && jsdiff ,t8.nq t8-ref.nq",
-    "serialize-test-9": "cd tests/serialize && node ./data.js -in=t7.n3 -format=application/ld+json -out=,t9.json && jsdiff ,t9.json t9-ref.json"
+    "serialize-test-9": "cd tests/serialize && node ./data.js -in=t7.n3 -format=application/ld+json -out=,t9.json && jsdiff ,t9.json t9-ref.json",
+    "serialize-test-10": "cd tests/serialize && node ./data.js -in=details.ttl -format=text/turtle -out=,t10.ttl && jsdiff ,t10.ttl t10-ref.ttl",
+    "serialize-test-11": "cd tests/serialize && node ./data.js -in=structures.n3 -format=application/rdf+xml  -out=,structures.xml && jsdiff ,structures.xml t11-ref.xml",
+    "serialize-test-12": "cd tests/serialize && node ./data.js -in=structures.n3 -format=text/turtle -out=,structures.ttl && jsdiff ,structures.ttl t12-ref.ttl",
+    "serialize-test-13": "cd tests/serialize && node ./data.js -in=structures.n3 -format=application/n-triples -out=,structures.nt && node ./data.js -format=application/n-triples -in=,structures.nt -format=text/turtle -out=,structures.nt.ttl && jsdiff ,structures.nt.ttl t13-ref.ttl"
   },
   "files": [
     "dist",
