@@ -46,7 +46,7 @@
     "mocha": "^3.2.0",
     "node-mkdirp": "0.0.1",
     "rimraf": "^2.6.1",
-    "jsdiff-cli": "^0.1.2"
+    "jsdiff-cli": "Neur0mante/jsdiff-cli"
   },
   "scripts": {
     "test": "npm run test:unit && npm run test:serialize",
