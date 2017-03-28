@@ -1,6 +1,6 @@
 parsers/*.js
 node_modules
 .vscode/
-npm-debug.log
+npm-debug.log*
 dist/rdflib.min.js
 lib/

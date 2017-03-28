@@ -1,0 +1,11 @@
+{
+  "extends": "../../base",
+  "compilerOptions": {
+    "allowJs": false,
+    "outDir": "../serialize"
+  },
+  "include": [
+    "./"
+  ],
+  "exclude": []
+}
