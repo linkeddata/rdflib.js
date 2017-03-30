@@ -6,8 +6,12 @@ class BlankNode extends Node {
   constructor (id) {
     super()
     this.termType = BlankNode.termType
-    this.id = BlankNode.nextId++
-    this.value = id || this.id.toString()
+    if (id && (typeof id !== 'string')) {
+      throw "Bad id argument to new bkank node: " + id
+    }
+    this.id = '' + BlankNode.nextId // Ignore param as not globally unique
+    BlankNode.nextId++
+    this.value = this.id // for API compatability
   }
   compareTerm (other) {
     if (this.classOrder < other.classOrder) {

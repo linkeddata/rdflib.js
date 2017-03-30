@@ -1097,7 +1097,10 @@ var Fetcher = function Fetcher (store, timeout, async) {
             return
           }
 
-          var loc = xhr.headers['content-location']
+          var loc =  xhr.headers['content-location']
+          if (loc) {
+            loc = Uri.join(loc, docuri)
+          }
 
           // deduce some things from the HTTP transaction
           var addType = function (cla) { // add type to all redirected resources too

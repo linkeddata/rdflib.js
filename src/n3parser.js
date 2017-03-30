@@ -655,7 +655,8 @@ __SinkParser.prototype.anonymousNode = function(ln) {
     if (term) {
         return term;
     }
-    var term = this._store.bnode(this._context, this._reason2);
+    var term = this._store.bnode(ln);
+    // var term = this._store.bnode(this._context, this._reason2); eh?
     this._anonymousNodes[ln] = ( term);
     return term;
 };
