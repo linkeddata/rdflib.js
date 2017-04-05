@@ -77,7 +77,7 @@
     "lib": "babel src -d lib",
     "detach": "git checkout origin/master &&  git reset--hard HEAD",
     "clean": "rimraf dist/* lib/*",
-    "cleantest": "rimraf tests/serialize/,*",
+    "cleantest": "rimraf tests/**/,*",
     "status": "@git branch -v && @git status -s",
     "minify": "npm run dist/rdflib.min.js",
     "size": "node-line-counter .",

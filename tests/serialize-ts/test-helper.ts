@@ -1,9 +1,9 @@
-import $rdf = require('rdflib')
+import $rdf = require('../../lib/index')
 
 import * as fs from 'fs'
 import * as Promise from 'bluebird'
 
-export type MIME = "application/rdf+xml" | "text/turtle" | "text/n3" | "application/n-triples" | "application/n-quads" | "application/ldjson"
+export type MIME = "application/rdf+xml" | "text/turtle" | "text/n3" | "application/n-triples" | "application/n-quads" | "application/ld+json"
 
 /**
  * A helper class for manipulating files during tests
@@ -34,6 +34,7 @@ export class TestHelper {
   }
 
   clear() {
+    $rdf.BlankNode.nextId = 0
     this.kb = $rdf.graph();
     this.fetcher = $rdf.fetcher(this.kb)
   }
@@ -74,11 +75,6 @@ export class TestHelper {
       this.setFormat(format);
     }
     let out
-    try {
-      out = $rdf.serialize(this.targetDocument, this.kb, this.targetDocument.uri, this.contentType)
-    } catch (e) {
-      console.log('Error in serializer: ' + e + this.stackString(e))
-    }
     if (!file) {
       console.log('Result: ' + out)
       return
@@ -87,17 +83,50 @@ export class TestHelper {
     if (doc.uri.slice(0, 7) !== 'file://') {
       console.log('Can only write files just now, sorry: ' + doc.uri);
     }
-    let fileName = doc.uri.slice(7) //
-    return new Promise(function (fulfilled, rejected) {
-      fs.writeFile(fileName, out, "utf8", function (err) {
-        if (err) {
-          console.log('Error writing file <' + file + '> :' + err)
-          rejected(err)
-        }
-        // console.log('Written ' + fileName)
-        fulfilled()
-      })
-    })
+    let fileName = doc.uri.slice(7)
+    try {
+      if (this.contentType !== 'application/ld+json') {
+        out = $rdf.serialize(this.targetDocument, this.kb, this.targetDocument.uri, this.contentType)
+        return new Promise(function (fulfilled, rejected) {
+          fs.writeFile(fileName, out, "utf8", function (err) {
+            if (err) {
+              console.log('Error writing file <' + file + '> :' + err)
+              rejected(err)
+            }
+            // console.log('Written ' + fileName)
+            fulfilled()
+          })
+        })
+      }
+      else {
+        return new Promise((resolve, reject) => {
+          try {
+            $rdf.serialize(this.targetDocument, this.kb, this.targetDocument.uri, this.contentType,
+              function (err, res) {
+                if (err) reject(err)
+                else resolve(res)
+              })
+          } catch (e) {
+            reject(e)
+          }
+        }).then((out) => {
+          return new Promise(function (fulfilled, rejected) {
+            fs.writeFile(fileName, out, "utf8", function (err) {
+              if (err) {
+                console.log('Error writing file <' + file + '> :' + err)
+                rejected(err)
+              }
+              // console.log('Written ' + fileName)
+              fulfilled()
+            })
+          })
+        })
+      }
+    } catch (e) {
+      console.log('Error in serializer: ' + e + this.stackString(e))
+    }
+
+
   }
 
   dump(file) {
@@ -163,7 +192,7 @@ export class TestHelper {
 
   reverseSlash(str) {
     // this would uniform the kb in windows and linux but it's still breaking the fetcher so I can't run it.
-    // I think it whould be placed inside the fetcher before inserting the literal referring to the loaded file in the kb,
+    // I think it should be placed inside the fetcher before inserting the literal referring to the loaded file in the kb,
     // but remember that xhr on windows wants "file://folder"
     // if (str[0] !== "/") {
     //     str = "/" + str
