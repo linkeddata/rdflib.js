@@ -12,8 +12,9 @@ var Promise = require("bluebird");
 var TestHelper = (function () {
     function TestHelper(folder) {
         this.testFolder = folder || "tests/serialize/sample_files/";
-        this.kb = new $rdf.graph();
+        this.kb = $rdf.graph();
         this.fetcher = $rdf.fetcher(this.kb);
+        $rdf.fetcher(this.kb);
         this.contentType = 'text/turtle';
         this.base = 'file://' + this.reverseSlash(process.cwd()) + "/" + this.testFolder;
         this.targetDocument = $rdf.sym(this.base + 'stdin'); // defaul URI of test data
@@ -22,7 +23,8 @@ var TestHelper = (function () {
         this.base = $rdf.uri.join(base, this.base);
     };
     TestHelper.prototype.clear = function () {
-        this.kb = new $rdf.graph();
+        $rdf.BlankNode.nextId = 0;
+        this.kb = $rdf.graph();
         this.fetcher = $rdf.fetcher(this.kb);
     };
     TestHelper.prototype.setFormat = function (format) {
@@ -37,7 +39,6 @@ var TestHelper = (function () {
      * @memberOf TestHelper
      */
     TestHelper.prototype.loadFile = function (file) {
-        // console.log(this.base);
         var _this = this;
         var document = $rdf.sym($rdf.uri.join(file, this.base));
         this.targetDocument = document;
@@ -55,16 +56,11 @@ var TestHelper = (function () {
         });
     };
     TestHelper.prototype.outputFile = function (file, format) {
+        var _this = this;
         if (format) {
             this.setFormat(format);
         }
         var out;
-        try {
-            out = $rdf.serialize(this.targetDocument, this.kb, this.targetDocument.uri, this.contentType);
-        }
-        catch (e) {
-            console.log('Error in serializer: ' + e + this.stackString(e));
-        }
         if (!file) {
             console.log('Result: ' + out);
             return;
@@ -73,20 +69,56 @@ var TestHelper = (function () {
         if (doc.uri.slice(0, 7) !== 'file://') {
             console.log('Can only write files just now, sorry: ' + doc.uri);
         }
-        var fileName = doc.uri.slice(7); //
-        return new Promise(function (fulfilled, rejected) {
-            fs.writeFile(fileName, out, "utf8", function (err) {
-                if (err) {
-                    console.log('Error writing file <' + file + '> :' + err);
-                    rejected(err);
-                }
-                // console.log('Written ' + fileName)
-                fulfilled();
-            });
-        });
+        var fileName = doc.uri.slice(7);
+        fileName = fileName.slice(1);
+        try {
+            if (this.contentType !== 'application/ld+json') {
+                out = $rdf.serialize(this.targetDocument, this.kb, this.targetDocument.uri, this.contentType);
+                return new Promise(function (fulfilled, rejected) {
+                    fs.writeFile(fileName, out, "utf8", function (err) {
+                        if (err) {
+                            console.log('Error writing file <' + file + '> :' + err);
+                            rejected(err);
+                        }
+                        // console.log('Written ' + fileName)
+                        fulfilled();
+                    });
+                });
+            }
+            else {
+                return new Promise(function (resolve, reject) {
+                    try {
+                        $rdf.serialize(_this.targetDocument, _this.kb, _this.targetDocument.uri, _this.contentType, function (err, res) {
+                            if (err)
+                                reject(err);
+                            else
+                                resolve(res);
+                        });
+                    }
+                    catch (e) {
+                        reject(e);
+                    }
+                }).then(function (out) {
+                    return new Promise(function (fulfilled, rejected) {
+                        fs.writeFile(fileName, out, "utf8", function (err) {
+                            if (err) {
+                                console.log('Error writing file <' + file + '> :' + err);
+                                rejected(err);
+                            }
+                            // console.log('Written ' + fileName)
+                            fulfilled();
+                        });
+                    });
+                });
+            }
+        }
+        catch (e) {
+            console.log('Error in serializer: ' + e + this.stackString(e));
+        }
     };
     TestHelper.prototype.dump = function (file) {
         var doc = $rdf.sym($rdf.uri.join(file, this.base));
+        $rdf.term();
         var out;
         try {
             out = $rdf.serialize(null, this.kb, this.targetDocument.uri, 'application/n-quads'); // whole store
@@ -143,11 +175,11 @@ var TestHelper = (function () {
     };
     TestHelper.prototype.reverseSlash = function (str) {
         // this would uniform the kb in windows and linux but it's still breaking the fetcher so I can't run it.
-        // I think it whould be placed inside the fetcher before inserting the literal referring to the loaded file in the kb,
+        // I think it should be placed inside the fetcher before inserting the literal referring to the loaded file in the kb,
         // but remember that xhr on windows wants "file://folder"
-        // if (str[0] !== "/") {
-        //     str = "/" + str
-        // }
+        if (str[0] !== "/") {
+            str = "/" + str;
+        }
         return str = str.replace(/\\/g, "/");
     };
     return TestHelper;

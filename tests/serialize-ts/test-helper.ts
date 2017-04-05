@@ -7,14 +7,14 @@ export type MIME = "application/rdf+xml" | "text/turtle" | "text/n3" | "applicat
 
 /**
  * A helper class for manipulating files during tests
- * 
+ *
  * @export
  * @class TestHelper
  */
 export class TestHelper {
   testFolder: string
-  kb: $rdf.IndexedFormula
-  fetcher: $rdf.Fetcher
+  kb
+  fetcher
   contentType
   base: string
   targetDocument
@@ -45,15 +45,13 @@ export class TestHelper {
 
   /**
    * load a file and return a promise
-   * 
-   * @param {any} file  
+   *
+   * @param {any} file
    * @returns a promise
-   * 
+   *
    * @memberOf TestHelper
    */
   loadFile(file) {
-    // console.log(this.base);
-
     let document = $rdf.sym($rdf.uri.join(file, this.base))
     this.targetDocument = document
     return new Promise((fulfill, reject) => {
@@ -84,10 +82,12 @@ export class TestHelper {
       console.log('Can only write files just now, sorry: ' + doc.uri);
     }
     let fileName = doc.uri.slice(7)
+    fileName = fileName.slice(1)
     try {
       if (this.contentType !== 'application/ld+json') {
         out = $rdf.serialize(this.targetDocument, this.kb, this.targetDocument.uri, this.contentType)
         return new Promise(function (fulfilled, rejected) {
+
           fs.writeFile(fileName, out, "utf8", function (err) {
             if (err) {
               console.log('Error writing file <' + file + '> :' + err)
@@ -194,9 +194,9 @@ export class TestHelper {
     // this would uniform the kb in windows and linux but it's still breaking the fetcher so I can't run it.
     // I think it should be placed inside the fetcher before inserting the literal referring to the loaded file in the kb,
     // but remember that xhr on windows wants "file://folder"
-    // if (str[0] !== "/") {
-    //     str = "/" + str
-    // }
+    if (str[0] !== "/") {
+      str = "/" + str
+    }
     return str = str.replace(/\\/g, "/");
   }
 }

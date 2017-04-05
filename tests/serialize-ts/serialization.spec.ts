@@ -297,7 +297,7 @@ describe("Testing the consistency of serialization between the various parsers",
     })
   }) // END ttl parser
 
-  describe("T11: n3 to rdf+xml", () => {
+  describe.only("T11: n3 to rdf+xml", () => {
     // "serialize-test-11": "cd tests/serialize && node ./data.js -in=structures.n3 -format=application/rdf+xml  -out=,structures.xml && node diff ,structures.xml t11-ref.xml",
     let testHelper: TestHelper = new TestHelper()
     testHelper.clear()
@@ -346,7 +346,7 @@ describe("Testing the consistency of serialization between the various parsers",
     })
   }) // END n3 to turtle
 
-  describe.only("T13: n3 to rdf+xml", () => {
+  describe("T13: n3 to rdf+xml", () => {
     //   "serialize-test-13": "cd tests/serialize && node ./data.js -in=structures.n3 -format=application/n-triples -out=,structures.nt && node ./data.js -in=,structures.nt -format=text/turtle -out=,structures.nt.ttl && node diff ,structures.nt.ttl t13-ref.ttl"
     let testHelper: TestHelper = new TestHelper()
     it("Should load structures.n3 and write ,structures.nt, matching t11-ref.ttl", function (done) {

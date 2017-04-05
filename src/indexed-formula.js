@@ -303,6 +303,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
       this.add(quad.subject, quad.predicate, quad.object, quad.graph)
     })
   }
+  
   any (s, p, o, g) {
     var st = this.anyStatementMatching(s, p, o, g)
     if (st == null) {

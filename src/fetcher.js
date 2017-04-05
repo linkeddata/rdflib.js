@@ -403,6 +403,7 @@ var Fetcher = function Fetcher (store, timeout, async) {
 
         // console.log('web.js: Parsing as N3 ' + xhr.resource.uri + ' base: ' + xhr.original.uri) // @@@@ comment me out
         // sf.addStatus(xhr.req, "N3 not parsed yet...")
+
         var p = N3Parser(kb, kb, xhr.original.uri, xhr.original.uri, null, null, '', null)
         //                p.loadBuf(xhr.responseText)
         try {
@@ -1350,6 +1351,11 @@ var Fetcher = function Fetcher (store, timeout, async) {
       sf.failFetch(xhr, 'requestTimeout')
     }
     try {
+      // console.log("ACTUAL PROXY URI: "+actualProxyURI)
+      // NOTE: FIXME: this is the fixup for the xhr path under windows. 
+      // It will keep the kb consistent between platforms but it might
+      // break other things
+      actualProxyURI = actualProxyURI.replace(/\/\/\//g,"//")
       xhr.open('GET', actualProxyURI, this.async)
     } catch (er) {
       return this.failFetch(xhr, 'XHR open for GET failed for <' + uri2 + '>:\n\t' + er)

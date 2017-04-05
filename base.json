@@ -1,0 +1,37 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "target": "es5",
+        "noImplicitAny": false,
+        "sourceMap": false,
+        "declaration": false,
+        "allowJs": true,
+        "allowUnreachableCode": true,
+        "types": [
+            "node",
+            "mocha",
+            "bluebird",
+            "chai",
+            "chai-as-promised",
+            "diff"
+
+        ],
+        "typeRoots": [
+            "node_modules/@types",
+            "@types",
+            "./types"
+        ]
+    },
+    "include": [
+        "tests/**/*.ts"
+    ],
+    "exclude": [
+        "node_modules",
+        "dist",
+        "lib",
+        "src",
+        "build",
+        "ts-dist"
+    ]
+}
