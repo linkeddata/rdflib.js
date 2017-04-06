@@ -324,7 +324,7 @@ var Fetcher = function Fetcher (store, timeout, async) {
           return
         }
 
-        // dc:title	                       //no need to escape '/' here
+        // dc:title                         //no need to escape '/' here
         var titleMatch = (new RegExp('<title>([\\s\\S]+?)</title>', 'im')).exec(rt)
         if (titleMatch) {
           var kb = sf.store
@@ -403,7 +403,6 @@ var Fetcher = function Fetcher (store, timeout, async) {
 
         // console.log('web.js: Parsing as N3 ' + xhr.resource.uri + ' base: ' + xhr.original.uri) // @@@@ comment me out
         // sf.addStatus(xhr.req, "N3 not parsed yet...")
-
         var p = N3Parser(kb, kb, xhr.original.uri, xhr.original.uri, null, null, '', null)
         //                p.loadBuf(xhr.responseText)
         try {
@@ -533,8 +532,8 @@ var Fetcher = function Fetcher (store, timeout, async) {
       link = xhr.getResponseHeader('link') // May crash from CORS error
     } catch (e) {}
     if (link) {
-      var linkexp = /<[^>]*>\s*(\s*;\s*[^\(\)<>@,;:"\/\[\]\?={} \t]+=(([^\(\)<>@,;:"\/\[\]\?={} \t]+)|("[^"]*")))*(,|$)/g
-      var paramexp = /[^\(\)<>@,;:"\/\[\]\?={} \t]+=(([^\(\)<>@,;:"\/\[\]\?={} \t]+)|("[^"]*"))/g
+      var linkexp = /<[^>]*>\s*(\s*;\s*[^()<>@,;:"/[\]?={} \t]+=(([^()<>@,;:"/[\]?={} \t]+)|("[^"]*")))*(,|$)/g
+      var paramexp = /[^()<>@,;:"/[\]?={} \t]+=(([^()<>@,;:"/[\]?={} \t]+)|("[^"]*"))/g
 
       var matches = link.match(linkexp)
       for (var i = 0; i < matches.length; i++) {
@@ -586,8 +585,9 @@ var Fetcher = function Fetcher (store, timeout, async) {
   // Returns promise of XHR
   //
   //  Writes back to the web what we have in the store for this uri
-  this.putBack = function (uri, options = {}) {
+  this.putBack = function (uri, options) {
     uri = uri.uri || uri // Accept object or string
+    options = options || {}
     var doc = new NamedNode(uri).doc() // strip off #
     options.data = serialize(doc, this.store, doc.uri, options.contentType || 'text/turtle')
     return this.webOperation('PUT', uri, options)
@@ -595,8 +595,8 @@ var Fetcher = function Fetcher (store, timeout, async) {
 
   // Returns promise of XHR
   //
-  this.webOperation = function (method, uri, options = {}) {
-    uri = uri.uri || uri
+  this.webOperation = function (method, uri, options) {
+    uri = uri.uri || uri; options = options || {}
     uri = this.proxyIfNecessary(uri)
     var fetcher = this
     return new Promise(function (resolve, reject) {
@@ -873,14 +873,14 @@ var Fetcher = function Fetcher (store, timeout, async) {
 
   /** Requests a document URI and arranges to load the document.
    ** Parameters:
-   **	    term:  term for the thing whose URI is to be dereferenced
+   **      term:  term for the thing whose URI is to be dereferenced
    **      rterm:  the resource which refered to this (for tracking bad links)
    **      options:
    **              force:  Load the data even if loaded before
    **              withCredentials:   flag for XHR/CORS etc
    **      userCallback:  Called with (true) or (false, errorbody, {status: 400}) after load is done or failed
    ** Return value:
-   **	    The xhr object for the HTTP access
+   **      The xhr object for the HTTP access
    **      null if the protocol is not a look-up protocol,
    **              or URI has already been loaded
    */
@@ -1027,7 +1027,7 @@ var Fetcher = function Fetcher (store, timeout, async) {
                   if (!sf.fetchCallbacks[newURI]) {
                     sf.fetchCallbacks[newURI] = []
                   }
-                  sf.fetchCallbacks[newURI] === sf.fetchCallbacks[newURI].concat(sf.fetchCallbacks[xhr.resource.uri])
+                  sf.fetchCallbacks[newURI] = sf.fetchCallbacks[newURI].concat(sf.fetchCallbacks[xhr.resource.uri])
                   delete sf.fetchCallbacks[xhr.resource.uri]
                 }
 
@@ -1126,11 +1126,11 @@ var Fetcher = function Fetcher (store, timeout, async) {
           // This is a minimal set to allow the use of damaged servers if necessary
           var extensionToContentType = {
             'rdf': 'application/rdf+xml',
-'owl': 'application/rdf+xml',
+            'owl': 'application/rdf+xml',
             'n3': 'text/n3',
-'ttl': 'text/turtle',
-'nt': 'text/n3',
-'acl': 'text/n3',
+            'ttl': 'text/turtle',
+            'nt': 'text/n3',
+            'acl': 'text/n3',
             'html': 'text/html',
             'xml': 'text/xml'
           }
@@ -1256,7 +1256,7 @@ var Fetcher = function Fetcher (store, timeout, async) {
                   if (!sf.fetchCallbacks[newURI]) {
                     sf.fetchCallbacks[newURI] = []
                   }
-                  sf.fetchCallbacks[newURI] === sf.fetchCallbacks[newURI].concat(sf.fetchCallbacks[xhr.resource.uri])
+                  sf.fetchCallbacks[newURI] = sf.fetchCallbacks[newURI].concat(sf.fetchCallbacks[xhr.resource.uri])
                   delete sf.fetchCallbacks[xhr.resource.uri]
                 }
 
@@ -1354,10 +1354,8 @@ var Fetcher = function Fetcher (store, timeout, async) {
       sf.failFetch(xhr, 'requestTimeout')
     }
     try {
-      // console.log("ACTUAL PROXY URI: "+actualProxyURI)
-      // NOTE: FIXME: this is the fixup for the xhr path under windows.
-      // It will keep the kb consistent between platforms but it might
-      // break other things
+      // NOTE: this is the fixup for the xhr path under windows.
+
       if (process) {
         if (process.platform.slice(0, 3) === 'win') {
           actualProxyURI = actualProxyURI.replace(/\/\/\//g, '//')
@@ -1427,7 +1425,7 @@ var Fetcher = function Fetcher (store, timeout, async) {
                     if (!sf.fetchCallbacks[newURI]) {
                       sf.fetchCallbacks[newURI] = []
                     }
-                    sf.fetchCallbacks[newURI] === sf.fetchCallbacks[newURI].concat(sf.fetchCallbacks[xhr.resource.uri])
+                    sf.fetchCallbacks[newURI] = sf.fetchCallbacks[newURI].concat(sf.fetchCallbacks[xhr.resource.uri])
                     delete sf.fetchCallbacks[xhr.resource.uri]
                   }
 

@@ -16,8 +16,8 @@ var TestHelper = (function () {
     this.fetcher = $rdf.fetcher(this.kb)
     $rdf.fetcher(this.kb)
     this.contentType = 'text/turtle'
-    this.base = 'file://' + this.reverseSlash(process.cwd()) + '/' + this.testFolder
-    this.targetDocument = $rdf.sym(this.base + 'stdin') // defaul URI of test data
+    this.base = 'file://' + this.normalizeSlashes(process.cwd()) + '/' + this.testFolder
+    this.targetDocument = $rdf.sym(this.base + 'stdin') // default URI of test data
   }
   TestHelper.prototype.setBase = function (base) {
     this.base = $rdf.uri.join(base, this.base)
@@ -69,10 +69,15 @@ var TestHelper = (function () {
       console.log('Can only write files just now, sorry: ' + doc.uri)
     }
     var fileName = doc.uri.slice(7)
-    fileName = fileName.slice(1)
+    if (process) {
+      if (process.platform.slice(0, 3) === 'win') {
+        fileName = doc.uri.slice(8)
+      }
+    }
+    var options = { flags: 'z' } // Only applies to RDF/XML
     try {
       if (this.contentType !== 'application/ld+json') {
-        out = $rdf.serialize(this.targetDocument, this.kb, this.targetDocument.uri, this.contentType)
+        out = $rdf.serialize(this.targetDocument, this.kb, this.targetDocument.uri, this.contentType, undefined, options)
         return new Promise(function (resolve, reject) {
           fs.writeFile(fileName, out, 'utf8', function (err) {
             if (err) {
@@ -88,7 +93,7 @@ var TestHelper = (function () {
           try {
             $rdf.serialize(_this.targetDocument, _this.kb, _this.targetDocument.uri, _this.contentType, function (err, res) {
               if (err) { reject(err) } else { resolve(res) }
-            })
+            }, options)
           } catch (e) {
             reject(e)
           }
@@ -122,7 +127,12 @@ var TestHelper = (function () {
     if (doc.uri.slice(0, 7) !== 'file://') {
       // console.log('Can only write files just now, sorry: ' + doc.uri)
     }
-    var fileName = doc.uri.slice(7) //
+    var fileName = doc.uri.slice(7)
+    if (process) {
+      if (process.platform.slice(0, 3) === 'win') {
+        fileName = doc.uri.slice(8)
+      }
+    }
     return new Promise(function (resolve, reject) {
       fs.writeFile(fileName, out, function (err) {
         if (err) {
@@ -165,10 +175,7 @@ var TestHelper = (function () {
     }
     return str
   }
-  TestHelper.prototype.reverseSlash = function (str) {
-    // this would uniform the kb in windows and linux but it's still breaking the fetcher so I can't run it.
-    // I think it should be placed inside the fetcher before inserting the literal referring to the loaded file in the kb,
-    // but remember that xhr on windows wants "file://folder"
+  TestHelper.prototype.normalizeSlashes = function (str) {
     if (str[0] !== '/') {
       str = '/' + str
     }

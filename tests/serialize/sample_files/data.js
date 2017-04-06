@@ -5,7 +5,7 @@
 // See http://www.w3.org/TR/rdfa-syntax/  etc
 //
 
-const $rdf = require('../../lib')
+const $rdf = require('../../../lib')
 var fs = require('fs')
 
 var kb = $rdf.graph()

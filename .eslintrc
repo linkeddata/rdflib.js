@@ -1,10 +1,17 @@
 {
   "extends": "standard",
   "plugins": [
-    "standard",
-    "promise",
-    "mocha"
+    "promise"
   ],
+  "env": {
+    "node": true,
+    "es6": true,
+    "mocha": true
+  },
+  "globals": {
+    "tabulator": true,
+    "Components": true
+  },
   "rules": {
     "array-bracket-spacing": [
       "error",
