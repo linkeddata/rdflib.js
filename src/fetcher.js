@@ -232,7 +232,7 @@ var Fetcher = function Fetcher (store, timeout, async) {
             // Is it RDF/XML?
             if (ns && ns === ns['rdf']) {
               sf.addStatus(xhr.req, 'Has XML root element in the RDF namespace, so assume RDF/XML.')
-              sf.switchHandler('RDFXMLHandler', xhr, cb, [dom])
+              sf.switchHandler('RDFXMLHandler', xhr, cb, [ dom ])
               return
             }
             // it isn't RDF/XML or we can't tell
@@ -441,7 +441,7 @@ var Fetcher = function Fetcher (store, timeout, async) {
   }
   Fetcher.N3Handler.pattern = new RegExp('(application|text)/(x-)?(rdf\\+)?(n3|turtle)')
 
-  Util.callbackify(this, ['request', 'recv', 'headers', 'load', 'fail', 'refresh', 'retract', 'done'])
+  Util.callbackify(this, [ 'request', 'recv', 'headers', 'load', 'fail', 'refresh', 'retract', 'done' ])
 
   this.addHandler = function (handler) {
     sf.handlers.push(handler)
@@ -497,7 +497,7 @@ var Fetcher = function Fetcher (store, timeout, async) {
       this.fetchCallbacks[xhr.original.uri].shift()(false, 'Fetch of <' + xhr.original.uri + '> failed: ' + status, xhr)
     }
     delete this.fetchCallbacks[xhr.original.uri]
-    this.fireCallbacks('fail', [xhr.original.uri, status])
+    this.fireCallbacks('fail', [ xhr.original.uri, status ])
     xhr.abort()
     return xhr
   }
@@ -560,7 +560,7 @@ var Fetcher = function Fetcher (store, timeout, async) {
       this.fetchCallbacks[xhr.original.uri].shift()(true, undefined, xhr)
     }
     delete this.fetchCallbacks[xhr.original.uri]
-    this.fireCallbacks('done', [xhr.original.uri])
+    this.fireCallbacks('done', [ xhr.original.uri ])
   }
   var handlerList = [
     Fetcher.RDFXMLHandler, Fetcher.XHTMLHandler,
@@ -1066,7 +1066,7 @@ var Fetcher = function Fetcher (store, timeout, async) {
           sf.fireCallbacks('recv', args)
           var kb = sf.store
           sf.saveResponseMetadata(xhr, kb)
-          sf.fireCallbacks('headers', [{uri: docuri, headers: xhr.headers}])
+          sf.fireCallbacks('headers', [ {uri: docuri, headers: xhr.headers} ])
 
           // Check for masked errors.
           // For "security reasons" theboraser hides errors such as CORS errors from
@@ -1125,8 +1125,12 @@ var Fetcher = function Fetcher (store, timeout, async) {
           }
           // This is a minimal set to allow the use of damaged servers if necessary
           var extensionToContentType = {
-            'rdf': 'application/rdf+xml', 'owl': 'application/rdf+xml',
-            'n3': 'text/n3', 'ttl': 'text/turtle', 'nt': 'text/n3', 'acl': 'text/n3',
+            'rdf': 'application/rdf+xml',
+'owl': 'application/rdf+xml',
+            'n3': 'text/n3',
+'ttl': 'text/turtle',
+'nt': 'text/n3',
+'acl': 'text/n3',
             'html': 'text/html',
             'xml': 'text/xml'
           }
@@ -1200,7 +1204,6 @@ var Fetcher = function Fetcher (store, timeout, async) {
             // sf.failFetch(xhr, "Unhandled content type: " + xhr.headers['content-type']+
             //        ", readyState = "+xhr.readyState)
             */
-            return
           }
         }
 
@@ -1352,10 +1355,14 @@ var Fetcher = function Fetcher (store, timeout, async) {
     }
     try {
       // console.log("ACTUAL PROXY URI: "+actualProxyURI)
-      // NOTE: FIXME: this is the fixup for the xhr path under windows. 
+      // NOTE: FIXME: this is the fixup for the xhr path under windows.
       // It will keep the kb consistent between platforms but it might
       // break other things
-      actualProxyURI = actualProxyURI.replace(/\/\/\//g,"//")
+      if (process) {
+        if (process.platform.slice(0, 3) === 'win') {
+          actualProxyURI = actualProxyURI.replace(/\/\/\//g, '//')
+        }
+      }
       xhr.open('GET', actualProxyURI, this.async)
     } catch (er) {
       return this.failFetch(xhr, 'XHR open for GET failed for <' + uri2 + '>:\n\t' + er)

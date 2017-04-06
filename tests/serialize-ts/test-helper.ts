@@ -81,13 +81,17 @@ export class TestHelper {
     if (doc.uri.slice(0, 7) !== 'file://') {
       console.log('Can only write files just now, sorry: ' + doc.uri);
     }
-    let fileName = doc.uri.slice(7)
-    fileName = fileName.slice(1)
+    let fileName= doc.uri.slice(7)
+    if (process) {
+      if (process.platform.slice(0, 3) === 'win') {
+        fileName = doc.uri.slice(8)
+      }
+    } 
+    var options = { flags: 'z' } // Only applies to RDF/XML
     try {
       if (this.contentType !== 'application/ld+json') {
-        out = $rdf.serialize(this.targetDocument, this.kb, this.targetDocument.uri, this.contentType)
+        out = $rdf.serialize(this.targetDocument, this.kb, this.targetDocument.uri, this.contentType, undefined, options)
         return new Promise(function (fulfilled, rejected) {
-
           fs.writeFile(fileName, out, "utf8", function (err) {
             if (err) {
               console.log('Error writing file <' + file + '> :' + err)
@@ -105,7 +109,7 @@ export class TestHelper {
               function (err, res) {
                 if (err) reject(err)
                 else resolve(res)
-              })
+              }, options)
           } catch (e) {
             reject(e)
           }
@@ -142,7 +146,12 @@ export class TestHelper {
     if (doc.uri.slice(0, 7) !== 'file://') {
       // console.log('Can only write files just now, sorry: ' + doc.uri)
     }
-    var fileName = doc.uri.slice(7) //
+    let fileName= doc.uri.slice(7)
+    if (process) {
+      if (process.platform.slice(0, 3) === 'win') {
+        fileName = doc.uri.slice(8)
+      }
+    } 
     return new Promise(function (fulfill, reject) {
       fs.writeFile(fileName, out, function (err) {
         if (err) {

@@ -1,0 +1,17 @@
+{
+  "extends": "standard",
+  "plugins": [
+    "standard",
+    "promise",
+    "mocha"
+  ],
+  "rules": {
+    "array-bracket-spacing": [
+      "error",
+      "always"
+    ],
+    "space-before-function-paren": "error",
+    "camelcase": "off",
+    "no-unused-vars": "warn"
+  }
+}
