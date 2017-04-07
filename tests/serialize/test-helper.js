@@ -1,33 +1,33 @@
 'use strict'
-Object.defineProperty(exports, '__esModule', { value: true })
-var $rdf = require('../../lib/index')
-var fs = require('fs')
-var Promise = require('bluebird')
+import $rdf from '../../lib/index'
+import fs from 'mz/fs'
+import Promise from 'bluebird'
+
 /**
  * A helper class for manipulating files during tests
  *
  * @export
  * @class TestHelper
  */
-var TestHelper = (function () {
-  function TestHelper (folder) {
+class TestHelper {
+  constructor (folder) {
     this.testFolder = folder || 'tests/serialize/sample_files/'
     this.kb = $rdf.graph()
     this.fetcher = $rdf.fetcher(this.kb)
     $rdf.fetcher(this.kb)
     this.contentType = 'text/turtle'
     this.base = 'file://' + this.normalizeSlashes(process.cwd()) + '/' + this.testFolder
-    this.targetDocument = $rdf.sym(this.base + 'stdin') // default URI of test data
+    this.targetDocument = $rdf.sym(this.base + 'stdin') // defaul URI of test data
   }
-  TestHelper.prototype.setBase = function (base) {
+  setBase (base) {
     this.base = $rdf.uri.join(base, this.base)
   }
-  TestHelper.prototype.clear = function () {
+  clear () {
     $rdf.BlankNode.nextId = 0
     this.kb = $rdf.graph()
     this.fetcher = $rdf.fetcher(this.kb)
   }
-  TestHelper.prototype.setFormat = function (format) {
+  setFormat (format) {
     this.contentType = format
   }
   /**
@@ -38,37 +38,30 @@ var TestHelper = (function () {
    *
    * @memberOf TestHelper
    */
-  TestHelper.prototype.loadFile = function (file) {
-    var _this = this
-    var document = $rdf.sym($rdf.uri.join(file, this.base))
+  loadFile (file) {
+    let document = $rdf.sym($rdf.uri.join(file, this.base))
     this.targetDocument = document
-    return new Promise(function (resolve, reject) {
-      _this.fetcher.nowOrWhenFetched(document, {}, function (ok, body, xhr) {
-        if (ok) {
-          // console.log('Loaded  ' + document)
-          resolve(this)
-        } else {
-          check(ok, body, xhr ? xhr.status : undefined)
-          reject(xhr ? xhr.status : undefined)
-        }
-      })
+    return this.fetcher.load(document, {})
+    .catch((err) => {
+      console.log('Loading error:' + err)
+      // I dont think not rethrowing is a good idea since we are testing
+      throw Error(err)
     })
   }
-  TestHelper.prototype.outputFile = function (file, format) {
-    var _this = this
+  outputFile (file, format) {
     if (format) {
       this.setFormat(format)
     }
-    var out
+    let out
     if (!file) {
       console.log('Result: ' + out)
       return
     }
-    var doc = $rdf.sym($rdf.uri.join(file, this.base))
+    let doc = $rdf.sym($rdf.uri.join(file, this.base))
     if (doc.uri.slice(0, 7) !== 'file://') {
       console.log('Can only write files just now, sorry: ' + doc.uri)
     }
-    var fileName = doc.uri.slice(7)
+    let fileName = doc.uri.slice(7)
     if (process) {
       if (process.platform.slice(0, 3) === 'win') {
         fileName = doc.uri.slice(8)
@@ -78,79 +71,66 @@ var TestHelper = (function () {
     try {
       if (this.contentType !== 'application/ld+json') {
         out = $rdf.serialize(this.targetDocument, this.kb, this.targetDocument.uri, this.contentType, undefined, options)
-        return new Promise(function (resolve, reject) {
-          fs.writeFile(fileName, out, 'utf8', function (err) {
-            if (err) {
-              console.log('Error writing file <' + file + '> :' + err)
-              reject(err)
-            }
-            // console.log('Written ' + fileName)
-            resolve()
+        return fs.writeFile(fileName, out, 'utf8')
+          .catch(err => {
+            console.log('Error writing file <' + file + '> :' + err)
+            throw Error(err)
           })
-        })
       } else {
-        return new Promise(function (resolve, reject) {
+        return new Promise((resolve, reject) => {
           try {
-            $rdf.serialize(_this.targetDocument, _this.kb, _this.targetDocument.uri, _this.contentType, function (err, res) {
+            $rdf.serialize(this.targetDocument, this.kb, this.targetDocument.uri, this.contentType, function (err, res) {
               if (err) { reject(err) } else { resolve(res) }
             }, options)
           } catch (e) {
             reject(e)
           }
-        }).then(function (out) {
-          return new Promise(function (resolve, reject) {
-            fs.writeFile(fileName, out, 'utf8', function (err) {
-              if (err) {
-                console.log('Error writing file <' + file + '> :' + err)
-                reject(err)
-              }
-              // console.log('Written ' + fileName)
-              resolve()
+        }).then((out) => {
+          return fs.writeFile(fileName, out, 'utf8')
+            .catch(err => {
+              console.log('Error writing file <' + file + '> :' + err)
+              throw Error(err)
             })
-          })
         })
       }
     } catch (e) {
       console.log('Error in serializer: ' + e + this.stackString(e))
+      throw Error(e)
     }
   }
-  TestHelper.prototype.dump = function (file) {
-    var doc = $rdf.sym($rdf.uri.join(file, this.base))
+  dump (file) {
+    let doc = $rdf.sym($rdf.uri.join(file, this.base))
     $rdf.term()
-    var out
+    let out
     try {
       out = $rdf.serialize(null, this.kb, this.targetDocument.uri, 'application/n-quads') // whole store
-    } catch (e) {
-      console.log('Error in serializer: ' + e + this.stackString(e))
+    } catch (err) {
+      console.log('Error in serializer: ' + err + this.stackString(e))
+      throw Error(err)
     }
     console.log(out)
     if (doc.uri.slice(0, 7) !== 'file://') {
       // console.log('Can only write files just now, sorry: ' + doc.uri)
     }
-    var fileName = doc.uri.slice(7)
+    let fileName = doc.uri.slice(7)
     if (process) {
       if (process.platform.slice(0, 3) === 'win') {
         fileName = doc.uri.slice(8)
       }
     }
-    return new Promise(function (resolve, reject) {
-      fs.writeFile(fileName, out, function (err) {
-        if (err) {
-          console.log('Error writing file <' + file + '> :' + err)
-          reject(err)
-        }
-        // console.log('Written ' + fileName)
-        resolve()
+    return fs.writeFile(fileName, out)
+      .catch(err => {
+        console.log('Error writing file <' + file + '> :' + err)
+        throw Error(err)
       })
-    })
   }
-  TestHelper.prototype.size = function () {
+  size () {
     console.log(this.kb.statements.length + ' triples')
   }
-  TestHelper.prototype.version = function () {
+  version () {
     // console.log('rdflib built: ' + $rdf.buildTime)
   }
-  TestHelper.prototype.stackString = function (e) {
+  stackString (e) {
     var str = '' + e + '\n'
     if (!e.stack) {
       return str + 'No stack available.\n'
@@ -175,15 +155,15 @@ var TestHelper = (function () {
     }
     return str
   }
-  TestHelper.prototype.normalizeSlashes = function (str) {
+
+  normalizeSlashes (str) {
     if (str[0] !== '/') {
       str = '/' + str
     }
     return str.replace(/\\/g, '/')
   }
-  return TestHelper
-}())
-exports.TestHelper = TestHelper
+}
+export default TestHelper
 function check (ok, message, status) {
   if (!ok) {
     console.log('Failed ' + status + ': ' + message)

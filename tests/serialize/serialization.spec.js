@@ -1,20 +1,19 @@
 'use strict'
 /* eslint no-unused-expressions:0 */
-Object.defineProperty(exports, '__esModule', { value: true })
-var $rdf = require('../../lib/index')
-var TestHelper = require('./test-helper')
-var fs = require('mz/fs')
-var chai = require('chai')
-var chaiAsPromised = require('chai-as-promised')
-var Promise = require('bluebird')
-require('colors')
+import $rdf from '../../lib/index'
+import TestHelper from './test-helper'
+import fs from 'mz/fs'
+import chai from 'chai'
+import chaiAsPromised from 'chai-as-promised'
+import Promise from 'bluebird'
+
 chai.use(chaiAsPromised)
 chai.should()
 
 describe('Testing the consistency of serialization between the various parsers', function () {
   let testHelper
   beforeEach(() => {
-    testHelper = new TestHelper.TestHelper()
+    testHelper = new TestHelper()
     testHelper.clear()
   })
   describe('T1: Simple turtle to xml', function () {
@@ -301,7 +300,7 @@ describe('Testing the consistency of serialization between the various parsers',
 
   describe('T12: n3 to nt to ttl', function () {
     //   "serialize-test-12": "cd tests/serialize && node ./data.js -in=structures.n3 -format=text/turtle -out=,structures.ttl && node diff ,structures.ttl t12-ref.ttl",
-    it('Should load structures.n3 and write ,structures.ttl, matching t11-ref.ttl', function (done) {
+    it('Should load structures.n3 and write ,structures.ttl, matching t12-ref.ttl', function (done) {
       testHelper.loadFile('structures.n3').should.eventually.be.fulfilled
         .then(function () {
           var lit = $rdf.literal(testHelper.base + 'structures.n3')
@@ -323,7 +322,7 @@ describe('Testing the consistency of serialization between the various parsers',
     })
   }) // END n3 to turtle
 
-  describe('T13: n3 to rdf+xml', function () {
+  describe('T13: n3 to nt to turtle', function () {
     //   "serialize-test-13": "cd tests/serialize && node ./data.js -in=structures.n3 -format=application/n-triples -out=,structures.nt && node ./data.js -in=,structures.nt -format=text/turtle -out=,structures.nt.ttl && node diff ,structures.nt.ttl t13-ref.ttl"
     it('Should load structures.n3 and write ,structures.nt, then load ,structures.nt and write ,structures.nt.ttl, matching t13-ref.ttl', function (done) {
       testHelper.loadFile('structures.n3').should.eventually.be.fulfilled
@@ -356,5 +355,5 @@ describe('Testing the consistency of serialization between the various parsers',
         })
         .should.notify(done)
     })
-  }) // END n3 to rdf+xml
+  }) // END n3 to nt to turtle
 })
