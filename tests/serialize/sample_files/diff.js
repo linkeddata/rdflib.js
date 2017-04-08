@@ -26,7 +26,6 @@
   var data2 = fs.readFileSync(file2, 'utf-8')
   data1 = data1.replace(/\r\n?/g, '\n')
   data2 = data2.replace(/\r\n?/g, '\n')
-  console.log(data1)
   var diff = jsdiff.diffChars(data1, data2)
 
   diff.forEach(function (part) {

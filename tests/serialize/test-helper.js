@@ -1,7 +1,6 @@
 'use strict'
 import $rdf from '../../lib/index'
 import fs from 'mz/fs'
-import Promise from 'bluebird'
 
 /**
  * A helper class for manipulating files during tests

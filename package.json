@@ -30,11 +30,9 @@
   "dependencies": {
     "async": "^0.9.x",
     "jsonld": "^0.4.5",
-    "mz": "^2.6.0",
     "n3": "^0.4.1",
     "xmldom": "^0.1.22",
-    "xmlhttprequest": "1.8.0",
-    "bluebird": "3.5.0"
+    "xmlhttprequest": "1.8.0"
   },
   "devDependencies": {
     "babel-cli": "^6.11.4",
@@ -45,15 +43,15 @@
     "chai": "^3.5.0",
     "chai-as-promised": "^6.0.0",
     "diff": "^3.2.0",
-    "eslint": "^3.18.0",
-    "eslint-plugin-promise": "^3.5.0",
-    "eslint-plugin-standard": "^2.1.1",
+    "dirty-chai": "^1.2.2",
     "fs-grep": "^0.0.5",
     "grep-cli": "^0.2.1",
     "minifyify": "^7.3.2",
     "mocha": "^3.2.0",
+    "mz": "2.6.0",
     "node-mkdirp": "0.0.1",
-    "rimraf": "^2.6.1"
+    "rimraf": "^2.6.1",
+    "standard": "10.0.1"
   },
   "scripts": {
     "test": "npm run test:unit && npm run test:serialize",
@@ -115,7 +113,11 @@
       "$rdf",
       "Services",
       "tabulator",
-      "WebSocket"
+      "WebSocket",
+      "describe",
+      "it",
+      "tabulator",
+      "Components"
     ]
   }
 }

@@ -1,13 +1,13 @@
 'use strict'
-/* eslint no-unused-expressions:0 */
 import $rdf from '../../lib/index'
 import TestHelper from './test-helper'
 import fs from 'mz/fs'
 import chai from 'chai'
 import chaiAsPromised from 'chai-as-promised'
-import Promise from 'bluebird'
+import dirtyChai from 'dirty-chai'
 
 chai.use(chaiAsPromised)
+chai.use(dirtyChai)
 chai.should()
 
 describe('Testing the consistency of serialization between the various parsers', function () {
@@ -18,7 +18,7 @@ describe('Testing the consistency of serialization between the various parsers',
   })
   describe('T1: Simple turtle to xml', function () {
     it('Should read t1.ttl, write to ,t1.xml matching t1-ref.xml', function (done) {
-      testHelper.loadFile('t1.ttl').should.eventually.be.fulfilled
+      testHelper.loadFile('t1.ttl').should.eventually.be.fulfilled()
         .then(function () {
           testHelper.kb.statementsMatching(null, null, testHelper.base + 't1.ttl')[0]['object'].termType.should.equal('Literal')
           return testHelper.outputFile(',t1.xml', 'application/rdf+xml')
@@ -34,7 +34,7 @@ describe('Testing the consistency of serialization between the various parsers',
     // node ./data.js -in=t2.ttl -format=application/rdf+xml  -out=,t2.xml
     // diff ,t2.xml t2-ref.xml
     it('Should load t2.ttl and write ,t2.xml, matching t2-ref.xml', function (done) {
-      testHelper.loadFile('t2.ttl').should.eventually.be.fulfilled
+      testHelper.loadFile('t2.ttl').should.eventually.be.fulfilled()
         .then(function () {
           var foo = $rdf.sym('https://example.org/foo#foo')
           testHelper.kb.statementsMatching(foo)[0]['object'].termType.should.equal('Literal')
@@ -59,7 +59,7 @@ describe('Testing the consistency of serialization between the various parsers',
     // node ./data.js -in=t3.ttl -format=application/rdf+xml  -out=,t3.xml
     // diff ,t3.xml t3-ref.xml
     it('Should load t3.ttl and write to ,t3.xml, matching t3-ref.xml', function (done) {
-      testHelper.loadFile('t3.ttl').should.eventually.be.fulfilled
+      testHelper.loadFile('t3.ttl').should.eventually.be.fulfilled()
         .then(function () {
           var foo = $rdf.sym('https://example.net/67890#foo')
           var pred = $rdf.sym('https://example.net/67890#bar')
@@ -86,7 +86,7 @@ describe('Testing the consistency of serialization between the various parsers',
     // node./data.js -in=t3.ttl - out=,t4.ttl
     // diff , t4.ttl t4- ref.ttl
     it('Should load t3.ttl and write t4.ttl, matching t4-ref.ttl', function (done) {
-      testHelper.loadFile('t3.ttl').should.eventually.be.fulfilled
+      testHelper.loadFile('t3.ttl').should.eventually.be.fulfilled()
         .then(function () {
           var foo = $rdf.sym('https://example.net/67890#foo')
           var pred = $rdf.sym('https://example.net/67890#bar')
@@ -113,11 +113,11 @@ describe('Testing the consistency of serialization between the various parsers',
     // node ./data.js -in=t5.n3 -format=text/turtle -out=,t5.ttl
     // diff ,t5.ttl t5-ref.ttl
     it('Should load t5.n3 and write t5.ttl, matching t5-ref.ttl', function (done) {
-      testHelper.loadFile('t5.n3').should.eventually.be.fulfilled
+      testHelper.loadFile('t5.n3').should.eventually.be.fulfilled()
         .then(function () {
           var lit = $rdf.literal(testHelper.base + 't5.n3')
           // let pred = $rdf.sym("https://example.net/67890#bar");
-          testHelper.kb.statementsMatching(undefined, undefined, lit).should.not.be.undefined
+          testHelper.kb.statementsMatching(undefined, undefined, lit).should.not.be.undefined()
           return testHelper.outputFile(',t5.ttl', 'text/turtle')
         })
         .then(function () {
@@ -140,10 +140,10 @@ describe('Testing the consistency of serialization between the various parsers',
     // de ./data.js -in=t5.n3 -format=text/n3 -out=,t6.n3
     // diff ,t6.n3 t6-ref.n3
     it('Should load t5.n3 and write t6.n3, matching t6-ref.n3', function (done) {
-      testHelper.loadFile('t5.n3').should.eventually.be.fulfilled
+      testHelper.loadFile('t5.n3').should.eventually.be.fulfilled()
         .then(function () {
           var lit = $rdf.literal(testHelper.base + 't5.n3')
-          testHelper.kb.statementsMatching(undefined, undefined, lit).should.not.be.undefined
+          testHelper.kb.statementsMatching(undefined, undefined, lit).should.not.be.undefined()
           return testHelper.outputFile(',t6.n3', 'text/n3')
         })
         .then(function () {
@@ -167,10 +167,10 @@ describe('Testing the consistency of serialization between the various parsers',
     // node ./data.js -in=t7.n3 -format=application/n-triples -out=,t7.nt
     // diff ,t7.nt t7-ref.nt
     it('Should load t7.n3 and write t7.nt, matching t7-ref.nt', function (done) {
-      testHelper.loadFile('t7.n3').should.eventually.be.fulfilled
+      testHelper.loadFile('t7.n3').should.eventually.be.fulfilled()
         .then(function () {
           var lit = $rdf.literal(testHelper.base + 't7.n3')
-          testHelper.kb.statementsMatching(undefined, undefined, lit).should.not.be.undefined
+          testHelper.kb.statementsMatching(undefined, undefined, lit).should.not.be.undefined()
           return testHelper.outputFile(',t7.nt', 'application/n-triples')
         })
         .then(function () {
@@ -196,10 +196,10 @@ describe('Testing the consistency of serialization between the various parsers',
     // node ./data.js -in=t5.n3  -format=application/n-quads -dump=,t8.nq
     // diff ,t8.nq t8-ref.nq
     it('Should load t5.n3 and write t8.nq, matching t8-ref.nq', function (done) {
-      testHelper.loadFile('t5.n3').should.eventually.be.fulfilled
+      testHelper.loadFile('t5.n3').should.eventually.be.fulfilled()
         .then(function () {
           var lit = $rdf.literal(testHelper.base + 't5.n3')
-          testHelper.kb.statementsMatching(undefined, undefined, lit).should.not.be.undefined
+          testHelper.kb.statementsMatching(undefined, undefined, lit).should.not.be.undefined()
           return testHelper.outputFile(',t8.nq', 'application/n-quads')
         })
         .then(function () {
@@ -229,10 +229,10 @@ describe('Testing the consistency of serialization between the various parsers',
   describe('T9: n3 to ld+json', function () {
     // "serialize-test-9": "cd tests/serialize && node ./data.js -in=t7.n3 -format=application/ld+json -out=,t9.json && node diff ,t9.json t9-ref.json"
     it('Should load t7.n3 and write t9.json, matching t9-ref.json', function (done) {
-      testHelper.loadFile('t7.n3').should.eventually.be.fulfilled
+      testHelper.loadFile('t7.n3').should.eventually.be.fulfilled()
         .then(function () {
           var lit = $rdf.literal(testHelper.base + 't7.n3')
-          testHelper.kb.statementsMatching(undefined, undefined, lit).should.not.be.undefined
+          testHelper.kb.statementsMatching(undefined, undefined, lit).should.not.be.undefined()
           return testHelper.outputFile(',t9.json', 'application/ld+json')
         })
         .then(function () {
@@ -253,10 +253,10 @@ describe('Testing the consistency of serialization between the various parsers',
   describe('T10: turtle parsing', function () {
     // "serialize-test-10": "cd tests/serialize && node ./data.js -in=details.ttl -format=text/turtle -out=,t10.ttl && node diff ,t10.ttl t10-ref.ttl",
     it('Should load details.ttl and write ,t10.ttl, matching t10-ref.ttl', function (done) {
-      testHelper.loadFile('details.ttl').should.eventually.be.fulfilled
+      testHelper.loadFile('details.ttl').should.eventually.be.fulfilled()
         .then(function () {
           var lit = $rdf.literal(testHelper.base + 'details.ttl')
-          testHelper.kb.statementsMatching(undefined, undefined, lit).should.not.be.undefined
+          testHelper.kb.statementsMatching(undefined, undefined, lit).should.not.be.undefined()
           return testHelper.outputFile(',t10.ttl', 'text/turtle')
         })
         .then(function () {
@@ -277,10 +277,10 @@ describe('Testing the consistency of serialization between the various parsers',
   describe('T11: n3 to rdf+xml', function () {
     // "serialize-test-11": "cd tests/serialize && node ./data.js -in=structures.n3 -format=application/rdf+xml  -out=,structures.xml && node diff ,structures.xml t11-ref.xml",
     it('Should load structures.n3 and write ,structures.xml, matching t11-ref.xml', function (done) {
-      testHelper.loadFile('structures.n3').should.eventually.be.fulfilled
+      testHelper.loadFile('structures.n3').should.eventually.be.fulfilled()
         .then(function () {
           var lit = $rdf.literal(testHelper.base + 'structures.n3')
-          testHelper.kb.statementsMatching(undefined, undefined, lit).should.not.be.undefined
+          testHelper.kb.statementsMatching(undefined, undefined, lit).should.not.be.undefined()
           return testHelper.outputFile(',structures.xml', 'application/rdf+xml')
         })
         .then(function () {
@@ -301,10 +301,10 @@ describe('Testing the consistency of serialization between the various parsers',
   describe('T12: n3 to nt to ttl', function () {
     //   "serialize-test-12": "cd tests/serialize && node ./data.js -in=structures.n3 -format=text/turtle -out=,structures.ttl && node diff ,structures.ttl t12-ref.ttl",
     it('Should load structures.n3 and write ,structures.ttl, matching t12-ref.ttl', function (done) {
-      testHelper.loadFile('structures.n3').should.eventually.be.fulfilled
+      testHelper.loadFile('structures.n3').should.eventually.be.fulfilled()
         .then(function () {
           var lit = $rdf.literal(testHelper.base + 'structures.n3')
-          testHelper.kb.statementsMatching(undefined, undefined, lit).should.not.be.undefined
+          testHelper.kb.statementsMatching(undefined, undefined, lit).should.not.be.undefined()
           return testHelper.outputFile(',structures.ttl', 'text/turtle')
         })
         .then(function () {
@@ -325,10 +325,10 @@ describe('Testing the consistency of serialization between the various parsers',
   describe('T13: n3 to nt to turtle', function () {
     //   "serialize-test-13": "cd tests/serialize && node ./data.js -in=structures.n3 -format=application/n-triples -out=,structures.nt && node ./data.js -in=,structures.nt -format=text/turtle -out=,structures.nt.ttl && node diff ,structures.nt.ttl t13-ref.ttl"
     it('Should load structures.n3 and write ,structures.nt, then load ,structures.nt and write ,structures.nt.ttl, matching t13-ref.ttl', function (done) {
-      testHelper.loadFile('structures.n3').should.eventually.be.fulfilled
+      testHelper.loadFile('structures.n3').should.eventually.be.fulfilled()
         .then(function () {
           var lit = $rdf.literal(testHelper.base + 'structures.n3')
-          testHelper.kb.statementsMatching(undefined, undefined, lit).should.not.be.undefined
+          testHelper.kb.statementsMatching(undefined, undefined, lit).should.not.be.undefined()
           return testHelper.outputFile(',structures.nt', 'application/n-triples')
         })
         .then(function () {
@@ -339,7 +339,7 @@ describe('Testing the consistency of serialization between the various parsers',
         })
         .then(function () {
           var lit = $rdf.literal(testHelper.base + ',structures.nt')
-          testHelper.kb.statementsMatching(undefined, undefined, lit).should.not.be.undefined
+          testHelper.kb.statementsMatching(undefined, undefined, lit).should.not.be.undefined()
           return testHelper.outputFile(',structures.nt.ttl', 'text/turtle')
         })
         .then(function () {
