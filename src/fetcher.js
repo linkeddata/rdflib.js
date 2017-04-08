@@ -232,7 +232,7 @@ var Fetcher = function Fetcher (store, timeout, async) {
             // Is it RDF/XML?
             if (ns && ns === ns['rdf']) {
               sf.addStatus(xhr.req, 'Has XML root element in the RDF namespace, so assume RDF/XML.')
-              sf.switchHandler('RDFXMLHandler', xhr, cb, [dom])
+              sf.switchHandler('RDFXMLHandler', xhr, cb, [ dom ])
               return
             }
             // it isn't RDF/XML or we can't tell
@@ -324,7 +324,7 @@ var Fetcher = function Fetcher (store, timeout, async) {
           return
         }
 
-        // dc:title	                       //no need to escape '/' here
+        // dc:title                         //no need to escape '/' here
         var titleMatch = (new RegExp('<title>([\\s\\S]+?)</title>', 'im')).exec(rt)
         if (titleMatch) {
           var kb = sf.store
@@ -440,7 +440,7 @@ var Fetcher = function Fetcher (store, timeout, async) {
   }
   Fetcher.N3Handler.pattern = new RegExp('(application|text)/(x-)?(rdf\\+)?(n3|turtle)')
 
-  Util.callbackify(this, ['request', 'recv', 'headers', 'load', 'fail', 'refresh', 'retract', 'done'])
+  Util.callbackify(this, [ 'request', 'recv', 'headers', 'load', 'fail', 'refresh', 'retract', 'done' ])
 
   this.addHandler = function (handler) {
     sf.handlers.push(handler)
@@ -496,7 +496,7 @@ var Fetcher = function Fetcher (store, timeout, async) {
       this.fetchCallbacks[xhr.original.uri].shift()(false, 'Fetch of <' + xhr.original.uri + '> failed: ' + status, xhr)
     }
     delete this.fetchCallbacks[xhr.original.uri]
-    this.fireCallbacks('fail', [xhr.original.uri, status])
+    this.fireCallbacks('fail', [ xhr.original.uri, status ])
     xhr.abort()
     return xhr
   }
@@ -532,8 +532,8 @@ var Fetcher = function Fetcher (store, timeout, async) {
       link = xhr.getResponseHeader('link') // May crash from CORS error
     } catch (e) {}
     if (link) {
-      var linkexp = /<[^>]*>\s*(\s*;\s*[^\(\)<>@,;:"\/\[\]\?={} \t]+=(([^\(\)<>@,;:"\/\[\]\?={} \t]+)|("[^"]*")))*(,|$)/g
-      var paramexp = /[^\(\)<>@,;:"\/\[\]\?={} \t]+=(([^\(\)<>@,;:"\/\[\]\?={} \t]+)|("[^"]*"))/g
+      var linkexp = /<[^>]*>\s*(\s*;\s*[^()<>@,;:"/[\]?={} \t]+=(([^()<>@,;:"/[\]?={} \t]+)|("[^"]*")))*(,|$)/g
+      var paramexp = /[^()<>@,;:"/[\]?={} \t]+=(([^()<>@,;:"/[\]?={} \t]+)|("[^"]*"))/g
 
       var matches = link.match(linkexp)
       for (var i = 0; i < matches.length; i++) {
@@ -559,7 +559,7 @@ var Fetcher = function Fetcher (store, timeout, async) {
       this.fetchCallbacks[xhr.original.uri].shift()(true, undefined, xhr)
     }
     delete this.fetchCallbacks[xhr.original.uri]
-    this.fireCallbacks('done', [xhr.original.uri])
+    this.fireCallbacks('done', [ xhr.original.uri ])
   }
   var handlerList = [
     Fetcher.RDFXMLHandler, Fetcher.XHTMLHandler,
@@ -872,14 +872,14 @@ var Fetcher = function Fetcher (store, timeout, async) {
 
   /** Requests a document URI and arranges to load the document.
    ** Parameters:
-   **	    term:  term for the thing whose URI is to be dereferenced
+   **      term:  term for the thing whose URI is to be dereferenced
    **      rterm:  the resource which refered to this (for tracking bad links)
    **      options:
    **              force:  Load the data even if loaded before
    **              withCredentials:   flag for XHR/CORS etc
    **      userCallback:  Called with (true) or (false, errorbody, {status: 400}) after load is done or failed
    ** Return value:
-   **	    The xhr object for the HTTP access
+   **      The xhr object for the HTTP access
    **      null if the protocol is not a look-up protocol,
    **              or URI has already been loaded
    */
@@ -1026,7 +1026,7 @@ var Fetcher = function Fetcher (store, timeout, async) {
                   if (!sf.fetchCallbacks[newURI]) {
                     sf.fetchCallbacks[newURI] = []
                   }
-                  sf.fetchCallbacks[newURI] === sf.fetchCallbacks[newURI].concat(sf.fetchCallbacks[xhr.resource.uri])
+                  sf.fetchCallbacks[newURI] = sf.fetchCallbacks[newURI].concat(sf.fetchCallbacks[xhr.resource.uri])
                   delete sf.fetchCallbacks[xhr.resource.uri]
                 }
 
@@ -1065,7 +1065,7 @@ var Fetcher = function Fetcher (store, timeout, async) {
           sf.fireCallbacks('recv', args)
           var kb = sf.store
           sf.saveResponseMetadata(xhr, kb)
-          sf.fireCallbacks('headers', [{uri: docuri, headers: xhr.headers}])
+          sf.fireCallbacks('headers', [ {uri: docuri, headers: xhr.headers} ])
 
           // Check for masked errors.
           // For "security reasons" theboraser hides errors such as CORS errors from
@@ -1124,8 +1124,12 @@ var Fetcher = function Fetcher (store, timeout, async) {
           }
           // This is a minimal set to allow the use of damaged servers if necessary
           var extensionToContentType = {
-            'rdf': 'application/rdf+xml', 'owl': 'application/rdf+xml',
-            'n3': 'text/n3', 'ttl': 'text/turtle', 'nt': 'text/n3', 'acl': 'text/n3',
+            'rdf': 'application/rdf+xml',
+            'owl': 'application/rdf+xml',
+            'n3': 'text/n3',
+            'ttl': 'text/turtle',
+            'nt': 'text/n3',
+            'acl': 'text/n3',
             'html': 'text/html',
             'xml': 'text/xml'
           }
@@ -1199,7 +1203,6 @@ var Fetcher = function Fetcher (store, timeout, async) {
             // sf.failFetch(xhr, "Unhandled content type: " + xhr.headers['content-type']+
             //        ", readyState = "+xhr.readyState)
             */
-            return
           }
         }
 
@@ -1252,7 +1255,7 @@ var Fetcher = function Fetcher (store, timeout, async) {
                   if (!sf.fetchCallbacks[newURI]) {
                     sf.fetchCallbacks[newURI] = []
                   }
-                  sf.fetchCallbacks[newURI] === sf.fetchCallbacks[newURI].concat(sf.fetchCallbacks[xhr.resource.uri])
+                  sf.fetchCallbacks[newURI] = sf.fetchCallbacks[newURI].concat(sf.fetchCallbacks[xhr.resource.uri])
                   delete sf.fetchCallbacks[xhr.resource.uri]
                 }
 
@@ -1350,6 +1353,13 @@ var Fetcher = function Fetcher (store, timeout, async) {
       sf.failFetch(xhr, 'requestTimeout')
     }
     try {
+      // NOTE: this is the fixup for the xhr path under windows.
+
+      if (process) {
+        if (process.platform.slice(0, 3) === 'win') {
+          actualProxyURI = actualProxyURI.replace(/\/\/\//g, '//')
+        }
+      }
       xhr.open('GET', actualProxyURI, this.async)
     } catch (er) {
       return this.failFetch(xhr, 'XHR open for GET failed for <' + uri2 + '>:\n\t' + er)
@@ -1414,7 +1424,7 @@ var Fetcher = function Fetcher (store, timeout, async) {
                     if (!sf.fetchCallbacks[newURI]) {
                       sf.fetchCallbacks[newURI] = []
                     }
-                    sf.fetchCallbacks[newURI] === sf.fetchCallbacks[newURI].concat(sf.fetchCallbacks[xhr.resource.uri])
+                    sf.fetchCallbacks[newURI] = sf.fetchCallbacks[newURI].concat(sf.fetchCallbacks[xhr.resource.uri])
                     delete sf.fetchCallbacks[xhr.resource.uri]
                   }
 
