@@ -539,6 +539,13 @@ class Fetcher {
     this.nowOrWhenFetched(uri, p2, userCallback, options)
   }
 
+  /**
+   * Records a status message (as a literal node) by appending it to the
+   * request's metadata status collection.
+   *
+   * @param req {BlankNode}
+   * @param status {string}
+   */
   addStatus (req, status) {
     // <Debug about="parsePerformance">
     let now = new Date()
@@ -546,16 +553,24 @@ class Fetcher {
       now.getSeconds() + '.' + now.getMilliseconds() + '] ' + status
     // </Debug>
     let kb = this.store
-    let s = kb.the(req, ns.link('status'))
-    if (s && s.append) {
-      s.append(kb.literal(status))
+
+    let statusNode = kb.the(req, ns.link('status'))
+    if (statusNode && statusNode.append) {
+      statusNode.append(kb.literal(status))
     } else {
-      log.warn('web.js: No list to add to: ' + s + ',' + status) // @@@
+      log.warn('web.js: No list to add to: ' + statusNode + ',' + status)
     }
   }
 
   /**
-   * Records errors in the system on failure.
+   * Records errors in the system on failure:
+   *
+   *  - Adds an entry to the request status collection
+   *  - Adds an error triple with the fail message to the metadata
+   *  - Signals failure by calling all the `fetchCallbacks` with a fail message
+   *  - Fires the 'fail' callback
+   *  - Calls xhr.abort()
+   *
    * Returns xhr so can just do return this.failFetch(...)
    */
   failFetch (xhr, status) {
@@ -814,7 +829,7 @@ class Fetcher {
       if (request !== undefined) {
         let response = kb.any(request, ns.link('response'))
 
-        if (request !== undefined) {
+        if (response !== undefined) {
           let results = kb.each(response, ns.httph(header.toLowerCase()))
 
           if (results.length) {
@@ -1121,7 +1136,7 @@ class Fetcher {
   }
 
   handleResponse (xhr, docuri, rterm, args, options) {
-    if (xhr.handleResponseDone) return
+    if (xhr.handleResponseDone) { return }
     xhr.handleResponseDone = true
     let handler = null
     var thisReq = xhr.req // Might have changes by redirect
@@ -1360,11 +1375,12 @@ class Fetcher {
   }
 
   /**
-   * Requests a document URI and arranges to load the document.
+   * Requests a document URI and arranges to load the document. This is the main
+   * fetching function, used by `load()` and `nowOrWhenFetched()`.
    *
-   * @param docuri {Node} term for the thing whose URI is to be dereferenced
+   * @param docuri {Node} Term for the thing whose URI is to be dereferenced
    *
-   * @param rterm {Node} the resource which referred to this
+   * @param rterm {Node} Referring term, the resource which referred to this
    *   (for tracking bad links)
    *
    * @param [options={}] {Object}
@@ -1381,17 +1397,44 @@ class Fetcher {
    *   clear old, but only on status 200 responses
    *
    * @param [options.forceContentType] {string} Override the incoming header to
-   *   force the data to be treated as this content-type.
+   *   force the data to be treated as this content-type
    *
-   * @param [options.noMeta] {boolean}
+   * @param [options.noMeta] {boolean} Prevents the addition of various metadata
+   *   triples (about the fetch request) to the store
    *
    * @param [options.noRDFa] {boolean}
    *
    * @param userCallback {Function} Called with (true) or (false, errorbody,
    *   {status: 400}) after load is done or failed
    *
-   * @returns {*} The xhr object for the HTTP access,
-   *   null if the protocol is not a look-up protocol,
+   * This function adds the following properties to the XHR object:
+   *
+   * - `xhr.handle` - The response parsing function registered by various Handler
+   *     classes
+   * - `xhr.options` - The `options` argument itself
+   * - `xhr.req` - A Blank Node that acts as a subject for various additional
+   *     metadata triples about the request itself (status, requestedUri, etc),
+   *     if the `options.noMeta` flag is not set.
+   * - `xhr.original` - A Named Node of `options.baseURI`
+   * - `xhr.resource` - A Named Node of the `docuri` to be loaded
+   * - `xhr.requestedURI` - Actual URI to be requested (could be proxied, etc)
+   * - `xhr.actualProxyURI`
+   * - `xhr.withCredentials`
+   * - `xhr.retriedWithCredentials` - Set by `checkCredentialsRetry()` to prevent
+   *     multiple retries.
+   * - `xhr.onErrorWasCalled`
+   * - `xhr.proxyUsed` - Set when the proxy url is tried (to prevent retries)
+   * - `xhr.aborted`
+   * - `xhr.handleResponseDone`
+   * - `xhr.redirected`
+   * - `xhr.userCallback`
+   * - `xhr.CORS_status`
+   * - `xhr.channel` - In Tabulator/Firefox extension environment
+   *
+   * @throws {Error} If it cannot set the `Accept` header
+   *
+   * @returns {XmlHttpRequest|undefined} The xhr object for the HTTP access,
+   *   undefined if the protocol is not a look-up protocol,
    *   or URI has already been loaded
    */
   requestURI (docuri, rterm, options, userCallback) {
@@ -1475,10 +1518,12 @@ class Fetcher {
     // console.log('XHR original: ' + xhr.original)
     xhr.options = options
     xhr.resource = docterm // This might be proxified
+    xhr.userCallback = userCallback
 
     const now = new Date()
     const timeNow = '[' + now.getHours() + ':' + now.getMinutes() + ':' +
       now.getSeconds() + '] '
+
     if (!options.noMeta) {
       kb.add(req, ns.rdfs('label'),
         kb.literal(timeNow + ' Request for ' + docuri), this.appNode)
@@ -1521,15 +1566,12 @@ class Fetcher {
     let actualProxyURI = this.proxyIfNecessary(uri2)
 
     // Setup the request
-    // var xhr
-    // xhr = Util.XMLHTTPFactory()
     xhr.onerror = this.onerrorFactory(xhr, docuri, rterm, args, options)
     xhr.onreadystatechange = this.onreadystatechangeFactory(xhr, docuri, rterm, args, options)
     xhr.timeout = this.timeout
     xhr.withCredentials = withCredentials
     xhr.actualProxyURI = actualProxyURI
 
-    xhr.req = req
     xhr.options = options
     xhr.resource = docterm
     xhr.requestedURI = uri2
