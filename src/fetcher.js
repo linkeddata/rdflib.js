@@ -1552,94 +1552,7 @@ class Fetcher {
         (Uri.protocol(xhr.resource.uri) === 'http' ||
          Uri.protocol(xhr.resource.uri) === 'https')) {
       try {
-        xhr.channel.notificationCallbacks = {
-          getInterface: (iid) => {
-            if (iid.equals(Components.interfaces.nsIChannelEventSink)) {
-              return {
-                // See https://developer.mozilla.org/en/XPCOM_Interface_Reference/nsIChannelEventSink
-                asyncOnChannelRedirect: (oldC, newC, flags, callback) => {
-                  if (xhr.aborted) return
-                  var kb = this.store
-                  var newURI = newC.URI.spec
-                  var oldreq = xhr.req
-                  this.addStatus(xhr.req, 'Redirected: ' + xhr.status + ' to <' + newURI + '>')
-                  kb.add(oldreq, ns.http('redirectedTo'), kb.sym(newURI), xhr.req)
-
-                  // //////////// Change the request node to a new one:  @@@@@@@@@@@@ Duplicate?
-                  var newreq = xhr.req = kb.bnode() // Make NEW reqest for everything else
-                  // xhr.resource = docterm
-                  // xhr.requestedURI = args[0]
-
-                  // kb.add(kb.sym(newURI), ns.link("request"), req, this.appNode)
-                  kb.add(oldreq, ns.http('redirectedRequest'), newreq, xhr.req)
-
-                  var now = new Date()
-                  var timeNow = '[' + now.getHours() + ':' + now.getMinutes() + ':' + now.getSeconds() + '] '
-                  kb.add(newreq, ns.rdfs('label'), kb.literal(timeNow + ' Request for ' + newURI), this.appNode)
-                  kb.add(newreq, ns.link('status'), kb.collection(), this.appNode)
-                  kb.add(newreq, ns.link('requestedURI'), kb.literal(newURI), this.appNode)
-                  // /////////////
-
-                  // // log.info('@@ sources onChannelRedirect'+
-                  //               "Redirected: "+
-                  //               xhr.status + " to <" + newURI + ">"); //@@
-                  var response = kb.bnode()
-                  // kb.add(response, ns.http('location'), newURI, response); Not on this response
-                  kb.add(oldreq, ns.link('response'), response)
-                  kb.add(response, ns.http('status'), kb.literal(xhr.status), response)
-                  if (xhr.statusText) kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response)
-
-                  if (xhr.status - 0 !== 303) kb.HTTPRedirects[xhr.resource.uri] = newURI // same document as
-                  if (xhr.status - 0 === 301 && rterm) { // 301 Moved
-                    var badDoc = Uri.docpart(rterm.uri)
-                    var msg = 'Warning: ' + xhr.resource + ' has moved to <' + newURI + '>.'
-                    if (rterm) {
-                      msg += ' Link in <' + badDoc + ' >should be changed'
-                      kb.add(badDoc, kb.sym('http://www.w3.org/2007/ont/link#warning'), msg, this.appNode)
-                    }
-                    // dump(msg+"\n")
-                  }
-                  xhr.abort()
-                  xhr.aborted = true
-
-                  var hash = newURI.indexOf('#')
-                  if (hash >= 0) {
-                    var msg2 = ('Warning: ' + xhr.resource + ' HTTP redirects to' + newURI + ' which do not normally contain a "#" sign')
-                    // dump(msg+"\n")
-                    kb.add(xhr.resource, kb.sym('http://www.w3.org/2007/ont/link#warning'), msg2)
-                    newURI = newURI.slice(0, hash)
-                  }
-                  /*
-                   if (sf.fetchCallbacks[xhr.resource.uri]) {
-                   if (!sf.fetchCallbacks[newURI]) {
-                   sf.fetchCallbacks[newURI] = []
-                   }
-                   sf.fetchCallbacks[newURI] = sf.fetchCallbacks[newURI].concat(sf.fetchCallbacks[xhr.resource.uri])
-                   delete sf.fetchCallbacks[xhr.resource.uri]
-                   }
-                   */
-                  this.requested[xhr.resource.uri] = 'redirected'
-                  this.redirectedTo[xhr.resource.uri] = newURI
-
-                  let xhr2 = this.requestURI(newURI, xhr.resource, xhr.options, xhr.userCallback)
-                  if (xhr2) { // may be no XHR is other URI already loaded
-                    xhr2.original = xhr.original // use this for finding base
-                    if (xhr2.req) {
-                      kb.add(
-                        xhr.req,
-                        kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'),
-                        xhr2.req,
-                        this.appNode
-                      )
-                    }
-                  }
-                  // else dump("No xhr.req available for redirect from "+xhr.resource+" to "+newURI+"\n")
-                } // asyncOnChannelRedirect
-              }
-            }
-            return Components.results.NS_NOINTERFACE
-          }
-        }
+        xhr.channel.notificationCallbacks = this.channelNotificationCallbacks(xhr, rterm)
       } catch (err) {
         return this.failFetch(xhr,
           "@@ Couldn't set callback for redirects: " + err)
@@ -1683,6 +1596,97 @@ class Fetcher {
 
     return xhr
   } // this.requestURI()
+
+  channelNotificationCallbacks (xhr, rterm) {
+    return {
+      getInterface: (iid) => {
+        if (iid.equals(Components.interfaces.nsIChannelEventSink)) {
+          return {
+            // See https://developer.mozilla.org/en/XPCOM_Interface_Reference/nsIChannelEventSink
+            asyncOnChannelRedirect: (oldC, newC, flags, callback) => {
+              if (xhr.aborted) return
+              var kb = this.store
+              var newURI = newC.URI.spec
+              var oldreq = xhr.req
+              this.addStatus(xhr.req, 'Redirected: ' + xhr.status + ' to <' + newURI + '>')
+              kb.add(oldreq, ns.http('redirectedTo'), kb.sym(newURI), xhr.req)
+
+              // //////////// Change the request node to a new one:  @@@@@@@@@@@@ Duplicate?
+              var newreq = xhr.req = kb.bnode() // Make NEW reqest for everything else
+              // xhr.resource = docterm
+              // xhr.requestedURI = args[0]
+
+              // kb.add(kb.sym(newURI), ns.link("request"), req, this.appNode)
+              kb.add(oldreq, ns.http('redirectedRequest'), newreq, xhr.req)
+
+              var now = new Date()
+              var timeNow = '[' + now.getHours() + ':' + now.getMinutes() + ':' + now.getSeconds() + '] '
+              kb.add(newreq, ns.rdfs('label'), kb.literal(timeNow + ' Request for ' + newURI), this.appNode)
+              kb.add(newreq, ns.link('status'), kb.collection(), this.appNode)
+              kb.add(newreq, ns.link('requestedURI'), kb.literal(newURI), this.appNode)
+              // /////////////
+
+              // // log.info('@@ sources onChannelRedirect'+
+              //               "Redirected: "+
+              //               xhr.status + " to <" + newURI + ">"); //@@
+              var response = kb.bnode()
+              // kb.add(response, ns.http('location'), newURI, response); Not on this response
+              kb.add(oldreq, ns.link('response'), response)
+              kb.add(response, ns.http('status'), kb.literal(xhr.status), response)
+              if (xhr.statusText) kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response)
+
+              if (xhr.status - 0 !== 303) kb.HTTPRedirects[xhr.resource.uri] = newURI // same document as
+              if (xhr.status - 0 === 301 && rterm) { // 301 Moved
+                var badDoc = Uri.docpart(rterm.uri)
+                var msg = 'Warning: ' + xhr.resource + ' has moved to <' + newURI + '>.'
+                if (rterm) {
+                  msg += ' Link in <' + badDoc + ' >should be changed'
+                  kb.add(badDoc, kb.sym('http://www.w3.org/2007/ont/link#warning'), msg, this.appNode)
+                }
+                // dump(msg+"\n")
+              }
+              xhr.abort()
+              xhr.aborted = true
+
+              var hash = newURI.indexOf('#')
+              if (hash >= 0) {
+                var msg2 = ('Warning: ' + xhr.resource + ' HTTP redirects to' + newURI + ' which do not normally contain a "#" sign')
+                // dump(msg+"\n")
+                kb.add(xhr.resource, kb.sym('http://www.w3.org/2007/ont/link#warning'), msg2)
+                newURI = newURI.slice(0, hash)
+              }
+              /*
+               if (sf.fetchCallbacks[xhr.resource.uri]) {
+               if (!sf.fetchCallbacks[newURI]) {
+               sf.fetchCallbacks[newURI] = []
+               }
+               sf.fetchCallbacks[newURI] = sf.fetchCallbacks[newURI].concat(sf.fetchCallbacks[xhr.resource.uri])
+               delete sf.fetchCallbacks[xhr.resource.uri]
+               }
+               */
+              this.requested[xhr.resource.uri] = 'redirected'
+              this.redirectedTo[xhr.resource.uri] = newURI
+
+              let xhr2 = this.requestURI(newURI, xhr.resource, xhr.options, xhr.userCallback)
+              if (xhr2) { // may be no XHR is other URI already loaded
+                xhr2.original = xhr.original // use this for finding base
+                if (xhr2.req) {
+                  kb.add(
+                    xhr.req,
+                    kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'),
+                    xhr2.req,
+                    this.appNode
+                  )
+                }
+              }
+              // else dump("No xhr.req available for redirect from "+xhr.resource+" to "+newURI+"\n")
+            } // asyncOnChannelRedirect
+          }
+        }
+        return Components.results.NS_NOINTERFACE
+      }
+    }
+  }
 
   // var updatesVia = new $rdf.UpdatesVia(this) // Subscribe to headers
 // @@@@@@@@ This is turned off because it causes a websocket to be set up for ANY fetch
