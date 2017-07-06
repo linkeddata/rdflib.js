@@ -469,6 +469,19 @@ class Fetcher {
   }
 
   /**
+   * Tests whether the uri's protocol is supported by the Fetcher.
+   *
+   * @param uri {string}
+   *
+   * @returns {boolean}
+   */
+  static unsupportedProtocol (uri) {
+    let pcol = Uri.protocol(uri)
+
+    return (pcol === 'tel' || pcol === 'mailto' || pcol === 'urn')
+  }
+
+  /**
    * Promise-based load function
    *
    * NamedNode -> Promise of xhr
@@ -485,18 +498,16 @@ class Fetcher {
   load (uri, options) {
     if (uri instanceof Array) {
       return Promise.all(
-        uri.map(x => { return this.load(x) })
+        uri.map(x => { return this.load(x, options) })
       )
     }
 
-    uri = uri.uri || uri // NamedNode or URI string
-
     return new Promise((resolve, reject) => {
-      this.nowOrWhenFetched(uri, options, (ok, message, xhr) => {
+      this.requestURI(uri, options.referingTerm, options, (ok, message, xhr) => {
         if (ok) {
           resolve(xhr)
         } else {
-          reject(message)
+          reject(new Error(message))
         }
       })
     })
@@ -521,18 +532,21 @@ class Fetcher {
    */
   nowOrWhenFetched (uri, p2, userCallback, options = {}) {
     uri = uri.uri || uri // allow symbol object or string to be passed
+
     if (typeof p2 === 'function') {
+      // nowOrWhenFetched (uri, userCallback)
       userCallback = p2
     } else if (typeof p2 === 'undefined') { // original calling signature
       // referingTerm = undefined
     } else if (p2 instanceof NamedNode) {
       // referingTerm = p2
-      options = { referingTerm: p2 }
+      options.referingTerm = p2
     } else {
+      // nowOrWhenFetched (uri, options, userCallback)
       options = p2
     }
 
-    this.requestURI(uri, p2, options, userCallback)
+    this.requestURI(uri, options.referingTerm, options, userCallback)
   }
 
   get (uri, p2, userCallback, options) {
@@ -732,7 +746,7 @@ class Fetcher {
       }
 
       xhr.onreadystatechange = () => {
-        if (xhr.readyState === 4) { // NOte a 404 can be not afailure
+        if (xhr.readyState === 4) { // Note: a 404 can be not a failure
           let ok = (!xhr.status || (xhr.status >= 200 && xhr.status < 300))
           if (!options.noMeta && typeof tabulator !== 'undefined') {
             this.saveResponseMetadata(xhr, this.store)
@@ -1043,71 +1057,80 @@ class Fetcher {
   onerrorFactory (xhr, docuri, rterm, args, options) {
     return (event) => {
       xhr.onErrorWasCalled = true // debugging and may need it
-      if (typeof document !== 'undefined') { // Mashup situation, not node etc
-        if (Fetcher.crossSiteProxyTemplate && document.location && !xhr.proxyUsed) {
-          const hostpart = Uri.hostpart
-          const here = '' + document.location
-          const uri = xhr.resource.uri
-          if (hostpart(here) && hostpart(uri) && hostpart(here) !== hostpart(uri)) { // If cross-site
-            if (xhr.status === 401 || xhr.status === 403 || xhr.status === 404) {
-              this.onreadystatechangeFactory(xhr, docuri, rterm, args, options)()
-            } else {
-              // IT IS A PAIN THAT NO PROPER ERROR REPORTING
-              // If credentials flag set, retry without
-              if (this.checkCredentialsRetry(docuri, rterm, xhr, options)) {
-                return
-              }
-              // If it wasn't, or we already tried that
-              let newURI = Fetcher.crossSiteProxy(uri)
-              console.log('web: Direct failed so trying proxy ' + newURI)
-              this.addStatus(xhr.req, 'BLOCKED -> Cross-site Proxy to <' + newURI + '>')
-              if (xhr.aborted) return
 
-              let kb = this.store
-              let oldreq = xhr.req
-              if (!xhr.options.noMeta) {
-                kb.add(oldreq, ns.http('redirectedTo'), kb.sym(newURI), oldreq)
-              }
-              xhr.abort()
-              xhr.aborted = true
+      // Mashup situation, not node etc
+      if (typeof document === 'undefined') {
+        return
+      }
 
-              this.addStatus(oldreq, 'redirected to new request') // why
-              // the callback throws an exception when called from xhr.onerror (so removed)
-              // this.fireCallbacks('done', args)
-              // Are these args right? @@@   Not done yet! done means success
-              this.requested[xhr.resource.uri] = 'redirected'
-              this.redirectedTo[xhr.resource.uri] = newURI
+      if (!Fetcher.crossSiteProxyTemplate || !document.location || xhr.proxyUsed) {
+        return
+      }
 
-              if (this.fetchCallbacks[xhr.resource.uri]) {
-                if (!this.fetchCallbacks[newURI]) {
-                  this.fetchCallbacks[newURI] = []
-                }
-                // this.fetchCallbacks[newURI] === this.fetchCallbacks[newURI].concat(this.fetchCallbacks[xhr.resource.uri])
-                delete this.fetchCallbacks[xhr.resource.uri]
-              }
+      const hostpart = Uri.hostpart
+      const here = '' + document.location
+      const uri = xhr.resource.uri
+      const crossSite = hostpart(here) && hostpart(uri) && hostpart(here) !== hostpart(uri)
 
-              const xhr2 = this.requestURI(newURI, xhr.resource, xhr.options,
-                xhr.userCallback)
-              if (xhr2) {
-                xhr2.proxyUsed = true // only try the proxy once
-                xhr2.original = xhr.original
-                console.log('Proxying but original still ' + xhr2.original)
-              }
-              if (xhr2 && xhr2.req) {
-                if (!xhr.options.noMeta) {
-                  kb.add(xhr.req,
-                    kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'),
-                    xhr2.req,
-                    this.appNode)
-                }
-                return
-              }
-            }
-          }
-          xhr.CORS_status = 999
-          // xhr.status = 999     forbidden - read-only
+      if (!crossSite) {
+        return // nothing further to do
+      }
+
+      if (xhr.status === 401 || xhr.status === 403 || xhr.status === 404) {
+        // Not an error; send to the state change handler to deal with
+        return this.onreadystatechangeFactory(xhr, docuri, rterm, args, options)()
+      }
+
+      // IT IS A PAIN THAT NO PROPER ERROR REPORTING
+      // If credentials flag set, retry without
+      if (this.checkCredentialsRetry(docuri, rterm, xhr, options)) {
+        return
+      }
+      // If it wasn't, or we already tried that
+      let newURI = Fetcher.crossSiteProxy(uri)
+      console.log('web: Direct failed so trying proxy ' + newURI)
+      this.addStatus(xhr.req, 'BLOCKED -> Cross-site Proxy to <' + newURI + '>')
+      if (xhr.aborted) { return }
+
+      let kb = this.store
+      let oldreq = xhr.req
+      if (!xhr.options.noMeta) {
+        kb.add(oldreq, ns.http('redirectedTo'), kb.sym(newURI), oldreq)
+      }
+      xhr.abort()
+      xhr.aborted = true
+
+      this.addStatus(oldreq, 'redirected to new request') // why
+      // the callback throws an exception when called from xhr.onerror (so removed)
+      // this.fireCallbacks('done', args)
+      // Are these args right? @@@   Not done yet! done means success
+      this.requested[xhr.resource.uri] = 'redirected'
+      this.redirectedTo[xhr.resource.uri] = newURI
+
+      if (this.fetchCallbacks[xhr.resource.uri]) {
+        if (!this.fetchCallbacks[newURI]) {
+          this.fetchCallbacks[newURI] = []
         }
-      } // mashup
+        // this.fetchCallbacks[newURI] === this.fetchCallbacks[newURI].concat(this.fetchCallbacks[xhr.resource.uri])
+        delete this.fetchCallbacks[xhr.resource.uri]
+      }
+
+      const xhr2 = this.requestURI(newURI, xhr.resource, xhr.options,
+        xhr.userCallback)
+      if (xhr2) {
+        xhr2.proxyUsed = true // only try the proxy once
+        xhr2.original = xhr.original
+        console.log('Proxying but original still ' + xhr2.original)
+      }
+      if (xhr2 && xhr2.req) {
+        if (!xhr.options.noMeta) {
+          kb.add(xhr.req,
+            kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'),
+            xhr2.req,
+            this.appNode)
+        }
+        return
+      }
     } // function of event
   }
 
@@ -1136,7 +1159,10 @@ class Fetcher {
   }
 
   handleResponse (xhr, docuri, rterm, args, options) {
-    if (xhr.handleResponseDone) { return }
+    if (xhr.handleResponseDone) {
+      return
+    }
+
     xhr.handleResponseDone = true
     let handler = null
     var thisReq = xhr.req // Might have changes by redirect
@@ -1151,13 +1177,14 @@ class Fetcher {
     //
     if (xhr.status === 0) {
       console.log('Masked error - status 0 for ' + xhr.resource.uri)
-      if (this.checkCredentialsRetry(docuri, rterm, xhr, options)) { // retry is could be credentials flag CORS issue
+      if (this.checkCredentialsRetry(docuri, rterm, xhr, options)) {
+        // retry, it could be credentials flag CORS issue
         return
       }
       xhr.CORS_status = 900 // unknown masked error
       return
     }
-    if (xhr.status >= 400) { // For extra dignostics, keep the reply
+    if (xhr.status >= 400) { // For extra diagnostics, keep the reply
       //  @@@ 401 should cause  a retry with credential son
       // @@@ cache the credentials flag by host ????
       if (xhr.status === 404) {
@@ -1284,51 +1311,16 @@ class Fetcher {
         case 0:
           const uri = xhr.resource.uri
           let newURI
-          if (this.crossSiteProxyTemplate && (typeof document !== 'undefined') && document.location) { // In mashup situation
+          if (Fetcher.crossSiteProxyTemplate && (typeof document !== 'undefined') && document.location) { // In mashup situation
             var hostpart = Uri.hostpart
             var here = '' + document.location
-            if (hostpart(here) && hostpart(uri) && hostpart(here) !== hostpart(uri)) {
-              newURI = this.crossSiteProxyTemplate.replace('{uri}', encodeURIComponent(uri))
-              this.addStatus(xhr.req, 'BLOCKED -> Cross-site Proxy to <' + newURI + '>')
-              if (xhr.aborted) { return }
+            const crossSite = hostpart(here) && hostpart(uri) && hostpart(here) !== hostpart(uri)
 
-              var kb = this.store
-              var oldreq = xhr.req
-              kb.add(oldreq, ns.http('redirectedTo'), kb.sym(newURI), oldreq)
+            if (crossSite) {
+              newURI = Fetcher.crossSiteProxyTemplate.replace('{uri}', encodeURIComponent(uri))
 
-              // //////////// Change the request node to a new one:  @@@@@@@@@@@@ Duplicate?
-              var newreq = xhr.req = kb.bnode() // Make NEW reqest for everything else
-              kb.add(oldreq, ns.http('redirectedRequest'), newreq, xhr.req)
+              let xhr2 = this.redirectTo(newURI, xhr, args)
 
-              var now = new Date()
-              var timeNow = '[' + now.getHours() + ':' + now.getMinutes() + ':' + now.getSeconds() + '] '
-              kb.add(newreq, ns.rdfs('label'), kb.literal(timeNow + ' Request for ' + newURI), this.appNode)
-              kb.add(newreq, ns.link('status'), kb.collection(), this.appNode)
-              kb.add(newreq, ns.link('requestedURI'), kb.literal(newURI), this.appNode)
-
-              var response = kb.bnode()
-              kb.add(oldreq, ns.link('response'), response)
-              // kb.add(response, ns.http('status'), kb.literal(xhr.status), response)
-              // if (xhr.statusText) kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response)
-
-              xhr.abort()
-              xhr.aborted = true
-              xhr.redirected = true
-
-              this.addStatus(oldreq, 'redirected XHR') // why
-
-              if (this.fetchCallbacks[xhr.resource.uri]) {
-                if (!this.fetchCallbacks[newURI]) {
-                  this.fetchCallbacks[newURI] = []
-                }
-                // this.fetchCallbacks[newURI] === this.fetchCallbacks[newURI].concat(this.fetchCallbacks[xhr.resource.uri])
-                delete this.fetchCallbacks[xhr.resource.uri]
-              }
-
-              this.fireCallbacks('redirected', args) // Are these args right? @@@
-              this.requested[xhr.resource.uri] = 'redirected'
-
-              var xhr2 = this.requestURI(newURI, xhr.resource, xhr.options || {}, xhr.userCallback)
               if (xhr2 && xhr2.req) {
                 kb.add(
                   xhr.req,
@@ -1374,11 +1366,55 @@ class Fetcher {
     }
   }
 
+  redirectTo (newURI, xhr, args) {
+    this.addStatus(xhr.req, 'BLOCKED -> Cross-site Proxy to <' + newURI + '>')
+
+    if (xhr.aborted) { return }
+
+    var kb = this.store
+    var oldreq = xhr.req
+    kb.add(oldreq, ns.http('redirectedTo'), kb.sym(newURI), oldreq)
+
+    // //////////// Change the request node to a new one:  @@@@@@@@@@@@ Duplicate?
+    var newreq = xhr.req = kb.bnode() // Make NEW reqest for everything else
+    kb.add(oldreq, ns.http('redirectedRequest'), newreq, xhr.req)
+
+    var now = new Date()
+    var timeNow = '[' + now.getHours() + ':' + now.getMinutes() + ':' + now.getSeconds() + '] '
+    kb.add(newreq, ns.rdfs('label'), kb.literal(timeNow + ' Request for ' + newURI), this.appNode)
+    kb.add(newreq, ns.link('status'), kb.collection(), this.appNode)
+    kb.add(newreq, ns.link('requestedURI'), kb.literal(newURI), this.appNode)
+
+    var response = kb.bnode()
+    kb.add(oldreq, ns.link('response'), response)
+    // kb.add(response, ns.http('status'), kb.literal(xhr.status), response)
+    // if (xhr.statusText) kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response)
+
+    xhr.abort()
+    xhr.aborted = true
+    xhr.redirected = true
+
+    this.addStatus(oldreq, 'redirected XHR') // why
+
+    if (this.fetchCallbacks[xhr.resource.uri]) {
+      if (!this.fetchCallbacks[newURI]) {
+        this.fetchCallbacks[newURI] = []
+      }
+      // this.fetchCallbacks[newURI] === this.fetchCallbacks[newURI].concat(this.fetchCallbacks[xhr.resource.uri])
+      delete this.fetchCallbacks[xhr.resource.uri]
+    }
+
+    this.fireCallbacks('redirected', args) // Are these args right? @@@
+    this.requested[xhr.resource.uri] = 'redirected'
+
+    return this.requestURI(newURI, xhr.resource, xhr.options || {}, xhr.userCallback)
+  }
+
   /**
    * Requests a document URI and arranges to load the document. This is the main
    * fetching function, used by `load()` and `nowOrWhenFetched()`.
    *
-   * @param docuri {Node} Term for the thing whose URI is to be dereferenced
+   * @param docuri {Node|string} Term for the thing whose URI is to be dereferenced
    *
    * @param rterm {Node} Referring term, the resource which referred to this
    *   (for tracking bad links)
@@ -1438,7 +1474,6 @@ class Fetcher {
    *   or URI has already been loaded
    */
   requestURI (docuri, rterm, options, userCallback) {
-    // Various calling conventions
     docuri = docuri.uri || docuri // NamedNode or string
     docuri = docuri.split('#')[0]
 
@@ -1455,9 +1490,7 @@ class Fetcher {
     const baseURI = options.baseURI || docuri // Preserve though proxying etc
     options.userCallback = userCallback
 
-    let pcol = Uri.protocol(docuri)
-    if (pcol === 'tel' || pcol === 'mailto' || pcol === 'urn') {
-      // "No look-up operation on these, but they are not errors?"
+    if (Fetcher.unsupportedProtocol(docuri)) {
       console.log('Unsupported protocol in: ' + docuri)
       return userCallback(false, 'Unsupported protocol', { 'status': 900 })
     }
@@ -1490,8 +1523,7 @@ class Fetcher {
     // I think so so an old error doesn't get stuck
     // if (sta === 'unrequested')
 
-    this.fireCallbacks('request', args) // Kenny: fire 'request' callbacks here
-    // dump( "web.js: Requesting uri: " + docuri + "\n" )
+    this.fireCallbacks('request', args)
 
     if (userCallback) {
       if (!this.fetchCallbacks[docuri]) {
@@ -1736,3 +1768,4 @@ class Fetcher {
 }
 
 module.exports = Fetcher
+module.exports.HANDLERS = HANDLERS

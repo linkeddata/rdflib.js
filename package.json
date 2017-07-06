@@ -40,13 +40,16 @@
     "babel-register": "^6.18.0",
     "babelify": "^7.3.0",
     "browserify": "^13.0.0",
-    "chai": "^3.5.0",
+    "chai": "^4.0.2",
     "diff": "^3.2.0",
+    "dirty-chai": "^2.0.0",
     "fs-grep": "^0.0.5",
     "minifyify": "^7.3.2",
-    "mocha": "^3.2.0",
+    "mocha": "^3.4.2",
     "node-mkdirp": "0.0.1",
-    "rimraf": "^2.6.1"
+    "rimraf": "^2.6.1",
+    "sinon": "^2.3.6",
+    "sinon-chai": "^2.11.0"
   },
   "scripts": {
     "test": "npm run test:unit && npm run test:serialize",
