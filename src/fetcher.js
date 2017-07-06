@@ -469,6 +469,81 @@ class Fetcher {
   }
 
   /**
+   * @param uri {string}
+   *
+   * @returns {string}
+   */
+  static offlineOverride (uri) {
+    // Map the URI to a localhost proxy if we are running on localhost
+    // This is used for working offline, e.g. on planes.
+    // Is the script itself is running in localhost, then access all
+    //   data in a localhost mirror.
+    // Do not remove without checking with TimBL
+    let requestedURI = uri
+
+    if (typeof tabulator !== 'undefined' &&
+      tabulator.preferences.get('offlineModeUsingLocalhost')) {
+      if (requestedURI.slice(0, 7) === 'http://' && requestedURI.slice(7, 17) !== 'localhost/') {
+        requestedURI = 'http://localhost/' + requestedURI.slice(7)
+        log.warn('Localhost kludge for offline use: actually getting <' +
+          requestedURI + '>')
+      } else {
+        // log.warn("Localhost kludge NOT USED <" + requestedURI + ">")
+      }
+    } else {
+      // log.warn("Localhost kludge OFF offline use: actually getting <" +
+      //   requestedURI + ">")
+    }
+
+    return requestedURI
+  }
+
+  static proxyIfNecessary (uri) {
+    if (typeof tabulator !== 'undefined' && tabulator.isExtension) {
+      return uri
+    } // Extension does not need proxy
+
+    if (typeof $SolidTestEnvironment !== 'undefined' &&
+      $SolidTestEnvironment.localSiteMap) {
+      // nested dictionaries of URI parts from origin down
+      let hostpath = uri.split('/').slice(2) // the bit after the //
+
+      const lookup = (parts, index) => {
+        let z = index[parts.shift()]
+
+        if (!z) { return null }
+
+        if (typeof z === 'string') {
+          return z + parts.join('/')
+        }
+
+        if (!parts) { return null }
+
+        return lookup(parts, z)
+      }
+
+      const y = lookup(hostpath, $SolidTestEnvironment.localSiteMap)
+
+      if (y) {
+        return y
+      }
+    }
+
+    // browser does 2014 on as https browser script not trusted
+    // If the web app origin is https: then the mixed content rules
+    // prevent it loading insecure http: stuff so we need proxy.
+    if (Fetcher.crossSiteProxyTemplate &&
+        typeof document !== 'undefined' && document.location &&
+        ('' + document.location).slice(0, 6) === 'https:' && // origin is secure
+        uri.slice(0, 5) === 'http:') { // requested data is not
+      return Fetcher.crossSiteProxyTemplate
+        .replace('{uri}', encodeURIComponent(uri))
+    }
+
+    return uri
+  }
+
+  /**
    * Tests whether the uri's protocol is supported by the Fetcher.
    *
    * @param uri {string}
@@ -479,6 +554,30 @@ class Fetcher {
     let pcol = Uri.protocol(uri)
 
     return (pcol === 'tel' || pcol === 'mailto' || pcol === 'urn')
+  }
+
+  /**
+   * @param requestedURI {string}
+   * @param options {Object}
+   *
+   * @returns {boolean}
+   */
+  static withCredentials (requestedURI, options = {}) {
+    // 2014 problem:
+    // XMLHttpRequest cannot load http://www.w3.org/People/Berners-Lee/card.
+    // A wildcard '*' cannot be used in the 'Access-Control-Allow-Origin'
+    //   header when the credentials flag is true.
+    // @ Many ontology files under http: and need CORS wildcard ->
+    //   can't have withCredentials
+
+    // @@ Kludge -- need for webid which typically is served from https
+    let withCredentials = requestedURI.startsWith('https:')
+
+    if (options.withCredentials) {
+      withCredentials = options.withCredentials
+    }
+
+    return withCredentials
   }
 
   /**
@@ -646,7 +745,7 @@ class Fetcher {
     }
   }
 
-  parseLinkHeader (xhr, thisReq) {
+  parseLinkHeader (xhr, req) {
     let link
 
     try {
@@ -670,7 +769,7 @@ class Fetcher {
         let paramsplit = p.split('=')
         // var name = paramsplit[0]
         let rel = paramsplit[1].replace(/["']/g, '') // '"
-        this.linkData(xhr, rel, href, thisReq)
+        this.linkData(xhr, rel, href, req)
       }
     }
   }
@@ -730,14 +829,14 @@ class Fetcher {
    * @param uri
    * @param options
    *
-   * @returns {Promise<XmlHttpRequest>}
+   * @returns {Promise<XMLHttpRequest>}
    */
   webOperation (method, uri, options = {}) {
     uri = uri.uri || uri
-    uri = this.proxyIfNecessary(uri)
+    uri = Fetcher.proxyIfNecessary(uri)
 
     return new Promise((resolve, reject) => {
-      let xhr = Util.XMLHTTPFactory()
+      let xhr = this.xhr()
       xhr.options = options
       xhr.original = this.store.sym(uri)
 
@@ -855,51 +954,6 @@ class Fetcher {
       }
     }
     return undefined
-  }
-
-  proxyIfNecessary (uri) {
-    if (typeof tabulator !== 'undefined' && tabulator.isExtension) {
-      return uri
-    } // Extension does not need proxy
-
-    if (typeof $SolidTestEnvironment !== 'undefined' &&
-        $SolidTestEnvironment.localSiteMap) {
-      // nested dictionaries of URI parts from origin down
-      let hostpath = uri.split('/').slice(2) // the bit after the //
-
-      const lookup = (parts, index) => {
-        let z = index[parts.shift()]
-
-        if (!z) { return null }
-
-        if (typeof z === 'string') {
-          return z + parts.join('/')
-        }
-
-        if (!parts) { return null }
-
-        return lookup(parts, z)
-      }
-
-      const y = lookup(hostpath, $SolidTestEnvironment.localSiteMap)
-
-      if (y) {
-        return y
-      }
-    }
-
-    // browser does 2014 on as https browser script not trusted
-    // If the web app origin is https: then the mixed content rules
-    // prevent it loading insecure http: stuff so we need proxy.
-    if (Fetcher.crossSiteProxyTemplate &&
-        typeof document !== 'undefined' && document.location &&
-        ('' + document.location).slice(0, 6) === 'https:' && // origin is secure
-        uri.slice(0, 5) === 'http:') { // requested data is not
-      return Fetcher.crossSiteProxyTemplate
-        .replace('{uri}', encodeURIComponent(uri))
-    }
-
-    return uri
   }
 
   saveRequestMetadata (xhr, kb, docuri) {
@@ -1135,18 +1189,18 @@ class Fetcher {
   }
 
   // deduce some things from the HTTP transaction
-  addType (cla, thisReq, kb, loc) { // add type to all redirected resources too
-    let prev = thisReq
+  addType (rdfType, req, kb, loc) { // add type to all redirected resources too
+    let prev = req
     if (loc) {
       const docURI = kb.any(prev, ns.link('requestedURI'))
       if (docURI !== loc) {
-        kb.add(kb.sym(loc), ns.rdf('type'), cla, this.appNode)
+        kb.add(kb.sym(loc), ns.rdf('type'), rdfType, this.appNode)
       }
     }
     for (;;) {
       const doc = kb.any(prev, ns.link('requestedURI'))
       if (doc && doc.value) {
-        kb.add(kb.sym(doc.value), ns.rdf('type'), cla, this.appNode)
+        kb.add(kb.sym(doc.value), ns.rdf('type'), rdfType, this.appNode)
       } // convert Literal
       prev = kb.any(undefined, kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'), prev)
       if (!prev) { break }
@@ -1158,6 +1212,15 @@ class Fetcher {
     }
   }
 
+  /**
+   * Handles XHR response
+   *
+   * @param xhr {XMLHttpRequest}
+   * @param docuri {string}
+   * @param rterm {Node|string}
+   * @param args {Object} requestURI function arguments
+   * @param options {Object}
+   */
   handleResponse (xhr, docuri, rterm, args, options) {
     if (xhr.handleResponseDone) {
       return
@@ -1165,7 +1228,6 @@ class Fetcher {
 
     xhr.handleResponseDone = true
     let handler = null
-    var thisReq = xhr.req // Might have changes by redirect
     this.fireCallbacks('recv', args)
     var kb = this.store
     this.saveResponseMetadata(xhr, kb)
@@ -1223,7 +1285,7 @@ class Fetcher {
     }
     let guess
     if (xhr.status === 200) {
-      this.addType(ns.link('Document'), thisReq, kb, loc)
+      this.addType(ns.link('Document'), xhr.req, kb, loc)
       let ct = xhr.headers['content-type']
       if (options.forceContentType) {
         xhr.headers['content-type'] = options.forceContentType
@@ -1236,7 +1298,7 @@ class Fetcher {
       }
       if (ct) {
         if (ct.indexOf('image/') === 0 || ct.indexOf('application/pdf') === 0) {
-          this.addType(kb.sym('http://purl.org/dc/terms/Image'), thisReq, kb, loc)
+          this.addType(kb.sym('http://purl.org/dc/terms/Image'), xhr.req, kb, loc)
         }
       }
       if (options.clearPreviousData) { // Before we parse new data clear old but only on 200
@@ -1279,7 +1341,7 @@ class Fetcher {
       }
     }
 
-    this.parseLinkHeader(xhr, thisReq)
+    this.parseLinkHeader(xhr, xhr.req)
 
     if (handler) {
       try {
@@ -1309,60 +1371,88 @@ class Fetcher {
 
       switch (xhr.readyState) {
         case 0:
-          const uri = xhr.resource.uri
-          let newURI
-          if (Fetcher.crossSiteProxyTemplate && (typeof document !== 'undefined') && document.location) { // In mashup situation
-            var hostpart = Uri.hostpart
-            var here = '' + document.location
-            const crossSite = hostpart(here) && hostpart(uri) && hostpart(here) !== hostpart(uri)
-
-            if (crossSite) {
-              newURI = Fetcher.crossSiteProxyTemplate.replace('{uri}', encodeURIComponent(uri))
-
-              let xhr2 = this.redirectTo(newURI, xhr, args)
-
-              if (xhr2 && xhr2.req) {
-                kb.add(
-                  xhr.req,
-                  kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'),
-                  xhr2.req, this.appNode
-                )
-                return
-              }
-            }
-          }
-          this.failFetch(xhr, 'HTTP Blocked. (ReadyState 0) Cross-site violation for <' +
-            docuri + '>')
+          this.dispatchStateUnsent(xhr, args)
 
           break
-
         case 3:
           // Intermediate state -- 3 may OR MAY NOT be called, selon browser.
           // handleResponse();   // In general it you can't do it yet as the headers are in but not the data
           break
         case 4:
+          this.dispatchStateDone(xhr, docuri, rterm, args, options)
           // Final state for this XHR but may be redirected
-          this.handleResponse(xhr, docuri, rterm, args, options)
-          // Now handle
-          if (xhr.handle && xhr.responseText !== undefined) { // can be validly zero length
-            if (this.requested[xhr.resource.uri] === 'redirected') {
-              break
-            }
-            this.fireCallbacks('load', args)
-            xhr.handle(() => {
-              this.doneFetch(xhr)
-            })
-          } else {
-            if (xhr.redirected) {
-              this.addStatus(xhr.req, 'Aborted and redirected to new request.')
-            } else {
-              this.addStatus(xhr.req, 'Fetch over. No data handled. Aborted = ' + xhr.aborted)
-            }
-            // this.failFetch(xhr, "HTTP failed unusually. (no handler set) (x-site violation? no net?) for <"+
-            //    docuri+">")
-          }
+
           break
-      } // switch
+      }
+    }
+  }
+
+  /**
+   * Activates when xhr.readyState == 0
+   *
+   * @param xhr {XMLHttpRequest}
+   * @param args {Object} requestURI function arguments
+   */
+  dispatchStateUnsent (xhr, args) {
+    const uri = xhr.resource.uri
+    let newURI
+
+    if (Fetcher.crossSiteProxyTemplate &&
+        typeof document !== 'undefined' && document.location) { // In mashup situation
+      const hostpart = Uri.hostpart
+      const here = '' + document.location
+      const crossSite = hostpart(here) && hostpart(uri) && hostpart(here) !== hostpart(uri)
+
+      if (crossSite) {
+        newURI = Fetcher.crossSiteProxyTemplate.replace('{uri}', encodeURIComponent(uri))
+
+        let xhr2 = this.redirectTo(newURI, xhr, args)
+
+        if (xhr2 && xhr2.req) {
+          kb.add(
+            xhr.req,
+            kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'),
+            xhr2.req, this.appNode
+          )
+          return
+        }
+      }
+    }
+    this.failFetch(xhr, 'HTTP Blocked. (ReadyState 0) Cross-site violation for <' +
+      docuri + '>')
+  }
+
+  /**
+   * Activates when xhr.readyState == 4
+   *
+   * @param xhr {XMLHttpRequest}
+   * @param docuri {string}
+   * @param rterm {Node|string}
+   * @param args {Object} requestURI function arguments
+   * @param options {Object}
+   */
+  dispatchStateDone (xhr, docuri, rterm, args, options) {
+    this.handleResponse(xhr, docuri, rterm, args, options)
+
+    // Now handle
+    if (xhr.handle && xhr.responseText !== undefined) { // can be validly zero length
+      if (this.requested[xhr.resource.uri] === 'redirected') {
+        return
+      }
+
+      this.fireCallbacks('load', args)
+
+      xhr.handle(() => {
+        this.doneFetch(xhr)
+      })
+    } else {
+      if (xhr.redirected) {
+        this.addStatus(xhr.req, 'Aborted and redirected to new request.')
+      } else {
+        this.addStatus(xhr.req, 'Fetch over. No data handled. Aborted = ' + xhr.aborted)
+      }
+      // this.failFetch(xhr, "HTTP failed unusually. (no handler set) (x-site violation? no net?) for <"+
+      //    docuri+">")
     }
   }
 
@@ -1443,7 +1533,7 @@ class Fetcher {
    * @param userCallback {Function} Called with (true) or (false, errorbody,
    *   {status: 400}) after load is done or failed
    *
-   * This function adds the following properties to the XHR object:
+   * This operation adds the following properties to the XHR object (downstream):
    *
    * - `xhr.handle` - The response parsing function registered by various Handler
    *     classes
@@ -1467,9 +1557,7 @@ class Fetcher {
    * - `xhr.CORS_status`
    * - `xhr.channel` - In Tabulator/Firefox extension environment
    *
-   * @throws {Error} If it cannot set the `Accept` header
-   *
-   * @returns {XmlHttpRequest|undefined} The xhr object for the HTTP access,
+   * @returns {XMLHttpRequest|undefined} The xhr object for the HTTP access,
    *   undefined if the protocol is not a look-up protocol,
    *   or URI has already been loaded
    */
@@ -1484,192 +1572,194 @@ class Fetcher {
       options = {}
     }
 
-    const force = !!options.force
-    const kb = this.store
-    const args = arguments
-    const baseURI = options.baseURI || docuri // Preserve though proxying etc
+    options.baseURI = options.baseURI || docuri // Preserve though proxying etc
     options.userCallback = userCallback
+
+    const args = arguments
 
     if (Fetcher.unsupportedProtocol(docuri)) {
       console.log('Unsupported protocol in: ' + docuri)
       return userCallback(false, 'Unsupported protocol', { 'status': 900 })
     }
 
-    let docterm = kb.sym(docuri)
-
-    let sta = this.getState(docuri)
-    if (!force) {
-      if (sta === 'fetched') {
+    let state = this.getState(docuri)
+    if (!options.force) {
+      if (state === 'fetched') {
         return userCallback ? userCallback(true) : undefined
       }
-      if (sta === 'failed') {
+      if (state === 'failed') {
         return userCallback
           ? userCallback(false, 'Previously failed. ' + this.requested[docuri],
             {'status': this.requested[docuri]})
           : undefined // An xhr standin
       }
-      // if (sta === 'requested') {
-      //   return userCallback
-      //     ? userCallback(false,
-      //       "Sorry already requested - pending already.", {'status': 999 })
-      //     : undefined
-      // }
     } else {
       delete this.nonexistant[docuri]
     }
-    // @@ Should allow concurrent requests
-
-    // If it is 'failed', then should we try again?
-    // I think so so an old error doesn't get stuck
-    // if (sta === 'unrequested')
 
     this.fireCallbacks('request', args)
 
     if (userCallback) {
-      if (!this.fetchCallbacks[docuri]) {
-        this.fetchCallbacks[docuri] = [ userCallback ]
-      } else {
-        this.fetchCallbacks[docuri].push(userCallback)
-      }
+      // Beyond this point, failure/success will be signaled via .fetchCallbacks
+      this.addFetchCallback(docuri, userCallback)
     }
 
-    if (this.requested[docuri] === true) {
+    if (state === 'requested') {
       return // Don't ask again - wait for existing call
     } else {
-      this.requested[docuri] = true
+      this.requested[docuri] = true  // mark this uri as 'requested'
     }
 
-    if (!options.noMeta && rterm && rterm.uri) {
-      kb.add(docterm.uri, ns.link('requestedBy'), rterm.uri, this.appNode)
-    }
+    let requestedURI = Fetcher.offlineOverride(docuri)
 
-    const xhr = Util.XMLHTTPFactory()
-    xhr.req = kb.bnode()
-    let req = xhr.req
-    xhr.original = kb.sym(baseURI)
-    // console.log('XHR original: ' + xhr.original)
-    xhr.options = options
-    xhr.resource = docterm // This might be proxified
-    xhr.userCallback = userCallback
+    let actualProxyURI = Fetcher.proxyIfNecessary(requestedURI)
 
-    const now = new Date()
-    const timeNow = '[' + now.getHours() + ':' + now.getMinutes() + ':' +
-      now.getSeconds() + '] '
+    const xhr = this.xhrFor(docuri, rterm, requestedURI, actualProxyURI, options, args)
 
     if (!options.noMeta) {
-      kb.add(req, ns.rdfs('label'),
-        kb.literal(timeNow + ' Request for ' + docuri), this.appNode)
-      kb.add(req, ns.link('requestedURI'), kb.literal(docuri), this.appNode)
-      kb.add(req, ns.link('status'), kb.collection(), this.appNode)
+      this.addRequestMeta(docuri, rterm, xhr.req)
     }
 
-    // Map the URI to a localhost proxy if we are running on localhost
-    // This is used for working offline, e.g. on planes.
-    // Is the script itself is running in localhost, then access all
-    //   data in a localhost mirror.
-    // Do not remove without checking with TimBL
-    let uri2 = docuri
-    if (typeof tabulator !== 'undefined' &&
-        tabulator.preferences.get('offlineModeUsingLocalhost')) {
-      if (uri2.slice(0, 7) === 'http://' && uri2.slice(7, 17) !== 'localhost/') {
-        uri2 = 'http://localhost/' + uri2.slice(7)
-        log.warn('Localhost kludge for offline use: actually getting <' +
-          uri2 + '>')
-      } else {
-        // log.warn("Localhost kludge NOT USED <" + uri2 + ">")
-      }
-    } else {
-      // log.warn("Localhost kludge OFF offline use: actually getting <" +
-      //   uri2 + ">")
+    try {
+      xhr.open('GET', actualProxyURI, this.async)
+    } catch (err) {
+      return this.failFetch(xhr, 'XHR open for GET failed for <' + requestedURI + '>:\n\t' + err)
     }
-    // 2014 problem:
-    // XMLHttpRequest cannot load http://www.w3.org/People/Berners-Lee/card.
-    // A wildcard '*' cannot be used in the 'Access-Control-Allow-Origin'
-    //   header when the credentials flag is true.
-    // @ Many ontology files under http: and need CORS wildcard ->
-    //   can't have withCredentials
 
-    // @@ Kludge -- need for webid which typically is served from https
-    let withCredentials = (uri2.slice(0, 6) === 'https:')
-
-    if (options.withCredentials !== undefined) {
-      withCredentials = options.withCredentials
+    if (options.force) { // must happen after open
+      xhr.setRequestHeader('Cache-control', 'no-cache')
     }
-    let actualProxyURI = this.proxyIfNecessary(uri2)
+
+    try {
+      this.initExtensionCallbacks(xhr, rterm)  // tabulator / Firefox only
+    } catch (err) {
+      return this.failFetch(xhr, "Error setting callbacks for extension redirects: " + err)
+    }
+
+    try {
+      let acceptString = this.acceptString()
+
+      xhr.setRequestHeader('Accept', acceptString)
+      this.addStatus(xhr.req, 'Accept: ' + acceptString)
+    } catch (err) {
+      return this.failFetch(xhr, "Can't set Accept header: " + err)
+    }
+
+    try {  // Fire
+      xhr.send(null)
+    } catch (err) {
+      return this.failFetch(xhr, 'XHR send failed:' + err)
+    }
+
+    this.setXHRTimeout(xhr)
+
+    this.addStatus(xhr.req, 'HTTP Request sent.')
+
+    return xhr
+  }
+
+  /**
+   * Creates, initializes and returns an XHR instance used by `requestURI()`.
+   *
+   * @param docuri {string}
+   * @param rterm {NamedNode|string}
+   * @param requestedURI {string}
+   * @param actualProxyURI {string}
+   * @param options {Object} requestURI `options` argument
+   * @param args {Object} Arguments passed to requestURI
+   *
+   * @returns {XMLHttpRequest}
+   */
+  xhrFor (docuri, rterm, requestedURI, actualProxyURI, options, args) {
+    const kb = this.store
+    const xhr = this.xhr()
+
+    xhr.req = kb.bnode()
+    xhr.original = kb.sym(options.baseURI)
+    xhr.options = options
+
+    xhr.resource = kb.sym(docuri) // This might be proxified
+    xhr.userCallback = options.userCallback
 
     // Setup the request
     xhr.onerror = this.onerrorFactory(xhr, docuri, rterm, args, options)
     xhr.onreadystatechange = this.onreadystatechangeFactory(xhr, docuri, rterm, args, options)
     xhr.timeout = this.timeout
-    xhr.withCredentials = withCredentials
+    xhr.withCredentials = Fetcher.withCredentials(requestedURI, options)
     xhr.actualProxyURI = actualProxyURI
 
-    xhr.options = options
-    xhr.resource = docterm
-    xhr.requestedURI = uri2
+    xhr.requestedURI = requestedURI
 
     xhr.ontimeout = () => {
       this.failFetch(xhr, 'requestTimeout')
     }
-    try {
-      xhr.open('GET', actualProxyURI, this.async)
-    } catch (er) {
-      return this.failFetch(xhr, 'XHR open for GET failed for <' + uri2 + '>:\n\t' + er)
-    }
-    if (force) { // must happen after open
-      xhr.setRequestHeader('Cache-control', 'no-cache')
-    }
+    return xhr
+  }
 
-    // Set redirect callback and request headers -- alas Firefox Extension Only
-    if (typeof tabulator !== 'undefined' &&
-        tabulator.isExtension && xhr.channel &&
-        (Uri.protocol(xhr.resource.uri) === 'http' ||
-         Uri.protocol(xhr.resource.uri) === 'https')) {
-      try {
-        xhr.channel.notificationCallbacks = this.channelNotificationCallbacks(xhr, rterm)
-      } catch (err) {
-        return this.failFetch(xhr,
-          "@@ Couldn't set callback for redirects: " + err)
-      } // try
-    } // if Firefox extension
+  xhr () {
+    return Util.XMLHTTPFactory()
+  }
 
-    try {
-      let acceptstring = ''
-      for (let type in this.mediatypes) {
-        // var attrstring = ''
-        if (acceptstring !== '') {
-          acceptstring += ', '
-        }
-        acceptstring += type
-        for (let attr in this.mediatypes[type]) {
-          acceptstring += ';' + attr + '=' + this.mediatypes[type][attr]
-        }
-      }
-      xhr.setRequestHeader('Accept', acceptstring)
-      this.addStatus(xhr.req, 'Accept: ' + acceptstring)
-
-      // if (requester) { xhr.setRequestHeader('Referer',requester) }
-    } catch (err) {
-      throw new Error("Can't set Accept header: " + err)
-    }
-
-    // Fire
-    try {
-      xhr.send(null)
-    } catch (er) {
-      return this.failFetch(xhr, 'XHR send failed:' + er)
-    }
-
+  setXHRTimeout (xhr) {
     setTimeout(() => {
       if (xhr.readyState !== 4 && this.isPending(xhr.resource.uri)) {
         this.failFetch(xhr, 'requestTimeout')
       }
     }, this.timeout)
+  }
 
-    this.addStatus(xhr.req, 'HTTP Request sent.')
+  addFetchCallback (uri, callback) {
+    if (!this.fetchCallbacks[uri]) {
+      this.fetchCallbacks[uri] = [ callback ]
+    } else {
+      this.fetchCallbacks[uri].push(callback)
+    }
+  }
 
-    return xhr
-  } // this.requestURI()
+  acceptString () {
+    let acceptstring = ''
+
+    for (let mediaType in this.mediatypes) {
+      if (acceptstring !== '') {
+        acceptstring += ', '
+      }
+
+      acceptstring += mediaType
+
+      for (let property in this.mediatypes[mediaType]) {
+        acceptstring += ';' + property + '=' + this.mediatypes[mediaType][property]
+      }
+    }
+
+    return acceptstring
+  }
+
+  initExtensionCallbacks (xhr, rterm) {
+    // Set redirect callback and request headers -- alas Firefox Extension Only
+    if (typeof tabulator !== 'undefined' &&
+        tabulator.isExtension && xhr.channel &&
+        (Uri.protocol(xhr.resource.uri) === 'http' ||
+         Uri.protocol(xhr.resource.uri) === 'https')) {
+      xhr.channel.notificationCallbacks = this.channelNotificationCallbacks(xhr, rterm)
+    }
+  }
+
+  addRequestMeta (docuri, rterm, req) {
+    let kb = this.store
+
+    if (rterm && rterm.uri) {
+      kb.add(docuri, ns.link('requestedBy'), rterm.uri, this.appNode)
+    }
+
+    const now = new Date()
+    const timeNow = '[' + now.getHours() + ':' + now.getMinutes() + ':' +
+      now.getSeconds() + '] '
+
+    kb.add(req, ns.rdfs('label'),
+      kb.literal(timeNow + ' Request for ' + docuri), this.appNode)
+    kb.add(req, ns.link('requestedURI'), kb.literal(docuri), this.appNode)
+    kb.add(req, ns.link('status'), kb.collection(), this.appNode)
+  }
 
   channelNotificationCallbacks (xhr, rterm) {
     return {
