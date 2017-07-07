@@ -714,6 +714,7 @@ class Fetcher {
     delete this.fetchCallbacks[xhr.original.uri]
     this.fireCallbacks('fail', [xhr.original.uri, status])
     xhr.abort()
+    xhr.aborted = true
     return xhr
   }
 
@@ -1072,22 +1073,25 @@ class Fetcher {
   checkCredentialsRetry (docuri, rterm, xhr) {
     if (!xhr.withCredentials) { return false }  // not dealt with
 
-    if (xhr.retriedWithCredentials) {
+    if (xhr.retriedWithNoCredentials) {
       return true
     }
 
-    xhr.retriedWithCredentials = true // protect against being called twice
     console.log('web: Retrying with no credentials for ' + xhr.resource)
+
+    xhr.retriedWithNoCredentials = true // protect against being called twice
     xhr.abort()
+    xhr.aborted = true
+
     delete this.requested[docuri] // forget the original request happened
 
-    let newopt = Object.assign({}, xhr.options, { withCredentials: false })
+    let newOptions = Object.assign({}, xhr.options, { withCredentials: false })
 
     this.addStatus(xhr.req,
       'Abort: Will retry with credentials SUPPRESSED to see if that helps')
-    // userCallback already registered (with where?)
 
-    this.requestURI(docuri, rterm, newopt, xhr.userCallback)
+    // userCallback is already registered with this.fetchCallbacks
+    this.requestURI(docuri, rterm, newOptions)
     return true
   }
 
@@ -1278,6 +1282,7 @@ class Fetcher {
         // log.info("HTTP headers indicate we have already" + " retrieved " + xhr.resource + " as " + udoc + ". Aborting.")
         this.doneFetch(xhr)
         xhr.abort()
+        xhr.aborted = true
         return
       }
       this.requested[udoc] = true
@@ -1483,7 +1488,7 @@ class Fetcher {
    * - `xhr.requestedURI` - Actual URI to be requested (could be proxied, etc)
    * - `xhr.actualProxyURI`
    * - `xhr.withCredentials`
-   * - `xhr.retriedWithCredentials` - Set by `checkCredentialsRetry()` to prevent
+   * - `xhr.retriedWithNoCredentials` - Set by `checkCredentialsRetry()` to prevent
    *     multiple retries.
    * - `xhr.onErrorWasCalled`
    * - `xhr.proxyUsed` - Set when the proxy url is tried (to prevent retries)
