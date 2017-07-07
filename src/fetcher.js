@@ -573,7 +573,7 @@ class Fetcher {
     // @@ Kludge -- need for webid which typically is served from https
     let withCredentials = requestedURI.startsWith('https:')
 
-    if (options.withCredentials) {
+    if (options.withCredentials !== undefined) {
       withCredentials = options.withCredentials
     }
 
@@ -594,7 +594,7 @@ class Fetcher {
    *
    * @returns {Promise}
    */
-  load (uri, options) {
+  load (uri, options = {}) {
     if (uri instanceof Array) {
       return Promise.all(
         uri.map(x => { return this.load(x, options) })
@@ -688,6 +688,8 @@ class Fetcher {
    *
    * @param xhr {XMLHttpRequest}
    * @param status {string}
+   *
+   * @returns {XMLHttpRequest}
    */
   failFetch (xhr, status) {
     this.addStatus(xhr.req, status)
@@ -780,7 +782,7 @@ class Fetcher {
 
   doneFetch (xhr) {
     this.addStatus(xhr.req, 'Done.')
-    this.requested[xhr.original.uri] = 'done' // Kenny
+    this.requested[xhr.original.uri] = 'done'
 
     while (this.fetchCallbacks[xhr.original.uri] &&
            this.fetchCallbacks[xhr.original.uri].length) {
@@ -855,7 +857,7 @@ class Fetcher {
         if (xhr.readyState === 4) { // Note: a 404 can be not a failure
           let ok = (!xhr.status || (xhr.status >= 200 && xhr.status < 300))
           if (!options.noMeta && typeof tabulator !== 'undefined') {
-            this.saveResponseMetadata(xhr, this.store)
+            this.saveResponseMetadata(xhr)
           }
           if (ok) {
             resolve(xhr)
@@ -963,10 +965,12 @@ class Fetcher {
     return undefined
   }
 
-  saveResponseMetadata (xhr, kb) {
+  saveResponseMetadata (xhr) {
+    const kb = this.store
+
     let response = kb.bnode()
 
-    if (xhr.req) kb.add(xhr.req, ns.link('response'), response)
+    kb.add(xhr.req, ns.link('response'), response)
     kb.add(response, ns.http('status'), kb.literal(xhr.status), response)
     kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response)
 
@@ -1188,7 +1192,7 @@ class Fetcher {
     let handler = null
     this.fireCallbacks('recv', xhr.args)
     var kb = this.store
-    this.saveResponseMetadata(xhr, kb)
+    this.saveResponseMetadata(xhr)
     this.fireCallbacks('headers', [{uri: docuri, headers: xhr.headers}])
 
     // Check for masked errors.
@@ -1215,9 +1219,8 @@ class Fetcher {
         }
         // dump("HTTP >= 400 responseText:\n"+xhr.responseText+"\n"); // @@@@
       }
-      this.failFetch(xhr, 'HTTP error for ' + xhr.resource + ': ' +
+      return this.failFetch(xhr, 'HTTP error for ' + xhr.resource + ': ' +
         xhr.status + ' ' + xhr.statusText)
-      return
     }
 
     let loc =  xhr.headers['content-location']
@@ -1397,11 +1400,6 @@ class Fetcher {
     if (!xhr.options.noMeta) {
       kb.add(oldReq, ns.link('redirectedTo'), kb.sym(newURI), oldReq)
 
-      const response = kb.bnode()
-      kb.add(oldReq, ns.link('response'), response)
-      // kb.add(response, ns.http('status'), kb.literal(xhr.status), response)
-      // if (xhr.statusText) kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response)
-
       this.addRequestMeta(newURI, xhr)
       this.addStatus(oldReq, 'redirected to new request') // why
     }
@@ -1487,7 +1485,6 @@ class Fetcher {
    * - `xhr.resource` - A Named Node of the `docuri` to be loaded
    * - `xhr.requestedURI` - Actual URI to be requested (could be proxied, etc)
    * - `xhr.actualProxyURI`
-   * - `xhr.withCredentials`
    * - `xhr.retriedWithNoCredentials` - Set by `checkCredentialsRetry()` to prevent
    *     multiple retries.
    * - `xhr.onErrorWasCalled`
