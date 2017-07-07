@@ -1325,11 +1325,11 @@ class Fetcher {
       // log.debug("web.js: XHR " + xhr.resource.uri + ' readyState='+xhr.readyState); // @@@@ comment me out
 
       switch (xhr.readyState) {
-        case 0:
-          // This is
-          this.dispatchStateUnsent(xhr)
-
-          break
+        // case 0:
+        //   // According to the XMLHttpRequest spec, onreadystatechangeFactory
+        //   // does NOT get triggered when the readyState changes to 0 / UNSENT
+        //   this.onerrorFactory (xhr, docuri, rterm)()
+        //   break
         case 3:
           // Intermediate state -- 3 may OR MAY NOT be called, selon browser.
           // handleResponse();   // In general it you can't do it yet as the headers are in but not the data
@@ -1341,34 +1341,6 @@ class Fetcher {
           break
       }
     }
-  }
-
-  /**
-   * Activates when xhr.readyState == 0
-   *
-   * @param xhr {XMLHttpRequest}
-   * @param args {Object} requestURI function arguments
-   */
-  dispatchStateUnsent (xhr) {
-    const uri = xhr.resource.uri
-    let newURI
-
-    if (Fetcher.crossSiteProxyTemplate &&
-        typeof document !== 'undefined' && document.location) { // In mashup situation
-      const hostpart = Uri.hostpart
-      const here = '' + document.location
-      const crossSite = hostpart(here) && hostpart(uri) && hostpart(here) !== hostpart(uri)
-
-      if (crossSite && !xhr.proxyUsed) {
-        newURI = Fetcher.crossSiteProxyTemplate.replace('{uri}', encodeURIComponent(uri))
-
-        xhr.options.proxyUsed = true
-
-        return this.redirectTo(newURI, xhr)
-      }
-    }
-    this.failFetch(xhr, 'HTTP Blocked. (ReadyState 0) Cross-site violation for <' +
-      uri + '>')
   }
 
   /**
