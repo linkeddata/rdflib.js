@@ -1075,24 +1075,39 @@ class Fetcher {
     if (xhr.retriedWithCredentials) {
       return true
     }
-    let options = xhr.options
 
     xhr.retriedWithCredentials = true // protect against being called twice
     console.log('web: Retrying with no credentials for ' + xhr.resource)
     xhr.abort()
     delete this.requested[docuri] // forget the original request happened
-    let newopt = {}
-    for (let opt in options) { // transfer baseURI etc
-      if (options.hasOwnProperty(opt)) {
-        newopt[opt] = options[opt]
-      }
-    }
-    newopt.withCredentials = false
+
+    let newopt = Object.assign({}, xhr.options, { withCredentials: false })
+
     this.addStatus(xhr.req,
       'Abort: Will retry with credentials SUPPRESSED to see if that helps')
     // userCallback already registered (with where?)
+
     this.requestURI(docuri, rterm, newopt, xhr.userCallback)
     return true
+  }
+
+  /**
+   * Tests whether a request is being made to a cross-site URI (for purposes
+   * of retrying with a proxy)
+   *
+   * @param uri {string}
+   *
+   * @returns {boolean}
+   */
+  isCrossSite (uri) {
+    // Mashup situation, not node etc
+    if (typeof document === 'undefined' || !document.location) {
+      return false
+    }
+
+    const hostpart = Uri.hostpart
+    const here = '' + document.location
+    return hostpart(here) && hostpart(uri) && hostpart(here) !== hostpart(uri)
   }
 
   onerrorFactory (xhr, docuri, rterm) {
@@ -1104,41 +1119,25 @@ class Fetcher {
         return this.onreadystatechangeFactory(xhr, docuri, rterm)()
       }
 
-      // Mashup situation, not node etc
-      if (typeof document === 'undefined') {
-        return
+      if (this.isCrossSite(docuri)) {
+        // Make sure we haven't retried already
+        if (this.checkCredentialsRetry(docuri, rterm, xhr)) {
+          return
+        }
+
+        // Now attempt retry via proxy
+        let proxyUri = Fetcher.crossSiteProxy(docuri)
+
+        if (proxyUri && !xhr.proxyUsed) {
+          console.log('web: Direct failed so trying proxy ' + proxyUri)
+
+          xhr.options.proxyUsed = true
+
+          return this.redirectTo(proxyUri, xhr)
+        }
       }
 
-      if (!Fetcher.crossSiteProxyTemplate || !document.location || xhr.proxyUsed) {
-        return
-      }
-
-      const hostpart = Uri.hostpart
-      const here = '' + document.location
-      const uri = xhr.resource.uri
-      const crossSite = hostpart(here) && hostpart(uri) && hostpart(here) !== hostpart(uri)
-
-      if (!crossSite) {
-        return // nothing further to do
-      }
-
-      // Make sure we haven't retried already
-      if (this.checkCredentialsRetry(docuri, rterm, xhr)) {
-        return
-      }
-
-      // At this point, we have retried with credentials
-      // Now attempt retry via proxy
-      if (!xhr.proxyUsed) {
-        let newURI = Fetcher.crossSiteProxy(uri)
-        console.log('web: Direct failed so trying proxy ' + newURI)
-
-        xhr.options.proxyUsed = true
-
-        return this.redirectTo(newURI, xhr)
-      }
-
-      // Retrying has not helped, fail
+      // This is either not a CORS error, or retries have been made
       this.failFetch(xhr, `Request failed: ${xhr.status} ${xhr.statusText}`)
     }
   }
@@ -1173,17 +1172,17 @@ class Fetcher {
    * @param xhr {XMLHttpRequest}
    * @param docuri {string}
    * @param rterm {Node|string}
-   * @param args {Object} requestURI function arguments
-   * @param options {Object}
    */
-  handleResponse (xhr, docuri, rterm, args, options) {
+  handleResponse (xhr, docuri, rterm) {
     if (xhr.handleResponseDone) {
       return
     }
 
+    const options = xhr.options
+
     xhr.handleResponseDone = true
     let handler = null
-    this.fireCallbacks('recv', args)
+    this.fireCallbacks('recv', xhr.args)
     var kb = this.store
     this.saveResponseMetadata(xhr, kb)
     this.fireCallbacks('headers', [{uri: docuri, headers: xhr.headers}])
@@ -1191,16 +1190,11 @@ class Fetcher {
     // Check for masked errors.
     // For "security reasons" the browser hides errors such as CORS errors from
     // the calling code (2015). onerror() used to be called but is not now.
-    //
     if (xhr.status === 0) {
       console.log('Masked error - status 0 for ' + xhr.resource.uri)
-      if (this.checkCredentialsRetry(docuri, rterm, xhr)) {
-        // retry, it could be credentials flag CORS issue
-        return
-      }
-      xhr.CORS_status = 900 // unknown masked error
-      return
+      return this.onerrorFactory(xhr, docuri, rterm)()
     }
+
     if (xhr.status >= 400) { // For extra diagnostics, keep the reply
       //  @@@ 401 should cause  a retry with credential son
       // @@@ cache the credentials flag by host ????
@@ -1313,7 +1307,6 @@ class Fetcher {
     }
   }
 
-  // Set up callbacks
   onreadystatechangeFactory (xhr, docuri, rterm) {
     return () => {
       // DONE: 4
@@ -1352,8 +1345,8 @@ class Fetcher {
    * @param args {Object} requestURI function arguments
    * @param options {Object}
    */
-  dispatchStateDone (xhr, docuri, rterm, args, options) {
-    this.handleResponse(xhr, docuri, rterm, args, options)
+  dispatchStateDone (xhr, docuri, rterm) {
+    this.handleResponse(xhr, docuri, rterm)
 
     // Now handle
     if (xhr.handle && xhr.responseText !== undefined) { // can be validly zero length
@@ -1361,7 +1354,7 @@ class Fetcher {
         return
       }
 
-      this.fireCallbacks('load', args)
+      this.fireCallbacks('load', xhr.args)
 
       xhr.handle(() => {
         this.doneFetch(xhr)
@@ -1428,7 +1421,7 @@ class Fetcher {
 
     this.fireCallbacks('redirected', xhr.args) // Are these args right? @@@
 
-    let options = Object.assign({ baseURI: xhr.original }, xhr.options)
+    let options = Object.assign({}, xhr.options, { baseURI: xhr.original })
 
     const newXhr = this.requestURI(newURI, xhr.resource, options, xhr.userCallback)
 
