@@ -685,6 +685,9 @@ class Fetcher {
    *  - Calls xhr.abort()
    *
    * Returns xhr so can just do return this.failFetch(...)
+   *
+   * @param xhr {XMLHttpRequest}
+   * @param status {string}
    */
   failFetch (xhr, status) {
     this.addStatus(xhr.req, status)
@@ -834,14 +837,17 @@ class Fetcher {
   webOperation (method, uri, options = {}) {
     uri = uri.uri || uri
     uri = Fetcher.proxyIfNecessary(uri)
+    let kb = this.store
 
     return new Promise((resolve, reject) => {
       let xhr = this.xhr()
       xhr.options = options
-      xhr.original = this.store.sym(uri)
+      xhr.original = kb.sym(uri)
+      xhr.resource = kb.sym(uri)
+      xhr.req = kb.bnode()
 
-      if (!options.noMeta && typeof tabulator !== 'undefined') {
-        this.saveRequestMetadata(xhr, this.store, uri)
+      if (!options.noMeta) {
+        this.addRequestMeta(uri, xhr)
       }
 
       xhr.onreadystatechange = () => {
@@ -956,27 +962,6 @@ class Fetcher {
     return undefined
   }
 
-  saveRequestMetadata (xhr, kb, docuri) {
-    let request = kb.bnode()
-    xhr.resource = kb.sym(docuri)
-
-    xhr.req = request
-    if (!xhr.options.noMeta) { // Store no triples but do mind the bnode for req
-      let now = new Date()
-      let timeNow = '[' + now.getHours() + ':' + now.getMinutes() + ':' +
-        now.getSeconds() + '] '
-      kb.add(request, ns.rdfs('label'), kb.literal(timeNow + ' Request for ' +
-        docuri), this.appNode)
-      kb.add(request, ns.link('requestedURI'), kb.literal(docuri), this.appNode)
-      if (xhr.original && xhr.original.uri !== docuri) {
-        kb.add(request, ns.link('orginalURI'), kb.literal(xhr.original.uri),
-          this.appNode)
-      }
-      kb.add(request, ns.link('status'), kb.collection(), this.appNode)
-    }
-    return request
-  }
-
   saveResponseMetadata (xhr, kb) {
     let response = kb.bnode()
 
@@ -1084,13 +1069,15 @@ class Fetcher {
     xhr.handle(cb)
   }
 
-  checkCredentialsRetry (docuri, rterm, xhr, options) {
+  checkCredentialsRetry (docuri, rterm, xhr) {
     if (!xhr.withCredentials) { return false }  // not dealt with
 
     if (xhr.retriedWithCredentials) {
       return true
     }
-    xhr.retriedWithCredentials = true // protect against called twice
+    let options = xhr.options
+
+    xhr.retriedWithCredentials = true // protect against being called twice
     console.log('web: Retrying with no credentials for ' + xhr.resource)
     xhr.abort()
     delete this.requested[docuri] // forget the original request happened
@@ -1108,9 +1095,14 @@ class Fetcher {
     return true
   }
 
-  onerrorFactory (xhr, docuri, rterm, args, options) {
-    return (event) => {
+  onerrorFactory (xhr, docuri, rterm) {
+    return () => {
       xhr.onErrorWasCalled = true // debugging and may need it
+
+      if (xhr.status === 401 || xhr.status === 403 || xhr.status === 404) {
+        // Not an error; send to the state change handler to deal with
+        return this.onreadystatechangeFactory(xhr, docuri, rterm)()
+      }
 
       // Mashup situation, not node etc
       if (typeof document === 'undefined') {
@@ -1130,62 +1122,25 @@ class Fetcher {
         return // nothing further to do
       }
 
-      if (xhr.status === 401 || xhr.status === 403 || xhr.status === 404) {
-        // Not an error; send to the state change handler to deal with
-        return this.onreadystatechangeFactory(xhr, docuri, rterm, args, options)()
-      }
-
-      // IT IS A PAIN THAT NO PROPER ERROR REPORTING
-      // If credentials flag set, retry without
-      if (this.checkCredentialsRetry(docuri, rterm, xhr, options)) {
+      // Make sure we haven't retried already
+      if (this.checkCredentialsRetry(docuri, rterm, xhr)) {
         return
       }
-      // If it wasn't, or we already tried that
-      let newURI = Fetcher.crossSiteProxy(uri)
-      console.log('web: Direct failed so trying proxy ' + newURI)
-      this.addStatus(xhr.req, 'BLOCKED -> Cross-site Proxy to <' + newURI + '>')
-      if (xhr.aborted) { return }
 
-      let kb = this.store
-      let oldreq = xhr.req
-      if (!xhr.options.noMeta) {
-        kb.add(oldreq, ns.http('redirectedTo'), kb.sym(newURI), oldreq)
-      }
-      xhr.abort()
-      xhr.aborted = true
+      // At this point, we have retried with credentials
+      // Now attempt retry via proxy
+      if (!xhr.proxyUsed) {
+        let newURI = Fetcher.crossSiteProxy(uri)
+        console.log('web: Direct failed so trying proxy ' + newURI)
 
-      this.addStatus(oldreq, 'redirected to new request') // why
-      // the callback throws an exception when called from xhr.onerror (so removed)
-      // this.fireCallbacks('done', args)
-      // Are these args right? @@@   Not done yet! done means success
-      this.requested[xhr.resource.uri] = 'redirected'
-      this.redirectedTo[xhr.resource.uri] = newURI
+        xhr.options.proxyUsed = true
 
-      if (this.fetchCallbacks[xhr.resource.uri]) {
-        if (!this.fetchCallbacks[newURI]) {
-          this.fetchCallbacks[newURI] = []
-        }
-        // this.fetchCallbacks[newURI] === this.fetchCallbacks[newURI].concat(this.fetchCallbacks[xhr.resource.uri])
-        delete this.fetchCallbacks[xhr.resource.uri]
+        return this.redirectTo(newURI, xhr)
       }
 
-      const xhr2 = this.requestURI(newURI, xhr.resource, xhr.options,
-        xhr.userCallback)
-      if (xhr2) {
-        xhr2.proxyUsed = true // only try the proxy once
-        xhr2.original = xhr.original
-        console.log('Proxying but original still ' + xhr2.original)
-      }
-      if (xhr2 && xhr2.req) {
-        if (!xhr.options.noMeta) {
-          kb.add(xhr.req,
-            kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'),
-            xhr2.req,
-            this.appNode)
-        }
-        return
-      }
-    } // function of event
+      // Retrying has not helped, fail
+      this.failFetch(xhr, `Request failed: ${xhr.status} ${xhr.statusText}`)
+    }
   }
 
   // deduce some things from the HTTP transaction
@@ -1239,7 +1194,7 @@ class Fetcher {
     //
     if (xhr.status === 0) {
       console.log('Masked error - status 0 for ' + xhr.resource.uri)
-      if (this.checkCredentialsRetry(docuri, rterm, xhr, options)) {
+      if (this.checkCredentialsRetry(docuri, rterm, xhr)) {
         // retry, it could be credentials flag CORS issue
         return
       }
@@ -1359,7 +1314,7 @@ class Fetcher {
   }
 
   // Set up callbacks
-  onreadystatechangeFactory (xhr, docuri, rterm, args, options) {
+  onreadystatechangeFactory (xhr, docuri, rterm) {
     return () => {
       // DONE: 4
       // HEADERS_RECEIVED: 2
@@ -1371,7 +1326,8 @@ class Fetcher {
 
       switch (xhr.readyState) {
         case 0:
-          this.dispatchStateUnsent(xhr, args)
+          // This is
+          this.dispatchStateUnsent(xhr)
 
           break
         case 3:
@@ -1379,7 +1335,7 @@ class Fetcher {
           // handleResponse();   // In general it you can't do it yet as the headers are in but not the data
           break
         case 4:
-          this.dispatchStateDone(xhr, docuri, rterm, args, options)
+          this.dispatchStateDone(xhr, docuri, rterm)
           // Final state for this XHR but may be redirected
 
           break
@@ -1393,7 +1349,7 @@ class Fetcher {
    * @param xhr {XMLHttpRequest}
    * @param args {Object} requestURI function arguments
    */
-  dispatchStateUnsent (xhr, args) {
+  dispatchStateUnsent (xhr) {
     const uri = xhr.resource.uri
     let newURI
 
@@ -1403,23 +1359,16 @@ class Fetcher {
       const here = '' + document.location
       const crossSite = hostpart(here) && hostpart(uri) && hostpart(here) !== hostpart(uri)
 
-      if (crossSite) {
+      if (crossSite && !xhr.proxyUsed) {
         newURI = Fetcher.crossSiteProxyTemplate.replace('{uri}', encodeURIComponent(uri))
 
-        let xhr2 = this.redirectTo(newURI, xhr, args)
+        xhr.options.proxyUsed = true
 
-        if (xhr2 && xhr2.req) {
-          kb.add(
-            xhr.req,
-            kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'),
-            xhr2.req, this.appNode
-          )
-          return
-        }
+        return this.redirectTo(newURI, xhr)
       }
     }
     this.failFetch(xhr, 'HTTP Blocked. (ReadyState 0) Cross-site violation for <' +
-      docuri + '>')
+      uri + '>')
   }
 
   /**
@@ -1456,48 +1405,68 @@ class Fetcher {
     }
   }
 
-  redirectTo (newURI, xhr, args) {
+  /**
+   * Sends a new request to the specified uri. Aborts the old request (and
+   * marks it at redirected). (Extracted from `onerrorFactory()`)
+   *
+   * @param newURI {string}
+   * @param xhr {XMLHttpRequest}
+   *
+   * @returns {XMLHttpRequest|undefined}
+   */
+  redirectTo (newURI, xhr) {
     this.addStatus(xhr.req, 'BLOCKED -> Cross-site Proxy to <' + newURI + '>')
 
-    if (xhr.aborted) { return }
+    if (xhr.aborted) {
+      return
+    }
 
-    var kb = this.store
-    var oldreq = xhr.req
-    kb.add(oldreq, ns.http('redirectedTo'), kb.sym(newURI), oldreq)
+    const kb = this.store
+    const oldReq = xhr.req  // request metadata blank node
 
-    // //////////// Change the request node to a new one:  @@@@@@@@@@@@ Duplicate?
-    var newreq = xhr.req = kb.bnode() // Make NEW reqest for everything else
-    kb.add(oldreq, ns.http('redirectedRequest'), newreq, xhr.req)
+    if (!xhr.options.noMeta) {
+      kb.add(oldReq, ns.link('redirectedTo'), kb.sym(newURI), oldReq)
 
-    var now = new Date()
-    var timeNow = '[' + now.getHours() + ':' + now.getMinutes() + ':' + now.getSeconds() + '] '
-    kb.add(newreq, ns.rdfs('label'), kb.literal(timeNow + ' Request for ' + newURI), this.appNode)
-    kb.add(newreq, ns.link('status'), kb.collection(), this.appNode)
-    kb.add(newreq, ns.link('requestedURI'), kb.literal(newURI), this.appNode)
+      const response = kb.bnode()
+      kb.add(oldReq, ns.link('response'), response)
+      // kb.add(response, ns.http('status'), kb.literal(xhr.status), response)
+      // if (xhr.statusText) kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response)
 
-    var response = kb.bnode()
-    kb.add(oldreq, ns.link('response'), response)
-    // kb.add(response, ns.http('status'), kb.literal(xhr.status), response)
-    // if (xhr.statusText) kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response)
+      this.addRequestMeta(newURI, xhr)
+      this.addStatus(oldReq, 'redirected to new request') // why
+    }
 
     xhr.abort()
     xhr.aborted = true
+
     xhr.redirected = true
+    this.requested[xhr.resource.uri] = 'redirected'
+    this.redirectedTo[xhr.resource.uri] = newURI
 
-    this.addStatus(oldreq, 'redirected XHR') // why
+    // Nothing needs to happen to the callbacks on redirection;
+    // both doneFetch and failFetch dispatch the original uri's callbacks only
+    // old:
+    // if (this.fetchCallbacks[xhr.resource.uri]) {
+    //   if (!this.fetchCallbacks[newURI]) {
+    //     this.fetchCallbacks[newURI] = []
+    //   }
+    //   // this.fetchCallbacks[newURI] === this.fetchCallbacks[newURI].concat(this.fetchCallbacks[xhr.resource.uri])
+    //   delete this.fetchCallbacks[xhr.resource.uri]
+    // }
 
-    if (this.fetchCallbacks[xhr.resource.uri]) {
-      if (!this.fetchCallbacks[newURI]) {
-        this.fetchCallbacks[newURI] = []
+    this.fireCallbacks('redirected', xhr.args) // Are these args right? @@@
+
+    let options = Object.assign({ baseURI: xhr.original }, xhr.options)
+
+    const newXhr = this.requestURI(newURI, xhr.resource, options, xhr.userCallback)
+
+    if (newXhr) {
+      if (!options.noMeta) {
+        kb.add(oldReq, ns.link('redirectedRequest'), newXhr.req, this.appNode)
       }
-      // this.fetchCallbacks[newURI] === this.fetchCallbacks[newURI].concat(this.fetchCallbacks[xhr.resource.uri])
-      delete this.fetchCallbacks[xhr.resource.uri]
     }
 
-    this.fireCallbacks('redirected', args) // Are these args right? @@@
-    this.requested[xhr.resource.uri] = 'redirected'
-
-    return this.requestURI(newURI, xhr.resource, xhr.options || {}, xhr.userCallback)
+    return newXhr
   }
 
   /**
@@ -1515,7 +1484,10 @@ class Fetcher {
    *   Also sets the `Cache-Control:` header to `no-cache`
    *
    * @param [options.baseURI=docuri] {Node|string} Original uri to preserve
-   *   through proxying etc
+   *   through proxying etc (`xhr.original`).
+   *
+   * @param [options.proxyUsed] {boolean} Whether this request is a retry via
+   *   a proxy (generally done from an error handler)
    *
    * @param [options.withCredentials] {boolean} flag for XHR/CORS etc
    *
@@ -1617,7 +1589,7 @@ class Fetcher {
     const xhr = this.xhrFor(docuri, rterm, requestedURI, actualProxyURI, options, args)
 
     if (!options.noMeta) {
-      this.addRequestMeta(docuri, rterm, xhr.req)
+      this.addRequestMeta(docuri, xhr, rterm)
     }
 
     try {
@@ -1633,7 +1605,7 @@ class Fetcher {
     try {
       this.initExtensionCallbacks(xhr, rterm)  // tabulator / Firefox only
     } catch (err) {
-      return this.failFetch(xhr, "Error setting callbacks for extension redirects: " + err)
+      return this.failFetch(xhr, 'Error setting callbacks for extension redirects: ' + err)
     }
 
     try {
@@ -1682,11 +1654,12 @@ class Fetcher {
     xhr.userCallback = options.userCallback
 
     // Setup the request
-    xhr.onerror = this.onerrorFactory(xhr, docuri, rterm, args, options)
-    xhr.onreadystatechange = this.onreadystatechangeFactory(xhr, docuri, rterm, args, options)
+    xhr.onerror = this.onerrorFactory(xhr, docuri, rterm)
+    xhr.onreadystatechange = this.onreadystatechangeFactory(xhr, docuri, rterm)
     xhr.timeout = this.timeout
     xhr.withCredentials = Fetcher.withCredentials(requestedURI, options)
     xhr.actualProxyURI = actualProxyURI
+    xhr.proxyUsed = options.proxyUsed
 
     xhr.requestedURI = requestedURI
 
@@ -1744,11 +1717,23 @@ class Fetcher {
     }
   }
 
-  addRequestMeta (docuri, rterm, req) {
+  /**
+   *
+   * @param docuri
+   * @param xhr
+   * @param rterm
+   */
+  addRequestMeta (docuri, xhr, rterm) {
+    let req = xhr.req
     let kb = this.store
 
     if (rterm && rterm.uri) {
       kb.add(docuri, ns.link('requestedBy'), rterm.uri, this.appNode)
+    }
+
+    if (xhr.original && xhr.original.uri !== docuri) {
+      kb.add(req, ns.link('orginalURI'), kb.literal(xhr.original.uri),
+        this.appNode)
     }
 
     const now = new Date()
