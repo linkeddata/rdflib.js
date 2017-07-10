@@ -5,6 +5,7 @@ import chai from 'chai'
 import sinon from 'sinon'
 import sinonChai from 'sinon-chai'
 import dirtyChai from 'dirty-chai'
+import nock from 'nock'
 import rdf from '../../src/index'
 import { XMLHttpRequest } from 'xmlhttprequest'
 
@@ -308,6 +309,112 @@ describe('Fetcher', () => {
       let options = { withCredentials: true }
 
       expect(Fetcher.withCredentials(uri, options)).to.be.true()
+    })
+
+    it('should return false for an https uri with an override', () => {
+      let uri = 'https://example.com/newdoc2.ttl'
+      let options = { withCredentials: false }
+
+      expect(Fetcher.withCredentials(uri, options)).to.be.false()
+    })
+  })
+
+  describe('load nock tests', () => {
+    let fetcher
+
+    beforeEach(() => {
+      fetcher = new Fetcher(rdf.graph())
+    })
+
+    afterEach(() => {
+      nock.cleanAll()
+    })
+
+    it('should fail on a 404', done => {
+      nock('https://example.com').get('/notfound').reply(404)
+
+      fetcher.load('https://example.com/notfound')
+        .catch(err => {
+          expect(err.message).to.match(/Fetch of <https:\/\/example.com\/notfound> failed: HTTP error for <https:\/\/example.com\/notfound>: 404/)
+          done()
+        })
+    })
+
+    it('should load and parse RDF-XML', () => {
+      let testXml = `<rdf:RDF
+ xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+ xmlns:n0="https://example.net/67890#"
+ xmlns:n1="https://example.org/67890#">
+    <rdf:Description rdf:about="https://example.net/67890#foo">
+       <n0:bar rdf:resource="https://example.net/88888#baz"/>
+    </rdf:Description>
+    <rdf:Description rdf:about="https://example.org/67890#foo">
+       <n1:bar rdf:resource="https://example.org/88888#baz"/>
+    </rdf:Description>
+</rdf:RDF>`
+
+      nock('https://example.com').get('/test.xml')
+        .reply(200, testXml, { 'Content-Type': 'application/rdf+xml' })
+
+      return fetcher.load('https://example.com/test.xml')
+        .then(res => {
+          expect(res.status).to.equal(200)
+          let kb = fetcher.store
+
+          let match = kb.anyStatementMatching(
+            kb.sym('https://example.net/67890#foo'),
+            kb.sym('https://example.net/67890#bar')
+          )
+
+          expect(match.object.value).to.equal('https://example.net/88888#baz')
+          expect(match.graph.value).to.equal('https://example.com/test.xml')
+        })
+    })
+
+    it('should load and parse Turtle', () => {
+      let testTurtle = `<https://example.net/67890#foo> <https://example.net/67890#bar> <https://example.net/88888#baz>.
+<https://example.org/67890#foo> <https://example.org/67890#bar> <https://example.org/88888#baz>.`
+
+      nock('https://example.com').get('/test.ttl')
+        .reply(200, testTurtle)
+
+      return fetcher.load('https://example.com/test.ttl')
+        .then(res => {
+          expect(res.status).to.equal(200)
+          let kb = fetcher.store
+
+          let match = kb.anyStatementMatching(
+            kb.sym('https://example.net/67890#foo'),
+            kb.sym('https://example.net/67890#bar')
+          )
+
+          expect(match.object.value).to.equal('https://example.net/88888#baz')
+          expect(match.graph.value).to.equal('https://example.com/test.ttl')
+        })
+    })
+
+    it('should load and parse N3', () => {
+      let testN3 = `@prefix : <http://example.com/foo/vocab#>.
+:building0 :bar 123, 78768.
+:building1  :length 1.45e5 ;
+    :created 2012-03-12 .
+:building0 :connectsTo :building4 .`
+
+      nock('https://example.com').get('/test.n3')
+        .reply(200, testN3)
+
+      return fetcher.load('https://example.com/test.n3')
+        .then(res => {
+          expect(res.status).to.equal(200)
+          let kb = fetcher.store
+
+          let match = kb.anyStatementMatching(
+            kb.sym('http://example.com/foo/vocab#building0'),
+            kb.sym('http://example.com/foo/vocab#connectsTo')
+          )
+
+          expect(match.object.value).to.equal('http://example.com/foo/vocab#building4')
+        })
     })
   })
 })

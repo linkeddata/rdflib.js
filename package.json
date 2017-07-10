@@ -46,6 +46,7 @@
     "fs-grep": "^0.0.5",
     "minifyify": "^7.3.2",
     "mocha": "^3.4.2",
+    "nock": "^9.0.13",
     "node-mkdirp": "0.0.1",
     "rimraf": "^2.6.1",
     "sinon": "^2.3.6",
