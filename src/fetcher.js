@@ -41,6 +41,18 @@ const Parsable = {
   'application/ld+json': true
 }
 
+// This is a minimal set to allow the use of damaged servers if necessary
+const CONTENT_TYPE_BY_EXT = {
+  'rdf': 'application/rdf+xml',
+  'owl': 'application/rdf+xml',
+  'n3': 'text/n3',
+  'ttl': 'text/turtle',
+  'nt': 'text/n3',
+  'acl': 'text/n3',
+  'html': 'text/html',
+  'xml': 'text/xml'
+}
+
 // Convenience namespaces needed in this module.
 // These are deliberately not exported as the user application should
 // make its own list and not rely on the prefixes used here,
@@ -590,7 +602,8 @@ class Fetcher {
    * @@ todo: If p1 is array then sequence or parallel fetch of all
    *
    * @param uri {Node|string}
-   * @param options
+   *
+   * @param [options={}] {Object}
    *
    * @returns {Promise}
    */
@@ -1187,12 +1200,13 @@ class Fetcher {
     }
 
     const options = xhr.options
+    const kb = this.store
 
     xhr.handleResponseDone = true
-    let handler = null
-    this.fireCallbacks('recv', xhr.args)
-    var kb = this.store
+
     this.saveResponseMetadata(xhr)
+
+    this.fireCallbacks('recv', xhr.args)
     this.fireCallbacks('headers', [{uri: docuri, headers: xhr.headers}])
 
     // Check for masked errors.
@@ -1223,80 +1237,46 @@ class Fetcher {
         xhr.status + ' ' + xhr.statusText)
     }
 
-    let loc =  xhr.headers['content-location']
-          if (loc) {
-            loc = Uri.join(loc, docuri)
-          }
+    let contentLocation = xhr.headers['content-location']
+    let contentType = xhr.headers['content-type']
+    contentType = this.normalizedContentType(xhr) || ''
 
-    // This is a minimal set to allow the use of damaged servers if necessary
-    const extensionToContentType = {
-      'rdf': 'application/rdf+xml',
-      'owl': 'application/rdf+xml',
-      'n3': 'text/n3',
-      'ttl': 'text/turtle',
-      'nt': 'text/n3',
-      'acl': 'text/n3',
-      'html': 'text/html',
-      'xml': 'text/xml'
-    }
-    let guess
     if (xhr.status === 200) {
-      this.addType(ns.link('Document'), xhr.req, kb, loc)
-      let ct = xhr.headers['content-type']
-      if (options.forceContentType) {
-        xhr.headers['content-type'] = options.forceContentType
-      }
-      if (!ct || ct.indexOf('application/octet-stream') >= 0) {
-        guess = extensionToContentType[xhr.resource.uri.split('.').pop()]
-        if (guess) {
-          xhr.headers['content-type'] = guess
-        }
-      }
-      if (ct) {
-        if (ct.indexOf('image/') === 0 || ct.indexOf('application/pdf') === 0) {
-          this.addType(kb.sym('http://purl.org/dc/terms/Image'), xhr.req, kb, loc)
-        }
-      }
-      if (options.clearPreviousData) { // Before we parse new data clear old but only on 200
+      this.addType(ns.link('Document'), xhr.req, kb, contentLocation)
+
+      // Before we parse new data clear old but only on 200
+      if (options.clearPreviousData) {
         kb.removeDocument(xhr.resource)
       }
-    }
-    // application/octet-stream; charset=utf-8
 
-    if (Uri.protocol(xhr.resource.uri) === 'file' || Uri.protocol(xhr.resource.uri) === 'chrome') {
-      if (options.forceContentType) {
-        xhr.headers['content-type'] = options.forceContentType
-      } else {
-        guess = extensionToContentType[xhr.resource.uri.split('.').pop()]
-        if (guess) {
-          xhr.headers['content-type'] = guess
-        } else {
-          xhr.headers['content-type'] = 'text/xml'
-        }
+      let isImage = contentType.includes('image/') ||
+        contentType.includes('application/pdf')
+
+      if (contentType && isImage) {
+        this.addType(kb.sym('http://purl.org/dc/terms/Image'), xhr.req, kb,
+          contentLocation)
       }
     }
 
     // If we have already got the thing at this location, abort
-    if (loc) {
-      let udoc = Uri.join(xhr.resource.uri, loc)
-      if (!options.force && udoc !== xhr.resource.uri &&
-        this.requested[udoc] && this.requested[udoc] === 'done') { // we have already fetched this in fact.
+    if (contentLocation) {
+      let udoc = Uri.join(xhr.resource.uri, contentLocation)
+
+      if (!options.force &&
+          udoc !== xhr.resource.uri &&
+          this.requested[udoc] === 'done') { // we have already fetched this
         // should we smush too?
-        // log.info("HTTP headers indicate we have already" + " retrieved " + xhr.resource + " as " + udoc + ". Aborting.")
-        this.doneFetch(xhr)
+        // log.info("HTTP headers indicate we have already" + " retrieved " +
+        // xhr.resource + " as " + udoc + ". Aborting.")
         xhr.abort()
         xhr.aborted = true
-        return
+        return this.doneFetch(xhr)
       }
+
       this.requested[udoc] = true
     }
 
-    for (let x = 0; x < this.handlers.length; x++) {
-      if (xhr.headers['content-type'] && xhr.headers['content-type'].match(this.handlers[x].pattern)) {
-        handler = new this.handlers[x]()
-        break
-      }
-    }
+    let handler = this.handlerForContentType(contentType)
 
     this.parseLinkHeader(xhr, xhr.req)
 
@@ -1304,7 +1284,8 @@ class Fetcher {
       try {
         handler.handlerFactory(xhr, this)
       } catch (e) { // Try to avoid silent errors
-        this.failFetch(xhr, 'Exception handling content-type ' + xhr.headers['content-type'] + ' was: ' + e)
+        this.failFetch(xhr, 'Exception handling content-type ' +
+          contentType + ': ' + e)
       }
     } else {
       this.doneFetch(xhr) //  Not a problem, we just don't extract data.
@@ -1313,6 +1294,61 @@ class Fetcher {
        //        ", readyState = "+xhr.readyState)
        */
     }
+  }
+
+  /**
+   * @param contentType {string}
+   *
+   * @returns {Handler|null}
+   */
+  handlerForContentType (contentType) {
+    if (!contentType) {
+      return null
+    }
+
+    let Handler = this.handlers.find(handler => {
+      return contentType.match(handler.pattern)
+    })
+
+    return Handler ? new Handler() : null
+  }
+
+  /**
+   * @param uri {string}
+   *
+   * @returns {string}
+   */
+  guessContentType (uri) {
+    return CONTENT_TYPE_BY_EXT[uri.split('.').pop()]
+  }
+
+  /**
+   * @param xhr {XMLHttpRequest}
+   *
+   * @returns {string}
+   */
+  normalizedContentType (xhr) {
+    if (xhr.options.forceContentType) {
+      return xhr.options.forceContentType
+    }
+
+    let contentType = xhr.headers['content-type']
+
+    if (!contentType || contentType.includes('application/octet-stream')) {
+      let guess = this.guessContentType(xhr.resource.uri)
+
+      if (guess) {
+        return guess
+      }
+    }
+
+    let protocol = Uri.protocol(xhr.resource.uri)
+
+    if (!contentType && ['file', 'chrome'].includes(protocol)) {
+      return 'text/xml'
+    }
+
+    return contentType
   }
 
   onreadystatechangeFactory (xhr, docuri, rterm) {
