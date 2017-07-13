@@ -31,6 +31,7 @@
     "async": "^0.9.x",
     "jsonld": "^0.4.5",
     "n3": "^0.4.1",
+    "node-fetch": "^1.7.1",
     "xmldom": "^0.1.22",
     "xmlhttprequest": "^1.7.0"
   },
@@ -40,7 +41,7 @@
     "babel-register": "^6.18.0",
     "babelify": "^7.3.0",
     "browserify": "^13.0.0",
-    "chai": "^4.0.2",
+    "chai": "^4.1.0",
     "diff": "^3.2.0",
     "dirty-chai": "^2.0.0",
     "fs-grep": "^0.0.5",

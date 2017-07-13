@@ -1,7 +1,7 @@
 <rdf:RDF
  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
- xmlns:str="#">
-    <rdf:Description rdf:about="#MLK">
+ xmlns:str="/structures.n3#">
+    <rdf:Description rdf:about="/structures.n3#MLK">
         <str:born rdf:datatype="http://www.w3.org/2001/XMLSchema#date">1929-01-17</str:born>
         <str:died rdf:datatype="http://www.w3.org/2001/XMLSchema#date">1968-01-15</str:died>
         <str:friend rdf:parseType="Resource">
@@ -15,45 +15,45 @@
     </rdf:Description>
     <rdf:Description rdf:nodeID="n5">
         <str:offspring rdf:parseType="Collection">
-                <rdf:Description rdf:about="#MLK3">
+                <rdf:Description rdf:about="/structures.n3#MLK3">
                    <str:name>Martin Luther King III</str:name>
                 </rdf:Description>
-                <rdf:Description rdf:about="#DSK">
+                <rdf:Description rdf:about="/structures.n3#DSK">
                    <str:name>Dexter Scott King</str:name>
                 </rdf:Description>
-                <rdf:Description rdf:about="#YK">
+                <rdf:Description rdf:about="/structures.n3#YK">
                    <str:name>Yolanda King</str:name>
                 </rdf:Description>
                 <rdf:Description>
                    <str:name>Bernice King</str:name>
                 </rdf:Description>
         </str:offspring>
-        <str:spouse rdf:resource="#MLK"/>
+        <str:spouse rdf:resource="/structures.n3#MLK"/>
         <str:spouse rdf:nodeID="n4"/>
-        <rdf:type rdf:resource="#Marriage"/>
+        <rdf:type rdf:resource="/structures.n3#Marriage"/>
     </rdf:Description>
-    <rdf:Description rdf:about="#MLK3">
+    <rdf:Description rdf:about="/structures.n3#MLK3">
        <str:name>Martin Luther King III</str:name>
     </rdf:Description>
-    <rdf:Description rdf:about="#DSK">
+    <rdf:Description rdf:about="/structures.n3#DSK">
        <str:name>Dexter Scott King</str:name>
     </rdf:Description>
-    <rdf:Description rdf:about="#YK">
+    <rdf:Description rdf:about="/structures.n3#YK">
        <str:name>Yolanda King</str:name>
     </rdf:Description>
     <rdf:Description rdf:nodeID="n9">
-       <str:friend rdf:resource="#MLK"/>
+       <str:friend rdf:resource="/structures.n3#MLK"/>
     </rdf:Description>
     <rdf:Description rdf:nodeID="n10">
        <str:loves rdf:parseType="Resource"></str:loves>
     </rdf:Description>
     <rdf:Description rdf:nodeID="n12">
-        <str:author rdf:resource="#MLK"/>
+        <str:author rdf:resource="/structures.n3#MLK"/>
         <str:date rdf:datatype="http://www.w3.org/2001/XMLSchema#date">1963-08-23</str:date>
         <str:title>I have a dream</str:title>
-        <rdf:type rdf:resource="#Speech"/>
+        <rdf:type rdf:resource="/structures.n3#Speech"/>
     </rdf:Description>
-    <rdf:Description rdf:about="#ZooReading1">
+    <rdf:Description rdf:about="/structures.n3#ZooReading1">
         <str:boolDisabled rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">0</str:boolDisabled>
         <str:boolEnabled rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">1</str:boolEnabled>
         <str:date rdf:datatype="http://www.w3.org/2001/XMLSchema#date">2015-02-28</str:date>

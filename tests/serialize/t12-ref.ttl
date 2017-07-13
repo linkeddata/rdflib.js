@@ -1,4 +1,4 @@
-@prefix : <#>.
+@prefix : </structures.n3#>.
 @prefix XML: <http://www.w3.org/2001/XMLSchema#>.
 
 :DSK :name "Dexter Scott King".

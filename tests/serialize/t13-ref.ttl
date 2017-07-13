@@ -1,6 +1,6 @@
-@prefix : <#>.
+@prefix : </,structures.nt#>.
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
-@prefix str: <structures.n3#>.
+@prefix str: </structures.n3#>.
 @prefix XML: <http://www.w3.org/2001/XMLSchema#>.
 
 str:DSK str:name "Dexter Scott King".
