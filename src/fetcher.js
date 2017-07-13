@@ -68,8 +68,9 @@ const ns = {
 }
 
 class Handler {
-  constructor (args) {
-    this.dom = args ? args[0] : undefined
+  constructor (response, dom) {
+    this.response = response
+    this.dom = dom
   }
 }
 
@@ -84,41 +85,30 @@ class RDFXMLHandler extends Handler {
     }
   }
 
-  handlerFactory (xhr, fetcher) {
-    xhr.handle = (cb) => {
-      // sf.addStatus(xhr.req, 'parsing soon as RDF/XML...')
-      let kb = fetcher.store
-      if (!this.dom) {
-        this.dom = Util.parseXML(xhr.responseText)
-      }
-      let root = this.dom.documentElement
-      if (root.nodeName === 'parsererror') { // Mozilla only See issue/issue110
-        // have to fail the request
-        fetcher.failFetch(xhr, 'Badly formed XML in ' + xhr.resource.uri)
-        // Add details
-        throw new Error('Badly formed XML in ' + xhr.resource.uri)
-      }
-      let parser = new RDFParser(kb)
-      try {
-        parser.parse(this.dom, xhr.original.uri, xhr.original)
-      } catch (e) {
-        fetcher.addStatus(xhr.req, 'Syntax error parsing RDF/XML! ' + e)
-        console.log('Syntax error parsing RDF/XML! ' + e)
-      }
-      if (!xhr.options.noMeta) {
-        kb.add(xhr.original, ns.rdf('type'), ns.link('RDFDocument'), fetcher.appNode)
-      }
-      cb()
+  parse (fetcher, responseText, options) {
+    let kb = fetcher.store
+    if (!this.dom) {
+      this.dom = Util.parseXML(responseText)
     }
-  }
+    let root = this.dom.documentElement
+    if (root.nodeName === 'parsererror') { // Mozilla only See issue/issue110
+      // have to fail the request
+      return fetcher.failFetch(options, 'Badly formed XML in ' +
+        options.resource.uri, 'parse_error')
+    }
+    let parser = new RDFParser(kb)
+    try {
+      parser.parse(this.dom, options.original.uri, options.original)
+    } catch (err) {
+      return fetcher.failFetch(options, 'Syntax error parsing RDF/XML! ' + err,
+        'parse_error')
+    }
+    if (!options.noMeta) {
+      kb.add(options.original, ns.rdf('type'), ns.link('RDFDocument'), fetcher.appNode)
+    }
 
-  // This would much better use on-board XSLT engine. @@
-  /*  deprecated 2016-02-17  timbl
-   Fetcher.doGRDDL = function(kb, doc, xslturi, xmluri) {
-   sf.requestURI('http://www.w3.org/2005/08/' + 'online_xslt/xslt?' +
-     'xslfile=' + escape(xslturi) + '&xmlfile=' + escape(xmluri), doc)
-   }
-   */
+    return fetcher.doneFetch(options, this.response)
+  }
 }
 RDFXMLHandler.pattern = new RegExp('application/rdf\\+xml')
 
@@ -131,63 +121,60 @@ class XHTMLHandler extends Handler {
     fetcher.mediatypes['application/xhtml+xml'] = {}
   }
 
-  handlerFactory (xhr, fetcher) {
-    xhr.handle = (cb) => {
-      let relation, reverse
-      if (!this.dom) {
-        this.dom = Util.parseXML(xhr.responseText)
-      }
-      let kb = fetcher.store
-
-      // dc:title
-      let title = this.dom.getElementsByTagName('title')
-      if (title.length > 0) {
-        kb.add(xhr.resource, ns.dc('title'), kb.literal(title[0].textContent), xhr.resource)
-        // log.info("Inferring title of " + xhr.resource)
-      }
-
-      // link rel
-      let links = this.dom.getElementsByTagName('link')
-      for (let x = links.length - 1; x >= 0; x--) { // @@ rev
-        relation = links[x].getAttribute('rel')
-        reverse = false
-        if (!relation) {
-          relation = links[x].getAttribute('rev')
-          reverse = true
-        }
-        if (relation) {
-          fetcher.linkData(xhr, relation,
-            links[x].getAttribute('href'), xhr.resource, reverse)
-        }
-      }
-
-      // Data Islands
-
-      let scripts = this.dom.getElementsByTagName('script')
-      for (let i = 0; i < scripts.length; i++) {
-        let contentType = scripts[i].getAttribute('type')
-        if (Parsable[contentType]) {
-          rdfParse(scripts[i].textContent, kb, xhr.original.uri, contentType)
-        }
-      }
-
-      if (!xhr.options.noMeta) {
-        kb.add(xhr.resource, ns.rdf('type'), ns.link('WebPage'), fetcher.appNode)
-      }
-
-      if (!xhr.options.noRDFa && parseRDFaDOM) { // enable by default
-        try {
-          parseRDFaDOM(this.dom, kb, xhr.original.uri)
-        } catch (e) {
-          let msg = ('Error trying to parse ' + xhr.resource + ' as RDFa:\n' +
-            e + ':\n' + e.stack)
-          // dump(msg+"\n")
-          fetcher.failFetch(xhr, msg)
-          return
-        }
-      }
-      cb() // Fire done callbacks
+  parse (fetcher, responseText, options) {
+    let relation, reverse
+    if (!this.dom) {
+      this.dom = Util.parseXML(responseText)
     }
+    let kb = fetcher.store
+
+    // dc:title
+    let title = this.dom.getElementsByTagName('title')
+    if (title.length > 0) {
+      kb.add(options.resource, ns.dc('title'), kb.literal(title[0].textContent),
+        options.resource)
+      // log.info("Inferring title of " + xhr.resource)
+    }
+
+    // link rel
+    let links = this.dom.getElementsByTagName('link')
+    for (let x = links.length - 1; x >= 0; x--) { // @@ rev
+      relation = links[x].getAttribute('rel')
+      reverse = false
+      if (!relation) {
+        relation = links[x].getAttribute('rev')
+        reverse = true
+      }
+      if (relation) {
+        fetcher.linkData(options.original, relation,
+          links[x].getAttribute('href'), options.resource, reverse)
+      }
+    }
+
+    // Data Islands
+    let scripts = this.dom.getElementsByTagName('script')
+    for (let i = 0; i < scripts.length; i++) {
+      let contentType = scripts[i].getAttribute('type')
+      if (Parsable[contentType]) {
+        rdfParse(scripts[i].textContent, kb, options.original.uri, contentType)
+      }
+    }
+
+    if (!options.noMeta) {
+      kb.add(options.resource, ns.rdf('type'), ns.link('WebPage'), fetcher.appNode)
+    }
+
+    if (!options.noRDFa && parseRDFaDOM) { // enable by default
+      try {
+        parseRDFaDOM(this.dom, kb, options.original.uri)
+      } catch (err) {
+        let msg = 'Error trying to parse ' + options.resource + ' as RDFa:\n' +
+          err + ':\n' + err.stack
+        return fetcher.failFetch(options, msg, 'parse_error')
+      }
+    }
+
+    return fetcher.doneFetch(options, this.response)
   }
 }
 XHTMLHandler.pattern = new RegExp('application/xhtml')
@@ -202,75 +189,66 @@ class XMLHandler extends Handler {
     fetcher.mediatypes['application/xml'] = { 'q': 0.5 }
   }
 
-  handlerFactory (xhr, fetcher) {
-    xhr.handle = (cb) => {
-      let dom = Util.parseXML(xhr.responseText)
+  parse (fetcher, responseText, options) {
+    let dom = Util.parseXML(responseText)
 
-      // XML Semantics defined by root element namespace
-      // figure out the root element
-      for (let c = 0; c < dom.childNodes.length; c++) {
-        // is this node an element?
-        if (dom.childNodes[c].nodeType === 1) {
-          // We've found the first element, it's the root
-          let ns = dom.childNodes[c].namespaceURI
+    // XML Semantics defined by root element namespace
+    // figure out the root element
+    for (let c = 0; c < dom.childNodes.length; c++) {
+      // is this node an element?
+      if (dom.childNodes[c].nodeType === 1) {
+        // We've found the first element, it's the root
+        let ns = dom.childNodes[c].namespaceURI
 
-          // Is it RDF/XML?
-          if (ns && ns === ns['rdf']) {
-            fetcher.addStatus(xhr.req, 'Has XML root element in the RDF namespace, so assume RDF/XML.')
-            fetcher.switchHandler('RDFXMLHandler', xhr, cb, [dom])
-            return
-          }
-          // it isn't RDF/XML or we can't tell
-          // Are there any GRDDL transforms for this namespace?
-          // @@ assumes ns documents have already been loaded
-          /*
-           var xforms = kb.each(kb.sym(ns), kb.sym("http://www.w3.org/2003/g/data-view#namespaceTransformation"))
-           for (var i = 0; i < xforms.length; i++) {
-           var xform = xforms[i]
-           // log.info(xhr.resource.uri + " namespace " + ns + " has GRDDL ns transform" + xform.uri)
-           Fetcher.doGRDDL(kb, xhr.resource, xform.uri, xhr.resource.uri)
-           }
-           */
-          break
+        // Is it RDF/XML?
+        if (ns && ns === ns['rdf']) {
+          fetcher.addStatus(options.req,
+            'Has XML root element in the RDF namespace, so assume RDF/XML.')
+
+          let rdfHandler = new RDFXMLHandler(this.response, dom)
+          return rdfHandler.parse(fetcher, responseText, options)
         }
-      }
 
-      // Or it could be XHTML?
-      // Maybe it has an XHTML DOCTYPE?
-      if (dom.doctype) {
-        // log.info("We found a DOCTYPE in " + xhr.resource)
-        if (dom.doctype.name === 'html' &&
-            dom.doctype.publicId.match(/^-\/\/W3C\/\/DTD XHTML/) &&
-            dom.doctype.systemId.match(/http:\/\/www.w3.org\/TR\/xhtml/)) {
-          fetcher.addStatus(xhr.req,
-            'Has XHTML DOCTYPE. Switching to XHTML Handler.\n')
-          fetcher.switchHandler('XHTMLHandler', xhr, cb)
-          return
-        }
+        break
       }
-
-      // Or what about an XHTML namespace?
-      let html = dom.getElementsByTagName('html')[0]
-      if (html) {
-        let xmlns = html.getAttribute('xmlns')
-        if (xmlns && xmlns.match(/^http:\/\/www.w3.org\/1999\/xhtml/)) {
-          fetcher.addStatus(xhr.req,
-            'Has a default namespace for ' +
-            'XHTML. Switching to XHTMLHandler.\n')
-          fetcher.switchHandler('XHTMLHandler', xhr, cb)
-          return
-        }
-      }
-
-      // At this point we should check the namespace document (cache it!) and
-      // look for a GRDDL transform
-      // @@  Get namespace document <n>, parse it, look for  <n> grddl:namespaceTransform ?y
-      // Apply ?y to   dom
-      // We give up. What dialect is this?
-      fetcher.failFetch(xhr,
-        'Unsupported dialect of XML: not RDF or XHTML namespace, etc.\n' +
-        xhr.responseText.slice(0, 80))
     }
+
+    // Or it could be XHTML?
+    // Maybe it has an XHTML DOCTYPE?
+    if (dom.doctype) {
+      // log.info("We found a DOCTYPE in " + xhr.resource)
+      if (dom.doctype.name === 'html' &&
+          dom.doctype.publicId.match(/^-\/\/W3C\/\/DTD XHTML/) &&
+          dom.doctype.systemId.match(/http:\/\/www.w3.org\/TR\/xhtml/)) {
+        fetcher.addStatus(options.req,
+          'Has XHTML DOCTYPE. Switching to XHTML Handler.\n')
+
+        let xhtmlHandler = new XHTMLHandler(this.response, dom)
+        return xhtmlHandler.parse(fetcher, responseText, options)
+      }
+    }
+
+    // Or what about an XHTML namespace?
+    let html = dom.getElementsByTagName('html')[0]
+    if (html) {
+      let xmlns = html.getAttribute('xmlns')
+      if (xmlns && xmlns.match(/^http:\/\/www.w3.org\/1999\/xhtml/)) {
+        fetcher.addStatus(options.req,
+          'Has a default namespace for ' + 'XHTML. Switching to XHTMLHandler.\n')
+
+        let xhtmlHandler = new XHTMLHandler(this.response, dom)
+        return xhtmlHandler.parse(fetcher, responseText, options)
+      }
+    }
+
+    // At this point we should check the namespace document (cache it!) and
+    // look for a GRDDL transform
+    // @@  Get namespace document <n>, parse it, look for  <n> grddl:namespaceTransform ?y
+    // Apply ?y to   dom
+    // We give up. What dialect is this?
+    return fetcher.failFetch(options,
+      'Unsupported dialect of XML: not RDF or XHTML namespace, etc.\n' +
+      responseText.slice(0, 80))
   }
 }
 XMLHandler.pattern = new RegExp('(text|application)/(.*)xml')
@@ -286,55 +264,51 @@ class HTMLHandler extends Handler {
     }
   }
 
-  handlerFactory (xhr, fetcher) {
-    xhr.handle = (cb) => {
-      let rt = xhr.responseText
-      // We only handle XHTML so we have to figure out if this is XML
-      // log.info("Sniffing HTML " + xhr.resource + " for XHTML.")
+  parse (fetcher, responseText, options) {
+    let kb = fetcher.store
 
-      if (rt.match(/\s*<\?xml\s+version\s*=[^<>]+\?>/)) {
-        fetcher.addStatus(xhr.req, "Has an XML declaration. We'll assume " +
-          "it's XHTML as the content-type was text/html.\n")
-        fetcher.switchHandler('XHTMLHandler', xhr, cb)
-        return
-      }
+    // We only handle XHTML so we have to figure out if this is XML
+    // log.info("Sniffing HTML " + xhr.resource + " for XHTML.")
 
-      // DOCTYPE
-      // There is probably a smarter way to do this
-      if (rt.match(/.*<!DOCTYPE\s+html[^<]+-\/\/W3C\/\/DTD XHTML[^<]+http:\/\/www.w3.org\/TR\/xhtml[^<]+>/)) {
-        fetcher.addStatus(xhr.req,
-          'Has XHTML DOCTYPE. Switching to XHTMLHandler.\n')
-        fetcher.switchHandler('XHTMLHandler', xhr, cb)
-        return
-      }
+    if (responseText.match(/\s*<\?xml\s+version\s*=[^<>]+\?>/)) {
+      fetcher.addStatus(options.req, "Has an XML declaration. We'll assume " +
+        "it's XHTML as the content-type was text/html.\n")
 
-      // xmlns
-      if (rt.match(/[^(<html)]*<html\s+[^<]*xmlns=['"]http:\/\/www.w3.org\/1999\/xhtml["'][^<]*>/)) {
-        fetcher.addStatus(xhr.req,
-          'Has default namespace for XHTML, so switching to XHTMLHandler.\n')
-        fetcher.switchHandler('XHTMLHandler', xhr, cb)
-        return
-      }
-
-      // dc:title
-      // no need to escape '/' here
-      let titleMatch = (new RegExp('<title>([\\s\\S]+?)</title>', 'im')).exec(rt)
-      if (titleMatch) {
-        let kb = fetcher.store
-        kb.add(
-          xhr.resource,
-          ns.dc('title'),
-          kb.literal(titleMatch[1]),
-          xhr.resource
-        ) // think about xml:lang later
-        kb.add(xhr.resource, ns.rdf('type'), ns.link('WebPage'), fetcher.appNode)
-        cb() // doneFetch, not failed
-        return
-      }
-      fetcher.addStatus(xhr.req, 'non-XML HTML document, not parsed for data.')
-      fetcher.doneFetch(xhr)
-      // sf.failFetch(xhr, "Sorry, can't yet parse non-XML HTML")
+      let xhtmlHandler = new XHTMLHandler(this.response)
+      return xhtmlHandler.parse(fetcher, responseText, options)
     }
+
+    // DOCTYPE
+    // There is probably a smarter way to do this
+    if (responseText.match(/.*<!DOCTYPE\s+html[^<]+-\/\/W3C\/\/DTD XHTML[^<]+http:\/\/www.w3.org\/TR\/xhtml[^<]+>/)) {
+      fetcher.addStatus(options.req,
+        'Has XHTML DOCTYPE. Switching to XHTMLHandler.\n')
+
+      let xhtmlHandler = new XHTMLHandler(this.response)
+      return xhtmlHandler.parse(fetcher, responseText, options)
+    }
+
+    // xmlns
+    if (responseText.match(/[^(<html)]*<html\s+[^<]*xmlns=['"]http:\/\/www.w3.org\/1999\/xhtml["'][^<]*>/)) {
+      fetcher.addStatus(options.req,
+        'Has default namespace for XHTML, so switching to XHTMLHandler.\n')
+
+      let xhtmlHandler = new XHTMLHandler(this.response)
+      return xhtmlHandler.parse(fetcher, responseText, options)
+    }
+
+    // dc:title
+    // no need to escape '/' here
+    let titleMatch = (new RegExp('<title>([\\s\\S]+?)</title>', 'im')).exec(responseText)
+    if (titleMatch) {
+      kb.add(options.resource, ns.dc('title'), kb.literal(titleMatch[1]),
+        options.resource) // think about xml:lang later
+    }
+    kb.add(options.resource, ns.rdf('type'), ns.link('WebPage'), fetcher.appNode)
+    fetcher.addStatus(options.req, 'non-XML HTML document, not parsed for data.')
+
+    return fetcher.doneFetch(options, this.response)
+    // sf.failFetch(xhr, "Sorry, can't yet parse non-XML HTML")
   }
 }
 HTMLHandler.pattern = new RegExp('text/html')
@@ -350,35 +324,35 @@ class TextHandler extends Handler {
     }
   }
 
-  handlerFactory (xhr, fetcher) {
-    xhr.handle = (cb) => {
-      // We only speak dialects of XML right now. Is this XML?
-      let rt = xhr.responseText
+  parse (fetcher, responseText, options) {
+    // We only speak dialects of XML right now. Is this XML?
 
-      // Look for an XML declaration
-      if (rt.match(/\s*<\?xml\s+version\s*=[^<>]+\?>/)) {
-        fetcher.addStatus(xhr.req, 'Warning: ' + xhr.resource +
-          " has an XML declaration. We'll assume " +
-          "it's XML but its content-type wasn't XML.\n")
-        fetcher.switchHandler('XMLHandler', xhr, cb)
-        return
-      }
+    // Look for an XML declaration
+    if (responseText.match(/\s*<\?xml\s+version\s*=[^<>]+\?>/)) {
+      fetcher.addStatus(options.req, 'Warning: ' + options.resource +
+        " has an XML declaration. We'll assume " +
+        "it's XML but its content-type wasn't XML.\n")
 
-      // Look for an XML declaration
-      if (rt.slice(0, 500).match(/xmlns:/)) {
-        fetcher.addStatus(xhr.req, "May have an XML namespace. We'll assume " +
-          "it's XML but its content-type wasn't XML.\n")
-        fetcher.switchHandler('XMLHandler', xhr, cb)
-        return
-      }
-
-      // We give up finding semantics - this is not an error, just no data
-      fetcher.addStatus(xhr.req, 'Plain text document, no known RDF semantics.')
-      fetcher.doneFetch(xhr)
-      // fetcher.failFetch(xhr, "unparseable - text/plain not visibly XML")
-      // dump(xhr.resource + " unparseable - text/plain not visibly XML,
-      //   starts:\n" + rt.slice(0, 500)+"\n")
+      let xmlHandler = new XMLHandler(this.response)
+      return xmlHandler.parse(fetcher, responseText, options)
     }
+
+    // Look for an XML declaration
+    if (responseText.slice(0, 500).match(/xmlns:/)) {
+      fetcher.addStatus(options.req, "May have an XML namespace. We'll assume " +
+        "it's XML but its content-type wasn't XML.\n")
+
+      let xmlHandler = new XMLHandler(this.response)
+      return xmlHandler.parse(fetcher, responseText, options)
+    }
+
+    // We give up finding semantics - this is not an error, just no data
+    fetcher.addStatus(options.req, 'Plain text document, no known RDF semantics.')
+
+    return fetcher.doneFetch(options, this.response)
+    // fetcher.failFetch(xhr, "unparseable - text/plain not visibly XML")
+    // dump(xhr.resource + " unparseable - text/plain not visibly XML,
+    //   starts:\n" + rt.slice(0, 500)+"\n")
   }
 }
 TextHandler.pattern = new RegExp('text/plain')
@@ -402,33 +376,29 @@ class N3Handler extends Handler {
     } // post 2008
   }
 
-  handlerFactory (xhr, fetcher) {
-    const kb = fetcher.store
-
-    xhr.handle = () => {
-      // Parse the text of this non-XML file
-
-      // console.log('web.js: Parsing as N3 ' + xhr.resource.uri + ' base: ' +
-      // xhr.original.uri) // @@@@ comment me out
-      // fetcher.addStatus(xhr.req, "N3 not parsed yet...")
-      let p = N3Parser(kb, kb, xhr.original.uri, xhr.original.uri,
-        null, null, '', null)
-      //                p.loadBuf(xhr.responseText)
-      try {
-        p.loadBuf(xhr.responseText)
-      } catch (e) {
-        let msg = 'Error trying to parse ' + xhr.resource +
-          ' as Notation3:\n' + e + ':\n' + e.stack
-        // dump(msg+"\n")
-        fetcher.failFetch(xhr, msg)
-        return
-      }
-
-      fetcher.addStatus(xhr.req, 'N3 parsed: ' + p.statementCount + ' triples in ' + p.lines + ' lines.')
-      fetcher.store.add(xhr.original, ns.rdf('type'), ns.link('RDFDocument'), fetcher.appNode)
-      // var args = [xhr.original.uri] // Other args needed ever?
-      fetcher.doneFetch(xhr)
+  parse (fetcher, responseText, options) {
+    // Parse the text of this non-XML file
+    let kb = fetcher.store
+    // console.log('web.js: Parsing as N3 ' + xhr.resource.uri + ' base: ' +
+    // xhr.original.uri) // @@@@ comment me out
+    // fetcher.addStatus(xhr.req, "N3 not parsed yet...")
+    let p = N3Parser(kb, kb, options.original.uri, options.original.uri,
+      null, null, '', null)
+    //                p.loadBuf(xhr.responseText)
+    try {
+      p.loadBuf(responseText)
+    } catch (err) {
+      let msg = 'Error trying to parse ' + options.resource +
+        ' as Notation3:\n' + err + ':\n' + err.stack
+      // dump(msg+"\n")
+      return fetcher.failFetch(options, msg, 'parse_error')
     }
+
+    fetcher.addStatus(options.req, 'N3 parsed: ' + p.statementCount + ' triples in ' + p.lines + ' lines.')
+    fetcher.store.add(options.original, ns.rdf('type'), ns.link('RDFDocument'), fetcher.appNode)
+    // var args = [xhr.original.uri] // Other args needed ever?
+
+    return fetcher.doneFetch(options, this.response)
   }
 }
 N3Handler.pattern = new RegExp('(application|text)/(x-)?(rdf\\+)?(n3|turtle)')
@@ -438,21 +408,24 @@ const HANDLERS = {
 }
 
 class Fetcher {
-  constructor (store, timeout, async) {
+  constructor (store, options = {}) {
     this.store = store
-    this.timeout = timeout || 30000
-    this.async = async != null ? async : true
+    this.timeout = options.timeout || 30000
+    this.fetch = options.fetch || require('node-fetch')
     this.appNode = this.store.bnode() // Denoting this session
     this.store.fetcher = this // Bi-linked
     this.requested = {}
     // this.requested[uri] states:
     //   undefined     no record of web access or records reset
-    //   true          has been requested, XHR in progress
+    //   true          has been requested, fetch in progress
     //   'done'        received, Ok
+    //   401           Not logged in
     //   403           HTTP status unauthorized
     //   404           Resource does not exist. Can be created etc.
     //   'redirected'  In attempt to counter CORS problems retried.
-    //   other strings mean various other errors, such as parse errors.
+    //   'parse_error' Parse error
+    //   'unsupported_protocol'  URI is not a protocol Fetcher can deal with
+    //   other strings mean various other errors.
     //
     this.redirectedTo = {} // When 'redirected'
     this.fetchCallbacks = {} // fetchCallbacks[uri].push(callback)
@@ -465,8 +438,10 @@ class Fetcher {
       '*/*': { 'q': 0.1 }  // Must allow access to random content
     }
 
-    Util.callbackify(this, ['request', 'recv', 'headers', 'load', 'fail',
-      'refresh', 'retract', 'done'])
+    // Util.callbackify(this, ['request', 'recv', 'headers', 'load', 'fail',
+    //   'refresh', 'retract', 'done'])
+    // In switching to fetch(), 'recv', 'headers' and 'load' do not make sense
+    Util.callbackify(this, ['request', 'fail', 'refresh', 'retract', 'done'])
 
     Object.keys(HANDLERS).map(key => this.addHandler(HANDLERS[key]))
   }
@@ -601,9 +576,36 @@ class Fetcher {
    *
    * @@ todo: If p1 is array then sequence or parallel fetch of all
    *
-   * @param uri {Node|string}
+   * @param uri {Array<Node>|Array<string>|Node|string}
    *
    * @param [options={}] {Object}
+   *
+   * @param [options.fetch] {Function}
+   *
+   * @param [options.referringTerm] {Node} Referring term, the resource which
+   *   referred to this (for tracking bad links)
+   *
+   * @param [options.forceContentType] {string} Override the incoming header to
+   *   force the data to be treated as this content-type
+   *
+   * @param [options.force] {boolean} Load the data even if loaded before.
+   *   Also sets the `Cache-Control:` header to `no-cache`
+   *
+   * @param [options.baseURI=docuri] {Node|string} Original uri to preserve
+   *   through proxying etc (`xhr.original`).
+   *
+   * @param [options.proxyUsed] {boolean} Whether this request is a retry via
+   *   a proxy (generally done from an error handler)
+   *
+   * @param [options.withCredentials] {boolean} flag for XHR/CORS etc
+   *
+   * @param [options.clearPreviousData] {boolean} Before we parse new data,
+   *   clear old, but only on status 200 responses
+   *
+   * @param [options.noMeta] {boolean} Prevents the addition of various metadata
+   *   triples (about the fetch request) to the store
+   *
+   * @param [options.noRDFa] {boolean}
    *
    * @returns {Promise}
    */
@@ -614,15 +616,90 @@ class Fetcher {
       )
     }
 
-    return new Promise((resolve, reject) => {
-      this.requestURI(uri, options.referingTerm, options, (ok, message, xhr) => {
-        if (ok) {
-          resolve(xhr)
-        } else {
-          reject(new Error(message))
-        }
-      })
-    })
+    return Promise
+      .race([
+        this.setXHRTimeout(uri, this.timeout),
+        this.fetchUri(uri, options)
+      ])
+
+    // return new Promise((resolve, reject) => {
+    //   this.requestURI(uri, options.referringTerm, options, (ok, message, xhr) => {
+    //     if (ok) {
+    //       resolve(xhr)
+    //     } else {
+    //       reject(new Error(message))
+    //     }
+    //   })
+    // })
+  }
+
+  /**
+   * (The promise chain ends in either a `failFetch()` or a `doneFetch()`)
+   *
+   * @param uri {Node|string}
+   * @param [options={}] {Object}
+   *
+   * @returns {Promise<Object>} fetch() result or an { error, status } object
+   */
+  fetchUri (uri, options = {}) {
+    let docuri = uri.uri || uri
+    docuri = docuri.split('#')[0]
+    let kb = this.store
+
+    if (Fetcher.unsupportedProtocol(docuri)) {
+      return this.failFetch(options, 'Unsupported protocol', 'unsupported_protocol')
+    }
+
+    options.resource = kb.sym(docuri) // This might be proxified
+    options.baseURI = options.baseURI || docuri // Preserve though proxying etc
+    options.original = kb.sym(options.baseURI)
+    options.headers = options.headers || {}
+    options.req = kb.bnode()
+    if (options.force) { options.cache = 'no-cache' }
+
+    let acceptString = this.acceptString()
+    options.headers['accept'] = acceptString
+    this.addStatus(options.req, 'Accept: ' + acceptString)
+
+    let state = this.getState(docuri)
+    if (!options.force) {
+      if (state === 'fetched') {  // URI already fetched and added to store
+        return this.doneFetch(options, { status: 200, ok: true })
+      }
+      if (state === 'failed') {
+        return this.failFetch(options, 'Previously failed: ' +
+          this.requested[docuri], this.requested[docuri])
+      }
+    } else {
+      delete this.nonexistant[docuri]
+    }
+
+    this.fireCallbacks('request', [docuri])
+
+    // if (state === 'requested') {
+    //   return // Don't ask again - wait for existing call
+    // } else {
+    //   this.requested[docuri] = true  // mark this uri as 'requested'
+    // }
+    this.requested[docuri] = true  // mark this uri as 'requested'
+
+    let requestedURI = Fetcher.offlineOverride(docuri)
+    options.requestedURI = requestedURI
+
+    if (Fetcher.withCredentials(requestedURI, options)) {
+      options.credentials = 'include'
+    }
+
+    let actualProxyURI = Fetcher.proxyIfNecessary(requestedURI)
+    options.actualProxyURI = actualProxyURI
+
+    if (!options.noMeta) {
+      this.addRequestMeta(docuri, options)
+    }
+
+    return this.fetch(actualProxyURI, options)
+      .then(response => this.handleResponse(response, docuri, options))
+      .catch(error => this.retryOnError(error, docuri, options))
   }
 
   /**
@@ -635,7 +712,7 @@ class Fetcher {
    *   nowOrWhenFetched (uri, referringTerm, userCallback) <-- old
    *
    *  Options include:
-   *   referingTerm    The document in which this link was found.
+   *   referringTerm    The document in which this link was found.
    *                    this is valuable when finding the source of bad URIs
    *   force            boolean.  Never mind whether you have tried before,
    *                    load this from scratch.
@@ -649,16 +726,27 @@ class Fetcher {
       // nowOrWhenFetched (uri, userCallback)
       userCallback = p2
     } else if (typeof p2 === 'undefined') { // original calling signature
-      // referingTerm = undefined
+      // referringTerm = undefined
     } else if (p2 instanceof NamedNode) {
-      // referingTerm = p2
-      options.referingTerm = p2
+      // referringTerm = p2
+      options.referringTerm = p2
     } else {
       // nowOrWhenFetched (uri, options, userCallback)
       options = p2
     }
 
-    this.requestURI(uri, options.referingTerm, options, userCallback)
+    this.fetchUri(uri, options)
+      .then(result => {
+        if (userCallback) {
+          userCallback(true, null, result)
+        }
+      })
+      .catch(err => {
+        console.log(err)
+        userCallback(false, err.message)
+      })
+
+    // this.requestURI(uri, options.referringTerm, options, userCallback)
   }
 
   get (uri, p2, userCallback, options) {
@@ -670,21 +758,21 @@ class Fetcher {
    * request's metadata status collection.
    *
    * @param req {BlankNode}
-   * @param status {string}
+   * @param statusMessage {string}
    */
-  addStatus (req, status) {
+  addStatus (req, statusMessage) {
     // <Debug about="parsePerformance">
     let now = new Date()
-    status = '[' + now.getHours() + ':' + now.getMinutes() + ':' +
-      now.getSeconds() + '.' + now.getMilliseconds() + '] ' + status
+    statusMessage = '[' + now.getHours() + ':' + now.getMinutes() + ':' +
+      now.getSeconds() + '.' + now.getMilliseconds() + '] ' + statusMessage
     // </Debug>
     let kb = this.store
 
     let statusNode = kb.the(req, ns.link('status'))
     if (statusNode && statusNode.append) {
-      statusNode.append(kb.literal(status))
+      statusNode.append(kb.literal(statusMessage))
     } else {
-      log.warn('web.js: No list to add to: ' + statusNode + ',' + status)
+      log.warn('web.js: No list to add to: ' + statusNode + ',' + statusMessage)
     }
   }
 
@@ -693,58 +781,52 @@ class Fetcher {
    *
    *  - Adds an entry to the request status collection
    *  - Adds an error triple with the fail message to the metadata
-   *  - Signals failure by calling all the `fetchCallbacks` with a fail message
    *  - Fires the 'fail' callback
-   *  - Calls xhr.abort()
+   *  - Returns an error result object
    *
-   * Returns xhr so can just do return this.failFetch(...)
+   * @param options {Object}
+   * @param errorMessage {string}
+   * @param statusCode {number}
    *
-   * @param xhr {XMLHttpRequest}
-   * @param status {string}
-   *
-   * @returns {XMLHttpRequest}
+   * @returns {Promise<Object>}
    */
-  failFetch (xhr, status) {
-    this.addStatus(xhr.req, status)
+  failFetch (options, errorMessage, statusCode) {
+    this.addStatus(options.req, errorMessage)
 
-    if (!xhr.options.noMeta) {
-      this.store.add(xhr.original, ns.link('error'), status)
+    if (!options.noMeta) {
+      this.store.add(options.original, ns.link('error'), errorMessage)
     }
 
-    if (!xhr.resource.sameTerm(xhr.original)) {
-      console.log('@@ Recording failure original ' + xhr.original + '( as ' + xhr.resource + ') : ' + xhr.status)
+    if (!options.resource.sameTerm(options.original)) {
+      console.log('@@ Recording failure original ' + options.original +
+        '( as ' + options.resource + ') : ' + statusCode)
     } else {
-      console.log('@@ Recording failure for ' + xhr.original + ': ' + xhr.status)
+      console.log('@@ Recording failure for ' + options.original + ': ' + statusCode)
     }
 
     // changed 2015 was false
-    this.requested[Uri.docpart(xhr.original.uri)] = xhr.status
+    this.requested[Uri.docpart(options.original.uri)] = statusCode
 
-    while (this.fetchCallbacks[xhr.original.uri] &&
-           this.fetchCallbacks[xhr.original.uri].length) {
-      this.fetchCallbacks[xhr.original.uri].shift()(
-        false, 'Fetch of <' + xhr.original.uri + '> failed: ' + status, xhr
-      )
-    }
-    delete this.fetchCallbacks[xhr.original.uri]
-    this.fireCallbacks('fail', [xhr.original.uri, status])
-    xhr.abort()
-    xhr.aborted = true
-    return xhr
+    this.fireCallbacks('fail', [options.original.uri, errorMessage])
+
+    return Promise.resolve({
+      error: errorMessage,
+      status: statusCode
+    })
   }
 
   // in the why part of the quad distinguish between HTML and HTTP header
   // Reverse is set iif the link was rev= as opposed to rel=
-  linkData (xhr, rel, uri, why, reverse) {
+  linkData (originalUri, rel, uri, why, reverse) {
     if (!uri) return
     let kb = this.store
     let predicate
     // See http://www.w3.org/TR/powder-dr/#httplink for describedby 2008-12-10
-    let obj = kb.sym(Uri.join(uri, xhr.original.uri))
+    let obj = kb.sym(Uri.join(uri, originalUri.uri))
 
     if (rel === 'alternate' || rel === 'seeAlso' || rel === 'meta' ||
         rel === 'describedby') {
-      if (obj.uri === xhr.original.uri) { return }
+      if (obj.uri === originalUri.uri) { return }
       predicate = ns.rdfs('seeAlso')
     } else if (rel === 'type') {
       predicate = kb.sym('http://www.w3.org/1999/02/22-rdf-syntax-ns#type')
@@ -758,25 +840,19 @@ class Fetcher {
       )
     }
     if (reverse) {
-      kb.add(obj, predicate, xhr.original, why)
+      kb.add(obj, predicate, originalUri, why)
     } else {
-      kb.add(xhr.original, predicate, obj, why)
+      kb.add(originalUri, predicate, obj, why)
     }
   }
 
-  parseLinkHeader (xhr, req) {
-    let link
-
-    try {
-      link = xhr.getResponseHeader('link') // May crash from CORS error
-    } catch (err) {}
-
-    if (!link) { return }
+  parseLinkHeader (linkHeader, originalUri, reqNode) {
+    if (!linkHeader) { return }
 
     const linkexp = /<[^>]*>\s*(\s*;\s*[^\(\)<>@,;:"\/\[\]\?={} \t]+=(([^\(\)<>@,;:"\/\[\]\?={} \t]+)|("[^"]*")))*(,|$)/g
     const paramexp = /[^\(\)<>@,;:"\/\[\]\?={} \t]+=(([^\(\)<>@,;:"\/\[\]\?={} \t]+)|("[^"]*"))/g
 
-    const matches = link.match(linkexp)
+    const matches = linkHeader.match(linkexp)
 
     for (let i = 0; i < matches.length; i++) {
       let split = matches[i].split('>')
@@ -788,22 +864,18 @@ class Fetcher {
         let paramsplit = p.split('=')
         // var name = paramsplit[0]
         let rel = paramsplit[1].replace(/["']/g, '') // '"
-        this.linkData(xhr, rel, href, req)
+        this.linkData(originalUri, rel, href, reqNode)
       }
     }
   }
 
-  doneFetch (xhr) {
-    this.addStatus(xhr.req, 'Done.')
-    this.requested[xhr.original.uri] = 'done'
+  doneFetch (options, response) {
+    this.addStatus(options.req, 'Done.')
+    this.requested[options.original.uri] = 'done'
 
-    while (this.fetchCallbacks[xhr.original.uri] &&
-           this.fetchCallbacks[xhr.original.uri].length) {
-      this.fetchCallbacks[xhr.original.uri].shift()(true, undefined, xhr)
-    }
+    this.fireCallbacks('done', [options.original.uri])
 
-    delete this.fetchCallbacks[xhr.original.uri]
-    this.fireCallbacks('done', [xhr.original.uri])
+    return response
   }
 
   /**
@@ -978,29 +1050,31 @@ class Fetcher {
     return undefined
   }
 
-  saveResponseMetadata (xhr) {
+  saveResponseMetadata (response, options) {
     const kb = this.store
 
-    let response = kb.bnode()
+    let responseNode = kb.bnode()
 
-    kb.add(xhr.req, ns.link('response'), response)
-    kb.add(response, ns.http('status'), kb.literal(xhr.status), response)
-    kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response)
+    kb.add(options.req, ns.link('responseNode'), responseNode)
+    kb.add(responseNode, ns.http('status'),
+      kb.literal(response.status), responseNode)
+    kb.add(responseNode, ns.http('statusText'),
+      kb.literal(response.statusText), responseNode)
 
-    xhr.headers = {}
-    if (Uri.protocol(xhr.resource.uri) === 'http' ||
-        Uri.protocol(xhr.resource.uri) === 'https') {
-      xhr.headers = Util.getHTTPHeaders(xhr)
-      for (let h in xhr.headers) { // trim below for Safari - adds a CR!
-        let value = xhr.headers[h].trim()
-        let h2 = h.toLowerCase()
-        kb.add(response, ns.httph(h2), value, response)
-        if (h2 === 'content-type') { // Convert to RDF type
-          kb.add(xhr.resource, ns.rdf('type'), Util.mediaTypeClass(value), response)
-        }
-      }
+    if (!options.resource.uri.startsWith('http')) {
+      return responseNode
     }
-    return response
+
+    // Save the response headers
+    response.headers.forEach((value, header) => {
+      kb.add(responseNode, ns.httph(header), value, responseNode)
+
+      if (header === 'content-type') {
+        kb.add(options.resource, ns.rdf('type'), Util.mediaTypeClass(value), responseNode)
+      }
+    })
+
+    return responseNode
   }
 
   objectRefresh (term) {
@@ -1083,7 +1157,7 @@ class Fetcher {
         ';\n\t Fetcher.HTMLHandler=' + Fetcher.HTMLHandler + '\n' +
         '\n\tsf.handlers=' + this.handlers + '\n')
     }
-    (new Handler(args)).handlerFactory(xhr, this)
+    (new Handler(args)).initHandler(xhr, this)
     xhr.handle(cb)
   }
 
@@ -1129,6 +1203,10 @@ class Fetcher {
     const hostpart = Uri.hostpart
     const here = '' + document.location
     return hostpart(here) && hostpart(uri) && hostpart(here) !== hostpart(uri)
+  }
+
+  retryOnError (response, docuri, options) {
+    console.log('RETRYING ON ERROR:', response)
   }
 
   onerrorFactory (xhr, docuri, rterm) {
@@ -1190,110 +1268,100 @@ class Fetcher {
   /**
    * Handles XHR response
    *
-   * @param xhr {XMLHttpRequest}
+   * @param response {Response} fetch() response object
    * @param docuri {string}
-   * @param rterm {Node|string}
+   * @param options {Object}
    */
-  handleResponse (xhr, docuri, rterm) {
-    if (xhr.handleResponseDone) {
-      return
-    }
-
-    const options = xhr.options
+  handleResponse (response, docuri, options) {
     const kb = this.store
+    const headers = response.headers
 
-    xhr.handleResponseDone = true
+    const reqNode = options.req
 
-    this.saveResponseMetadata(xhr)
+    const responseNode = this.saveResponseMetadata(response, options)
 
-    this.fireCallbacks('recv', xhr.args)
-    this.fireCallbacks('headers', [{uri: docuri, headers: xhr.headers}])
+    const contentLocation = headers.get('content-location')
 
-    // Check for masked errors.
-    // For "security reasons" the browser hides errors such as CORS errors from
-    // the calling code (2015). onerror() used to be called but is not now.
-    if (xhr.status === 0) {
-      console.log('Masked error - status 0 for ' + xhr.resource.uri)
-      return this.onerrorFactory(xhr, docuri, rterm)()
+    const contentType = this.normalizedContentType(options, headers) || ''
+
+    // this.fireCallbacks('recv', xhr.args)
+    // this.fireCallbacks('headers', [{uri: docuri, headers: xhr.headers}])
+
+    // Check for masked errors (CORS, etc)
+    if (response.status === 0) {
+      console.log('Masked error - status 0 for ' + docuri)
+      return this.retryOnError(response, docuri, options)
     }
 
-    if (xhr.status >= 400) { // For extra diagnostics, keep the reply
-      //  @@@ 401 should cause  a retry with credential son
-      // @@@ cache the credentials flag by host ????
-      if (xhr.status === 404) {
-        kb.fetcher.nonexistant[xhr.resource.uri] = true
+    if (response.status >= 400) {
+      if (response.status === 404) {
+        this.nonexistant[docuri] = true
       }
-      if (xhr.responseText.length > 10) {
-        let response2 = kb.bnode()
-        kb.add(response2, ns.http('content'), kb.literal(xhr.responseText),
-          response2)
-        if (xhr.statusText) {
-          kb.add(response2, ns.http('statusText'),
-            kb.literal(xhr.statusText), response2)
-        }
-        // dump("HTTP >= 400 responseText:\n"+xhr.responseText+"\n"); // @@@@
-      }
-      return this.failFetch(xhr, 'HTTP error for ' + xhr.resource + ': ' +
-        xhr.status + ' ' + xhr.statusText)
+
+      return this.saveErrorResponse(response, responseNode)
+        .then(() => {
+          let errorMessage = 'HTTP error for ' + options.resource + ': ' +
+            response.status + ' ' + response.statusText
+
+          return this.failFetch(options, errorMessage, response.status)
+        })
     }
 
-    let contentLocation = xhr.headers['content-location']
-    let contentType = xhr.headers['content-type']
-    contentType = this.normalizedContentType(xhr) || ''
-
-    if (xhr.status === 200) {
-      this.addType(ns.link('Document'), xhr.req, kb, contentLocation)
+    if (response.status === 200) {
+      this.addType(ns.link('Document'), reqNode, kb, contentLocation)
 
       // Before we parse new data clear old but only on 200
       if (options.clearPreviousData) {
-        kb.removeDocument(xhr.resource)
+        kb.removeDocument(options.resource)
       }
 
       let isImage = contentType.includes('image/') ||
         contentType.includes('application/pdf')
 
       if (contentType && isImage) {
-        this.addType(kb.sym('http://purl.org/dc/terms/Image'), xhr.req, kb,
+        this.addType(kb.sym('http://purl.org/dc/terms/Image'), reqNode, kb,
           contentLocation)
       }
     }
 
     // If we have already got the thing at this location, abort
     if (contentLocation) {
-      let udoc = Uri.join(xhr.resource.uri, contentLocation)
+      let udoc = Uri.join(docuri, contentLocation)
 
-      if (!options.force &&
-          udoc !== xhr.resource.uri &&
-          this.requested[udoc] === 'done') { // we have already fetched this
+      if (!options.force && udoc !== docuri && this.requested[udoc] === 'done') {
+        // we have already fetched this
         // should we smush too?
         // log.info("HTTP headers indicate we have already" + " retrieved " +
         // xhr.resource + " as " + udoc + ". Aborting.")
-        xhr.abort()
-        xhr.aborted = true
-        return this.doneFetch(xhr)
+        return this.doneFetch(options, response)
       }
 
       this.requested[udoc] = true
     }
 
-    let handler = this.handlerForContentType(contentType)
+    this.parseLinkHeader(headers.get('link'), options.original, reqNode)
 
-    this.parseLinkHeader(xhr, xhr.req)
+    let handler = this.handlerForContentType(contentType, response)
 
-    if (handler) {
-      try {
-        handler.handlerFactory(xhr, this)
-      } catch (e) { // Try to avoid silent errors
-        this.failFetch(xhr, 'Exception handling content-type ' +
-          contentType + ': ' + e)
-      }
-    } else {
-      this.doneFetch(xhr) //  Not a problem, we just don't extract data.
-      /*
-       // this.failFetch(xhr, "Unhandled content type: " + xhr.headers['content-type']+
-       //        ", readyState = "+xhr.readyState)
-       */
+    if (!handler) {
+      //  Not a problem, we just don't extract data
+      this.addStatus(reqNode, 'Fetch over. No data handled.')
+      return this.doneFetch(options, response)
     }
+
+    return response.text()
+      .then(responseText => handler.parse(this, responseText, options))
+  }
+
+  saveErrorResponse (response, responseNode) {
+    let kb = this.store
+
+    return response.text()
+      .then(content => {
+        if (content.length > 10) {
+          kb.add(responseNode, ns.http('content'), kb.literal(content), responseNode)
+        }
+      })
   }
 
   /**
@@ -1301,7 +1369,7 @@ class Fetcher {
    *
    * @returns {Handler|null}
    */
-  handlerForContentType (contentType) {
+  handlerForContentType (contentType, response) {
     if (!contentType) {
       return null
     }
@@ -1310,7 +1378,7 @@ class Fetcher {
       return contentType.match(handler.pattern)
     })
 
-    return Handler ? new Handler() : null
+    return Handler ? new Handler(response) : null
   }
 
   /**
@@ -1323,95 +1391,33 @@ class Fetcher {
   }
 
   /**
-   * @param xhr {XMLHttpRequest}
+   * @param options {Object}
+   * @param headers {Headers}
    *
    * @returns {string}
    */
-  normalizedContentType (xhr) {
-    if (xhr.options.forceContentType) {
-      return xhr.options.forceContentType
+  normalizedContentType (options, headers) {
+    if (options.forceContentType) {
+      return options.forceContentType
     }
 
-    let contentType = xhr.headers['content-type']
+    let contentType = headers.get('content-type')
 
     if (!contentType || contentType.includes('application/octet-stream')) {
-      let guess = this.guessContentType(xhr.resource.uri)
+      let guess = this.guessContentType(options.resource.uri)
 
       if (guess) {
         return guess
       }
     }
 
-    let protocol = Uri.protocol(xhr.resource.uri)
+    let protocol = Uri.protocol(options.resource.uri)
 
     if (!contentType && ['file', 'chrome'].includes(protocol)) {
       return 'text/xml'
     }
 
     return contentType
-  }
-
-  onreadystatechangeFactory (xhr, docuri, rterm) {
-    return () => {
-      // DONE: 4
-      // HEADERS_RECEIVED: 2
-      // LOADING: 3
-      // OPENED: 1
-      // UNSENT: 0
-
-      // log.debug("web.js: XHR " + xhr.resource.uri + ' readyState='+xhr.readyState); // @@@@ comment me out
-
-      switch (xhr.readyState) {
-        // case 0:
-        //   // According to the XMLHttpRequest spec, onreadystatechangeFactory
-        //   // does NOT get triggered when the readyState changes to 0 / UNSENT
-        //   this.onerrorFactory (xhr, docuri, rterm)()
-        //   break
-        case 3:
-          // Intermediate state -- 3 may OR MAY NOT be called, selon browser.
-          // handleResponse();   // In general it you can't do it yet as the headers are in but not the data
-          break
-        case 4:
-          this.dispatchStateDone(xhr, docuri, rterm)
-          // Final state for this XHR but may be redirected
-
-          break
-      }
-    }
-  }
-
-  /**
-   * Activates when xhr.readyState == 4
-   *
-   * @param xhr {XMLHttpRequest}
-   * @param docuri {string}
-   * @param rterm {Node|string}
-   * @param args {Object} requestURI function arguments
-   * @param options {Object}
-   */
-  dispatchStateDone (xhr, docuri, rterm) {
-    this.handleResponse(xhr, docuri, rterm)
-
-    // Now handle
-    if (xhr.handle && xhr.responseText !== undefined) { // can be validly zero length
-      if (this.requested[xhr.resource.uri] === 'redirected') {
-        return
-      }
-
-      this.fireCallbacks('load', xhr.args)
-
-      xhr.handle(() => {
-        this.doneFetch(xhr)
-      })
-    } else {
-      if (xhr.redirected) {
-        this.addStatus(xhr.req, 'Aborted and redirected to new request.')
-      } else {
-        this.addStatus(xhr.req, 'Fetch over. No data handled. Aborted = ' + xhr.aborted)
-      }
-      // this.failFetch(xhr, "HTTP failed unusually. (no handler set) (x-site violation? no net?) for <"+
-      //    docuri+">")
-    }
   }
 
   /**
@@ -1676,12 +1682,18 @@ class Fetcher {
     return Util.XMLHTTPFactory()
   }
 
-  setXHRTimeout (xhr) {
-    setTimeout(() => {
-      if (xhr.readyState !== 4 && this.isPending(xhr.resource.uri)) {
-        this.failFetch(xhr, 'requestTimeout')
-      }
-    }, this.timeout)
+  setXHRTimeout () {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(this.failFetch({}, 'Request timed out', 'timeout'))
+      }, this.timeout)
+    })
+
+    // setTimeout(() => {
+    //   if (xhr.readyState !== 4 && this.isPending(xhr.resource.uri)) {
+    //     this.failFetch(xhr, 'requestTimeout')
+    //   }
+    // }, this.timeout)
   }
 
   addFetchCallback (uri, callback) {
@@ -1723,19 +1735,19 @@ class Fetcher {
   /**
    *
    * @param docuri
-   * @param xhr
-   * @param rterm
+   * @param options
    */
-  addRequestMeta (docuri, xhr, rterm) {
-    let req = xhr.req
+  addRequestMeta (docuri, options) {
+    let req = options.req
     let kb = this.store
+    let rterm = options.referringTerm
 
     if (rterm && rterm.uri) {
       kb.add(docuri, ns.link('requestedBy'), rterm.uri, this.appNode)
     }
 
-    if (xhr.original && xhr.original.uri !== docuri) {
-      kb.add(req, ns.link('orginalURI'), kb.literal(xhr.original.uri),
+    if (options.original && options.original.uri !== docuri) {
+      kb.add(req, ns.link('orginalURI'), kb.literal(options.original.uri),
         this.appNode)
     }
 
