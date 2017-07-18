@@ -585,8 +585,10 @@ class Fetcher {
    * @param [options.referringTerm] {Node} Referring term, the resource which
    *   referred to this (for tracking bad links)
    *
+   * @param [options.contentType] {string} Provided content type (for writes)
+   *
    * @param [options.forceContentType] {string} Override the incoming header to
-   *   force the data to be treated as this content-type
+   *   force the data to be treated as this content-type (for reads)
    *
    * @param [options.force] {boolean} Load the data even if loaded before.
    *   Also sets the `Cache-Control:` header to `no-cache`
@@ -1550,3 +1552,4 @@ class Fetcher {
 
 module.exports = Fetcher
 module.exports.HANDLERS = HANDLERS
+module.exports.CONTENT_TYPE_BY_EXT = CONTENT_TYPE_BY_EXT

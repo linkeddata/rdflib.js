@@ -578,12 +578,20 @@ class UpdateManager {
     return true
   }
 
-  // This high-level function updates the local store iff the web is changed successfully.
-  //
-  //  - deletions, insertions may be undefined or single statements or lists or formulae.
-  //      (may contain bnodes which can be indirectly identified by a where clause)
-  //
-  //  - callback is called as callback(uri, success, errorbody)
+  /**
+   * This high-level function updates the local store iff the web is changed
+   * successfully.
+   *
+   * deletions, insertions may be undefined or single statements or lists or formulae
+   * (may contain bnodes which can be indirectly identified by a where clause)
+   *
+   * @param deletions
+   * @param insertions
+   *
+   * @param callback {Function} called as callback(uri, success, errorbody)
+   *
+   * @returns {*}
+   */
   update (deletions, insertions, callback) {
     try {
       var kb = this.store
@@ -630,7 +638,6 @@ class UpdateManager {
       var i
       var newSts
       var documentString
-      var sz
       if (protocol.indexOf('SPARQL') >= 0) {
         var bnodes = []
         if (ds.length) bnodes = this.statementArrayBnodes(ds)
@@ -671,7 +678,7 @@ class UpdateManager {
             query += ' }\n'
           }
         }
-        // Track pending upstream patches until they have fnished their callback
+        // Track pending upstream patches until they have finished their callback
         control.pendingUpstream = control.pendingUpstream ? control.pendingUpstream + 1 : 1
         if ('upstreamCount' in control) {
           control.upstreamCount += 1 // count changes we originated ourselves
@@ -727,23 +734,7 @@ class UpdateManager {
           newSts.push(is[i])
         }
 
-        // serialize to te appropriate format
-        sz = Serializer(kb)
-        sz.suggestNamespaces(kb.namespaces)
-        sz.setBase(doc.uri) // ?? beware of this - kenny (why? tim)
-        switch (contentType) {
-          case 'application/rdf+xml':
-            documentString = sz.statementsToXML(newSts)
-            break
-          case 'text/n3':
-          case 'text/turtle':
-          case 'application/x-turtle': // Legacy
-          case 'application/n3': // Legacy
-            documentString = sz.statementsToN3(newSts)
-            break
-          default:
-            throw new Error('Content-type ' + contentType + ' not supported for data write')
-        }
+        documentString = this.serialize(doc.uri, newSts, contentType)
 
         // Write the new version back
 
@@ -776,73 +767,7 @@ class UpdateManager {
       } else {
         if (protocol.indexOf('LOCALFILE') >= 0) {
           try {
-            console.log('Writing back to local file\n')
-            // See http://simon-jung.blogspot.com/2007/10/firefox-extension-file-io.html
-            // prepare contents of revised document
-            newSts = kb.statementsMatching(undefined, undefined, undefined, doc).slice() // copy!
-            for (i = 0; i < ds.length; i++) {
-              Util.RDFArrayRemove(newSts, ds[i])
-            }
-            for (i = 0; i < is.length; i++) {
-              newSts.push(is[i])
-            }
-            // serialize to the appropriate format
-            sz = Serializer(kb)
-            sz.suggestNamespaces(kb.namespaces)
-            sz.setBase(doc.uri) // ?? beware of this - kenny (why? tim)
-            var dot = doc.uri.lastIndexOf('.')
-            if (dot < 1) {
-              throw new Error('Rewriting file: No filename extension: ' + doc.uri)
-            }
-            var ext = doc.uri.slice(dot + 1)
-            switch (ext) {
-              case 'rdf':
-              case 'owl': // Just my experence   ...@@ we should keep the format in which it was parsed
-              case 'xml':
-                documentString = sz.statementsToXML(newSts)
-                break
-              case 'n3':
-              case 'nt':
-              case 'ttl':
-                documentString = sz.statementsToN3(newSts)
-                break
-              default:
-                throw new Error('File extension .' + ext + ' not supported for data write')
-            }
-            // Write the new version back
-            // create component for file writing
-            console.log('Writing back: <<<' + documentString + '>>>')
-            var filename = doc.uri.slice(7) // chop off   file://  leaving /path
-            // console.log("Writeback: Filename: "+filename+"\n")
-            var file = Components.classes['@mozilla.org/file/local;1']
-              .createInstance(Components.interfaces.nsILocalFile)
-            file.initWithPath(filename)
-            if (!file.exists()) {
-              throw new Error('Rewriting file <' + doc.uri +
-                '> but it does not exist!')
-            }
-            // {
-            // file.create( Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 420)
-            // }
-            // create file output stream and use write/create/truncate mode
-            // 0x02 writing, 0x08 create file, 0x20 truncate length if exist
-            var stream = Components.classes['@mozilla.org/network/file-output-stream;1']
-              .createInstance(Components.interfaces.nsIFileOutputStream)
-
-            // Various JS systems object to 0666 in struct mode as dangerous
-            stream.init(file, 0x02 | 0x08 | 0x20, parseInt('0666', 8), 0)
-
-            // write data to file then close output stream
-            stream.write(documentString, documentString.length)
-            stream.close()
-
-            for (i = 0; i < ds.length; i++) {
-              kb.remove(ds[i])
-            }
-            for (i = 0; i < is.length; i++) {
-              kb.add(is[i].subject, is[i].predicate, is[i].object, doc)
-            }
-            callback(doc.uri, true, '') // success!
+            this.updateLocalFile(doc, ds, is, callback)
           } catch (e) {
             callback(doc.uri, false,
               'Exception trying to write back file <' + doc.uri + '>\n'
@@ -854,82 +779,192 @@ class UpdateManager {
         }
       }
     } catch (e) {
-      callback(undefined, false, 'Exception in update: ' + e + '\n' + $rdf.Util.stackString(e))
+      callback(undefined, false, 'Exception in update: ' + e + '\n' +
+        $rdf.Util.stackString(e))
     }
   }
 
-  // This is suitable for an initial creation of a document
-  //
-  // data:    string, or array of statements
-  put (doc, data, contentType, callback) {
-    var documentString
-    var kb = this.store
+  /**
+   * Likely deprecated, since this lib no longer deals with browser extension
+   *
+   * @param doc
+   * @param ds
+   * @param is
+   * @param callback
+   */
+  updateLocalFile (doc, ds, is, callback) {
+    const kb = this.store
+    console.log('Writing back to local file\n')
+    // See http://simon-jung.blogspot.com/2007/10/firefox-extension-file-io.html
+    // prepare contents of revised document
+    let newSts = kb.statementsMatching(undefined, undefined, undefined, doc).slice() // copy!
 
-    if (typeof data === typeof '') {
-      documentString = data
-    } else {
-      // serialize to te appropriate format
-      var sz = Serializer(kb)
-      sz.suggestNamespaces(kb.namespaces)
-      sz.setBase(doc.uri)
-      switch (contentType) {
-        case 'application/rdf+xml':
-          documentString = sz.statementsToXML(data)
-          break
-        case 'text/n3':
-        case 'text/turtle':
-        case 'application/x-turtle': // Legacy
-        case 'application/n3': // Legacy
-          documentString = sz.statementsToN3(data)
-          break
-        default:
-          throw new Error('Content-type ' + contentType +
-            ' not supported for data PUT')
-      }
+    let i
+    for (i = 0; i < ds.length; i++) {
+      Util.RDFArrayRemove(newSts, ds[ i ])
     }
-    var xhr = Util.XMLHTTPFactory()
-    xhr.options = {}
-    xhr.onreadystatechange = function () {
-      if (xhr.readyState === 4) {
-        // formula from sparqlUpdate.js, what about redirects?
-        var success = (!xhr.status || (xhr.status >= 200 && xhr.status < 300))
-        if (success && typeof data !== 'string') {
-          data.map(function (st) {
+    for (i = 0; i < is.length; i++) {
+      newSts.push(is[ i ])
+    }
+    // serialize to the appropriate format
+    var dot = doc.uri.lastIndexOf('.')
+    if (dot < 1) {
+      throw new Error('Rewriting file: No filename extension: ' + doc.uri)
+    }
+    var ext = doc.uri.slice(dot + 1)
+
+    let contentType = Fetcher.CONTENT_TYPE_BY_EXT[ ext ]
+    if (!contentType) {
+      throw new Error('File extension .' + ext + ' not supported for data write')
+    }
+
+    const documentString = this.serialize(doc.uri, newSts, contentType)
+
+    // Write the new version back
+    // create component for file writing
+    console.log('Writing back: <<<' + documentString + '>>>')
+    var filename = doc.uri.slice(7) // chop off   file://  leaving /path
+    // console.log("Writeback: Filename: "+filename+"\n")
+    var file = Components.classes[ '@mozilla.org/file/local;1' ]
+      .createInstance(Components.interfaces.nsILocalFile)
+    file.initWithPath(filename)
+    if (!file.exists()) {
+      throw new Error('Rewriting file <' + doc.uri +
+        '> but it does not exist!')
+    }
+    // {
+    // file.create( Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 420)
+    // }
+    // create file output stream and use write/create/truncate mode
+    // 0x02 writing, 0x08 create file, 0x20 truncate length if exist
+    var stream = Components.classes[ '@mozilla.org/network/file-output-stream;1' ]
+      .createInstance(Components.interfaces.nsIFileOutputStream)
+
+    // Various JS systems object to 0666 in struct mode as dangerous
+    stream.init(file, 0x02 | 0x08 | 0x20, parseInt('0666', 8), 0)
+
+    // write data to file then close output stream
+    stream.write(documentString, documentString.length)
+    stream.close()
+
+    for (i = 0; i < ds.length; i++) {
+      kb.remove(ds[ i ])
+    }
+    for (i = 0; i < is.length; i++) {
+      kb.add(is[ i ].subject, is[ i ].predicate, is[ i ].object, doc)
+    }
+    callback(doc.uri, true, '') // success!
+  }
+
+  /**
+   * @param uri {string}
+   * @param data {string|Array<Statement>}
+   * @param contentType {string}
+   *
+   * @throws {Error} On unsupported content type
+   *
+   * @returns {string}
+   */
+  serialize (uri, data, contentType) {
+    const kb = this.store
+    let documentString
+
+    if (typeof data === 'string') {
+      return data
+    }
+
+    // serialize to the appropriate format
+    var sz = Serializer(kb)
+    sz.suggestNamespaces(kb.namespaces)
+    sz.setBase(uri)
+    switch (contentType) {
+      case 'text/xml':
+      case 'application/rdf+xml':
+        documentString = sz.statementsToXML(data)
+        break
+      case 'text/n3':
+      case 'text/turtle':
+      case 'application/x-turtle': // Legacy
+      case 'application/n3': // Legacy
+        documentString = sz.statementsToN3(data)
+        break
+      default:
+        throw new Error('Content-type ' + contentType +
+          ' not supported for data serialization')
+    }
+
+    return documentString
+  }
+
+  /**
+   * This is suitable for an initial creation of a document
+   *
+   * @param doc {Node}
+   * @param data {string|Array<Statement>}
+   * @param contentType {string}
+   * @param callback {Function}  callback(uri, ok, message, response)
+   *
+   * @throws {Error} On unsupported content type (via serialize())
+   *
+   * @returns {Promise}
+   */
+  put (doc, data, contentType, callback) {
+    const kb = this.store
+    let documentString
+
+    return Promise.resolve()
+      .then(() => {
+        documentString = this.serialize(doc.uri, data, contentType)
+
+        return kb.fetcher
+          .webOperation('PUT', doc.uri, { contentType, body: documentString })
+      })
+      .then(response => {
+        if (!response.ok) {
+          return callback(doc.uri, response.ok, response.error, response)
+        }
+
+        delete kb.fetcher.nonexistant[doc.uri]
+        delete kb.fetcher.requested[doc.uri]
+
+        if (typeof data !== 'string') {
+          data.map((st) => {
             kb.addStatement(st)
           })
-          // kb.fetcher.requested[doc.uri] = true // as though fetched
         }
-        if (success) {
-          delete kb.fetcher.nonexistant[doc.uri]
-          delete kb.fetcher.requested[doc.uri]
-          // @@ later we can fake it has been requestd if put gives us the header sand we save them.
-        }
-        callback(doc.uri, success, xhr.responseText, xhr)
-      }
-    }
-    xhr.open('PUT', doc.uri, true)
-    xhr.setRequestHeader('Content-type', contentType)
-    xhr.send(documentString)
+
+        callback(doc.uri, response.ok, '', response)
+      })
+      .catch(err => {
+        callback(doc.uri, false, err.message)
+      })
   }
 
-  // Reload a document.
-  //
-  // Fast and cheap, no metadata
-  // Measure times for the document
-  // Load it provisionally
-  // Don't delete the statements before the load, or it will leave a broken document
-  // in the meantime.
+  /**
+   * Reloads a document.
+   *
+   * Fast and cheap, no metadata. Measure times for the document.
+   * Load it provisionally.
+   * Don't delete the statements before the load, or it will leave a broken
+   * document in the meantime.
+   *
+   * @param kb
+   * @param doc {NamedNode}
+   * @param callback
+   */
   reload (kb, doc, callback) {
     var startTime = Date.now()
     // force sets no-cache and
-    kb.fetcher.nowOrWhenFetched(doc.uri, {force: true, noMeta: true, clearPreviousData: true}, function (ok, body, xhr) {
+    const options = { force: true, noMeta: true, clearPreviousData: true }
+
+    kb.fetcher.nowOrWhenFetched(doc.uri, options, function (ok, body, response) {
       if (!ok) {
         console.log('    ERROR reloading data: ' + body)
-        callback(false, 'Error reloading data: ' + body, xhr)
-      } else if (xhr.onErrorWasCalled || xhr.status !== 200) {
+        callback(false, 'Error reloading data: ' + body, response)
+      } else if (response.onErrorWasCalled || response.status !== 200) {
         console.log('    Non-HTTP error reloading data! onErrorWasCalled=' +
-          xhr.onErrorWasCalled + ' status: ' + xhr.status)
-        callback(false, 'Non-HTTP error reloading data: ' + body, xhr)
+          response.onErrorWasCalled + ' status: ' + response.status)
+        callback(false, 'Non-HTTP error reloading data: ' + body, response)
       } else {
         var elapsedTimeMs = Date.now() - startTime
 
@@ -938,9 +973,11 @@ class UpdateManager {
 
         doc.reloadTimeTotal += elapsedTimeMs
         doc.reloadTimeCount += 1
+
         console.log('    Fetch took ' + elapsedTimeMs + 'ms, av. of ' +
           doc.reloadTimeCount + ' = ' +
           (doc.reloadTimeTotal / doc.reloadTimeCount) + 'ms.')
+
         callback(true)
       }
     })
