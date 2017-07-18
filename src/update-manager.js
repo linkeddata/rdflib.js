@@ -2,10 +2,10 @@
 // 2007-07-15
 // 2010-08-08 TimBL folded in Kenny's WEBDAV
 // 2010-12-07 TimBL addred local file write code
+import IndexedFormula from './indexed-formula'
 const docpart = require('./uri').docpart
 const Fetcher = require('./fetcher')
 const graph = require('./data-factory').graph
-import IndexedFormula from './indexed-formula'
 const namedNode = require('./data-factory').namedNode
 const Namespace = require('./namespace')
 const Serializer = require('./serializer')
@@ -19,7 +19,7 @@ var UpdateManager = (function () {
       throw new Error("You can't have two UpdateManagers for the same store")
     }
     if (!store.fetcher) { // The store must also/already have a fetcher
-      new Fetcher(store)
+      store.fetcher = new Fetcher(store)
     }
     store.updater = this
     this.ifps = {}
@@ -100,10 +100,10 @@ var UpdateManager = (function () {
               if (method.indexOf('application/sparql-update') >= 0) return 'SPARQL'
             }
           }
-          var author_via = kb.each(response, this.ns.httph('ms-author-via'))
-          if (author_via.length) {
-            for (i = 0; i < author_via.length; i++) {
-              method = author_via[i].value.trim()
+          var authorVia = kb.each(response, this.ns.httph('ms-author-via'))
+          if (authorVia.length) {
+            for (i = 0; i < authorVia.length; i++) {
+              method = authorVia[i].value.trim()
               if (method.indexOf('SPARQL') >= 0) {
                 return 'SPARQL'
               }
@@ -234,7 +234,6 @@ var UpdateManager = (function () {
   sparql.prototype._bnode_context_1 = function (x, source) {
     // Return a list of statements which indirectly identify a node
     //   Breadth-first
-    var self = this
     for (var depth = 0; depth < 3; depth++) { // Try simple first
       var con = this._bnode_context2(x, source, depth)
       if (con !== null) return con
@@ -403,10 +402,8 @@ var UpdateManager = (function () {
       action(doc)
     } else {
       if (control.downstreamAction) {
-        if ('' + control.downstreamAction === '' + action) { // @@@ Kludge comapre!!
-          return
-        } else {
-          throw new Error("Can't wait for > 1 differnt downstream actions")
+        if ('' + control.downstreamAction !== '' + action) { // @@@ Kludge comapre!!
+          throw new Error("Can't wait for > 1 different downstream actions")
         }
       } else {
         control.downstreamAction = action
@@ -429,11 +426,10 @@ var UpdateManager = (function () {
 
   sparql.prototype.addDownstreamChangeListener = function (doc, listener) {
     var control = this.patchControlFor(doc)
-    if (!control.downstreamChangeListeners) control.downstreamChangeListeners = []
+    if (!control.downstreamChangeListeners) { control.downstreamChangeListeners = [] }
     control.downstreamChangeListeners.push(listener)
-    var self = this
-    this.setRefreshHandler(doc, function(doc){ // a function not a method
-      self.reloadAndSync(doc)
+    this.setRefreshHandler(doc, (doc) => {
+      this.reloadAndSync(doc)
     })
   }
 
@@ -531,15 +527,15 @@ var UpdateManager = (function () {
 
       // https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent
       //
-      // 1000	CLOSE_NORMAL	Normal closure; the connection successfully completed whatever purpose for which it was created.
-      // 1001	CLOSE_GOING_AWAY	The endpoint is going away, either
+      // 1000  CLOSE_NORMAL  Normal closure; the connection successfully completed whatever purpose for which it was created.
+      // 1001  CLOSE_GOING_AWAY  The endpoint is going away, either
       //                                  because of a server failure or because the browser is navigating away from the page that opened the connection.
-      // 1002	CLOSE_PROTOCOL_ERROR	The endpoint is terminating the connection due to a protocol error.
-      // 1003	CLOSE_UNSUPPORTED	The connection is being terminated because the endpoint
+      // 1002  CLOSE_PROTOCOL_ERROR  The endpoint is terminating the connection due to a protocol error.
+      // 1003  CLOSE_UNSUPPORTED  The connection is being terminated because the endpoint
       //                                  received data of a type it cannot accept (for example, a text-only endpoint received binary data).
       // 1004                             Reserved. A meaning might be defined in the future.
-      // 1005	CLOSE_NO_STATUS	Reserved.  Indicates that no status code was provided even though one was expected.
-      // 1006	CLOSE_ABNORMAL	Reserved. Used to indicate that a connection was closed abnormally (
+      // 1005  CLOSE_NO_STATUS  Reserved.  Indicates that no status code was provided even though one was expected.
+      // 1006  CLOSE_ABNORMAL  Reserved. Used to indicate that a connection was closed abnormally (
       //
       //
       socket.onclose = function (event) {
@@ -703,7 +699,6 @@ var UpdateManager = (function () {
           })
       } else if (protocol.indexOf('DAV') >= 0) {
         // The code below is derived from Kenny's UpdateCenter.js
-        documentString
         var request = kb.any(doc, this.ns.link('request'))
         if (!request) {
           throw new Error('No record of our HTTP GET request for document: ' +
@@ -713,7 +708,7 @@ var UpdateManager = (function () {
         if (!response) {
           return null // throw "No record HTTP GET response for document: "+doc
         }
-        var content_type = kb.the(response, this.ns.httph('content-type')).value
+        var contentType = kb.the(response, this.ns.httph('content-type')).value
 
         // prepare contents of revised document
         newSts = kb.statementsMatching(undefined, undefined, undefined, doc).slice() // copy!
@@ -728,7 +723,7 @@ var UpdateManager = (function () {
         sz = Serializer(kb)
         sz.suggestNamespaces(kb.namespaces)
         sz.setBase(doc.uri) // ?? beware of this - kenny (why? tim)
-        switch (content_type) {
+        switch (contentType) {
           case 'application/rdf+xml':
             documentString = sz.statementsToXML(newSts)
             break
@@ -739,7 +734,7 @@ var UpdateManager = (function () {
             documentString = sz.statementsToN3(newSts)
             break
           default:
-            throw new Error('Content-type ' + content_type + ' not supported for data write')
+            throw new Error('Content-type ' + contentType + ' not supported for data write')
         }
 
         // Write the new version back
@@ -768,7 +763,7 @@ var UpdateManager = (function () {
         }
         xhr.open('PUT', targetURI, true)
         // assume the server does PUT content-negotiation.
-        xhr.setRequestHeader('Content-type', content_type) // OK?
+        xhr.setRequestHeader('Content-type', contentType) // OK?
         xhr.send(documentString)
       } else {
         if (protocol.indexOf('LOCALFILE') >= 0) {
@@ -784,7 +779,6 @@ var UpdateManager = (function () {
               newSts.push(is[i])
             }
             // serialize to the appropriate format
-            documentString
             sz = Serializer(kb)
             sz.suggestNamespaces(kb.namespaces)
             sz.setBase(doc.uri) // ?? beware of this - kenny (why? tim)
@@ -860,7 +854,7 @@ var UpdateManager = (function () {
   //
   // data:    string, or array of statements
   //
-  sparql.prototype.put = function (doc, data, content_type, callback) {
+  sparql.prototype.put = function (doc, data, contentType, callback) {
     var documentString
     var kb = this.store
 
@@ -871,7 +865,7 @@ var UpdateManager = (function () {
       var sz = Serializer(kb)
       sz.suggestNamespaces(kb.namespaces)
       sz.setBase(doc.uri)
-      switch (content_type) {
+      switch (contentType) {
         case 'application/rdf+xml':
           documentString = sz.statementsToXML(data)
           break
@@ -882,7 +876,7 @@ var UpdateManager = (function () {
           documentString = sz.statementsToN3(data)
           break
         default:
-          throw new Error('Content-type ' + content_type +
+          throw new Error('Content-type ' + contentType +
             ' not supported for data PUT')
       }
     }
@@ -907,7 +901,7 @@ var UpdateManager = (function () {
       }
     }
     xhr.open('PUT', doc.uri, true)
-    xhr.setRequestHeader('Content-type', content_type)
+    xhr.setRequestHeader('Content-type', contentType)
     xhr.send(documentString)
   }
 
@@ -931,12 +925,12 @@ var UpdateManager = (function () {
           xhr.onErrorWasCalled + ' status: ' + xhr.status)
         callback(false, 'Non-HTTP error reloading data: ' + body, xhr)
       } else {
-        var elapsedTime_ms = Date.now() - startTime
+        var elapsedTimeMs = Date.now() - startTime
         if (!doc.reloadTime_total) doc.reloadTime_total = 0
         if (!doc.reloadTime_count) doc.reloadTime_count = 0
-        doc.reloadTime_total += elapsedTime_ms
+        doc.reloadTime_total += elapsedTimeMs
         doc.reloadTime_count += 1
-        console.log('    Fetch took ' + elapsedTime_ms + 'ms, av. of ' +
+        console.log('    Fetch took ' + elapsedTimeMs + 'ms, av. of ' +
           doc.reloadTime_count + ' = ' +
           (doc.reloadTime_total / doc.reloadTime_count) + 'ms.')
         callback(true)
@@ -946,7 +940,7 @@ var UpdateManager = (function () {
 
   sparql.prototype.oldReload = function (kb, doc, callback) {
     var g2 = graph() // A separate store to hold the data as we load it
-    var f2 = fetcher(g2)
+    var f2 = new Fetcher(g2)
     var startTime = Date.now()
     // force sets no-cache and
     f2.nowOrWhenFetched(doc.uri, {force: true, noMeta: true, clearPreviousData: true}, function (ok, body, xhr) {
@@ -964,15 +958,15 @@ var UpdateManager = (function () {
           ' out of total statements ' + kb.statements.length)
         kb.remove(sts1)
         kb.add(sts2)
-        var elapsedTime_ms = Date.now() - startTime
+        var elapsedTimeMs = Date.now() - startTime
         if (sts2.length === 0) {
           console.log('????????????????? 0000000')
         }
         if (!doc.reloadTime_total) doc.reloadTime_total = 0
         if (!doc.reloadTime_count) doc.reloadTime_count = 0
-        doc.reloadTime_total += elapsedTime_ms
+        doc.reloadTime_total += elapsedTimeMs
         doc.reloadTime_count += 1
-        console.log('    fetch took ' + elapsedTime_ms + 'ms, av. of ' + doc.reloadTime_count + ' = ' +
+        console.log('    fetch took ' + elapsedTimeMs + 'ms, av. of ' + doc.reloadTime_count + ' = ' +
           (doc.reloadTime_total / doc.reloadTime_count) + 'ms.')
         callback(true)
       }
