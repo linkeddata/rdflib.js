@@ -403,7 +403,7 @@ var UpdateManager = (function () {
       action(doc)
     } else {
       if (control.downstreamAction) {
-        if (control.downstreamAction === action) {
+        if ('' + control.downstreamAction === '' + action) { // @@@ Kludge comapre!!
           return
         } else {
           throw new Error("Can't wait for > 1 differnt downstream actions")

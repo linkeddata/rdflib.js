@@ -399,17 +399,6 @@ function indexedFormulaQuery (myQuery, callback, fetcher, onDone) {
           match(f, g, bindingsSoFar, level, fetcher, // match not match2 to look up any others necessary.
             localCallback, branch)
         })
-      /*
-      if( sf ) {
-          sf.addCallback('done', function(uri) {
-              if ((kb.canon(kb.sym(uri)).uri !== path) && (uri !== kb.canon(kb.sym(path)))) {
-                  return true
-              }
-              return false
-          })
-      }
-      fetcher(requestedTerm, id)
-      */
       }
       for (i = 0; i < n; i++) {
         item = pattern[i] // for each of the triples in the query
