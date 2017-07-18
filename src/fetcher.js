@@ -411,7 +411,7 @@ class Fetcher {
   constructor (store, options = {}) {
     this.store = store
     this.timeout = options.timeout || 30000
-    this.fetch = options.fetch || require('node-fetch')
+    this._fetch = options.fetch || require('node-fetch')
     this.appNode = this.store.bnode() // Denoting this session
     this.store.fetcher = this // Bi-linked
     this.requested = {}
@@ -568,7 +568,7 @@ class Fetcher {
   }
 
   /**
-   * Promise-based load function
+   * Promise-based fetch function
    *
    * NamedNode -> Promise of xhr
    * uri string -> Promise of xhr
@@ -609,28 +609,35 @@ class Fetcher {
    *
    * @returns {Promise}
    */
-  load (uri, options = {}) {
+  fetch (uri, options = {}) {
     if (uri instanceof Array) {
       return Promise.all(
-        uri.map(x => { return this.load(x, options) })
+        uri.map(x => { return this.fetch(x, options) })
       )
+    }
+
+    let kb = this.store
+
+    options = Object.assign({}, options)  // copy
+    options.resource = kb.sym(uri) // This might be proxified
+    options.baseURI = options.baseURI || uri // Preserve though proxying etc
+    options.original = kb.sym(options.baseURI)
+    options.req = kb.bnode()
+    options.headers = options.headers || {}
+
+    if (options.contentType) {
+      options.headers['content-type'] = options.contentType
     }
 
     return Promise
       .race([
-        this.setXHRTimeout(uri, this.timeout),
+        this.setRequestTimeout(options),
         this.fetchUri(uri, options)
       ])
+  }
 
-    // return new Promise((resolve, reject) => {
-    //   this.requestURI(uri, options.referringTerm, options, (ok, message, xhr) => {
-    //     if (ok) {
-    //       resolve(xhr)
-    //     } else {
-    //       reject(new Error(message))
-    //     }
-    //   })
-    // })
+  load (uri, options) {
+    return this.fetch(uri, options)
   }
 
   /**
@@ -644,17 +651,11 @@ class Fetcher {
   fetchUri (uri, options = {}) {
     let docuri = uri.uri || uri
     docuri = docuri.split('#')[0]
-    let kb = this.store
 
     if (Fetcher.unsupportedProtocol(docuri)) {
       return this.failFetch(options, 'Unsupported protocol', 'unsupported_protocol')
     }
 
-    options.resource = kb.sym(docuri) // This might be proxified
-    options.baseURI = options.baseURI || docuri // Preserve though proxying etc
-    options.original = kb.sym(options.baseURI)
-    options.headers = options.headers || {}
-    options.req = kb.bnode()
     if (options.force) { options.cache = 'no-cache' }
 
     let acceptString = this.acceptString()
@@ -697,7 +698,7 @@ class Fetcher {
       this.addRequestMeta(docuri, options)
     }
 
-    return this.fetch(actualProxyURI, options)
+    return this._fetch(actualProxyURI, options)
       .then(response => this.handleResponse(response, docuri, options))
       .catch(error => this.retryOnError(error, docuri, options))
   }
@@ -735,7 +736,7 @@ class Fetcher {
       options = p2
     }
 
-    this.fetchUri(uri, options)
+    this.load(uri, options)
       .then(result => {
         if (userCallback) {
           userCallback(true, null, result)
@@ -875,6 +876,8 @@ class Fetcher {
 
     this.fireCallbacks('done', [options.original.uri])
 
+    response.req = options.req  // Set the request meta blank node
+
     return response
   }
 
@@ -897,7 +900,6 @@ class Fetcher {
   }
 
   /**
-   * Returns promise of XHR
    * Writes back to the web what we have in the store for this uri
    *
    * @param uri {Node|string}
@@ -913,6 +915,32 @@ class Fetcher {
     return this.webOperation('PUT', uri, options)
   }
 
+  webCopy (here, there, contentType) {
+    return this.webOperation('GET', here)
+      .then((result) => {
+        return this.webOperation(
+          'PUT', // change to binary from text
+          there, { data: result.responseText, contentType })
+      })
+  }
+
+  /**
+   * @param uri {string}
+   * @param [options] {Object}
+   *
+   * @returns {Promise<Response>}
+   */
+  delete (uri, options) {
+    return this.webOperation('DELETE', uri, options)
+      .then(response => {
+        this.requested[uri] = 404
+        this.nonexistant[uri] = true
+        this.unload(this.store.sym(uri))
+
+        return response
+      })
+  }
+
   /**
    * Returns promise of XHR
    *
@@ -923,38 +951,10 @@ class Fetcher {
    * @returns {Promise<XMLHttpRequest>}
    */
   webOperation (method, uri, options = {}) {
-    uri = uri.uri || uri
-    uri = Fetcher.proxyIfNecessary(uri)
-    let kb = this.store
+    options.method = method
+    options.body = options.data || options.body
 
-    return new Promise((resolve, reject) => {
-      let xhr = this.xhr()
-      xhr.options = options
-      xhr.original = kb.sym(uri)
-      xhr.resource = kb.sym(uri)
-      xhr.req = kb.bnode()
-
-      if (!options.noMeta) {
-        this.addRequestMeta(uri, xhr)
-      }
-
-      xhr.onreadystatechange = () => {
-        if (xhr.readyState === 4) { // Note: a 404 can be not a failure
-          let ok = (!xhr.status || (xhr.status >= 200 && xhr.status < 300))
-          if (!options.noMeta && typeof tabulator !== 'undefined') {
-            this.saveResponseMetadata(xhr)
-          }
-          if (ok) {
-            resolve(xhr)
-          } else {
-            reject(new Error(xhr.status + ' ' + xhr.statusText))
-          }
-        }
-      }
-      xhr.open(method, uri, true)
-      xhr.setRequestHeader('Content-type', options.contentType || 'text/turtle')
-      xhr.send(options.data ? options.data : undefined)
-    })
+    return this.fetch(uri, options)
   }
 
   /**
@@ -1089,8 +1089,9 @@ class Fetcher {
 
   refresh (term, userCallback) { // sources_refresh
     this.fireCallbacks('refresh', arguments)
-    this.requestURI(term.uri, undefined,
-      { force: true, clearPreviousData: true }, userCallback)
+
+    this.nowOrWhenFetched(term, { force: true, clearPreviousData: true },
+      userCallback)
   }
 
   retract (term) { // sources_retract
@@ -1122,43 +1123,14 @@ class Fetcher {
     return this.requested[docuri] === true
   }
 
-  /**
-   * @deprecated use IndexedFormula.removeDocument(doc)
-   */
   unload (term) {
-    this.store.removeMany(undefined, undefined, undefined, term)
+    this.store.removeDocument(term)
     delete this.requested[term.uri] // So it can be loaded again
-  }
-
-  webCopy (here, there, contentType) {
-    here = here.uri || here
-
-    return this.webOperation('GET', here)
-      .then((xhr) => {
-        return this.webOperation(
-          'PUT', // change to binary from text
-          there, { data: xhr.responseText, contentType })
-      })
   }
 
   addHandler (handler) {
     this.handlers.push(handler)
     handler.register(this)
-  }
-
-  switchHandler (name, xhr, cb, args) {
-    let Handler = HANDLERS[name]
-
-    if (!Handler) {
-      throw new Error('web.js: switchHandler: name=' + name + ' , ' +
-        'this.handlers =' + this.handlers + '\n' +
-        'switchHandler: switching to ' + Handler + '; sf=' + this +
-        '; typeof Fetcher=' + typeof Fetcher +
-        ';\n\t Fetcher.HTMLHandler=' + Fetcher.HTMLHandler + '\n' +
-        '\n\tsf.handlers=' + this.handlers + '\n')
-    }
-    (new Handler(args)).initHandler(xhr, this)
-    xhr.handle(cb)
   }
 
   checkCredentialsRetry (docuri, rterm, xhr) {
@@ -1350,7 +1322,10 @@ class Fetcher {
     }
 
     return response.text()
-      .then(responseText => handler.parse(this, responseText, options))
+      .then(responseText => {
+        response.responseText = responseText
+        return handler.parse(this, responseText, options)
+      })
   }
 
   saveErrorResponse (response, responseNode) {
@@ -1490,202 +1465,20 @@ class Fetcher {
    *
    * @param [options={}] {Object}
    *
-   * @param [options.force] {boolean} Load the data even if loaded before.
-   *   Also sets the `Cache-Control:` header to `no-cache`
-   *
-   * @param [options.baseURI=docuri] {Node|string} Original uri to preserve
-   *   through proxying etc (`xhr.original`).
-   *
-   * @param [options.proxyUsed] {boolean} Whether this request is a retry via
-   *   a proxy (generally done from an error handler)
-   *
-   * @param [options.withCredentials] {boolean} flag for XHR/CORS etc
-   *
-   * @param [options.clearPreviousData] {boolean} Before we parse new data,
-   *   clear old, but only on status 200 responses
-   *
-   * @param [options.forceContentType] {string} Override the incoming header to
-   *   force the data to be treated as this content-type
-   *
-   * @param [options.noMeta] {boolean} Prevents the addition of various metadata
-   *   triples (about the fetch request) to the store
-   *
-   * @param [options.noRDFa] {boolean}
-   *
-   * @param userCallback {Function} Called with (true) or (false, errorbody,
-   *   {status: 400}) after load is done or failed
-   *
-   * This operation adds the following properties to the XHR object (downstream):
-   *
-   * - `xhr.handle` - The response parsing function registered by various Handler
-   *     classes
-   * - `xhr.options` - The `options` argument itself
-   * - `xhr.req` - A Blank Node that acts as a subject for various additional
-   *     metadata triples about the request itself (status, requestedUri, etc),
-   *     if the `options.noMeta` flag is not set.
-   * - `xhr.original` - A Named Node of `options.baseURI`
-   * - `xhr.resource` - A Named Node of the `docuri` to be loaded
-   * - `xhr.requestedURI` - Actual URI to be requested (could be proxied, etc)
-   * - `xhr.actualProxyURI`
-   * - `xhr.retriedWithNoCredentials` - Set by `checkCredentialsRetry()` to prevent
-   *     multiple retries.
-   * - `xhr.onErrorWasCalled`
-   * - `xhr.proxyUsed` - Set when the proxy url is tried (to prevent retries)
-   * - `xhr.aborted`
-   * - `xhr.handleResponseDone`
-   * - `xhr.redirected`
-   * - `xhr.userCallback`
-   * - `xhr.CORS_status`
-   * - `xhr.channel` - In Tabulator/Firefox extension environment
-   *
-   * @returns {XMLHttpRequest|undefined} The xhr object for the HTTP access,
-   *   undefined if the protocol is not a look-up protocol,
-   *   or URI has already been loaded
+   * @param [userCallback] {Function}
    */
   requestURI (docuri, rterm, options, userCallback) {
-    docuri = docuri.uri || docuri // NamedNode or string
-    docuri = docuri.split('#')[0]
-
-    if (typeof options === 'boolean') {
-      options = { 'force': options } // Old signature
-    }
-    if (typeof options === 'undefined') {
-      options = {}
-    }
-
-    options.baseURI = options.baseURI || docuri // Preserve though proxying etc
-    options.userCallback = userCallback
-
-    const args = arguments
-
-    if (Fetcher.unsupportedProtocol(docuri)) {
-      console.log('Unsupported protocol in: ' + docuri)
-      return userCallback(false, 'Unsupported protocol', { 'status': 900 })
-    }
-
-    let state = this.getState(docuri)
-    if (!options.force) {
-      if (state === 'fetched') {
-        return userCallback ? userCallback(true) : undefined
-      }
-      if (state === 'failed') {
-        return userCallback
-          ? userCallback(false, 'Previously failed. ' + this.requested[docuri],
-            {'status': this.requested[docuri]})
-          : undefined // An xhr standin
-      }
-    } else {
-      delete this.nonexistant[docuri]
-    }
-
-    this.fireCallbacks('request', args)
-
-    if (userCallback) {
-      // Beyond this point, failure/success will be signaled via .fetchCallbacks
-      this.addFetchCallback(docuri, userCallback)
-    }
-
-    if (state === 'requested') {
-      return // Don't ask again - wait for existing call
-    } else {
-      this.requested[docuri] = true  // mark this uri as 'requested'
-    }
-
-    let requestedURI = Fetcher.offlineOverride(docuri)
-
-    let actualProxyURI = Fetcher.proxyIfNecessary(requestedURI)
-
-    const xhr = this.xhrFor(docuri, rterm, requestedURI, actualProxyURI, options, args)
-
-    if (!options.noMeta) {
-      this.addRequestMeta(docuri, xhr, rterm)
-    }
-
-    try {
-      xhr.open('GET', actualProxyURI, this.async)
-    } catch (err) {
-      return this.failFetch(xhr, 'XHR open for GET failed for <' + requestedURI + '>:\n\t' + err)
-    }
-
-    if (options.force) { // must happen after open
-      xhr.setRequestHeader('Cache-control', 'no-cache')
-    }
-
-    try {
-      this.initExtensionCallbacks(xhr, rterm)  // tabulator / Firefox only
-    } catch (err) {
-      return this.failFetch(xhr, 'Error setting callbacks for extension redirects: ' + err)
-    }
-
-    try {
-      let acceptString = this.acceptString()
-
-      xhr.setRequestHeader('Accept', acceptString)
-      this.addStatus(xhr.req, 'Accept: ' + acceptString)
-    } catch (err) {
-      return this.failFetch(xhr, "Can't set Accept header: " + err)
-    }
-
-    try {  // Fire
-      xhr.send(null)
-    } catch (err) {
-      return this.failFetch(xhr, 'XHR send failed:' + err)
-    }
-
-    this.setXHRTimeout(xhr)
-
-    this.addStatus(xhr.req, 'HTTP Request sent.')
-
-    return xhr
-  }
-
-  /**
-   * Creates, initializes and returns an XHR instance used by `requestURI()`.
-   *
-   * @param docuri {string}
-   * @param rterm {NamedNode|string}
-   * @param requestedURI {string}
-   * @param actualProxyURI {string}
-   * @param options {Object} requestURI `options` argument
-   * @param args {Object} Arguments passed to requestURI
-   *
-   * @returns {XMLHttpRequest}
-   */
-  xhrFor (docuri, rterm, requestedURI, actualProxyURI, options, args) {
-    const kb = this.store
-    const xhr = this.xhr()
-
-    xhr.req = kb.bnode()
-    xhr.original = kb.sym(options.baseURI)
-    xhr.options = options
-
-    xhr.resource = kb.sym(docuri) // This might be proxified
-    xhr.userCallback = options.userCallback
-
-    // Setup the request
-    xhr.onerror = this.onerrorFactory(xhr, docuri, rterm)
-    xhr.onreadystatechange = this.onreadystatechangeFactory(xhr, docuri, rterm)
-    xhr.timeout = this.timeout
-    xhr.withCredentials = Fetcher.withCredentials(requestedURI, options)
-    xhr.actualProxyURI = actualProxyURI
-    xhr.proxyUsed = options.proxyUsed
-
-    xhr.requestedURI = requestedURI
-
-    xhr.ontimeout = () => {
-      this.failFetch(xhr, 'requestTimeout')
-    }
-    return xhr
+    this.nowOrWhenFetched(docuri, rterm, userCallback, options)
   }
 
   xhr () {
     return Util.XMLHTTPFactory()
   }
 
-  setXHRTimeout () {
+  setRequestTimeout (options) {
     return new Promise((resolve) => {
       setTimeout(() => {
-        resolve(this.failFetch({}, 'Request timed out', 'timeout'))
+        resolve(this.failFetch(options, 'Request timed out', 'timeout'))
       }, this.timeout)
     })
 
@@ -1722,16 +1515,6 @@ class Fetcher {
     return acceptstring
   }
 
-  initExtensionCallbacks (xhr, rterm) {
-    // Set redirect callback and request headers -- alas Firefox Extension Only
-    if (typeof tabulator !== 'undefined' &&
-        tabulator.isExtension && xhr.channel &&
-        (Uri.protocol(xhr.resource.uri) === 'http' ||
-         Uri.protocol(xhr.resource.uri) === 'https')) {
-      xhr.channel.notificationCallbacks = this.channelNotificationCallbacks(xhr, rterm)
-    }
-  }
-
   /**
    *
    * @param docuri
@@ -1760,98 +1543,6 @@ class Fetcher {
     kb.add(req, ns.link('requestedURI'), kb.literal(docuri), this.appNode)
     kb.add(req, ns.link('status'), kb.collection(), this.appNode)
   }
-
-  channelNotificationCallbacks (xhr, rterm) {
-    return {
-      getInterface: (iid) => {
-        if (iid.equals(Components.interfaces.nsIChannelEventSink)) {
-          return {
-            // See https://developer.mozilla.org/en/XPCOM_Interface_Reference/nsIChannelEventSink
-            asyncOnChannelRedirect: (oldC, newC, flags, callback) => {
-              if (xhr.aborted) return
-              var kb = this.store
-              var newURI = newC.URI.spec
-              var oldreq = xhr.req
-              this.addStatus(xhr.req, 'Redirected: ' + xhr.status + ' to <' + newURI + '>')
-              kb.add(oldreq, ns.http('redirectedTo'), kb.sym(newURI), xhr.req)
-
-              // //////////// Change the request node to a new one:  @@@@@@@@@@@@ Duplicate?
-              var newreq = xhr.req = kb.bnode() // Make NEW reqest for everything else
-              // xhr.resource = docterm
-              // xhr.requestedURI = args[0]
-
-              // kb.add(kb.sym(newURI), ns.link("request"), req, this.appNode)
-              kb.add(oldreq, ns.http('redirectedRequest'), newreq, xhr.req)
-
-              var now = new Date()
-              var timeNow = '[' + now.getHours() + ':' + now.getMinutes() + ':' + now.getSeconds() + '] '
-              kb.add(newreq, ns.rdfs('label'), kb.literal(timeNow + ' Request for ' + newURI), this.appNode)
-              kb.add(newreq, ns.link('status'), kb.collection(), this.appNode)
-              kb.add(newreq, ns.link('requestedURI'), kb.literal(newURI), this.appNode)
-              // /////////////
-
-              // // log.info('@@ sources onChannelRedirect'+
-              //               "Redirected: "+
-              //               xhr.status + " to <" + newURI + ">"); //@@
-              var response = kb.bnode()
-              // kb.add(response, ns.http('location'), newURI, response); Not on this response
-              kb.add(oldreq, ns.link('response'), response)
-              kb.add(response, ns.http('status'), kb.literal(xhr.status), response)
-              if (xhr.statusText) kb.add(response, ns.http('statusText'), kb.literal(xhr.statusText), response)
-
-              if (xhr.status - 0 !== 303) kb.HTTPRedirects[xhr.resource.uri] = newURI // same document as
-              if (xhr.status - 0 === 301 && rterm) { // 301 Moved
-                var badDoc = Uri.docpart(rterm.uri)
-                var msg = 'Warning: ' + xhr.resource + ' has moved to <' + newURI + '>.'
-                if (rterm) {
-                  msg += ' Link in <' + badDoc + ' >should be changed'
-                  kb.add(badDoc, kb.sym('http://www.w3.org/2007/ont/link#warning'), msg, this.appNode)
-                }
-                // dump(msg+"\n")
-              }
-              xhr.abort()
-              xhr.aborted = true
-
-              var hash = newURI.indexOf('#')
-              if (hash >= 0) {
-                var msg2 = ('Warning: ' + xhr.resource + ' HTTP redirects to' + newURI + ' which do not normally contain a "#" sign')
-                // dump(msg+"\n")
-                kb.add(xhr.resource, kb.sym('http://www.w3.org/2007/ont/link#warning'), msg2)
-                newURI = newURI.slice(0, hash)
-              }
-              /*
-               if (sf.fetchCallbacks[xhr.resource.uri]) {
-               if (!sf.fetchCallbacks[newURI]) {
-               sf.fetchCallbacks[newURI] = []
-               }
-               sf.fetchCallbacks[newURI] = sf.fetchCallbacks[newURI].concat(sf.fetchCallbacks[xhr.resource.uri])
-               delete sf.fetchCallbacks[xhr.resource.uri]
-               }
-               */
-              this.requested[xhr.resource.uri] = 'redirected'
-              this.redirectedTo[xhr.resource.uri] = newURI
-
-              let xhr2 = this.requestURI(newURI, xhr.resource, xhr.options, xhr.userCallback)
-              if (xhr2) { // may be no XHR is other URI already loaded
-                xhr2.original = xhr.original // use this for finding base
-                if (xhr2.req) {
-                  kb.add(
-                    xhr.req,
-                    kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'),
-                    xhr2.req,
-                    this.appNode
-                  )
-                }
-              }
-              // else dump("No xhr.req available for redirect from "+xhr.resource+" to "+newURI+"\n")
-            } // asyncOnChannelRedirect
-          }
-        }
-        return Components.results.NS_NOINTERFACE
-      }
-    }
-  }
-
   // var updatesVia = new $rdf.UpdatesVia(this) // Subscribe to headers
 // @@@@@@@@ This is turned off because it causes a websocket to be set up for ANY fetch
 // whether we want to track it ot not. including ontologies loaed though the XSSproxy
