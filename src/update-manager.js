@@ -5,15 +5,14 @@
 import IndexedFormula from './indexed-formula'
 const docpart = require('./uri').docpart
 const Fetcher = require('./fetcher')
-const graph = require('./data-factory').graph
 const namedNode = require('./data-factory').namedNode
 const Namespace = require('./namespace')
 const Serializer = require('./serializer')
 const uriJoin = require('./uri').join
 const Util = require('./util')
 
-var UpdateManager = (function () {
-  var sparql = function (store) {
+class UpdateManager {
+  constructor (store) {
     this.store = store
     if (store.updater) {
       throw new Error("You can't have two UpdateManagers for the same store")
@@ -37,19 +36,23 @@ var UpdateManager = (function () {
     this.patchControl = [] // index of objects fro coordinating incomng and outgoing patches
   }
 
-  sparql.prototype.patchControlFor = function (doc) {
+  patchControlFor (doc) {
     if (!this.patchControl[doc.uri]) {
       this.patchControl[doc.uri] = []
     }
     return this.patchControl[doc.uri]
   }
 
-  // Returns The method string SPARQL or DAV or LOCALFILE or false if known, undefined if not known.
-  //
-  // Files have to have a specific annotaton that they are machine written, for safety.
-  // We don't actually check for write access on files.
-  //
-  sparql.prototype.editable = function (uri, kb) {
+  /**
+   * Returns The method string SPARQL or DAV or LOCALFILE or false if known,
+   *   undefined if not known.
+   * Files have to have a specific annotation that they are machine written,
+   *   for safety.
+   * We don't actually check for write access on files.
+   * @param uri
+   * @param kb
+   */
+  editable (uri, kb) {
     if (!uri) {
       return false // Eg subject is bnode, no known doc to write to
     }
@@ -74,7 +77,7 @@ var UpdateManager = (function () {
         return x.toNT()
       }).join('\n'))
       return false
-    // @@ Would be nifty of course to see whether we actually have write acess first.
+      // @@ Would be nifty of course to see whether we actually have write acess first.
     }
 
     var request
@@ -117,7 +120,7 @@ var UpdateManager = (function () {
             for (i = 0; i < status.length; i++) {
               if (status[i] === 200 || status[i] === 404) {
                 definitive = true
-              // return false // A definitive answer
+                // return false // A definitive answer
               }
             }
           }
@@ -137,32 +140,36 @@ var UpdateManager = (function () {
     return undefined // We don't know (yet) as we haven't had a response (yet)
   }
 
-  // /////////  The identification of bnodes
-
-  sparql.prototype.anonymize = function (obj) {
-    return (obj.toNT().substr(0, 2) === '_:' && this._mentioned(obj))
+  anonymize (obj) {
+    return (obj.toNT().substr(0, 2) === '_:' && this.mentioned(obj))
       ? '?' + obj.toNT().substr(2)
       : obj.toNT()
   }
 
-  sparql.prototype.anonymizeNT = function (stmt) {
+  anonymizeNT (stmt) {
     return this.anonymize(stmt.subject) + ' ' +
-    this.anonymize(stmt.predicate) + ' ' +
-    this.anonymize(stmt.object) + ' .'
+      this.anonymize(stmt.predicate) + ' ' +
+      this.anonymize(stmt.object) + ' .'
   }
 
-  // A list of all bnodes occuring in a statement
-  sparql.prototype._statement_bnodes = function (st) {
+  /**
+   * Returns a list of all bnodes occurring in a statement
+   * @private
+   */
+  statementBnodes (st) {
     return [st.subject, st.predicate, st.object].filter(function (x) {
       return x.isBlank
     })
   }
 
-  // A list of all bnodes occuring in a list of statements
-  sparql.prototype._statement_array_bnodes = function (sts) {
+  /**
+   * Returns a list of all bnodes occurring in a list of statements
+   * @private
+   */
+  statementArrayBnodes (sts) {
     var bnodes = []
     for (var i = 0; i < sts.length; i++) {
-      bnodes = bnodes.concat(this._statement_bnodes(sts[i]))
+      bnodes = bnodes.concat(this.statementBnodes(sts[i]))
     }
     bnodes.sort() // in place sort - result may have duplicates
     var bnodes2 = []
@@ -174,11 +181,14 @@ var UpdateManager = (function () {
     return bnodes2
   }
 
-  sparql.prototype._cache_ifps = function () {
-    // Make a cached list of [Inverse-]Functional properties
-    // Call this once before calling context_statements
+  /**
+   * Makes a cached list of [Inverse-]Functional properties
+   * @private
+   */
+  cacheIfps () {
     this.ifps = {}
-    var a = this.store.each(undefined, this.ns.rdf('type'), this.ns.owl('InverseFunctionalProperty'))
+    var a = this.store.each(undefined, this.ns.rdf('type'),
+      this.ns.owl('InverseFunctionalProperty'))
     for (var i = 0; i < a.length; i++) {
       this.ifps[a[i].uri] = true
     }
@@ -189,8 +199,11 @@ var UpdateManager = (function () {
     }
   }
 
-  // Returns a context to bind a given node, up to a given depth
-  sparql.prototype._bnode_context2 = function (x, source, depth) {
+  /**
+   * Returns a context to bind a given node, up to a given depth
+   * @private
+   */
+  bnodeContext2 (x, source, depth) {
     // Return a list of statements which indirectly identify a node
     //  Depth > 1 if try further indirection.
     //  Return array of statements (possibly empty), or null if failure
@@ -204,7 +217,7 @@ var UpdateManager = (function () {
           return [ sts[i] ]
         }
         if (depth) {
-          res = this._bnode_context2(y, source, depth - 1)
+          res = this.bnodeContext2(y, source, depth - 1)
           if (res) {
             return res.concat([ sts[i] ])
           }
@@ -220,7 +233,7 @@ var UpdateManager = (function () {
           return [ sts[i] ]
         }
         if (depth) {
-          res = this._bnode_context2(y, source, depth - 1)
+          res = this.bnodeContext2(y, source, depth - 1)
           if (res) {
             return res.concat([ sts[i] ])
           }
@@ -230,12 +243,15 @@ var UpdateManager = (function () {
     return null // Failure
   }
 
-  // Returns the smallest context to bind a given single bnode
-  sparql.prototype._bnode_context_1 = function (x, source) {
+  /**
+   * Returns the smallest context to bind a given single bnode
+   * @private
+   */
+  bnodeContext1 (x, source) {
     // Return a list of statements which indirectly identify a node
     //   Breadth-first
     for (var depth = 0; depth < 3; depth++) { // Try simple first
-      var con = this._bnode_context2(x, source, depth)
+      var con = this.bnodeContext2(x, source, depth)
       if (con !== null) return con
     }
     // If we can't guarantee unique with logic just send all info about node
@@ -243,51 +259,44 @@ var UpdateManager = (function () {
     // throw new Error('Unable to uniquely identify bnode: ' + x.toNT())
   }
 
-  sparql.prototype._mentioned = function (x) {
-    return (this.store.statementsMatching(x).length !== 0) || // Don't pin fresh bnodes
-    (this.store.statementsMatching(undefined, x).length !== 0) ||
-    (this.store.statementsMatching(undefined, undefined, x).length !== 0)
+  /**
+   * @private
+   */
+  mentioned (x) {
+    return this.store.statementsMatching(x).length !== 0 || // Don't pin fresh bnodes
+      this.store.statementsMatching(undefined, x).length !== 0 ||
+      this.store.statementsMatching(undefined, undefined, x).length !== 0
   }
 
-  sparql.prototype._bnode_context = function (bnodes, doc) {
+  /**
+   * @private
+   */
+  bnodeContext (bnodes, doc) {
     var context = []
     if (bnodes.length) {
-      this._cache_ifps()
+      this.cacheIfps()
       for (var i = 0; i < bnodes.length; i++) { // Does this occur in old graph?
         var bnode = bnodes[i]
-        if (!this._mentioned(bnode)) continue
-        context = context.concat(this._bnode_context_1(bnode, doc))
+        if (!this.mentioned(bnode)) continue
+        context = context.concat(this.bnodeContext1(bnode, doc))
       }
     }
     return context
   }
 
-  /*  Weird code does not make sense -- some code corruption along the line -- st undefined -- weird
-      sparql.prototype._bnode_context = function(bnodes) {
-          var context = []
-          if (bnodes.length) {
-              if (this.store.statementsMatching(st.subject.isBlank?undefined:st.subject,
-                                        st.predicate.isBlank?undefined:st.predicate,
-                                        st.object.isBlank?undefined:st.object,
-                                        st.why).length <= 1) {
-                  context = context.concat(st)
-              } else {
-                  this._cache_ifps()
-                  for (x in bnodes) {
-                      context = context.concat(this._bnode_context_1(bnodes[x], st.why))
-                  }
-              }
-          }
-          return context
-      }
-  */
-  // Returns the best context for a single statement
-  sparql.prototype._statement_context = function (st) {
-    var bnodes = this._statement_bnodes(st)
-    return this._bnode_context(bnodes, st.why)
+  /**
+   * Returns the best context for a single statement
+   * @private
+   */
+  statementContext (st) {
+    var bnodes = this.statementBnodes(st)
+    return this.bnodeContext(bnodes, st.why)
   }
 
-  sparql.prototype._context_where = function (context) {
+  /**
+   * @private
+   */
+  contextWhere (context) {
     var sparql = this
     return (!context || context.length === 0)
       ? ''
@@ -297,7 +306,10 @@ var UpdateManager = (function () {
       }).join('\n') + ' }\n'
   }
 
-  sparql.prototype._fire = function (uri, query, callback) {
+  /**
+   * @private
+   */
+  fire (uri, query, callback) {
     if (!uri) {
       throw new Error('No URI given for remote editing operation: ' + query)
     }
@@ -325,20 +337,19 @@ var UpdateManager = (function () {
   }
 
   // This does NOT update the statement.
-  // It returns an object whcih includes
+  // It returns an object which includes
   //  function which can be used to change the object of the statement.
-  //
-  sparql.prototype.update_statement = function (statement) {
+  update_statement (statement) {
     if (statement && !statement.why) {
       return
     }
     var sparql = this
-    var context = this._statement_context(statement)
+    var context = this.statementContext(statement)
 
     return {
       statement: statement ? [statement.subject, statement.predicate, statement.object, statement.why] : undefined,
       statementNT: statement ? this.anonymizeNT(statement) : undefined,
-      where: sparql._context_where(context),
+      where: sparql.contextWhere(context),
 
       set_object: function (obj, callback) {
         var query = this.where
@@ -348,14 +359,14 @@ var UpdateManager = (function () {
           this.anonymize(this.statement[1]) + ' ' +
           this.anonymize(obj) + ' ' + ' . }\n'
 
-        sparql._fire(this.statement[3].uri, query, callback)
+        sparql.fire(this.statement[3].uri, query, callback)
       }
     }
   }
 
-  sparql.prototype.insert_statement = function (st, callback) {
+  insert_statement (st, callback) {
     var st0 = st instanceof Array ? st[0] : st
-    var query = this._context_where(this._statement_context(st0))
+    var query = this.contextWhere(this.statementContext(st0))
 
     if (st instanceof Array) {
       var stText = ''
@@ -368,12 +379,12 @@ var UpdateManager = (function () {
         this.anonymize(st.object) + ' ' + ' . }\n'
     }
 
-    this._fire(st0.why.uri, query, callback)
+    this.fire(st0.why.uri, query, callback)
   }
 
-  sparql.prototype.delete_statement = function (st, callback) {
+  delete_statement (st, callback) {
     var st0 = st instanceof Array ? st[0] : st
-    var query = this._context_where(this._statement_context(st0))
+    var query = this.contextWhere(this.statementContext(st0))
 
     if (st instanceof Array) {
       var stText = ''
@@ -386,7 +397,7 @@ var UpdateManager = (function () {
         this.anonymize(st.object) + ' ' + ' . }\n'
     }
 
-    this._fire(st0.why.uri, query, callback)
+    this.fire(st0.why.uri, query, callback)
   }
 
   //  Request a now or future action to refresh changes coming downstream
@@ -395,8 +406,7 @@ var UpdateManager = (function () {
   // when a websocket has pinged to say there are changes.
   // If thewebsocket, by contrast, has sent a patch, then this may not be necessary.
   // This may be called out of context so *this* cannot be used.
-
-  sparql.prototype.requestDownstreamAction = function (doc, action) {
+  requestDownstreamAction (doc, action) {
     var control = this.patchControlFor(doc)
     if (!control.pendingUpstream) {
       action(doc)
@@ -413,18 +423,18 @@ var UpdateManager = (function () {
 
   // We want to start counting websockt notifications
   // to distinguish the ones from others from our own.
-  sparql.prototype.clearUpstreamCount = function (doc) {
+  clearUpstreamCount (doc) {
     var control = this.patchControlFor(doc)
     control.upstreamCount = 0
   }
 
-  sparql.prototype.getUpdatesVia = function (doc) {
+  getUpdatesVia (doc) {
     var linkHeaders = this.store.fetcher.getHeader(doc, 'updates-via')
     if (!linkHeaders || !linkHeaders.length) return null
     return linkHeaders[0].trim()
   }
 
-  sparql.prototype.addDownstreamChangeListener = function (doc, listener) {
+  addDownstreamChangeListener (doc, listener) {
     var control = this.patchControlFor(doc)
     if (!control.downstreamChangeListeners) { control.downstreamChangeListeners = [] }
     control.downstreamChangeListeners.push(listener)
@@ -433,7 +443,7 @@ var UpdateManager = (function () {
     })
   }
 
-  sparql.prototype.reloadAndSync = function (doc) {
+  reloadAndSync (doc) {
     var control = this.patchControlFor(doc)
     var updater = this
 
@@ -481,8 +491,7 @@ var UpdateManager = (function () {
   // have to do the reload yourslf. Do mot mix them.
   //
   //  kb contains the HTTP  metadata from prefvious operations
-  //
-  sparql.prototype.setRefreshHandler = function (doc, handler) {
+  setRefreshHandler (doc, handler) {
     var wssURI = this.getUpdatesVia(doc) // relative
     // var kb = this.store
     var theHandler = handler
@@ -575,8 +584,7 @@ var UpdateManager = (function () {
   //      (may contain bnodes which can be indirectly identified by a where clause)
   //
   //  - callback is called as callback(uri, success, errorbody)
-  //
-  sparql.prototype.update = function (deletions, insertions, callback) {
+  update (deletions, insertions, callback) {
     try {
       var kb = this.store
       var ds = !deletions ? []
@@ -625,10 +633,10 @@ var UpdateManager = (function () {
       var sz
       if (protocol.indexOf('SPARQL') >= 0) {
         var bnodes = []
-        if (ds.length) bnodes = this._statement_array_bnodes(ds)
-        if (is.length) bnodes = bnodes.concat(this._statement_array_bnodes(is))
-        var context = this._bnode_context(bnodes, doc)
-        var whereClause = this._context_where(context)
+        if (ds.length) bnodes = this.statementArrayBnodes(ds)
+        if (is.length) bnodes = bnodes.concat(this.statementArrayBnodes(is))
+        var context = this.bnodeContext(bnodes, doc)
+        var whereClause = this.contextWhere(context)
         var query = ''
         if (whereClause.length) { // Is there a WHERE clause?
           if (ds.length) {
@@ -670,11 +678,11 @@ var UpdateManager = (function () {
           console.log('upstream count up to : ' + control.upstreamCount)
         }
 
-        this._fire(doc.uri, query,
+        this.fire(doc.uri, query,
           function (uri, success, body, xhr) {
-            xhr.elapsedTime_ms = Date.now() - startTime
+            xhr.elapsedTimeMs = Date.now() - startTime
             console.log('    sparql: Return ' + (success ? 'success' : 'FAILURE ' + xhr.status) +
-              ' elapsed ' + xhr.elapsedTime_ms + 'ms')
+              ' elapsed ' + xhr.elapsedTimeMs + 'ms')
             if (success) {
               try {
                 kb.remove(ds)
@@ -838,7 +846,7 @@ var UpdateManager = (function () {
           } catch (e) {
             callback(doc.uri, false,
               'Exception trying to write back file <' + doc.uri + '>\n'
-            // + tabulator.Util.stackString(e))
+              // + tabulator.Util.stackString(e))
             )
           }
         } else {
@@ -848,13 +856,12 @@ var UpdateManager = (function () {
     } catch (e) {
       callback(undefined, false, 'Exception in update: ' + e + '\n' + $rdf.Util.stackString(e))
     }
-  } // wnd update
+  }
 
-  // This suitable for an inital creation of a document
+  // This is suitable for an initial creation of a document
   //
   // data:    string, or array of statements
-  //
-  sparql.prototype.put = function (doc, data, contentType, callback) {
+  put (doc, data, contentType, callback) {
     var documentString
     var kb = this.store
 
@@ -890,12 +897,12 @@ var UpdateManager = (function () {
           data.map(function (st) {
             kb.addStatement(st)
           })
-        // kb.fetcher.requested[doc.uri] = true // as though fetched
+          // kb.fetcher.requested[doc.uri] = true // as though fetched
         }
         if (success) {
           delete kb.fetcher.nonexistant[doc.uri]
           delete kb.fetcher.requested[doc.uri]
-        // @@ later we can fake it has been requestd if put gives us the header sand we save them.
+          // @@ later we can fake it has been requestd if put gives us the header sand we save them.
         }
         callback(doc.uri, success, xhr.responseText, xhr)
       }
@@ -907,13 +914,12 @@ var UpdateManager = (function () {
 
   // Reload a document.
   //
-  // Fast and cheap, no metaata
+  // Fast and cheap, no metadata
   // Measure times for the document
   // Load it provisionally
-  // Don't delete the statemenst before the load, or it will leave a broken document
+  // Don't delete the statements before the load, or it will leave a broken document
   // in the meantime.
-
-  sparql.prototype.reload = function (kb, doc, callback) {
+  reload (kb, doc, callback) {
     var startTime = Date.now()
     // force sets no-cache and
     kb.fetcher.nowOrWhenFetched(doc.uri, {force: true, noMeta: true, clearPreviousData: true}, function (ok, body, xhr) {
@@ -926,53 +932,19 @@ var UpdateManager = (function () {
         callback(false, 'Non-HTTP error reloading data: ' + body, xhr)
       } else {
         var elapsedTimeMs = Date.now() - startTime
-        if (!doc.reloadTime_total) doc.reloadTime_total = 0
-        if (!doc.reloadTime_count) doc.reloadTime_count = 0
-        doc.reloadTime_total += elapsedTimeMs
-        doc.reloadTime_count += 1
-        console.log('    Fetch took ' + elapsedTimeMs + 'ms, av. of ' +
-          doc.reloadTime_count + ' = ' +
-          (doc.reloadTime_total / doc.reloadTime_count) + 'ms.')
-        callback(true)
-      }
-    })
-  }
 
-  sparql.prototype.oldReload = function (kb, doc, callback) {
-    var g2 = graph() // A separate store to hold the data as we load it
-    var f2 = new Fetcher(g2)
-    var startTime = Date.now()
-    // force sets no-cache and
-    f2.nowOrWhenFetched(doc.uri, {force: true, noMeta: true, clearPreviousData: true}, function (ok, body, xhr) {
-      if (!ok) {
-        console.log('    ERROR reloading data: ' + body)
-        callback(false, 'Error reloading data: ' + body, xhr)
-      } else if (xhr.onErrorWasCalled || xhr.status !== 200) {
-        console.log('    Non-HTTP error reloading data! onErrorWasCalled=' +
-          xhr.onErrorWasCalled + ' status: ' + xhr.status)
-        callback(false, 'Non-HTTP error reloading data: ' + body, xhr)
-      } else {
-        var sts1 = kb.statementsMatching(undefined, undefined, undefined, doc).slice() // Take a copy!!
-        var sts2 = g2.statementsMatching(undefined, undefined, undefined, doc).slice()
-        console.log('    replacing ' + sts1.length + ' with ' + sts2.length +
-          ' out of total statements ' + kb.statements.length)
-        kb.remove(sts1)
-        kb.add(sts2)
-        var elapsedTimeMs = Date.now() - startTime
-        if (sts2.length === 0) {
-          console.log('????????????????? 0000000')
-        }
-        if (!doc.reloadTime_total) doc.reloadTime_total = 0
-        if (!doc.reloadTime_count) doc.reloadTime_count = 0
-        doc.reloadTime_total += elapsedTimeMs
-        doc.reloadTime_count += 1
-        console.log('    fetch took ' + elapsedTimeMs + 'ms, av. of ' + doc.reloadTime_count + ' = ' +
-          (doc.reloadTime_total / doc.reloadTime_count) + 'ms.')
+        if (!doc.reloadTimeTotal) doc.reloadTimeTotal = 0
+        if (!doc.reloadTimeCount) doc.reloadTimeCount = 0
+
+        doc.reloadTimeTotal += elapsedTimeMs
+        doc.reloadTimeCount += 1
+        console.log('    Fetch took ' + elapsedTimeMs + 'ms, av. of ' +
+          doc.reloadTimeCount + ' = ' +
+          (doc.reloadTimeTotal / doc.reloadTimeCount) + 'ms.')
         callback(true)
       }
     })
   }
-  return sparql
-})()
+}
 
 module.exports = UpdateManager
