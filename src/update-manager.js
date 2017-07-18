@@ -44,13 +44,16 @@ class UpdateManager {
   }
 
   /**
-   * Returns The method string SPARQL or DAV or LOCALFILE or false if known,
-   *   undefined if not known.
+   * Tests whether a file is editable.
    * Files have to have a specific annotation that they are machine written,
    *   for safety.
    * We don't actually check for write access on files.
-   * @param uri
-   * @param kb
+   *
+   * @param uri {string}
+   * @param kb {IndexedFormula}
+   *
+   * @returns {string|boolean|undefined} The method string SPARQL or DAV or
+   *   LOCALFILE or false if known, undefined if not known.
    */
   editable (uri, kb) {
     if (!uri) {
@@ -310,30 +313,37 @@ class UpdateManager {
    * @private
    */
   fire (uri, query, callback) {
-    if (!uri) {
-      throw new Error('No URI given for remote editing operation: ' + query)
-    }
-    console.log('sparql: sending update to <' + uri + '>')
-    var xhr = Util.XMLHTTPFactory()
-    xhr.options = {}
-
-    xhr.onreadystatechange = function () {
-      // dump("SPARQL update ready state for <"+uri+"> readyState="+xhr.readyState+"\n"+query+"\n")
-      if (xhr.readyState === 4) {
-        var success = (!xhr.status || (xhr.status >= 200 && xhr.status < 300))
-        if (!success) {
-          console.log('sparql: update failed for <' + uri + '> status=' +
-            xhr.status + ', ' + xhr.statusText + ', body length=' + xhr.responseText.length + '\n   for query: ' + query)
-        } else {
-          console.log('sparql: update Ok for <' + uri + '>')
+    return Promise.resolve()
+      .then(() => {
+        if (!uri) {
+          throw new Error('No URI given for remote editing operation: ' + query)
         }
-        callback(uri, success, xhr.responseText, xhr)
-      }
-    }
+        console.log('sparql: sending update to <' + uri + '>')
 
-    xhr.open('PATCH', uri, true) // async=true
-    xhr.setRequestHeader('Content-type', 'application/sparql-update')
-    xhr.send(query)
+        let options = {
+          noMeta: true,
+          contentType: 'application/sparql-update',
+          body: query
+        }
+
+        return this.store.fetcher.webOperation('PATCH', uri, options)
+      })
+      .then(response => {
+        if (!response.ok) {
+          let message = 'sparql: update failed for <' + uri + '> status=' +
+            response.status + ', ' + response.statusText +
+            '\n   for query: ' + query
+          console.log(message)
+          throw new Error(message)
+        }
+
+        console.log('sparql: update Ok for <' + uri + '>')
+
+        callback(uri, response.ok, response.responseText, response)
+      })
+      .catch(err => {
+        callback(uri, false, err.message, err)
+      })
   }
 
   // This does NOT update the statement.
@@ -400,19 +410,22 @@ class UpdateManager {
     this.fire(st0.why.uri, query, callback)
   }
 
-  //  Request a now or future action to refresh changes coming downstream
-  //
-  // This is designed to allow the system to re-request the server version,
-  // when a websocket has pinged to say there are changes.
-  // If thewebsocket, by contrast, has sent a patch, then this may not be necessary.
-  // This may be called out of context so *this* cannot be used.
+  /**
+   * Requests a now or future action to refresh changes coming downstream
+   * This is designed to allow the system to re-request the server version,
+   * when a websocket has pinged to say there are changes.
+   * If the websocket, by contrast, has sent a patch, then this may not be necessary.
+   *
+   * @param doc
+   * @param action
+   */
   requestDownstreamAction (doc, action) {
     var control = this.patchControlFor(doc)
     if (!control.pendingUpstream) {
       action(doc)
     } else {
       if (control.downstreamAction) {
-        if ('' + control.downstreamAction !== '' + action) { // @@@ Kludge comapre!!
+        if ('' + control.downstreamAction !== '' + action) {  // Kludge compare
           throw new Error("Can't wait for > 1 different downstream actions")
         }
       } else {
@@ -421,8 +434,10 @@ class UpdateManager {
     }
   }
 
-  // We want to start counting websockt notifications
-  // to distinguish the ones from others from our own.
+  /**
+   * We want to start counting websocket notifications
+   * to distinguish the ones from others from our own.
+   */
   clearUpstreamCount (doc) {
     var control = this.patchControlFor(doc)
     control.upstreamCount = 0
@@ -455,7 +470,7 @@ class UpdateManager {
     var retryTimeout = 1000 // ms
     var tryReload = function () {
       console.log('try reload - timeout = ' + retryTimeout)
-      updater.reload(updater.store, doc, function (ok, message, xhr) {
+      updater.reload(updater.store, doc, function (ok, message, response) {
         control.reloading = false
         if (ok) {
           if (control.downstreamChangeListeners) {
@@ -465,14 +480,14 @@ class UpdateManager {
             }
           }
         } else {
-          if (xhr.status === 0) {
+          if (response.status === 0) {
             console.log('Network error refreshing the data. Retrying in ' +
               retryTimeout / 1000)
             control.reloading = true
             retryTimeout = retryTimeout * 2
             setTimeout(tryReload, retryTimeout)
           } else {
-            console.log('Error ' + xhr.status + 'refreshing the data:' +
+            console.log('Error ' + response.status + 'refreshing the data:' +
               message + '. Stopped' + doc)
           }
         }
@@ -481,16 +496,23 @@ class UpdateManager {
     tryReload()
   }
 
-  // Set up websocket to listen on
-  //
-  // There is coordination between upstream changes and downstream ones
-  // so that a reload is not done in the middle of an upsteeam patch.
-  // If you usie this API then you get called when a change happens, and you
-  // have to reload the file yourself, and then refresh the UI.
-  // Alternative is addDownstreamChangeListener(), where you do not
-  // have to do the reload yourslf. Do mot mix them.
-  //
-  //  kb contains the HTTP  metadata from prefvious operations
+  /**
+   * Sets up websocket to listen on
+   *
+   * There is coordination between upstream changes and downstream ones
+   * so that a reload is not done in the middle of an upstream patch.
+   * If you use this API then you get called when a change happens, and you
+   * have to reload the file yourself, and then refresh the UI.
+   * Alternative is addDownstreamChangeListener(), where you do not
+   * have to do the reload yourself. Do mot mix them.
+   *
+   * kb contains the HTTP  metadata from previous operations
+   *
+   * @param doc
+   * @param handler
+   *
+   * @returns {boolean}
+   */
   setRefreshHandler (doc, handler) {
     var wssURI = this.getUpdatesVia(doc) // relative
     // var kb = this.store
@@ -636,8 +658,6 @@ class UpdateManager {
         throw new Error("Can't make changes in uneditable " + doc)
       }
       var i
-      var newSts
-      var documentString
       if (protocol.indexOf('SPARQL') >= 0) {
         var bnodes = []
         if (ds.length) bnodes = this.statementArrayBnodes(ds)
@@ -685,85 +705,35 @@ class UpdateManager {
           console.log('upstream count up to : ' + control.upstreamCount)
         }
 
-        this.fire(doc.uri, query,
-          function (uri, success, body, xhr) {
-            xhr.elapsedTimeMs = Date.now() - startTime
-            console.log('    sparql: Return ' + (success ? 'success' : 'FAILURE ' + xhr.status) +
-              ' elapsed ' + xhr.elapsedTimeMs + 'ms')
-            if (success) {
-              try {
-                kb.remove(ds)
-              } catch (e) {
-                success = false
-                body = 'Remote Ok BUT error deleting ' + ds.length + ' from store!!! ' + e
-              } // Add in any case -- help recover from weirdness??
-              for (var i = 0; i < is.length; i++) {
-                kb.add(is[i].subject, is[i].predicate, is[i].object, doc)
-              }
+        this.fire(doc.uri, query, (uri, success, body, response) => {
+          response.elapsedTimeMs = Date.now() - startTime
+          console.log('    sparql: Return ' +
+            success ? 'success' : 'FAILURE ' + response.status +
+            ' elapsed ' + response.elapsedTimeMs + 'ms')
+          if (success) {
+            try {
+              kb.remove(ds)
+            } catch (e) {
+              success = false
+              body = 'Remote Ok BUT error deleting ' + ds.length + ' from store!!! ' + e
+            } // Add in any case -- help recover from weirdness??
+            for (var i = 0; i < is.length; i++) {
+              kb.add(is[i].subject, is[i].predicate, is[i].object, doc)
             }
-
-            callback(uri, success, body, xhr)
-            control.pendingUpstream -= 1
-            // When upstream patches have been sent, reload state if downstream waiting
-            if (control.pendingUpstream === 0 && control.downstreamAction) {
-              var downstreamAction = control.downstreamAction
-              delete control.downstreamAction
-              console.log('delayed downstream action:')
-              downstreamAction(doc)
-            }
-          })
-      } else if (protocol.indexOf('DAV') >= 0) {
-        // The code below is derived from Kenny's UpdateCenter.js
-        var request = kb.any(doc, this.ns.link('request'))
-        if (!request) {
-          throw new Error('No record of our HTTP GET request for document: ' +
-            doc)
-        } // should not happen
-        var response = kb.any(request, this.ns.link('response'))
-        if (!response) {
-          return null // throw "No record HTTP GET response for document: "+doc
-        }
-        var contentType = kb.the(response, this.ns.httph('content-type')).value
-
-        // prepare contents of revised document
-        newSts = kb.statementsMatching(undefined, undefined, undefined, doc).slice() // copy!
-        for (i = 0; i < ds.length; i++) {
-          Util.RDFArrayRemove(newSts, ds[i])
-        }
-        for (i = 0; i < is.length; i++) {
-          newSts.push(is[i])
-        }
-
-        documentString = this.serialize(doc.uri, newSts, contentType)
-
-        // Write the new version back
-
-        var candidateTarget = kb.the(response, this.ns.httph('content-location'))
-        var targetURI
-        if (candidateTarget) {
-          targetURI = uriJoin(candidateTarget.value, targetURI)
-        }
-        var xhr = Util.XMLHTTPFactory()
-        xhr.options = {}
-        xhr.onreadystatechange = function () {
-          if (xhr.readyState === 4) {
-            // formula from sparqlUpdate.js, what about redirects?
-            var success = (!xhr.status || (xhr.status >= 200 && xhr.status < 300))
-            if (success) {
-              for (var i = 0; i < ds.length; i++) {
-                kb.remove(ds[i])
-              }
-              for (i = 0; i < is.length; i++) {
-                kb.add(is[i].subject, is[i].predicate, is[i].object, doc)
-              }
-            }
-            callback(doc.uri, success, xhr.responseText)
           }
-        }
-        xhr.open('PUT', targetURI, true)
-        // assume the server does PUT content-negotiation.
-        xhr.setRequestHeader('Content-type', contentType) // OK?
-        xhr.send(documentString)
+
+          callback(uri, success, body, response)
+          control.pendingUpstream -= 1
+          // When upstream patches have been sent, reload state if downstream waiting
+          if (control.pendingUpstream === 0 && control.downstreamAction) {
+            var downstreamAction = control.downstreamAction
+            delete control.downstreamAction
+            console.log('delayed downstream action:')
+            downstreamAction(doc)
+          }
+        })
+      } else if (protocol.indexOf('DAV') >= 0) {
+        this.updateDav(doc, ds, is, callback)
       } else {
         if (protocol.indexOf('LOCALFILE') >= 0) {
           try {
@@ -782,6 +752,65 @@ class UpdateManager {
       callback(undefined, false, 'Exception in update: ' + e + '\n' +
         $rdf.Util.stackString(e))
     }
+  }
+
+  updateDav (doc, ds, is, callback) {
+    let kb = this.store
+    // The code below is derived from Kenny's UpdateCenter.js
+    var request = kb.any(doc, this.ns.link('request'))
+    if (!request) {
+      throw new Error('No record of our HTTP GET request for document: ' +
+        doc)
+    } // should not happen
+    var response = kb.any(request, this.ns.link('response'))
+    if (!response) {
+      return null // throw "No record HTTP GET response for document: "+doc
+    }
+    var contentType = kb.the(response, this.ns.httph('content-type')).value
+
+    // prepare contents of revised document
+    let i
+    let newSts = kb.statementsMatching(undefined, undefined, undefined, doc).slice() // copy!
+    for (i = 0; i < ds.length; i++) {
+      Util.RDFArrayRemove(newSts, ds[i])
+    }
+    for (i = 0; i < is.length; i++) {
+      newSts.push(is[i])
+    }
+
+    const documentString = this.serialize(doc.uri, newSts, contentType)
+
+    // Write the new version back
+    var candidateTarget = kb.the(response, this.ns.httph('content-location'))
+    var targetURI
+    if (candidateTarget) {
+      targetURI = uriJoin(candidateTarget.value, targetURI)
+    }
+
+    let options = {
+      contentType,
+      noMeta: true,
+      body: documentString
+    }
+
+    return kb.fetcher.webOperation('PUT', targetURI, options)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(response.error)
+        }
+
+        for (var i = 0; i < ds.length; i++) {
+          kb.remove(ds[i])
+        }
+        for (i = 0; i < is.length; i++) {
+          kb.add(is[i].subject, is[i].predicate, is[i].object, doc)
+        }
+
+        callback(doc.uri, response.ok, response.responseText, response)
+      })
+      .catch(err => {
+        callback(doc.uri, false, err.message, err)
+      })
   }
 
   /**
