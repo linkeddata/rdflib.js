@@ -23,14 +23,21 @@ describe('Fetcher', () => {
   describe('constructor', () => {
     it('should init a fetcher instance', () => {
       let store = rdf.graph()
-      let fetcher = new Fetcher(store)
+      let options = {
+        timeout: 1000,
+        fetch: {}
+      }
+      let fetcher = new Fetcher(store, options)
 
       expect(fetcher.store).to.equal(store)
+      expect(fetcher.timeout).to.equal(options.timeout)
+      expect(fetcher._fetch).to.equal(options.fetch)
+
       expect(fetcher.handlers.length).to.equal(Object.keys(Fetcher.HANDLERS).length)
     })
   })
 
-  describe.skip('nowOrWhenFetched', () => {
+  describe('nowOrWhenFetched', () => {
     let fetcher, docuri, rterm, options, userCallback
 
     beforeEach(() => {
@@ -41,57 +48,61 @@ describe('Fetcher', () => {
 
       fetcher = new Fetcher(rdf.graph())
 
-      fetcher.requestURI = sinon.stub()
+      fetcher.fetch = sinon.stub().resolves()
     })
 
-    it('nowOrWhenFetched(uri, userCallback)', () => {
-      fetcher.nowOrWhenFetched(docuri, userCallback)
+    it('should invoke userCallback with caught error', done => {
+      let errorMessage = 'Some error'
+      fetcher.fetch = sinon.stub().rejects(new Error(errorMessage))
 
-      expect(fetcher.requestURI).to.have.been
-        .calledWith(docuri, undefined, {}, userCallback)
+      fetcher.nowOrWhenFetched(docuri, (ok, message) => {
+        expect(ok).to.be.false()
+        expect(message).to.equal(errorMessage)
+        done()
+      })
     })
 
-    it('accepts NamedNode docuri', () => {
-      fetcher.nowOrWhenFetched(rdf.namedNode(docuri), userCallback)
-
-      expect(fetcher.requestURI).to.have.been
-        .calledWith(docuri, undefined, {}, userCallback)
+    it('nowOrWhenFetched(uri, userCallback)', done => {
+      fetcher.nowOrWhenFetched(docuri, (ok) => {
+        expect(fetcher.fetch).to.have.been.calledWith(docuri, {})
+        expect(ok).to.be.true()
+        done()
+      })
     })
 
-    it('nowOrWhenFetched(uri, options, userCallback)', () => {
-      fetcher.nowOrWhenFetched(docuri, options, userCallback)
-
-      expect(fetcher.requestURI).to.have.been
-        .calledWith(docuri, undefined, options, userCallback)
+    it('nowOrWhenFetched(uri, options, userCallback)', done => {
+      let options = {}
+      fetcher.nowOrWhenFetched(docuri, options, (ok) => {
+        expect(fetcher.fetch).to.have.been.calledWith(docuri, options)
+        expect(ok).to.be.true()
+        done()
+      })
     })
 
-    it('nowOrWhenFetched(uri, options, userCallback) with referringTerm', () => {
-      options.referringTerm = rterm
-      fetcher.nowOrWhenFetched(docuri, options, userCallback)
-
-      expect(fetcher.requestURI).to.have.been
-        .calledWith(docuri, rterm, options, userCallback)
-    })
-
-    it('nowOrWhenFetched(uri, referringTerm, userCallback, options)', () => {
+    it('nowOrWhenFetched(uri, referringTerm, userCallback, options)', done => {
+      userCallback = (ok) => {
+        expect(fetcher.fetch).to.have.been.calledWith(docuri, { referringTerm: rterm })
+        expect(ok).to.be.true()
+        done()
+      }
       fetcher.nowOrWhenFetched(docuri, rterm, userCallback, options)
-
-      expect(fetcher.requestURI).to.have.been
-        .calledWith(docuri, rterm, options, userCallback)
     })
 
-    it('nowOrWhenFetched(uri, undefined, userCallback, options)', () => {
+    it('nowOrWhenFetched(uri, undefined, userCallback, options)', done => {
+      userCallback = (ok) => {
+        expect(fetcher.fetch).to.have.been.calledWith(docuri, {})
+        expect(ok).to.be.true()
+        done()
+      }
       fetcher.nowOrWhenFetched(docuri, undefined, userCallback, options)
-
-      expect(fetcher.requestURI).to.have.been
-        .calledWith(docuri, undefined, options, userCallback)
     })
 
-    it('nowOrWhenFetched(uri, referringTerm, userCallback)', () => {
-      fetcher.nowOrWhenFetched(docuri, rterm, userCallback)
-
-      expect(fetcher.requestURI).to.have.been
-        .calledWith(docuri, rterm, { referringTerm: rterm }, userCallback)
+    it('nowOrWhenFetched(uri, referringTerm, userCallback)', done => {
+      fetcher.nowOrWhenFetched(docuri, rterm, (ok) => {
+        expect(fetcher.fetch).to.have.been.calledWith(docuri, { referringTerm: rterm })
+        expect(ok).to.be.true()
+        done()
+      })
     })
   })
 
