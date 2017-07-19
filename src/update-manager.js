@@ -65,28 +65,25 @@ class UpdateManager {
 
     if (uri.slice(0, 8) === 'file:///') {
       if (kb.holds(
-          kb.sym(uri),
-          namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
-          namedNode('http://www.w3.org/2007/ont/link#MachineEditableDocument')
-        )) {
+            kb.sym(uri),
+            namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
+            namedNode('http://www.w3.org/2007/ont/link#MachineEditableDocument'))) {
         return 'LOCALFILE'
       }
 
-      var sts = kb.statementsMatching(kb.sym(uri), undefined, undefined)
+      var sts = kb.statementsMatching(kb.sym(uri))
 
       console.log('sparql.editable: Not MachineEditableDocument file ' +
         uri + '\n')
-      console.log(sts.map(function (x) {
-        return x.toNT()
-      }).join('\n'))
+      console.log(sts.map((x) => { return x.toNT() }).join('\n'))
+
       return false
-      // @@ Would be nifty of course to see whether we actually have write acess first.
+      // @@ Would be nifty of course to see whether we actually have write access first.
     }
 
     var request
     var definitive = false
-    var requests = kb.each(undefined, this.ns.link('requestedURI'),
-      docpart(uri))
+    var requests = kb.each(undefined, this.ns.link('requestedURI'), docpart(uri))
 
     // Hack for the moment @@@@ 2016-02-12
     if (kb.holds(namedNode(uri), this.ns.rdf('type'), this.ns.ldp('Resource'))) {
