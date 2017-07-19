@@ -411,7 +411,7 @@ class Fetcher {
   constructor (store, options = {}) {
     this.store = store
     this.timeout = options.timeout || 30000
-    this._fetch = options.fetch || require('node-fetch')
+    this._fetch = options.fetch || global.fetch || require('node-fetch')
     this.appNode = this.store.bnode() // Denoting this session
     this.store.fetcher = this // Bi-linked
     this.requested = {}
@@ -697,7 +697,7 @@ class Fetcher {
     options.actualProxyURI = actualProxyURI
 
     if (!options.noMeta) {
-      this.addRequestMeta(docuri, options)
+      this.saveRequestMetadata(docuri, options)
     }
 
     return this._fetch(actualProxyURI, options)
@@ -950,7 +950,7 @@ class Fetcher {
    * @param uri
    * @param options
    *
-   * @returns {Promise<XMLHttpRequest>}
+   * @returns {Promise<Response>}
    */
   webOperation (method, uri, options = {}) {
     options.method = method
@@ -998,7 +998,7 @@ class Fetcher {
         outstanding[u] = true
         this.lookedUp[u] = true
 
-        this.requestURI(Uri.docpart(u), rterm, options, (ok, body, xhr) => {
+        this.requestURI(Uri.docpart(u), rterm, options, (ok, body) => {
           if (ok) {
             if (oneDone) { oneDone(true, u) }
           } else {
@@ -1050,6 +1050,35 @@ class Fetcher {
       }
     }
     return undefined
+  }
+
+  /**
+   *
+   * @param docuri
+   * @param options
+   */
+  saveRequestMetadata (docuri, options) {
+    let req = options.req
+    let kb = this.store
+    let rterm = options.referringTerm
+
+    if (rterm && rterm.uri) {
+      kb.add(docuri, ns.link('requestedBy'), rterm.uri, this.appNode)
+    }
+
+    if (options.original && options.original.uri !== docuri) {
+      kb.add(req, ns.link('orginalURI'), kb.literal(options.original.uri),
+        this.appNode)
+    }
+
+    const now = new Date()
+    const timeNow = '[' + now.getHours() + ':' + now.getMinutes() + ':' +
+      now.getSeconds() + '] '
+
+    kb.add(req, ns.rdfs('label'),
+      kb.literal(timeNow + ' Request for ' + docuri), this.appNode)
+    kb.add(req, ns.link('requestedURI'), kb.literal(docuri), this.appNode)
+    kb.add(req, ns.link('status'), kb.collection(), this.appNode)
   }
 
   saveResponseMetadata (response, options) {
@@ -1135,29 +1164,19 @@ class Fetcher {
     handler.register(this)
   }
 
-  checkCredentialsRetry (docuri, rterm, xhr) {
-    if (!xhr.withCredentials) { return false }  // not dealt with
+  retryNoCredentials (docuri, options) {
+    console.log('web: Retrying with no credentials for ' + options.resource)
 
-    if (xhr.retriedWithNoCredentials) {
-      return true
-    }
-
-    console.log('web: Retrying with no credentials for ' + xhr.resource)
-
-    xhr.retriedWithNoCredentials = true // protect against being called twice
-    xhr.abort()
-    xhr.aborted = true
+    options.retriedWithNoCredentials = true // protect against being called twice
 
     delete this.requested[docuri] // forget the original request happened
 
-    let newOptions = Object.assign({}, xhr.options, { withCredentials: false })
+    let newOptions = Object.assign({}, options, { withCredentials: false })
 
-    this.addStatus(xhr.req,
+    this.addStatus(options.req,
       'Abort: Will retry with credentials SUPPRESSED to see if that helps')
 
-    // userCallback is already registered with this.fetchCallbacks
-    this.requestURI(docuri, rterm, newOptions)
-    return true
+    return this.fetch(docuri, newOptions)
   }
 
   /**
@@ -1179,40 +1198,36 @@ class Fetcher {
     return hostpart(here) && hostpart(uri) && hostpart(here) !== hostpart(uri)
   }
 
+  /**
+   * Called when there's a network error in fetch(), or a response
+   * with status of 0.
+   *
+   * @param response {Response|Error}
+   * @param docuri {string}
+   * @param options {Object}
+   *
+   * @returns {Promise}
+   */
   retryOnError (response, docuri, options) {
-    console.log('RETRYING ON ERROR:', response)
-  }
-
-  onerrorFactory (xhr, docuri, rterm) {
-    return () => {
-      xhr.onErrorWasCalled = true // debugging and may need it
-
-      if (xhr.status === 401 || xhr.status === 403 || xhr.status === 404) {
-        // Not an error; send to the state change handler to deal with
-        return this.onreadystatechangeFactory(xhr, docuri, rterm)()
+    if (this.isCrossSite(docuri)) {
+      // Make sure we haven't retried already
+      if (options.withCredentials && !options.retriedWithNoCredentials) {
+        return this.retryNoCredentials(docuri, options)
       }
 
-      if (this.isCrossSite(docuri)) {
-        // Make sure we haven't retried already
-        if (this.checkCredentialsRetry(docuri, rterm, xhr)) {
-          return
-        }
+      // Now attempt retry via proxy
+      let proxyUri = Fetcher.crossSiteProxy(docuri)
 
-        // Now attempt retry via proxy
-        let proxyUri = Fetcher.crossSiteProxy(docuri)
+      if (proxyUri && !options.proxyUsed) {
+        console.log('web: Direct failed so trying proxy ' + proxyUri)
 
-        if (proxyUri && !xhr.proxyUsed) {
-          console.log('web: Direct failed so trying proxy ' + proxyUri)
-
-          xhr.options.proxyUsed = true
-
-          return this.redirectTo(proxyUri, xhr)
-        }
+        return this.redirectTo(proxyUri, options)
       }
-
-      // This is either not a CORS error, or retries have been made
-      this.failFetch(xhr, `Request failed: ${xhr.status} ${xhr.statusText}`)
     }
+
+    // This is either not a CORS error, or retries have been made
+    return this.failFetch(options,
+      `Request failed: ${response.status} ${response.statusText}`, response.status)
   }
 
   // deduce some things from the HTTP transaction
@@ -1254,7 +1269,10 @@ class Fetcher {
 
     const responseNode = this.saveResponseMetadata(response, options)
 
-    const contentLocation = headers.get('content-location')
+    let contentLocation = headers.get('content-location')
+    if (contentLocation) {
+      contentLocation = Uri.join(contentLocation, docuri)
+    }
 
     const contentType = this.normalizedContentType(options, headers) || ''
 
@@ -1398,62 +1416,41 @@ class Fetcher {
   }
 
   /**
-   * Sends a new request to the specified uri. Aborts the old request (and
-   * marks it at redirected). (Extracted from `onerrorFactory()`)
+   * Sends a new request to the specified uri. (Extracted from `onerrorFactory()`)
    *
    * @param newURI {string}
-   * @param xhr {XMLHttpRequest}
+   * @param options {Object}
    *
-   * @returns {XMLHttpRequest|undefined}
+   * @returns {Promise<Response>}
    */
-  redirectTo (newURI, xhr) {
-    this.addStatus(xhr.req, 'BLOCKED -> Cross-site Proxy to <' + newURI + '>')
+  redirectTo (newURI, options) {
+    this.addStatus(options.req, 'BLOCKED -> Cross-site Proxy to <' + newURI + '>')
 
-    if (xhr.aborted) {
-      return
-    }
+    options.proxyUsed = true
 
     const kb = this.store
-    const oldReq = xhr.req  // request metadata blank node
+    const oldReq = options.req  // request metadata blank node
 
-    if (!xhr.options.noMeta) {
+    if (!options.noMeta) {
       kb.add(oldReq, ns.link('redirectedTo'), kb.sym(newURI), oldReq)
 
-      this.addRequestMeta(newURI, xhr)
+      this.saveRequestMetadata(newURI, options)
       this.addStatus(oldReq, 'redirected to new request') // why
     }
 
-    xhr.abort()
-    xhr.aborted = true
+    this.requested[options.resource.uri] = 'redirected'
+    this.redirectedTo[options.resource.uri] = newURI
 
-    xhr.redirected = true
-    this.requested[xhr.resource.uri] = 'redirected'
-    this.redirectedTo[xhr.resource.uri] = newURI
+    let newOptions = Object.assign({}, options)
 
-    // Nothing needs to happen to the callbacks on redirection;
-    // both doneFetch and failFetch dispatch the original uri's callbacks only
-    // old:
-    // if (this.fetchCallbacks[xhr.resource.uri]) {
-    //   if (!this.fetchCallbacks[newURI]) {
-    //     this.fetchCallbacks[newURI] = []
-    //   }
-    //   // this.fetchCallbacks[newURI] === this.fetchCallbacks[newURI].concat(this.fetchCallbacks[xhr.resource.uri])
-    //   delete this.fetchCallbacks[xhr.resource.uri]
-    // }
+    return this.fetch(newURI, newOptions)
+      .then(response => {
+        if (!newOptions.noMeta) {
+          kb.add(oldReq, ns.link('redirectedRequest'), newOptions.req, this.appNode)
+        }
 
-    this.fireCallbacks('redirected', xhr.args) // Are these args right? @@@
-
-    let options = Object.assign({}, xhr.options, { baseURI: xhr.original })
-
-    const newXhr = this.requestURI(newURI, xhr.resource, options, xhr.userCallback)
-
-    if (newXhr) {
-      if (!options.noMeta) {
-        kb.add(oldReq, ns.link('redirectedRequest'), newXhr.req, this.appNode)
-      }
-    }
-
-    return newXhr
+        return response
+      })
   }
 
   /**
@@ -1473,27 +1470,17 @@ class Fetcher {
     this.nowOrWhenFetched(docuri, rterm, userCallback, options)
   }
 
-  xhr () {
-    return Util.XMLHTTPFactory()
-  }
-
   setRequestTimeout (options) {
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve(this.failFetch(options, 'Request timed out', 'timeout'))
       }, this.timeout)
     })
-
-    // setTimeout(() => {
-    //   if (xhr.readyState !== 4 && this.isPending(xhr.resource.uri)) {
-    //     this.failFetch(xhr, 'requestTimeout')
-    //   }
-    // }, this.timeout)
   }
 
   addFetchCallback (uri, callback) {
     if (!this.fetchCallbacks[uri]) {
-      this.fetchCallbacks[uri] = [ callback ]
+      this.fetchCallbacks[uri] = [callback]
     } else {
       this.fetchCallbacks[uri].push(callback)
     }
@@ -1515,35 +1502,6 @@ class Fetcher {
     }
 
     return acceptstring
-  }
-
-  /**
-   *
-   * @param docuri
-   * @param options
-   */
-  addRequestMeta (docuri, options) {
-    let req = options.req
-    let kb = this.store
-    let rterm = options.referringTerm
-
-    if (rterm && rterm.uri) {
-      kb.add(docuri, ns.link('requestedBy'), rterm.uri, this.appNode)
-    }
-
-    if (options.original && options.original.uri !== docuri) {
-      kb.add(req, ns.link('orginalURI'), kb.literal(options.original.uri),
-        this.appNode)
-    }
-
-    const now = new Date()
-    const timeNow = '[' + now.getHours() + ':' + now.getMinutes() + ':' +
-      now.getSeconds() + '] '
-
-    kb.add(req, ns.rdfs('label'),
-      kb.literal(timeNow + ' Request for ' + docuri), this.appNode)
-    kb.add(req, ns.link('requestedURI'), kb.literal(docuri), this.appNode)
-    kb.add(req, ns.link('status'), kb.collection(), this.appNode)
   }
   // var updatesVia = new $rdf.UpdatesVia(this) // Subscribe to headers
 // @@@@@@@@ This is turned off because it causes a websocket to be set up for ANY fetch

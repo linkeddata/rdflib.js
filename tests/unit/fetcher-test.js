@@ -7,7 +7,6 @@ import sinonChai from 'sinon-chai'
 import dirtyChai from 'dirty-chai'
 import nock from 'nock'
 import rdf from '../../src/index'
-import { XMLHttpRequest } from 'xmlhttprequest'
 
 chai.use(sinonChai)
 chai.use(dirtyChai)
