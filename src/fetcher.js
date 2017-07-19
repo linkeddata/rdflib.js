@@ -738,7 +738,7 @@ class Fetcher {
       options = p2
     }
 
-    this.load(uri, options)
+    this.fetch(uri, options)
       .then(result => {
         if (userCallback) {
           userCallback(true, null, result)
@@ -748,8 +748,6 @@ class Fetcher {
         console.log(err)
         userCallback(false, err.message)
       })
-
-    // this.requestURI(uri, options.referringTerm, options, userCallback)
   }
 
   get (uri, p2, userCallback, options) {
@@ -963,60 +961,22 @@ class Fetcher {
    * Looks up something.
    * Looks up all the URIs a things has.
    *
-   * @param term {Node} canonical term for the thing whose URI is
+   * @param term {NamedNode} canonical term for the thing whose URI is
    *   to be dereferenced
-   * @param rterm {Node} the resource which referred to this
+   * @param rterm {NamedNode} the resource which referred to this
    *   (for tracking bad links)
-   * @param options {Object} (old: force parameter) or dictionary of options
-   * @param options.force {boolean} Load the data even if loaded before
    *
-   * @param oneDone {Function} is called as callback(ok, errorbody, xhr)
-   *   for each one
-   * @param allDone {Function} is called as callback(ok, errorbody)
-   *   for all of them
-   *
-   * @returns {number} Number of URIs fetched
+   * @returns {Promise}
    */
-  lookUpThing (term, rterm, options, oneDone, allDone) {
-    let uris = this.store.uris(term) // Get all URIs
-    let success = true
-    let errors = ''
-    let outstanding = {}
-    let force
+  lookUpThing (term, rterm) {
+    let uris = this.store.uris(term)  // Get all URIs
+    uris = uris.map(u => Uri.docpart(u))  // Drop hash fragments
 
-    if (options === false || options === true) { // Old signature
-      force = options
-      options = { force: force }
-    } else {
-      if (options === undefined) { options = {} }
-      // force = !!options.force
-    }
+    uris.forEach(u => {
+      this.lookedUp[u] = true
+    })
 
-    if (uris) {
-      for (let i = 0; i < uris.length; i++) {
-        let u = uris[i]
-        outstanding[u] = true
-        this.lookedUp[u] = true
-
-        this.requestURI(Uri.docpart(u), rterm, options, (ok, body) => {
-          if (ok) {
-            if (oneDone) { oneDone(true, u) }
-          } else {
-            if (oneDone) { oneDone(false, body) }
-            success = false
-            errors += body + '\n'
-          }
-          delete outstanding[u]
-          if (Object.keys(outstanding).length > 0) {
-            return
-          }
-          if (allDone) {
-            allDone(success, errors)
-          }
-        })
-      }
-    }
-    return uris.length
+    return this.fetch(uris, { referringTerm: rterm })
   }
 
   /**
@@ -1451,23 +1411,6 @@ class Fetcher {
 
         return response
       })
-  }
-
-  /**
-   * Requests a document URI and arranges to load the document. This is the main
-   * fetching function, used by `load()` and `nowOrWhenFetched()`.
-   *
-   * @param docuri {Node|string} Term for the thing whose URI is to be dereferenced
-   *
-   * @param rterm {Node} Referring term, the resource which referred to this
-   *   (for tracking bad links)
-   *
-   * @param [options={}] {Object}
-   *
-   * @param [userCallback] {Function}
-   */
-  requestURI (docuri, rterm, options, userCallback) {
-    this.nowOrWhenFetched(docuri, rterm, userCallback, options)
   }
 
   setRequestTimeout (options) {

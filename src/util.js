@@ -75,7 +75,8 @@ function ajarHandleNewTerm (kb, p, requestedBy) {
     log.warn('Assuming server still broken, faking redirect of <' + p.uri +
       '> to <' + docuri + '>')
   }
-  sf.requestURI(docuri, requestedBy)
+
+  return sf.fetch(docuri, { referringTerm: requestedBy })
 }
 
 /**
