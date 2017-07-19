@@ -7,12 +7,12 @@ class BlankNode extends Node {
     super()
     this.termType = BlankNode.termType
     if (id && (typeof id !== 'string')) {
-      throw "Bad id argument to new bkank node: " + id
+      throw new Error('Bad id argument to new blank node: ' + id)
     }
-    this.id = '' + BlankNode.nextId // Ignore param as not globally unique
-    BlankNode.nextId++
-    this.value = this.id // for API compatability
+    this.id = '' + BlankNode.nextId++  // Ignore param as not globally unique
+    this.value = id || this.id  // for API compatibility
   }
+
   compareTerm (other) {
     if (this.classOrder < other.classOrder) {
       return -1
@@ -28,18 +28,22 @@ class BlankNode extends Node {
     }
     return 0
   }
+
   copy (formula) { // depends on the formula
     var bnodeNew = new BlankNode()
     formula.copyTo(this, bnodeNew)
     return bnodeNew
   }
+
   toCanonical () {
     return '_:' + this.value
   }
+
   toString () {
     return BlankNode.NTAnonymousNodePrefix + this.id
   }
 }
+
 BlankNode.nextId = 0
 BlankNode.termType = 'BlankNode'
 BlankNode.NTAnonymousNodePrefix = '_:n'
