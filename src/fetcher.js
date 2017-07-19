@@ -750,10 +750,6 @@ class Fetcher {
       })
   }
 
-  get (uri, p2, userCallback, options) {
-    this.nowOrWhenFetched(uri, p2, userCallback, options)
-  }
-
   /**
    * Records a status message (as a literal node) by appending it to the
    * request's metadata status collection.
