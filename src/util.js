@@ -13,7 +13,6 @@ module.exports.dtstamp = dtstamp
 module.exports.DOMParserFactory = domParser
 module.exports.domToString = domToString
 module.exports.dumpNode = dumpNode
-module.exports.getHTTPHeaders = getHTTPHeaders
 module.exports.heavyCompare = heavyCompare
 module.exports.heavyCompareSPO = heavyCompareSPO
 module.exports.output = output
@@ -24,8 +23,6 @@ module.exports.string_startswith = stringStartsWith
 module.exports.string = {}
 module.exports.string.template = stringTemplate
 module.exports.uri = require('./uri')  // TODO: Remove this mixed usage
-// module.exports.variablesIn = variablesIn
-module.exports.XMLHTTPFactory = xhr
 module.exports.log = log
 
 module.exports.mediaTypeClass = function(mediaType){
@@ -270,29 +267,6 @@ function dtstamp () {
 }
 
 /**
- * Returns a hashmap of HTTP headers and their values.
- * @@ Bug: Assumes that each header only occurs once.
- * Also note that a , in a header value is just the same as having two headers.
- */
-function getHTTPHeaders (xhr) {
-  var lines = xhr.getAllResponseHeaders().split('\n')
-  var headers = {}
-  var last
-  for (var x = 0; x < lines.length; x++) {
-    if (lines[x].length > 0) {
-      var pair = lines[x].split(': ')
-      if (typeof pair[1] === 'undefined') { // continuation
-        headers[last] += '\n' + pair[0]
-      } else {
-        last = pair[0].toLowerCase()
-        headers[last] = pair[1]
-      }
-    }
-  }
-  return headers
-}
-
-/**
  * Compares statements (heavy comparison for repeatable canonical ordering)
  */
 function heavyCompare (x, y, g, uriMap) {
@@ -436,56 +410,3 @@ function stackString (e) {
   return str
 }
 
-
-/**
- * Finds the variables in a graph (shallow).
- * Note: UNUSED.
- */
-// function variablesIn (g) {
-//   for (var i = 0; i < g.statements.length; i++) {
-//     var st = g.statatements[i]
-//     var vars = {}
-//     if (st.subject instanceof $rdf.Variable) {
-//       vars[st.subject.toNT()] = true
-//     }
-//     if (st.predicate instanceof $rdf.Variable) {
-//       vars[st.predicate.toNT()] = true
-//     }
-//     if (st.object instanceof $rdf.Variable) {
-//       vars[st.object.toNT()] = true
-//     }
-//   }
-//   return vars
-// }
-
-/**
- * Returns an XMLHttpRequest object for the appropriate current runtime
- * environment. Exports as `XMLHTTPFactory`
- */
-function xhr () {
-  var XMLHttpRequest
-  // Running inside the Tabulator Firefox extension
-  if (typeof tabulator !== 'undefined' && tabulator.isExtension) {
-    // Cannot use XMLHttpRequest natively, must request it through SDK
-    return Components
-      .classes['@mozilla.org/xmlextras/xmlhttprequest;1']
-      .createInstance()
-      .QueryInterface(Components.interfaces.nsIXMLHttpRequest)
-  } else if (typeof window !== 'undefined' && 'XMLHttpRequest' in window) {
-    // Running inside the browser
-    XMLHttpRequest = window.XMLHttpRequest
-    return new XMLHttpRequest()
-  } else if (typeof module !== 'undefined' && module && module.exports) {
-    // Running in Node.js
-    XMLHttpRequest = require('xmlhttprequest').XMLHttpRequest
-    return new XMLHttpRequest()
-  } else if (window.ActiveXObject) {
-    try {
-      return new ActiveXObject('Msxml2.XMLHTTP')
-    } catch (e) {
-      return new ActiveXObject('Microsoft.XMLHTTP')
-    }
-  } else {
-    return false
-  }
-}
