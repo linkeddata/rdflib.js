@@ -6,10 +6,23 @@ class BlankNode extends Node {
   constructor (id) {
     super()
     this.termType = BlankNode.termType
-    if (id && (typeof id !== 'string')) {
-      throw new Error('Bad id argument to new blank node: ' + id)
+
+    if (id) {
+      if (typeof id !== 'string') {
+        console.log('Bad blank id:', id)
+        throw new Error('Bad id argument to new blank node: ' + id)
+      }
+      if (id.includes('#')) {
+        // Is a URI with hash fragment
+        let fragments = id.split('#')
+        id = fragments[fragments.length - 1]
+      }
+      // this.id = id
+      this.id = '' + BlankNode.nextId++
+    } else {
+      this.id = '' + BlankNode.nextId++
     }
-    this.id = id || '' + BlankNode.nextId++
+
     this.value = this.id
   }
 
