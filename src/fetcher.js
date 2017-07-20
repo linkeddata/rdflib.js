@@ -430,7 +430,7 @@ class Fetcher {
     this.redirectedTo = {} // When 'redirected'
     this.fetchCallbacks = {} // fetchCallbacks[uri].push(callback)
 
-    this.nonexistant = {} // keep track of explicit 404s -> we can overwrite etc
+    this.nonexistent = {} // keep track of explicit 404s -> we can overwrite etc
     this.lookedUp = {}
     this.handlers = []
     this.mediatypes = {
@@ -570,19 +570,13 @@ class Fetcher {
   /**
    * Promise-based fetch function
    *
-   * NamedNode -> Promise of xhr
-   * uri string -> Promise of xhr
-   * Array of the above -> Promise of array of xhr
-   *
-   * @@ todo: If p1 is array then sequence or parallel fetch of all
-   *
-   * @param uri {Array<Node>|Array<string>|Node|string}
+   * @param uri {Array<NamedNode>|Array<string>|NamedNode|string}
    *
    * @param [options={}] {Object}
    *
    * @param [options.fetch] {Function}
    *
-   * @param [options.referringTerm] {Node} Referring term, the resource which
+   * @param [options.referringTerm] {NamedNode} Referring term, the resource which
    *   referred to this (for tracking bad links)
    *
    * @param [options.contentType] {string} Provided content type (for writes)
@@ -614,21 +608,8 @@ class Fetcher {
   fetch (uri, options = {}) {
     if (uri instanceof Array) {
       return Promise.all(
-        uri.map(x => { return this.fetch(x, options) })
+        uri.map(x => { return this.fetch(x, Object.assign({}, options)) })
       )
-    }
-
-    let kb = this.store
-
-    options = Object.assign({}, options)  // copy
-    options.resource = kb.sym(uri) // This might be proxified
-    options.baseURI = options.baseURI || uri // Preserve though proxying etc
-    options.original = kb.sym(options.baseURI)
-    options.req = kb.bnode()
-    options.headers = options.headers || {}
-
-    if (options.contentType) {
-      options.headers['content-type'] = options.contentType
     }
 
     return Promise
@@ -640,6 +621,42 @@ class Fetcher {
 
   load (uri, options) {
     return this.fetch(uri, options)
+  }
+
+  initFetchOptions (uri, options) {
+    let kb = this.store
+
+    options.resource = kb.sym(uri) // This might be proxified
+    options.baseURI = options.baseURI || uri // Preserve though proxying etc
+    options.original = kb.sym(options.baseURI)
+    options.req = kb.bnode()
+    options.headers = options.headers || {}
+
+    if (options.contentType) {
+      options.headers['content-type'] = options.contentType
+    }
+
+    if (options.force) {
+      options.cache = 'no-cache'
+    }
+
+    let acceptString = this.acceptString()
+    options.headers['accept'] = acceptString
+
+    let requestedURI = Fetcher.offlineOverride(uri)
+    options.requestedURI = requestedURI
+
+    if (Fetcher.withCredentials(requestedURI, options)) {
+      options.credentials = 'include'
+    }
+
+    let actualProxyURI = Fetcher.proxyIfNecessary(requestedURI)
+    if (requestedURI !== actualProxyURI) {
+      options.proxyUsed = true
+    }
+    options.actualProxyURI = actualProxyURI
+
+    return options
   }
 
   /**
@@ -654,55 +671,42 @@ class Fetcher {
     let docuri = uri.uri || uri
     docuri = docuri.split('#')[0]
 
+    options = this.initFetchOptions(uri, options)
+
     if (Fetcher.unsupportedProtocol(docuri)) {
       return this.failFetch(options, 'Unsupported protocol', 'unsupported_protocol')
     }
 
-    if (options.force) { options.cache = 'no-cache' }
-
-    let acceptString = this.acceptString()
-    options.headers['accept'] = acceptString
-    this.addStatus(options.req, 'Accept: ' + acceptString)
-
     let state = this.getState(docuri)
+
     if (!options.force) {
       if (state === 'fetched') {  // URI already fetched and added to store
-        return this.doneFetch(options, { status: 200, ok: true })
+        return Promise.resolve(
+          this.doneFetch(options, { status: 200, ok: true })
+        )
       }
       if (state === 'failed') {
-        return this.failFetch(options, 'Previously failed: ' +
-          this.requested[docuri], this.requested[docuri])
+        return this.failFetch(options, 'Previously failed: ' + this.requested[docuri],
+          this.requested[docuri])
       }
     } else {
-      delete this.nonexistant[docuri]
+      // options.force == true
+      delete this.nonexistent[docuri]
     }
 
     this.fireCallbacks('request', [docuri])
 
-    // if (state === 'requested') {
-    //   return // Don't ask again - wait for existing call
-    // } else {
-    //   this.requested[docuri] = true  // mark this uri as 'requested'
-    // }
     this.requested[docuri] = true  // mark this uri as 'requested'
-
-    let requestedURI = Fetcher.offlineOverride(docuri)
-    options.requestedURI = requestedURI
-
-    if (Fetcher.withCredentials(requestedURI, options)) {
-      options.credentials = 'include'
-    }
-
-    let actualProxyURI = Fetcher.proxyIfNecessary(requestedURI)
-    options.actualProxyURI = actualProxyURI
 
     if (!options.noMeta) {
       this.saveRequestMetadata(docuri, options)
     }
 
+    let { actualProxyURI } = options
+
     return this._fetch(actualProxyURI, options)
       .then(response => this.handleResponse(response, docuri, options))
-      .catch(error => this.retryOnError(error, docuri, options))
+      .catch(error => this.handleError(error, docuri, options))
   }
 
   /**
@@ -745,7 +749,7 @@ class Fetcher {
         }
       })
       .catch(err => {
-        console.log(err)
+        // console.log(err)
         userCallback(false, err.message)
       })
   }
@@ -807,6 +811,7 @@ class Fetcher {
     this.fireCallbacks('fail', [options.original.uri, errorMessage])
 
     return Promise.resolve({
+      ok: false,
       error: errorMessage,
       status: statusCode
     })
@@ -930,7 +935,7 @@ class Fetcher {
     return this.webOperation('DELETE', uri, options)
       .then(response => {
         this.requested[uri] = 404
-        this.nonexistant[uri] = true
+        this.nonexistent[uri] = true
         this.unload(this.store.sym(uri))
 
         return response
@@ -1017,6 +1022,8 @@ class Fetcher {
     let req = options.req
     let kb = this.store
     let rterm = options.referringTerm
+
+    this.addStatus(options.req, 'Accept: ' + options.headers['accept'])
 
     if (rterm && rterm.uri) {
       kb.add(docuri, ns.link('requestedBy'), rterm.uri, this.appNode)
@@ -1164,7 +1171,7 @@ class Fetcher {
    *
    * @returns {Promise}
    */
-  retryOnError (response, docuri, options) {
+  handleError (response, docuri, options) {
     if (this.isCrossSite(docuri)) {
       // Make sure we haven't retried already
       if (options.withCredentials && !options.retriedWithNoCredentials) {
@@ -1177,7 +1184,7 @@ class Fetcher {
       if (proxyUri && !options.proxyUsed) {
         console.log('web: Direct failed so trying proxy ' + proxyUri)
 
-        return this.redirectTo(proxyUri, options)
+        return this.redirectToProxy(proxyUri, options)
       }
     }
 
@@ -1225,12 +1232,9 @@ class Fetcher {
 
     const responseNode = this.saveResponseMetadata(response, options)
 
-    let contentLocation = headers.get('content-location')
-    if (contentLocation) {
-      contentLocation = Uri.join(contentLocation, docuri)
-    }
-
     const contentType = this.normalizedContentType(options, headers) || ''
+
+    let contentLocation = headers.get('content-location')
 
     // this.fireCallbacks('recv', xhr.args)
     // this.fireCallbacks('headers', [{uri: docuri, headers: xhr.headers}])
@@ -1238,12 +1242,13 @@ class Fetcher {
     // Check for masked errors (CORS, etc)
     if (response.status === 0) {
       console.log('Masked error - status 0 for ' + docuri)
-      return this.retryOnError(response, docuri, options)
+      return this.handleError(response, docuri, options)
     }
 
     if (response.status >= 400) {
       if (response.status === 404) {
-        this.nonexistant[docuri] = true
+        this.nonexistent[options.original.uri] = true
+        this.nonexistent[docuri] = true
       }
 
       return this.saveErrorResponse(response, responseNode)
@@ -1274,7 +1279,7 @@ class Fetcher {
 
     // If we have already got the thing at this location, abort
     if (contentLocation) {
-      let udoc = Uri.join(docuri, contentLocation)
+      let udoc = Uri.join(contentLocation, docuri)
 
       if (!options.force && udoc !== docuri && this.requested[udoc] === 'done') {
         // we have already fetched this
@@ -1379,7 +1384,7 @@ class Fetcher {
    *
    * @returns {Promise<Response>}
    */
-  redirectTo (newURI, options) {
+  redirectToProxy (newURI, options) {
     this.addStatus(options.req, 'BLOCKED -> Cross-site Proxy to <' + newURI + '>')
 
     options.proxyUsed = true
@@ -1389,8 +1394,6 @@ class Fetcher {
 
     if (!options.noMeta) {
       kb.add(oldReq, ns.link('redirectedTo'), kb.sym(newURI), oldReq)
-
-      this.saveRequestMetadata(newURI, options)
       this.addStatus(oldReq, 'redirected to new request') // why
     }
 
@@ -1398,6 +1401,7 @@ class Fetcher {
     this.redirectedTo[options.resource.uri] = newURI
 
     let newOptions = Object.assign({}, options)
+    newOptions.baseURI = options.resource.uri
 
     return this.fetch(newURI, newOptions)
       .then(response => {

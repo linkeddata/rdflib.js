@@ -106,14 +106,14 @@ describe('Fetcher', () => {
     })
   })
 
-  describe('load', () => {
+  describe('fetch', () => {
     // let fetcher, uri, options, xhr
 
     it('should load multiple docs')
   })
 
-  describe.skip('requestURI', () => {
-    let fetcher, uri, options, rterm
+  describe('fetchUri', () => {
+    let fetcher, uri, options
 
     beforeEach(() => {
       uri = 'https://example.com/newdoc.ttl'
@@ -121,128 +121,115 @@ describe('Fetcher', () => {
 
       fetcher = new Fetcher(rdf.graph())
 
-      let xhr = new XMLHttpRequest()
-      xhr.open = sinon.stub()
-      xhr.send = sinon.stub()
-      xhr.setRequestHeader = sinon.stub()
-
-      fetcher.xhr = sinon.stub().returns(xhr)
-      sinon.spy(fetcher, 'failFetch')
+      fetcher._fetch = sinon.stub().resolves()
+      fetcher.handleResponse = sinon.stub().resolves()
+      sinon.spy(fetcher, 'handleError')
     })
 
-    it('should fail for an unsupported uri protocol', done => {
+    it('should fail for an unsupported uri protocol', () => {
       uri = 'tel:+1-816-555-1212'
 
-      fetcher.requestURI(uri, rterm, options, (ok, message) => {
-        expect(ok).to.be.false()
-        expect(message).to.equal('Unsupported protocol')
-        done()
-      })
+      return fetcher.fetchUri(uri, options)
+        .then(result => {
+          expect(result.ok).to.be.false()
+          expect(result.error).to.equal('Unsupported protocol')
+          expect(fetcher.requested[uri]).to.equal('unsupported_protocol')
+        })
     })
 
-    describe('force: false', () => {
-      it('should succeed with a no-op if the uri was previously fetched', done => {
+    it('should mark the uri as requested', () => {
+      return fetcher.fetchUri(uri, options)
+        .then(() => {
+          expect(fetcher.requested[uri]).to.be.true()
+        })
+    })
+
+    it('should save request metadata if noMeta is not set', () => {
+      sinon.spy(fetcher, 'saveRequestMetadata')
+
+      return fetcher.fetchUri(uri, options)
+        .then(() => {
+          expect(fetcher.saveRequestMetadata).to.have.been.called()
+        })
+    })
+
+    it('should not save request metadata if noMeta is set', () => {
+      sinon.spy(fetcher, 'saveRequestMetadata')
+
+      options.noMeta = true
+
+      return fetcher.fetchUri(uri, options)
+        .then(() => {
+          expect(fetcher.saveRequestMetadata).to.not.have.been.called()
+        })
+    })
+
+    describe('force: false (undefined)', () => {
+      it('should succeed with a no-op if the uri was previously fetched', () => {
         fetcher.getState = sinon.stub().withArgs(uri).returns('fetched')
 
-        fetcher.requestURI(uri, rterm, options, (ok, message, xhr) => {
-          expect(ok).to.be.true()
-          expect(message).to.be.undefined()
-          expect(xhr).to.be.undefined()
-          done()
-        })
+        return fetcher.fetchUri(uri, options)
+          .then(response => {
+            expect(response.ok).to.be.true()
+            expect(response.status).to.equal(200)
+            expect(fetcher._fetch).to.not.have.been.called()
+            expect(fetcher.handleError).to.not.have.been.called()
+            expect(fetcher.requested[uri]).to.equal('done')
+          })
       })
 
-      it('should fail if the uri fetch previously failed', done => {
+      it('should fail if the uri fetch previously failed', () => {
         fetcher.getState = sinon.stub().withArgs(uri).returns('failed')
 
-        fetcher.requestURI(uri, rterm, options, (ok, message) => {
-          expect(ok).to.be.false()
-          expect(message.startsWith('Previously failed.')).to.be.true()
-          done()
-        })
+        return fetcher.fetchUri(uri, options)
+          .then(response => {
+            expect(response.ok).to.be.false()
+            expect(response.error.startsWith('Previously failed:')).to.be.true()
+            expect(fetcher._fetch).to.not.have.been.called()
+            expect(fetcher.handleError).to.not.have.been.called()
+          })
+      })
+
+      it('should not delete the uri from nonexistent list', () => {
+        fetcher.nonexistent[uri] =  true
+
+        return fetcher.fetchUri(uri, options)
+          .then(() => {
+            expect(fetcher.nonexistent[uri]).to.be.true()
+          })
       })
     })
 
     describe('force: true', () => {
-      it('should not succeed with a no-op if the uri was previously fetched', () => {
-        options.force = true
-        fetcher.getState = sinon.stub().withArgs(uri).returns('fetched')
-
-        let userCallback = sinon.stub()
-
-        let xhr = fetcher.requestURI(uri, rterm, options, userCallback)
-
-        expect(xhr.send).to.have.been.called()
-        expect(userCallback).to.not.have.been.called()
-        expect(fetcher.failFetch).to.not.have.been.called()
-      })
-
-      it('should not fail if the uri fetch previously failed', () => {
-        options.force = true
-        fetcher.getState = sinon.stub().withArgs(uri).returns('failed')
-
-        let userCallback = sinon.stub()
-
-        let xhr = fetcher.requestURI(uri, rterm, options, userCallback)
-
-        expect(xhr.send).to.have.been.called()
-        expect(userCallback).to.not.have.been.called()
-        expect(fetcher.failFetch).to.not.have.been.called()
-      })
-
-      it('should set cache control headers', () => {
+      it('should delete the uri from the nonexistent list', () => {
         options.force = true
 
-        let xhr = fetcher.requestURI(uri, rterm, options)
+        fetcher.nonexistent[uri] =  true
 
-        expect(xhr.setRequestHeader).to.have.been.calledWith('Cache-control', 'no-cache')
-        expect(fetcher.failFetch).to.not.have.been.called()
+        return fetcher.fetchUri(uri, options)
+          .then(() => {
+            expect(fetcher.nonexistent[uri]).to.be.undefined()
+          })
       })
-    })
-
-    it('should return with a no-op if if the uri is already being requested', () => {
-      fetcher.getState = sinon.stub().withArgs(uri).returns('requested')
-
-      let userCallback = sinon.stub()
-
-      let result = fetcher.requestURI(uri, rterm, options, userCallback)
-
-      expect(result).to.be.undefined()
-      expect(userCallback).to.not.have.been.called()
-    })
-
-    it('should open the xhr request', () => {
-      let xhr = fetcher.requestURI(uri, rterm, options)
-
-      expect(xhr.open).to.have.been.calledWith('GET', uri, fetcher.async)
-      expect(fetcher.failFetch).to.not.have.been.called()
-    })
-
-    it('should send the xhr request', () => {
-      let xhr = fetcher.requestURI(uri, rterm, options)
-
-      expect(xhr.send).to.have.been.calledWith(null)
-      expect(fetcher.failFetch).to.not.have.been.called()
-    })
-
-    it('should set the Accept header', () => {
-      let xhr = fetcher.requestURI(uri, rterm, options)
-
-      let expectedHeader = 'image/*;q=0.9, */*;q=0.1, application/rdf+xml;q=0.9, application/xhtml+xml, text/xml;q=0.5, application/xml;q=0.5, text/html;q=0.9, text/plain;q=0.5, text/n3;q=1.0, text/turtle;q=1'
-
-      expect(xhr.setRequestHeader).to.have.been.calledWith('Accept', expectedHeader)
-    })
-
-    it('should add the userCallback to the fetchCallbacks list', () => {
-      sinon.spy(fetcher, 'addFetchCallback')
-      let userCallback = sinon.stub()
-
-      fetcher.requestURI(uri, rterm, options, userCallback)
-
-      expect(fetcher.addFetchCallback).to.have.been.calledWith(uri, userCallback)
-      expect(fetcher.failFetch).to.not.have.been.called()
     })
   })
+
+  // it('should set cache control headers', () => {
+  //   options.force = true
+  //
+  //   let xhr = fetcher.requestURI(uri, rterm, options)
+  //
+  //   expect(xhr.setRequestHeader).to.have.been.calledWith('Cache-control', 'no-cache')
+  //   expect(fetcher.failFetch).to.not.have.been.called()
+  // })
+
+  // it('should set the Accept header', () => {
+  //   let xhr = fetcher.requestURI(uri, rterm, options)
+  //
+  //   let expectedHeader = 'image/*;q=0.9, */*;q=0.1, application/rdf+xml;q=0.9, application/xhtml+xml, text/xml;q=0.5, application/xml;q=0.5, text/html;q=0.9, text/plain;q=0.5, text/n3;q=1.0, text/turtle;q=1'
+  //
+  //   expect(xhr.setRequestHeader).to.have.been.calledWith('Accept', expectedHeader)
+  // })
 
   describe('offlineOverride', () => {
     it('should pass through the given uri in a node environment', () => {

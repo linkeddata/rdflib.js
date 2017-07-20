@@ -950,7 +950,7 @@ class UpdateManager {
           return callback(doc.uri, response.ok, response.error, response)
         }
 
-        delete kb.fetcher.nonexistant[doc.uri]
+        delete kb.fetcher.nonexistent[doc.uri]
         delete kb.fetcher.requested[doc.uri]
 
         if (typeof data !== 'string') {
