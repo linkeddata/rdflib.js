@@ -9,8 +9,8 @@ class BlankNode extends Node {
     if (id && (typeof id !== 'string')) {
       throw new Error('Bad id argument to new blank node: ' + id)
     }
-    this.id = '' + BlankNode.nextId++  // Ignore param as not globally unique
-    this.value = id || this.id  // for API compatibility
+    this.id = id || '' + BlankNode.nextId++
+    this.value = this.id
   }
 
   compareTerm (other) {
