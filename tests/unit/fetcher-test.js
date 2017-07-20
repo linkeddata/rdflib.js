@@ -164,6 +164,18 @@ describe('Fetcher', () => {
         })
     })
 
+    it('should use the proxy uri when appropriate', () => {
+      let actualProxyURI = 'https://example.com/proxy?uri=whatever'
+      let options = { actualProxyURI }
+      fetcher.initFetchOptions = sinon.stub().returns(options)
+      fetcher.saveRequestMetadata = sinon.stub()
+
+      return fetcher.fetchUri(uri, options)
+        .then(() => {
+          expect(fetcher._fetch).to.have.been.calledWith(actualProxyURI, options)
+        })
+    })
+
     describe('force: false (undefined)', () => {
       it('should succeed with a no-op if the uri was previously fetched', () => {
         fetcher.getState = sinon.stub().withArgs(uri).returns('fetched')
@@ -214,22 +226,40 @@ describe('Fetcher', () => {
     })
   })
 
-  // it('should set cache control headers', () => {
-  //   options.force = true
-  //
-  //   let xhr = fetcher.requestURI(uri, rterm, options)
-  //
-  //   expect(xhr.setRequestHeader).to.have.been.calledWith('Cache-control', 'no-cache')
-  //   expect(fetcher.failFetch).to.not.have.been.called()
-  // })
+  describe('initFetchOptions', () => {
+    let fetcher, uri, options
 
-  // it('should set the Accept header', () => {
-  //   let xhr = fetcher.requestURI(uri, rterm, options)
-  //
-  //   let expectedHeader = 'image/*;q=0.9, */*;q=0.1, application/rdf+xml;q=0.9, application/xhtml+xml, text/xml;q=0.5, application/xml;q=0.5, text/html;q=0.9, text/plain;q=0.5, text/n3;q=1.0, text/turtle;q=1'
-  //
-  //   expect(xhr.setRequestHeader).to.have.been.calledWith('Accept', expectedHeader)
-  // })
+    beforeEach(() => {
+      uri = 'https://example.com/newdoc.ttl'
+      options = {}
+
+      fetcher = new Fetcher(rdf.graph())
+    })
+
+    it('should set content type if passed in', () => {
+      options.contentType = 'text/n3'
+
+      options = fetcher.initFetchOptions(uri, options)
+
+      expect(options.headers['content-type']).to.equal(options.contentType)
+    })
+
+    it('should set cache control headers when force: true', () => {
+      options.force = true
+
+      options = fetcher.initFetchOptions(uri, options)
+
+      expect(options.cache).to.equal('no-cache')
+    })
+
+    it('should set the Accept header', () => {
+      options = fetcher.initFetchOptions(uri, options)
+
+      let expectedHeader = 'image/*;q=0.9, */*;q=0.1, application/rdf+xml;q=0.9, application/xhtml+xml, text/xml;q=0.5, application/xml;q=0.5, text/html;q=0.9, text/plain;q=0.5, text/n3;q=1.0, text/turtle;q=1'
+
+      expect(options.headers['accept']).to.equal(expectedHeader)
+    })
+  })
 
   describe('offlineOverride', () => {
     it('should pass through the given uri in a node environment', () => {
