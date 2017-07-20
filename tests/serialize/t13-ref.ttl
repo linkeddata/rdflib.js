@@ -34,14 +34,16 @@ str:ZooReading1
     str:time "2015-03-16T17:53Z"^^XML:dateTime.
 _:n5 str:name "Coretta Scott King".
 
-[ str:loves [] ].
-
 [
     a str:Speech;
     str:author str:MLK;
     str:date "1963-08-23"^^XML:date;
     str:title "I have a dream"
 ].
+[ str:friend str:MLK ].
+
+[ str:loves [] ].
+
 [
     a str:Marriage;
     str:offspring
@@ -64,5 +66,3 @@ _:n5 str:name "Coretta Scott King".
             ];
     str:spouse str:MLK, _:n5
 ].
-[ str:friend str:MLK ].
-
