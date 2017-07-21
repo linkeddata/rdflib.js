@@ -17,10 +17,10 @@ class BlankNode extends Node {
         let fragments = id.split('#')
         id = fragments[fragments.length - 1]
       }
-      // this.id = id
-      this.id = '' + BlankNode.nextId++
+      this.id = id
+      // this.id = '' + BlankNode.nextId++
     } else {
-      this.id = '' + BlankNode.nextId++
+      this.id = 'n' + BlankNode.nextId++
     }
 
     this.value = this.id
@@ -59,7 +59,7 @@ class BlankNode extends Node {
 
 BlankNode.nextId = 0
 BlankNode.termType = 'BlankNode'
-BlankNode.NTAnonymousNodePrefix = '_:n'
+BlankNode.NTAnonymousNodePrefix = '_:'
 BlankNode.prototype.classOrder = ClassOrder['BlankNode']
 BlankNode.prototype.isBlank = 1
 BlankNode.prototype.isVar = 1
