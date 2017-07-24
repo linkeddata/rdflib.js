@@ -1426,9 +1426,9 @@ class Fetcher {
   }
 
   setRequestTimeout (options) {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       setTimeout(() => {
-        resolve(this.failFetch(options, 'Request timed out', 'timeout'))
+        reject(new Error(`Request to ${options.original.uri} timed out`))
       }, this.timeout)
     })
   }
