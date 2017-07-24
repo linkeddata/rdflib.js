@@ -10,7 +10,7 @@ str:MLK
     str:died "1968-01-15"^^XML:date;
     str:friend [];
     str:name "Martin Luther King, Jr";
-    str:spouse _:n5;
+    str:spouse _:_g_L4C88;
     str:wikipediapage <https://en.wikipedia.org/wiki/Martin_Luther_King_Jr.>.
 str:MLK3 str:name "Martin Luther King III".
 
@@ -32,7 +32,7 @@ str:ZooReading1
     str:intCount 16;
     str:intNegative -123;
     str:time "2015-03-16T17:53Z"^^XML:dateTime.
-_:n5 str:name "Coretta Scott King".
+_:_g_L4C88 str:name "Coretta Scott King".
 
 [
     a str:Speech;
@@ -64,5 +64,5 @@ _:n5 str:name "Coretta Scott King".
                                     ]
                         ]
             ];
-    str:spouse str:MLK, _:n5
+    str:spouse str:MLK, _:_g_L4C88
 ].

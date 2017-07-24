@@ -7,13 +7,13 @@
         <str:friend rdf:parseType="Resource">
             </str:friend>
         <str:name>Martin Luther King, Jr</str:name>
-        <str:spouse rdf:nodeID="n4"/>
+        <str:spouse rdf:nodeID="_g_L4C88"/>
         <str:wikipediapage rdf:resource="https://en.wikipedia.org/wiki/Martin_Luther_King_Jr."/>
     </rdf:Description>
-    <rdf:Description rdf:nodeID="n4">
+    <rdf:Description rdf:nodeID="_g_L4C88">
        <str:name>Coretta Scott King</str:name>
     </rdf:Description>
-    <rdf:Description rdf:nodeID="n5">
+    <rdf:Description rdf:nodeID="_g_L6C140">
         <str:offspring rdf:parseType="Collection">
                 <rdf:Description rdf:about="/structures.n3#MLK3">
                    <str:name>Martin Luther King III</str:name>
@@ -29,7 +29,7 @@
                 </rdf:Description>
         </str:offspring>
         <str:spouse rdf:resource="/structures.n3#MLK"/>
-        <str:spouse rdf:nodeID="n4"/>
+        <str:spouse rdf:nodeID="_g_L4C88"/>
         <rdf:type rdf:resource="/structures.n3#Marriage"/>
     </rdf:Description>
     <rdf:Description rdf:about="/structures.n3#MLK3">
@@ -41,13 +41,13 @@
     <rdf:Description rdf:about="/structures.n3#YK">
        <str:name>Yolanda King</str:name>
     </rdf:Description>
-    <rdf:Description rdf:nodeID="n9">
+    <rdf:Description rdf:nodeID="_g_L20C476">
        <str:friend rdf:resource="/structures.n3#MLK"/>
     </rdf:Description>
-    <rdf:Description rdf:nodeID="n10">
+    <rdf:Description rdf:nodeID="_g_L22C530">
        <str:loves rdf:parseType="Resource"></str:loves>
     </rdf:Description>
-    <rdf:Description rdf:nodeID="n12">
+    <rdf:Description rdf:nodeID="_g_L24C602">
         <str:author rdf:resource="/structures.n3#MLK"/>
         <str:date rdf:datatype="http://www.w3.org/2001/XMLSchema#date">1963-08-23</str:date>
         <str:title>I have a dream</str:title>

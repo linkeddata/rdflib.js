@@ -8,7 +8,7 @@
     :died "1968-01-15"^^XML:date;
     :friend [];
     :name "Martin Luther King, Jr";
-    :spouse _:n4;
+    :spouse _:_g_L4C88;
     :wikipediapage <https://en.wikipedia.org/wiki/Martin_Luther_King_Jr.>.
 :MLK3 :name "Martin Luther King III".
 
@@ -30,7 +30,7 @@
     :intCount 16;
     :intNegative -123;
     :time "2015-03-16T17:53Z"^^XML:dateTime.
-_:n4 :name "Coretta Scott King".
+_:_g_L4C88 :name "Coretta Scott King".
 
 [ a :Speech; :author :MLK; :date "1963-08-23"^^XML:date; :title "I have a dream" ].
 
@@ -41,5 +41,5 @@ _:n4 :name "Coretta Scott King".
 [
     a :Marriage;
     :offspring ( :MLK3 :DSK :YK [ :name "Bernice King" ] );
-    :spouse :MLK, _:n4
+    :spouse :MLK, _:_g_L4C88
 ].

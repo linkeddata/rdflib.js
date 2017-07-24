@@ -338,11 +338,7 @@ class Formula extends Node {
         str = str.replace(/\\\\/g, '\\')
         return this.literal(str, lang, dt)
       case '_':
-        // x = new BlankNode()
-        // x.id = parseInt(str.slice(3), 10)
-        // BlankNode.nextId--
-        // return x
-        return new BlankNode(str.slice(3))
+        return new BlankNode(str.slice(2))
       case '?':
         return new Variable(str.slice(1))
     }
