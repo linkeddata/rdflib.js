@@ -411,7 +411,17 @@ class Fetcher {
   constructor (store, options = {}) {
     this.store = store
     this.timeout = options.timeout || 30000
-    this._fetch = options.fetch || global.fetch || require('node-fetch')
+
+    this._fetch = options.fetch
+
+    if (!this._fetch) {
+      if (typeof window !== 'undefined') {
+        this._fetch = window.fetch.bind(window)
+      } else {
+        this._fetch = require('node-fetch')
+      }
+    }
+
     this.appNode = this.store.bnode() // Denoting this session
     this.store.fetcher = this // Bi-linked
     this.requested = {}
@@ -671,7 +681,7 @@ class Fetcher {
     let docuri = uri.uri || uri
     docuri = docuri.split('#')[0]
 
-    options = this.initFetchOptions(uri, options)
+    options = this.initFetchOptions(docuri, options)
 
     if (Fetcher.unsupportedProtocol(docuri)) {
       return this.failFetch(options, 'Unsupported protocol', 'unsupported_protocol')
@@ -1049,7 +1059,7 @@ class Fetcher {
 
     let responseNode = kb.bnode()
 
-    kb.add(options.req, ns.link('responseNode'), responseNode)
+    kb.add(options.req, ns.link('response'), responseNode)
     kb.add(responseNode, ns.http('status'),
       kb.literal(response.status), responseNode)
     kb.add(responseNode, ns.http('statusText'),
@@ -1188,9 +1198,11 @@ class Fetcher {
       }
     }
 
+    let message = response.message || `${response.status} ${response.statusText}`
+
     // This is either not a CORS error, or retries have been made
     return this.failFetch(options,
-      `Request failed: ${response.status} ${response.statusText}`, response.status)
+      `Request failed: ${message}`, response.status)
   }
 
   // deduce some things from the HTTP transaction
