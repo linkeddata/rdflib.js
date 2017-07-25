@@ -132,16 +132,19 @@ function callbackify (obj, callbacks) {
     obj.callbacks[hook].unshift(func)
   }
 
-  obj.fireCallbacks = function (hook, args) {
+  obj.fireCallbacks = function fireCallbacks (hook, args) {
     var newCallbacks = []
     var replaceCallbacks = []
     var len = obj.callbacks[hook].length
     var x
+    let callback
+
     // log.info('!@$ Firing '+hook+' call back with length'+len)
     for (x = len - 1; x >= 0; x--) {
       // log.info('@@ Firing '+hook+' callback '+ obj.callbacks[hook][x])
-      if (obj.callbacks[hook][x].apply(obj, args)) {
-        newCallbacks.push(obj.callbacks[hook][x])
+      callback = obj.callbacks[hook][x]
+      if (callback && callback.apply(obj, args)) {
+        newCallbacks.push(callback)
       }
     }
 
