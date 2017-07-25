@@ -117,9 +117,10 @@ describe('Fetcher', () => {
 
     beforeEach(() => {
       uri = 'https://example.com/newdoc.ttl'
-      options = {}
 
       fetcher = new Fetcher(rdf.graph())
+
+      options = fetcher.initFetchOptions(uri, {})
 
       fetcher._fetch = sinon.stub().resolves()
       fetcher.handleResponse = sinon.stub().resolves()
@@ -128,6 +129,7 @@ describe('Fetcher', () => {
 
     it('should fail for an unsupported uri protocol', () => {
       uri = 'tel:+1-816-555-1212'
+      options = fetcher.initFetchOptions(uri, {})
 
       return fetcher.fetchUri(uri, options)
         .then(result => {

@@ -622,10 +622,15 @@ class Fetcher {
       )
     }
 
+    let docuri = uri.uri || uri
+    docuri = docuri.split('#')[0]
+
+    options = this.initFetchOptions(docuri, options)
+
     return Promise
       .race([
-        this.setRequestTimeout(options),
-        this.fetchUri(uri, options)
+        this.setRequestTimeout(docuri, options),
+        this.fetchUri(docuri, options)
       ])
   }
 
@@ -633,6 +638,12 @@ class Fetcher {
     return this.fetch(uri, options)
   }
 
+  /**
+   * @param uri {string}
+   * @param options {Object}
+   *
+   * @returns {Object}
+   */
   initFetchOptions (uri, options) {
     let kb = this.store
 
@@ -672,16 +683,15 @@ class Fetcher {
   /**
    * (The promise chain ends in either a `failFetch()` or a `doneFetch()`)
    *
-   * @param uri {Node|string}
-   * @param [options={}] {Object}
+   * @param docuri {string}
+   * @param options {Object}
    *
    * @returns {Promise<Object>} fetch() result or an { error, status } object
    */
-  fetchUri (uri, options = {}) {
-    let docuri = uri.uri || uri
-    docuri = docuri.split('#')[0]
-
-    options = this.initFetchOptions(docuri, options)
+  fetchUri (docuri, options) {
+    if (!docuri) {
+      return Promise.reject(new Error('Cannot fetch an empty uri'))
+    }
 
     if (Fetcher.unsupportedProtocol(docuri)) {
       return this.failFetch(options, 'Unsupported protocol', 'unsupported_protocol')
@@ -1425,10 +1435,12 @@ class Fetcher {
       })
   }
 
-  setRequestTimeout (options) {
-    return new Promise((resolve, reject) => {
+  setRequestTimeout (uri, options) {
+    return new Promise((resolve) => {
       setTimeout(() => {
-        reject(new Error(`Request to ${options.original.uri} timed out`))
+        if (this.getState(uri) === 'requested') {
+          resolve(this.failFetch(options, `Request to ${uri} timed out`, 'timeout'))
+        }
       }, this.timeout)
     })
   }
