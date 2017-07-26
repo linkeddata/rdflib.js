@@ -1425,7 +1425,7 @@ class Fetcher {
     let newOptions = Object.assign({}, options)
     newOptions.baseURI = options.resource.uri
 
-    return this.fetch(newURI, newOptions)
+    return this.fetchUri(newURI, newOptions)
       .then(response => {
         if (!newOptions.noMeta) {
           kb.add(oldReq, ns.link('redirectedRequest'), newOptions.req, this.appNode)
@@ -1438,7 +1438,9 @@ class Fetcher {
   setRequestTimeout (uri, options) {
     return new Promise((resolve) => {
       setTimeout(() => {
-        if (this.getState(uri) === 'requested') {
+        if (this.isPending(uri) &&
+            !options.retriedWithNoCredentials &&
+            !options.proxyUsed) {
           resolve(this.failFetch(options, `Request to ${uri} timed out`, 'timeout'))
         }
       }, this.timeout)
