@@ -435,4 +435,8 @@ describe('Fetcher', () => {
         })
     })
   })
+
+  describe('createContainer', () => {
+    it('should invoke webOperation with the right options')
+  })
 })

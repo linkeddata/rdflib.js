@@ -64,7 +64,8 @@ const ns = {
   httph: Namespace('http://www.w3.org/2007/ont/httph#'),  // headers
   rdf: Namespace('http://www.w3.org/1999/02/22-rdf-syntax-ns#'),
   rdfs: Namespace('http://www.w3.org/2000/01/rdf-schema#'),
-  dc: Namespace('http://purl.org/dc/elements/1.1/')
+  dc: Namespace('http://purl.org/dc/elements/1.1/'),
+  ldp: Namespace('http://www.w3.org/ns/ldp#')
 }
 
 class Handler {
@@ -962,6 +963,33 @@ class Fetcher {
 
         return response
       })
+  }
+
+  /**
+   * @param parentURI {string} URI of parent container
+   * @param [folderName] {string} Optional folder name (slug)
+   * @param [data] {string} Optional folder metadata
+   *
+   * @returns {Promise<Response>}
+   */
+  createContainer (parentURI, folderName, data) {
+    let headers = {
+      // Force the right mime type for containers
+      'content-type': 'text/turtle',
+      'link': ns.ldp('BasicContainer') + '; rel="type"'
+    }
+
+    if (folderName) {
+      headers['slug'] = folderName
+    }
+
+    let options = { headers }
+
+    if (data) {
+      options.body = data
+    }
+
+    return this.webOperation('POST', parentURI, options)
   }
 
   /**
