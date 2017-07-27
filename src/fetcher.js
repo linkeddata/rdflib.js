@@ -699,7 +699,9 @@ class Fetcher {
 
     let state = this.getState(docuri)
 
-    if (!options.force) {
+    let isGet = !options.method || options.method.toUpperCase() === 'get'
+
+    if (isGet && !options.force) {
       if (state === 'fetched') {  // URI already fetched and added to store
         return Promise.resolve(
           this.doneFetch(options, { status: 200, ok: true })
@@ -974,6 +976,7 @@ class Fetcher {
   webOperation (method, uri, options = {}) {
     options.method = method
     options.body = options.data || options.body
+    options.force = true
 
     return this.fetch(uri, options)
   }
