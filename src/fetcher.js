@@ -439,6 +439,7 @@ class Fetcher {
     //   other strings mean various other errors.
     //
     this.redirectedTo = {} // When 'redirected'
+    this.fetchQueue = {}
     this.fetchCallbacks = {} // fetchCallbacks[uri].push(callback)
 
     this.nonexistent = {} // keep track of explicit 404s -> we can overwrite etc
@@ -614,7 +615,7 @@ class Fetcher {
    *
    * @param [options.noRDFa] {boolean}
    *
-   * @returns {Promise}
+   * @returns {Promise<Result>}
    */
   fetch (uri, options = {}) {
     if (uri instanceof Array) {
@@ -628,11 +629,42 @@ class Fetcher {
 
     options = this.initFetchOptions(docuri, options)
 
-    return Promise
-      .race([
-        this.setRequestTimeout(docuri, options),
-        this.fetchUri(docuri, options)
-      ])
+    return this.pendingFetchPromise(uri, options.baseURI, options)
+  }
+
+  /**
+   * @param uri {string}
+   * @param originalUri {string}
+   * @param options {Object}
+   * @returns {Promise<Result>}
+   */
+  pendingFetchPromise (uri, originalUri, options) {
+    let pendingPromise
+
+    // Check to see if some request is already dealing with this uri
+    if (!options.force && this.fetchQueue[originalUri]) {
+      pendingPromise = this.fetchQueue[originalUri]
+    } else {
+      pendingPromise = Promise
+        .race([
+          this.setRequestTimeout(uri, options),
+          this.fetchUri(uri, options)
+        ])
+      this.fetchQueue[originalUri] = pendingPromise
+
+      // Clean up the queued promise after a time, if it's resolved
+      this.cleanupFetchRequest(originalUri, options, this.timeout)
+    }
+
+    return pendingPromise
+  }
+
+  cleanupFetchRequest (originalUri, options, timeout) {
+    setTimeout(() => {
+      if (!this.isPending(originalUri)) {
+        delete this.fetchQueue[originalUri]
+      }
+    }, timeout)
   }
 
   load (uri, options) {
@@ -647,6 +679,11 @@ class Fetcher {
    */
   initFetchOptions (uri, options) {
     let kb = this.store
+
+    let isGet = !options.method || options.method.toUpperCase() === 'GET'
+    if (!isGet) {
+      options.force = true
+    }
 
     options.resource = kb.sym(uri) // This might be proxified
     options.baseURI = options.baseURI || uri // Preserve though proxying etc
@@ -700,9 +737,7 @@ class Fetcher {
 
     let state = this.getState(docuri)
 
-    let isGet = !options.method || options.method.toUpperCase() === 'get'
-
-    if (isGet && !options.force) {
+    if (!options.force) {
       if (state === 'fetched') {  // URI already fetched and added to store
         return Promise.resolve(
           this.doneFetch(options, { status: 200, ok: true })
