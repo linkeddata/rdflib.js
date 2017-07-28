@@ -553,6 +553,10 @@ class UpdateManager {
       var control = self.patchControlFor(doc)
       control.upstreamCount = 0
 
+      socket.onerror = function onerror (err) {
+        console.log('Error on Websocket:', err)
+      }
+
       // https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent
       //
       // 1000  CLOSE_NORMAL  Normal closure; the connection successfully completed whatever purpose for which it was created.
