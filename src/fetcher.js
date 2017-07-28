@@ -629,7 +629,7 @@ class Fetcher {
 
     options = this.initFetchOptions(docuri, options)
 
-    return this.pendingFetchPromise(uri, options.baseURI, options)
+    return this.pendingFetchPromise(docuri, options.baseURI, options)
   }
 
   /**
