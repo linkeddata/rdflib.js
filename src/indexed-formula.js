@@ -628,7 +628,9 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
   }
 
   removeStatements (sts) {
-    for (var i = 0; i < sts.length; i++) {
+    //for (var i = 0; i < sts.length; i++) {
+    // ^^ this was leaving statements
+    for (var i = sts.length-1; i >= 0; i--) {
       this.remove(sts[i])
     }
     return this
