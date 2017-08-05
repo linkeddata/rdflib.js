@@ -893,7 +893,7 @@ class Fetcher {
     } else {
       // See https://www.iana.org/assignments/link-relations/link-relations.xml
       // Alas not yet in RDF yet for each predicate
-      /// encode space in e.g. rel="shortcut icon"
+      // encode space in e.g. rel="shortcut icon"
       predicate = kb.sym(
         Uri.join(encodeURIComponent(rel),
           'http://www.iana.org/assignments/link-relations/')
@@ -1282,12 +1282,12 @@ class Fetcher {
   }
 
   // deduce some things from the HTTP transaction
-  addType (rdfType, req, kb, loc) { // add type to all redirected resources too
+  addType (rdfType, req, kb, locURI) { // add type to all redirected resources too
     let prev = req
-    if (loc) {
-      const docURI = kb.any(prev, ns.link('requestedURI'))
-      if (docURI !== loc) {
-        kb.add(kb.sym(loc), ns.rdf('type'), rdfType, this.appNode)
+    if (locURI) {
+      var reqURI = kb.any(prev, ns.link('requestedURI'))
+      if (reqURI && reqURI !== locURI) {
+        kb.add(kb.sym(locURI), ns.rdf('type'), rdfType, this.appNode)
       }
     }
     for (;;) {
@@ -1348,8 +1348,20 @@ class Fetcher {
         })
     }
 
+    var diffLocation = null
+    var absContentLocation = null
+    if (contentLocation) {
+      absContentLocation = Uri.join(contentLocation, docuri)
+      if (absContentLocation !== docuri) {
+        diffLocation = absContentLocation
+      }
+    }
     if (response.status === 200) {
-      this.addType(ns.link('Document'), reqNode, kb, contentLocation)
+      this.addType(ns.link('Document'), reqNode, kb, docuri)
+      if (diffLocation) {
+        this.addType(ns.link('Document'), reqNode, kb,
+          diffLocation)
+      }
 
       // Before we parse new data clear old but only on 200
       if (options.clearPreviousData) {
@@ -1361,23 +1373,25 @@ class Fetcher {
 
       if (contentType && isImage) {
         this.addType(kb.sym('http://purl.org/dc/terms/Image'), reqNode, kb,
-          contentLocation)
+          docuri)
+        if (diffLocation) {
+          this.addType(kb.sym('http://purl.org/dc/terms/Image'), reqNode, kb,
+            diffLocation)
+        }
       }
     }
 
     // If we have already got the thing at this location, abort
     if (contentLocation) {
-      let udoc = Uri.join(contentLocation, docuri)
-
-      if (!options.force && udoc !== docuri && this.requested[udoc] === 'done') {
+      if (!options.force && diffLocation && this.requested[absContentLocation] === 'done') {
         // we have already fetched this
         // should we smush too?
         // log.info("HTTP headers indicate we have already" + " retrieved " +
-        // xhr.resource + " as " + udoc + ". Aborting.")
+        // xhr.resource + " as " + absContentLocation + ". Aborting.")
         return this.doneFetch(options, response)
       }
 
-      this.requested[udoc] = true
+      this.requested[absContentLocation] = true
     }
 
     this.parseLinkHeader(headers.get('link'), options.original, reqNode)

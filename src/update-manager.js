@@ -634,6 +634,11 @@ class UpdateManager {
         return callback(null, true) // success -- nothing needed to be done.
       }
       var doc = ds.length ? ds[0].why : is[0].why
+      if (!doc) {
+        let message = 'Error patching: statement does not specify which document to patch:' + ds[0] + ', ' + is[0]
+        console.log(message)
+        throw new Error(message)
+      }
       var control = this.patchControlFor(doc)
       var startTime = Date.now()
 
