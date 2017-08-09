@@ -14,13 +14,24 @@ class NamedNode extends Node {
   constructor (iri) {
     super()
     this.termType = NamedNode.termType
+
+    if (iri && iri.termType === NamedNode.termType) {  // param is a named node
+      iri = iri.value
+    }
+
+    if (!iri) {
+      throw new Error('Missing IRI for NamedNode')
+    }
+
     if (!iri.includes(':')) {
       throw new Error('NamedNode IRI "' + iri + '" must be absolute.')
     }
+
     if (iri.includes(' ')) {
       var message = 'Error: NamedNode IRI "' + iri + '" must not contain unencoded spaces.'
       throw new Error(message)
     }
+
     this.value = iri
   }
   /**

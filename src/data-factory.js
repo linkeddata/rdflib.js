@@ -18,8 +18,8 @@ function collection (elements) {
 function defaultGraph () {
   return new DefaultGraph()
 }
-function fetcher (store, timeout, async) {
-  return new Fetcher(store, timeout, async)
+function fetcher (store, options) {
+  return new Fetcher(store, options)
 }
 function graph () {
   return new IndexedFormula()

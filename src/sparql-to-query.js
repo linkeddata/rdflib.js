@@ -502,15 +502,11 @@ function SPARQLToQuery (SPARQL, testMode, kb) {
   for (var x in q.pat.statements) {
     var st = q.pat.statements[x]
     if (st.subject.termType === 'NamedNode') {
-      /* && sf.isPending(st.subject.uri) */ // This doesn't work.
-      // sf.requestURI(st.subject.uri,"sparql:"+st.subject) Kenny: I remove these two
       if (kb.fetcher) {
         kb.fetcher.lookUpThing(st.subject, 'sparql:' + st.subject)
       }
     }
     if (st.object.termType === 'NamedNode') {
-      /* && sf.isPending(st.object.uri) */
-      // sf.requestURI(st.object.uri,"sparql:"+st.object)
       if (kb.fetcher) {
         kb.fetcher.lookUpThing(st.object, 'sparql:' + st.object)
       }

@@ -4,17 +4,21 @@
 //
 // See http://www.w3.org/TR/rdfa-syntax/  etc
 //
-
 const $rdf = require('../../lib')
-var fs = require('fs')
+const fs = require('fs')
+const nock = require('nock')
 
-var kb = $rdf.graph()
-var fetcher = $rdf.fetcher(kb)
+const kb = $rdf.graph()
+const fetcher = $rdf.fetcher(kb)
 
 var contentType = 'text/turtle'
-var base = 'file://' + process.cwd() + '/'
-var uri
-var targetDocument = $rdf.sym(base + 'stdin') // defaul URI of test data
+var base = 'http://localhost/'
+var server
+var fileName
+var targetDocument  // = $rdf.sym(base + 'stdin') // defaul URI of test data
+
+var inDocument
+var outDocument
 
 var check = function (ok, message, status) {
   if (!ok) {
@@ -50,7 +54,6 @@ var stackString = function (e) {
   return str
 }
 
-
 var exitMessage = function (message) {
   console.log(message)
   process.exit(4)
@@ -78,11 +81,15 @@ var doNext = function (remaining) {
         break
 
       case '-in':
-        targetDocument = $rdf.sym($rdf.uri.join(right, base))
-        // console.log("Document is " + targetDocument)
-        fetcher.nowOrWhenFetched(targetDocument, {}, function (ok, body, xhr) {
+        let targetUri = $rdf.uri.join(right, base)
+        inDocument = $rdf.sym(targetUri)
+        let docContents = fs.readFileSync(right, 'utf8')
+
+        server = nock('http://localhost').get('/' + right).reply(200, docContents)
+
+        fetcher.nowOrWhenFetched(inDocument, {}, function (ok, body, xhr) {
           check(ok, body, xhr ? xhr.status : undefined)
-          console.log('Loaded  ' + targetDocument)
+          // console.log(kb.statementsMatching().map(ea => ea.toString() + ' why:' + ea.why))
           doNext(remaining)
         }); // target, kb, base, contentType, callback
         return // STOP processing at this level
@@ -90,7 +97,8 @@ var doNext = function (remaining) {
         case '-out':
           try {
             var options = {flags: 'z'} // Only applies to RDF/XML
-            var out = $rdf.serialize(targetDocument, kb, targetDocument.uri, contentType, undefined, options)
+
+            var out = $rdf.serialize(inDocument, kb, inDocument.uri, contentType, undefined, options)
           } catch(e) {
             exitMessage('Error in serializer: ' + e + stackString(e))
           }
@@ -99,11 +107,12 @@ var doNext = function (remaining) {
             doNext(remaining)
             return
           }
-          doc = $rdf.sym($rdf.uri.join(right, base))
-          if (doc.uri.slice(0, 7) !== 'file://') {
-            exitMessage('Can only write files just now, sorry: ' + doc.uri)
-          }
-          var fileName = doc.uri.slice(7) //
+          // doc = $rdf.sym($rdf.uri.join(right, base))
+          // if (doc.uri.slice(0, 7) !== 'file://') {
+          //   exitMessage('Can only write files just now, sorry: ' + doc.uri)
+          // }
+          fileName = right
+
           fs.writeFile(fileName, out, function (err) {
             if (err) {
               exitMessage('Error writing file <' + right + '> :' + err)
@@ -120,10 +129,11 @@ var doNext = function (remaining) {
             } catch(e) {
               exitMessage('Error in serializer: ' + e + stackString(e))
             }
-            if (doc.uri.slice(0, 7) !== 'file://') {
-              exitMessage('Can only write files just now, sorry: ' + doc.uri)
-            }
-            var fileName = doc.uri.slice(7) //
+            // if (doc.uri.slice(0, 7) !== 'file://') {
+            //   exitMessage('Can only write files just now, sorry: ' + doc.uri)
+            // }
+            // fileName = doc.uri.slice(7) //
+            fileName = doc.uri.split('/')[doc.uri.length - 1]
             fs.writeFile(fileName, out, function (err) {
               if (err) {
                 exitMessage('Error writing file <' + right + '> :' + err)

@@ -1,4 +1,4 @@
-@prefix : <#>.
+@prefix : </details.ttl#>.
 @prefix dc: <http://purl.org/dc/elements/1.1/>.
 @prefix sch: <http://www.w3.org/ns/pim/schedule#>.
 @prefix c: <https://www.w3.org/People/Berners-Lee/card#>.
@@ -26,7 +26,7 @@
         :id1442316628781;
     sch:option :id1442316021318, :id1442316021319;
     sch:ready "2015-09-15T11:20:21Z"^^XML:dateTime;
-    sch:results <results.ttl>.
+    sch:results </results.ttl>.
 :id1442316021316 n0:mbox "timbl@w3.org"; n0:name "Tim BL".
 
 :id1442316021318 ic:dtstart "2016-01-13".

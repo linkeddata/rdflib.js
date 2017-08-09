@@ -2,24 +2,23 @@
 // 2007-07-15
 // 2010-08-08 TimBL folded in Kenny's WEBDAV
 // 2010-12-07 TimBL addred local file write code
+import IndexedFormula from './indexed-formula'
 const docpart = require('./uri').docpart
 const Fetcher = require('./fetcher')
-const graph = require('./data-factory').graph
-import IndexedFormula from './indexed-formula'
 const namedNode = require('./data-factory').namedNode
 const Namespace = require('./namespace')
 const Serializer = require('./serializer')
 const uriJoin = require('./uri').join
 const Util = require('./util')
 
-var UpdateManager = (function () {
-  var sparql = function (store) {
+class UpdateManager {
+  constructor (store) {
     this.store = store
     if (store.updater) {
       throw new Error("You can't have two UpdateManagers for the same store")
     }
     if (!store.fetcher) { // The store must also/already have a fetcher
-      new Fetcher(store)
+      store.fetcher = new Fetcher(store)
     }
     store.updater = this
     this.ifps = {}
@@ -37,19 +36,26 @@ var UpdateManager = (function () {
     this.patchControl = [] // index of objects fro coordinating incomng and outgoing patches
   }
 
-  sparql.prototype.patchControlFor = function (doc) {
+  patchControlFor (doc) {
     if (!this.patchControl[doc.uri]) {
       this.patchControl[doc.uri] = []
     }
     return this.patchControl[doc.uri]
   }
 
-  // Returns The method string SPARQL or DAV or LOCALFILE or false if known, undefined if not known.
-  //
-  // Files have to have a specific annotaton that they are machine written, for safety.
-  // We don't actually check for write access on files.
-  //
-  sparql.prototype.editable = function (uri, kb) {
+  /**
+   * Tests whether a file is editable.
+   * Files have to have a specific annotation that they are machine written,
+   *   for safety.
+   * We don't actually check for write access on files.
+   *
+   * @param uri {string}
+   * @param kb {IndexedFormula}
+   *
+   * @returns {string|boolean|undefined} The method string SPARQL or DAV or
+   *   LOCALFILE or false if known, undefined if not known.
+   */
+  editable (uri, kb) {
     if (!uri) {
       return false // Eg subject is bnode, no known doc to write to
     }
@@ -59,28 +65,25 @@ var UpdateManager = (function () {
 
     if (uri.slice(0, 8) === 'file:///') {
       if (kb.holds(
-          kb.sym(uri),
-          namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
-          namedNode('http://www.w3.org/2007/ont/link#MachineEditableDocument')
-        )) {
+            kb.sym(uri),
+            namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
+            namedNode('http://www.w3.org/2007/ont/link#MachineEditableDocument'))) {
         return 'LOCALFILE'
       }
 
-      var sts = kb.statementsMatching(kb.sym(uri), undefined, undefined)
+      var sts = kb.statementsMatching(kb.sym(uri))
 
       console.log('sparql.editable: Not MachineEditableDocument file ' +
         uri + '\n')
-      console.log(sts.map(function (x) {
-        return x.toNT()
-      }).join('\n'))
+      console.log(sts.map((x) => { return x.toNT() }).join('\n'))
+
       return false
-    // @@ Would be nifty of course to see whether we actually have write acess first.
+      // @@ Would be nifty of course to see whether we actually have write access first.
     }
 
     var request
     var definitive = false
-    var requests = kb.each(undefined, this.ns.link('requestedURI'),
-      docpart(uri))
+    var requests = kb.each(undefined, this.ns.link('requestedURI'), docpart(uri))
 
     // Hack for the moment @@@@ 2016-02-12
     if (kb.holds(namedNode(uri), this.ns.rdf('type'), this.ns.ldp('Resource'))) {
@@ -100,10 +103,10 @@ var UpdateManager = (function () {
               if (method.indexOf('application/sparql-update') >= 0) return 'SPARQL'
             }
           }
-          var author_via = kb.each(response, this.ns.httph('ms-author-via'))
-          if (author_via.length) {
-            for (i = 0; i < author_via.length; i++) {
-              method = author_via[i].value.trim()
+          var authorVia = kb.each(response, this.ns.httph('ms-author-via'))
+          if (authorVia.length) {
+            for (i = 0; i < authorVia.length; i++) {
+              method = authorVia[i].value.trim()
               if (method.indexOf('SPARQL') >= 0) {
                 return 'SPARQL'
               }
@@ -117,7 +120,7 @@ var UpdateManager = (function () {
             for (i = 0; i < status.length; i++) {
               if (status[i] === 200 || status[i] === 404) {
                 definitive = true
-              // return false // A definitive answer
+                // return false // A definitive answer
               }
             }
           }
@@ -137,32 +140,36 @@ var UpdateManager = (function () {
     return undefined // We don't know (yet) as we haven't had a response (yet)
   }
 
-  // /////////  The identification of bnodes
-
-  sparql.prototype.anonymize = function (obj) {
-    return (obj.toNT().substr(0, 2) === '_:' && this._mentioned(obj))
+  anonymize (obj) {
+    return (obj.toNT().substr(0, 2) === '_:' && this.mentioned(obj))
       ? '?' + obj.toNT().substr(2)
       : obj.toNT()
   }
 
-  sparql.prototype.anonymizeNT = function (stmt) {
+  anonymizeNT (stmt) {
     return this.anonymize(stmt.subject) + ' ' +
-    this.anonymize(stmt.predicate) + ' ' +
-    this.anonymize(stmt.object) + ' .'
+      this.anonymize(stmt.predicate) + ' ' +
+      this.anonymize(stmt.object) + ' .'
   }
 
-  // A list of all bnodes occuring in a statement
-  sparql.prototype._statement_bnodes = function (st) {
+  /**
+   * Returns a list of all bnodes occurring in a statement
+   * @private
+   */
+  statementBnodes (st) {
     return [st.subject, st.predicate, st.object].filter(function (x) {
       return x.isBlank
     })
   }
 
-  // A list of all bnodes occuring in a list of statements
-  sparql.prototype._statement_array_bnodes = function (sts) {
+  /**
+   * Returns a list of all bnodes occurring in a list of statements
+   * @private
+   */
+  statementArrayBnodes (sts) {
     var bnodes = []
     for (var i = 0; i < sts.length; i++) {
-      bnodes = bnodes.concat(this._statement_bnodes(sts[i]))
+      bnodes = bnodes.concat(this.statementBnodes(sts[i]))
     }
     bnodes.sort() // in place sort - result may have duplicates
     var bnodes2 = []
@@ -174,11 +181,14 @@ var UpdateManager = (function () {
     return bnodes2
   }
 
-  sparql.prototype._cache_ifps = function () {
-    // Make a cached list of [Inverse-]Functional properties
-    // Call this once before calling context_statements
+  /**
+   * Makes a cached list of [Inverse-]Functional properties
+   * @private
+   */
+  cacheIfps () {
     this.ifps = {}
-    var a = this.store.each(undefined, this.ns.rdf('type'), this.ns.owl('InverseFunctionalProperty'))
+    var a = this.store.each(undefined, this.ns.rdf('type'),
+      this.ns.owl('InverseFunctionalProperty'))
     for (var i = 0; i < a.length; i++) {
       this.ifps[a[i].uri] = true
     }
@@ -189,8 +199,11 @@ var UpdateManager = (function () {
     }
   }
 
-  // Returns a context to bind a given node, up to a given depth
-  sparql.prototype._bnode_context2 = function (x, source, depth) {
+  /**
+   * Returns a context to bind a given node, up to a given depth
+   * @private
+   */
+  bnodeContext2 (x, source, depth) {
     // Return a list of statements which indirectly identify a node
     //  Depth > 1 if try further indirection.
     //  Return array of statements (possibly empty), or null if failure
@@ -204,7 +217,7 @@ var UpdateManager = (function () {
           return [ sts[i] ]
         }
         if (depth) {
-          res = this._bnode_context2(y, source, depth - 1)
+          res = this.bnodeContext2(y, source, depth - 1)
           if (res) {
             return res.concat([ sts[i] ])
           }
@@ -220,7 +233,7 @@ var UpdateManager = (function () {
           return [ sts[i] ]
         }
         if (depth) {
-          res = this._bnode_context2(y, source, depth - 1)
+          res = this.bnodeContext2(y, source, depth - 1)
           if (res) {
             return res.concat([ sts[i] ])
           }
@@ -230,13 +243,15 @@ var UpdateManager = (function () {
     return null // Failure
   }
 
-  // Returns the smallest context to bind a given single bnode
-  sparql.prototype._bnode_context_1 = function (x, source) {
+  /**
+   * Returns the smallest context to bind a given single bnode
+   * @private
+   */
+  bnodeContext1 (x, source) {
     // Return a list of statements which indirectly identify a node
     //   Breadth-first
-    var self = this
     for (var depth = 0; depth < 3; depth++) { // Try simple first
-      var con = this._bnode_context2(x, source, depth)
+      var con = this.bnodeContext2(x, source, depth)
       if (con !== null) return con
     }
     // If we can't guarantee unique with logic just send all info about node
@@ -244,51 +259,44 @@ var UpdateManager = (function () {
     // throw new Error('Unable to uniquely identify bnode: ' + x.toNT())
   }
 
-  sparql.prototype._mentioned = function (x) {
-    return (this.store.statementsMatching(x).length !== 0) || // Don't pin fresh bnodes
-    (this.store.statementsMatching(undefined, x).length !== 0) ||
-    (this.store.statementsMatching(undefined, undefined, x).length !== 0)
+  /**
+   * @private
+   */
+  mentioned (x) {
+    return this.store.statementsMatching(x).length !== 0 || // Don't pin fresh bnodes
+      this.store.statementsMatching(undefined, x).length !== 0 ||
+      this.store.statementsMatching(undefined, undefined, x).length !== 0
   }
 
-  sparql.prototype._bnode_context = function (bnodes, doc) {
+  /**
+   * @private
+   */
+  bnodeContext (bnodes, doc) {
     var context = []
     if (bnodes.length) {
-      this._cache_ifps()
+      this.cacheIfps()
       for (var i = 0; i < bnodes.length; i++) { // Does this occur in old graph?
         var bnode = bnodes[i]
-        if (!this._mentioned(bnode)) continue
-        context = context.concat(this._bnode_context_1(bnode, doc))
+        if (!this.mentioned(bnode)) continue
+        context = context.concat(this.bnodeContext1(bnode, doc))
       }
     }
     return context
   }
 
-  /*  Weird code does not make sense -- some code corruption along the line -- st undefined -- weird
-      sparql.prototype._bnode_context = function(bnodes) {
-          var context = []
-          if (bnodes.length) {
-              if (this.store.statementsMatching(st.subject.isBlank?undefined:st.subject,
-                                        st.predicate.isBlank?undefined:st.predicate,
-                                        st.object.isBlank?undefined:st.object,
-                                        st.why).length <= 1) {
-                  context = context.concat(st)
-              } else {
-                  this._cache_ifps()
-                  for (x in bnodes) {
-                      context = context.concat(this._bnode_context_1(bnodes[x], st.why))
-                  }
-              }
-          }
-          return context
-      }
-  */
-  // Returns the best context for a single statement
-  sparql.prototype._statement_context = function (st) {
-    var bnodes = this._statement_bnodes(st)
-    return this._bnode_context(bnodes, st.why)
+  /**
+   * Returns the best context for a single statement
+   * @private
+   */
+  statementContext (st) {
+    var bnodes = this.statementBnodes(st)
+    return this.bnodeContext(bnodes, st.why)
   }
 
-  sparql.prototype._context_where = function (context) {
+  /**
+   * @private
+   */
+  contextWhere (context) {
     var sparql = this
     return (!context || context.length === 0)
       ? ''
@@ -298,48 +306,57 @@ var UpdateManager = (function () {
       }).join('\n') + ' }\n'
   }
 
-  sparql.prototype._fire = function (uri, query, callback) {
-    if (!uri) {
-      throw new Error('No URI given for remote editing operation: ' + query)
-    }
-    console.log('sparql: sending update to <' + uri + '>')
-    var xhr = Util.XMLHTTPFactory()
-    xhr.options = {}
-
-    xhr.onreadystatechange = function () {
-      // dump("SPARQL update ready state for <"+uri+"> readyState="+xhr.readyState+"\n"+query+"\n")
-      if (xhr.readyState === 4) {
-        var success = (!xhr.status || (xhr.status >= 200 && xhr.status < 300))
-        if (!success) {
-          console.log('sparql: update failed for <' + uri + '> status=' +
-            xhr.status + ', ' + xhr.statusText + ', body length=' + xhr.responseText.length + '\n   for query: ' + query)
-        } else {
-          console.log('sparql: update Ok for <' + uri + '>')
+  /**
+   * @private
+   */
+  fire (uri, query, callback) {
+    return Promise.resolve()
+      .then(() => {
+        if (!uri) {
+          throw new Error('No URI given for remote editing operation: ' + query)
         }
-        callback(uri, success, xhr.responseText, xhr)
-      }
-    }
+        console.log('sparql: sending update to <' + uri + '>')
 
-    xhr.open('PATCH', uri, true) // async=true
-    xhr.setRequestHeader('Content-type', 'application/sparql-update')
-    xhr.send(query)
+        let options = {
+          noMeta: true,
+          contentType: 'application/sparql-update',
+          body: query
+        }
+
+        return this.store.fetcher.webOperation('PATCH', uri, options)
+      })
+      .then(response => {
+        if (!response.ok) {
+          let message = 'sparql: update failed for <' + uri + '> status=' +
+            response.status + ', ' + response.statusText +
+            '\n   for query: ' + query
+          console.log(message)
+          throw new Error(message)
+        }
+
+        console.log('sparql: update Ok for <' + uri + '>')
+
+        callback(uri, response.ok, response.responseText, response)
+      })
+      .catch(err => {
+        callback(uri, false, err.message, err)
+      })
   }
 
   // This does NOT update the statement.
-  // It returns an object whcih includes
+  // It returns an object which includes
   //  function which can be used to change the object of the statement.
-  //
-  sparql.prototype.update_statement = function (statement) {
+  update_statement (statement) {
     if (statement && !statement.why) {
       return
     }
     var sparql = this
-    var context = this._statement_context(statement)
+    var context = this.statementContext(statement)
 
     return {
       statement: statement ? [statement.subject, statement.predicate, statement.object, statement.why] : undefined,
       statementNT: statement ? this.anonymizeNT(statement) : undefined,
-      where: sparql._context_where(context),
+      where: sparql.contextWhere(context),
 
       set_object: function (obj, callback) {
         var query = this.where
@@ -349,14 +366,14 @@ var UpdateManager = (function () {
           this.anonymize(this.statement[1]) + ' ' +
           this.anonymize(obj) + ' ' + ' . }\n'
 
-        sparql._fire(this.statement[3].uri, query, callback)
+        sparql.fire(this.statement[3].uri, query, callback)
       }
     }
   }
 
-  sparql.prototype.insert_statement = function (st, callback) {
+  insert_statement (st, callback) {
     var st0 = st instanceof Array ? st[0] : st
-    var query = this._context_where(this._statement_context(st0))
+    var query = this.contextWhere(this.statementContext(st0))
 
     if (st instanceof Array) {
       var stText = ''
@@ -369,12 +386,12 @@ var UpdateManager = (function () {
         this.anonymize(st.object) + ' ' + ' . }\n'
     }
 
-    this._fire(st0.why.uri, query, callback)
+    this.fire(st0.why.uri, query, callback)
   }
 
-  sparql.prototype.delete_statement = function (st, callback) {
+  delete_statement (st, callback) {
     var st0 = st instanceof Array ? st[0] : st
-    var query = this._context_where(this._statement_context(st0))
+    var query = this.contextWhere(this.statementContext(st0))
 
     if (st instanceof Array) {
       var stText = ''
@@ -387,26 +404,26 @@ var UpdateManager = (function () {
         this.anonymize(st.object) + ' ' + ' . }\n'
     }
 
-    this._fire(st0.why.uri, query, callback)
+    this.fire(st0.why.uri, query, callback)
   }
 
-  //  Request a now or future action to refresh changes coming downstream
-  //
-  // This is designed to allow the system to re-request the server version,
-  // when a websocket has pinged to say there are changes.
-  // If thewebsocket, by contrast, has sent a patch, then this may not be necessary.
-  // This may be called out of context so *this* cannot be used.
-
-  sparql.prototype.requestDownstreamAction = function (doc, action) {
+  /**
+   * Requests a now or future action to refresh changes coming downstream
+   * This is designed to allow the system to re-request the server version,
+   * when a websocket has pinged to say there are changes.
+   * If the websocket, by contrast, has sent a patch, then this may not be necessary.
+   *
+   * @param doc
+   * @param action
+   */
+  requestDownstreamAction (doc, action) {
     var control = this.patchControlFor(doc)
     if (!control.pendingUpstream) {
       action(doc)
     } else {
       if (control.downstreamAction) {
-        if (control.downstreamAction === action) {
-          return
-        } else {
-          throw new Error("Can't wait for > 1 differnt downstream actions")
+        if ('' + control.downstreamAction !== '' + action) {  // Kludge compare
+          throw new Error("Can't wait for > 1 different downstream actions")
         }
       } else {
         control.downstreamAction = action
@@ -414,30 +431,31 @@ var UpdateManager = (function () {
     }
   }
 
-  // We want to start counting websockt notifications
-  // to distinguish the ones from others from our own.
-  sparql.prototype.clearUpstreamCount = function (doc) {
+  /**
+   * We want to start counting websocket notifications
+   * to distinguish the ones from others from our own.
+   */
+  clearUpstreamCount (doc) {
     var control = this.patchControlFor(doc)
     control.upstreamCount = 0
   }
 
-  sparql.prototype.getUpdatesVia = function (doc) {
+  getUpdatesVia (doc) {
     var linkHeaders = this.store.fetcher.getHeader(doc, 'updates-via')
     if (!linkHeaders || !linkHeaders.length) return null
     return linkHeaders[0].trim()
   }
 
-  sparql.prototype.addDownstreamChangeListener = function (doc, listener) {
+  addDownstreamChangeListener (doc, listener) {
     var control = this.patchControlFor(doc)
-    if (!control.downstreamChangeListeners) control.downstreamChangeListeners = []
+    if (!control.downstreamChangeListeners) { control.downstreamChangeListeners = [] }
     control.downstreamChangeListeners.push(listener)
-    var self = this
-    this.setRefreshHandler(doc, function(doc){ // a function not a method
-      self.reloadAndSync(doc)
+    this.setRefreshHandler(doc, (doc) => {
+      this.reloadAndSync(doc)
     })
   }
 
-  sparql.prototype.reloadAndSync = function (doc) {
+  reloadAndSync (doc) {
     var control = this.patchControlFor(doc)
     var updater = this
 
@@ -449,7 +467,7 @@ var UpdateManager = (function () {
     var retryTimeout = 1000 // ms
     var tryReload = function () {
       console.log('try reload - timeout = ' + retryTimeout)
-      updater.reload(updater.store, doc, function (ok, message, xhr) {
+      updater.reload(updater.store, doc, function (ok, message, response) {
         control.reloading = false
         if (ok) {
           if (control.downstreamChangeListeners) {
@@ -459,14 +477,14 @@ var UpdateManager = (function () {
             }
           }
         } else {
-          if (xhr.status === 0) {
+          if (response.status === 0) {
             console.log('Network error refreshing the data. Retrying in ' +
               retryTimeout / 1000)
             control.reloading = true
             retryTimeout = retryTimeout * 2
             setTimeout(tryReload, retryTimeout)
           } else {
-            console.log('Error ' + xhr.status + 'refreshing the data:' +
+            console.log('Error ' + response.status + 'refreshing the data:' +
               message + '. Stopped' + doc)
           }
         }
@@ -475,18 +493,24 @@ var UpdateManager = (function () {
     tryReload()
   }
 
-  // Set up websocket to listen on
-  //
-  // There is coordination between upstream changes and downstream ones
-  // so that a reload is not done in the middle of an upsteeam patch.
-  // If you usie this API then you get called when a change happens, and you
-  // have to reload the file yourself, and then refresh the UI.
-  // Alternative is addDownstreamChangeListener(), where you do not
-  // have to do the reload yourslf. Do mot mix them.
-  //
-  //  kb contains the HTTP  metadata from prefvious operations
-  //
-  sparql.prototype.setRefreshHandler = function (doc, handler) {
+  /**
+   * Sets up websocket to listen on
+   *
+   * There is coordination between upstream changes and downstream ones
+   * so that a reload is not done in the middle of an upstream patch.
+   * If you use this API then you get called when a change happens, and you
+   * have to reload the file yourself, and then refresh the UI.
+   * Alternative is addDownstreamChangeListener(), where you do not
+   * have to do the reload yourself. Do mot mix them.
+   *
+   * kb contains the HTTP  metadata from previous operations
+   *
+   * @param doc
+   * @param handler
+   *
+   * @returns {boolean}
+   */
+  setRefreshHandler (doc, handler) {
     var wssURI = this.getUpdatesVia(doc) // relative
     // var kb = this.store
     var theHandler = handler
@@ -529,17 +553,21 @@ var UpdateManager = (function () {
       var control = self.patchControlFor(doc)
       control.upstreamCount = 0
 
+      socket.onerror = function onerror (err) {
+        console.log('Error on Websocket:', err)
+      }
+
       // https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent
       //
-      // 1000	CLOSE_NORMAL	Normal closure; the connection successfully completed whatever purpose for which it was created.
-      // 1001	CLOSE_GOING_AWAY	The endpoint is going away, either
+      // 1000  CLOSE_NORMAL  Normal closure; the connection successfully completed whatever purpose for which it was created.
+      // 1001  CLOSE_GOING_AWAY  The endpoint is going away, either
       //                                  because of a server failure or because the browser is navigating away from the page that opened the connection.
-      // 1002	CLOSE_PROTOCOL_ERROR	The endpoint is terminating the connection due to a protocol error.
-      // 1003	CLOSE_UNSUPPORTED	The connection is being terminated because the endpoint
+      // 1002  CLOSE_PROTOCOL_ERROR  The endpoint is terminating the connection due to a protocol error.
+      // 1003  CLOSE_UNSUPPORTED  The connection is being terminated because the endpoint
       //                                  received data of a type it cannot accept (for example, a text-only endpoint received binary data).
       // 1004                             Reserved. A meaning might be defined in the future.
-      // 1005	CLOSE_NO_STATUS	Reserved.  Indicates that no status code was provided even though one was expected.
-      // 1006	CLOSE_ABNORMAL	Reserved. Used to indicate that a connection was closed abnormally (
+      // 1005  CLOSE_NO_STATUS  Reserved.  Indicates that no status code was provided even though one was expected.
+      // 1006  CLOSE_ABNORMAL  Reserved. Used to indicate that a connection was closed abnormally (
       //
       //
       socket.onclose = function (event) {
@@ -573,14 +601,21 @@ var UpdateManager = (function () {
     return true
   }
 
-  // This high-level function updates the local store iff the web is changed successfully.
-  //
-  //  - deletions, insertions may be undefined or single statements or lists or formulae.
-  //      (may contain bnodes which can be indirectly identified by a where clause)
-  //
-  //  - callback is called as callback(uri, success, errorbody)
-  //
-  sparql.prototype.update = function (deletions, insertions, callback) {
+  /**
+   * This high-level function updates the local store iff the web is changed
+   * successfully.
+   *
+   * deletions, insertions may be undefined or single statements or lists or formulae
+   * (may contain bnodes which can be indirectly identified by a where clause)
+   *
+   * @param deletions
+   * @param insertions
+   *
+   * @param callback {Function} called as callback(uri, success, errorbody)
+   *
+   * @returns {*}
+   */
+  update (deletions, insertions, callback) {
     try {
       var kb = this.store
       var ds = !deletions ? []
@@ -599,6 +634,11 @@ var UpdateManager = (function () {
         return callback(null, true) // success -- nothing needed to be done.
       }
       var doc = ds.length ? ds[0].why : is[0].why
+      if (!doc) {
+        let message = 'Error patching: statement does not specify which document to patch:' + ds[0] + ', ' + is[0]
+        console.log(message)
+        throw new Error(message)
+      }
       var control = this.patchControlFor(doc)
       var startTime = Date.now()
 
@@ -624,15 +664,12 @@ var UpdateManager = (function () {
         throw new Error("Can't make changes in uneditable " + doc)
       }
       var i
-      var newSts
-      var documentString
-      var sz
       if (protocol.indexOf('SPARQL') >= 0) {
         var bnodes = []
-        if (ds.length) bnodes = this._statement_array_bnodes(ds)
-        if (is.length) bnodes = bnodes.concat(this._statement_array_bnodes(is))
-        var context = this._bnode_context(bnodes, doc)
-        var whereClause = this._context_where(context)
+        if (ds.length) bnodes = this.statementArrayBnodes(ds)
+        if (is.length) bnodes = bnodes.concat(this.statementArrayBnodes(is))
+        var context = this.bnodeContext(bnodes, doc)
+        var whereClause = this.contextWhere(context)
         var query = ''
         if (whereClause.length) { // Is there a WHERE clause?
           if (ds.length) {
@@ -667,184 +704,50 @@ var UpdateManager = (function () {
             query += ' }\n'
           }
         }
-        // Track pending upstream patches until they have fnished their callback
+        // Track pending upstream patches until they have finished their callback
         control.pendingUpstream = control.pendingUpstream ? control.pendingUpstream + 1 : 1
         if ('upstreamCount' in control) {
           control.upstreamCount += 1 // count changes we originated ourselves
           console.log('upstream count up to : ' + control.upstreamCount)
         }
 
-        this._fire(doc.uri, query,
-          function (uri, success, body, xhr) {
-            xhr.elapsedTime_ms = Date.now() - startTime
-            console.log('    sparql: Return ' + (success ? 'success' : 'FAILURE ' + xhr.status) +
-              ' elapsed ' + xhr.elapsedTime_ms + 'ms')
-            if (success) {
-              try {
-                kb.remove(ds)
-              } catch (e) {
-                success = false
-                body = 'Remote Ok BUT error deleting ' + ds.length + ' from store!!! ' + e
-              } // Add in any case -- help recover from weirdness??
-              for (var i = 0; i < is.length; i++) {
-                kb.add(is[i].subject, is[i].predicate, is[i].object, doc)
-              }
+        this.fire(doc.uri, query, (uri, success, body, response) => {
+          response.elapsedTimeMs = Date.now() - startTime
+          console.log('    sparql: Return ' +
+            success ? 'success' : 'FAILURE ' + response.status +
+            ' elapsed ' + response.elapsedTimeMs + 'ms')
+          if (success) {
+            try {
+              kb.remove(ds)
+            } catch (e) {
+              success = false
+              body = 'Remote Ok BUT error deleting ' + ds.length + ' from store!!! ' + e
+            } // Add in any case -- help recover from weirdness??
+            for (var i = 0; i < is.length; i++) {
+              kb.add(is[i].subject, is[i].predicate, is[i].object, doc)
             }
-
-            callback(uri, success, body, xhr)
-            control.pendingUpstream -= 1
-            // When upstream patches have been sent, reload state if downstream waiting
-            if (control.pendingUpstream === 0 && control.downstreamAction) {
-              var downstreamAction = control.downstreamAction
-              delete control.downstreamAction
-              console.log('delayed downstream action:')
-              downstreamAction(doc)
-            }
-          })
-      } else if (protocol.indexOf('DAV') >= 0) {
-        // The code below is derived from Kenny's UpdateCenter.js
-        documentString
-        var request = kb.any(doc, this.ns.link('request'))
-        if (!request) {
-          throw new Error('No record of our HTTP GET request for document: ' +
-            doc)
-        } // should not happen
-        var response = kb.any(request, this.ns.link('response'))
-        if (!response) {
-          return null // throw "No record HTTP GET response for document: "+doc
-        }
-        var content_type = kb.the(response, this.ns.httph('content-type')).value
-
-        // prepare contents of revised document
-        newSts = kb.statementsMatching(undefined, undefined, undefined, doc).slice() // copy!
-        for (i = 0; i < ds.length; i++) {
-          Util.RDFArrayRemove(newSts, ds[i])
-        }
-        for (i = 0; i < is.length; i++) {
-          newSts.push(is[i])
-        }
-
-        // serialize to te appropriate format
-        sz = Serializer(kb)
-        sz.suggestNamespaces(kb.namespaces)
-        sz.setBase(doc.uri) // ?? beware of this - kenny (why? tim)
-        switch (content_type) {
-          case 'application/rdf+xml':
-            documentString = sz.statementsToXML(newSts)
-            break
-          case 'text/n3':
-          case 'text/turtle':
-          case 'application/x-turtle': // Legacy
-          case 'application/n3': // Legacy
-            documentString = sz.statementsToN3(newSts)
-            break
-          default:
-            throw new Error('Content-type ' + content_type + ' not supported for data write')
-        }
-
-        // Write the new version back
-
-        var candidateTarget = kb.the(response, this.ns.httph('content-location'))
-        var targetURI
-        if (candidateTarget) {
-          targetURI = uriJoin(candidateTarget.value, targetURI)
-        }
-        var xhr = Util.XMLHTTPFactory()
-        xhr.options = {}
-        xhr.onreadystatechange = function () {
-          if (xhr.readyState === 4) {
-            // formula from sparqlUpdate.js, what about redirects?
-            var success = (!xhr.status || (xhr.status >= 200 && xhr.status < 300))
-            if (success) {
-              for (var i = 0; i < ds.length; i++) {
-                kb.remove(ds[i])
-              }
-              for (i = 0; i < is.length; i++) {
-                kb.add(is[i].subject, is[i].predicate, is[i].object, doc)
-              }
-            }
-            callback(doc.uri, success, xhr.responseText)
           }
-        }
-        xhr.open('PUT', targetURI, true)
-        // assume the server does PUT content-negotiation.
-        xhr.setRequestHeader('Content-type', content_type) // OK?
-        xhr.send(documentString)
+
+          callback(uri, success, body, response)
+          control.pendingUpstream -= 1
+          // When upstream patches have been sent, reload state if downstream waiting
+          if (control.pendingUpstream === 0 && control.downstreamAction) {
+            var downstreamAction = control.downstreamAction
+            delete control.downstreamAction
+            console.log('delayed downstream action:')
+            downstreamAction(doc)
+          }
+        })
+      } else if (protocol.indexOf('DAV') >= 0) {
+        this.updateDav(doc, ds, is, callback)
       } else {
         if (protocol.indexOf('LOCALFILE') >= 0) {
           try {
-            console.log('Writing back to local file\n')
-            // See http://simon-jung.blogspot.com/2007/10/firefox-extension-file-io.html
-            // prepare contents of revised document
-            newSts = kb.statementsMatching(undefined, undefined, undefined, doc).slice() // copy!
-            for (i = 0; i < ds.length; i++) {
-              Util.RDFArrayRemove(newSts, ds[i])
-            }
-            for (i = 0; i < is.length; i++) {
-              newSts.push(is[i])
-            }
-            // serialize to the appropriate format
-            documentString
-            sz = Serializer(kb)
-            sz.suggestNamespaces(kb.namespaces)
-            sz.setBase(doc.uri) // ?? beware of this - kenny (why? tim)
-            var dot = doc.uri.lastIndexOf('.')
-            if (dot < 1) {
-              throw new Error('Rewriting file: No filename extension: ' + doc.uri)
-            }
-            var ext = doc.uri.slice(dot + 1)
-            switch (ext) {
-              case 'rdf':
-              case 'owl': // Just my experence   ...@@ we should keep the format in which it was parsed
-              case 'xml':
-                documentString = sz.statementsToXML(newSts)
-                break
-              case 'n3':
-              case 'nt':
-              case 'ttl':
-                documentString = sz.statementsToN3(newSts)
-                break
-              default:
-                throw new Error('File extension .' + ext + ' not supported for data write')
-            }
-            // Write the new version back
-            // create component for file writing
-            console.log('Writing back: <<<' + documentString + '>>>')
-            var filename = doc.uri.slice(7) // chop off   file://  leaving /path
-            // console.log("Writeback: Filename: "+filename+"\n")
-            var file = Components.classes['@mozilla.org/file/local;1']
-              .createInstance(Components.interfaces.nsILocalFile)
-            file.initWithPath(filename)
-            if (!file.exists()) {
-              throw new Error('Rewriting file <' + doc.uri +
-                '> but it does not exist!')
-            }
-            // {
-            // file.create( Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 420)
-            // }
-            // create file output stream and use write/create/truncate mode
-            // 0x02 writing, 0x08 create file, 0x20 truncate length if exist
-            var stream = Components.classes['@mozilla.org/network/file-output-stream;1']
-              .createInstance(Components.interfaces.nsIFileOutputStream)
-
-            // Various JS systems object to 0666 in struct mode as dangerous
-            stream.init(file, 0x02 | 0x08 | 0x20, parseInt('0666', 8), 0)
-
-            // write data to file then close output stream
-            stream.write(documentString, documentString.length)
-            stream.close()
-
-            for (i = 0; i < ds.length; i++) {
-              kb.remove(ds[i])
-            }
-            for (i = 0; i < is.length; i++) {
-              kb.add(is[i].subject, is[i].predicate, is[i].object, doc)
-            }
-            callback(doc.uri, true, '') // success!
+            this.updateLocalFile(doc, ds, is, callback)
           } catch (e) {
             callback(doc.uri, false,
               'Exception trying to write back file <' + doc.uri + '>\n'
-            // + tabulator.Util.stackString(e))
+              // + tabulator.Util.stackString(e))
             )
           }
         } else {
@@ -852,133 +755,268 @@ var UpdateManager = (function () {
         }
       }
     } catch (e) {
-      callback(undefined, false, 'Exception in update: ' + e + '\n' + $rdf.Util.stackString(e))
+      callback(undefined, false, 'Exception in update: ' + e + '\n' +
+        $rdf.Util.stackString(e))
     }
-  } // wnd update
+  }
 
-  // This suitable for an inital creation of a document
-  //
-  // data:    string, or array of statements
-  //
-  sparql.prototype.put = function (doc, data, content_type, callback) {
-    var documentString
-    var kb = this.store
-
-    if (typeof data === typeof '') {
-      documentString = data
-    } else {
-      // serialize to te appropriate format
-      var sz = Serializer(kb)
-      sz.suggestNamespaces(kb.namespaces)
-      sz.setBase(doc.uri)
-      switch (content_type) {
-        case 'application/rdf+xml':
-          documentString = sz.statementsToXML(data)
-          break
-        case 'text/n3':
-        case 'text/turtle':
-        case 'application/x-turtle': // Legacy
-        case 'application/n3': // Legacy
-          documentString = sz.statementsToN3(data)
-          break
-        default:
-          throw new Error('Content-type ' + content_type +
-            ' not supported for data PUT')
-      }
+  updateDav (doc, ds, is, callback) {
+    let kb = this.store
+    // The code below is derived from Kenny's UpdateCenter.js
+    var request = kb.any(doc, this.ns.link('request'))
+    if (!request) {
+      throw new Error('No record of our HTTP GET request for document: ' +
+        doc)
+    } // should not happen
+    var response = kb.any(request, this.ns.link('response'))
+    if (!response) {
+      return null // throw "No record HTTP GET response for document: "+doc
     }
-    var xhr = Util.XMLHTTPFactory()
-    xhr.options = {}
-    xhr.onreadystatechange = function () {
-      if (xhr.readyState === 4) {
-        // formula from sparqlUpdate.js, what about redirects?
-        var success = (!xhr.status || (xhr.status >= 200 && xhr.status < 300))
-        if (success && typeof data !== 'string') {
-          data.map(function (st) {
+    var contentType = kb.the(response, this.ns.httph('content-type')).value
+
+    // prepare contents of revised document
+    let i
+    let newSts = kb.statementsMatching(undefined, undefined, undefined, doc).slice() // copy!
+    for (i = 0; i < ds.length; i++) {
+      Util.RDFArrayRemove(newSts, ds[i])
+    }
+    for (i = 0; i < is.length; i++) {
+      newSts.push(is[i])
+    }
+
+    const documentString = this.serialize(doc.uri, newSts, contentType)
+
+    // Write the new version back
+    var candidateTarget = kb.the(response, this.ns.httph('content-location'))
+    var targetURI
+    if (candidateTarget) {
+      targetURI = uriJoin(candidateTarget.value, targetURI)
+    }
+
+    let options = {
+      contentType,
+      noMeta: true,
+      body: documentString
+    }
+
+    return kb.fetcher.webOperation('PUT', targetURI, options)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(response.error)
+        }
+
+        for (var i = 0; i < ds.length; i++) {
+          kb.remove(ds[i])
+        }
+        for (i = 0; i < is.length; i++) {
+          kb.add(is[i].subject, is[i].predicate, is[i].object, doc)
+        }
+
+        callback(doc.uri, response.ok, response.responseText, response)
+      })
+      .catch(err => {
+        callback(doc.uri, false, err.message, err)
+      })
+  }
+
+  /**
+   * Likely deprecated, since this lib no longer deals with browser extension
+   *
+   * @param doc
+   * @param ds
+   * @param is
+   * @param callback
+   */
+  updateLocalFile (doc, ds, is, callback) {
+    const kb = this.store
+    console.log('Writing back to local file\n')
+    // See http://simon-jung.blogspot.com/2007/10/firefox-extension-file-io.html
+    // prepare contents of revised document
+    let newSts = kb.statementsMatching(undefined, undefined, undefined, doc).slice() // copy!
+
+    let i
+    for (i = 0; i < ds.length; i++) {
+      Util.RDFArrayRemove(newSts, ds[ i ])
+    }
+    for (i = 0; i < is.length; i++) {
+      newSts.push(is[ i ])
+    }
+    // serialize to the appropriate format
+    var dot = doc.uri.lastIndexOf('.')
+    if (dot < 1) {
+      throw new Error('Rewriting file: No filename extension: ' + doc.uri)
+    }
+    var ext = doc.uri.slice(dot + 1)
+
+    let contentType = Fetcher.CONTENT_TYPE_BY_EXT[ ext ]
+    if (!contentType) {
+      throw new Error('File extension .' + ext + ' not supported for data write')
+    }
+
+    const documentString = this.serialize(doc.uri, newSts, contentType)
+
+    // Write the new version back
+    // create component for file writing
+    console.log('Writing back: <<<' + documentString + '>>>')
+    var filename = doc.uri.slice(7) // chop off   file://  leaving /path
+    // console.log("Writeback: Filename: "+filename+"\n")
+    var file = Components.classes[ '@mozilla.org/file/local;1' ]
+      .createInstance(Components.interfaces.nsILocalFile)
+    file.initWithPath(filename)
+    if (!file.exists()) {
+      throw new Error('Rewriting file <' + doc.uri +
+        '> but it does not exist!')
+    }
+    // {
+    // file.create( Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 420)
+    // }
+    // create file output stream and use write/create/truncate mode
+    // 0x02 writing, 0x08 create file, 0x20 truncate length if exist
+    var stream = Components.classes[ '@mozilla.org/network/file-output-stream;1' ]
+      .createInstance(Components.interfaces.nsIFileOutputStream)
+
+    // Various JS systems object to 0666 in struct mode as dangerous
+    stream.init(file, 0x02 | 0x08 | 0x20, parseInt('0666', 8), 0)
+
+    // write data to file then close output stream
+    stream.write(documentString, documentString.length)
+    stream.close()
+
+    for (i = 0; i < ds.length; i++) {
+      kb.remove(ds[ i ])
+    }
+    for (i = 0; i < is.length; i++) {
+      kb.add(is[ i ].subject, is[ i ].predicate, is[ i ].object, doc)
+    }
+    callback(doc.uri, true, '') // success!
+  }
+
+  /**
+   * @param uri {string}
+   * @param data {string|Array<Statement>}
+   * @param contentType {string}
+   *
+   * @throws {Error} On unsupported content type
+   *
+   * @returns {string}
+   */
+  serialize (uri, data, contentType) {
+    const kb = this.store
+    let documentString
+
+    if (typeof data === 'string') {
+      return data
+    }
+
+    // serialize to the appropriate format
+    var sz = Serializer(kb)
+    sz.suggestNamespaces(kb.namespaces)
+    sz.setBase(uri)
+    switch (contentType) {
+      case 'text/xml':
+      case 'application/rdf+xml':
+        documentString = sz.statementsToXML(data)
+        break
+      case 'text/n3':
+      case 'text/turtle':
+      case 'application/x-turtle': // Legacy
+      case 'application/n3': // Legacy
+        documentString = sz.statementsToN3(data)
+        break
+      default:
+        throw new Error('Content-type ' + contentType +
+          ' not supported for data serialization')
+    }
+
+    return documentString
+  }
+
+  /**
+   * This is suitable for an initial creation of a document
+   *
+   * @param doc {Node}
+   * @param data {string|Array<Statement>}
+   * @param contentType {string}
+   * @param callback {Function}  callback(uri, ok, message, response)
+   *
+   * @throws {Error} On unsupported content type (via serialize())
+   *
+   * @returns {Promise}
+   */
+  put (doc, data, contentType, callback) {
+    const kb = this.store
+    let documentString
+
+    return Promise.resolve()
+      .then(() => {
+        documentString = this.serialize(doc.uri, data, contentType)
+
+        return kb.fetcher
+          .webOperation('PUT', doc.uri, { contentType, body: documentString })
+      })
+      .then(response => {
+        if (!response.ok) {
+          return callback(doc.uri, response.ok, response.error, response)
+        }
+
+        delete kb.fetcher.nonexistent[doc.uri]
+        delete kb.fetcher.requested[doc.uri]
+
+        if (typeof data !== 'string') {
+          data.map((st) => {
             kb.addStatement(st)
           })
-        // kb.fetcher.requested[doc.uri] = true // as though fetched
         }
-        if (success) {
-          delete kb.fetcher.nonexistant[doc.uri]
-          delete kb.fetcher.requested[doc.uri]
-        // @@ later we can fake it has been requestd if put gives us the header sand we save them.
-        }
-        callback(doc.uri, success, xhr.responseText, xhr)
-      }
-    }
-    xhr.open('PUT', doc.uri, true)
-    xhr.setRequestHeader('Content-type', content_type)
-    xhr.send(documentString)
+
+        callback(doc.uri, response.ok, '', response)
+      })
+      .catch(err => {
+        callback(doc.uri, false, err.message)
+      })
   }
 
-  // Reload a document.
-  //
-  // Fast and cheap, no metaata
-  // Measure times for the document
-  // Load it provisionally
-  // Don't delete the statemenst before the load, or it will leave a broken document
-  // in the meantime.
-
-  sparql.prototype.reload = function (kb, doc, callback) {
+  /**
+   * Reloads a document.
+   *
+   * Fast and cheap, no metadata. Measure times for the document.
+   * Load it provisionally.
+   * Don't delete the statements before the load, or it will leave a broken
+   * document in the meantime.
+   *
+   * @param kb
+   * @param doc {NamedNode}
+   * @param callback
+   */
+  reload (kb, doc, callback) {
     var startTime = Date.now()
     // force sets no-cache and
-    kb.fetcher.nowOrWhenFetched(doc.uri, {force: true, noMeta: true, clearPreviousData: true}, function (ok, body, xhr) {
+    const options = { force: true, noMeta: true, clearPreviousData: true }
+
+    kb.fetcher.nowOrWhenFetched(doc.uri, options, function (ok, body, response) {
       if (!ok) {
         console.log('    ERROR reloading data: ' + body)
-        callback(false, 'Error reloading data: ' + body, xhr)
-      } else if (xhr.onErrorWasCalled || xhr.status !== 200) {
+        callback(false, 'Error reloading data: ' + body, response)
+      } else if (response.onErrorWasCalled || response.status !== 200) {
         console.log('    Non-HTTP error reloading data! onErrorWasCalled=' +
-          xhr.onErrorWasCalled + ' status: ' + xhr.status)
-        callback(false, 'Non-HTTP error reloading data: ' + body, xhr)
+          response.onErrorWasCalled + ' status: ' + response.status)
+        callback(false, 'Non-HTTP error reloading data: ' + body, response)
       } else {
-        var elapsedTime_ms = Date.now() - startTime
-        if (!doc.reloadTime_total) doc.reloadTime_total = 0
-        if (!doc.reloadTime_count) doc.reloadTime_count = 0
-        doc.reloadTime_total += elapsedTime_ms
-        doc.reloadTime_count += 1
-        console.log('    Fetch took ' + elapsedTime_ms + 'ms, av. of ' +
-          doc.reloadTime_count + ' = ' +
-          (doc.reloadTime_total / doc.reloadTime_count) + 'ms.')
+        var elapsedTimeMs = Date.now() - startTime
+
+        if (!doc.reloadTimeTotal) doc.reloadTimeTotal = 0
+        if (!doc.reloadTimeCount) doc.reloadTimeCount = 0
+
+        doc.reloadTimeTotal += elapsedTimeMs
+        doc.reloadTimeCount += 1
+
+        console.log('    Fetch took ' + elapsedTimeMs + 'ms, av. of ' +
+          doc.reloadTimeCount + ' = ' +
+          (doc.reloadTimeTotal / doc.reloadTimeCount) + 'ms.')
+
         callback(true)
       }
     })
   }
-
-  sparql.prototype.oldReload = function (kb, doc, callback) {
-    var g2 = graph() // A separate store to hold the data as we load it
-    var f2 = fetcher(g2)
-    var startTime = Date.now()
-    // force sets no-cache and
-    f2.nowOrWhenFetched(doc.uri, {force: true, noMeta: true, clearPreviousData: true}, function (ok, body, xhr) {
-      if (!ok) {
-        console.log('    ERROR reloading data: ' + body)
-        callback(false, 'Error reloading data: ' + body, xhr)
-      } else if (xhr.onErrorWasCalled || xhr.status !== 200) {
-        console.log('    Non-HTTP error reloading data! onErrorWasCalled=' +
-          xhr.onErrorWasCalled + ' status: ' + xhr.status)
-        callback(false, 'Non-HTTP error reloading data: ' + body, xhr)
-      } else {
-        var sts1 = kb.statementsMatching(undefined, undefined, undefined, doc).slice() // Take a copy!!
-        var sts2 = g2.statementsMatching(undefined, undefined, undefined, doc).slice()
-        console.log('    replacing ' + sts1.length + ' with ' + sts2.length +
-          ' out of total statements ' + kb.statements.length)
-        kb.remove(sts1)
-        kb.add(sts2)
-        var elapsedTime_ms = Date.now() - startTime
-        if (sts2.length === 0) {
-          console.log('????????????????? 0000000')
-        }
-        if (!doc.reloadTime_total) doc.reloadTime_total = 0
-        if (!doc.reloadTime_count) doc.reloadTime_count = 0
-        doc.reloadTime_total += elapsedTime_ms
-        doc.reloadTime_count += 1
-        console.log('    fetch took ' + elapsedTime_ms + 'ms, av. of ' + doc.reloadTime_count + ' = ' +
-          (doc.reloadTime_total / doc.reloadTime_count) + 'ms.')
-        callback(true)
-      }
-    })
-  }
-  return sparql
-})()
+}
 
 module.exports = UpdateManager
