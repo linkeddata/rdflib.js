@@ -863,10 +863,14 @@ class Fetcher {
       console.log('@@ Recording failure for ' + options.original + ': ' + statusCode)
     }
 
-    // changed 2015 was false
-    this.requested[Uri.docpart(options.original.uri)] = statusCode
+    let isGet = !options.method || options.method.toUpperCase() === 'GET' ||
+      options.method.toUpperCase() === 'HEAD'
 
-    this.fireCallbacks('fail', [options.original.uri, errorMessage])
+    if (isGet) {  // only cache the status code on GET or HEAD
+      this.requested[Uri.docpart(options.original.uri)] = statusCode
+
+      this.fireCallbacks('fail', [options.original.uri, errorMessage])
+    }
 
     return Promise.resolve({
       ok: false,
