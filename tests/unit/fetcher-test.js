@@ -228,6 +228,53 @@ describe('Fetcher', () => {
     })
   })
 
+  describe('failFetch', () => {
+    let fetcher, uri, options, statusCode
+    const errorMessage = 'An error has occurred'
+
+    beforeEach(() => {
+      uri = 'https://example.com/doc.ttl'
+
+      fetcher = new Fetcher(rdf.graph())
+
+      options = fetcher.initFetchOptions(uri, {})
+
+      statusCode = 400
+    })
+
+    it('should return a result object', () => {
+      return fetcher.failFetch(options, errorMessage, statusCode)
+        .then(result => {
+          expect(result.ok).to.be.false()
+          expect(result.status).to.equal(statusCode)
+          expect(result.error).to.equal(errorMessage)
+        })
+    })
+
+    it('should add to status cache for GET operations', () => {
+      return fetcher.failFetch(options, errorMessage, statusCode)
+        .then(() => {
+          expect(fetcher.requested[uri]).to.equal(statusCode)
+        })
+    })
+
+    it('should add to status cache for HEAD operations', () => {
+      options.method = 'HEAD'
+      return fetcher.failFetch(options, errorMessage, statusCode)
+        .then(() => {
+          expect(fetcher.requested[uri]).to.equal(statusCode)
+        })
+    })
+
+    it('should not add to status cache for non-GET operations', () => {
+      options.method = 'PATCH'
+      return fetcher.failFetch(options, errorMessage, statusCode)
+        .then(() => {
+          expect(fetcher.requested[uri]).to.not.exist()
+        })
+    })
+  })
+
   describe('initFetchOptions', () => {
     let fetcher, uri, options
 
