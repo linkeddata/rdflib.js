@@ -47,10 +47,10 @@ function parse (str, kb, base, contentType, callback) {
         try {
           jsonDocument = JSON.parse(str)
         } catch (parseErr) {
-          callback(parseErr, null)
+          return callback(parseErr, null)
         }
         jsonld.toRDF(jsonDocument,
-          {format: 'application/nquads'},
+          {format: 'application/nquads', base},
           nquadCallback)
       } else {
         nquadCallback(null, str)
