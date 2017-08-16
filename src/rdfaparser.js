@@ -179,7 +179,7 @@ class RDFaProcessor {
 
   static parseRDFaDOM (dom, kb, base) {
     var p = new RDFaProcessor(kb, { 'base': base })
-    dom.baseURI = base
+    // dom.baseURI = base  // @@ Not allowed 2017- readonly property -- necessary?
     p.process(dom)
   }
 
@@ -263,7 +263,7 @@ class RDFaProcessor {
     if (node.nodeType === Node.DOCUMENT_NODE) {
       base = node.baseURI
       node = node.documentElement
-      node.baseURI = base
+      // node.baseURI = base
       this.setContext(node)
     } else if (node.parentNode.nodeType === Node.DOCUMENT_NODE) {
       this.setContext(node)
@@ -359,7 +359,7 @@ class RDFaProcessor {
           }
           var prefix = att.nodeName.substring(6)
           // TODO: resolve relative?
-          var ref = RDFaProcessor.trim(att.value)
+          var ref = this.trim(att.value)
           prefixes[prefix] = this.options.base ? Uri.join(ref, this.options.base) : ref
         }
       }
@@ -378,7 +378,7 @@ class RDFaProcessor {
         xmlLangAtt = current.getAttributeNodeNS(this.langAttributes[i].namespaceURI, this.langAttributes[i].localName)
       }
       if (xmlLangAtt) {
-        let value = RDFaProcessor.trim(xmlLangAtt.value)
+        let value = this.trim(xmlLangAtt.value)
         if (value.length > 0) {
           language = value
         } else {
@@ -728,7 +728,7 @@ class RDFaProcessor {
       for (var child = current.lastChild; child; child = child.previousSibling) {
         if (child.nodeType === Node.ELEMENT_NODE) {
           // console.log("Pushing child "+child.localName)
-          child.baseURI = current.baseURI
+          // child.baseURI = current.baseURI   @@ read-only
           queue.unshift({ current: child, context: childContext })
         }
       }
@@ -852,6 +852,10 @@ class RDFaProcessor {
     this.setInitialContext()
     this.inXHTMLMode = false
     this.inHTMLMode = false
+  }
+
+  trim (str) {
+    return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '')
   }
 
   tokenize (str) {
