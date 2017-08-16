@@ -17,4 +17,33 @@ describe('Parse', () => {
       })
     })
   })
+  describe('a JSON-LD document', () => {
+    describe('with a base IRI', () => {
+      let store
+      before(done => {
+        const base = 'https://www.example.org/abc/def'
+        const mimeType = 'application/ld+json'
+        const content = `
+        {
+          "@context": {
+            "homepage": {
+              "@id": "http://xmlns.com/foaf/0.1/homepage",
+              "@type": "@id"
+            }
+          },
+          "@id": "../#me",
+          "homepage": "xyz"
+        }`
+        store = graph()
+        parse(content, store, base, mimeType, done)
+      })
+
+      it('uses the specified base IRI', () => {
+        expect(store.statements).to.have.length(1);
+        const statement = store.statements[0]
+        expect(statement.subject.value).to.equal('https://www.example.org/#me')
+        expect(statement.object.value).to.equal('https://www.example.org/abc/xyz')
+      })
+    })
+  })
 })
