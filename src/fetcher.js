@@ -803,7 +803,7 @@ class Fetcher {
     this.fetch(uri, options)
       .then(result => {
         if (userCallback) {
-          userCallback(true, null, result)
+          userCallback(result.ok, result.status, result)
         }
       })
       .catch(err => {
