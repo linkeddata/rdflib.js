@@ -48,7 +48,7 @@ describe('Fetcher', () => {
 
       fetcher = new Fetcher(rdf.graph())
 
-      fetcher.fetch = sinon.stub().resolves()
+      fetcher.fetch = sinon.stub().resolves({ ok: true })
     })
 
     it('should invoke userCallback with caught error', done => {
