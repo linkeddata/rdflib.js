@@ -59,7 +59,7 @@
     "test:unit": "mocha --growl --require babel-register tests/unit/**-test.js",
     "test:unit:dev": "mocha --watch --growl --require babel-register tests/unit/**-test.js",
     "test:serialize": "npm run lib  && npm run serialize-tests && npm run cleantest",
-    "all": "npm run lib && npm run webpack",
+    "all": "npm run webpack",
     "webpack": "webpack --progress --colors",
     "lib": "babel src -d lib",
     "detach": "git checkout origin/master &&  git reset--hard HEAD",
