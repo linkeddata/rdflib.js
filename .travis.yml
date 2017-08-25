@@ -6,6 +6,8 @@ node_js:
   - "node"
 before_script:
   - npm run build:browser
+after_success:
+  - ./.travis_publish
 cache:
   directories:
     - node_modules
