@@ -78,10 +78,7 @@
     "test:unit:dev": "mocha --watch --growl --require babel-register tests/unit/**-test.js"
   },
   "files": [
-    "dist",
-    "dist/rdflib.js",
-    "lib",
-    "src"
+    "lib"
   ],
   "main": "lib/index.js",
   "keywords": [
