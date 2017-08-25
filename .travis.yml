@@ -4,6 +4,8 @@ node_js:
   - "6.0"
   - "8.0"
   - "node"
+before_script:
+  - npm run build:browser
 cache:
   directories:
     - node_modules
