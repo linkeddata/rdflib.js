@@ -46,7 +46,7 @@ npm install --save rdflib
 
 #### Subdirectories
 
-- `dist`: Where the bundled libraries are built.  Run 'make' to generate them.
+- `dist`: Where the bundled libraries are built. Run `npm run build` to generate them.
 - `test`: Tests are here.
 - `lib`: Transpiled, non-bundled library is built here when the library is
   published to npm.
