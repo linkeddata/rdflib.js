@@ -67,7 +67,7 @@
     "minify": "npm run dist/rdflib.min.js",
     "size": "node-line-counter .",
     "gh-pages": "npm run detach && git branch - D gh - pages ||: && git checkout - b gh - pages && npm run all && git add - f dist /*.js src/*.js *.js && git commit -m 'gh-pages: update to latest' && git push -f origin gh-pages && git checkout master",
-    "prepublish": "npm run lib",
+    "prepare": "npm run lib",
     "serialize-tests": "npm run serialize-test-1 && npm run serialize-test-2 && npm run serialize-test-3 && npm run serialize-test-4 && npm run serialize-test-5 && npm run serialize-test-6 && npm run serialize-test-7 && npm run serialize-test-10 && npm run serialize-test-11 && npm run serialize-test-12 && npm run serialize-test-13",
     "serialize-test-1": "cd ./tests/serialize && node ./data.js -in=t1.ttl -format=application/rdf+xml -out=,t1.xml && fs-grep http://www.w3.org/2001/XMLSchema#integer ,t1.xml",
     "serialize-test-2": "cd ./tests/serialize && node ./data.js -in=t2.ttl -format=application/rdf+xml  -out=,t2.xml && node diff ,t2.xml t2-ref.xml",
