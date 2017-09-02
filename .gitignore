@@ -1,3 +1,4 @@
+dist
 parsers/*.js
 node_modules
 .vscode/

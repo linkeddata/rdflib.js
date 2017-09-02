@@ -1,0 +1,28 @@
+#!/bin/bash
+REPO_NAME="linkeddata/rdflib.js"
+PUBLICATION_BRANCH=gh-pages
+
+# Only publish from the main repository's master branch
+if [ "$TRAVIS_REPO_SLUG" != "$REPO_NAME" ] || [ "$TRAVIS_BRANCH" != "master" ] || [ "$TRAVIS_PULL_REQUEST" != "false" ]; then exit; fi
+echo -e "Building $PUBLICATION_BRANCH...\n"
+
+# Checkout the branch
+REPO_PATH=$PWD
+pushd $HOME
+git clone --quiet --depth=1 --branch=$PUBLICATION_BRANCH https://${GH_TOKEN}@github.com/$REPO_NAME publish 2>&1 > /dev/null
+cd publish
+
+# Don't update if already at the latest version
+if [[ `git log -1 --pretty=%B` == *$TRAVIS_COMMIT* ]]; then exit; fi
+
+# Update pages
+rm -r * 2> /dev/null
+cp -r $REPO_PATH/dist .
+
+# Commit and push latest version
+git add .
+git config user.name  "Travis"
+git config user.email "travis@travis-ci.org"
+git commit -m "Update to $TRAVIS_COMMIT."
+git push -fq origin $PUBLICATION_BRANCH 2>&1 > /dev/null
+popd
