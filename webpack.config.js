@@ -1,5 +1,5 @@
 const path = require('path')
-// const webpack = require('webpack')
+const MinifyPlugin = require('babel-minify-webpack-plugin')
 
 module.exports = {
   entry: [
@@ -24,5 +24,8 @@ module.exports = {
     'node-fetch': 'fetch',
     'xmldom': 'window'
   },
-  devtool: 'source-map'
+  devtool: 'source-map',
+  plugins: [
+    new MinifyPlugin()
+  ]
 }
