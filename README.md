@@ -30,7 +30,7 @@ npm install
 Generate the dist directory
 
 ```bash
-npm run all
+npm run build:browser
 ```
 
 #### Node.js
