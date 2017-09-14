@@ -1,5 +1,7 @@
 sudo: false
 language: node_js
+env:
+  - PUBLISH_FROM_NODE_VERSION=8.0
 node_js:
   - "6.0"
   - "8.0"

@@ -2,6 +2,8 @@
 REPO_NAME="linkeddata/rdflib.js"
 PUBLICATION_BRANCH=gh-pages
 
+# Only publish from a specific Node version
+if [ "$TRAVIS_NODE_VERSION" != "$PUBLISH_FROM_NODE_VERSION" ]; then exit; fi
 # Only publish from the main repository's master branch
 if [ "$TRAVIS_REPO_SLUG" != "$REPO_NAME" ] || [ "$TRAVIS_BRANCH" != "master" ] || [ "$TRAVIS_PULL_REQUEST" != "false" ]; then exit; fi
 echo -e "Building $PUBLICATION_BRANCH...\n"
