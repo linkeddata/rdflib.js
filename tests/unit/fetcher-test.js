@@ -48,7 +48,7 @@ describe('Fetcher', () => {
 
       fetcher = new Fetcher(rdf.graph())
 
-      fetcher.fetch = sinon.stub().resolves()
+      fetcher.fetch = sinon.stub().resolves({ ok: true, status: 200, statusText: "Dummy stub"})
     })
 
     it('should invoke userCallback with caught error', done => {
@@ -63,16 +63,17 @@ describe('Fetcher', () => {
     })
 
     it('nowOrWhenFetched(uri, userCallback)', done => {
-      fetcher.nowOrWhenFetched(docuri, (ok) => {
+      fetcher.nowOrWhenFetched(docuri, (ok, text, status) => {
         expect(fetcher.fetch).to.have.been.calledWith(docuri, {})
         expect(ok).to.be.true()
+        expect(status).to.equal(200)
         done()
       })
     })
 
     it('nowOrWhenFetched(uri, options, userCallback)', done => {
       let options = {}
-      fetcher.nowOrWhenFetched(docuri, options, (ok) => {
+      fetcher.nowOrWhenFetched(docuri, options, (ok, text, status) => {
         expect(fetcher.fetch).to.have.been.calledWith(docuri, options)
         expect(ok).to.be.true()
         done()
