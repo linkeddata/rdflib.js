@@ -776,6 +776,11 @@ class Fetcher {
    *   nowOrWhenFetched (uri, referringTerm, userCallback, options)  <-- old
    *   nowOrWhenFetched (uri, referringTerm, userCallback) <-- old
    *
+   * Callback params:
+   *    ok: Boolean      eg false
+   *    message: string  eg "Does not exist"
+   *    status: Number   eg 400
+   *
    *  Options include:
    *   referringTerm    The document in which this link was found.
    *                    this is valuable when finding the source of bad URIs
@@ -801,14 +806,14 @@ class Fetcher {
     }
 
     this.fetch(uri, options)
-      .then(result => {
+      .then(response => {
         if (userCallback) {
-          userCallback(true, null, result)
+          userCallback(response.ok, response.statusText || response.error, response.status)
         }
       })
       .catch(err => {
-        // console.log(err)
-        userCallback(false, err.message)
+        console.log("Non-HTTP error in fetch" + err)
+        userCallback(false, err.message, 999) // Dummy HTTP status
       })
   }
 
