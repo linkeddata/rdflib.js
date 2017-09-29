@@ -392,8 +392,8 @@ function indexedFormulaQuery (myQuery, callback, fetcher, onDone) {
       var id = 'match' + match_index++
       var fetchResource = function (requestedTerm, id) {
         var docuri = requestedTerm.uri.split('#')[0]
-        sf.nowOrWhenFetched(docuri, undefined, function (err, body, xhr) {
-          if (err) {
+        sf.nowOrWhenFetched(docuri, undefined, function (ok, body, xhr) {
+          if (!ok) {
             console.log('Error following link to <' + requestedTerm.uri + '> in query: ' + body)
           }
           match(f, g, bindingsSoFar, level, fetcher, // match not match2 to look up any others necessary.

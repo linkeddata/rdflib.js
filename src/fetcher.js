@@ -808,7 +808,7 @@ class Fetcher {
     this.fetch(uri, options)
       .then(response => {
         if (userCallback) {
-          userCallback(response.ok, response.statusText || response.error, response.status)
+          userCallback(response.ok, response.statusText || response.error, response)
         }
       })
       .catch(err => {
