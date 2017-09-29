@@ -63,17 +63,17 @@ describe('Fetcher', () => {
     })
 
     it('nowOrWhenFetched(uri, userCallback)', done => {
-      fetcher.nowOrWhenFetched(docuri, (ok, text, status) => {
+      fetcher.nowOrWhenFetched(docuri, (ok, text, response) => {
         expect(fetcher.fetch).to.have.been.calledWith(docuri, {})
         expect(ok).to.be.true()
-        expect(status).to.equal(200)
+        expect(response.status).to.equal(200)
         done()
       })
     })
 
     it('nowOrWhenFetched(uri, options, userCallback)', done => {
       let options = {}
-      fetcher.nowOrWhenFetched(docuri, options, (ok, text, status) => {
+      fetcher.nowOrWhenFetched(docuri, options, (ok, text, response) => {
         expect(fetcher.fetch).to.have.been.calledWith(docuri, options)
         expect(ok).to.be.true()
         done()

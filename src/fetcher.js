@@ -779,7 +779,7 @@ class Fetcher {
    * Callback params:
    *    ok: Boolean      eg false
    *    message: string  eg "Does not exist"
-   *    status: Number   eg 400
+   *    resonse: Response   from fetch()
    *
    *  Options include:
    *   referringTerm    The document in which this link was found.
