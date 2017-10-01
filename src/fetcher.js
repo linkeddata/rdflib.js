@@ -813,7 +813,7 @@ class Fetcher {
       })
       .catch(err => {
         console.log("Non-HTTP error in fetch" + err)
-        userCallback(false, err.message, 999) // Dummy HTTP status
+        userCallback(false, err.message, { status: 999}) // Dummy HTTP status
       })
   }
 
