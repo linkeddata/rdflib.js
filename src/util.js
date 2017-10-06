@@ -8,6 +8,7 @@ var NamedNode = require('./named-node')
 
 module.exports.AJAR_handleNewTerm = ajarHandleNewTerm
 module.exports.ArrayIndexOf = arrayIndexOf
+module.exports.baseMediaType = baseMediaType
 module.exports.callbackify = callbackify
 module.exports.dtstamp = dtstamp
 module.exports.DOMParserFactory = domParser
@@ -15,6 +16,7 @@ module.exports.domToString = domToString
 module.exports.dumpNode = dumpNode
 module.exports.heavyCompare = heavyCompare
 module.exports.heavyCompareSPO = heavyCompareSPO
+module.exports.mediaTypeClass = mediaTypeClass
 module.exports.output = output
 module.exports.parseXML = parseXML
 module.exports.RDFArrayRemove = rdfArrayRemove
@@ -25,9 +27,12 @@ module.exports.string.template = stringTemplate
 module.exports.uri = require('./uri')  // TODO: Remove this mixed usage
 module.exports.log = log
 
-module.exports.mediaTypeClass = function(mediaType){
-  mediaType = mediaType.split(';')[0].trim()  // remove media type parameters
-  return new NamedNode('http://www.w3.org/ns/iana/media-types/' + mediaType + '#Resource')
+function baseMediaType(mediaType) {
+  return mediaType.split(';')[0].trim();
+}
+
+function mediaTypeClass(mediaType){
+  return new NamedNode('http://www.w3.org/ns/iana/media-types/' + baseMediaType(mediaType) + '#Resource')
 }
 
 /**
