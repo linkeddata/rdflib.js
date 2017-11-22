@@ -419,7 +419,13 @@ class Fetcher {
       if (typeof window !== 'undefined') {
         this._fetch = window.fetch.bind(window)
       } else {
-        this._fetch = require('node-fetch')
+        var nodeFetch = require('node-fetch');
+        var fileFetch = require('file-fetch');
+        var fetchers = this._fetch = require('proto-fetch')({
+          'http': nodeFetch,
+          'https': nodeFetch,
+          'file': fileFetch
+        });
       }
     }
 

@@ -36,6 +36,8 @@
     "jsonld": "^0.4.5",
     "n3": "^0.4.1",
     "node-fetch": "^1.7.1",
+    "file-fetch": "^1.1.1",
+    "proto-fetch": "^1.0.0",
     "xmldom": "^0.1.22"
   },
   "devDependencies": {
