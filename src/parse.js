@@ -19,6 +19,7 @@ const Util = require('./util')
  */
 function parse (str, kb, base, contentType, callback) {
   contentType = contentType || 'text/turtle'
+  contentType = contentType.split(';')[0]
   try {
     if (contentType === 'text/n3' || contentType === 'text/turtle') {
       var p = N3Parser(kb, kb, base, base, null, null, '', null)
