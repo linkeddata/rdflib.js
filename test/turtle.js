@@ -63,7 +63,11 @@ function loadAndRunTestManifest () {
             return new Promise((resolve, reject) => {
               var graph = $rdf.graph()
               $rdf.fetcher(graph, {a:1}).nowOrWhenFetched(test[k], {}, function (ok, body, xhr) {
-                resolve({ role: k, graph: graph.length })
+                if (ok) {
+                  resolve({ role: k, graph: graph.length })
+                } else {
+                  reject(Error(body))
+                }
               })
             })
           })).then(pair => {
@@ -72,6 +76,12 @@ function loadAndRunTestManifest () {
             })
             suite.addTest(mochaTest)
             return [test.name].concat(pair, mochaTest)
+          }).catch(e => {
+            let mochaTest = new Test(test.name, done => {
+              done(e)
+            })
+            suite.addTest(mochaTest)
+            return [test.name].concat(e, mochaTest)
           }))
           
         default:
