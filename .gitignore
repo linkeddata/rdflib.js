@@ -5,3 +5,7 @@ node_modules
 npm-debug.log
 dist/rdflib.min.js
 lib/
+test/downloaded-turtle-tests/*.ttl
+test/downloaded-turtle-tests/*.nt
+test/downloaded-turtle-tests/LICENSE
+test/downloaded-turtle-tests/README
