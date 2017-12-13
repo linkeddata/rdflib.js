@@ -27,5 +27,8 @@ module.exports = {
   devtool: 'source-map',
   plugins: [
     new MinifyPlugin({ deadcode: false })
-  ]
+  ],
+  node: {
+    fs: 'empty'
+  }
 }
