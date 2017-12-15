@@ -38,7 +38,8 @@
     "node-fetch": "^1.7.3",
     "file-fetch": "^1.1.1",
     "proto-fetch": "^1.0.0",
-    "xmldom": "^0.1.27"
+    "xmldom": "^0.1.27",
+    "set-blocking": "^2.0.0"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
