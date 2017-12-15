@@ -41,7 +41,8 @@
     "xmldom": "^0.1.27",
     "set-blocking": "^2.0.0",
     "parse-json": "^2.2.0",
-    "tapable": "^0.2.8"
+    "tapable": "^0.2.8",
+    "loader-runner": "2.3.0"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
