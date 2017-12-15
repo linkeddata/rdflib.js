@@ -39,7 +39,8 @@
     "file-fetch": "^1.1.1",
     "proto-fetch": "^1.0.0",
     "xmldom": "^0.1.27",
-    "set-blocking": "^2.0.0"
+    "set-blocking": "^2.0.0",
+    "parse-json": "^2.2.0"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
