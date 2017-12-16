@@ -8,7 +8,7 @@ node_js:
   - "node"
 before_script:
   - npm list || true
-  - rm -r node_modules/webpack && mkdir t-webpack && npm install --prefix t-webpack webpack && (npm list --prefix t-webpack || echo NPM LIST FAILED) && mv t-webpack/node_modules/webpack ./node_modules/ && rm -r t-webpack/
+  - mkdir t-webpack && npm install --prefix t-webpack webpack && rsync -a t-webpack/node_modules/ ./node_modules/ && rm -r t-webpack/
   - npm list || true
   - npm run build:browser
 after_success:
