@@ -7,7 +7,7 @@ node_js:
   - "8.0"
   - "node"
 before_script:
-  - cat package-lock.json
+  - cat package-lock.json | gzip -f && echo
   - npm run build:browser
 after_success:
   - ./.travis_publish
