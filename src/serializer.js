@@ -786,7 +786,7 @@ var Serializer = (function () {
       for (var i = 0; i < sts.length; i++) {
         st = sts[i]
         // look for a type
-        if (st.predicate.uri === 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type' && !type && st.object.termType === 'symbol') {
+        if (st.predicate.uri === 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type' && !type && st.object.termType === 'NamedNode') {
           type = st.object
           continue // don't include it as a child element
         }
