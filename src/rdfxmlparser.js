@@ -329,7 +329,7 @@ var RDFParser = function (store) {
               frame.datatype = RDFParser.ns.RDF + 'XMLLiteral' // (this.buildFrame(frame)).addLiteral(dom)
               // should work but doesn't
               frame = this.buildFrame(frame)
-              frame.addLiteral(dom)
+              frame.addLiteral(dom.childNodes)
               dig = false
             } else if (nv === 'Resource') {
               frame = this.buildFrame(frame, frame.element)
