@@ -21,7 +21,7 @@ function parse (str, kb, base, contentType, callback) {
   contentType = contentType || 'text/turtle'
   contentType = contentType.split(';')[0]
   try {
-    if (contentType === 'text/n3' || contentType === 'text/turtle') {
+    if (contentType === 'text/n3' || contentType === 'text/turtle' || contentType === 'application/n-triples') {
       var p = N3Parser(kb, kb, base, base, null, null, '', null)
       p.loadBuf(str)
       executeCallback()
