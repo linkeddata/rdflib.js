@@ -27,5 +27,12 @@ module.exports = {
   devtool: 'source-map',
   plugins: [
     new MinifyPlugin({ deadcode: false })
-  ]
+  ],
+  node: {
+    fs: 'empty'
+  }
 }
+
+// TEMPORARY: handle https://github.com/webpack/webpack/issues/6131
+if (!(process.version.startsWith("v8")))
+  delete module.exports.devtool
