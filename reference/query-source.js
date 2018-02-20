@@ -9,6 +9,8 @@
  */
 module.exports = QuerySource
 
+var optionalSubqueriesIndex = [];
+
 function QuerySource () {
   /**
    * stores all of the queries currently held by this source,
