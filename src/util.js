@@ -30,6 +30,10 @@ module.exports.mediaTypeClass = function(mediaType){
   return new NamedNode('http://www.w3.org/ns/iana/media-types/' + mediaType + '#Resource')
 }
 
+module.exports.linkRelationProperty = function(relation){
+  return new NamedNode('http://www.w3.org/ns/iana/link-relations/relation#' + relation.trim())
+}
+
 /**
  * Loads ontologies of the data we load (this is the callback from the kb to
  * the fetcher). Exports as `AJAR_handleNewTerm`
@@ -165,10 +169,7 @@ function callbackify (obj, callbacks) {
  * Exports as `DOMParserFactory`
  */
 function domParser () {
-  if (tabulator && tabulator.isExtension) {
-    return Components.classes['@mozilla.org/xmlextras/domparser;1']
-      .getService(Components.interfaces.nsIDOMParser)
-  } else if (window.DOMParser) {
+  if (window.DOMParser) {
     return new DOMParser()
   } else if (window.ActiveXObject) {
     return new ActiveXObject('Microsoft.XMLDOM')
@@ -325,10 +326,7 @@ function output (o) {
 function parseXML (str, options) {
   var dparser
   options = options || {}
-  if ((typeof tabulator !== 'undefined' && tabulator.isExtension)) {
-    dparser = Components.classes['@mozilla.org/xmlextras/domparser;1'].getService(
-      Components.interfaces.nsIDOMParser)
-  } else if (typeof module !== 'undefined' && module && module.exports) { // Node.js
+  if (typeof module !== 'undefined' && module && module.exports) { // Node.js
     // var libxmljs = require('libxmljs'); // Was jsdom before 2012-01 then libxmljs but that nonstandard
     // return libxmljs.parseXmlString(str)
 
@@ -413,4 +411,3 @@ function stackString (e) {
   }
   return str
 }
-

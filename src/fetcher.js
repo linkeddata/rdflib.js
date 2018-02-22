@@ -32,6 +32,8 @@ const Uri = require('./uri')
 const Util = require('./util')
 const serialize = require('./serialize')
 
+const fetch = require('solid-auth-client').fetch
+
 const Parsable = {
   'text/n3': true,
   'text/turtle': true,
@@ -413,14 +415,27 @@ class Fetcher {
     this.store = store
     this.timeout = options.timeout || 30000
 
-    this._fetch = options.fetch
+    console.log('@@ Creating new Fetcher. Store size: ' + store.statements.length)
 
+    this._fetch = options.fetch || fetch
+
+/*
     if (!this._fetch) {
       if (typeof window !== 'undefined') {
-        this._fetch = window.fetch.bind(window)
+        Object.defineProperty(this, '_fetch', {
+          // writable: false,
+          get: function(){ return window.fetch.bind(window)},
+          set: function(x){console.log("@@@@@@@@@@@@@@")}
+        }
+        )
+        // this._fetch = window.fetch.bind(window)
       } else {
         this._fetch = require('node-fetch')
       }
+    }
+    */
+    if (!this._fetch) {
+      throw new Error('No _fetch function availble for Fetcher')
     }
 
     this.appNode = this.store.bnode() // Denoting this session
@@ -480,8 +495,8 @@ class Fetcher {
     // Do not remove without checking with TimBL
     let requestedURI = uri
 
-    if (typeof tabulator !== 'undefined' &&
-      tabulator.preferences.get('offlineModeUsingLocalhost')) {
+    if (typeof UI !== 'undefined' &&
+      UI.preferences && UI.preferences.get('offlineModeUsingLocalhost')) {
       if (requestedURI.slice(0, 7) === 'http://' && requestedURI.slice(7, 17) !== 'localhost/') {
         requestedURI = 'http://localhost/' + requestedURI.slice(7)
         log.warn('Localhost kludge for offline use: actually getting <' +
@@ -498,7 +513,7 @@ class Fetcher {
   }
 
   static proxyIfNecessary (uri) {
-    if (typeof tabulator !== 'undefined' && tabulator.isExtension) {
+    if (typeof UI !== 'undefined' && UI.isExtension) {
       return uri
     } // Extension does not need proxy
 
@@ -776,11 +791,6 @@ class Fetcher {
    *   nowOrWhenFetched (uri, referringTerm, userCallback, options)  <-- old
    *   nowOrWhenFetched (uri, referringTerm, userCallback) <-- old
    *
-   * Callback params:
-   *    ok: Boolean      eg false
-   *    message: string  eg "Does not exist"
-   *    resonse: Response   from fetch()
-   *
    *  Options include:
    *   referringTerm    The document in which this link was found.
    *                    this is valuable when finding the source of bad URIs
@@ -805,15 +815,22 @@ class Fetcher {
       options = p2
     }
 
+    console.log('@@ Fetcher: call this.fetch : ' + uri + ': ' + options)
     this.fetch(uri, options)
-      .then(response => {
+      .then(result => {
+        console.log('@@ Fetcher: result: ' + result)
         if (userCallback) {
-          userCallback(response.ok, response.statusText || response.error, response)
+          if (result) {
+            userCallback(result.ok, result.status, result)
+          } else {
+            console.log('@@ Fetcher: result: ' + result)
+            userCallback(false)
+          }
         }
       })
       .catch(err => {
-        console.log("Non-HTTP error in fetch" + err)
-        userCallback(false, err.message, { status: 999}) // Dummy HTTP status
+        // console.log(err)
+        userCallback(false, err.message)
       })
   }
 
