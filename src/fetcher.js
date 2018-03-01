@@ -673,18 +673,20 @@ class Fetcher {
     }
 
     return pendingPromise.then(x => {
-      clearTimeout(this.timeouts[uri]);
+      if (uri in this.timeouts) {
+        this.timeouts[uri].forEach(clearTimeout);
+        delete this.timeouts[uri];
+      }
       return x;
     })
   }
 
   cleanupFetchRequest (originalUri, options, timeout) {
-    return;
-    setTimeout(() => {
+    this.timeouts[originalUri] = (this.timeouts[originalUri] || []).concat(setTimeout(() => {
       if (!this.isPending(originalUri)) {
         delete this.fetchQueue[originalUri]
       }
-    }, timeout)
+    }, timeout))
   }
 
   load (uri, options) {
@@ -1548,13 +1550,13 @@ class Fetcher {
 
   setRequestTimeout (uri, options) {
     return new Promise((resolve) => {
-      this.timeouts[uri] = setTimeout(() => {
+      this.timeouts[uri] = (this.timeouts[uri] || []).concat(setTimeout(() => {
         if (this.isPending(uri) &&
             !options.retriedWithNoCredentials &&
             !options.proxyUsed) {
           resolve(this.failFetch(options, `Request to ${uri} timed out`, 'timeout'))
         }
-      }, this.timeout)
+      }, this.timeout))
     })
   }
 
