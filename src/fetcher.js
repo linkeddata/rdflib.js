@@ -453,6 +453,7 @@ class Fetcher {
     //   'unsupported_protocol'  URI is not a protocol Fetcher can deal with
     //   other strings mean various other errors.
     //
+    this.timeouts = {}; // list of timeouts associated with a requested URL
     this.redirectedTo = {} // When 'redirected'
     this.fetchQueue = {}
     this.fetchCallbacks = {} // fetchCallbacks[uri].push(callback)
@@ -671,10 +672,14 @@ class Fetcher {
       this.cleanupFetchRequest(originalUri, options, this.timeout)
     }
 
-    return pendingPromise
+    return pendingPromise.then(x => {
+      clearTimeout(this.timeouts[uri]);
+      return x;
+    })
   }
 
   cleanupFetchRequest (originalUri, options, timeout) {
+    return;
     setTimeout(() => {
       if (!this.isPending(originalUri)) {
         delete this.fetchQueue[originalUri]
@@ -1543,7 +1548,7 @@ class Fetcher {
 
   setRequestTimeout (uri, options) {
     return new Promise((resolve) => {
-      setTimeout(() => {
+      this.timeouts[uri] = setTimeout(() => {
         if (this.isPending(uri) &&
             !options.retriedWithNoCredentials &&
             !options.proxyUsed) {
