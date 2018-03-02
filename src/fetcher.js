@@ -786,7 +786,21 @@ class Fetcher {
 
     return this._fetch(actualProxyURI, options)
       .then(response => this.handleResponse(response, docuri, options))
-      .catch(error => this.handleError(error, docuri, options))
+      .catch(
+        error =>
+          // handleError expects a response so we fake some important bits.
+          this.handleError({
+            url: actualProxyURI,
+            status: -1,
+            statusText: 'network failure: ' + (error.errno || error.code || -1),
+            headers: Headers(),
+            ok: false,
+            body: null,
+            bodyUsed: false,
+            size: 0,
+            timeout: 0
+          }, docuri, options)
+      )
   }
 
   /**
