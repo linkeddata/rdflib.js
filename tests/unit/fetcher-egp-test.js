@@ -2,42 +2,86 @@
 'use strict'
 
 import chai from 'chai'
-import sinon from 'sinon'
-import sinonChai from 'sinon-chai'
-import dirtyChai from 'dirty-chai'
 import nock from 'nock'
 import rdf from '../../src/index'
 
-chai.use(sinonChai)
-chai.use(dirtyChai)
 const { expect } = chai
 chai.should()
 
-const { Fetcher, BlankNode } = rdf
-
 describe('Fetcher', () => {
   describe('nowOrWhenFetched', () => {
-    let fetcher, docuri, rterm, options, userCallback
+    let goodServer = 'http://localhost'
+    let badServer = 'http://localhost999'
 
-    it('should invoke userCallback with caught error', done => {
-nock('http://localhost')
-  // .persist() // 
-  .get('/asdf')
-  .reply(200, '<html></html>', {'Content-type': 'text/html'})
-;
-// require('node-fetch')(uri).then(handle);
-let kb = rdf.graph();
-let fetcher = rdf.fetcher(kb, {a:1})
-const uri = 'http://localhost/asdf'
-  fetcher.nowOrWhenFetched(kb.sym(uri), {force: true}, function (ok, status, resp) {
-    if (ok)
-      console.dir(resp.status + ' ' + resp.statusText + ' ' + resp.responseText.length + ' characters')
-    else
-      console.log("Failed: " + status + ", status: " + resp.error)
-    if (ok)
-      done();
-    return 7;
-  })
+    it('should handle 200', done => {
+      let path = '/200'
+      const bodyText = '<html></html>'
+      nock(goodServer)
+        .get(path)
+        .reply(200, bodyText, {'Content-type': 'text/html'})
+      ;
+      let kb = rdf.graph();
+      let fetcher = rdf.fetcher(kb, {a:1})
+      fetcher.nowOrWhenFetched(kb.sym(goodServer + path), {force: true}, function (ok, status, resp) {
+        expect(ok).to.be.true;
+        expect(status).to.equal(200);
+        expect(resp.responseText.length).to.equal(bodyText.length)
+        done();
+      })
+    })
+
+    it('should handle 404', done => {
+      let path = '/404'
+      const bodyText = '<html></html>'
+      nock(goodServer)
+        .get(path)
+        .reply(404)
+      ;
+      let kb = rdf.graph();
+      let fetcher = rdf.fetcher(kb, {a:1})
+      fetcher.nowOrWhenFetched(kb.sym(goodServer + path), {force: true}, function (ok, status, resp) {
+        expect(ok).to.be.false;
+        expect(status).to.equal(404);
+        expect(resp.error).to.match(/404/)
+        done();
+      })
+    })
+
+    it('should handle dns error', done => {
+      let path = '/200'
+      const bodyText = '<html></html>'
+      nock(goodServer)
+        .get(path)
+        .reply(404)
+      ;
+      let kb = rdf.graph();
+      let fetcher = rdf.fetcher(kb, {a:1})
+      fetcher.nowOrWhenFetched(kb.sym(badServer + path), {force: true}, function (ok, status, resp) {
+        expect(ok).to.be.false;
+        expect(status).to.equal(-1);
+        expect(resp.error).to.match(/ENOTFOUND/)
+        done();
+      })
+    })
+
+    it('should handle nock failure', done => {
+      let path = '/200'
+      const bodyText = '<html></html>'
+      nock(goodServer)
+        .get(path)
+        .reply(404)
+      ;
+
+      // Use up the nock path (note no .persistent() on nock).
+      require('node-fetch')(goodServer + path).then(() => null);
+      let kb = rdf.graph();
+      let fetcher = rdf.fetcher(kb, {a:1})
+      fetcher.nowOrWhenFetched(kb.sym(goodServer + path), {force: true}, function (ok, status, resp) {
+        expect(ok).to.be.false;
+        expect(status).to.equal(404);
+        expect(resp.error).to.match(/404/)
+        done();
+      })
     })
 
   })
