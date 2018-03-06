@@ -7,6 +7,11 @@ import rdf from '../../src/index'
 
 const { expect } = chai
 chai.should()
+// get rid of @@ console logs
+const noLog = () => undefined
+// console.log = noLog
+// console.warn = noLog
+const oldConsoleLog = console.log
 
 describe('Fetcher', () => {
   describe('nowOrWhenFetched', () => {
@@ -16,13 +21,18 @@ describe('Fetcher', () => {
     it('should handle 200', done => {
       let path = '/200'
       const bodyText = '<html></html>'
-      nock(goodServer)
+      let c = nock(goodServer)
         .get(path)
         .reply(200, bodyText, {'Content-type': 'text/html'})
       ;
+      console.log(c);
+      c.on('request', function () { console.log(arguments); })
+      c.on('replied', function () { console.log(arguments); })
       let kb = rdf.graph();
+      console.log = noLog
       let fetcher = rdf.fetcher(kb, {a:1})
       fetcher.nowOrWhenFetched(kb.sym(goodServer + path), {force: true}, function (ok, status, resp) {
+        console.log = oldConsoleLog;
         expect(ok).to.be.true;
         expect(status).to.equal(200);
         expect(resp.responseText.length).to.equal(bodyText.length)
