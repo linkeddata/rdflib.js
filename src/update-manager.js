@@ -714,7 +714,7 @@ class UpdateManager {
         this.fire(doc.uri, query, (uri, success, body, response) => {
           response.elapsedTimeMs = Date.now() - startTime
           console.log('    sparql: Return ' +
-            success ? 'success' : 'FAILURE ' + response.status +
+            (success ? 'success ' : 'FAILURE ') + response.status +
             ' elapsed ' + response.elapsedTimeMs + 'ms')
           if (success) {
             try {

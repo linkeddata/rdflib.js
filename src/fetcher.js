@@ -415,7 +415,7 @@ class Fetcher {
     this.store = store
     this.timeout = options.timeout || 30000
 
-    console.log('@@ Creating new Fetcher. Store size: ' + store.statements.length)
+    // console.log('@@ Creating new Fetcher. Store size: ' + store.statements.length)
 
     this._fetch = options.fetch || fetch
 
@@ -495,7 +495,8 @@ class Fetcher {
     // Do not remove without checking with TimBL
     let requestedURI = uri
 
-    if (typeof UI !== 'undefined' &&
+    var UI
+    if (typeof window !== 'undefined' && window.panes && (UI = window.panes.UI) &&
       UI.preferences && UI.preferences.get('offlineModeUsingLocalhost')) {
       if (requestedURI.slice(0, 7) === 'http://' && requestedURI.slice(7, 17) !== 'localhost/') {
         requestedURI = 'http://localhost/' + requestedURI.slice(7)
@@ -513,7 +514,8 @@ class Fetcher {
   }
 
   static proxyIfNecessary (uri) {
-    if (typeof UI !== 'undefined' && UI.isExtension) {
+    var UI
+    if (typeof window !== 'undefined' && window.panes && (UI = window.panes.UI) && UI.isExtension) {
       return uri
     } // Extension does not need proxy
 
@@ -755,7 +757,7 @@ class Fetcher {
     if (!options.force) {
       if (state === 'fetched') {  // URI already fetched and added to store
         return Promise.resolve(
-          this.doneFetch(options, { status: 200, ok: true })
+          this.doneFetch(options, {status: 200, ok: true, statusText: 'Already loaded into quadstore.'})
         )
       }
       if (state === 'failed') {
@@ -778,8 +780,8 @@ class Fetcher {
     let { actualProxyURI } = options
 
     return this._fetch(actualProxyURI, options)
-      .then(response => this.handleResponse(response, docuri, options))
-      .catch(error => this.handleError(error, docuri, options))
+      .then(response => this.handleResponse(response, docuri, options),
+            error => this.handleError(error, docuri, options))
   }
 
   /**
@@ -798,6 +800,16 @@ class Fetcher {
    *                    load this from scratch.
    *   forceContentType Override the incoming header to force the data to be
    *                    treated as this content-type.
+   *
+   *  Callback function takes:
+   *
+   *    ok               True if the fetch worked, and got a 200 response.
+   *                     False if any error happened
+   *
+   *    errmessage       Text error message if not OK.
+   *
+   *    response         The fetch Response object (was: XHR) if there was was one
+   *                     includes response.status as the HTTP status if any.
    */
   nowOrWhenFetched (uri, p2, userCallback, options = {}) {
     uri = uri.uri || uri // allow symbol object or string to be passed
@@ -815,22 +827,28 @@ class Fetcher {
       options = p2
     }
 
-    console.log('@@ Fetcher: call this.fetch : ' + uri + ': ' + options)
+    // console.log('@@ Fetcher: call this.fetch : ' + uri)
     this.fetch(uri, options)
-      .then(result => {
-        console.log('@@ Fetcher: result: ' + result)
+      .then(fetchResponse => {
+        console.log('@@ nowOrWhenFetched: Resolved fetch: ok ' + fetchResponse.ok)
         if (userCallback) {
-          if (result) {
-            userCallback(result.ok, result.status, result)
+          if (fetchResponse) {
+            if (fetchResponse.ok) {
+              userCallback(fetchResponse.ok, fetchResponse.status, fetchResponse)
+            } else {
+              let oops = 'HTTP error: Status ' + fetchResponse.status + ' (' + fetchResponse.statusText + ') ' + fetchResponse.responseText
+              console.log(oops + ' fetching ' + uri)
+              userCallback(false, oops, fetchResponse)
+            }
           } else {
-            console.log('@@ Fetcher: result: ' + result)
-            userCallback(false)
+            let oops = ('@@ nowOrWhenFetched:  no response object: ' + fetchResponse)
+            console.log(oops)
+            userCallback(false, oops)
           }
         }
-      })
-      .catch(err => {
-        // console.log(err)
-        userCallback(false, err.message)
+      }, function (err) {
+        console.log('@@ nowOrWhenFetched: REJECTED from fetch ' + err.message)
+        userCallback(false, 'Rejection from fetch?! ' + err.message, null)
       })
   }
 
@@ -896,7 +914,8 @@ class Fetcher {
 
     return Promise.resolve({
       ok: false,
-      error: errorMessage,
+      error: errorMessage, // @@ Why does a response object have an "error" property?
+      statusText: errorMessage,
       status: statusCode
     })
   }
@@ -935,7 +954,7 @@ class Fetcher {
   parseLinkHeader (linkHeader, originalUri, reqNode) {
     if (!linkHeader) { return }
 
-    const linkexp = /<[^>]*>\s*(\s*;\s*[^\(\)<>@,;:"\/\[\]\?={} \t]+=(([^\(\)<>@,;:"\/\[\]\?={} \t]+)|("[^"]*")))*(,|$)/g
+    const linkexp = /<[^>]*>\s*(\s*;\s*[^()<>@,;:"/[\]?={} \t]+=(([^\(\)<>@,;:"\/\[\]\?={} \t]+)|("[^"]*")))*(,|$)/g
     const paramexp = /[^\(\)<>@,;:"\/\[\]\?={} \t]+=(([^\(\)<>@,;:"\/\[\]\?={} \t]+)|("[^"]*"))/g
 
     const matches = linkHeader.match(linkexp)
@@ -1054,7 +1073,7 @@ class Fetcher {
   }
 
   /**
-   * Returns promise of XHR
+   * Returns promise of Response
    *
    * @param method
    * @param uri
@@ -1300,11 +1319,15 @@ class Fetcher {
       }
     }
 
-    let message = response.message || `${response.status} ${response.statusText}`
+    var message
+    if (response.message) {
+      message = 'Fetch error: ' + response.message
+    } else {
+      message = `HTTP Error: ${response.status} (${response.statusText}) ${response.responseText}`
+    }
 
     // This is either not a CORS error, or retries have been made
-    return this.failFetch(options,
-      `Request failed: ${message}`, response.status)
+    return this.failFetch(options, message, response.status || 998)
   }
 
   // deduce some things from the HTTP transaction

@@ -57,7 +57,7 @@ describe('Fetcher', () => {
 
       fetcher.nowOrWhenFetched(docuri, (ok, message) => {
         expect(ok).to.be.false()
-        expect(message).to.equal(errorMessage)
+        expect(message).to.include(errorMessage)
         done()
       })
     })
