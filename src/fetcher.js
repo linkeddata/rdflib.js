@@ -415,7 +415,7 @@ class Fetcher {
     this.store = store
     this.timeout = options.timeout || 30000
 
-    console.log('@@ Creating new Fetcher. Store size: ' + store.statements.length)
+    // console.log('@@ Creating new Fetcher. Store size: ' + store.statements.length)
 
     this._fetch = options.fetch || fetch
 
@@ -1327,7 +1327,7 @@ class Fetcher {
     }
 
     // This is either not a CORS error, or retries have been made
-    return this.failFetch(options, message, response.status || cat depth)
+    return this.failFetch(options, message, response.status || 998)
   }
 
   // deduce some things from the HTTP transaction
