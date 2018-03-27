@@ -792,8 +792,10 @@ class Fetcher {
               // handleError expects a response so we fake some important bits.
               this.handleError({
                 url: actualProxyURI,
-                status: -1,
-                statusText: 'network failure: ' + (error.errno || error.code || -1),
+                status: 999, // @@ what number/string should fetch failures report?
+                statusText: (error.name || 'network failure') + ': ' +
+                  (error.errno || error.code || error.type),
+                responseText: error.message,
                 headers: Headers(),
                 ok: false,
                 body: null,
@@ -856,7 +858,10 @@ class Fetcher {
             if (fetchResponse.ok) {
               userCallback(fetchResponse.ok, fetchResponse.status, fetchResponse)
             } else {
-              let oops = 'HTTP error: Status ' + fetchResponse.status + ' (' + fetchResponse.statusText + ') ' + fetchResponse.responseText
+              let oops = 'HTTP error: Status ' + fetchResponse.status + ' (' + fetchResponse.statusText + ')'
+              if (fetchResponse.responseText) {
+                oops += ' ' + fetchResponse.responseText // not in 404, dns error, nock failure
+              }
               console.log(oops + ' fetching ' + uri)
               userCallback(false, oops, fetchResponse)
             }
@@ -1343,7 +1348,10 @@ class Fetcher {
     if (response.message) {
       message = 'Fetch error: ' + response.message
     } else {
-      message = `HTTP Error: ${response.status} (${response.statusText}) ${response.responseText}`
+      message = response.statusText
+      if (response.responseText) {
+        message += ` ${response.responseText}`
+      }
     }
 
     // This is either not a CORS error, or retries have been made
@@ -1410,8 +1418,7 @@ class Fetcher {
 
       return this.saveErrorResponse(response, responseNode)
         .then(() => {
-          let errorMessage = 'HTTP error for ' + options.resource + ': ' +
-            response.status + ' ' + response.statusText
+          let errorMessage = options.resource + ' ' + response.statusText
 
           return this.failFetch(options, errorMessage, response.status)
         })
