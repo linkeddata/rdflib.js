@@ -1271,12 +1271,14 @@ __SinkParser.prototype.object = function(str, i, res) {
         else {
             var i = j;
         }
-        if ((str.charAt(i) == "\"")) {
-            if ((pyjslib_slice(str, i,  ( i + 3 ) ) == "\"\"\"")) {
-                var delim = "\"\"\"";
+        var delim = null
+        let ch = str.charAt(i)
+        if ((ch == "\"" || ch == "'")) {
+            if (str.slice(i,  ( i + 3 ) == ch + ch)) {
+                delim = ch + ch + ch;
             }
             else {
-                var delim = "\"";
+                delim = ch;
             }
             var i =  ( i + pyjslib_len(delim) ) ;
             var pairFudge = this.strconst(str, i, delim);

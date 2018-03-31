@@ -1,7 +1,7 @@
 {
   "name": "rdflib",
   "description": "an RDF library for node.js. Suitable for client and server side.",
-  "version": "0.16.3",
+  "version": "0.16.7",
   "engines": {
     "node": ">=6.0"
   },
@@ -38,6 +38,7 @@
     "node-fetch": "^1.7.1",
     "file-fetch": "^1.1.1",
     "proto-fetch": "^1.0.0",
+    "solid-auth-client": ">=0.5.1",
     "xmldom": "^0.1.22"
   },
   "devDependencies": {
