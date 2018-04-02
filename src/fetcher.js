@@ -311,7 +311,6 @@ class HTMLHandler extends Handler {
     fetcher.addStatus(options.req, 'non-XML HTML document, not parsed for data.')
 
     return fetcher.doneFetch(options, this.response)
-    // sf.failFetch(xhr, "Sorry, can't yet parse non-XML HTML")
   }
 }
 HTMLHandler.pattern = new RegExp('text/html')
@@ -353,9 +352,6 @@ class TextHandler extends Handler {
     fetcher.addStatus(options.req, 'Plain text document, no known RDF semantics.')
 
     return fetcher.doneFetch(options, this.response)
-    // fetcher.failFetch(xhr, "unparseable - text/plain not visibly XML")
-    // dump(xhr.resource + " unparseable - text/plain not visibly XML,
-    //   starts:\n" + rt.slice(0, 500)+"\n")
   }
 }
 TextHandler.pattern = new RegExp('text/plain')
@@ -415,25 +411,8 @@ class Fetcher {
     this.store = store
     this.timeout = options.timeout || 30000
 
-    // console.log('@@ Creating new Fetcher. Store size: ' + store.statements.length)
-
     this._fetch = options.fetch || fetch
 
-/*
-    if (!this._fetch) {
-      if (typeof window !== 'undefined') {
-        Object.defineProperty(this, '_fetch', {
-          // writable: false,
-          get: function(){ return window.fetch.bind(window)},
-          set: function(x){console.log("@@@@@@@@@@@@@@")}
-        }
-        )
-        // this._fetch = window.fetch.bind(window)
-      } else {
-        this._fetch = require('node-fetch')
-      }
-    }
-    */
     if (!this._fetch) {
       throw new Error('No _fetch function availble for Fetcher')
     }
@@ -598,7 +577,7 @@ class Fetcher {
   }
 
   /**
-   * Promise-based fetch function
+   * Promise-based load function
    *
    * @param uri {Array<NamedNode>|Array<string>|NamedNode|string}
    *
@@ -756,7 +735,7 @@ class Fetcher {
     }
 
     if (Fetcher.unsupportedProtocol(docuri)) {
-      return this.failFetch(options, 'Unsupported protocol', 'unsupported_protocol')
+      return this.failFetch(options, 'fetcher: Unsupported protocol', 'unsupported_protocol')
     }
 
     let state = this.getState(docuri)
@@ -852,7 +831,7 @@ class Fetcher {
     // console.log('@@ Fetcher: call this.fetch : ' + uri)
     this.fetch(uri, options)
       .then(fetchResponse => {
-        console.log('@@ nowOrWhenFetched: Resolved fetch: ok ' + fetchResponse.ok)
+        // console.log('@@ nowOrWhenFetched: Resolved fetch: ok ' + fetchResponse.ok)
         if (userCallback) {
           if (fetchResponse) {
             if (fetchResponse.ok) {
@@ -872,8 +851,9 @@ class Fetcher {
           }
         }
       }, function (err) {
-        console.log('@@ nowOrWhenFetched: REJECTED from fetch ' + err.message)
-        userCallback(false, 'Rejection from fetch?! ' + err.message, null)
+        var message = err.message || err.statusText
+        console.log('@@ nowOrWhenFetched: Load failed: ' + message)
+        userCallback(false, 'Rejection from fetch?! ' + message, err.response)
       })
   }
 
@@ -911,10 +891,11 @@ class Fetcher {
    * @param options {Object}
    * @param errorMessage {string}
    * @param statusCode {number}
+   * @param response {Response}  // when an fetch() error
    *
    * @returns {Promise<Object>}
    */
-  failFetch (options, errorMessage, statusCode) {
+  failFetch (options, errorMessage, statusCode, response) {
     this.addStatus(options.req, errorMessage)
 
     if (!options.noMeta) {
@@ -933,16 +914,17 @@ class Fetcher {
 
     if (isGet) {  // only cache the status code on GET or HEAD
       this.requested[Uri.docpart(options.original.uri)] = statusCode
-
       this.fireCallbacks('fail', [options.original.uri, errorMessage])
     }
 
-    return Promise.resolve({
-      ok: false,
-      error: errorMessage, // @@ Why does a response object have an "error" property?
-      statusText: errorMessage,
-      status: statusCode
-    })
+    var err = new Error(errorMessage)
+
+    err.ok = false // Is taken as a response, will work too @@ phase out?
+    err.status = statusCode
+    err.statusText = errorMessage
+    err.response = response
+
+    return Promise.reject(err)
   }
 
   // in the why part of the quad distinguish between HTML and HTTP header
@@ -1098,7 +1080,10 @@ class Fetcher {
   }
 
   /**
-   * Returns promise of Response
+   * A generic web opeation, at the fetch() level.
+   * does not invole the quadstore.
+   *
+   *  Returns promise of Response
    *
    * @param method
    * @param uri
@@ -1111,7 +1096,21 @@ class Fetcher {
     options.body = options.data || options.body
     options.force = true
 
-    return this.fetch(uri, options)
+    return new Promise(function (resolve, reject) {
+      this._fetch(uri, options).then(response => {
+        if (!response.ok) {
+          let msg = 'Web error: ' + response.status
+          if (response.statusText) msg += ' (' + response.statusText + ')'
+          msg += ' on ' + method + ' of <' + uri + '>'
+          if (response.responseText) msg += ': ' + response.responseText
+          reject(new Error(msg))
+        }
+        resolve(response)
+      }, err => {
+        let msg = 'Fetch error for ' + method + ' of <' + uri + '>:' + err
+        reject(new Error(msg))
+      })
+    })
   }
 
   /**
@@ -1355,7 +1354,7 @@ class Fetcher {
     }
 
     // This is either not a CORS error, or retries have been made
-    return this.failFetch(options, message, response.status || 998)
+    return this.failFetch(options, message, response.status || 998, response)
   }
 
   // deduce some things from the HTTP transaction
@@ -1420,7 +1419,7 @@ class Fetcher {
         .then(() => {
           let errorMessage = options.resource + ' ' + response.statusText
 
-          return this.failFetch(options, errorMessage, response.status)
+          return this.failFetch(options, errorMessage, response.status, response)
         })
     }
 
