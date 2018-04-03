@@ -9,3 +9,4 @@ test/downloaded-turtle-tests/*.ttl
 test/downloaded-turtle-tests/*.nt
 test/downloaded-turtle-tests/LICENSE
 test/downloaded-turtle-tests/README
+/tests/unit/downloaded-turtle-tests/*
