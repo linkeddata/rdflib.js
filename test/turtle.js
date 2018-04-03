@@ -41,16 +41,18 @@ function loadAndRunTestManifest () {
   function runTestManifest () {
     let manifestURL = 'file://' + TurtleTestManifest
     var manifestGraph = $rdf.graph()
-    $rdf.fetcher(manifestGraph, {a:1}).nowOrWhenFetched(manifestURL, {}, function (ok, body, xhr) {
+    fs.readFile(TurtleTestManifest, 'utf8', function(err, manifestText) {
       console.log('Loaded  ' + manifestURL)
+      $rdf.N3Parser(manifestGraph, manifestGraph, manifestURL, manifestURL, null, null, '', null)
+        .loadBuf(manifestText)
       const rdfs = $rdf.Namespace('http://www.w3.org/2000/01/rdf-schema#')
       const rdf = $rdf.Namespace('http://www.w3.org/1999/02/22-rdf-syntax-ns#')
       const mf = $rdf.Namespace('http://www.w3.org/2001/sw/DataAccess/tests/test-manifest#')
       let manifestNode = manifestGraph.the(null, rdf('type'), mf('Manifest'))
-      console.log(manifestGraph.the(manifestNode, rdfs('comment'), null))
+      let manifestComment = manifestGraph.the(manifestNode, rdfs('comment'), null).value
 
       let mocha = new Mocha
-      let suite = Suite.create(mocha.suite, manifestGraph.the(manifestNode, rdfs('comment'), null).value)
+      let suite = Suite.create(mocha.suite, manifestComment)
       let entries = manifestGraph.the(manifestNode, mf('entries'), null).elements
       Promise.all(entries.reduce((acc, entry) => {
         switch (manifestGraph.the(entry, rdf('type'), null).value) {
@@ -62,17 +64,29 @@ function loadAndRunTestManifest () {
           return acc.concat(Promise.all(['action', 'result'].map(k => {
             return new Promise((resolve, reject) => {
               var graph = $rdf.graph()
-              $rdf.fetcher(graph, {a:1}).nowOrWhenFetched(test[k], {}, function (ok, body, xhr) {
-                if (ok) {
-                  resolve({ role: k, graph: graph.length })
-                } else {
-                  reject(Error(body))
+              let filename = test[k].substr('file://'.length)
+              fs.readFile(filename, 'utf8', function(err, data) {
+                var p = $rdf.N3Parser(graph, graph, test[k], test[k], null, null, '', null)
+                try {
+                  p.loadBuf(data)
+                  resolve(graph)
+                } catch (e) {
+                  reject(e)
                 }
               })
             })
           })).then(pair => {
             let mochaTest = new Test(test.name, () => {
               assert.equal(pair[0].length, pair[1].length) // !! replace with graph isomorphism
+              /* catches these silent failures:
+                blankNodePropertyList_containing_collection
+                collection_subject
+                collection_object
+                nested_collection
+                first
+                last
+                turtle-subm-08
+               */
             })
             suite.addTest(mochaTest)
             return [test.name].concat(pair, mochaTest)
