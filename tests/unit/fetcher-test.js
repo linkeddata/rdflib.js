@@ -403,7 +403,6 @@ describe('Fetcher', () => {
         .then(res => {
           expect(res.status).to.equal(404)
           expect(res.error).to.include('https://example.com/notfound')
-          expect(res.error).to.include('404')
           expect(res.error).to.include('Not Found')
         })
     })
