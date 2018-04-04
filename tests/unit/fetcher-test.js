@@ -402,7 +402,9 @@ describe('Fetcher', () => {
       return fetcher.load('https://example.com/notfound')
         .then(res => {
           expect(res.status).to.equal(404)
-          expect(res.error).to.equal(`HTTP error for <https://example.com/notfound>: 404 Not Found`)
+          expect(res.error).to.include('https://example.com/notfound')
+          expect(res.error).to.include('404')
+          expect(res.error).to.include('Not Found')
         })
     })
 
