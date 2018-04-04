@@ -453,6 +453,7 @@ class Fetcher {
     //   'unsupported_protocol'  URI is not a protocol Fetcher can deal with
     //   other strings mean various other errors.
     //
+    this.timeouts = {}; // list of timeouts associated with a requested URL
     this.redirectedTo = {} // When 'redirected'
     this.fetchQueue = {}
     this.fetchCallbacks = {} // fetchCallbacks[uri].push(callback)
@@ -673,15 +674,21 @@ class Fetcher {
       this.cleanupFetchRequest(originalUri, options, this.timeout)
     }
 
-    return pendingPromise
+    return pendingPromise.then(x => {
+      if (uri in this.timeouts) {
+        this.timeouts[uri].forEach(clearTimeout);
+        delete this.timeouts[uri];
+      }
+      return x;
+    })
   }
 
   cleanupFetchRequest (originalUri, options, timeout) {
-    setTimeout(() => {
+    this.timeouts[originalUri] = (this.timeouts[originalUri] || []).concat(setTimeout(() => {
       if (!this.isPending(originalUri)) {
         delete this.fetchQueue[originalUri]
       }
-    }, timeout)
+    }, timeout))
   }
 
   load (uri, options) {
@@ -781,7 +788,22 @@ class Fetcher {
 
     return this._fetch(actualProxyURI, options)
       .then(response => this.handleResponse(response, docuri, options),
-            error => this.handleError(error, docuri, options))
+            error =>
+              // handleError expects a response so we fake some important bits.
+              this.handleError({
+                url: actualProxyURI,
+                status: 999, // @@ what number/string should fetch failures report?
+                statusText: (error.name || 'network failure') + ': ' +
+                  (error.errno || error.code || error.type),
+                responseText: error.message,
+                headers: Headers(),
+                ok: false,
+                body: null,
+                bodyUsed: false,
+                size: 0,
+                timeout: 0
+              }, docuri, options)
+      )
   }
 
   /**
@@ -836,7 +858,10 @@ class Fetcher {
             if (fetchResponse.ok) {
               userCallback(fetchResponse.ok, fetchResponse.status, fetchResponse)
             } else {
-              let oops = 'HTTP error: Status ' + fetchResponse.status + ' (' + fetchResponse.statusText + ') ' + fetchResponse.responseText
+              let oops = 'HTTP error: Status ' + fetchResponse.status + ' (' + fetchResponse.statusText + ')'
+              if (fetchResponse.responseText) {
+                oops += ' ' + fetchResponse.responseText // not in 404, dns error, nock failure
+              }
               console.log(oops + ' fetching ' + uri)
               userCallback(false, oops, fetchResponse)
             }
@@ -1323,7 +1348,10 @@ class Fetcher {
     if (response.message) {
       message = 'Fetch error: ' + response.message
     } else {
-      message = `HTTP Error: ${response.status} (${response.statusText}) ${response.responseText}`
+      message = response.statusText
+      if (response.responseText) {
+        message += ` ${response.responseText}`
+      }
     }
 
     // This is either not a CORS error, or retries have been made
@@ -1390,8 +1418,7 @@ class Fetcher {
 
       return this.saveErrorResponse(response, responseNode)
         .then(() => {
-          let errorMessage = 'HTTP error for ' + options.resource + ': ' +
-            response.status + ' ' + response.statusText
+          let errorMessage = options.resource + ' ' + response.statusText
 
           return this.failFetch(options, errorMessage, response.status)
         })
@@ -1566,13 +1593,13 @@ class Fetcher {
 
   setRequestTimeout (uri, options) {
     return new Promise((resolve) => {
-      setTimeout(() => {
+      this.timeouts[uri] = (this.timeouts[uri] || []).concat(setTimeout(() => {
         if (this.isPending(uri) &&
             !options.retriedWithNoCredentials &&
             !options.proxyUsed) {
           resolve(this.failFetch(options, `Request to ${uri} timed out`, 'timeout'))
         }
-      }, this.timeout)
+      }, this.timeout))
     })
   }
 
