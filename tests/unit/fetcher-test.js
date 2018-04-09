@@ -239,9 +239,9 @@ describe('Fetcher', () => {
       fetcher = new Fetcher(rdf.graph())
 
       // No, this is internal function!
-      // options = fetcher.initFetchOptions(uri, {})
-
-      options = {}
+      options = fetcher.initFetchOptions(uri, {})
+      nock('https://example.com').get('/doc.ttl').reply(400)
+      // options = {}
 
       statusCode = 400
     })
@@ -260,23 +260,28 @@ describe('Fetcher', () => {
 
     it('should add to status cache for GET operations', () => {
       return fetcher.load(uri, options)
-        .then(() => {
+        .then(result => {}, () => {
           expect(fetcher.requested[uri]).to.equal(statusCode)
         })
     })
 
     it('should add to status cache for HEAD operations', () => {
       options.method = 'HEAD'
+      nock('https://example.com').head('/doc.ttl').reply(400)
+
       return fetcher.load(uri, options)
-        .then(() => {
+        .then(result => {}, () => {
           expect(fetcher.requested[uri]).to.equal(statusCode)
         })
     })
 
     it('should not add to status cache for non-GET operations', () => {
       options.method = 'PATCH'
-      return fetcher.load(uri, options)
-        .then(() => {
+      nock('https://example.com').patch('/doc.ttl').reply(400)
+      delete fetcher.requested[uri]
+      return fetcher.webOperation('POST', uri, options)
+        .then(result => {}, () => {
+          console.log('###### ' + fetcher.requested[uri])
           expect(fetcher.requested[uri]).to.not.exist()
         })
     })

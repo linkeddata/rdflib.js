@@ -911,17 +911,16 @@ class Fetcher {
       this.store.add(options.original, ns.link('error'), errorMessage)
     }
 
-    if (!options.resource.sameTerm(options.original)) {
-      console.log('@@ Recording failure original ' + options.original +
-        '( as ' + options.resource + ') : ' + statusCode)
-    } else {
-      console.log('@@ Recording failure for ' + options.original + ': ' + statusCode)
-    }
-
-    let isGet = !options.method || options.method.toUpperCase() === 'GET' ||
-      options.method.toUpperCase() === 'HEAD'
+    let meth = (options.method || 'GET').toUpperCase()
+    let isGet = meth === 'GET' || meth === 'HEAD'
 
     if (isGet) {  // only cache the status code on GET or HEAD
+      if (!options.resource.sameTerm(options.original)) {
+        console.log('@@ Recording failure  ' + meth + '  original ' + options.original +
+          '( as ' + options.resource + ') : ' + statusCode)
+      } else {
+        console.log('@@ Recording ' + meth + ' failure for ' + options.original + ': ' + statusCode)
+      }
       this.requested[Uri.docpart(options.original.uri)] = statusCode
       this.fireCallbacks('fail', [options.original.uri, errorMessage])
     }
