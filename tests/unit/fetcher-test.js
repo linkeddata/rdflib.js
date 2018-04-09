@@ -197,9 +197,9 @@ describe('Fetcher', () => {
         fetcher.getState = sinon.stub().withArgs(uri).returns('failed')
 
         return fetcher.load(uri, options)
-          .then(response => {
-            expect(response.ok).to.be.false()
-            expect(response.error.startsWith('Previously failed:')).to.be.true()
+          .then(response => {}, error => {
+            // expect(response.ok).to.be.false()
+            expect(error.message.startsWith('Previously failed:')).to.be.true()
             expect(fetcher._fetch).to.not.have.been.called()
             expect(fetcher.handleError).to.not.have.been.called()
           })
@@ -279,7 +279,7 @@ describe('Fetcher', () => {
       options.method = 'PATCH'
       nock('https://example.com').patch('/doc.ttl').reply(400)
       delete fetcher.requested[uri]
-      return fetcher.webOperation('POST', uri, options)
+      return fetcher.webOperation('PATCH', uri, options) // load() is not usable for PATCH
         .then(result => {}, () => {
           console.log('###### ' + fetcher.requested[uri])
           expect(fetcher.requested[uri]).to.not.exist()
