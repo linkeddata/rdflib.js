@@ -36,11 +36,21 @@ describe('Fetcher', () => {
 
       let kb = rdf.graph();
       let fetcher = rdf.fetcher(kb, {a:1})
+/*
+      fetcher.nowOrWhenFetched(kb.sym(goodServer + path), {force: true}, function (ok, statusOrErrorText, resp) {
+        console.log('@@@@@@ resp is ' + resp)
+        expect(ok).to.be.false
+        expect(statusOrErrorText).to.include(404)
+        expect(resp.status).to.match(/404/)
+        done()
+      })
+*/
       fetcher.nowOrWhenFetched(kb.sym(goodServer + path), {force: true}, trywrap(done, function (ok, statusOrErrorText, resp) {
         expect(ok).to.be.false
         expect(statusOrErrorText).to.include(404)
         expect(resp.status).to.match(/404/)
       }))
+
     })
 
     it('should handle dns error', done => {

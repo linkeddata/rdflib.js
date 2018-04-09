@@ -1423,6 +1423,8 @@ class Fetcher {
         this.nonexistent[docuri] = true
       }
 
+      return this.failFetch(options, errorMessage, response.status, response) // @@@@@ just try
+
       return this.saveErrorResponse(response, responseNode)
         .then(() => {
           let errorMessage = options.resource + ' ' + response.statusText
