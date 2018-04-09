@@ -46,7 +46,11 @@ describe('Fetcher', () => {
       })
 */
       fetcher.nowOrWhenFetched(kb.sym(goodServer + path), {force: true}, trywrap(done, function (ok, statusOrErrorText, resp) {
+        console.log('@@@@@@ ok is ' + ok)
+        console.log('@@@@@@ statusOrErrorText is ' + statusOrErrorText)
         console.log('@@@@@@ resp is ' + resp)
+        console.log('@@@@@@ resp.status is ' + resp.status)
+
         expect(ok).to.be.false
         expect(statusOrErrorText).to.include(404)
         expect(resp.status).to.match(/404/)
@@ -93,7 +97,7 @@ describe('Fetcher', () => {
         f.apply(null, arguments);
         done();
       } catch (e) {
-        done(e);
+        done('trywrap ' + e);
       }
     }
   }

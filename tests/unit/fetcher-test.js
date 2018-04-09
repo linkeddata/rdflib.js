@@ -249,6 +249,10 @@ describe('Fetcher', () => {
     it('should return a result object on HTTP error', () => {
       return fetcher.load(uri, options)
         .then(result => {}, err => {
+          console.log('@@@@@@ err is ' + err)
+          console.log('@@@@@@ err.response is ' + err.response)
+          console.log('@@@@@@ err.response.status is ' + err.response.status)
+
           expect(err.response.status).to.equal(statusCode)
           expect(err.message).to.include(errorMessage)
         })

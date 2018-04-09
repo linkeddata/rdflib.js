@@ -252,7 +252,7 @@ class XMLHandler extends Handler {
     // We give up. What dialect is this?
     return fetcher.failFetch(options,
       'Unsupported dialect of XML: not RDF or XHTML namespace, etc.\n' +
-      responseText.slice(0, 80))
+      responseText.slice(0, 80), 901)
   }
 }
 XMLHandler.pattern = new RegExp('(text|application)/(.*)xml')
@@ -778,6 +778,7 @@ class Fetcher {
                 size: 0,
                 timeout: 0
               }
+              console.log('Fetcher: Non-HTTP fetch error ' + error)
               return this.failFetch(options, 'fetch failed: ' + error, 999, dummyResponse) // Fake status code: fetch exception
 
               // handleError expects a response so we fake some important bits.
@@ -1423,6 +1424,7 @@ class Fetcher {
         this.nonexistent[docuri] = true
       }
 
+      let errorMessage = options.resource + ' ' + response.statusText
       return this.failFetch(options, errorMessage, response.status, response) // @@@@@ just try
 
       return this.saveErrorResponse(response, responseNode)
