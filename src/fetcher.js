@@ -32,6 +32,7 @@ const Uri = require('./uri')
 const Util = require('./util')
 const serialize = require('./serialize')
 
+// This is a special fetch withich does OIDC auth, catching 401 errors
 const fetch = require('solid-auth-client').fetch
 
 const Parsable = {
@@ -432,7 +433,7 @@ class Fetcher {
     //   'unsupported_protocol'  URI is not a protocol Fetcher can deal with
     //   other strings mean various other errors.
     //
-    this.timeouts = {}; // list of timeouts associated with a requested URL
+    this.timeouts = {} // list of timeouts associated with a requested URL
     this.redirectedTo = {} // When 'redirected'
     this.fetchQueue = {}
     this.fetchCallbacks = {} // fetchCallbacks[uri].push(callback)
@@ -614,10 +615,10 @@ class Fetcher {
    *
    * @returns {Promise<Result>}
    */
-  fetch (uri, options = {}) {
+  load (uri, options = {}) {
     if (uri instanceof Array) {
       return Promise.all(
-        uri.map(x => { return this.fetch(x, Object.assign({}, options)) })
+        uri.map(x => { return this.load(x, Object.assign({}, options)) })
       )
     }
 
@@ -655,10 +656,10 @@ class Fetcher {
 
     return pendingPromise.then(x => {
       if (uri in this.timeouts) {
-        this.timeouts[uri].forEach(clearTimeout);
-        delete this.timeouts[uri];
+        this.timeouts[uri].forEach(clearTimeout)
+        delete this.timeouts[uri]
       }
-      return x;
+      return x
     })
   }
 
@@ -668,10 +669,6 @@ class Fetcher {
         delete this.fetchQueue[originalUri]
       }
     }, timeout))
-  }
-
-  load (uri, options) {
-    return this.fetch(uri, options)
   }
 
   /**
@@ -767,22 +764,28 @@ class Fetcher {
 
     return this._fetch(actualProxyURI, options)
       .then(response => this.handleResponse(response, docuri, options),
-            error =>
-              // handleError expects a response so we fake some important bits.
-              this.handleError({
+            error => {
+              let dummyResponse = {
                 url: actualProxyURI,
                 status: 999, // @@ what number/string should fetch failures report?
                 statusText: (error.name || 'network failure') + ': ' +
                   (error.errno || error.code || error.type),
                 responseText: error.message,
-                headers: Headers(),
+                headers: {},  // Headers() ???
                 ok: false,
                 body: null,
                 bodyUsed: false,
                 size: 0,
                 timeout: 0
-              }, docuri, options)
-      )
+              }
+              return this.failFetch(options, 'fetch failed: ' + error, 999, dummyResponse) // Fake status code: fetch exception
+
+              // handleError expects a response so we fake some important bits.
+              /*
+              this.handleError(, docuri, options)
+              */
+            }
+    )
   }
 
   /**
@@ -829,14 +832,15 @@ class Fetcher {
     }
 
     // console.log('@@ Fetcher: call this.fetch : ' + uri)
-    this.fetch(uri, options)
+    this.load(uri, options)
       .then(fetchResponse => {
         // console.log('@@ nowOrWhenFetched: Resolved fetch: ok ' + fetchResponse.ok)
         if (userCallback) {
           if (fetchResponse) {
             if (fetchResponse.ok) {
-              userCallback(fetchResponse.ok, fetchResponse.status, fetchResponse)
+              userCallback(true, 'OK', fetchResponse)
             } else {
+              console.log('@@@ fetcher.js Should not take this path !!!!!!!!!!!!')
               let oops = 'HTTP error: Status ' + fetchResponse.status + ' (' + fetchResponse.statusText + ')'
               if (fetchResponse.responseText) {
                 oops += ' ' + fetchResponse.responseText // not in 404, dns error, nock failure
@@ -845,15 +849,19 @@ class Fetcher {
               userCallback(false, oops, fetchResponse)
             }
           } else {
-            let oops = ('@@ nowOrWhenFetched:  no response object: ' + fetchResponse)
+            let oops = ('@@ nowOrWhenFetched:  no response object!')
             console.log(oops)
             userCallback(false, oops)
           }
         }
       }, function (err) {
         var message = err.message || err.statusText
-        console.log('@@ nowOrWhenFetched: Load failed: ' + message)
-        userCallback(false, 'Rejection from fetch?! ' + message, err.response)
+        message = 'Failed to load  <' + uri + '> ' + message
+        console.log(message)
+        if (err.response && err.response.status) {
+          message += ' status: ' + err.response.status
+        }
+        userCallback(false, message, err.response)
       })
   }
 
@@ -886,7 +894,7 @@ class Fetcher {
    *  - Adds an entry to the request status collection
    *  - Adds an error triple with the fail message to the metadata
    *  - Fires the 'fail' callback
-   *  - Returns an error result object
+   *  - Rejects with an error result object, which has a response object if any
    *
    * @param options {Object}
    * @param errorMessage {string}
@@ -919,7 +927,7 @@ class Fetcher {
 
     var err = new Error(errorMessage)
 
-    err.ok = false // Is taken as a response, will work too @@ phase out?
+    // err.ok = false // Is taken as a response, will work too @@ phase out?
     err.status = statusCode
     err.statusText = errorMessage
     err.response = response
@@ -1382,7 +1390,7 @@ class Fetcher {
   }
 
   /**
-   * Handles XHR response
+   * Handle fetch() response
    *
    * @param response {Response} fetch() response object
    * @param docuri {string}

@@ -23,7 +23,8 @@ describe('Fetcher', () => {
       let fetcher = rdf.fetcher(kb, {a:1})
       fetcher.nowOrWhenFetched(kb.sym(goodServer + path), {force: true}, trywrap(done, function (ok, statusOrErrorText, resp) {
         expect(ok).to.be.true
-        expect(statusOrErrorText).to.equal(200)
+        expect(resp.status).to.equal(200)
+        expect(statusOrErrorText).to.equal('OK')
         expect(resp.responseText.length).to.equal(bodyText.length)
       }))
     })
@@ -38,7 +39,7 @@ describe('Fetcher', () => {
       fetcher.nowOrWhenFetched(kb.sym(goodServer + path), {force: true}, trywrap(done, function (ok, statusOrErrorText, resp) {
         expect(ok).to.be.false
         expect(statusOrErrorText).to.include(404)
-        expect(resp.error).to.match(/404/)
+        expect(resp.status).to.match(/404/)
       }))
     })
 
@@ -49,8 +50,8 @@ describe('Fetcher', () => {
       let fetcher = rdf.fetcher(kb, {a:1})
       fetcher.nowOrWhenFetched(kb.sym(badServer + path), {force: true}, trywrap(done, function (ok, statusOrErrorText, resp) {
         expect(ok).to.be.false
-        expect(statusOrErrorText).to.include(999);
-        expect(resp.error).to.match(/ENOTFOUND/)
+        expect(statusOrErrorText).to.match(/ENOTFOUND/);
+        expect(resp.status).to.equal(999)
       }))
     })
 
@@ -87,4 +88,3 @@ describe('Fetcher', () => {
   }
 
 })
-
