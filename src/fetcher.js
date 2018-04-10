@@ -7,12 +7,16 @@
  *
  * Description: contains functions for requesting/fetching/retracting
  *  This implements quite a lot of the web architecture.
- * A fetcher is bound to a specific knowledge base graph, into which
+ * A fetcher is bound to a specific quad store, into which
  * it loads stuff and into which it writes its metadata
- * @@ The metadata should be optionally a separate graph
+ * @@ The metadata could be optionally a separate graph
  *
  * - implements semantics of HTTP headers, Internet Content Types
  * - selects parsers for rdf/xml, n3, rdfa, grddl
+ *
+ * TO do:
+ * - Implement a runtime registry for parsers and serializers
+ * -
  */
 
 /**
@@ -1101,9 +1105,10 @@ class Fetcher {
     options.method = method
     options.body = options.data || options.body
     options.force = true
+    const fetcher = this
 
     return new Promise(function (resolve, reject) {
-      this._fetch(uri, options).then(response => {
+      fetcher._fetch(uri, options).then(response => {
         if (!response.ok) {
           let msg = 'Web error: ' + response.status
           if (response.statusText) msg += ' (' + response.statusText + ')'
