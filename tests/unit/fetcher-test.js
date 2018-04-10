@@ -49,8 +49,6 @@ describe('Fetcher', () => {
       userCallback = () => {}
 
       fetcher = new Fetcher(rdf.graph())
-
-      // fetcher.load = sinon.stub().resolves({ ok: true, status: 200, statusText: "Dummy stub"})
     })
 
     it('should invoke userCallback with caught error', done => {
@@ -79,18 +77,7 @@ describe('Fetcher', () => {
 
       fetcher.load = sinon.stub().resolves({ ok: true, status: 200, statusText: "Dummy stub"})
     })
-/*
-    it('should invoke userCallback with caught error', done => {
-      let errorMessage = 'Some error'
-      fetcher._fetch = sinon.stub().rejects(new Error(errorMessage))
 
-      fetcher.nowOrWhenFetched(docuri, (ok, message) => {
-        expect(ok).to.be.false()
-        expect(message).to.include(errorMessage)
-        done()
-      })
-    })
-*/
     it('nowOrWhenFetched(uri, userCallback)', done => {
       fetcher.nowOrWhenFetched(docuri, (ok, text, response) => {
         expect(fetcher.load).to.have.been.calledWith(docuri, {})
@@ -149,7 +136,6 @@ describe('Fetcher', () => {
       uri = 'https://example.com/newdoc.ttl'
 
       fetcher = new Fetcher(rdf.graph())
-
       options = fetcher.initFetchOptions(uri, {})
 
       fetcher._fetch = sinon.stub().resolves()
@@ -163,7 +149,6 @@ describe('Fetcher', () => {
 
       return fetcher.load(uri, options)
         .then(result => {}, err => {
-          //expect(result.ok).to.be.false()
           expect(err.message).to.include('Unsupported protocol')
           expect(fetcher.requested[uri]).to.equal('unsupported_protocol')
         })
@@ -278,13 +263,7 @@ describe('Fetcher', () => {
     it('should return a result object on HTTP error', () => {
       return fetcher.load(uri, options)
         .then(result => {}, err => {
-          console.log('@@@@@@ err is ' + err)
-          console.log('@@@@@@ err.response is ' + err.response)
-          console.log('@@@@@@ err.response.status is ' + err.response.status)
-          console.log('@@@@@@ err.response.statusText is ' + err.response.statusText)
-
           expect(err.response.status).to.equal(statusCode)
-          // expect(err.message).to.include(errorMessage)
         })
     })
 
