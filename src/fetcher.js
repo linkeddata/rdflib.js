@@ -832,10 +832,8 @@ class Fetcher {
       options = p2
     }
 
-    // console.log('@@ Fetcher: call this.fetch : ' + uri)
     this.load(uri, options)
       .then(fetchResponse => {
-        // console.log('@@ nowOrWhenFetched: Resolved fetch: ok ' + fetchResponse.ok)
         if (userCallback) {
           if (fetchResponse) {
             if (fetchResponse.ok) {
@@ -1140,7 +1138,7 @@ class Fetcher {
       this.lookedUp[u] = true
     })
 
-    return this.fetch(uris, { referringTerm: rterm })
+    return this.load(uris, { referringTerm: rterm })
   }
 
   /**
@@ -1302,7 +1300,7 @@ class Fetcher {
     this.addStatus(options.req,
       'Abort: Will retry with credentials SUPPRESSED to see if that helps')
 
-    return this.fetch(docuri, newOptions)
+    return this.load(docuri, newOptions)
   }
 
   /**
