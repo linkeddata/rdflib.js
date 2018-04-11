@@ -1107,6 +1107,14 @@ class Fetcher {
     options.force = true
     const fetcher = this
 
+    if (options.body && !options.contentType) {
+      throw new Error("Web operation sending data must have a defined contentType.")
+    }
+    if (options.contentType) {
+      options.header = options.header || {}
+      options.headers['content-type'] = options.contentType
+    }
+
     return new Promise(function (resolve, reject) {
       fetcher._fetch(uri, options).then(response => {
         if (!response.ok) {
