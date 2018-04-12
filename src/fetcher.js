@@ -1435,8 +1435,6 @@ class Fetcher {
       }
 
       let errorMessage = options.resource + ' ' + response.statusText
-      return this.failFetch(options, errorMessage, response.status, response) // @@@@@ just try
-
       return this.saveErrorResponse(response, responseNode)
         .then(() => {
           let errorMessage = options.resource + ' ' + response.statusText
