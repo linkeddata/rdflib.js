@@ -1111,7 +1111,7 @@ class Fetcher {
       throw new Error("Web operation sending data must have a defined contentType.")
     }
     if (options.contentType) {
-      options.header = options.header || {}
+      options.headers = options.headers || {}
       options.headers['content-type'] = options.contentType
     }
 
