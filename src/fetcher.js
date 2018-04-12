@@ -971,8 +971,8 @@ class Fetcher {
   parseLinkHeader (linkHeader, originalUri, reqNode) {
     if (!linkHeader) { return }
 
-    const linkexp = /<[^>]*>\s*(\s*;\s*[^()<>@,;:"/[\]?={} \t]+=(([^\(\)<>@,;:"\/\[\]\?={} \t]+)|("[^"]*")))*(,|$)/g
-    const paramexp = /[^\(\)<>@,;:"\/\[\]\?={} \t]+=(([^\(\)<>@,;:"\/\[\]\?={} \t]+)|("[^"]*"))/g
+    const linkexp = /<[^>]*>\s*(\s*;\s*[^()<>@,;:"/[\]?={} \t]+=(([^()<>@,;:"/[]?={} \t]+)|("[^"]*")))*(,|$)/g
+    const paramexp = /[^()<>@,;:"/[]?={} \t]+=(([^()<>@,;:"/[]?={} \t]+)|("[^"]*"))/g
 
     const matches = linkHeader.match(linkexp)
 
@@ -1108,7 +1108,7 @@ class Fetcher {
     const fetcher = this
 
     if (options.body && !options.contentType) {
-      throw new Error("Web operation sending data must have a defined contentType.")
+      throw new Error('Web operation sending data must have a defined contentType.')
     }
     if (options.contentType) {
       options.headers = options.headers || {}
@@ -1434,7 +1434,6 @@ class Fetcher {
         this.nonexistent[docuri] = true
       }
 
-      let errorMessage = options.resource + ' ' + response.statusText
       return this.saveErrorResponse(response, responseNode)
         .then(() => {
           let errorMessage = options.resource + ' ' + response.statusText
