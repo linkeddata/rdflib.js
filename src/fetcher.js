@@ -1122,7 +1122,7 @@ class Fetcher {
       options.headers = options.headers || {}
       options.headers['content-type'] = options.contentType
     }
-    if (Fetcher.withCredentials(requestedURI, options)) {
+    if (Fetcher.withCredentials(uri, options)) {
       options.credentials = 'include'
     }
 
