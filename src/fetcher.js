@@ -973,6 +973,11 @@ class Fetcher {
 
     // const linkexp = /<[^>]*>\s*(\s*;\s*[^()<>@,;:"/[\]?={} \t]+=(([^()<>@,;:"/[]?={} \t]+)|("[^"]*")))*(,|$)/g
     // const paramexp = /[^()<>@,;:"/[]?={} \t]+=(([^()<>@,;:"/[]?={} \t]+)|("[^"]*"))/g
+
+    // From https://www.dcode.fr/regular-expression-simplificator:
+    // const linkexp = /<[^>]*>\s*(\s*;\s*[^()<>@,;:"/[\]?={} t]+=["]))*[,$]/g
+    // const paramexp = /[^\\<>@,;:"\/\[\]?={} \t]+=["])/g
+    // Original:
     const linkexp = /<[^>]*>\s*(\s*;\s*[^()<>@,;:"/[\]?={} \t]+=(([^\(\)<>@,;:"\/\[\]\?={} \t]+)|("[^"]*")))*(,|$)/g
     const paramexp = /[^\(\)<>@,;:"\/\[\]\?={} \t]+=(([^\(\)<>@,;:"\/\[\]\?={} \t]+)|("[^"]*"))/g
 
@@ -1096,6 +1101,7 @@ class Fetcher {
    * does not invole the quadstore.
    *
    *  Returns promise of Response
+   *  If data is returned, copies it to response.responseText before returning
    *
    * @param method
    * @param uri
@@ -1119,14 +1125,22 @@ class Fetcher {
 
     return new Promise(function (resolve, reject) {
       fetcher._fetch(uri, options).then(response => {
-        if (!response.ok) {
+        if (response.ok) {
+          if (response.body) {
+            response.body.text().then(data => {
+              response.responseText = data
+              resolve(response)
+            })
+          } else {
+            resolve(response)
+          }
+        } else {
           let msg = 'Web error: ' + response.status
           if (response.statusText) msg += ' (' + response.statusText + ')'
           msg += ' on ' + method + ' of <' + uri + '>'
           if (response.responseText) msg += ': ' + response.responseText
           reject(new Error(msg))
         }
-        resolve(response)
       }, err => {
         let msg = 'Fetch error for ' + method + ' of <' + uri + '>:' + err
         reject(new Error(msg))
