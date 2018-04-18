@@ -1127,7 +1127,7 @@ class Fetcher {
       fetcher._fetch(uri, options).then(response => {
         if (response.ok) {
           if (response.body) {
-            response.body.text().then(data => {
+            response.text().then(data => {
               response.responseText = data
               resolve(response)
             })
