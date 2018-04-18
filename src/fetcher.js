@@ -1123,7 +1123,7 @@ class Fetcher {
       options.headers['content-type'] = options.contentType
     }
     if (Fetcher.withCredentials(uri, options)) {
-      options.credentials = 'include'
+      options.credentials = 'include' // Otherwise coookies are not sent
     }
 
     return new Promise(function (resolve, reject) {
