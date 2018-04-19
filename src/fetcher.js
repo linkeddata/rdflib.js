@@ -93,7 +93,7 @@ class RDFXMLHandler extends Handler {
     }
   }
 
-  parse (fetcher, responseText, options) {
+  parse (fetcher, responseText, options, response) {
     let kb = fetcher.store
     if (!this.dom) {
       this.dom = Util.parseXML(responseText)
@@ -106,7 +106,7 @@ class RDFXMLHandler extends Handler {
     }
     let parser = new RDFParser(kb)
     try {
-      parser.parse(this.dom, options.original.uri, options.original)
+      parser.parse(this.dom, options.original.uri, options.original, response)
     } catch (err) {
       return fetcher.failFetch(options, 'Syntax error parsing RDF/XML! ' + err,
         'parse_error')
@@ -129,7 +129,7 @@ class XHTMLHandler extends Handler {
     fetcher.mediatypes['application/xhtml+xml'] = {}
   }
 
-  parse (fetcher, responseText, options) {
+  parse (fetcher, responseText, options, response) {
     let relation, reverse
     if (!this.dom) {
       this.dom = Util.parseXML(responseText)
@@ -165,6 +165,7 @@ class XHTMLHandler extends Handler {
       let contentType = scripts[i].getAttribute('type')
       if (Parsable[contentType]) {
         rdfParse(scripts[i].textContent, kb, options.original.uri, contentType)
+        rdfParse(scripts[i].textContent, kb, options.original.uri, contentType)
       }
     }
 
@@ -197,7 +198,7 @@ class XMLHandler extends Handler {
     fetcher.mediatypes['application/xml'] = { 'q': 0.5 }
   }
 
-  parse (fetcher, responseText, options) {
+  parse (fetcher, responseText, options, response) {
     let dom = Util.parseXML(responseText)
 
     // XML Semantics defined by root element namespace
@@ -214,7 +215,7 @@ class XMLHandler extends Handler {
             'Has XML root element in the RDF namespace, so assume RDF/XML.')
 
           let rdfHandler = new RDFXMLHandler(this.response, dom)
-          return rdfHandler.parse(fetcher, responseText, options)
+          return rdfHandler.parse(fetcher, responseText, options, response)
         }
 
         break
@@ -232,7 +233,7 @@ class XMLHandler extends Handler {
           'Has XHTML DOCTYPE. Switching to XHTML Handler.\n')
 
         let xhtmlHandler = new XHTMLHandler(this.response, dom)
-        return xhtmlHandler.parse(fetcher, responseText, options)
+        return xhtmlHandler.parse(fetcher, responseText, options, response)
       }
     }
 
@@ -245,7 +246,7 @@ class XMLHandler extends Handler {
           'Has a default namespace for ' + 'XHTML. Switching to XHTMLHandler.\n')
 
         let xhtmlHandler = new XHTMLHandler(this.response, dom)
-        return xhtmlHandler.parse(fetcher, responseText, options)
+        return xhtmlHandler.parse(fetcher, responseText, options, response)
       }
     }
 
@@ -272,7 +273,7 @@ class HTMLHandler extends Handler {
     }
   }
 
-  parse (fetcher, responseText, options) {
+  parse (fetcher, responseText, options, response) {
     let kb = fetcher.store
 
     // We only handle XHTML so we have to figure out if this is XML
@@ -283,7 +284,7 @@ class HTMLHandler extends Handler {
         "it's XHTML as the content-type was text/html.\n")
 
       let xhtmlHandler = new XHTMLHandler(this.response)
-      return xhtmlHandler.parse(fetcher, responseText, options)
+      return xhtmlHandler.parse(fetcher, responseText, options, response)
     }
 
     // DOCTYPE
@@ -293,7 +294,7 @@ class HTMLHandler extends Handler {
         'Has XHTML DOCTYPE. Switching to XHTMLHandler.\n')
 
       let xhtmlHandler = new XHTMLHandler(this.response)
-      return xhtmlHandler.parse(fetcher, responseText, options)
+      return xhtmlHandler.parse(fetcher, responseText, options, response)
     }
 
     // xmlns
@@ -302,7 +303,7 @@ class HTMLHandler extends Handler {
         'Has default namespace for XHTML, so switching to XHTMLHandler.\n')
 
       let xhtmlHandler = new XHTMLHandler(this.response)
-      return xhtmlHandler.parse(fetcher, responseText, options)
+      return xhtmlHandler.parse(fetcher, responseText, options, response)
     }
 
     // dc:title
@@ -331,7 +332,7 @@ class TextHandler extends Handler {
     }
   }
 
-  parse (fetcher, responseText, options) {
+  parse (fetcher, responseText, options, response) {
     // We only speak dialects of XML right now. Is this XML?
 
     // Look for an XML declaration
@@ -341,7 +342,7 @@ class TextHandler extends Handler {
         "it's XML but its content-type wasn't XML.\n")
 
       let xmlHandler = new XMLHandler(this.response)
-      return xmlHandler.parse(fetcher, responseText, options)
+      return xmlHandler.parse(fetcher, responseText, options, response)
     }
 
     // Look for an XML declaration
@@ -350,7 +351,7 @@ class TextHandler extends Handler {
         "it's XML but its content-type wasn't XML.\n")
 
       let xmlHandler = new XMLHandler(this.response)
-      return xmlHandler.parse(fetcher, responseText, options)
+      return xmlHandler.parse(fetcher, responseText, options, response)
     }
 
     // We give up finding semantics - this is not an error, just no data
@@ -380,7 +381,7 @@ class N3Handler extends Handler {
     } // post 2008
   }
 
-  parse (fetcher, responseText, options) {
+  parse (fetcher, responseText, options, response) {
     // Parse the text of this non-XML file
     let kb = fetcher.store
     // console.log('web.js: Parsing as N3 ' + xhr.resource.uri + ' base: ' +
@@ -395,7 +396,7 @@ class N3Handler extends Handler {
       let msg = 'Error trying to parse ' + options.resource +
         ' as Notation3:\n' + err + ':\n' + err.stack
       // dump(msg+"\n")
-      return fetcher.failFetch(options, msg, 'parse_error')
+      return fetcher.failFetch(options, msg, 'parse_error', response)
     }
 
     fetcher.addStatus(options.req, 'N3 parsed: ' + p.statementCount + ' triples in ' + p.lines + ' lines.')
@@ -748,8 +749,21 @@ class Fetcher {
         )
       }
       if (state === 'failed') {
-        return this.failFetch(options, 'Previously failed: ' + this.requested[docuri],
-          this.requested[docuri])
+        let message = 'Previously failed: ' + this.requested[docuri]
+        let dummyResponse = {
+          url: docuri,
+          status: this.requested[docuri],
+          statusText: message,
+          responseText: message,
+          headers: {},  // Headers() ???
+          ok: false,
+          body: null,
+          bodyUsed: false,
+          size: 0,
+          timeout: 0
+        }
+        return this.failFetch(options, message,
+          this.requested[docuri], dummyResponse)
       }
     } else {
       // options.force == true
@@ -782,7 +796,7 @@ class Fetcher {
                 size: 0,
                 timeout: 0
               }
-              console.log('Fetcher: Non-HTTP fetch error ' + error)
+              console.log('Fetcher: <' + actualProxyURI + '> Non-HTTP fetch error: ' + error)
               return this.failFetch(options, 'fetch failed: ' + error, 999, dummyResponse) // Fake status code: fetch exception
 
               // handleError expects a response so we fake some important bits.
@@ -927,7 +941,7 @@ class Fetcher {
       this.fireCallbacks('fail', [options.original.uri, errorMessage])
     }
 
-    var err = new Error(errorMessage)
+    var err = new Error('Fetcher: ' + errorMessage)
 
     // err.ok = false // Is taken as a response, will work too @@ phase out?
     err.status = statusCode
@@ -1520,7 +1534,7 @@ class Fetcher {
     return response.text()
       .then(responseText => {
         response.responseText = responseText
-        return handler.parse(this, responseText, options)
+        return handler.parse(this, responseText, options, response)
       })
   }
 

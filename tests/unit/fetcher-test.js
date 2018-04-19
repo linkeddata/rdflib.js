@@ -212,8 +212,7 @@ describe('Fetcher', () => {
 
         return fetcher.load(uri, options)
           .then(response => {}, error => {
-            // expect(response.ok).to.be.false()
-            expect(error.message.startsWith('Previously failed:')).to.be.true()
+            expect(error.message.includes('Previously failed:')).to.be.true()
             expect(fetcher._fetch).to.not.have.been.called()
             expect(fetcher.handleError).to.not.have.been.called()
           })
