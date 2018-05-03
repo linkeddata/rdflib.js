@@ -37,7 +37,34 @@ describe('Fetcher', () => {
     })
   })
 
-  describe('nowOrWhenFetched', () => {
+
+
+  describe('nowOrWhenFetched 1', () => {
+    let fetcher, docuri, rterm, options, userCallback
+
+    beforeEach(() => {
+      docuri = 'https://example.com/newdoc.ttl'
+      rterm = rdf.namedNode('https://example.com/original.ttl')
+      options = {}
+      userCallback = () => {}
+
+      fetcher = new Fetcher(rdf.graph())
+    })
+
+    it('should invoke userCallback with caught error', done => {
+      let errorMessage = 'Some error'
+      fetcher._fetch = sinon.stub().rejects(new Error(errorMessage))
+
+      fetcher.nowOrWhenFetched(docuri, (ok, message) => {
+        expect(ok).to.be.false()
+        expect(message).to.include(errorMessage)
+        done()
+      })
+    })
+
+  })
+
+  describe('nowOrWhenFetched 2', () => {
     let fetcher, docuri, rterm, options, userCallback
 
     beforeEach(() => {
@@ -48,23 +75,12 @@ describe('Fetcher', () => {
 
       fetcher = new Fetcher(rdf.graph())
 
-      fetcher.fetch = sinon.stub().resolves({ ok: true, status: 200, statusText: "Dummy stub"})
-    })
-
-    it('should invoke userCallback with caught error', done => {
-      let errorMessage = 'Some error'
-      fetcher.fetch = sinon.stub().rejects(new Error(errorMessage))
-
-      fetcher.nowOrWhenFetched(docuri, (ok, message) => {
-        expect(ok).to.be.false()
-        expect(message).to.include(errorMessage)
-        done()
-      })
+      fetcher.load = sinon.stub().resolves({ ok: true, status: 200, statusText: "Dummy stub"})
     })
 
     it('nowOrWhenFetched(uri, userCallback)', done => {
       fetcher.nowOrWhenFetched(docuri, (ok, text, response) => {
-        expect(fetcher.fetch).to.have.been.calledWith(docuri, {})
+        expect(fetcher.load).to.have.been.calledWith(docuri, {})
         expect(ok).to.be.true()
         expect(response.status).to.equal(200)
         done()
@@ -74,7 +90,7 @@ describe('Fetcher', () => {
     it('nowOrWhenFetched(uri, options, userCallback)', done => {
       let options = {}
       fetcher.nowOrWhenFetched(docuri, options, (ok, text, response) => {
-        expect(fetcher.fetch).to.have.been.calledWith(docuri, options)
+        expect(fetcher.load).to.have.been.calledWith(docuri, options)
         expect(ok).to.be.true()
         done()
       })
@@ -82,7 +98,7 @@ describe('Fetcher', () => {
 
     it('nowOrWhenFetched(uri, referringTerm, userCallback, options)', done => {
       userCallback = (ok) => {
-        expect(fetcher.fetch).to.have.been.calledWith(docuri, { referringTerm: rterm })
+        expect(fetcher.load).to.have.been.calledWith(docuri, { referringTerm: rterm })
         expect(ok).to.be.true()
         done()
       }
@@ -91,7 +107,7 @@ describe('Fetcher', () => {
 
     it('nowOrWhenFetched(uri, undefined, userCallback, options)', done => {
       userCallback = (ok) => {
-        expect(fetcher.fetch).to.have.been.calledWith(docuri, {})
+        expect(fetcher.load).to.have.been.calledWith(docuri, {})
         expect(ok).to.be.true()
         done()
       }
@@ -100,27 +116,26 @@ describe('Fetcher', () => {
 
     it('nowOrWhenFetched(uri, referringTerm, userCallback)', done => {
       fetcher.nowOrWhenFetched(docuri, rterm, (ok) => {
-        expect(fetcher.fetch).to.have.been.calledWith(docuri, { referringTerm: rterm })
+        expect(fetcher.load).to.have.been.calledWith(docuri, { referringTerm: rterm })
         expect(ok).to.be.true()
         done()
       })
     })
   })
 
-  describe('fetch', () => {
+  describe('load', () => {
     // let fetcher, uri, options, xhr
 
     it('should load multiple docs')
   })
 
-  describe('fetchUri', () => {
+  describe('load', () => {
     let fetcher, uri, options
 
     beforeEach(() => {
       uri = 'https://example.com/newdoc.ttl'
 
       fetcher = new Fetcher(rdf.graph())
-
       options = fetcher.initFetchOptions(uri, {})
 
       fetcher._fetch = sinon.stub().resolves()
@@ -132,16 +147,15 @@ describe('Fetcher', () => {
       uri = 'tel:+1-816-555-1212'
       options = fetcher.initFetchOptions(uri, {})
 
-      return fetcher.fetchUri(uri, options)
-        .then(result => {
-          expect(result.ok).to.be.false()
-          expect(result.error).to.equal('Unsupported protocol')
+      return fetcher.load(uri, options)
+        .then(result => {}, err => {
+          expect(err.message).to.include('Unsupported protocol')
           expect(fetcher.requested[uri]).to.equal('unsupported_protocol')
         })
     })
 
     it('should mark the uri as requested', () => {
-      return fetcher.fetchUri(uri, options)
+      return fetcher.load(uri, options)
         .then(() => {
           expect(fetcher.requested[uri]).to.be.true()
         })
@@ -150,7 +164,7 @@ describe('Fetcher', () => {
     it('should save request metadata if noMeta is not set', () => {
       sinon.spy(fetcher, 'saveRequestMetadata')
 
-      return fetcher.fetchUri(uri, options)
+      return fetcher.load(uri, options)
         .then(() => {
           expect(fetcher.saveRequestMetadata).to.have.been.called()
         })
@@ -161,7 +175,7 @@ describe('Fetcher', () => {
 
       options.noMeta = true
 
-      return fetcher.fetchUri(uri, options)
+      return fetcher.load(uri, options)
         .then(() => {
           expect(fetcher.saveRequestMetadata).to.not.have.been.called()
         })
@@ -173,7 +187,7 @@ describe('Fetcher', () => {
       fetcher.initFetchOptions = sinon.stub().returns(options)
       fetcher.saveRequestMetadata = sinon.stub()
 
-      return fetcher.fetchUri(uri, options)
+      return fetcher.load(uri, options)
         .then(() => {
           expect(fetcher._fetch).to.have.been.calledWith(actualProxyURI, options)
         })
@@ -183,7 +197,7 @@ describe('Fetcher', () => {
       it('should succeed with a no-op if the uri was previously fetched', () => {
         fetcher.getState = sinon.stub().withArgs(uri).returns('fetched')
 
-        return fetcher.fetchUri(uri, options)
+        return fetcher.load(uri, options)
           .then(response => {
             expect(response.ok).to.be.true()
             expect(response.status).to.equal(200)
@@ -196,10 +210,9 @@ describe('Fetcher', () => {
       it('should fail if the uri fetch previously failed', () => {
         fetcher.getState = sinon.stub().withArgs(uri).returns('failed')
 
-        return fetcher.fetchUri(uri, options)
-          .then(response => {
-            expect(response.ok).to.be.false()
-            expect(response.error.startsWith('Previously failed:')).to.be.true()
+        return fetcher.load(uri, options)
+          .then(response => {}, error => {
+            expect(error.message.includes('Previously failed:')).to.be.true()
             expect(fetcher._fetch).to.not.have.been.called()
             expect(fetcher.handleError).to.not.have.been.called()
           })
@@ -208,7 +221,7 @@ describe('Fetcher', () => {
       it('should not delete the uri from nonexistent list', () => {
         fetcher.nonexistent[uri] =  true
 
-        return fetcher.fetchUri(uri, options)
+        return fetcher.load(uri, options)
           .then(() => {
             expect(fetcher.nonexistent[uri]).to.be.true()
           })
@@ -221,7 +234,7 @@ describe('Fetcher', () => {
 
         fetcher.nonexistent[uri] =  true
 
-        return fetcher.fetchUri(uri, options)
+        return fetcher.load(uri, options)
           .then(() => {
             expect(fetcher.nonexistent[uri]).to.be.undefined()
           })
@@ -229,7 +242,7 @@ describe('Fetcher', () => {
     })
   })
 
-  describe('failFetch', () => {
+  describe('load()', () => {
     let fetcher, uri, options, statusCode
     const errorMessage = 'An error has occurred'
 
@@ -238,39 +251,45 @@ describe('Fetcher', () => {
 
       fetcher = new Fetcher(rdf.graph())
 
+      // No, this is internal function!
       options = fetcher.initFetchOptions(uri, {})
+      nock('https://example.com').get('/doc.ttl').reply(400, errorMessage) // sets body not statusText
+      // options = {}
 
       statusCode = 400
     })
 
-    it('should return a result object', () => {
-      return fetcher.failFetch(options, errorMessage, statusCode)
-        .then(result => {
-          expect(result.ok).to.be.false()
-          expect(result.status).to.equal(statusCode)
-          expect(result.error).to.equal(errorMessage)
+    it('should return a result object on HTTP error', () => {
+      return fetcher.load(uri, options)
+        .then(result => {}, err => {
+          expect(err.response.status).to.equal(statusCode)
         })
     })
 
     it('should add to status cache for GET operations', () => {
-      return fetcher.failFetch(options, errorMessage, statusCode)
-        .then(() => {
+      return fetcher.load(uri, options)
+        .then(result => {}, () => {
           expect(fetcher.requested[uri]).to.equal(statusCode)
         })
     })
 
     it('should add to status cache for HEAD operations', () => {
       options.method = 'HEAD'
-      return fetcher.failFetch(options, errorMessage, statusCode)
-        .then(() => {
+      nock('https://example.com').head('/doc.ttl').reply(400)
+
+      return fetcher.load(uri, options)
+        .then(result => {}, () => {
           expect(fetcher.requested[uri]).to.equal(statusCode)
         })
     })
 
     it('should not add to status cache for non-GET operations', () => {
       options.method = 'PATCH'
-      return fetcher.failFetch(options, errorMessage, statusCode)
-        .then(() => {
+      nock('https://example.com').patch('/doc.ttl').reply(400)
+      delete fetcher.requested[uri]
+      return fetcher.webOperation('PATCH', uri, options) // load() is not usable for PATCH
+        .then(result => {}, () => {
+          console.log('###### ' + fetcher.requested[uri])
           expect(fetcher.requested[uri]).to.not.exist()
         })
     })
@@ -400,9 +419,10 @@ describe('Fetcher', () => {
       nock('https://example.com').get('/notfound').reply(404)
 
       return fetcher.load('https://example.com/notfound')
-        .then(res => {
-          expect(res.status).to.equal(404)
-          expect(res.error).to.equal(`HTTP error for <https://example.com/notfound>: 404 Not Found`)
+        .then(res => {}, err => {
+          expect(err.response.status).to.equal(404)
+          expect(err.message).to.include('https://example.com/notfound')
+          expect(err.message).to.include('Not Found')
         })
     })
 

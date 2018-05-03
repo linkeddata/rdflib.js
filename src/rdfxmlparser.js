@@ -326,10 +326,10 @@ var RDFParser = function (store) {
           if (parsetype) {
             var nv = parsetype.nodeValue
             if (nv === 'Literal') {
-              frame.datatype = RDFParser.ns.RDF + 'XMLLiteral' // (this.buildFrame(frame)).addLiteral(dom)
-              // should work but doesn't
+              frame.datatype = RDFParser.ns.RDF + 'XMLLiteral' 
               frame = this.buildFrame(frame)
-              frame.addLiteral(dom)
+              // Don't include the literal node, only its children
+              frame.addLiteral(dom.childNodes)
               dig = false
             } else if (nv === 'Resource') {
               frame = this.buildFrame(frame, frame.element)

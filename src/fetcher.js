@@ -7,12 +7,16 @@
  *
  * Description: contains functions for requesting/fetching/retracting
  *  This implements quite a lot of the web architecture.
- * A fetcher is bound to a specific knowledge base graph, into which
+ * A fetcher is bound to a specific quad store, into which
  * it loads stuff and into which it writes its metadata
- * @@ The metadata should be optionally a separate graph
+ * @@ The metadata could be optionally a separate graph
  *
  * - implements semantics of HTTP headers, Internet Content Types
  * - selects parsers for rdf/xml, n3, rdfa, grddl
+ *
+ * TO do:
+ * - Implement a runtime registry for parsers and serializers
+ * -
  */
 
 /**
@@ -32,6 +36,7 @@ const Uri = require('./uri')
 const Util = require('./util')
 const serialize = require('./serialize')
 
+// This is a special fetch withich does OIDC auth, catching 401 errors
 const fetch = require('solid-auth-client').fetch
 
 const Parsable = {
@@ -88,7 +93,7 @@ class RDFXMLHandler extends Handler {
     }
   }
 
-  parse (fetcher, responseText, options) {
+  parse (fetcher, responseText, options, response) {
     let kb = fetcher.store
     if (!this.dom) {
       this.dom = Util.parseXML(responseText)
@@ -101,7 +106,7 @@ class RDFXMLHandler extends Handler {
     }
     let parser = new RDFParser(kb)
     try {
-      parser.parse(this.dom, options.original.uri, options.original)
+      parser.parse(this.dom, options.original.uri, options.original, response)
     } catch (err) {
       return fetcher.failFetch(options, 'Syntax error parsing RDF/XML! ' + err,
         'parse_error')
@@ -124,7 +129,7 @@ class XHTMLHandler extends Handler {
     fetcher.mediatypes['application/xhtml+xml'] = {}
   }
 
-  parse (fetcher, responseText, options) {
+  parse (fetcher, responseText, options, response) {
     let relation, reverse
     if (!this.dom) {
       this.dom = Util.parseXML(responseText)
@@ -160,6 +165,7 @@ class XHTMLHandler extends Handler {
       let contentType = scripts[i].getAttribute('type')
       if (Parsable[contentType]) {
         rdfParse(scripts[i].textContent, kb, options.original.uri, contentType)
+        rdfParse(scripts[i].textContent, kb, options.original.uri, contentType)
       }
     }
 
@@ -192,7 +198,7 @@ class XMLHandler extends Handler {
     fetcher.mediatypes['application/xml'] = { 'q': 0.5 }
   }
 
-  parse (fetcher, responseText, options) {
+  parse (fetcher, responseText, options, response) {
     let dom = Util.parseXML(responseText)
 
     // XML Semantics defined by root element namespace
@@ -209,7 +215,7 @@ class XMLHandler extends Handler {
             'Has XML root element in the RDF namespace, so assume RDF/XML.')
 
           let rdfHandler = new RDFXMLHandler(this.response, dom)
-          return rdfHandler.parse(fetcher, responseText, options)
+          return rdfHandler.parse(fetcher, responseText, options, response)
         }
 
         break
@@ -227,7 +233,7 @@ class XMLHandler extends Handler {
           'Has XHTML DOCTYPE. Switching to XHTML Handler.\n')
 
         let xhtmlHandler = new XHTMLHandler(this.response, dom)
-        return xhtmlHandler.parse(fetcher, responseText, options)
+        return xhtmlHandler.parse(fetcher, responseText, options, response)
       }
     }
 
@@ -240,7 +246,7 @@ class XMLHandler extends Handler {
           'Has a default namespace for ' + 'XHTML. Switching to XHTMLHandler.\n')
 
         let xhtmlHandler = new XHTMLHandler(this.response, dom)
-        return xhtmlHandler.parse(fetcher, responseText, options)
+        return xhtmlHandler.parse(fetcher, responseText, options, response)
       }
     }
 
@@ -251,7 +257,7 @@ class XMLHandler extends Handler {
     // We give up. What dialect is this?
     return fetcher.failFetch(options,
       'Unsupported dialect of XML: not RDF or XHTML namespace, etc.\n' +
-      responseText.slice(0, 80))
+      responseText.slice(0, 80), 901)
   }
 }
 XMLHandler.pattern = new RegExp('(text|application)/(.*)xml')
@@ -267,7 +273,7 @@ class HTMLHandler extends Handler {
     }
   }
 
-  parse (fetcher, responseText, options) {
+  parse (fetcher, responseText, options, response) {
     let kb = fetcher.store
 
     // We only handle XHTML so we have to figure out if this is XML
@@ -278,7 +284,7 @@ class HTMLHandler extends Handler {
         "it's XHTML as the content-type was text/html.\n")
 
       let xhtmlHandler = new XHTMLHandler(this.response)
-      return xhtmlHandler.parse(fetcher, responseText, options)
+      return xhtmlHandler.parse(fetcher, responseText, options, response)
     }
 
     // DOCTYPE
@@ -288,7 +294,7 @@ class HTMLHandler extends Handler {
         'Has XHTML DOCTYPE. Switching to XHTMLHandler.\n')
 
       let xhtmlHandler = new XHTMLHandler(this.response)
-      return xhtmlHandler.parse(fetcher, responseText, options)
+      return xhtmlHandler.parse(fetcher, responseText, options, response)
     }
 
     // xmlns
@@ -297,7 +303,7 @@ class HTMLHandler extends Handler {
         'Has default namespace for XHTML, so switching to XHTMLHandler.\n')
 
       let xhtmlHandler = new XHTMLHandler(this.response)
-      return xhtmlHandler.parse(fetcher, responseText, options)
+      return xhtmlHandler.parse(fetcher, responseText, options, response)
     }
 
     // dc:title
@@ -311,7 +317,6 @@ class HTMLHandler extends Handler {
     fetcher.addStatus(options.req, 'non-XML HTML document, not parsed for data.')
 
     return fetcher.doneFetch(options, this.response)
-    // sf.failFetch(xhr, "Sorry, can't yet parse non-XML HTML")
   }
 }
 HTMLHandler.pattern = new RegExp('text/html')
@@ -327,7 +332,7 @@ class TextHandler extends Handler {
     }
   }
 
-  parse (fetcher, responseText, options) {
+  parse (fetcher, responseText, options, response) {
     // We only speak dialects of XML right now. Is this XML?
 
     // Look for an XML declaration
@@ -337,7 +342,7 @@ class TextHandler extends Handler {
         "it's XML but its content-type wasn't XML.\n")
 
       let xmlHandler = new XMLHandler(this.response)
-      return xmlHandler.parse(fetcher, responseText, options)
+      return xmlHandler.parse(fetcher, responseText, options, response)
     }
 
     // Look for an XML declaration
@@ -346,16 +351,13 @@ class TextHandler extends Handler {
         "it's XML but its content-type wasn't XML.\n")
 
       let xmlHandler = new XMLHandler(this.response)
-      return xmlHandler.parse(fetcher, responseText, options)
+      return xmlHandler.parse(fetcher, responseText, options, response)
     }
 
     // We give up finding semantics - this is not an error, just no data
     fetcher.addStatus(options.req, 'Plain text document, no known RDF semantics.')
 
     return fetcher.doneFetch(options, this.response)
-    // fetcher.failFetch(xhr, "unparseable - text/plain not visibly XML")
-    // dump(xhr.resource + " unparseable - text/plain not visibly XML,
-    //   starts:\n" + rt.slice(0, 500)+"\n")
   }
 }
 TextHandler.pattern = new RegExp('text/plain')
@@ -379,7 +381,7 @@ class N3Handler extends Handler {
     } // post 2008
   }
 
-  parse (fetcher, responseText, options) {
+  parse (fetcher, responseText, options, response) {
     // Parse the text of this non-XML file
     let kb = fetcher.store
     // console.log('web.js: Parsing as N3 ' + xhr.resource.uri + ' base: ' +
@@ -394,7 +396,7 @@ class N3Handler extends Handler {
       let msg = 'Error trying to parse ' + options.resource +
         ' as Notation3:\n' + err + ':\n' + err.stack
       // dump(msg+"\n")
-      return fetcher.failFetch(options, msg, 'parse_error')
+      return fetcher.failFetch(options, msg, 'parse_error', response)
     }
 
     fetcher.addStatus(options.req, 'N3 parsed: ' + p.statementCount + ' triples in ' + p.lines + ' lines.')
@@ -415,29 +417,11 @@ class Fetcher {
     this.store = store
     this.timeout = options.timeout || 30000
 
-    // console.log('@@ Creating new Fetcher. Store size: ' + store.statements.length)
-
     this._fetch = options.fetch || fetch
 
 /*
     if (!this._fetch) {
-      if (typeof window !== 'undefined') {
-        Object.defineProperty(this, '_fetch', {
-          // writable: false,
-          get: function(){ return window.fetch.bind(window)},
-          set: function(x){console.log("@@@@@@@@@@@@@@")}
-        }
-        )
-        // this._fetch = window.fetch.bind(window)
-      } else {
-        var nodeFetch = require('node-fetch');
-        var fileFetch = require('file-fetch');
-        var fetchers = this._fetch = require('proto-fetch')({
-          'http': nodeFetch,
-          'https': nodeFetch,
-          'file': fileFetch
-        });
-      }
+      throw new Error('No _fetch function availble for Fetcher')
     }
     */
     if (!this._fetch) {
@@ -459,7 +443,7 @@ class Fetcher {
     //   'unsupported_protocol'  URI is not a protocol Fetcher can deal with
     //   other strings mean various other errors.
     //
-    this.timeouts = {}; // list of timeouts associated with a requested URL
+    this.timeouts = {} // list of timeouts associated with a requested URL
     this.redirectedTo = {} // When 'redirected'
     this.fetchQueue = {}
     this.fetchCallbacks = {} // fetchCallbacks[uri].push(callback)
@@ -604,7 +588,7 @@ class Fetcher {
   }
 
   /**
-   * Promise-based fetch function
+   * Promise-based load function
    *
    * @param uri {Array<NamedNode>|Array<string>|NamedNode|string}
    *
@@ -641,10 +625,10 @@ class Fetcher {
    *
    * @returns {Promise<Result>}
    */
-  fetch (uri, options = {}) {
+  load (uri, options = {}) {
     if (uri instanceof Array) {
       return Promise.all(
-        uri.map(x => { return this.fetch(x, Object.assign({}, options)) })
+        uri.map(x => { return this.load(x, Object.assign({}, options)) })
       )
     }
 
@@ -682,10 +666,10 @@ class Fetcher {
 
     return pendingPromise.then(x => {
       if (uri in this.timeouts) {
-        this.timeouts[uri].forEach(clearTimeout);
-        delete this.timeouts[uri];
+        this.timeouts[uri].forEach(clearTimeout)
+        delete this.timeouts[uri]
       }
-      return x;
+      return x
     })
   }
 
@@ -695,10 +679,6 @@ class Fetcher {
         delete this.fetchQueue[originalUri]
       }
     }, timeout))
-  }
-
-  load (uri, options) {
-    return this.fetch(uri, options)
   }
 
   /**
@@ -762,7 +742,7 @@ class Fetcher {
     }
 
     if (Fetcher.unsupportedProtocol(docuri)) {
-      return this.failFetch(options, 'Unsupported protocol', 'unsupported_protocol')
+      return this.failFetch(options, 'fetcher: Unsupported protocol', 'unsupported_protocol')
     }
 
     let state = this.getState(docuri)
@@ -774,8 +754,21 @@ class Fetcher {
         )
       }
       if (state === 'failed') {
-        return this.failFetch(options, 'Previously failed: ' + this.requested[docuri],
-          this.requested[docuri])
+        let message = 'Previously failed: ' + this.requested[docuri]
+        let dummyResponse = {
+          url: docuri,
+          status: this.requested[docuri],
+          statusText: message,
+          responseText: message,
+          headers: {},  // Headers() ???
+          ok: false,
+          body: null,
+          bodyUsed: false,
+          size: 0,
+          timeout: 0
+        }
+        return this.failFetch(options, message,
+          this.requested[docuri], dummyResponse)
       }
     } else {
       // options.force == true
@@ -794,22 +787,29 @@ class Fetcher {
 
     return this._fetch(actualProxyURI, options)
       .then(response => this.handleResponse(response, docuri, options),
-            error =>
-              // handleError expects a response so we fake some important bits.
-              this.handleError({
+            error => {
+              let dummyResponse = {
                 url: actualProxyURI,
                 status: 999, // @@ what number/string should fetch failures report?
                 statusText: (error.name || 'network failure') + ': ' +
                   (error.errno || error.code || error.type),
                 responseText: error.message,
-                headers: Headers(),
+                headers: {},  // Headers() ???
                 ok: false,
                 body: null,
                 bodyUsed: false,
                 size: 0,
                 timeout: 0
-              }, docuri, options)
-      )
+              }
+              console.log('Fetcher: <' + actualProxyURI + '> Non-HTTP fetch error: ' + error)
+              return this.failFetch(options, 'fetch failed: ' + error, 999, dummyResponse) // Fake status code: fetch exception
+
+              // handleError expects a response so we fake some important bits.
+              /*
+              this.handleError(, docuri, options)
+              */
+            }
+    )
   }
 
   /**
@@ -855,15 +855,14 @@ class Fetcher {
       options = p2
     }
 
-    // console.log('@@ Fetcher: call this.fetch : ' + uri)
-    this.fetch(uri, options)
+    this.load(uri, options)
       .then(fetchResponse => {
-        console.log('@@ nowOrWhenFetched: Resolved fetch: ok ' + fetchResponse.ok)
         if (userCallback) {
           if (fetchResponse) {
             if (fetchResponse.ok) {
-              userCallback(fetchResponse.ok, fetchResponse.status, fetchResponse)
+              userCallback(true, 'OK', fetchResponse)
             } else {
+              console.log('@@@ fetcher.js Should not take this path !!!!!!!!!!!!')
               let oops = 'HTTP error: Status ' + fetchResponse.status + ' (' + fetchResponse.statusText + ')'
               if (fetchResponse.responseText) {
                 oops += ' ' + fetchResponse.responseText // not in 404, dns error, nock failure
@@ -872,14 +871,19 @@ class Fetcher {
               userCallback(false, oops, fetchResponse)
             }
           } else {
-            let oops = ('@@ nowOrWhenFetched:  no response object: ' + fetchResponse)
+            let oops = ('@@ nowOrWhenFetched:  no response object!')
             console.log(oops)
             userCallback(false, oops)
           }
         }
       }, function (err) {
-        console.log('@@ nowOrWhenFetched: REJECTED from fetch ' + err.message)
-        userCallback(false, 'Rejection from fetch?! ' + err.message, null)
+        var message = err.message || err.statusText
+        message = 'Failed to load  <' + uri + '> ' + message
+        console.log(message)
+        if (err.response && err.response.status) {
+          message += ' status: ' + err.response.status
+        }
+        userCallback(false, message, err.response)
       })
   }
 
@@ -912,43 +916,44 @@ class Fetcher {
    *  - Adds an entry to the request status collection
    *  - Adds an error triple with the fail message to the metadata
    *  - Fires the 'fail' callback
-   *  - Returns an error result object
+   *  - Rejects with an error result object, which has a response object if any
    *
    * @param options {Object}
    * @param errorMessage {string}
    * @param statusCode {number}
+   * @param response {Response}  // when an fetch() error
    *
    * @returns {Promise<Object>}
    */
-  failFetch (options, errorMessage, statusCode) {
+  failFetch (options, errorMessage, statusCode, response) {
     this.addStatus(options.req, errorMessage)
 
     if (!options.noMeta) {
       this.store.add(options.original, ns.link('error'), errorMessage)
     }
 
-    if (!options.resource.sameTerm(options.original)) {
-      console.log('@@ Recording failure original ' + options.original +
-        '( as ' + options.resource + ') : ' + statusCode)
-    } else {
-      console.log('@@ Recording failure for ' + options.original + ': ' + statusCode)
-    }
-
-    let isGet = !options.method || options.method.toUpperCase() === 'GET' ||
-      options.method.toUpperCase() === 'HEAD'
+    let meth = (options.method || 'GET').toUpperCase()
+    let isGet = meth === 'GET' || meth === 'HEAD'
 
     if (isGet) {  // only cache the status code on GET or HEAD
+      if (!options.resource.sameTerm(options.original)) {
+        console.log('@@ Recording failure  ' + meth + '  original ' + options.original +
+          '( as ' + options.resource + ') : ' + statusCode)
+      } else {
+        console.log('@@ Recording ' + meth + ' failure for ' + options.original + ': ' + statusCode)
+      }
       this.requested[Uri.docpart(options.original.uri)] = statusCode
-
       this.fireCallbacks('fail', [options.original.uri, errorMessage])
     }
 
-    return Promise.resolve({
-      ok: false,
-      error: errorMessage, // @@ Why does a response object have an "error" property?
-      statusText: errorMessage,
-      status: statusCode
-    })
+    var err = new Error('Fetcher: ' + errorMessage)
+
+    // err.ok = false // Is taken as a response, will work too @@ phase out?
+    err.status = statusCode
+    err.statusText = errorMessage
+    err.response = response
+
+    return Promise.reject(err)
   }
 
   // in the why part of the quad distinguish between HTML and HTTP header
@@ -985,6 +990,13 @@ class Fetcher {
   parseLinkHeader (linkHeader, originalUri, reqNode) {
     if (!linkHeader) { return }
 
+    // const linkexp = /<[^>]*>\s*(\s*;\s*[^()<>@,;:"/[\]?={} \t]+=(([^()<>@,;:"/[]?={} \t]+)|("[^"]*")))*(,|$)/g
+    // const paramexp = /[^()<>@,;:"/[]?={} \t]+=(([^()<>@,;:"/[]?={} \t]+)|("[^"]*"))/g
+
+    // From https://www.dcode.fr/regular-expression-simplificator:
+    // const linkexp = /<[^>]*>\s*(\s*;\s*[^()<>@,;:"/[\]?={} t]+=["]))*[,$]/g
+    // const paramexp = /[^\\<>@,;:"\/\[\]?={} \t]+=["])/g
+    // Original:
     const linkexp = /<[^>]*>\s*(\s*;\s*[^()<>@,;:"/[\]?={} \t]+=(([^\(\)<>@,;:"\/\[\]\?={} \t]+)|("[^"]*")))*(,|$)/g
     const paramexp = /[^\(\)<>@,;:"\/\[\]\?={} \t]+=(([^\(\)<>@,;:"\/\[\]\?={} \t]+)|("[^"]*"))/g
 
@@ -1104,7 +1116,11 @@ class Fetcher {
   }
 
   /**
-   * Returns promise of Response
+   * A generic web opeation, at the fetch() level.
+   * does not invole the quadstore.
+   *
+   *  Returns promise of Response
+   *  If data is returned, copies it to response.responseText before returning
    *
    * @param method
    * @param uri
@@ -1116,8 +1132,42 @@ class Fetcher {
     options.method = method
     options.body = options.data || options.body
     options.force = true
+    const fetcher = this
 
-    return this.fetch(uri, options)
+    if (options.body && !options.contentType) {
+      throw new Error('Web operation sending data must have a defined contentType.')
+    }
+    if (options.contentType) {
+      options.headers = options.headers || {}
+      options.headers['content-type'] = options.contentType
+    }
+    if (Fetcher.withCredentials(uri, options)) {
+      options.credentials = 'include' // Otherwise coookies are not sent
+    }
+
+    return new Promise(function (resolve, reject) {
+      fetcher._fetch(uri, options).then(response => {
+        if (response.ok) {
+          if (response.body) {
+            response.text().then(data => {
+              response.responseText = data
+              resolve(response)
+            })
+          } else {
+            resolve(response)
+          }
+        } else {
+          let msg = 'Web error: ' + response.status
+          if (response.statusText) msg += ' (' + response.statusText + ')'
+          msg += ' on ' + method + ' of <' + uri + '>'
+          if (response.responseText) msg += ': ' + response.responseText
+          reject(new Error(msg))
+        }
+      }, err => {
+        let msg = 'Fetch error for ' + method + ' of <' + uri + '>:' + err
+        reject(new Error(msg))
+      })
+    })
   }
 
   /**
@@ -1139,7 +1189,7 @@ class Fetcher {
       this.lookedUp[u] = true
     })
 
-    return this.fetch(uris, { referringTerm: rterm })
+    return this.load(uris, { referringTerm: rterm })
   }
 
   /**
@@ -1301,7 +1351,7 @@ class Fetcher {
     this.addStatus(options.req,
       'Abort: Will retry with credentials SUPPRESSED to see if that helps')
 
-    return this.fetch(docuri, newOptions)
+    return this.load(docuri, newOptions)
   }
 
   /**
@@ -1361,7 +1411,7 @@ class Fetcher {
     }
 
     // This is either not a CORS error, or retries have been made
-    return this.failFetch(options, message, response.status || 998)
+    return this.failFetch(options, message, response.status || 998, response)
   }
 
   // deduce some things from the HTTP transaction
@@ -1389,7 +1439,7 @@ class Fetcher {
   }
 
   /**
-   * Handles XHR response
+   * Handle fetch() response
    *
    * @param response {Response} fetch() response object
    * @param docuri {string}
@@ -1426,7 +1476,7 @@ class Fetcher {
         .then(() => {
           let errorMessage = options.resource + ' ' + response.statusText
 
-          return this.failFetch(options, errorMessage, response.status)
+          return this.failFetch(options, errorMessage, response.status, response)
         })
     }
 
@@ -1489,7 +1539,7 @@ class Fetcher {
     return response.text()
       .then(responseText => {
         response.responseText = responseText
-        return handler.parse(this, responseText, options)
+        return handler.parse(this, responseText, options, response)
       })
   }
 
