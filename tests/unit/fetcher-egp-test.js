@@ -23,7 +23,8 @@ describe('Fetcher', () => {
       let fetcher = rdf.fetcher(kb, {a:1})
       fetcher.nowOrWhenFetched(kb.sym(goodServer + path), {force: true}, trywrap(done, function (ok, statusOrErrorText, resp) {
         expect(ok).to.be.true
-        expect(statusOrErrorText).to.equal(200)
+        expect(resp.status).to.equal(200)
+        expect(statusOrErrorText).to.equal('OK')
         expect(resp.responseText.length).to.equal(bodyText.length)
       }))
     })
@@ -35,11 +36,26 @@ describe('Fetcher', () => {
 
       let kb = rdf.graph();
       let fetcher = rdf.fetcher(kb, {a:1})
-      fetcher.nowOrWhenFetched(kb.sym(goodServer + path), {force: true}, trywrap(done, function (ok, statusOrErrorText, resp) {
+/*
+      fetcher.nowOrWhenFetched(kb.sym(goodServer + path), {force: true}, function (ok, statusOrErrorText, resp) {
+        console.log('@@@@@@ resp is ' + resp)
         expect(ok).to.be.false
         expect(statusOrErrorText).to.include(404)
-        expect(resp.error).to.match(/404/)
+        expect(resp.status).to.match(/404/)
+        done()
+      })
+*/
+      fetcher.nowOrWhenFetched(kb.sym(goodServer + path), {force: true}, trywrap(done, function (ok, statusOrErrorText, resp) {
+        console.log('@@@@@@ ok is ' + ok)
+        console.log('@@@@@@ statusOrErrorText is ' + statusOrErrorText)
+        console.log('@@@@@@ resp is ' + resp)
+        console.log('@@@@@@ resp.status is ' + resp.status)
+
+        expect(ok).to.be.false
+        expect(statusOrErrorText).to.include(404)
+        expect(resp.status).to.match(/404/)
       }))
+
     })
 
     it('should handle dns error', done => {
@@ -49,8 +65,8 @@ describe('Fetcher', () => {
       let fetcher = rdf.fetcher(kb, {a:1})
       fetcher.nowOrWhenFetched(kb.sym(badServer + path), {force: true}, trywrap(done, function (ok, statusOrErrorText, resp) {
         expect(ok).to.be.false
-        expect(statusOrErrorText).to.include(999);
-        expect(resp.error).to.match(/ENOTFOUND/)
+        expect(statusOrErrorText).to.match(/ENOTFOUND/);
+        expect(resp.status).to.equal(999)
       }))
     })
 
@@ -81,10 +97,9 @@ describe('Fetcher', () => {
         f.apply(null, arguments);
         done();
       } catch (e) {
-        done(e);
+        done('trywrap ' + e);
       }
     }
   }
 
 })
-
