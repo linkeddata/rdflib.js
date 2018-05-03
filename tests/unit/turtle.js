@@ -1,3 +1,8 @@
+/* invoke like
+   $(npm bin)/babel src/n3parser.js -o lib/n3parser.js && \
+   TESTS='^(SPARQL|old)_style_(base|prefix)$' npm test
+ */
+
 let fetch = require('node-fetch')
 let assert = require('assert')
 let path = require('path')
@@ -54,6 +59,12 @@ function loadAndRunTestManifest () {
       let mocha = new Mocha
       let suite = Suite.create(mocha.suite, manifestComment)
       let entries = manifestGraph.the(manifestNode, mf('entries'), null).elements
+      if ('TESTS' in process.env) {
+        entries = entries.filter(
+          ent => ent.value.substr(manifestURL.length + 1).match(RegExp(process.env.TESTS))
+        )
+      }
+
       Promise.all(entries.reduce((acc, entry) => {
         switch (manifestGraph.the(entry, rdf('type'), null).value) {
         case 'http://www.w3.org/ns/rdftest#TestTurtleEval':
@@ -102,8 +113,10 @@ function loadAndRunTestManifest () {
           return acc
         }
       }, [])).then(l => {
-        // console.log(l)
-        mocha.run()
+        let suiteRun = mocha.run()
+        process.on('exit', (code) => {
+          process.exit(suiteRun.stats.failures > 0)
+        });
       })
     })
   }
