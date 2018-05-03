@@ -247,7 +247,9 @@ function __SinkParser(store, openFormula, thisDoc, baseURI, genPrefix, metaURI, 
     this.startOfLine = 0;
     this.previousLine = 0;
     this._genPrefix = genPrefix;
-    this.keywords = new pyjslib_List(["a", "this", "bind", "has", "is", "of", "true", "false"]);
+    this.noDotKeywords = ["prefix", "base"];
+    this.keywords = new pyjslib_List(["a", "this", "bind", "has", "is", "of", "true", "false"]
+                                     .concat(this.noDotKeywords));
     this.keywordsSet = 0;
     this._anonymousNodes = new pyjslib_Dict([]);
     this._variables = new pyjslib_Dict([]);
@@ -338,7 +340,11 @@ __SinkParser.prototype.directiveOrStatement = function(str, h) {
     }
     var j = this.directive(str, i);
     if ((j >= 0)) {
-        return this.checkDot(str, j);
+        return this.noDotKeywords.find(
+                 keyword => str.substr(i, keyword.length).toLowerCase() === keyword
+               )
+            ? this.skipSpace(str, j)
+            : this.checkDot(str, j);
     }
     var j = this.statement(str, i);
     if ((j >= 0)) {
@@ -360,7 +366,7 @@ __SinkParser.prototype.tok = function(tok, str, i) {
         }
     }
     var k =  ( i + pyjslib_len(tok) ) ;
-    if ((pyjslib_slice(str, i, k) == tok) && (_notQNameChars.indexOf(str.charAt(k)) >= 0)) {
+    if ((pyjslib_slice(str, i, k).toLowerCase() == tok) && (_notQNameChars.indexOf(str.charAt(k)) >= 0)) {
         return k;
     }
     else {
