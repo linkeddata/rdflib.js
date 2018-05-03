@@ -419,6 +419,11 @@ class Fetcher {
 
     this._fetch = options.fetch || fetch
 
+/*
+    if (!this._fetch) {
+      throw new Error('No _fetch function availble for Fetcher')
+    }
+    */
     if (!this._fetch) {
       throw new Error('No _fetch function availble for Fetcher')
     }

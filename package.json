@@ -36,6 +36,8 @@
     "jsonld": "^0.4.5",
     "n3": "^0.4.1",
     "node-fetch": "^1.7.1",
+    "file-fetch": "^1.1.1",
+    "proto-fetch": "^1.0.0",
     "solid-auth-client": ">=0.5.1",
     "xmldom": "^0.1.22"
   },
@@ -49,6 +51,7 @@
     "chai": "^4.1.0",
     "diff": "^3.2.0",
     "dirty-chai": "^2.0.0",
+    "fs-extra": "^4.0.3",
     "fs-grep": "^0.0.5",
     "mocha": "^3.4.2",
     "nock": "^9.0.13",
@@ -56,13 +59,15 @@
     "rimraf": "^2.6.1",
     "sinon": "^2.3.6",
     "sinon-chai": "^2.11.0",
+    "tar": "^4.1.1",
     "webpack": "^2.5.1"
   },
   "scripts": {
     "build": "babel src -d lib",
     "build:browser": "webpack --progress --colors",
     "prepare": "npm run build",
-    "test": "npm run test:unit && npm run test:serialize",
+    "test": "node tests/unit/turtle.js",
+    "test-orig": "npm run test:unit && npm run test:serialize",
     "test:clean": "rimraf tests/serialize/,*",
     "test:serialize": "npm run build && npm run test:serialize:all && npm run test:clean",
     "test:serialize:all": "npm run test:serialize:1 && npm run test:serialize:2 && npm run test:serialize:3 && npm run test:serialize:4 && npm run test:serialize:5 && npm run test:serialize:6 && npm run test:serialize:7 && npm run test:serialize:10 && npm run test:serialize:11 && npm run test:serialize:12 && npm run test:serialize:13",
