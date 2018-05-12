@@ -301,9 +301,9 @@ function indexedFormulaQuery (myQuery, callback, fetcher, onDone) {
     //    log.debug("Prepare: f has "+ f.statements.length)
     // log.debug("Prepare: Kb size "+f.statements.length+" Preparing "+item)
 
-    terms = [item.subject, item.predicate, item.object, items.why]
+    terms = [item.subject, item.predicate, item.object, item.why]
     ind = [f.subjectIndex, f.predicateIndex, f.objectIndex, f.whyIndex]
-    for (i = 0; i < 3; i++) {
+    for (i = 0; i < 4; i++) {
       // alert("Prepare "+terms[i]+" "+(terms[i] in bindings))
       if (terms[i].isVar && !(bindings[terms[i]] !== undefined)) {
         item.nvars++
