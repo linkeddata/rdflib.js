@@ -24,9 +24,8 @@ describe('Query', () => {
     let options, userCallback, doneCallback
 
     const x = new Variable('x')
-    // const y = new Variable('y')
-    // const z = new Variable('z')
-    // const w = new Variable('w')
+    const y = new Variable('y')
+    const z = new Variable('z')
 
     const knows = rdf.sym('http://xmlns.com/foaf/0.1/knows')
     const age = rdf.sym('http://xmlns.com/foaf/0.1/age')
@@ -47,13 +46,13 @@ describe('Query', () => {
     kb.add(bob, age, 30, bobDoc)
     kb.add(bob, knows, alice, bobDoc)
     kb.add(alice, knows, bob, bobDoc)
-
+/*
     beforeEach(() => {
       options = {}
       userCallback = (bindings) => {}
     })
-
-    it('should find a value only in the given document ', done => {
+*/
+    it('should find a value only in the given document 1', done => {
       var result = null
 
       var query = new rdf.Query()
@@ -63,7 +62,6 @@ describe('Query', () => {
         // console.log('bindings', bindings)
         expect(bindings['?x'].value).to.equal('21') // Should only get Alice's documents value
         result = bindings['?x'].value
-        //done()
       }, null, () => { // fetcher, done callback
         expect(result).to.equal('21')
         done()
@@ -77,7 +75,7 @@ describe('Query', () => {
       query.pat.add(rdf.st(alice, age, x, bobDoc))
 
       kb.query(query, (bindings) => {
-        console.log('bindings', bindings)
+        // console.log('bobdoc bindings', bindings)
         expect(bindings['?x'].value).to.equal('25') // Should only get Alice's documents value
         result = bindings['?x'].value
         //done()
@@ -86,5 +84,116 @@ describe('Query', () => {
         done()
       })
     })
+
+    it('should find both values 3', done => {
+      var result = []
+
+      var query = new rdf.Query()
+      query.pat.add(rdf.st(alice, age, x, y))
+
+      kb.query(query, (bindings) => {
+        result.push(bindings['?x'].value)
+      }, null, () => { // fetcher, done callback
+        result.sort()
+        expect(result.join(',')).to.equal('21,25')
+        done()
+      })
+    })
+
+    it('should find both values 4', done => {
+      var result = []
+      var query = new rdf.Query()
+
+      query.pat.add(rdf.st(alice, age, x, undefined))
+
+      kb.query(query, (bindings) => {
+        console.log('both bindings 4)', bindings)
+        result.push(bindings['?x'].value)
+      }, null, () => { // fetcher, done callback
+        result.sort()
+        expect(result.join(',')).to.equal('21,25')
+        done()
+      })
+    })
+
+    it('should find all values 5', done => {
+      var result = []
+      var query = new rdf.Query()
+      query.pat.add(rdf.st(y, age, x, z))
+      kb.query(query, (bindings) => {
+        result.push(bindings['?x'].value)
+      }, null, () => { // fetcher, done callback
+        result.sort()
+        expect(result.join(',')).to.equal('21,25,30')
+        done()
+      })
+    })
+
+    it('should do two line query with explicit doc', done => {
+      var result = []
+      var query = new rdf.Query()
+      query.pat.add(rdf.st(alice, knows, y, z))
+      query.pat.add(rdf.st(y, age, x, z))
+      kb.query(query, (bindings) => {
+        result.push(bindings['?x'].value)
+      }, null, () => { // fetcher, done callback
+        result.sort()
+        expect(result.join(',')).to.equal('30')
+        done()
+      })
+    })
+
+    it('should do two line query with implicit doc', done => {
+      var result = []
+      var query = new rdf.Query()
+      query.pat.add(rdf.st(alice, knows, y))
+      query.pat.add(rdf.st(y, age, x))
+      kb.query(query, (bindings) => {
+        result.push(bindings['?x'].value)
+      }, null, () => { // fetcher, done callback
+        result.sort()
+        expect(result.join(',')).to.equal('30,30') // Two statements to bind y
+        done()
+      })
+    })
+
+    const a = rdf.sym('http://www.w3.org/1999/02/22-rdf-syntax-ns#type')
+    const vegetarian = rdf.sym('http://xmlns.com/foaf/0.1/Vegetarian')
+    const profile = rdf.sym('http://xmlns.com/foaf/0.1/personalProfile')
+
+    kb.add(alice, profile, aliceDoc, aliceDoc)
+    kb.add(bob, profile, aliceDoc, bobDoc)
+    kb.add(alice, a, vegetarian, aliceDoc)
+    kb.add(bob, a, vegetarian, aliceDoc) // we disregard non-self-assertion
+
+    it('should involve statements about the document', done => {
+      var result = []
+      var query = new rdf.Query()
+      query.pat.add(rdf.st(x, profile, y, y))
+      query.pat.add(rdf.st(x, a, vegetarian, y))
+      kb.query(query, (bindings) => {
+        result.push(bindings['?x'].value)
+      }, null, () => { // fetcher, done callback
+        result.sort()
+        expect(result.join(',')).to.equal('https://example.com/alice#i') // Two statements to bind y
+        done()
+      })
+    })
+
+    it('should find a loop', done => {
+      var result = []
+      var query = new rdf.Query()
+      query.pat.add(rdf.st(x, knows, y))
+      query.pat.add(rdf.st(y, knows, x))
+      kb.query(query, (bindings) => {
+        result[(bindings['?x'].value)] = true
+      }, null, () => { // fetcher, done callback
+        result.sort()
+        expect(result[alice.uri]).to.be.true
+        expect(result[bob.uri]).to.be.true
+        done()
+      })
+    })
+
   })
 })
