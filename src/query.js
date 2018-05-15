@@ -21,7 +21,7 @@ import IndexedFormula from './indexed-formula'
 const log = require('./log')
 const docpart = require('./uri').docpart
 
-const defaultDocumentURI = 'chrome:theSession'
+const defaultDocumentURI = IndexedFormula.defaultGraphURI
 /**
  * Query class, for tracking queries the user has in the UI.
  */

@@ -22,6 +22,8 @@ const Node = require('./node')
 const Variable = require('./variable')
 
 const owl_ns = 'http://www.w3.org/2002/07/owl#'
+
+const defaultGraphURI = 'chrome:theSession'
 // var link_ns = 'http://www.w3.org/2007/ont/link#'
 
 // Handle Functional Property
@@ -90,6 +92,10 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
       'FunctionalProperty'
     ]
     this.initPropertyActions(this.features)
+  }
+
+  static get defaultGraphURI() {
+   return defaultGraphURI;
   }
 
   substitute (bindings) {
@@ -254,7 +260,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     var st
     if (!why) {
       // system generated
-      why = this.fetcher ? this.fetcher.appNode : this.sym('chrome:theSession')
+      why = this.fetcher ? this.fetcher.appNode : this.sym(defaultGraphURI)
     }
     subj = Node.fromValue(subj)
     pred = Node.fromValue(pred)
