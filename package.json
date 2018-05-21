@@ -1,7 +1,7 @@
 {
   "name": "rdflib-jra",
   "description": "an RDF library for node.js. Suitable for client and server side.",
-  "version": "0.16.10",
+  "version": "0.16.9",
   "engines": {
     "node": ">=6.0"
   },
@@ -84,6 +84,7 @@
     "test:serialize:12": "cd ./tests/serialize && node ./data.js -in=structures.n3 -format=text/turtle -out=,structures.ttl && node diff ,structures.ttl t12-ref.ttl",
     "test:serialize:13": "cd ./tests/serialize && node ./data.js -in=structures.n3 -format=application/n-triples -out=,structures.nt && node ./data.js -format=application/n-triples -in=,structures.nt -format=text/turtle -out=,structures.nt.ttl && node diff ,structures.nt.ttl t13-ref.ttl",
     "test:unit": "mocha --growl --require babel-register tests/unit/**-test.js",
+    "test:unit:egp": "mocha --require babel-register tests/unit/fetcher-egp-test.js",
     "test:unit:dev": "mocha --watch --growl --require babel-register tests/unit/**-test.js"
   },
   "files": [
