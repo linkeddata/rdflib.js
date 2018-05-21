@@ -1,7 +1,7 @@
 {
-  "name": "rdflib",
+  "name": "rdflib-jra",
   "description": "an RDF library for node.js. Suitable for client and server side.",
-  "version": "0.16.7",
+  "version": "0.16.10",
   "engines": {
     "node": ">=6.0"
   },
@@ -22,12 +22,16 @@
     {
       "name": "Daniel Friedman",
       "url": "https://github.com/dan-f/"
+    },
+    {
+      "name": "Jim Amsden",
+      "url": "https://github.com/jamsden/"
     }
   ],
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git://github.com/linkeddata/rdflib.js.git"
+    "url": "git://github.com/OSLC/rdflib.js.git"
   },
   "homepage": "http://github.com/linkeddata/rdflib.js",
   "bugs": "http://github.com/linkeddata/rdflib.js/issues",
@@ -42,16 +46,16 @@
   "devDependencies": {
     "babel-cli": "^6.26.0",
     "babel-core": "^6.26.0",
-    "babel-loader": "^7.1.2",
+    "babel-loader": "^7.1.4",
     "babel-minify-webpack-plugin": "^0.2.0",
     "babel-preset-env": "^1.6.0",
     "babel-register": "^6.26.0",
     "chai": "^4.1.0",
-    "diff": "^3.2.0",
+    "diff": "^3.5.0",
     "dirty-chai": "^2.0.0",
     "fs-grep": "^0.0.5",
     "mocha": "^3.4.2",
-    "nock": "^9.0.13",
+    "nock": "^9.2.5",
     "node-mkdirp": "0.0.1",
     "rimraf": "^2.6.1",
     "sinon": "^2.3.6",
