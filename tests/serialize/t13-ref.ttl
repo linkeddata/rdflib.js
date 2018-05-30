@@ -17,7 +17,7 @@ str:MLK3 str:name "Martin Luther King III".
 str:YK str:name "Yolanda King".
 
 str:ZooReading1
-    str:boolDisabled true;
+    str:boolDisabled false;
     str:boolEnabled true;
     str:date "2015-02-28"^^XML:date;
     str:decBig 1234567890.99;

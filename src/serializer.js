@@ -453,7 +453,11 @@ var Serializer = (function () {
       case 'Variable':
         return expr.toNT()
       case 'Literal':
-        var val = expr.value.toString() // should be a string already
+        var val = expr.value
+        if (typeof val !== 'string') {
+          throw new TypeError('Value of RDF literal node must be a string')
+        }
+        // var val = expr.value.toString() // should be a string already
         if (expr.datatype && this.flags.indexOf('x') < 0) { // Supress native numbers
           switch (expr.datatype.uri) {
 
@@ -470,7 +474,7 @@ var Serializer = (function () {
               return val
 
             case 'http://www.w3.org/2001/XMLSchema#boolean':
-              return expr.value ? 'true' : 'false'
+              return expr.value === '1' ? 'true' : 'false'
           }
         }
         var str = this.stringToN3(expr.value)
