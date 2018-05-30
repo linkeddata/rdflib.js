@@ -1052,8 +1052,8 @@ class Fetcher {
   putBack (uri, options = {}) {
     uri = uri.uri || uri // Accept object or string
     let doc = new NamedNode(uri).doc() // strip off #
-    options.data = serialize(doc, this.store, doc.uri,
-      options.contentType || 'text/turtle')
+    options.contentType = options.contentType || 'text/turtle'
+    options.data = serialize(doc, this.store, doc.uri, options.contentType)
     return this.webOperation('PUT', uri, options)
   }
 
@@ -1156,7 +1156,9 @@ class Fetcher {
           if (response.statusText) msg += ' (' + response.statusText + ')'
           msg += ' on ' + method + ' of <' + uri + '>'
           if (response.responseText) msg += ': ' + response.responseText
-          reject(new Error(msg))
+          let e2 = new Error(msg)
+          e2.response = response
+          reject(e2)
         }
       }, err => {
         let msg = 'Fetch error for ' + method + ' of <' + uri + '>:' + err
@@ -1256,7 +1258,7 @@ class Fetcher {
 
     let responseNode = kb.bnode()
 
-    kb.add(options.req, ns.link('response'), responseNode)
+    kb.add(options.req, ns.link('response'), responseNode, responseNode)
     kb.add(responseNode, ns.http('status'),
       kb.literal(response.status), responseNode)
     kb.add(responseNode, ns.http('statusText'),
@@ -1587,7 +1589,6 @@ class Fetcher {
     }
 
     let contentType = headers.get('content-type')
-
     if (!contentType || contentType.includes('application/octet-stream')) {
       let guess = this.guessContentType(options.resource.uri)
 

@@ -15,7 +15,7 @@
 :YK :name "Yolanda King".
 
 :ZooReading1
-    :boolDisabled true;
+    :boolDisabled false;
     :boolEnabled true;
     :date "2015-02-28"^^XML:date;
     :decBig 1234567890.99;

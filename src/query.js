@@ -21,6 +21,7 @@ import IndexedFormula from './indexed-formula'
 const log = require('./log')
 const docpart = require('./uri').docpart
 
+const defaultDocumentURI = IndexedFormula.defaultGraphURI
 /**
  * Query class, for tracking queries the user has in the UI.
  */
@@ -104,7 +105,7 @@ function indexedFormulaQuery (myQuery, callback, fetcher, onDone) {
       if (formula.redirections[other]) {
         other = formula.redirections[other]
       }
-      if (actual.sameTerm(other)) {
+      if (actual.sameTerm(other) || (actual.uri && actual.uri === defaultDocumentURI)) { // Used to mean 'any graph' in a query
         return [[ [], null ]]
       }
       return []
@@ -291,21 +292,24 @@ function indexedFormulaQuery (myQuery, callback, fetcher, onDone) {
   /** prepare -- sets the index of the item to the possible matches
       * @param f - formula
       * @param item - an Statement, possibly w/ vars in it
-      * @param bindings -
-  * @returns true if the query fails -- there are no items that match **/
+      * @param bindings - Bindings so far
+  * @returns false if the query fails -- there are no items that match **/
   var prepare = function (f, item, bindings) {
-    var t, terms, termIndex, i, ind
+    var terms, termIndex, i, ind
     item.nvars = 0
     item.index = null
     // if (!f.statements) log.warn("@@@ prepare: f is "+f)
     //    log.debug("Prepare: f has "+ f.statements.length)
     // log.debug("Prepare: Kb size "+f.statements.length+" Preparing "+item)
 
-    terms = [item.subject, item.predicate, item.object]
-    ind = [f.subjectIndex, f.predicateIndex, f.objectIndex]
-    for (i = 0; i < 3; i++) {
-      // alert("Prepare "+terms[i]+" "+(terms[i] in bindings))
-      if (terms[i].isVar && !(bindings[terms[i]] !== undefined)) {
+    terms = [item.subject, item.predicate, item.object, item.why]
+    ind = [f.subjectIndex, f.predicateIndex, f.objectIndex, f.whyIndex]
+    for (i = 0; i < 4; i++) {
+      let t = terms[i]
+      // console.log("  Prepare (" + t + ") "+(t in bindings))
+      if (t.uri && t.uri === defaultDocumentURI) { // chrome:session
+        // console.log('     query: Ignoring slot ' + i)
+      } else if (t.isVar && !(bindings[t] !== undefined)) {
         item.nvars++
       } else {
         t = bind(terms[i], bindings) // returns the RDF binding if bound, otherwise itself
@@ -319,13 +323,13 @@ function indexedFormulaQuery (myQuery, callback, fetcher, onDone) {
           item.index = []
           return false // Query line cannot match
         }
-        if ((item.index === null) || (item.index.length > termIndex.length)) {
+        if ((item.index === null) || (item.index.length > termIndex.length)) { // Find smallest index
           item.index = termIndex
         }
       }
     }
 
-    if (item.index === null) { // All 3 are variables?
+    if (item.index === null) { // All 4 are variables?
       item.index = f.statements
     }
     return true
@@ -451,8 +455,9 @@ function indexedFormulaQuery (myQuery, callback, fetcher, onDone) {
     var item
     for (i = 0; i < n; i++) { // For each statement left in the query, run prepare
       item = pattern[i]
-      log.info('match2: item=' + item + ', bindingsSoFar=' + bindingDebug(bindingsSoFar))
+      // log.info('match2: item=' + item + ', bindingsSoFar=' + bindingDebug(bindingsSoFar))
       prepare(f, item, bindingsSoFar)
+      // if (item.index) console.log('     item.index.length ' + item.index.length)
     }
     pattern.sort(easiestQuery)
     item = pattern[0]
@@ -473,8 +478,8 @@ function indexedFormulaQuery (myQuery, callback, fetcher, onDone) {
     for (c = 0; c < nc; c++) { // For each candidate statement
       st = item.index[c] // for each statement in the item's index, spawn a new match with that binding
       nbs1 = unifyContents(
-        [item.subject, item.predicate, item.object],
-        [st.subject, st.predicate, st.object], bindingsSoFar, f)
+        [item.subject, item.predicate, item.object, item.why],
+        [st.subject, st.predicate, st.object, st.why], bindingsSoFar, f)
       log.info(level + ' From first: ' + nbs1.length + ': ' + bindingsDebug(nbs1))
       nk = nbs1.length
       // branch.count += nk

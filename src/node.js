@@ -73,3 +73,25 @@ Node.fromValue = function fromValue (value) {
   }
   return Literal.fromValue(value)
 }
+
+Node.toJS = function fromJS (term) {
+  if (term.elements) {
+    return term.elements.map(Node.toJS) // Array node (not standard RDFJS)
+  }
+  if (!term.datatype) return term // Objects remain objects
+  if (term.datatype.equals(ns.xsd('boolean'))) {
+    return term.value === '1'
+  }
+  if (term.datatype.equals(ns.xsd('dateTime')) ||
+    term.datatype.equals(ns.xsd('date'))) {
+    return new Date(term.value)
+  }
+  if (
+    term.datatype.equals(ns.xsd('integer')) ||
+    term.datatype.equals(ns.xsd('float')) ||
+    term.datatype.equals(ns.xsd('decimal'))
+  ) {
+    return Number(term.value)
+  }
+  return term.value
+}
