@@ -22,7 +22,8 @@ module.exports = {
   },
   externals: {
     'node-fetch': 'fetch',
-    'xmldom': 'window'
+    'xmldom': 'window',
+    '@trust/webcrypto': 'crypto'
   },
   devtool: 'source-map',
   plugins: [
