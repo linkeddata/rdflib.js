@@ -9,7 +9,7 @@ const Serializer = require('./serializer')
  * through mutiple conversions.
  */
 function serialize (target, kb, base, contentType, callback, options) {
-  base = base || target.uri
+  base = base || (target ? target.uri : null)
   options = options || {}
   contentType = contentType || 'text/turtle' // text/n3 if complex?
   var documentString = null
