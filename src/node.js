@@ -75,6 +75,7 @@ Node.fromValue = function fromValue (value) {
 }
 
 Node.toJS = function fromJS (term) {
+  const ns = require('./ns')
   if (term.elements) {
     return term.elements.map(Node.toJS) // Array node (not standard RDFJS)
   }
