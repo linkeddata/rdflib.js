@@ -78,10 +78,8 @@ Node.fromValue = function fromValue (value) {
   return Literal.fromValue(value)
 }
 
-const Namespace = require('./namespace')
-const ns = { xsd: Namespace('http://www.w3.org/2001/XMLSchema#') }
-
 Node.toJS = function toJS (term) {
+  const ns = require('./ns')
   if (term.elements) {
     return term.elements.map(Node.toJS) // Array node (not standard RDFJS)
   }

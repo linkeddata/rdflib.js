@@ -13,6 +13,7 @@ var $rdf = {
   N3Parser: require('./n3parser'),
   NamedNode: require('./named-node'),
   Namespace: require('./namespace'),
+  ns: require('./ns'),
   Node: require('./node'),
   parse: require('./parse'),
   Query: require('./query').Query,
