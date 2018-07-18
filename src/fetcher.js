@@ -1118,12 +1118,13 @@ class Fetcher {
    *  If data is returned, copies it to response.responseText before returning
    *
    * @param method
-   * @param uri
+   * @param uri  or NamedNode
    * @param options
    *
    * @returns {Promise<Response>}
    */
   webOperation (method, uri, options = {}) {
+    uri = uri.uri || uri // Allow a NamedNode to be passed as it is very common
     options.method = method
     options.body = options.data || options.body
     options.force = true
