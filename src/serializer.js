@@ -68,8 +68,8 @@ var Serializer = (function () {
   __Serializer.prototype.suggestNamespaces = function (namespaces) {
     for (var px in namespaces) {
       this.suggestPrefix(px, namespaces[px])
-      return this
     }
+    return this
   }
 
   __Serializer.prototype.checkIntegrity = function () {
