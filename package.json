@@ -33,6 +33,7 @@
   "bugs": "http://github.com/linkeddata/rdflib.js/issues",
   "dependencies": {
     "async": "^0.9.x",
+    "growl": "^1.10.5",
     "jsonld": "^0.4.5",
     "n3": "^0.4.1",
     "node-fetch": "^1.7.1",
