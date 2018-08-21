@@ -748,7 +748,7 @@ class Fetcher {
           this.doneFetch(options, {status: 200, ok: true, statusText: 'Already loaded into quadstore.'})
         )
       }
-      if (state === 'failed') {
+      if (state === 'failed' && this.requested[docuri] === 404) { // Remember nonexistence
         let message = 'Previously failed: ' + this.requested[docuri]
         let dummyResponse = {
           url: docuri,
