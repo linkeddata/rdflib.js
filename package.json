@@ -36,7 +36,7 @@
     "jsonld": "^0.4.5",
     "n3": "^0.4.1",
     "node-fetch": "^1.7.1",
-    "solid-auth-client": "^2.0.0",
+    "solid-auth-client": "^2.2.3",
     "xmldom": "^0.1.22"
   },
   "devDependencies": {
