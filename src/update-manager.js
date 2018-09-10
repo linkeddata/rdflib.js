@@ -615,7 +615,7 @@ class UpdateManager {
    *
    * @returns {*}
    */
-  update (deletions, insertions, callback) {
+  update (deletions, insertions, callback, secondTry) {
     try {
       var kb = this.store
       var ds = !deletions ? []
@@ -660,8 +660,18 @@ class UpdateManager {
       })
 
       var protocol = this.editable(doc.uri, kb)
-      if (!protocol) {
-        throw new Error("Can't make changes in uneditable " + doc)
+      if (protocol === false) {
+        throw new Error("Update: Can't make changes in uneditable " + doc)
+      }
+      if (protocol === undefined) { // Not enough metadata
+        if (secondTry) {
+          throw new Error("Update: Loaded " + doc + "but stil can't figure out what editing protcol it supports.")
+        }
+        this.store,fetcher.load(doc).then( response => {
+          this.update(deletions, insertions, callback, true) // secondTry
+        }, err => {
+          throw new Error(`Update: Can't read ${doc} before patching: ${err}`)
+        })
       }
       var i
       if (protocol.indexOf('SPARQL') >= 0) {
