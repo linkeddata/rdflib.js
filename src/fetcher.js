@@ -1291,11 +1291,30 @@ class Fetcher {
     }
   }
 
+  /* refresh  Reload data from a given document
+  **
+  ** @param  {NamedNode} term -  An RDF Named Node for the eodcument in question
+  ** @param  {function } userCallback - A function userCallback(ok, message, response)
+  */
   refresh (term, userCallback) { // sources_refresh
     this.fireCallbacks('refresh', arguments)
 
     this.nowOrWhenFetched(term, { force: true, clearPreviousData: true },
       userCallback)
+  }
+
+ /* refreshIfExpired   Conditional refresh if Expired
+ **
+ ** @param  {NamedNode} term -  An RDF Named Node for the eodcument in question
+ ** @param  {function } userCallback - A function userCallback(ok, message, response)
+ */
+  refreshIfExpired (term, userCallback) {
+    let exp = this.getHeader(term, 'Expires')
+    if (!exp || (new Date(exp).getTime()) <= (new Date().getTime())) {
+      this.refresh(term, userCallback)
+    } else {
+      userCallback(true, 'Not expired', {})
+    }
   }
 
   retract (term) { // sources_retract
