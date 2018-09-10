@@ -5,10 +5,15 @@ env:
 node_js:
   - "8.10"
   - "node"
+
+before_install:
+  - npm install -g npm@latest
+
+install:
+  - npm ci
+
 before_script:
   - npm run build:browser
+
 after_success:
   - ./.travis_publish
-cache:
-  directories:
-    - node_modules
