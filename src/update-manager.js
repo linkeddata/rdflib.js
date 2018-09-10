@@ -667,6 +667,7 @@ class UpdateManager {
         if (secondTry) {
           throw new Error("Update: Loaded " + doc + "but stil can't figure out what editing protcol it supports.")
         }
+        console.log(`Update: have not loaded ${doc} before: loading now...`)
         this.store,fetcher.load(doc).then( response => {
           this.update(deletions, insertions, callback, true) // secondTry
         }, err => {
