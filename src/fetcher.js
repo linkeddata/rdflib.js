@@ -412,9 +412,12 @@ const HANDLERS = {
   RDFXMLHandler, XHTMLHandler, XMLHandler, HTMLHandler, TextHandler, N3Handler
 }
 
+/*
+** @constructor
+*/
 class Fetcher {
   constructor (store, options = {}) {
-    this.store = store
+    this.store = store || new rdf.IndexedFormula()
     this.timeout = options.timeout || 30000
 
     this._fetch = options.fetch || fetch

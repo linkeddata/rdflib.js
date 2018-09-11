@@ -14,6 +14,9 @@ const Util = require('./util')
 class UpdateManager {
   constructor (store) {
     this.store = store
+    if (!store) {
+      store = new IndexedFormula() // If none provided make a store
+    }
     if (store.updater) {
       throw new Error("You can't have two UpdateManagers for the same store")
     }
