@@ -1202,6 +1202,7 @@ class Fetcher {
    * @returns {Array|undefined} a list of header values found in a stored HTTP
    *   response, or [] if response was found but no header found,
    *   or undefined if no response is available.
+   * Looks for { [] link:requestedURI ?uri; link:response [ httph:header-name  ?value ] }
    */
   getHeader (doc, header) {
     const kb = this.store
@@ -1213,6 +1214,7 @@ class Fetcher {
         let response = kb.any(request, ns.link('response'))
 
         if (response !== undefined) {
+          console.log('@@@ looking for ' + ns.httph(header.toLowerCase()))
           let results = kb.each(response, ns.httph(header.toLowerCase()))
 
           if (results.length) {

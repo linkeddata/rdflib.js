@@ -1,4 +1,4 @@
-// Joe Presbrey <presbrey@mit.edu>
+UpdateManager// Joe Presbrey <presbrey@mit.edu>
 // 2007-07-15
 // 2010-08-08 TimBL folded in Kenny's WEBDAV
 // 2010-12-07 TimBL addred local file write code
@@ -11,12 +11,18 @@ const Serializer = require('./serializer')
 const uriJoin = require('./uri').join
 const Util = require('./util')
 
+/*
+** The update manager is a helper object for a store.
+** Just as a Fetcher provides the store with the ability to read and write,
+** the Update Manager provides functionality for making small patches in real time,
+** and also looking out for concurrent updates from other agents
+*/
 class UpdateManager {
   constructor (store) {
-    this.store = store
     if (!store) {
       store = new IndexedFormula() // If none provided make a store
     }
+    this.store = store
     if (store.updater) {
       throw new Error("You can't have two UpdateManagers for the same store")
     }
@@ -76,7 +82,7 @@ class UpdateManager {
 
       var sts = kb.statementsMatching(kb.sym(uri))
 
-      console.log('sparql.editable: Not MachineEditableDocument file ' +
+      console.log('UpdateManager.editable: Not MachineEditableDocument file ' +
         uri + '\n')
       console.log(sts.map((x) => { return x.toNT() }).join('\n'))
 
@@ -128,18 +134,18 @@ class UpdateManager {
             }
           }
         } else {
-          console.log('sparql.editable: No response for ' + uri + '\n')
+          console.log('UpdateManager.editable: No response for ' + uri + '\n')
         }
       }
     }
     if (requests.length === 0) {
-      console.log('sparql.editable: No request for ' + uri + '\n')
+      console.log('UpdateManager.editable: No request for ' + uri + '\n')
     } else {
       if (definitive) {
         return false // We have got a request and it did NOT say editable => not editable
       }
     }
-    console.log('sparql.editable: inconclusive for ' + uri + '\n')
+    console.log('UpdateManager.editable: inconclusive for ' + uri + '\n')
     return undefined // We don't know (yet) as we haven't had a response (yet)
   }
 
@@ -300,12 +306,12 @@ class UpdateManager {
    * @private
    */
   contextWhere (context) {
-    var sparql = this
+    var updater = this
     return (!context || context.length === 0)
       ? ''
       : 'WHERE { ' +
       context.map(function (x) {
-        return sparql.anonymizeNT(x)
+        return updater.anonymizeNT(x)
       }).join('\n') + ' }\n'
   }
 
@@ -318,7 +324,7 @@ class UpdateManager {
         if (!uri) {
           throw new Error('No URI given for remote editing operation: ' + query)
         }
-        console.log('sparql: sending update to <' + uri + '>')
+        console.log('UpdateManager: sending update to <' + uri + '>')
 
         let options = {
           noMeta: true,
@@ -330,14 +336,14 @@ class UpdateManager {
       })
       .then(response => {
         if (!response.ok) {
-          let message = 'sparql: update failed for <' + uri + '> status=' +
+          let message = 'UpdateManager: update failed for <' + uri + '> status=' +
             response.status + ', ' + response.statusText +
             '\n   for query: ' + query
           console.log(message)
           throw new Error(message)
         }
 
-        console.log('sparql: update Ok for <' + uri + '>')
+        console.log('UpdateManager: update Ok for <' + uri + '>')
 
         callback(uri, response.ok, response.responseText, response)
       })
@@ -353,13 +359,13 @@ class UpdateManager {
     if (statement && !statement.why) {
       return
     }
-    var sparql = this
+    var updater = this
     var context = this.statementContext(statement)
 
     return {
       statement: statement ? [statement.subject, statement.predicate, statement.object, statement.why] : undefined,
       statementNT: statement ? this.anonymizeNT(statement) : undefined,
-      where: sparql.contextWhere(context),
+      where: updater.contextWhere(context),
 
       set_object: function (obj, callback) {
         var query = this.where
@@ -369,7 +375,7 @@ class UpdateManager {
           this.anonymize(this.statement[1]) + ' ' +
           this.anonymize(obj) + ' ' + ' . }\n'
 
-        sparql.fire(this.statement[3].uri, query, callback)
+        updater.fire(this.statement[3].uri, query, callback)
       }
     }
   }
@@ -621,6 +627,7 @@ class UpdateManager {
   update (deletions, insertions, callback, secondTry) {
     try {
       var kb = this.store
+      var i
       var ds = !deletions ? []
         : deletions instanceof IndexedFormula ? deletions.statements
           : deletions instanceof Array ? deletions : [ deletions ]
@@ -671,14 +678,13 @@ class UpdateManager {
           throw new Error("Update: Loaded " + doc + "but stil can't figure out what editing protcol it supports.")
         }
         console.log(`Update: have not loaded ${doc} before: loading now...`)
-        this.store,fetcher.load(doc).then( response => {
+        this.store.fetcher.load(doc).then( response => {
           this.update(deletions, insertions, callback, true) // secondTry
         }, err => {
           throw new Error(`Update: Can't read ${doc} before patching: ${err}`)
         })
-      }
-      var i
-      if (protocol.indexOf('SPARQL') >= 0) {
+        return
+      } else if (protocol.indexOf('SPARQL') >= 0) {
         var bnodes = []
         if (ds.length) bnodes = this.statementArrayBnodes(ds)
         if (is.length) bnodes = bnodes.concat(this.statementArrayBnodes(is))
@@ -727,7 +733,7 @@ class UpdateManager {
 
         this.fire(doc.uri, query, (uri, success, body, response) => {
           response.elapsedTimeMs = Date.now() - startTime
-          console.log('    sparql: Return ' +
+          console.log('    UpdateManager: Return ' +
             (success ? 'success ' : 'FAILURE ') + response.status +
             ' elapsed ' + response.elapsedTimeMs + 'ms')
           if (success) {
@@ -770,7 +776,7 @@ class UpdateManager {
       }
     } catch (e) {
       callback(undefined, false, 'Exception in update: ' + e + '\n' +
-        $rdf.Util.stackString(e))
+        Util.stackString(e))
     }
   }
 
