@@ -1,7 +1,9 @@
-UpdateManager// Joe Presbrey <presbrey@mit.edu>
-// 2007-07-15
-// 2010-08-08 TimBL folded in Kenny's WEBDAV
-// 2010-12-07 TimBL addred local file write code
+/* Update Manager Class
+**
+** 2007-07-15 originall sparl update module by Joe Presbrey <presbrey@mit.edu>
+** 2010-08-08 TimBL folded in Kenny's WEBDAV
+** 2010-12-07 TimBL addred local file write code
+*/
 import IndexedFormula from './indexed-formula'
 const docpart = require('./uri').docpart
 const Fetcher = require('./fetcher')
@@ -19,9 +21,7 @@ const Util = require('./util')
 */
 class UpdateManager {
   constructor (store) {
-    if (!store) {
-      store = new IndexedFormula() // If none provided make a store
-    }
+    store = store || new IndexedFormula() // If none provided make a store
     this.store = store
     if (store.updater) {
       throw new Error("You can't have two UpdateManagers for the same store")
@@ -98,7 +98,6 @@ class UpdateManager {
     if (kb.holds(namedNode(uri), this.ns.rdf('type'), this.ns.ldp('Resource'))) {
       return 'SPARQL'
     }
-    var i
     var method
     for (var r = 0; r < requests.length; r++) {
       request = requests[r]
@@ -107,14 +106,14 @@ class UpdateManager {
         if (request !== undefined) {
           var acceptPatch = kb.each(response, this.ns.httph('accept-patch'))
           if (acceptPatch.length) {
-            for (i = 0; i < acceptPatch.length; i++) {
+            for (let i = 0; i < acceptPatch.length; i++) {
               method = acceptPatch[i].value.trim()
               if (method.indexOf('application/sparql-update') >= 0) return 'SPARQL'
             }
           }
           var authorVia = kb.each(response, this.ns.httph('ms-author-via'))
           if (authorVia.length) {
-            for (i = 0; i < authorVia.length; i++) {
+            for (let i = 0; i < authorVia.length; i++) {
               method = authorVia[i].value.trim()
               if (method.indexOf('SPARQL') >= 0) {
                 return 'SPARQL'
@@ -126,7 +125,7 @@ class UpdateManager {
           }
           var status = kb.each(response, this.ns.http('status'))
           if (status.length) {
-            for (i = 0; i < status.length; i++) {
+            for (let i = 0; i < status.length; i++) {
               if (status[i] === 200 || status[i] === 404) {
                 definitive = true
                 // return false // A definitive answer
@@ -177,12 +176,12 @@ class UpdateManager {
    */
   statementArrayBnodes (sts) {
     var bnodes = []
-    for (var i = 0; i < sts.length; i++) {
+    for (let i = 0; i < sts.length; i++) {
       bnodes = bnodes.concat(this.statementBnodes(sts[i]))
     }
     bnodes.sort() // in place sort - result may have duplicates
     var bnodes2 = []
-    for (var j = 0; j < bnodes.length; j++) {
+    for (let j = 0; j < bnodes.length; j++) {
       if (j === 0 || !bnodes[j].sameTerm(bnodes[j - 1])) {
         bnodes2.push(bnodes[j])
       }
@@ -198,12 +197,12 @@ class UpdateManager {
     this.ifps = {}
     var a = this.store.each(undefined, this.ns.rdf('type'),
       this.ns.owl('InverseFunctionalProperty'))
-    for (var i = 0; i < a.length; i++) {
+    for (let i = 0; i < a.length; i++) {
       this.ifps[a[i].uri] = true
     }
     this.fps = {}
     a = this.store.each(undefined, this.ns.rdf('type'), this.ns.owl('FunctionalProperty'))
-    for (i = 0; i < a.length; i++) {
+    for (let i = 0; i < a.length; i++) {
       this.fps[a[i].uri] = true
     }
   }
@@ -219,7 +218,7 @@ class UpdateManager {
     var sts = this.store.statementsMatching(undefined, undefined, x, source) // incoming links
     var y
     var res
-    for (var i = 0; i < sts.length; i++) {
+    for (let i = 0; i < sts.length; i++) {
       if (this.fps[sts[i].predicate.uri]) {
         y = sts[i].subject
         if (!y.isBlank) {
@@ -235,7 +234,7 @@ class UpdateManager {
     }
     // outgoing links
     sts = this.store.statementsMatching(x, undefined, undefined, source)
-    for (i = 0; i < sts.length; i++) {
+    for (let i = 0; i < sts.length; i++) {
       if (this.ifps[sts[i].predicate.uri]) {
         y = sts[i].object
         if (!y.isBlank) {
@@ -284,7 +283,7 @@ class UpdateManager {
     var context = []
     if (bnodes.length) {
       this.cacheIfps()
-      for (var i = 0; i < bnodes.length; i++) { // Does this occur in old graph?
+      for (let i = 0; i < bnodes.length; i++) { // Does this occur in old graph?
         var bnode = bnodes[i]
         if (!this.mentioned(bnode)) continue
         context = context.concat(this.bnodeContext1(bnode, doc))
@@ -386,7 +385,7 @@ class UpdateManager {
 
     if (st instanceof Array) {
       var stText = ''
-      for (var i = 0; i < st.length; i++) stText += st[i] + '\n'
+      for (let i = 0; i < st.length; i++) stText += st[i] + '\n'
       query += 'INSERT DATA { ' + stText + ' }\n'
     } else {
       query += 'INSERT DATA { ' +
@@ -404,7 +403,7 @@ class UpdateManager {
 
     if (st instanceof Array) {
       var stText = ''
-      for (var i = 0; i < st.length; i++) stText += st[i] + '\n'
+      for (let i = 0; i < st.length; i++) stText += st[i] + '\n'
       query += 'DELETE DATA { ' + stText + ' }\n'
     } else {
       query += 'DELETE DATA { ' +
@@ -480,7 +479,7 @@ class UpdateManager {
         control.reloading = false
         if (ok) {
           if (control.downstreamChangeListeners) {
-            for (var i = 0; i < control.downstreamChangeListeners.length; i++) {
+            for (let i = 0; i < control.downstreamChangeListeners.length; i++) {
               console.log('        Calling downstream listener ' + i)
               control.downstreamChangeListeners[i]()
             }
@@ -627,7 +626,6 @@ class UpdateManager {
   update (deletions, insertions, callback, secondTry) {
     try {
       var kb = this.store
-      var i
       var ds = !deletions ? []
         : deletions instanceof IndexedFormula ? deletions.statements
           : deletions instanceof Array ? deletions : [ deletions ]
@@ -694,14 +692,14 @@ class UpdateManager {
         if (whereClause.length) { // Is there a WHERE clause?
           if (ds.length) {
             query += 'DELETE { '
-            for (i = 0; i < ds.length; i++) {
+            for (let i = 0; i < ds.length; i++) {
               query += this.anonymizeNT(ds[i]) + '\n'
             }
             query += ' }\n'
           }
           if (is.length) {
             query += 'INSERT { '
-            for (i = 0; i < is.length; i++) {
+            for (let i = 0; i < is.length; i++) {
               query += this.anonymizeNT(is[i]) + '\n'
             }
             query += ' }\n'
@@ -710,7 +708,7 @@ class UpdateManager {
         } else { // no where clause
           if (ds.length) {
             query += 'DELETE DATA { '
-            for (i = 0; i < ds.length; i++) {
+            for (let i = 0; i < ds.length; i++) {
               query += this.anonymizeNT(ds[i]) + '\n'
             }
             query += ' } \n'
@@ -718,7 +716,7 @@ class UpdateManager {
           if (is.length) {
             if (ds.length) query += ' ; '
             query += 'INSERT DATA { '
-            for (i = 0; i < is.length; i++) {
+            for (let i = 0; i < is.length; i++) {
               query += this.anonymizeNT(is[i]) + '\n'
             }
             query += ' }\n'
@@ -743,7 +741,7 @@ class UpdateManager {
               success = false
               body = 'Remote Ok BUT error deleting ' + ds.length + ' from store!!! ' + e
             } // Add in any case -- help recover from weirdness??
-            for (var i = 0; i < is.length; i++) {
+            for (let i = 0; i < is.length; i++) {
               kb.add(is[i].subject, is[i].predicate, is[i].object, doc)
             }
           }
@@ -797,10 +795,10 @@ class UpdateManager {
     // prepare contents of revised document
     let i
     let newSts = kb.statementsMatching(undefined, undefined, undefined, doc).slice() // copy!
-    for (i = 0; i < ds.length; i++) {
+    for (let i = 0; i < ds.length; i++) {
       Util.RDFArrayRemove(newSts, ds[i])
     }
-    for (i = 0; i < is.length; i++) {
+    for (let i = 0; i < is.length; i++) {
       newSts.push(is[i])
     }
 
@@ -825,10 +823,10 @@ class UpdateManager {
           throw new Error(response.error)
         }
 
-        for (var i = 0; i < ds.length; i++) {
+        for (let i = 0; i < ds.length; i++) {
           kb.remove(ds[i])
         }
-        for (i = 0; i < is.length; i++) {
+        for (let i = 0; i < is.length; i++) {
           kb.add(is[i].subject, is[i].predicate, is[i].object, doc)
         }
 
@@ -855,10 +853,10 @@ class UpdateManager {
     let newSts = kb.statementsMatching(undefined, undefined, undefined, doc).slice() // copy!
 
     let i
-    for (i = 0; i < ds.length; i++) {
+    for (let i = 0; i < ds.length; i++) {
       Util.RDFArrayRemove(newSts, ds[ i ])
     }
-    for (i = 0; i < is.length; i++) {
+    for (let i = 0; i < is.length; i++) {
       newSts.push(is[ i ])
     }
     // serialize to the appropriate format
@@ -902,10 +900,10 @@ class UpdateManager {
     stream.write(documentString, documentString.length)
     stream.close()
 
-    for (i = 0; i < ds.length; i++) {
+    for (let i = 0; i < ds.length; i++) {
       kb.remove(ds[ i ])
     }
-    for (i = 0; i < is.length; i++) {
+    for (let i = 0; i < is.length; i++) {
       kb.add(is[ i ].subject, is[ i ].predicate, is[ i ].object, doc)
     }
     callback(doc.uri, true, '') // success!
