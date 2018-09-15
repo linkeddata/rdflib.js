@@ -2,6 +2,22 @@
 const Node = require('./node')
 
 class Statement {
+  /* Construct a new statment
+  **
+  ** @param {Term} subject - The subject of the triple.  What the efact is about
+  ** @ param {Term} predciate - The relationship which is assrted between the subject and object
+  ** @param {Term} object - The thing or data value which is asserted to be related to the subject
+  ** @param {NamedNode} why - The document where thr triple is or was or will be stored on the web.
+  **
+  ** The why param is a named node of the document in which the triple when
+  ** it is stored on the web.
+  ** It is called “why” because when you have read data from varou slaces the
+  **  “why” tells you why you have the triple. (At the moment, it is just the
+  ** document, in future it could be an inference step). When you do
+  ** UpdateManager.update() then the why’s of all the statmemts must be the same,
+  ** and give the document you are patching. In future, we may have a more
+  ** powerful update() which can update more than one docment.
+  */
   constructor (subject, predicate, object, graph) {
     this.subject = Node.fromValue(subject)
     this.predicate = Node.fromValue(predicate)

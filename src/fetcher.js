@@ -412,9 +412,12 @@ const HANDLERS = {
   RDFXMLHandler, XHTMLHandler, XMLHandler, HTMLHandler, TextHandler, N3Handler
 }
 
+/*
+** @constructor
+*/
 class Fetcher {
   constructor (store, options = {}) {
-    this.store = store
+    this.store = store || new rdf.IndexedFormula()
     this.timeout = options.timeout || 30000
 
     this._fetch = options.fetch || fetch
@@ -748,7 +751,7 @@ class Fetcher {
           this.doneFetch(options, {status: 200, ok: true, statusText: 'Already loaded into quadstore.'})
         )
       }
-      if (state === 'failed') {
+      if (state === 'failed' && this.requested[docuri] === 404) { // Remember nonexistence
         let message = 'Previously failed: ' + this.requested[docuri]
         let dummyResponse = {
           url: docuri,
@@ -1118,12 +1121,13 @@ class Fetcher {
    *  If data is returned, copies it to response.responseText before returning
    *
    * @param method
-   * @param uri
+   * @param uri  or NamedNode
    * @param options
    *
    * @returns {Promise<Response>}
    */
   webOperation (method, uri, options = {}) {
+    uri = uri.uri || uri // Allow a NamedNode to be passed as it is very common
     options.method = method
     options.body = options.data || options.body
     options.force = true
@@ -1198,6 +1202,7 @@ class Fetcher {
    * @returns {Array|undefined} a list of header values found in a stored HTTP
    *   response, or [] if response was found but no header found,
    *   or undefined if no response is available.
+   * Looks for { [] link:requestedURI ?uri; link:response [ httph:header-name  ?value ] }
    */
   getHeader (doc, header) {
     const kb = this.store
@@ -1209,6 +1214,7 @@ class Fetcher {
         let response = kb.any(request, ns.link('response'))
 
         if (response !== undefined) {
+          console.log('@@@ looking for ' + ns.httph(header.toLowerCase()))
           let results = kb.each(response, ns.httph(header.toLowerCase()))
 
           if (results.length) {
@@ -1290,11 +1296,30 @@ class Fetcher {
     }
   }
 
+  /* refresh  Reload data from a given document
+  **
+  ** @param  {NamedNode} term -  An RDF Named Node for the eodcument in question
+  ** @param  {function } userCallback - A function userCallback(ok, message, response)
+  */
   refresh (term, userCallback) { // sources_refresh
     this.fireCallbacks('refresh', arguments)
 
     this.nowOrWhenFetched(term, { force: true, clearPreviousData: true },
       userCallback)
+  }
+
+ /* refreshIfExpired   Conditional refresh if Expired
+ **
+ ** @param  {NamedNode} term -  An RDF Named Node for the eodcument in question
+ ** @param  {function } userCallback - A function userCallback(ok, message, response)
+ */
+  refreshIfExpired (term, userCallback) {
+    let exp = this.getHeader(term, 'Expires')
+    if (!exp || (new Date(exp).getTime()) <= (new Date().getTime())) {
+      this.refresh(term, userCallback)
+    } else {
+      userCallback(true, 'Not expired', {})
+    }
   }
 
   retract (term) { // sources_retract

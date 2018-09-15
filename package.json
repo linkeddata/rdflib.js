@@ -49,6 +49,7 @@
     "chai": "^4.1.0",
     "diff": "^3.2.0",
     "dirty-chai": "^2.0.0",
+    "jsdoc": "*",
     "fs-grep": "^0.0.5",
     "mocha": "^5.2.0",
     "nock": "^9.0.13",
@@ -61,6 +62,7 @@
   "scripts": {
     "build": "babel src -d lib",
     "build:browser": "webpack --progress --colors",
+    "doc": "jsdoc -d doc src/*.js",
     "prepare": "npm run build",
     "test": "npm run test:unit && npm run test:serialize",
     "test:clean": "rimraf tests/serialize/,*",
