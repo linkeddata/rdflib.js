@@ -1,4 +1,32 @@
-/**  Identity management and indexing for RDF
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: indexed-formula.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: indexed-formula.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**  Identity management and indexing for RDF
  *
  * This file provides  IndexedFormula a formula (set of triples) which
  * indexed by predicate, subject and object.
@@ -59,7 +87,7 @@ function handleRDFType (formula, subj, pred, obj, why) {
   var x = formula.classActions[obj.hashString()]
   var done = false
   if (x) {
-    for (var i = 0; i < x.length; i++) {
+    for (var i = 0; i &lt; x.length; i++) {
       done = done || x[i](formula, subj, pred, obj, why)
     }
   }
@@ -75,7 +103,7 @@ function handleRDFType (formula, subj, pred, obj, why) {
 export default class IndexedFormula extends Formula { // IN future - allow pass array of statements to constructor
   /**
    * @constructor
-   * @param {Array<String>} features - What sort of autmatic processing to do? Array of string
+   * @param {Array&lt;String>} features - What sort of autmatic processing to do? Array of string
    * @param {Boolean} features.sameAs - Smush together A and B nodes whenever { A sameAs B }
    */
   constructor (features) {
@@ -84,7 +112,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     // this.optional = []
 
     this.propertyActions = [] // Array of functions to call when getting statement with {s X o}
-    // maps <uri> to [f(F,s,p,o),...]
+    // maps &lt;uri> to [f(F,s,p,o),...]
     this.classActions = [] // Array of functions to call when adding { s type X }
     this.redirections = [] // redirect to lexically smaller equivalent symbol
     this.aliases = [] // reverse mapping to redirection: aliases for this
@@ -221,21 +249,21 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
 
   initPropertyActions (features) {
     // If the predicate is #type, use handleRDFType to create a typeCallback on the object
-    this.propertyActions['<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>'] =
+    this.propertyActions['&lt;http://www.w3.org/1999/02/22-rdf-syntax-ns#type>'] =
       [ handleRDFType ]
 
     // Assumption: these terms are not redirected @@fixme
     if (ArrayIndexOf(features, 'sameAs') >= 0) {
-      this.propertyActions['<http://www.w3.org/2002/07/owl#sameAs>'] = [
+      this.propertyActions['&lt;http://www.w3.org/2002/07/owl#sameAs>'] = [
         function (formula, subj, pred, obj, why) {
           // log.warn("Equating "+subj.uri+" sameAs "+obj.uri);  //@@
           formula.equate(subj, obj)
           return true // true if statement given is NOT needed in the store
         }
-      ] // sameAs -> equate & don't add to index
+      ] // sameAs -> equate &amp; don't add to index
     }
     if (ArrayIndexOf(features, 'InverseFunctionalProperty') >= 0) {
-      this.classActions['<' + owl_ns + 'InverseFunctionalProperty>'] = [
+      this.classActions['&lt;' + owl_ns + 'InverseFunctionalProperty>'] = [
         function (formula, subj, pred, obj, addFn) {
           // yes subj not pred!
           return formula.newPropertyAction(subj, handle_IFP)
@@ -243,7 +271,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
       ] // IFP -> handle_IFP, do add to index
     }
     if (ArrayIndexOf(features, 'FunctionalProperty') >= 0) {
-      this.classActions['<' + owl_ns + 'FunctionalProperty>'] = [
+      this.classActions['&lt;' + owl_ns + 'FunctionalProperty>'] = [
         function (formula, subj, proj, obj, addFn) {
           return formula.newPropertyAction(subj, handle_FP)
         }
@@ -260,7 +288,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     var i
     if (arguments.length === 1) {
       if (subj instanceof Array) {
-        for (i = 0; i < subj.length; i++) {
+        for (i = 0; i &lt; subj.length; i++) {
           this.add(subj[i])
         }
       } else if (subj instanceof Statement) {
@@ -289,7 +317,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     var done = false
     if (actions) {
       // alert('type: '+typeof actions +' @@ actions='+actions)
-      for (i = 0; i < actions.length; i++) {
+      for (i = 0; i &lt; actions.length; i++) {
         done = done || actions[i](this, subj, pred, obj, why)
       }
     }
@@ -304,7 +332,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     var hash = [ this.canon(subj).hashString(), predHash,
       this.canon(obj).hashString(), this.canon(why).hashString()]
     st = new Statement(subj, pred, obj, why)
-    for (i = 0; i < 4; i++) {
+    for (i = 0; i &lt; 4; i++) {
       var ix = this.index[i]
       var h = hash[i]
       if (!ix[h]) {
@@ -366,7 +394,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
 
   check () {
     this.checkStatementList(this.statements)
-    for (var p = 0; p < 4; p++) {
+    for (var p = 0; p &lt; 4; p++) {
       var ix = this.index[p]
       for (var key in ix) {
         if (ix.hasOwnProperty(key)) {
@@ -384,20 +412,20 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     var names = ['subject', 'predicate', 'object', 'why']
     var origin = ' found in ' + names[from] + ' index.'
     var st
-    for (var j = 0; j < sts.length; j++) {
+    for (var j = 0; j &lt; sts.length; j++) {
       st = sts[j]
       var term = [ st.subject, st.predicate, st.object, st.why ]
       var arrayContains = function (a, x) {
-        for (var i = 0; i < a.length; i++) {
-          if (a[i].subject.sameTerm(x.subject) &&
-            a[i].predicate.sameTerm(x.predicate) &&
-            a[i].object.sameTerm(x.object) &&
+        for (var i = 0; i &lt; a.length; i++) {
+          if (a[i].subject.sameTerm(x.subject) &amp;&amp;
+            a[i].predicate.sameTerm(x.predicate) &amp;&amp;
+            a[i].object.sameTerm(x.object) &amp;&amp;
             a[i].why.sameTerm(x.why)) {
             return true
           }
         }
       }
-      for (var p = 0; p < 4; p++) {
+      for (var p = 0; p &lt; 4; p++) {
         var c = this.canon(term[p])
         var h = c.hashString()
         if (!this.index[p][h]) {
@@ -430,7 +458,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     if (ArrayIndexOf(flags, 'two-direction') !== -1) {
       statList.concat(this.statementsMatching(undefined, undefined, template))
     }
-    for (var i = 0; i < statList.length; i++) {
+    for (var i = 0; i &lt; statList.length; i++) {
       var st = statList[i]
       switch (st.object.termType) {
         case 'NamedNode':
@@ -463,7 +491,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     }
     // var big
     // var small
-    if (d < 0) { // u1 less than u2
+    if (d &lt; 0) { // u1 less than u2
       return this.replaceWith(u2, u1)
     } else {
       return this.replaceWith(u1, u2)
@@ -511,7 +539,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
    * Find out whether a given URI is used as symbol in the formula
    */
   mentionsURI (uri) {
-    var hash = '<' + uri + '>'
+    var hash = '&lt;' + uri + '>'
     return (!!this.subjectIndex[hash] ||
     !!this.objectIndex[hash] ||
     !!this.predicateIndex[hash])
@@ -534,7 +562,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     // Now apply the function to to statements already in the store
     var toBeFixed = this.statementsMatching(undefined, pred, undefined)
     var done = false
-    for (var i = 0; i < toBeFixed.length; i++) { // NOT optimized - sort toBeFixed etc
+    for (var i = 0; i &lt; toBeFixed.length; i++) { // NOT optimized - sort toBeFixed etc
       done = done || action(this, toBeFixed[i].subject, pred, toBeFixed[i].object)
     }
     return done
@@ -574,7 +602,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
    */
   remove (st) {
     if (st instanceof Array) {
-      for (var i = 0; i < st.length; i++) {
+      for (var i = 0; i &lt; st.length; i++) {
         this.remove(st[i])
       }
       return this
@@ -596,7 +624,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
    */
   removeDocument (doc) {
     var sts = this.statementsMatching(undefined, undefined, undefined, doc).slice() // Take a copy as this is the actual index
-    for (var i = 0; i < sts.length; i++) {
+    for (var i = 0; i &lt; sts.length; i++) {
       this.removeStatement(sts[i])
     }
     return this
@@ -613,9 +641,9 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     // but for perfromance consideration, it's better to just do that
     // so make a copy here.
     var statements = []
-    for (var i = 0; i < sts.length; i++) statements.push(sts[i])
+    for (var i = 0; i &lt; sts.length; i++) statements.push(sts[i])
     if (limit) statements = statements.slice(0, limit)
-    for (i = 0; i < statements.length; i++) this.remove(statements[i])
+    for (i = 0; i &lt; statements.length; i++) this.remove(statements[i])
   }
 
   removeMatches (subject, predicate, object, why) {
@@ -634,7 +662,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
   removeStatement (st) {
     // log.debug("entering remove w/ st=" + st)
     var term = [ st.subject, st.predicate, st.object, st.why ]
-    for (var p = 0; p < 4; p++) {
+    for (var p = 0; p &lt; 4; p++) {
       var c = this.canon(term[p])
       var h = c.hashString()
       if (!this.index[p][h]) {
@@ -648,7 +676,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
   }
 
   removeStatements (sts) {
-    for (var i = 0; i < sts.length; i++) {
+    for (var i = 0; i &lt; sts.length; i++) {
       this.remove(sts[i])
     }
     return this
@@ -675,7 +703,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
       delete ix[oldhash]
     }
     // the canonical one carries all the indexes
-    for (var i = 0; i < 4; i++) {
+    for (var i = 0; i &lt; 4; i++) {
       moveIndex(this.index[i])
     }
     this.redirections[oldhash] = small
@@ -686,7 +714,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
       }
       this.aliases[newhash].push(big) // Back link
       if (this.aliases[oldhash]) {
-        for (i = 0; i < this.aliases[oldhash].length; i++) {
+        for (i = 0; i &lt; this.aliases[oldhash].length; i++) {
           this.redirections[this.aliases[oldhash][i].hashString()] = small
           this.aliases[newhash].push(this.aliases[oldhash][i])
         }
@@ -732,7 +760,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     // TODO: This is a hack for our own issues, which ought to be fixed
     // post-release
     // See http://dig.csail.mit.edu/cgi-bin/roundup.cgi/$rdf/issue227
-    if (prefix === 'tab' && this.namespaces['tab']) {
+    if (prefix === 'tab' &amp;&amp; this.namespaces['tab']) {
       return
     } // There are files around with long badly generated prefixes like this
     if (prefix.slice(0, 2) === 'ns' || prefix.slice(0, 7) === 'default') {
@@ -754,7 +782,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     var given = [] // Not wild
     var p
     var list
-    for (p = 0; p < 4; p++) {
+    for (p = 0; p &lt; 4; p++) {
       pattern[p] = this.canon(Node.fromValue(pat[p]))
       if (!pattern[p]) {
         wild.push(p)
@@ -769,7 +797,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     if (given.length === 1) { // Easy too, we have an index for that
       p = given[0]
       list = this.index[p][hash[p]]
-      if (list && justOne) {
+      if (list &amp;&amp; justOne) {
         if (list.length > 1) {
           list = list.slice(0, 1)
         }
@@ -783,13 +811,13 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     var best = 1e10 // really bad
     var best_i
     var i
-    for (i = 0; i < given.length; i++) {
+    for (i = 0; i &lt; given.length; i++) {
       p = given[i] // Which part we are dealing with
       list = this.index[p][hash[p]]
       if (!list) {
         return [] // No occurrences
       }
-      if (list.length < best) {
+      if (list.length &lt; best) {
         best = list.length
         best_i = i // (not p!)
       }
@@ -800,10 +828,10 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     var check = given.slice(0, best_i).concat(given.slice(best_i + 1)) // remove best_i
     var results = []
     var parts = [ 'subject', 'predicate', 'object', 'why' ]
-    for (var j = 0; j < possibles.length; j++) {
+    for (var j = 0; j &lt; possibles.length; j++) {
       var st = possibles[j]
 
-      for (i = 0; i < check.length; i++) { // for each position to be checked
+      for (i = 0; i &lt; check.length; i++) { // for each position to be checked
         p = check[i]
         if (!this.canon(st[parts[p]]).sameTerm(pattern[p])) {
           st = null
@@ -827,7 +855,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     if (!cterm.uri) return []
     var res = [ cterm.uri ]
     if (terms) {
-      for (var i = 0; i < terms.length; i++) {
+      for (var i = 0; i &lt; terms.length; i++) {
         res.push(terms[i].uri)
       }
     }
@@ -836,3 +864,26 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
 }
 
 IndexedFormula.handleRDFType = handleRDFType
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-log.html">log</a></li><li><a href="module-util.html">util</a></li></ul><h3>Classes</h3><ul><li><a href="Empty.html">Empty</a></li><li><a href="Fetcher.html">Fetcher</a></li><li><a href="module.exports.html">exports</a></li><li><a href="NamedNode.html">NamedNode</a></li><li><a href="Node.html">Node</a></li><li><a href="Query.html">Query</a></li><li><a href="UpdateManager.html">UpdateManager</a></li><li><a href="uriUtil.html">uriUtil</a></li><li><a href="Variable.html">Variable</a></li></ul><h3>Global</h3><ul><li><a href="global.html#add">add</a></li><li><a href="global.html#addArc">addArc</a></li><li><a href="global.html#addBNode">addBNode</a></li><li><a href="global.html#addCollection">addCollection</a></li><li><a href="global.html#addCollectionArc">addCollectionArc</a></li><li><a href="global.html#addLiteral">addLiteral</a></li><li><a href="global.html#addNode">addNode</a></li><li><a href="global.html#addSymbol">addSymbol</a></li><li><a href="global.html#allAliases">allAliases</a></li><li><a href="global.html#ArrayIndexOf">ArrayIndexOf</a></li><li><a href="global.html#bnodes">bnodes</a></li><li><a href="global.html#canon">canon</a></li><li><a href="global.html#checkStatementList">checkStatementList</a></li><li><a href="global.html#copyTo">copyTo</a></li><li><a href="global.html#equate">equate</a></li><li><a href="global.html">fromBoolean</a></li><li><a href="global.html">fromDate</a></li><li><a href="global.html">fromNumber</a></li><li><a href="global.html">fromValue</a></li><li><a href="global.html#indexedFormulaQuery">indexedFormulaQuery</a></li><li><a href="global.html#isTripleToLoad">isTripleToLoad</a></li><li><a href="global.html#length">length</a></li><li><a href="global.html#loadTriple">loadTriple</a></li><li><a href="global.html#log">log</a></li><li><a href="global.html#match">match</a></li><li><a href="global.html#mentionsURI">mentionsURI</a></li><li><a href="global.html#nextSymbol">nextSymbol</a></li><li><a href="global.html#parse">parse</a></li><li><a href="global.html#RDFParser">RDFParser</a></li><li><a href="global.html#reify">reify</a></li><li><a href="global.html#remove">remove</a></li><li><a href="global.html#removeDocument">removeDocument</a></li><li><a href="global.html#removeMany">removeMany</a></li><li><a href="global.html#removeStatement">removeStatement</a></li><li><a href="global.html#replaceWith">replaceWith</a></li><li><a href="global.html#sameThings">sameThings</a></li><li><a href="global.html#serialize">serialize</a></li><li><a href="global.html#SPARQLToQuery">SPARQLToQuery</a></li><li><a href="global.html#statementsMatching">statementsMatching</a></li><li><a href="global.html#store">store</a></li><li><a href="global.html#terminateFrame">terminateFrame</a></li><li><a href="global.html#Uri">Uri</a></li><li><a href="global.html#uris">uris</a></li><li><a href="global.html#why">why</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Sun Sep 16 2018 23:24:18 GMT+0100 (BST)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

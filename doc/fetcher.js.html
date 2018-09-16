@@ -1,4 +1,32 @@
-/* global $SolidTestEnvironment */
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: fetcher.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: fetcher.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/* global $SolidTestEnvironment */
 /**
  *
  * Project: rdflib.js
@@ -161,7 +189,7 @@ class XHTMLHandler extends Handler {
 
     // Data Islands
     let scripts = this.dom.getElementsByTagName('script')
-    for (let i = 0; i < scripts.length; i++) {
+    for (let i = 0; i &lt; scripts.length; i++) {
       let contentType = scripts[i].getAttribute('type')
       if (Parsable[contentType]) {
         rdfParse(scripts[i].textContent, kb, options.original.uri, contentType)
@@ -173,7 +201,7 @@ class XHTMLHandler extends Handler {
       kb.add(options.resource, ns.rdf('type'), ns.link('WebPage'), fetcher.appNode)
     }
 
-    if (!options.noRDFa && parseRDFaDOM) { // enable by default
+    if (!options.noRDFa &amp;&amp; parseRDFaDOM) { // enable by default
       try {
         parseRDFaDOM(this.dom, kb, options.original.uri)
       } catch (err) {
@@ -203,14 +231,14 @@ class XMLHandler extends Handler {
 
     // XML Semantics defined by root element namespace
     // figure out the root element
-    for (let c = 0; c < dom.childNodes.length; c++) {
+    for (let c = 0; c &lt; dom.childNodes.length; c++) {
       // is this node an element?
       if (dom.childNodes[c].nodeType === 1) {
         // We've found the first element, it's the root
         let ns = dom.childNodes[c].namespaceURI
 
         // Is it RDF/XML?
-        if (ns && ns === ns['rdf']) {
+        if (ns &amp;&amp; ns === ns['rdf']) {
           fetcher.addStatus(options.req,
             'Has XML root element in the RDF namespace, so assume RDF/XML.')
 
@@ -226,8 +254,8 @@ class XMLHandler extends Handler {
     // Maybe it has an XHTML DOCTYPE?
     if (dom.doctype) {
       // log.info("We found a DOCTYPE in " + xhr.resource)
-      if (dom.doctype.name === 'html' &&
-          dom.doctype.publicId.match(/^-\/\/W3C\/\/DTD XHTML/) &&
+      if (dom.doctype.name === 'html' &amp;&amp;
+          dom.doctype.publicId.match(/^-\/\/W3C\/\/DTD XHTML/) &amp;&amp;
           dom.doctype.systemId.match(/http:\/\/www.w3.org\/TR\/xhtml/)) {
         fetcher.addStatus(options.req,
           'Has XHTML DOCTYPE. Switching to XHTML Handler.\n')
@@ -241,7 +269,7 @@ class XMLHandler extends Handler {
     let html = dom.getElementsByTagName('html')[0]
     if (html) {
       let xmlns = html.getAttribute('xmlns')
-      if (xmlns && xmlns.match(/^http:\/\/www.w3.org\/1999\/xhtml/)) {
+      if (xmlns &amp;&amp; xmlns.match(/^http:\/\/www.w3.org\/1999\/xhtml/)) {
         fetcher.addStatus(options.req,
           'Has a default namespace for ' + 'XHTML. Switching to XHTMLHandler.\n')
 
@@ -252,7 +280,7 @@ class XMLHandler extends Handler {
 
     // At this point we should check the namespace document (cache it!) and
     // look for a GRDDL transform
-    // @@  Get namespace document <n>, parse it, look for  <n> grddl:namespaceTransform ?y
+    // @@  Get namespace document &lt;n>, parse it, look for  &lt;n> grddl:namespaceTransform ?y
     // Apply ?y to   dom
     // We give up. What dialect is this?
     return fetcher.failFetch(options,
@@ -279,7 +307,7 @@ class HTMLHandler extends Handler {
     // We only handle XHTML so we have to figure out if this is XML
     // log.info("Sniffing HTML " + xhr.resource + " for XHTML.")
 
-    if (responseText.match(/\s*<\?xml\s+version\s*=[^<>]+\?>/)) {
+    if (responseText.match(/\s*&lt;\?xml\s+version\s*=[^&lt;>]+\?>/)) {
       fetcher.addStatus(options.req, "Has an XML declaration. We'll assume " +
         "it's XHTML as the content-type was text/html.\n")
 
@@ -289,7 +317,7 @@ class HTMLHandler extends Handler {
 
     // DOCTYPE
     // There is probably a smarter way to do this
-    if (responseText.match(/.*<!DOCTYPE\s+html[^<]+-\/\/W3C\/\/DTD XHTML[^<]+http:\/\/www.w3.org\/TR\/xhtml[^<]+>/)) {
+    if (responseText.match(/.*&lt;!DOCTYPE\s+html[^&lt;]+-\/\/W3C\/\/DTD XHTML[^&lt;]+http:\/\/www.w3.org\/TR\/xhtml[^&lt;]+>/)) {
       fetcher.addStatus(options.req,
         'Has XHTML DOCTYPE. Switching to XHTMLHandler.\n')
 
@@ -298,7 +326,7 @@ class HTMLHandler extends Handler {
     }
 
     // xmlns
-    if (responseText.match(/[^(<html)]*<html\s+[^<]*xmlns=['"]http:\/\/www.w3.org\/1999\/xhtml["'][^<]*>/)) {
+    if (responseText.match(/[^(&lt;html)]*&lt;html\s+[^&lt;]*xmlns=['"]http:\/\/www.w3.org\/1999\/xhtml["'][^&lt;]*>/)) {
       fetcher.addStatus(options.req,
         'Has default namespace for XHTML, so switching to XHTMLHandler.\n')
 
@@ -308,7 +336,7 @@ class HTMLHandler extends Handler {
 
     // dc:title
     // no need to escape '/' here
-    let titleMatch = (new RegExp('<title>([\\s\\S]+?)</title>', 'im')).exec(responseText)
+    let titleMatch = (new RegExp('&lt;title>([\\s\\S]+?)&lt;/title>', 'im')).exec(responseText)
     if (titleMatch) {
       kb.add(options.resource, ns.dc('title'), kb.literal(titleMatch[1]),
         options.resource) // think about xml:lang later
@@ -336,7 +364,7 @@ class TextHandler extends Handler {
     // We only speak dialects of XML right now. Is this XML?
 
     // Look for an XML declaration
-    if (responseText.match(/\s*<\?xml\s+version\s*=[^<>]+\?>/)) {
+    if (responseText.match(/\s*&lt;\?xml\s+version\s*=[^&lt;>]+\?>/)) {
       fetcher.addStatus(options.req, 'Warning: ' + options.resource +
         " has an XML declaration. We'll assume " +
         "it's XML but its content-type wasn't XML.\n")
@@ -493,17 +521,17 @@ class Fetcher {
     let requestedURI = uri
 
     var UI
-    if (typeof window !== 'undefined' && window.panes && (UI = window.panes.UI) &&
-      UI.preferences && UI.preferences.get('offlineModeUsingLocalhost')) {
-      if (requestedURI.slice(0, 7) === 'http://' && requestedURI.slice(7, 17) !== 'localhost/') {
+    if (typeof window !== 'undefined' &amp;&amp; window.panes &amp;&amp; (UI = window.panes.UI) &amp;&amp;
+      UI.preferences &amp;&amp; UI.preferences.get('offlineModeUsingLocalhost')) {
+      if (requestedURI.slice(0, 7) === 'http://' &amp;&amp; requestedURI.slice(7, 17) !== 'localhost/') {
         requestedURI = 'http://localhost/' + requestedURI.slice(7)
-        log.warn('Localhost kludge for offline use: actually getting <' +
+        log.warn('Localhost kludge for offline use: actually getting &lt;' +
           requestedURI + '>')
       } else {
-        // log.warn("Localhost kludge NOT USED <" + requestedURI + ">")
+        // log.warn("Localhost kludge NOT USED &lt;" + requestedURI + ">")
       }
     } else {
-      // log.warn("Localhost kludge OFF offline use: actually getting <" +
+      // log.warn("Localhost kludge OFF offline use: actually getting &lt;" +
       //   requestedURI + ">")
     }
 
@@ -512,11 +540,11 @@ class Fetcher {
 
   static proxyIfNecessary (uri) {
     var UI
-    if (typeof window !== 'undefined' && window.panes && (UI = window.panes.UI) && UI.isExtension) {
+    if (typeof window !== 'undefined' &amp;&amp; window.panes &amp;&amp; (UI = window.panes.UI) &amp;&amp; UI.isExtension) {
       return uri
     } // Extension does not need proxy
 
-    if (typeof $SolidTestEnvironment !== 'undefined' &&
+    if (typeof $SolidTestEnvironment !== 'undefined' &amp;&amp;
       $SolidTestEnvironment.localSiteMap) {
       // nested dictionaries of URI parts from origin down
       let hostpath = uri.split('/').slice(2) // the bit after the //
@@ -545,9 +573,9 @@ class Fetcher {
     // browser does 2014 on as https browser script not trusted
     // If the web app origin is https: then the mixed content rules
     // prevent it loading insecure http: stuff so we need proxy.
-    if (Fetcher.crossSiteProxyTemplate &&
-        typeof document !== 'undefined' && document.location &&
-        ('' + document.location).slice(0, 6) === 'https:' && // origin is secure
+    if (Fetcher.crossSiteProxyTemplate &amp;&amp;
+        typeof document !== 'undefined' &amp;&amp; document.location &amp;&amp;
+        ('' + document.location).slice(0, 6) === 'https:' &amp;&amp; // origin is secure
         uri.slice(0, 5) === 'http:') { // requested data is not
       return Fetcher.crossSiteProxyTemplate
         .replace('{uri}', encodeURIComponent(uri))
@@ -603,7 +631,7 @@ class Fetcher {
    * By default, the HTTP headers are recorded also, in the same store, in a separate graph.
    * This allows code like editable() for example to test things about the resource.
    *
-   * @param uri {Array<NamedNode>|Array<string>|NamedNode|string}
+   * @param uri {Array&lt;NamedNode>|Array&lt;string>|NamedNode|string}
    *
    * @param [options={}] {Object}
    *
@@ -636,7 +664,7 @@ class Fetcher {
    *
    * @param [options.noRDFa] {boolean}
    *
-   * @returns {Promise<Result>}
+   * @returns {Promise&lt;Result>}
    */
   load (uri, options = {}) {
     if (uri instanceof Array) {
@@ -657,13 +685,13 @@ class Fetcher {
    * @param uri {string}
    * @param originalUri {string}
    * @param options {Object}
-   * @returns {Promise<Result>}
+   * @returns {Promise&lt;Result>}
    */
   pendingFetchPromise (uri, originalUri, options) {
     let pendingPromise
 
     // Check to see if some request is already dealing with this uri
-    if (!options.force && this.fetchQueue[originalUri]) {
+    if (!options.force &amp;&amp; this.fetchQueue[originalUri]) {
       pendingPromise = this.fetchQueue[originalUri]
     } else {
       pendingPromise = Promise
@@ -747,7 +775,7 @@ class Fetcher {
    * @param docuri {string}
    * @param options {Object}
    *
-   * @returns {Promise<Object>} fetch() result or an { error, status } object
+   * @returns {Promise&lt;Object>} fetch() result or an { error, status } object
    */
   fetchUri (docuri, options) {
     if (!docuri) {
@@ -766,7 +794,7 @@ class Fetcher {
           this.doneFetch(options, {status: 200, ok: true, statusText: 'Already loaded into quadstore.'})
         )
       }
-      if (state === 'failed' && this.requested[docuri] === 404) { // Remember nonexistence
+      if (state === 'failed' &amp;&amp; this.requested[docuri] === 404) { // Remember nonexistence
         let message = 'Previously failed: ' + this.requested[docuri]
         let dummyResponse = {
           url: docuri,
@@ -814,7 +842,7 @@ class Fetcher {
                 size: 0,
                 timeout: 0
               }
-              console.log('Fetcher: <' + actualProxyURI + '> Non-HTTP fetch error: ' + error)
+              console.log('Fetcher: &lt;' + actualProxyURI + '> Non-HTTP fetch error: ' + error)
               return this.failFetch(options, 'fetch failed: ' + error, 999, dummyResponse) // Fake status code: fetch exception
 
               // handleError expects a response so we fake some important bits.
@@ -831,8 +859,8 @@ class Fetcher {
    * Calling methods:
    *   nowOrWhenFetched (uri, userCallback)
    *   nowOrWhenFetched (uri, options, userCallback)
-   *   nowOrWhenFetched (uri, referringTerm, userCallback, options)  <-- old
-   *   nowOrWhenFetched (uri, referringTerm, userCallback) <-- old
+   *   nowOrWhenFetched (uri, referringTerm, userCallback, options)  &lt;-- old
+   *   nowOrWhenFetched (uri, referringTerm, userCallback) &lt;-- old
    *
    *  Options include:
    *   referringTerm    The document in which this link was found.
@@ -891,9 +919,9 @@ class Fetcher {
         }
       }, function (err) {
         var message = err.message || err.statusText
-        message = 'Failed to load  <' + uri + '> ' + message
+        message = 'Failed to load  &lt;' + uri + '> ' + message
         console.log(message)
-        if (err.response && err.response.status) {
+        if (err.response &amp;&amp; err.response.status) {
           message += ' status: ' + err.response.status
         }
         userCallback(false, message, err.response)
@@ -908,15 +936,15 @@ class Fetcher {
    * @param statusMessage {string}
    */
   addStatus (req, statusMessage) {
-    // <Debug about="parsePerformance">
+    // &lt;Debug about="parsePerformance">
     let now = new Date()
     statusMessage = '[' + now.getHours() + ':' + now.getMinutes() + ':' +
       now.getSeconds() + '.' + now.getMilliseconds() + '] ' + statusMessage
-    // </Debug>
+    // &lt;/Debug>
     let kb = this.store
 
     let statusNode = kb.the(req, ns.link('status'))
-    if (statusNode && statusNode.append) {
+    if (statusNode &amp;&amp; statusNode.append) {
       statusNode.append(kb.literal(statusMessage))
     } else {
       log.warn('web.js: No list to add to: ' + statusNode + ',' + statusMessage)
@@ -936,7 +964,7 @@ class Fetcher {
    * @param statusCode {number}
    * @param response {Response}  // when an fetch() error
    *
-   * @returns {Promise<Object>}
+   * @returns {Promise&lt;Object>}
    */
   failFetch (options, errorMessage, statusCode, response) {
     this.addStatus(options.req, errorMessage)
@@ -1003,24 +1031,24 @@ class Fetcher {
   parseLinkHeader (linkHeader, originalUri, reqNode) {
     if (!linkHeader) { return }
 
-    // const linkexp = /<[^>]*>\s*(\s*;\s*[^()<>@,;:"/[\]?={} \t]+=(([^()<>@,;:"/[]?={} \t]+)|("[^"]*")))*(,|$)/g
-    // const paramexp = /[^()<>@,;:"/[]?={} \t]+=(([^()<>@,;:"/[]?={} \t]+)|("[^"]*"))/g
+    // const linkexp = /&lt;[^>]*>\s*(\s*;\s*[^()&lt;>@,;:"/[\]?={} \t]+=(([^()&lt;>@,;:"/[]?={} \t]+)|("[^"]*")))*(,|$)/g
+    // const paramexp = /[^()&lt;>@,;:"/[]?={} \t]+=(([^()&lt;>@,;:"/[]?={} \t]+)|("[^"]*"))/g
 
     // From https://www.dcode.fr/regular-expression-simplificator:
-    // const linkexp = /<[^>]*>\s*(\s*;\s*[^()<>@,;:"/[\]?={} t]+=["]))*[,$]/g
-    // const paramexp = /[^\\<>@,;:"\/\[\]?={} \t]+=["])/g
+    // const linkexp = /&lt;[^>]*>\s*(\s*;\s*[^()&lt;>@,;:"/[\]?={} t]+=["]))*[,$]/g
+    // const paramexp = /[^\\&lt;>@,;:"\/\[\]?={} \t]+=["])/g
     // Original:
-    const linkexp = /<[^>]*>\s*(\s*;\s*[^()<>@,;:"/[\]?={} \t]+=(([^\(\)<>@,;:"\/\[\]\?={} \t]+)|("[^"]*")))*(,|$)/g
-    const paramexp = /[^\(\)<>@,;:"\/\[\]\?={} \t]+=(([^\(\)<>@,;:"\/\[\]\?={} \t]+)|("[^"]*"))/g
+    const linkexp = /&lt;[^>]*>\s*(\s*;\s*[^()&lt;>@,;:"/[\]?={} \t]+=(([^\(\)&lt;>@,;:"\/\[\]\?={} \t]+)|("[^"]*")))*(,|$)/g
+    const paramexp = /[^\(\)&lt;>@,;:"\/\[\]\?={} \t]+=(([^\(\)&lt;>@,;:"\/\[\]\?={} \t]+)|("[^"]*"))/g
 
     const matches = linkHeader.match(linkexp)
 
-    for (let i = 0; i < matches.length; i++) {
+    for (let i = 0; i &lt; matches.length; i++) {
       let split = matches[i].split('>')
       let href = split[0].substring(1)
       let ps = split[1]
       let s = ps.match(paramexp)
-      for (let j = 0; j < s.length; j++) {
+      for (let j = 0; j &lt; s.length; j++) {
         let p = s[j]
         let paramsplit = p.split('=')
         // var name = paramsplit[0]
@@ -1088,7 +1116,7 @@ class Fetcher {
    * @param uri {string}
    * @param [options] {Object}
    *
-   * @returns {Promise<Response>}
+   * @returns {Promise&lt;Response>}
    */
   delete (uri, options) {
     return this.webOperation('DELETE', uri, options)
@@ -1106,7 +1134,7 @@ class Fetcher {
    * @param [folderName] {string} Optional folder name (slug)
    * @param [data] {string} Optional folder metadata
    *
-   * @returns {Promise<Response>}
+   * @returns {Promise&lt;Response>}
    */
   createContainer (parentURI, folderName, data) {
     let headers = {
@@ -1139,7 +1167,7 @@ class Fetcher {
    * @param uri  or NamedNode
    * @param options
    *
-   * @returns {Promise<Response>}
+   * @returns {Promise&lt;Response>}
    */
   webOperation (method, uri, options = {}) {
     uri = uri.uri || uri // Allow a NamedNode to be passed as it is very common
@@ -1148,7 +1176,7 @@ class Fetcher {
     options.force = true
     const fetcher = this
 
-    if (options.body && !options.contentType) {
+    if (options.body &amp;&amp; !options.contentType) {
       throw new Error('Web operation sending data must have a defined contentType.')
     }
     if (options.contentType) {
@@ -1173,14 +1201,14 @@ class Fetcher {
         } else {
           let msg = 'Web error: ' + response.status
           if (response.statusText) msg += ' (' + response.statusText + ')'
-          msg += ' on ' + method + ' of <' + uri + '>'
+          msg += ' on ' + method + ' of &lt;' + uri + '>'
           if (response.responseText) msg += ': ' + response.responseText
           let e2 = new Error(msg)
           e2.response = response
           reject(e2)
         }
       }, err => {
-        let msg = 'Fetch error for ' + method + ' of <' + uri + '>:' + err
+        let msg = 'Fetch error for ' + method + ' of &lt;' + uri + '>:' + err
         reject(new Error(msg))
       })
     })
@@ -1223,7 +1251,7 @@ class Fetcher {
     const kb = this.store
     const requests = kb.each(undefined, ns.link('requestedURI'), doc.uri)
 
-    for (let r = 0; r < requests.length; r++) {
+    for (let r = 0; r &lt; requests.length; r++) {
       let request = requests[r]
       if (request !== undefined) {
         let response = kb.any(request, ns.link('response'))
@@ -1255,11 +1283,11 @@ class Fetcher {
 
     this.addStatus(options.req, 'Accept: ' + options.headers['accept'])
 
-    if (rterm && rterm.uri) {
+    if (rterm &amp;&amp; rterm.uri) {
       kb.add(docuri, ns.link('requestedBy'), rterm.uri, this.appNode)
     }
 
-    if (options.original && options.original.uri !== docuri) {
+    if (options.original &amp;&amp; options.original.uri !== docuri) {
       kb.add(req, ns.link('orginalURI'), kb.literal(options.original.uri),
         this.appNode)
     }
@@ -1304,7 +1332,7 @@ class Fetcher {
   objectRefresh (term) {
     let uris = this.store.uris(term) // Get all URIs
     if (typeof uris !== 'undefined') {
-      for (let i = 0; i < uris.length; i++) {
+      for (let i = 0; i &lt; uris.length; i++) {
         this.refresh(this.store.sym(Uri.docpart(uris[i])))
         // what about rterm?
       }
@@ -1330,7 +1358,7 @@ class Fetcher {
  */
   refreshIfExpired (term, userCallback) {
     let exp = this.getHeader(term, 'Expires')
-    if (!exp || (new Date(exp).getTime()) <= (new Date().getTime())) {
+    if (!exp || (new Date(exp).getTime()) &lt;= (new Date().getTime())) {
       this.refresh(term, userCallback)
     } else {
       userCallback(true, 'Not expired', {})
@@ -1407,7 +1435,7 @@ class Fetcher {
 
     const hostpart = Uri.hostpart
     const here = '' + document.location
-    return hostpart(here) && hostpart(uri) && hostpart(here) !== hostpart(uri)
+    return hostpart(here) &amp;&amp; hostpart(uri) &amp;&amp; hostpart(here) !== hostpart(uri)
   }
 
   /**
@@ -1423,14 +1451,14 @@ class Fetcher {
   handleError (response, docuri, options) {
     if (this.isCrossSite(docuri)) {
       // Make sure we haven't retried already
-      if (options.withCredentials && !options.retriedWithNoCredentials) {
+      if (options.withCredentials &amp;&amp; !options.retriedWithNoCredentials) {
         return this.retryNoCredentials(docuri, options)
       }
 
       // Now attempt retry via proxy
       let proxyUri = Fetcher.crossSiteProxy(docuri)
 
-      if (proxyUri && !options.proxyUsed) {
+      if (proxyUri &amp;&amp; !options.proxyUsed) {
         console.log('web: Direct failed so trying proxy ' + proxyUri)
 
         return this.redirectToProxy(proxyUri, options)
@@ -1456,13 +1484,13 @@ class Fetcher {
     let prev = req
     if (locURI) {
       var reqURI = kb.any(prev, ns.link('requestedURI'))
-      if (reqURI && reqURI !== locURI) {
+      if (reqURI &amp;&amp; reqURI !== locURI) {
         kb.add(kb.sym(locURI), ns.rdf('type'), rdfType, this.appNode)
       }
     }
     for (;;) {
       const doc = kb.any(prev, ns.link('requestedURI'))
-      if (doc && doc.value) {
+      if (doc &amp;&amp; doc.value) {
         kb.add(kb.sym(doc.value), ns.rdf('type'), rdfType, this.appNode)
       } // convert Literal
       prev = kb.any(undefined, kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'), prev)
@@ -1471,7 +1499,7 @@ class Fetcher {
       if (!response) { break }
       var redirection = kb.any(response, kb.sym('http://www.w3.org/2007/ont/http#status'))
       if (!redirection) { break }
-      if (redirection !== '301' && redirection !== '302') { break }
+      if (redirection !== '301' &amp;&amp; redirection !== '302') { break }
     }
   }
 
@@ -1540,7 +1568,7 @@ class Fetcher {
       let isImage = contentType.includes('image/') ||
         contentType.includes('application/pdf')
 
-      if (contentType && isImage) {
+      if (contentType &amp;&amp; isImage) {
         this.addType(kb.sym('http://purl.org/dc/terms/Image'), reqNode, kb,
           docuri)
         if (diffLocation) {
@@ -1552,7 +1580,7 @@ class Fetcher {
 
     // If we have already got the thing at this location, abort
     if (contentLocation) {
-      if (!options.force && diffLocation && this.requested[absContentLocation] === 'done') {
+      if (!options.force &amp;&amp; diffLocation &amp;&amp; this.requested[absContentLocation] === 'done') {
         // we have already fetched this
         // should we smush too?
         // log.info("HTTP headers indicate we have already" + " retrieved " +
@@ -1639,7 +1667,7 @@ class Fetcher {
 
     let protocol = Uri.protocol(options.resource.uri)
 
-    if (!contentType && ['file', 'chrome'].includes(protocol)) {
+    if (!contentType &amp;&amp; ['file', 'chrome'].includes(protocol)) {
       return 'text/xml'
     }
 
@@ -1652,10 +1680,10 @@ class Fetcher {
    * @param newURI {string}
    * @param options {Object}
    *
-   * @returns {Promise<Response>}
+   * @returns {Promise&lt;Response>}
    */
   redirectToProxy (newURI, options) {
-    this.addStatus(options.req, 'BLOCKED -> Cross-site Proxy to <' + newURI + '>')
+    this.addStatus(options.req, 'BLOCKED -> Cross-site Proxy to &lt;' + newURI + '>')
 
     options.proxyUsed = true
 
@@ -1686,8 +1714,8 @@ class Fetcher {
   setRequestTimeout (uri, options) {
     return new Promise((resolve) => {
       this.timeouts[uri] = (this.timeouts[uri] || []).concat(setTimeout(() => {
-        if (this.isPending(uri) &&
-            !options.retriedWithNoCredentials &&
+        if (this.isPending(uri) &amp;&amp;
+            !options.retriedWithNoCredentials &amp;&amp;
             !options.proxyUsed) {
           resolve(this.failFetch(options, `Request to ${uri} timed out`, 'timeout'))
         }
@@ -1728,3 +1756,26 @@ class Fetcher {
 module.exports = Fetcher
 module.exports.HANDLERS = HANDLERS
 module.exports.CONTENT_TYPE_BY_EXT = CONTENT_TYPE_BY_EXT
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-log.html">log</a></li><li><a href="module-util.html">util</a></li></ul><h3>Classes</h3><ul><li><a href="Empty.html">Empty</a></li><li><a href="Fetcher.html">Fetcher</a></li><li><a href="module.exports.html">exports</a></li><li><a href="NamedNode.html">NamedNode</a></li><li><a href="Node.html">Node</a></li><li><a href="Query.html">Query</a></li><li><a href="UpdateManager.html">UpdateManager</a></li><li><a href="uriUtil.html">uriUtil</a></li><li><a href="Variable.html">Variable</a></li></ul><h3>Global</h3><ul><li><a href="global.html#add">add</a></li><li><a href="global.html#addArc">addArc</a></li><li><a href="global.html#addBNode">addBNode</a></li><li><a href="global.html#addCollection">addCollection</a></li><li><a href="global.html#addCollectionArc">addCollectionArc</a></li><li><a href="global.html#addLiteral">addLiteral</a></li><li><a href="global.html#addNode">addNode</a></li><li><a href="global.html#addSymbol">addSymbol</a></li><li><a href="global.html#allAliases">allAliases</a></li><li><a href="global.html#ArrayIndexOf">ArrayIndexOf</a></li><li><a href="global.html#bnodes">bnodes</a></li><li><a href="global.html#canon">canon</a></li><li><a href="global.html#checkStatementList">checkStatementList</a></li><li><a href="global.html#copyTo">copyTo</a></li><li><a href="global.html#equate">equate</a></li><li><a href="global.html">fromBoolean</a></li><li><a href="global.html">fromDate</a></li><li><a href="global.html">fromNumber</a></li><li><a href="global.html">fromValue</a></li><li><a href="global.html#indexedFormulaQuery">indexedFormulaQuery</a></li><li><a href="global.html#isTripleToLoad">isTripleToLoad</a></li><li><a href="global.html#length">length</a></li><li><a href="global.html#loadTriple">loadTriple</a></li><li><a href="global.html#log">log</a></li><li><a href="global.html#match">match</a></li><li><a href="global.html#mentionsURI">mentionsURI</a></li><li><a href="global.html#nextSymbol">nextSymbol</a></li><li><a href="global.html#parse">parse</a></li><li><a href="global.html#RDFParser">RDFParser</a></li><li><a href="global.html#reify">reify</a></li><li><a href="global.html#remove">remove</a></li><li><a href="global.html#removeDocument">removeDocument</a></li><li><a href="global.html#removeMany">removeMany</a></li><li><a href="global.html#removeStatement">removeStatement</a></li><li><a href="global.html#replaceWith">replaceWith</a></li><li><a href="global.html#sameThings">sameThings</a></li><li><a href="global.html#serialize">serialize</a></li><li><a href="global.html#SPARQLToQuery">SPARQLToQuery</a></li><li><a href="global.html#statementsMatching">statementsMatching</a></li><li><a href="global.html#store">store</a></li><li><a href="global.html#terminateFrame">terminateFrame</a></li><li><a href="global.html#Uri">Uri</a></li><li><a href="global.html#uris">uris</a></li><li><a href="global.html#why">why</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Sun Sep 16 2018 23:24:18 GMT+0100 (BST)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

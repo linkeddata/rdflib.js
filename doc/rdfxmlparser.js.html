@@ -1,12 +1,40 @@
-/**
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: rdfxmlparser.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: rdfxmlparser.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
  *  RDF/XML PARSER
  *
  *  Parser believed to be in full positive RDF/XML parsing compliance
  *  with the possible exception of handling deprecated RDF attributes
  *  appropriately. Parser is believed to comply fully with other W3C
- *  and industry standards where appropriate (DOM, ECMAScript, &c.)
+ *  and industry standards where appropriate (DOM, ECMAScript, &amp;c.)
  *
- *  Author: David Sheets <dsheets@mit.edu>
+ *  Author: David Sheets &lt;dsheets@mit.edu>
  *
  * W3C® SOFTWARE NOTICE AND LICENSE
  * http://www.w3.org/Consortium/Legal/2002/copyright-software-20021231
@@ -52,7 +80,7 @@
 /**
  * @class RDFParser resource object tied to an RDFStore
  *
- * @author David Sheets <dsheets@mit.edu>
+ * @author David Sheets &lt;dsheets@mit.edu>
  *
 */
  const uriUtil = require('./uri')
@@ -115,8 +143,8 @@ var RDFParser = function (store) {
           this.store.add(triple, this.store.sym(RDFParser.ns.RDF + 'object'), this.node, this.parser.why)
         }
       },         /** Check if it's OK to load a triple */'isTripleToLoad': function () {
-        return (this.parent != null && this.parent.parent != null && this.nodeType === this.NODE && this.parent.nodeType ===
-        this.ARC && this.parent.parent.nodeType === this.NODE)
+        return (this.parent != null &amp;&amp; this.parent.parent != null &amp;&amp; this.nodeType === this.NODE &amp;&amp; this.parent.nodeType ===
+        this.ARC &amp;&amp; this.parent.parent.nodeType === this.NODE)
       },         /** Add a symbolic node to this frame */'addNode': function (uri) {
         this.addSymbol(this.NODE, uri)
         if (this.isTripleToLoad()) {
@@ -174,7 +202,7 @@ var RDFParser = function (store) {
     } else {
       var attributes = node.attributes
       var potentialNode, fullName
-      for (var i = 0;i < attributes.length; ++i) {
+      for (var i = 0;i &lt; attributes.length; ++i) {
         potentialNode = attributes[i]
         if (potentialNode.namespaceURI === uri) {
           fullName = (potentialNode.prefix) ? (potentialNode.prefix + ':' + name) : name
@@ -207,7 +235,7 @@ var RDFParser = function (store) {
     this.cleanParser() // figure out the root element
     var root
     if (document.nodeType === RDFParser.nodeType.DOCUMENT) {
-      for (var c = 0;c < children.length;c++) {
+      for (var c = 0;c &lt; children.length;c++) {
         if (children[c].nodeType === RDFParser.nodeType.ELEMENT) {
           root = children[c]
           break
@@ -261,7 +289,7 @@ var RDFParser = function (store) {
         frame.addLiteral(dom.nodeValue)
       } else if (elementURI(dom) !== RDFParser.ns.RDF + 'RDF') {
         // not root
-        if (frame.parent && frame.parent.collection) {
+        if (frame.parent &amp;&amp; frame.parent.collection) {
           // we're a collection element
           frame.addCollectionArc()
           frame = this.buildFrame(frame, frame.element)
@@ -271,14 +299,14 @@ var RDFParser = function (store) {
           // we need a node
           var about = this.getAttributeNodeNS(dom, RDFParser.ns.RDF, 'about')
           rdfid = this.getAttributeNodeNS(dom, RDFParser.ns.RDF, 'ID')
-          if (about && rdfid) {
+          if (about &amp;&amp; rdfid) {
             throw new Error('RDFParser: ' + dom.nodeName + ' has both rdf:id and rdf:about.' +
               ' Halting. Only one of these' + ' properties may be specified on a' + ' node.')
           }
-          if (!about && rdfid) {
+          if (!about &amp;&amp; rdfid) {
             frame.addNode('#' + rdfid.nodeValue)
             dom.removeAttributeNode(rdfid)
-          } else if (about == null && rdfid == null) {
+          } else if (about == null &amp;&amp; rdfid == null) {
             var bnid = this.getAttributeNodeNS(dom, RDFParser.ns.RDF, 'nodeID')
             if (bnid) {
               frame.addBNode(bnid.nodeValue)
@@ -379,7 +407,7 @@ var RDFParser = function (store) {
           frame = frame.parent
           dom = frame.element
         }
-        var candidate = dom.childNodes && dom.childNodes[frame.lastChild]
+        var candidate = dom.childNodes &amp;&amp; dom.childNodes[frame.lastChild]
         if (!candidate || !dig) {
           frame.terminateFrame()
           if (!(frame = frame.parent)) {
@@ -387,11 +415,11 @@ var RDFParser = function (store) {
           } // done
           dom = frame.element
           dig = true
-        } else if ((candidate.nodeType !== RDFParser.nodeType.ELEMENT &&
-          candidate.nodeType !== RDFParser.nodeType.TEXT &&
+        } else if ((candidate.nodeType !== RDFParser.nodeType.ELEMENT &amp;&amp;
+          candidate.nodeType !== RDFParser.nodeType.TEXT &amp;&amp;
           candidate.nodeType !== RDFParser.nodeType.CDATA_SECTION) ||
           ((candidate.nodeType === RDFParser.nodeType.TEXT ||
-          candidate.nodeType === RDFParser.nodeType.CDATA_SECTION) &&
+          candidate.nodeType === RDFParser.nodeType.CDATA_SECTION) &amp;&amp;
           dom.childNodes.length !== 1)) {
           frame.lastChild++
         } else {
@@ -455,3 +483,26 @@ var RDFParser = function (store) {
 }
 
 module.exports = RDFParser
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-log.html">log</a></li><li><a href="module-util.html">util</a></li></ul><h3>Classes</h3><ul><li><a href="Empty.html">Empty</a></li><li><a href="Fetcher.html">Fetcher</a></li><li><a href="module.exports.html">exports</a></li><li><a href="NamedNode.html">NamedNode</a></li><li><a href="Node.html">Node</a></li><li><a href="Query.html">Query</a></li><li><a href="UpdateManager.html">UpdateManager</a></li><li><a href="uriUtil.html">uriUtil</a></li><li><a href="Variable.html">Variable</a></li></ul><h3>Global</h3><ul><li><a href="global.html#add">add</a></li><li><a href="global.html#addArc">addArc</a></li><li><a href="global.html#addBNode">addBNode</a></li><li><a href="global.html#addCollection">addCollection</a></li><li><a href="global.html#addCollectionArc">addCollectionArc</a></li><li><a href="global.html#addLiteral">addLiteral</a></li><li><a href="global.html#addNode">addNode</a></li><li><a href="global.html#addSymbol">addSymbol</a></li><li><a href="global.html#allAliases">allAliases</a></li><li><a href="global.html#ArrayIndexOf">ArrayIndexOf</a></li><li><a href="global.html#bnodes">bnodes</a></li><li><a href="global.html#canon">canon</a></li><li><a href="global.html#checkStatementList">checkStatementList</a></li><li><a href="global.html#copyTo">copyTo</a></li><li><a href="global.html#equate">equate</a></li><li><a href="global.html">fromBoolean</a></li><li><a href="global.html">fromDate</a></li><li><a href="global.html">fromNumber</a></li><li><a href="global.html">fromValue</a></li><li><a href="global.html#indexedFormulaQuery">indexedFormulaQuery</a></li><li><a href="global.html#isTripleToLoad">isTripleToLoad</a></li><li><a href="global.html#length">length</a></li><li><a href="global.html#loadTriple">loadTriple</a></li><li><a href="global.html#log">log</a></li><li><a href="global.html#match">match</a></li><li><a href="global.html#mentionsURI">mentionsURI</a></li><li><a href="global.html#nextSymbol">nextSymbol</a></li><li><a href="global.html#parse">parse</a></li><li><a href="global.html#RDFParser">RDFParser</a></li><li><a href="global.html#reify">reify</a></li><li><a href="global.html#remove">remove</a></li><li><a href="global.html#removeDocument">removeDocument</a></li><li><a href="global.html#removeMany">removeMany</a></li><li><a href="global.html#removeStatement">removeStatement</a></li><li><a href="global.html#replaceWith">replaceWith</a></li><li><a href="global.html#sameThings">sameThings</a></li><li><a href="global.html#serialize">serialize</a></li><li><a href="global.html#SPARQLToQuery">SPARQLToQuery</a></li><li><a href="global.html#statementsMatching">statementsMatching</a></li><li><a href="global.html#store">store</a></li><li><a href="global.html#terminateFrame">terminateFrame</a></li><li><a href="global.html#Uri">Uri</a></li><li><a href="global.html#uris">uris</a></li><li><a href="global.html#why">why</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Sun Sep 16 2018 23:24:18 GMT+0100 (BST)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

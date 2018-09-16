@@ -1,6 +1,34 @@
-/* @file Update Manager Class
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: update-manager.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: update-manager.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/* @file Update Manager Class
 **
-** 2007-07-15 originall sparl update module by Joe Presbrey <presbrey@mit.edu>
+** 2007-07-15 originall sparl update module by Joe Presbrey &lt;presbrey@mit.edu>
 ** 2010-08-08 TimBL folded in Kenny's WEBDAV
 ** 2010-12-07 TimBL addred local file write code
 */
@@ -104,21 +132,21 @@ class UpdateManager {
       return 'SPARQL'
     }
     var method
-    for (var r = 0; r < requests.length; r++) {
+    for (var r = 0; r &lt; requests.length; r++) {
       request = requests[r]
       if (request !== undefined) {
         var response = kb.any(request, this.ns.link('response'))
         if (request !== undefined) {
           var acceptPatch = kb.each(response, this.ns.httph('accept-patch'))
           if (acceptPatch.length) {
-            for (let i = 0; i < acceptPatch.length; i++) {
+            for (let i = 0; i &lt; acceptPatch.length; i++) {
               method = acceptPatch[i].value.trim()
               if (method.indexOf('application/sparql-update') >= 0) return 'SPARQL'
             }
           }
           var authorVia = kb.each(response, this.ns.httph('ms-author-via'))
           if (authorVia.length) {
-            for (let i = 0; i < authorVia.length; i++) {
+            for (let i = 0; i &lt; authorVia.length; i++) {
               method = authorVia[i].value.trim()
               if (method.indexOf('SPARQL') >= 0) {
                 return 'SPARQL'
@@ -130,7 +158,7 @@ class UpdateManager {
           }
           var status = kb.each(response, this.ns.http('status'))
           if (status.length) {
-            for (let i = 0; i < status.length; i++) {
+            for (let i = 0; i &lt; status.length; i++) {
               if (status[i] === 200 || status[i] === 404) {
                 definitive = true
                 // return false // A definitive answer
@@ -154,7 +182,7 @@ class UpdateManager {
   }
 
   anonymize (obj) {
-    return (obj.toNT().substr(0, 2) === '_:' && this.mentioned(obj))
+    return (obj.toNT().substr(0, 2) === '_:' &amp;&amp; this.mentioned(obj))
       ? '?' + obj.toNT().substr(2)
       : obj.toNT()
   }
@@ -181,12 +209,12 @@ class UpdateManager {
    */
   statementArrayBnodes (sts) {
     var bnodes = []
-    for (let i = 0; i < sts.length; i++) {
+    for (let i = 0; i &lt; sts.length; i++) {
       bnodes = bnodes.concat(this.statementBnodes(sts[i]))
     }
     bnodes.sort() // in place sort - result may have duplicates
     var bnodes2 = []
-    for (let j = 0; j < bnodes.length; j++) {
+    for (let j = 0; j &lt; bnodes.length; j++) {
       if (j === 0 || !bnodes[j].sameTerm(bnodes[j - 1])) {
         bnodes2.push(bnodes[j])
       }
@@ -202,12 +230,12 @@ class UpdateManager {
     this.ifps = {}
     var a = this.store.each(undefined, this.ns.rdf('type'),
       this.ns.owl('InverseFunctionalProperty'))
-    for (let i = 0; i < a.length; i++) {
+    for (let i = 0; i &lt; a.length; i++) {
       this.ifps[a[i].uri] = true
     }
     this.fps = {}
     a = this.store.each(undefined, this.ns.rdf('type'), this.ns.owl('FunctionalProperty'))
-    for (let i = 0; i < a.length; i++) {
+    for (let i = 0; i &lt; a.length; i++) {
       this.fps[a[i].uri] = true
     }
   }
@@ -223,7 +251,7 @@ class UpdateManager {
     var sts = this.store.statementsMatching(undefined, undefined, x, source) // incoming links
     var y
     var res
-    for (let i = 0; i < sts.length; i++) {
+    for (let i = 0; i &lt; sts.length; i++) {
       if (this.fps[sts[i].predicate.uri]) {
         y = sts[i].subject
         if (!y.isBlank) {
@@ -239,7 +267,7 @@ class UpdateManager {
     }
     // outgoing links
     sts = this.store.statementsMatching(x, undefined, undefined, source)
-    for (let i = 0; i < sts.length; i++) {
+    for (let i = 0; i &lt; sts.length; i++) {
       if (this.ifps[sts[i].predicate.uri]) {
         y = sts[i].object
         if (!y.isBlank) {
@@ -263,7 +291,7 @@ class UpdateManager {
   bnodeContext1 (x, source) {
     // Return a list of statements which indirectly identify a node
     //   Breadth-first
-    for (var depth = 0; depth < 3; depth++) { // Try simple first
+    for (var depth = 0; depth &lt; 3; depth++) { // Try simple first
       var con = this.bnodeContext2(x, source, depth)
       if (con !== null) return con
     }
@@ -288,7 +316,7 @@ class UpdateManager {
     var context = []
     if (bnodes.length) {
       this.cacheIfps()
-      for (let i = 0; i < bnodes.length; i++) { // Does this occur in old graph?
+      for (let i = 0; i &lt; bnodes.length; i++) { // Does this occur in old graph?
         var bnode = bnodes[i]
         if (!this.mentioned(bnode)) continue
         context = context.concat(this.bnodeContext1(bnode, doc))
@@ -328,7 +356,7 @@ class UpdateManager {
         if (!uri) {
           throw new Error('No URI given for remote editing operation: ' + query)
         }
-        console.log('UpdateManager: sending update to <' + uri + '>')
+        console.log('UpdateManager: sending update to &lt;' + uri + '>')
 
         let options = {
           noMeta: true,
@@ -340,14 +368,14 @@ class UpdateManager {
       })
       .then(response => {
         if (!response.ok) {
-          let message = 'UpdateManager: update failed for <' + uri + '> status=' +
+          let message = 'UpdateManager: update failed for &lt;' + uri + '> status=' +
             response.status + ', ' + response.statusText +
             '\n   for query: ' + query
           console.log(message)
           throw new Error(message)
         }
 
-        console.log('UpdateManager: update Ok for <' + uri + '>')
+        console.log('UpdateManager: update Ok for &lt;' + uri + '>')
 
         callback(uri, response.ok, response.responseText, response)
       })
@@ -363,7 +391,7 @@ class UpdateManager {
    *  function which can be used to change the object of the statement.
    */
   update_statement (statement) {
-    if (statement && !statement.why) {
+    if (statement &amp;&amp; !statement.why) {
       return
     }
     var updater = this
@@ -393,7 +421,7 @@ class UpdateManager {
 
     if (st instanceof Array) {
       var stText = ''
-      for (let i = 0; i < st.length; i++) stText += st[i] + '\n'
+      for (let i = 0; i &lt; st.length; i++) stText += st[i] + '\n'
       query += 'INSERT DATA { ' + stText + ' }\n'
     } else {
       query += 'INSERT DATA { ' +
@@ -411,7 +439,7 @@ class UpdateManager {
 
     if (st instanceof Array) {
       var stText = ''
-      for (let i = 0; i < st.length; i++) stText += st[i] + '\n'
+      for (let i = 0; i &lt; st.length; i++) stText += st[i] + '\n'
       query += 'DELETE DATA { ' + stText + ' }\n'
     } else {
       query += 'DELETE DATA { ' +
@@ -487,7 +515,7 @@ class UpdateManager {
         control.reloading = false
         if (ok) {
           if (control.downstreamChangeListeners) {
-            for (let i = 0; i < control.downstreamChangeListeners.length; i++) {
+            for (let i = 0; i &lt; control.downstreamChangeListeners.length; i++) {
               console.log('        Calling downstream listener ' + i)
               control.downstreamChangeListeners[i]()
             }
@@ -551,7 +579,7 @@ class UpdateManager {
         socket = new WebSocket(wssURI)
       } else if (typeof Services !== 'undefined') { // Firefox add on http://stackoverflow.com/questions/24244886/is-websocket-supported-in-firefox-for-android-addons
         socket = (Services.wm.getMostRecentWindow('navigator:browser').WebSocket)(wssURI)
-      } else if (typeof window !== 'undefined' && window.WebSocket) {
+      } else if (typeof window !== 'undefined' &amp;&amp; window.WebSocket) {
         socket = window.WebSocket(wssURI)
       } else {
         console.log('Live update disabled, as WebSocket not supported by platform :-(')
@@ -598,7 +626,7 @@ class UpdateManager {
         }, retryTimeout)
       }
       socket.onmessage = function (msg) {
-        if (msg.data && msg.data.slice(0, 3) === 'pub') {
+        if (msg.data &amp;&amp; msg.data.slice(0, 3) === 'pub') {
           if ('upstreamCount' in control) {
             control.upstreamCount -= 1
             if (control.upstreamCount >= 0) {
@@ -647,7 +675,7 @@ class UpdateManager {
       if (!(is instanceof Array)) {
         throw new Error('Type Error ' + (typeof is) + ': ' + is)
       }
-      if (ds.length === 0 && is.length === 0) {
+      if (ds.length === 0 &amp;&amp; is.length === 0) {
         return callback(null, true) // success -- nothing needed to be done.
       }
       var doc = ds.length ? ds[0].why : is[0].why
@@ -701,14 +729,14 @@ class UpdateManager {
         if (whereClause.length) { // Is there a WHERE clause?
           if (ds.length) {
             query += 'DELETE { '
-            for (let i = 0; i < ds.length; i++) {
+            for (let i = 0; i &lt; ds.length; i++) {
               query += this.anonymizeNT(ds[i]) + '\n'
             }
             query += ' }\n'
           }
           if (is.length) {
             query += 'INSERT { '
-            for (let i = 0; i < is.length; i++) {
+            for (let i = 0; i &lt; is.length; i++) {
               query += this.anonymizeNT(is[i]) + '\n'
             }
             query += ' }\n'
@@ -717,7 +745,7 @@ class UpdateManager {
         } else { // no where clause
           if (ds.length) {
             query += 'DELETE DATA { '
-            for (let i = 0; i < ds.length; i++) {
+            for (let i = 0; i &lt; ds.length; i++) {
               query += this.anonymizeNT(ds[i]) + '\n'
             }
             query += ' } \n'
@@ -725,7 +753,7 @@ class UpdateManager {
           if (is.length) {
             if (ds.length) query += ' ; '
             query += 'INSERT DATA { '
-            for (let i = 0; i < is.length; i++) {
+            for (let i = 0; i &lt; is.length; i++) {
               query += this.anonymizeNT(is[i]) + '\n'
             }
             query += ' }\n'
@@ -750,7 +778,7 @@ class UpdateManager {
               success = false
               body = 'Remote Ok BUT error deleting ' + ds.length + ' from store!!! ' + e
             } // Add in any case -- help recover from weirdness??
-            for (let i = 0; i < is.length; i++) {
+            for (let i = 0; i &lt; is.length; i++) {
               kb.add(is[i].subject, is[i].predicate, is[i].object, doc)
             }
           }
@@ -758,7 +786,7 @@ class UpdateManager {
           callback(uri, success, body, response)
           control.pendingUpstream -= 1
           // When upstream patches have been sent, reload state if downstream waiting
-          if (control.pendingUpstream === 0 && control.downstreamAction) {
+          if (control.pendingUpstream === 0 &amp;&amp; control.downstreamAction) {
             var downstreamAction = control.downstreamAction
             delete control.downstreamAction
             console.log('delayed downstream action:')
@@ -773,7 +801,7 @@ class UpdateManager {
             this.updateLocalFile(doc, ds, is, callback)
           } catch (e) {
             callback(doc.uri, false,
-              'Exception trying to write back file <' + doc.uri + '>\n'
+              'Exception trying to write back file &lt;' + doc.uri + '>\n'
               // + tabulator.Util.stackString(e))
             )
           }
@@ -804,10 +832,10 @@ class UpdateManager {
     // prepare contents of revised document
     let i
     let newSts = kb.statementsMatching(undefined, undefined, undefined, doc).slice() // copy!
-    for (let i = 0; i < ds.length; i++) {
+    for (let i = 0; i &lt; ds.length; i++) {
       Util.RDFArrayRemove(newSts, ds[i])
     }
-    for (let i = 0; i < is.length; i++) {
+    for (let i = 0; i &lt; is.length; i++) {
       newSts.push(is[i])
     }
 
@@ -832,10 +860,10 @@ class UpdateManager {
           throw new Error(response.error)
         }
 
-        for (let i = 0; i < ds.length; i++) {
+        for (let i = 0; i &lt; ds.length; i++) {
           kb.remove(ds[i])
         }
-        for (let i = 0; i < is.length; i++) {
+        for (let i = 0; i &lt; is.length; i++) {
           kb.add(is[i].subject, is[i].predicate, is[i].object, doc)
         }
 
@@ -862,15 +890,15 @@ class UpdateManager {
     let newSts = kb.statementsMatching(undefined, undefined, undefined, doc).slice() // copy!
 
     let i
-    for (let i = 0; i < ds.length; i++) {
+    for (let i = 0; i &lt; ds.length; i++) {
       Util.RDFArrayRemove(newSts, ds[ i ])
     }
-    for (let i = 0; i < is.length; i++) {
+    for (let i = 0; i &lt; is.length; i++) {
       newSts.push(is[ i ])
     }
     // serialize to the appropriate format
     var dot = doc.uri.lastIndexOf('.')
-    if (dot < 1) {
+    if (dot &lt; 1) {
       throw new Error('Rewriting file: No filename extension: ' + doc.uri)
     }
     var ext = doc.uri.slice(dot + 1)
@@ -884,14 +912,14 @@ class UpdateManager {
 
     // Write the new version back
     // create component for file writing
-    console.log('Writing back: <<<' + documentString + '>>>')
+    console.log('Writing back: &lt;&lt;&lt;' + documentString + '>>>')
     var filename = doc.uri.slice(7) // chop off   file://  leaving /path
     // console.log("Writeback: Filename: "+filename+"\n")
     var file = Components.classes[ '@mozilla.org/file/local;1' ]
       .createInstance(Components.interfaces.nsILocalFile)
     file.initWithPath(filename)
     if (!file.exists()) {
-      throw new Error('Rewriting file <' + doc.uri +
+      throw new Error('Rewriting file &lt;' + doc.uri +
         '> but it does not exist!')
     }
     // {
@@ -909,10 +937,10 @@ class UpdateManager {
     stream.write(documentString, documentString.length)
     stream.close()
 
-    for (let i = 0; i < ds.length; i++) {
+    for (let i = 0; i &lt; ds.length; i++) {
       kb.remove(ds[ i ])
     }
-    for (let i = 0; i < is.length; i++) {
+    for (let i = 0; i &lt; is.length; i++) {
       kb.add(is[ i ].subject, is[ i ].predicate, is[ i ].object, doc)
     }
     callback(doc.uri, true, '') // success!
@@ -920,7 +948,7 @@ class UpdateManager {
 
   /**
    * @param uri {string}
-   * @param data {string|Array<Statement>}
+   * @param data {string|Array&lt;Statement>}
    * @param contentType {string}
    *
    * @throws {Error} On unsupported content type
@@ -962,7 +990,7 @@ class UpdateManager {
    * This is suitable for an initial creation of a document
    *
    * @param doc {Node}
-   * @param data {string|Array<Statement>}
+   * @param data {string|Array&lt;Statement>}
    * @param contentType {string}
    * @param callback {Function}  callback(uri, ok, message, response)
    *
@@ -1047,3 +1075,26 @@ class UpdateManager {
 }
 
 module.exports = UpdateManager
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-log.html">log</a></li><li><a href="module-util.html">util</a></li></ul><h3>Classes</h3><ul><li><a href="Empty.html">Empty</a></li><li><a href="Fetcher.html">Fetcher</a></li><li><a href="module.exports.html">exports</a></li><li><a href="NamedNode.html">NamedNode</a></li><li><a href="Node.html">Node</a></li><li><a href="Query.html">Query</a></li><li><a href="UpdateManager.html">UpdateManager</a></li><li><a href="uriUtil.html">uriUtil</a></li><li><a href="Variable.html">Variable</a></li></ul><h3>Global</h3><ul><li><a href="global.html#add">add</a></li><li><a href="global.html#addArc">addArc</a></li><li><a href="global.html#addBNode">addBNode</a></li><li><a href="global.html#addCollection">addCollection</a></li><li><a href="global.html#addCollectionArc">addCollectionArc</a></li><li><a href="global.html#addLiteral">addLiteral</a></li><li><a href="global.html#addNode">addNode</a></li><li><a href="global.html#addSymbol">addSymbol</a></li><li><a href="global.html#allAliases">allAliases</a></li><li><a href="global.html#ArrayIndexOf">ArrayIndexOf</a></li><li><a href="global.html#bnodes">bnodes</a></li><li><a href="global.html#canon">canon</a></li><li><a href="global.html#checkStatementList">checkStatementList</a></li><li><a href="global.html#copyTo">copyTo</a></li><li><a href="global.html#equate">equate</a></li><li><a href="global.html">fromBoolean</a></li><li><a href="global.html">fromDate</a></li><li><a href="global.html">fromNumber</a></li><li><a href="global.html">fromValue</a></li><li><a href="global.html#indexedFormulaQuery">indexedFormulaQuery</a></li><li><a href="global.html#isTripleToLoad">isTripleToLoad</a></li><li><a href="global.html#length">length</a></li><li><a href="global.html#loadTriple">loadTriple</a></li><li><a href="global.html#log">log</a></li><li><a href="global.html#match">match</a></li><li><a href="global.html#mentionsURI">mentionsURI</a></li><li><a href="global.html#nextSymbol">nextSymbol</a></li><li><a href="global.html#parse">parse</a></li><li><a href="global.html#RDFParser">RDFParser</a></li><li><a href="global.html#reify">reify</a></li><li><a href="global.html#remove">remove</a></li><li><a href="global.html#removeDocument">removeDocument</a></li><li><a href="global.html#removeMany">removeMany</a></li><li><a href="global.html#removeStatement">removeStatement</a></li><li><a href="global.html#replaceWith">replaceWith</a></li><li><a href="global.html#sameThings">sameThings</a></li><li><a href="global.html#serialize">serialize</a></li><li><a href="global.html#SPARQLToQuery">SPARQLToQuery</a></li><li><a href="global.html#statementsMatching">statementsMatching</a></li><li><a href="global.html#store">store</a></li><li><a href="global.html#terminateFrame">terminateFrame</a></li><li><a href="global.html#Uri">Uri</a></li><li><a href="global.html#uris">uris</a></li><li><a href="global.html#why">why</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Sun Sep 16 2018 23:24:18 GMT+0100 (BST)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
