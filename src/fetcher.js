@@ -3,7 +3,7 @@
  *
  * Project: rdflib.js
  *
- * File: fetcher.js
+ * @file: fetcher.js
  *
  * Description: contains functions for requesting/fetching/retracting
  *  This implements quite a lot of the web architecture.
@@ -412,10 +412,18 @@ const HANDLERS = {
   RDFXMLHandler, XHTMLHandler, XMLHandler, HTMLHandler, TextHandler, N3Handler
 }
 
-/*
-** @constructor
-*/
+/** Fetcher
+ *
+ * The Fetcher object is a helper object for a quadstore
+ * which turns it from an offline store to an online store.
+ * The fetcher deals with loading data files rom the web,
+  * figuring how to parse them.  It will also refresh, remove, the data
+  * and put back the fata to the web.
+ */
 class Fetcher {
+  /**
+  * @constructor
+  */
   constructor (store, options = {}) {
     this.store = store || new rdf.IndexedFormula()
     this.timeout = options.timeout || 30000
@@ -587,6 +595,13 @@ class Fetcher {
 
   /**
    * Promise-based load function
+   *
+   * Loads a web resource or resources into the store.
+   *
+   * A resource may be given as NamedNode object, or as a plain URI.
+   * an arrsy of resources will be given, in which they will be fetched in parallel.
+   * By default, the HTTP headers are recorded also, in the same store, in a separate graph.
+   * This allows code like editable() for example to test things about the resource.
    *
    * @param uri {Array<NamedNode>|Array<string>|NamedNode|string}
    *

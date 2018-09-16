@@ -1,4 +1,4 @@
-/* Update Manager Class
+/* @file Update Manager Class
 **
 ** 2007-07-15 originall sparl update module by Joe Presbrey <presbrey@mit.edu>
 ** 2010-08-08 TimBL folded in Kenny's WEBDAV
@@ -13,13 +13,18 @@ const Serializer = require('./serializer')
 const uriJoin = require('./uri').join
 const Util = require('./util')
 
-/*
-** The update manager is a helper object for a store.
-** Just as a Fetcher provides the store with the ability to read and write,
-** the Update Manager provides functionality for making small patches in real time,
-** and also looking out for concurrent updates from other agents
+/** Update Manager
+*
+* The update manager is a helper object for a store.
+* Just as a Fetcher provides the store with the ability to read and write,
+* the Update Manager provides functionality for making small patches in real time,
+* and also looking out for concurrent updates from other agents
 */
+
 class UpdateManager {
+  /** @constructor
+   * @param {IndexedFormula} store - the quadstore to store data and metadata. Created if not passed.f
+  */
   constructor (store) {
     store = store || new IndexedFormula() // If none provided make a store
     this.store = store
@@ -351,9 +356,12 @@ class UpdateManager {
       })
   }
 
-  // This does NOT update the statement.
-  // It returns an object which includes
-  //  function which can be used to change the object of the statement.
+  /** return a statemnet updating function
+   *
+   * This does NOT update the statement.
+   * It returns an object which includes
+   *  function which can be used to change the object of the statement.
+   */
   update_statement (statement) {
     if (statement && !statement.why) {
       return
@@ -609,15 +617,16 @@ class UpdateManager {
     return true
   }
 
-  /**
+  /** Update
+   *
    * This high-level function updates the local store iff the web is changed
    * successfully.
    *
-   * deletions, insertions may be undefined or single statements or lists or formulae
+   * Deletions, insertions may be undefined or single statements or lists or formulae
    * (may contain bnodes which can be indirectly identified by a where clause)
    *
-   * @param deletions
-   * @param insertions
+   * @param deletions - Statement or statments to be deleted.
+   * @param insertions - Statement or statements to be inserted
    *
    * @param callback {Function} called as callback(uri, success, errorbody)
    *

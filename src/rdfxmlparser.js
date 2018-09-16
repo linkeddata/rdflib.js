@@ -1,8 +1,6 @@
 /**
- * @fileoverview
  *  RDF/XML PARSER
  *
- * Version 0.1
  *  Parser believed to be in full positive RDF/XML parsing compliance
  *  with the possible exception of handling deprecated RDF attributes
  *  appropriately. Parser is believed to comply fully with other W3C
@@ -52,15 +50,17 @@
  * holders.
  */
 /**
- * @class Class defining an RDFParser resource object tied to an RDFStore
+ * @class RDFParser resource object tied to an RDFStore
  *
  * @author David Sheets <dsheets@mit.edu>
- * @version 0.1
  *
+*/
+ const uriUtil = require('./uri')
+
+/*
  * @constructor
  * @param {RDFStore} store An RDFStore object
  */
-const uriUtil = require('./uri')
 
 var RDFParser = function (store) {
   var RDFParser = {}
@@ -326,7 +326,7 @@ var RDFParser = function (store) {
           if (parsetype) {
             var nv = parsetype.nodeValue
             if (nv === 'Literal') {
-              frame.datatype = RDFParser.ns.RDF + 'XMLLiteral' 
+              frame.datatype = RDFParser.ns.RDF + 'XMLLiteral'
               frame = this.buildFrame(frame)
               // Don't include the literal node, only its children
               frame.addLiteral(dom.childNodes)
