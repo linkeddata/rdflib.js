@@ -16,4 +16,5 @@ before_script:
   - npm run build:browser
 
 after_success:
+  - npm run doc
   - ./.travis_publish
