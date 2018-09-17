@@ -1,18 +1,21 @@
-//  Identity management and indexing for RDF
-//
-// This file provides  IndexedFormula a formula (set of triples) which
-// indexed by predicate, subject and object.
-//
-// It "smushes"  (merges into a single node) things which are identical
-// according to owl:sameAs or an owl:InverseFunctionalProperty
-// or an owl:FunctionalProperty
-//
-//
-//  2005-10 Written Tim Berners-Lee
-//  2007    Changed so as not to munge statements from documents when smushing
-//
-//
-/* jsl:option explicit */
+/**  Identity management and indexing for RDF
+ *
+ * This file provides  IndexedFormula a formula (set of triples) which
+ * indexed by predicate, subject and object.
+ *
+ * It "smushes"  (merges into a single node) things which are identical
+ * according to owl:sameAs or an owl:InverseFunctionalProperty
+ * or an owl:FunctionalProperty
+ *
+ *
+ *  2005-10 Written Tim Berners-Lee
+ *  2007    Changed so as not to munge statements from documents when smushing
+ *
+ *
+ * jsl:option explicit
+/** @file: indexed-formula.js
+*/
+
 const ArrayIndexOf = require('./util').ArrayIndexOf
 const Formula = require('./formula')
 // const log = require('./log')
@@ -62,8 +65,19 @@ function handleRDFType (formula, subj, pred, obj, why) {
   }
   return done // statement given is not needed if true
 }
+/** IndexedFormula
+ *
+ */
+ /**
+ * @class
+ */
 
 export default class IndexedFormula extends Formula { // IN future - allow pass array of statements to constructor
+  /**
+   * @constructor
+   * @param {Array<String>} features - What sort of autmatic processing to do? Array of string
+   * @param {Boolean} features.sameAs - Smush together A and B nodes whenever { A sameAs B }
+   */
   constructor (features) {
     super()
     // this.statements = [] // As in Formula NO don't overwrite inherited

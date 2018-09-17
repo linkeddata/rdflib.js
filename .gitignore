@@ -1,4 +1,5 @@
 dist
+doc
 parsers/*.js
 node_modules
 .vscode/
