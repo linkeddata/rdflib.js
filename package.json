@@ -62,7 +62,7 @@
   "scripts": {
     "build": "babel src -d lib",
     "build:browser": "webpack --progress --colors",
-    "doc": "jsdoc -d doc src/*.js",
+    "doc": "jsdoc -d doc README.md src/*.js",
     "prepare": "npm run build",
     "test": "npm run test:unit && npm run test:serialize",
     "test:clean": "rimraf tests/serialize/,*",
