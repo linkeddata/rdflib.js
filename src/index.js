@@ -1,5 +1,3 @@
-import IndexedFormula from './indexed-formula'
-
 var $rdf = {
   BlankNode: require('./blank-node'),
   Collection: require('./collection'),
@@ -8,7 +6,7 @@ var $rdf = {
   Empty: require('./empty'),
   Fetcher: require('./fetcher'),
   Formula: require('./formula'),
-  IndexedFormula,
+  IndexedFormula: require('./indexed-formula'),
   jsonParser: require('./jsonparser'),
   Literal: require('./literal'),
   log: require('./log'),

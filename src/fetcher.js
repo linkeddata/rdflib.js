@@ -25,7 +25,7 @@
  * To do:
  * Firing up a mail client for mid:  (message:) URLs
  */
-import IndexedFormula from './indexed-formula'
+const IndexedFormula = require('./indexed-formula')
 const log = require('./log')
 const N3Parser = require('./n3parser')
 const NamedNode = require('./named-node')

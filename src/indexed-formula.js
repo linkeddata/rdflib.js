@@ -65,15 +65,10 @@ function handleRDFType (formula, subj, pred, obj, why) {
   }
   return done // statement given is not needed if true
 }
-/** IndexedFormula
- *
+/**
+ * IndexedFormula
  */
- /**
- * @class
- */
-
- // default  comment out for jsdoc :-(((    https://github.com/jsdoc3/jsdoc/issues/1132
-export default class IndexedFormula extends Formula { // IN future - allow pass array of statements to constructor
+class IndexedFormula extends Formula { // IN future - allow pass array of statements to constructor
   /**
    * @constructor
    * @param {Array<String>} features - What sort of autmatic processing to do? Array of string
@@ -839,6 +834,5 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     return res
   }
 }
-//export default IndexedFormula;
-
+module.exports = IndexedFormula
 IndexedFormula.handleRDFType = handleRDFType

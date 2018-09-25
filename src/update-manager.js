@@ -4,7 +4,7 @@
 ** 2010-08-08 TimBL folded in Kenny's WEBDAV
 ** 2010-12-07 TimBL addred local file write code
 */
-import IndexedFormula from './indexed-formula'
+const IndexedFormula = require('./indexed-formula')
 const docpart = require('./uri').docpart
 const Fetcher = require('./fetcher')
 const namedNode = require('./data-factory').namedNode
