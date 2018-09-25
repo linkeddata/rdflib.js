@@ -1,5 +1,6 @@
 const path = require('path')
 const MinifyPlugin = require('babel-minify-webpack-plugin')
+const WrapperPlugin = require('wrapper-webpack-plugin');
 
 module.exports = (env, args) => {
   return {
@@ -22,21 +23,26 @@ module.exports = (env, args) => {
         }
       ]
     },
+    plugins: [
+      new WrapperPlugin({
+        // Ensure `solid` namespace exists for externals
+        header: `if (typeof window !== 'undefined' && !window.solid)
+                   window.solid = {};`
+      })
+    ],
     optimization: {
       minimizer: [
         new MinifyPlugin({ deadcode: false }),
       ]
     },
     externals: {
-      '@trust/webcrypto': 'crypto',
       'fs': 'null',
-      'isomorphic-fetch': 'fetch',
-      'node-fetch': 'fetch',
-      'text-encoding': 'TextEncoder',
-      'whatwg-url': 'window',
-      'xhr2': 'XMLHttpRequest',
-      'xmldom': 'window',
-      'xmlhttprequest': 'XMLHttpRequest',
+      'solid-auth-client': {
+        root: ['solid', 'auth'],
+        commonjs: 'solid-auth-client',
+        commonjs2: 'solid-auth-client',
+      },
+      'xmldom': 'window'
     },
     devtool: 'source-map'
   }
