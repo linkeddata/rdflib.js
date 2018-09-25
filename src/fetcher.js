@@ -25,6 +25,7 @@
  * To do:
  * Firing up a mail client for mid:  (message:) URLs
  */
+import IndexedFormula from './indexed-formula'
 const log = require('./log')
 const N3Parser = require('./n3parser')
 const NamedNode = require('./named-node')
@@ -425,7 +426,7 @@ class Fetcher {
   * @constructor
   */
   constructor (store, options = {}) {
-    this.store = store || new rdf.IndexedFormula()
+    this.store = store || new IndexedFormula()
     this.timeout = options.timeout || 30000
 
     this._fetch = options.fetch || fetch

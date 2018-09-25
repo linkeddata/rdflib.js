@@ -21,7 +21,7 @@ describe('Fetcher', () => {
   })
 
   describe('constructor', () => {
-    it('should init a fetcher instance', () => {
+    it('should init a fetcher instance, with store', () => {
       let store = rdf.graph()
       let options = {
         timeout: 1000,
@@ -34,6 +34,15 @@ describe('Fetcher', () => {
       expect(fetcher._fetch).to.equal(options.fetch)
 
       expect(fetcher.handlers.length).to.equal(Object.keys(Fetcher.HANDLERS).length)
+    })
+    it('should init a fetcher instance, making default store', () => {
+      let options = {
+        timeout: 1000,
+        fetch: {}
+      }
+      let fetcher = new Fetcher()
+
+      expect(fetcher.store.fetcher === fetcher).to.be.true
     })
   })
 

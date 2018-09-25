@@ -72,6 +72,7 @@ function handleRDFType (formula, subj, pred, obj, why) {
  * @class
  */
 
+ // default  comment out for jsdoc :-(((    https://github.com/jsdoc3/jsdoc/issues/1132
 export default class IndexedFormula extends Formula { // IN future - allow pass array of statements to constructor
   /**
    * @constructor
@@ -252,9 +253,13 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
   }
 
   /**
-   * Adds a triple to the store.
-   * Returns the statement added
-   * (would it be better to return the original formula for chaining?)
+   * Adds a triple (quad) to the store.
+   *
+   * @param {Term} subject - The thing about which the fact a relationship is asserted
+   * @param {namedNode} predicate - The relationship which is asserted
+   * @param {Term} object - The object of the relationship, e.g. another thing or avalue
+   * @param {namedNode} why - The document in which the triple (S,P,O) was or will be stored on the web
+   * @returns {Statement} The statement added to the store
    */
   add (subj, pred, obj, why) {
     var i
@@ -834,5 +839,6 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     return res
   }
 }
+//export default IndexedFormula;
 
 IndexedFormula.handleRDFType = handleRDFType

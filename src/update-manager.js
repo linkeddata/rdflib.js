@@ -623,7 +623,8 @@ class UpdateManager {
    * successfully.
    *
    * Deletions, insertions may be undefined or single statements or lists or formulae
-   * (may contain bnodes which can be indirectly identified by a where clause)
+   * (may contain bnodes which can be indirectly identified by a where clause).
+   * The `why` property of each statement must be the same and give the web document to be updated
    *
    * @param deletions - Statement or statments to be deleted.
    * @param insertions - Statement or statements to be inserted
