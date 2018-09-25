@@ -67,7 +67,7 @@
     "build": "babel src -d lib",
     "build:browser": "webpack --progress",
     "doc": "jsdoc -d doc README.md src/*.js",
-    "prepare": "npm run build",
+    "prepare": "npm run build && npm run build:browser",
     "test": "npm run test:unit && npm run test:serialize",
     "test:clean": "rimraf tests/serialize/,*",
     "test:serialize": "npm run build && npm run test:serialize:all && npm run test:clean",
@@ -90,7 +90,9 @@
     "test:unit:dev": "mocha --watch --growl --compilers js:@babel/register tests/unit/**-test.js"
   },
   "files": [
-    "lib"
+    "src",
+    "lib",
+    "dist"
   ],
   "main": "lib/index.js",
   "keywords": [
