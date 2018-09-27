@@ -95,6 +95,7 @@
     "dist"
   ],
   "main": "lib/index.js",
+  "types": "./index.d.ts",
   "keywords": [
     "linkeddata",
     "linked data",
