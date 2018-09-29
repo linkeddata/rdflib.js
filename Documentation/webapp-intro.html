@@ -28,7 +28,8 @@ pre { font-family: monospace }
 a:link img, a:visited img { border-style: none }
 UL.toc { list-style: disc; list-style: none;}
 div.issue { padding: 0.5em; border: none; margin-right: 5%; }
-table: { border: 0.1em orange; }
+table: { border: collapse; }
+td: { background-color: #eee; }
 </style>
 </head>
 <body>
@@ -49,7 +50,7 @@ table: { border: 0.1em orange; }
 	<li><b>Statement</b> - Another word for quad.</li>
 </ul><h3>Setting up rdflib.js</h3>
 
-<p>Typically people defined the RDF library as a constant ‘rdf; or ‘$rdf’.  We suggest that you define it as in your module as $rdf, so that you an easily cut and paste code between projects and examples here, without confusion.</p>
+<p>Typically people define rdflib in your module as $rdf, so that you an easily cut and paste code between projects and examples here, without confusion.</p>
 
 <p>Installation steps (using npm):</p>
 
