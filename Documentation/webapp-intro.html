@@ -1,9 +1,7 @@
 <html>
 <head>
 <title>rdflib: Introduction for building web apps</title>
-
 <style type="text/css">
-
 body {
 font-family: Trebuchet MS, Palatino, sans-serif;
 color: black;
@@ -79,8 +77,6 @@ td: { background-color: #eee; }
 <pre>
 <code>const store  = $rdf.graph();
 </code></pre>
-
-<p> </p>
 
 <h3>Using the Store</h3>
 
@@ -258,6 +254,16 @@ $rdf.parse(text, store, doc.uri, ‘text/turtle’);  // pass base URI
 <p>But before we get into using the UpdateManager, let's look at the Fetcher, which is your first level of connection to the web.</p>
 
 <h2>Using the Fetcher</h2>
+<p>The Fetcher is a "helper object" which you can attach to a store
+  to allow it to connect to the read-write web of data.
+  The Fetcher handles the HTTP requests, understands MIME types and different
+  formats.  It uses the 4th column of the quadstore to track where each triple came from.
+  It can parse data from the net (or elsewhere) and put it in the store.
+  It can generate pretty printed foratted data from the store, the whole stoe,
+  or the data corresponing to one daa document out there.
+</p>
+
+<img src="https://raw.githubusercontent.com/linkeddata/rdflib.js/Documentation/diagrams/rdflib_block_diagram.png" />
 
 <p>Let's set up a store as before.</p>
 
@@ -397,7 +403,6 @@ list(rdf.sym(‘https://alice.example.com/Public/’));</code></pre>
 
 <p>The results will come asynchronously. If we were building a UI, each would get slotted into the right place.</p>
 
-<p> </p>
 
 
 <h2>Update: Using UpdateManager to update the web</h2>
@@ -425,9 +430,10 @@ list(rdf.sym(‘https://alice.example.com/Public/’));</code></pre>
 
 </pre>
 <p>
-The first parameter to update() is the array of statements to be deleted.
+  The first parameter to update() is the array of statements to be deleted.
 If it is empty then update() just adds data to the store.
 (Note for this the user only needs Append priviledges, not full Write).
+The second parameter to update() is the array of statements to be deleted.
 </p>
 <pre>
   function modifyName(person, name, doc) {
@@ -490,3 +496,5 @@ want to delete whole resources, then you use the HTTP <tt>DELETE</tt> method.</p
   }
 </pre>
 <p>Use with care.. </p>
+</body>
+</html>
