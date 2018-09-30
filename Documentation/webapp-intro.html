@@ -238,7 +238,7 @@ $rdf.parse(text, store, doc.uri, ‘text/turtle’);  // pass base URI
 <p>Note also while we are here the handy<p>
 <pre>
 <code class="language-javascript">
-  let aboutAlice = store.connectedStatements(alice)
+  let aboutAlice = store.connectedStatements(alice, alice.doc())
 </code></pre>
 
 <p>which pulls in the statements which mention Alice, plus those which mention connected blank nodes,
@@ -278,7 +278,7 @@ $rdf.parse(text, store, doc.uri, ‘text/turtle’);  // pass base URI
   The Fetcher handles the HTTP requests, understands MIME types and different
   formats.  It uses the 4th column of the quadstore to track where each triple came from.
   It can parse data from the net (or elsewhere) and put it in the store.
-  It can generate pretty printed foratted data from the store, the whole stoe,
+  It can generate pretty printed foratted data from the store, the whole store,
   or the data corresponing to one daa document out there.
 </p>
 
@@ -490,7 +490,7 @@ want to delete whole resources, then you use the HTTP <tt>DELETE</tt> method.</p
     So if you want to, you have to delete everything in it first.
     Here is your <tt>rm -r</tt> function to complete this little guide. </p>
 <pre>
-  function deleteRecursive (stoe, folder) {
+  function deleteRecursive (store, folder) {
     return new Promise(function (resolve, reject) {
       store.fetcher.load(folder).then(function () {
         let promises = store.each(folder, ns.ldp('contains')).map(file => {
@@ -515,5 +515,116 @@ want to delete whole resources, then you use the HTTP <tt>DELETE</tt> method.</p
   }
 </pre>
 <p>Use with care.. </p>
+<h2>Tracking Changes</h2>
+<p>Using the UpdateManager above we made an app which sends changes to the data web whenever the UI changes.
+  Let's also make it so the UI changes whenever the data web changes.  The function we use is:
+</p>
+  <pre>
+    updater.addDownstreamChangeListener(doc, refreshFunction)
+  </pre>
+  <p>
+It will sign up for changes by opening a websocket with the server.
+When a message comes from the server that the document has changed, it will reload the docuemnt into the store.
+It will deal with you calling it for the smae docuemnt from different places.
+It will ignore changes whioch you have made yourself with updater.update().
+So all you have to do is provide a function which will sync changes in the store into the UI.
+</p>
+<p>
+  If the user isn't editing the UI, just looking at it, you can more or less get away with
+</p>
+<pre>
+  const div = dom.createElement(div')
+  function refresh () { // Not recommended
+    div.innerHTML = ''
+    store.each(subject, predicate, null, doc).forEach(obj) {
+      div.appendChild(renderOneObject(obj))
+    }
+  }
+  refresh()
+  updater.addDownstreamChangeListener(doc, refresh)
+</pre>
+<p> or words to that effect. This will cause the div to be repainted.
+  That isn't as slick as writing a refresh function which adjusts the UI
+  just deletiung old things and inserting new ones.  That means the user can happily be
+  looking at or editing one part while other parts change.
+</p>
+<pre>
+  mugshotDiv = div.appendChild(dom.createElement('div'))
+
+  function elementForImage (image) {
+    let img = dom.createElement('img')
+    img.setAttribute('style', 'max-height: 10em; border-radius: 1em; margin: 0.7em;')
+    img.setAttribute('src', image.uri)
+    return img
+  }
+
+  function syncMugshots () {
+    let images = kb.each(subject, ns.vcard('hasPhoto'), null, doc)
+    images.sort() // arbitrary consistency
+    images = images.slice(0, 5) // max number for the space
+    UI.utils.syncTableToArray(mugshotDiv, images, elementForImage)
+  }
+
+  syncMugshots()
+  updater.addDownstreamChangeListener(doc, syncMugshots)
+</pre>
+<p>This uses a handy function syncTableToArray, whcih comes with solid-ui, but is include here to
+  be complete.  Also, to encourage you to make UI which syncs in both directions, even if it isn't
+  built into the framework you are using.  So fiund a way that rdflib fits naturally
+  with your favorite UI framework, if you have one. See
+  <a href="https://solid.inrupt.com/docs">the Inrupt Solid documentation</a> for some hints about using
+  specific frameworks.
+</p>
+<pre>
+  function syncTableToArray (table, things, createNewRow) {
+    let foundOne, row, i
+
+    for (i = 0; i < table.children.length; i++) {
+      row = table.children[i]
+      row.trashMe = true
+    }
+
+    for (let g = 0; g < things.length; g++) {
+      var thing = things[g]
+      foundOne = false
+
+      for (i = 0; i < table.children.length; i++) {
+        row = table.children[i]
+        if (row.subject && row.subject.sameTerm(thing)) {
+          row.trashMe = false
+          foundOne = true
+          break
+        }
+      }
+      if (!foundOne) {
+        let newRow = createNewRow(thing)
+        // Insert new row in position g in the table to match array
+        if (g >= table.children.length) {
+          table.appendChild(newRow)
+        } else {
+          let ele = table.children[g]
+          table.insertBefore(newRow, ele)
+        }
+        newRow.subject = thing
+      } // if not foundOne
+    } // loop g
+
+    for (i = 0; i < table.children.length; i++) {
+      row = table.children[i]
+      if (row.trashMe) {
+        table.removeChild(row)
+      }
+    }
+  } // syncTableToArray
+</pre>
+<h2>Conclusion</h2>
+<p>
+  We've looked at how to interact directly with the store as a local in-memory triple store, and we
+  have looked at how to load it and save it, web resource at a time.
+  We see how it ina away acts as a local in-memory cache of the big wide web of linked data,
+  allowing a user-interface to keep in sync with the state of the data web.
+  As developers we can now write code which will allow users to explore, craete, modify and link together
+  a web of linked data which can grow to encompass more and more domains, different applications.
+  <p>
 </body>
 </html>
