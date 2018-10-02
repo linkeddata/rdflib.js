@@ -33,7 +33,7 @@ td: { background-color: #eee; }
 <body>
 <h2>What is rdflib?</h2>
 
-<p>The easiest and best way to work with link data in Solid is to use a library called rdflib. Rdflib is a general toolbox for doing most things for linked data. It can store data, parse and serialize data into various formats, and keep track of changes to the data coming from the app or from the server.</p>
+<p>The easiest and best way to work with linked data in Solid is to use a library called rdflib. Rdflib is a general toolbox for doing most things for linked data. It can store data, parse and serialize data into various formats, and keep track of changes to the data coming from the app or from the server.</p>
 
 <h3>Glossary of Terms</h3>
 
@@ -44,7 +44,7 @@ td: { background-color: #eee; }
 	<li><b>UpdateManager</b> - An even more helper object. The UpdateManager allows you to send small changes to the server to “patch” the data as your user changes data in real time. It also allows you to subscribe to changes other people make to the same file, keeping track of upstream and downstream changes, and signaling any conflict between them.</li>
 	<li><b>Graph</b> - A database for the semantic web. This database is seemingly arbitrary in terms of what is related to what. There are no parent or root nodes, and the connections between nodes is key.</li>
 	<li><b>Triples </b>- An RDF concept that comprise of subject, predicate, and object. For example, storing the data “I have the name John” would be represented as a triple. Similarly,</li>
-	<li><b>Quad</b> is like a triplebut also has a property to explain where the data came from.</li>
+	<li><b>Quad</b> is like a triple, but also has a property to explain where the data came from.</li>
 	<li><b>Statement</b> - Another word for quad.</li>
 </ul><h3>Setting up rdflib.js</h3>
 
@@ -217,7 +217,7 @@ $rdf.parse(text, store, doc.uri, ‘text/turtle’);  // pass base URI
 			</td>
 		</tr></tbody></table><p>The last property is called <i>why</i> because it tells us why we should believe it.  In a simple linked data system this is a document we have read. In a more complex system this could point to an inference step. It can also be a special object put in by the Fetcher to store the results of its HTTP operations on the web.</p>
 
-<p>So to find out all the document which mention an old email addess as the object of any statement</p>
+<p>So to find out all the document which mention an old email address as the object of any statement</p>
 
 <pre>
 <code class="language-javascript">
@@ -278,8 +278,8 @@ $rdf.parse(text, store, doc.uri, ‘text/turtle’);  // pass base URI
   The Fetcher handles the HTTP requests, understands MIME types and different
   formats.  It uses the 4th column of the quadstore to track where each triple came from.
   It can parse data from the net (or elsewhere) and put it in the store.
-  It can generate pretty printed foratted data from the store, the whole store,
-  or the data corresponing to one daa document out there.
+  It can generate pretty-printed formatted data from the store, the whole store,
+  or the data corresponding to one data document out there.
 </p>
 
 <img src="https://raw.githubusercontent.com/linkeddata/rdflib.js/Documentation/diagrams/rdflib_block_diagram.png" />
@@ -430,7 +430,7 @@ list(rdf.sym(‘https://alice.example.com/Public/’));</code></pre>
   allows the store to read and write resources from the web, generally a resource (file) at a time,
   the UpdateManager object allows the store to send small changes to the data web.
   It also allows the web app to subscribe to a stream of changes that other people have made,
-  and so keep all places wher the data is displayed in sync.
+  and so keep all places where the data is displayed in sync.
 </p>
 <pre>
     const store = $rdf.graph()
@@ -451,7 +451,7 @@ list(rdf.sym(‘https://alice.example.com/Public/’));</code></pre>
 <p>
   The first parameter to update() is the array of statements to be deleted.
 If it is empty then update() just adds data to the store.
-(Note for this the user only needs Append priviledges, not full Write).
+(Note for this the user only needs Append privileges, not full Write).
 The second parameter to update() is the array of statements to be deleted.
 </p>
 <pre>
@@ -497,14 +497,14 @@ want to delete whole resources, then you use the HTTP <tt>DELETE</tt> method.</p
           if (store.holds(file, ns.rdf('type'), ns.ldp('BasicContainer'))) {
             return deleteRecursive(kb, file)
           } else {
-            console.log('deleteRecirsive file: ' + file)
+            console.log('deleteRecursive file: ' + file)
             if (!confirm(' Really DELETE File ' + file)) {
               throw new Error('User aborted delete file')
             }
             return store.fetcher.webOperation('DELETE', file.uri)
           }
         })
-        console.log('deleteRecirsive folder: ' + folder)
+        console.log('deleteRecursive folder: ' + folder)
         if (!confirm(' Really DELETE folder ' + folder)) {
           throw new Error('User aborted delete file')
         }
@@ -524,9 +524,9 @@ want to delete whole resources, then you use the HTTP <tt>DELETE</tt> method.</p
   </pre>
   <p>
 It will sign up for changes by opening a websocket with the server.
-When a message comes from the server that the document has changed, it will reload the docuemnt into the store.
-It will deal with you calling it for the smae docuemnt from different places.
-It will ignore changes whioch you have made yourself with updater.update().
+When a message comes from the server that the document has changed, it will reload the document into the store.
+It will deal with you calling it for the same document from different places.
+It will ignore changes which you have made yourself with updater.update().
 So all you have to do is provide a function which will sync changes in the store into the UI.
 </p>
 <p>
@@ -545,7 +545,7 @@ So all you have to do is provide a function which will sync changes in the store
 </pre>
 <p> or words to that effect. This will cause the div to be repainted.
   That isn't as slick as writing a refresh function which adjusts the UI
-  just deletiung old things and inserting new ones.  That means the user can happily be
+  just deleting old things and inserting new ones.  That means the user can happily be
   looking at or editing one part while other parts change.
 </p>
 <pre>
@@ -568,9 +568,9 @@ So all you have to do is provide a function which will sync changes in the store
   syncMugshots()
   updater.addDownstreamChangeListener(doc, syncMugshots)
 </pre>
-<p>This uses a handy function syncTableToArray, whcih comes with solid-ui, but is include here to
+<p>This uses a handy function syncTableToArray, which comes with solid-ui, but is include here to
   be complete.  Also, to encourage you to make UI which syncs in both directions, even if it isn't
-  built into the framework you are using.  So fiund a way that rdflib fits naturally
+  built into the framework you are using.  So find a way that rdflib fits naturally
   with your favorite UI framework, if you have one. See
   <a href="https://solid.inrupt.com/docs">the Inrupt Solid documentation</a> for some hints about using
   specific frameworks.
@@ -623,7 +623,7 @@ So all you have to do is provide a function which will sync changes in the store
   have looked at how to load it and save it, web resource at a time.
   We see how it ina away acts as a local in-memory cache of the big wide web of linked data,
   allowing a user-interface to keep in sync with the state of the data web.
-  As developers we can now write code which will allow users to explore, craete, modify and link together
+  As developers we can now write code which will allow users to explore, create, modify and link together
   a web of linked data which can grow to encompass more and more domains, different applications.
   <p>
 </body>
