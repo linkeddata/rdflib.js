@@ -198,7 +198,8 @@ class Formula extends Node {
   }
   /**
    * Get all the Classes of which we can RDFS-infer the subject is a subclass
-   * Returns a hash table where key is NT of type and value is statement why we
+   * @param {NamedNode} subject - The thing whose classes are to be found
+   * @returns a hash table where key is NT of type and value is statement why we
    * think so.
    * Does NOT return terms, returns URI strings.
    * We use NT representations in this version because they handle blank nodes.
@@ -213,8 +214,8 @@ class Formula extends Node {
    * Get all the Classes of which we can RDFS-infer the subject is a member
    * todo: This will loop is there is a class subclass loop (Sublass loops are
    * not illegal)
-   * Returns a hash table where key is NT of type and value is statement why we
-   * think so.
+   * @param {NamedNode} subject - The thing whose classes are to be found
+   * @returns a hash table where key is NT of type and value is statement why we think so.
    * Does NOT return terms, returns URI strings.
    * We use NT representations in this version because they handle blank nodes.
    */
@@ -265,9 +266,12 @@ class Formula extends Node {
   findTypeURIs (subject) {
     return this.NTtoURI(this.findTypesNT(subject))
   }
-  // Trace the statements which connect directly, or through bnodes
-  // Returns an array of statements
-  // doc param may be null to search all documents in store
+  /** Trace statements which connect directly, or through bnodes
+   *
+   * @param {NamedNode} subject - The node to start looking for statments
+   * @param {NamedNode} doc - The document to be searched, or null to search all documents
+   * @returns an array of statements, duplicate statements are suppresssed.
+   */
   connectedStatements (subject, doc, excludePredicateURIs) {
     excludePredicateURIs = excludePredicateURIs || []
     var todo = [subject]
