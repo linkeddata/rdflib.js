@@ -17,7 +17,7 @@
 // Also, users name variables and want the same name back when stuff is printed
 /* jsl:option explicit*/ // Turn on JavaScriptLint variable declaration checking
 
-const IndexedFormula = require('./indexed-formula')
+const IndexedFormula = require('./store')
 const log = require('./log')
 const docpart = require('./uri').docpart
 

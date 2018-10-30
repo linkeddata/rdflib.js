@@ -480,7 +480,7 @@ class IndexedFormula extends Formula { // IN future - allow pass array of statem
    *    var kb = rdf.graph()
    *    kb.length  // -> 0
    *    ```
-   * @return {Number}
+   * @returns {Number}
    */
   get length () {
     return this.statements.length

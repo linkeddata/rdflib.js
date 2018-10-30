@@ -6,7 +6,7 @@ var $rdf = {
   Empty: require('./empty'),
   Fetcher: require('./fetcher'),
   Formula: require('./formula'),
-  IndexedFormula: require('./indexed-formula'),
+  IndexedFormula: require('./store'),
   jsonParser: require('./jsonparser'),
   Literal: require('./literal'),
   log: require('./log'),
