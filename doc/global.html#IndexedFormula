@@ -191,7 +191,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="indexed-formula.js.html">indexed-formula.js</a>, <a href="indexed-formula.js.html#line71">line 71</a>
+        <a href="indexed-formula.js.html">indexed-formula.js</a>, <a href="indexed-formula.js.html#line69">line 69</a>
     </li></ul></dd>
     
 
@@ -289,7 +289,7 @@ Usage:
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="indexed-formula.js.html">indexed-formula.js</a>, <a href="indexed-formula.js.html#line487">line 487</a>
+        <a href="indexed-formula.js.html">indexed-formula.js</a>, <a href="indexed-formula.js.html#line485">line 485</a>
     </li></ul></dd>
     
 
@@ -487,7 +487,7 @@ Usage:
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="indexed-formula.js.html">indexed-formula.js</a>, <a href="indexed-formula.js.html#line259">line 259</a>
+        <a href="indexed-formula.js.html">indexed-formula.js</a>, <a href="indexed-formula.js.html#line257">line 257</a>
     </li></ul></dd>
     
 
@@ -595,7 +595,7 @@ Usage:
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="indexed-formula.js.html">indexed-formula.js</a>, <a href="indexed-formula.js.html#line709">line 709</a>
+        <a href="indexed-formula.js.html">indexed-formula.js</a>, <a href="indexed-formula.js.html#line707">line 707</a>
     </li></ul></dd>
     
 
@@ -681,7 +681,7 @@ Usage:
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="indexed-formula.js.html">indexed-formula.js</a>, <a href="indexed-formula.js.html#line356">line 356</a>
+        <a href="indexed-formula.js.html">indexed-formula.js</a>, <a href="indexed-formula.js.html#line354">line 354</a>
     </li></ul></dd>
     
 
@@ -768,7 +768,7 @@ Is each statement properly indexed?
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="indexed-formula.js.html">indexed-formula.js</a>, <a href="indexed-formula.js.html#line383">line 383</a>
+        <a href="indexed-formula.js.html">indexed-formula.js</a>, <a href="indexed-formula.js.html#line381">line 381</a>
     </li></ul></dd>
     
 
@@ -855,7 +855,7 @@ We replace the bigger with the smaller.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="indexed-formula.js.html">indexed-formula.js</a>, <a href="indexed-formula.js.html#line454">line 454</a>
+        <a href="indexed-formula.js.html">indexed-formula.js</a>, <a href="indexed-formula.js.html#line452">line 452</a>
     </li></ul></dd>
     
 
@@ -941,7 +941,7 @@ We replace the bigger with the smaller.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="indexed-formula.js.html">indexed-formula.js</a>, <a href="indexed-formula.js.html#line513">line 513</a>
+        <a href="indexed-formula.js.html">indexed-formula.js</a>, <a href="indexed-formula.js.html#line511">line 511</a>
     </li></ul></dd>
     
 
@@ -1028,7 +1028,7 @@ We replace the bigger with the smaller.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="indexed-formula.js.html">indexed-formula.js</a>, <a href="indexed-formula.js.html#line560">line 560</a>
+        <a href="indexed-formula.js.html">indexed-formula.js</a>, <a href="indexed-formula.js.html#line558">line 558</a>
     </li></ul></dd>
     
 
@@ -1114,7 +1114,7 @@ We replace the bigger with the smaller.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="indexed-formula.js.html">indexed-formula.js</a>, <a href="indexed-formula.js.html#line575">line 575</a>
+        <a href="indexed-formula.js.html">indexed-formula.js</a>, <a href="indexed-formula.js.html#line573">line 573</a>
     </li></ul></dd>
     
 
@@ -1200,7 +1200,7 @@ We replace the bigger with the smaller.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="indexed-formula.js.html">indexed-formula.js</a>, <a href="indexed-formula.js.html#line597">line 597</a>
+        <a href="indexed-formula.js.html">indexed-formula.js</a>, <a href="indexed-formula.js.html#line595">line 595</a>
     </li></ul></dd>
     
 
@@ -1286,7 +1286,7 @@ We replace the bigger with the smaller.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="indexed-formula.js.html">indexed-formula.js</a>, <a href="indexed-formula.js.html#line608">line 608</a>
+        <a href="indexed-formula.js.html">indexed-formula.js</a>, <a href="indexed-formula.js.html#line606">line 606</a>
     </li></ul></dd>
     
 
@@ -1376,7 +1376,7 @@ st    a statement which is already in the store and indexed.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="indexed-formula.js.html">indexed-formula.js</a>, <a href="indexed-formula.js.html#line634">line 634</a>
+        <a href="indexed-formula.js.html">indexed-formula.js</a>, <a href="indexed-formula.js.html#line632">line 632</a>
     </li></ul></dd>
     
 
@@ -1462,7 +1462,7 @@ st    a statement which is already in the store and indexed.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="indexed-formula.js.html">indexed-formula.js</a>, <a href="indexed-formula.js.html#line660">line 660</a>
+        <a href="indexed-formula.js.html">indexed-formula.js</a>, <a href="indexed-formula.js.html#line658">line 658</a>
     </li></ul></dd>
     
 
@@ -1548,7 +1548,7 @@ st    a statement which is already in the store and indexed.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="indexed-formula.js.html">indexed-formula.js</a>, <a href="indexed-formula.js.html#line718">line 718</a>
+        <a href="indexed-formula.js.html">indexed-formula.js</a>, <a href="indexed-formula.js.html#line716">line 716</a>
     </li></ul></dd>
     
 
@@ -1635,7 +1635,7 @@ ALL CONVENIENCE LOOKUP FUNCTIONS RELY ON THIS!
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="indexed-formula.js.html">indexed-formula.js</a>, <a href="indexed-formula.js.html#line748">line 748</a>
+        <a href="indexed-formula.js.html">indexed-formula.js</a>, <a href="indexed-formula.js.html#line746">line 746</a>
     </li></ul></dd>
     
 
@@ -1721,7 +1721,7 @@ ALL CONVENIENCE LOOKUP FUNCTIONS RELY ON THIS!
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="indexed-formula.js.html">indexed-formula.js</a>, <a href="indexed-formula.js.html#line824">line 824</a>
+        <a href="indexed-formula.js.html">indexed-formula.js</a>, <a href="indexed-formula.js.html#line822">line 822</a>
     </li></ul></dd>
     
 
@@ -1771,7 +1771,7 @@ ALL CONVENIENCE LOOKUP FUNCTIONS RELY ON THIS!
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Sun Oct 28 2018 21:16:04 GMT+0000 (UTC)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Tue Oct 30 2018 17:07:34 GMT+0000 (UTC)
 </footer>
 
 <script> prettyPrint(); </script>
