@@ -12,8 +12,6 @@
  *  2007    Changed so as not to munge statements from documents when smushing
  *
  *
- * jsl:option explicit
-/** @file: indexed-formula.js
 */
 
 const ArrayIndexOf = require('./util').ArrayIndexOf
