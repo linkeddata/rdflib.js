@@ -11,15 +11,19 @@ Javascript RDF library for browsers and Node.js.
 - Compatible with [RDFJS task force spec](https://github.com/rdfjs/representation-task-force/blob/master/interface-spec.md)
 - SPARQL queries (not full SPARQL)
 - Smushing of nodes from `owl:sameAs`, and `owl:{f,inverseF}unctionProperty`
-- Tracks provence of triples keeps metadata (in RDF) from HTTP accesses
+- Tracks provenance of triples keeps metadata (in RDF) from HTTP accesses
 
 ## Documentation
 
-See **[Tutorial for using rdflib.js](https://github.com/solid/solid-tutorial-rdflib.js)**
-for more information.
+See:
 
-Possible out of date information is available from here:
-[http://dig.csail.mit.edu/2005/ajar/ajaw/Developer.html](http://dig.csail.mit.edu/2005/ajar/ajaw/Developer.html).
+* The [API documentation](https://linkeddata.github.io/rdflib.js/doc/) is partial but useful
+* [Using rdflib in a web app](https://linkeddata.github.io/rdflib.js/Documentation/webapp-intro.html)
+* [Tutorial for using rdflib.js](https://github.com/solid/solid-tutorial-rdflib.js)
+* [Using Turtle](https://linkeddata.github.io/rdflib.js/Documentation/turtle-intro.html)
+* [The Solid developer portal at Inrupt](https://solid.inrupt.com/)
+
+for more information.
 
 ## Install
 
