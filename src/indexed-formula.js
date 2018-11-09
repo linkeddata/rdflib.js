@@ -1,18 +1,19 @@
-//  Identity management and indexing for RDF
-//
-// This file provides  IndexedFormula a formula (set of triples) which
-// indexed by predicate, subject and object.
-//
-// It "smushes"  (merges into a single node) things which are identical
-// according to owl:sameAs or an owl:InverseFunctionalProperty
-// or an owl:FunctionalProperty
-//
-//
-//  2005-10 Written Tim Berners-Lee
-//  2007    Changed so as not to munge statements from documents when smushing
-//
-//
-/* jsl:option explicit */
+/**  Identity management and indexing for RDF
+ *
+ * This file provides  IndexedFormula a formula (set of triples) which
+ * indexed by predicate, subject and object.
+ *
+ * It "smushes"  (merges into a single node) things which are identical
+ * according to owl:sameAs or an owl:InverseFunctionalProperty
+ * or an owl:FunctionalProperty
+ *
+ *
+ *  2005-10 Written Tim Berners-Lee
+ *  2007    Changed so as not to munge statements from documents when smushing
+ *
+ *
+*/
+
 const ArrayIndexOf = require('./util').ArrayIndexOf
 const Formula = require('./formula')
 // const log = require('./log')
@@ -62,8 +63,15 @@ function handleRDFType (formula, subj, pred, obj, why) {
   }
   return done // statement given is not needed if true
 }
-
-export default class IndexedFormula extends Formula { // IN future - allow pass array of statements to constructor
+/**
+ * IndexedFormula
+ */
+class IndexedFormula extends Formula { // IN future - allow pass array of statements to constructor
+  /**
+   * @constructor
+   * @param {Array<String>} features - What sort of autmatic processing to do? Array of string
+   * @param {Boolean} features.sameAs - Smush together A and B nodes whenever { A sameAs B }
+   */
   constructor (features) {
     super()
     // this.statements = [] // As in Formula NO don't overwrite inherited
@@ -238,9 +246,13 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
   }
 
   /**
-   * Adds a triple to the store.
-   * Returns the statement added
-   * (would it be better to return the original formula for chaining?)
+   * Adds a triple (quad) to the store.
+   *
+   * @param {Term} subject - The thing about which the fact a relationship is asserted
+   * @param {namedNode} predicate - The relationship which is asserted
+   * @param {Term} object - The object of the relationship, e.g. another thing or avalue
+   * @param {namedNode} why - The document in which the triple (S,P,O) was or will be stored on the web
+   * @returns {Statement} The statement added to the store
    */
   add (subj, pred, obj, why) {
     var i
@@ -820,5 +832,5 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     return res
   }
 }
-
+module.exports = IndexedFormula
 IndexedFormula.handleRDFType = handleRDFType

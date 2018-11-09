@@ -1,8 +1,10 @@
-// Joe Presbrey <presbrey@mit.edu>
-// 2007-07-15
-// 2010-08-08 TimBL folded in Kenny's WEBDAV
-// 2010-12-07 TimBL addred local file write code
-import IndexedFormula from './indexed-formula'
+/* @file Update Manager Class
+**
+** 2007-07-15 originall sparl update module by Joe Presbrey <presbrey@mit.edu>
+** 2010-08-08 TimBL folded in Kenny's WEBDAV
+** 2010-12-07 TimBL addred local file write code
+*/
+const IndexedFormula = require('./indexed-formula')
 const docpart = require('./uri').docpart
 const Fetcher = require('./fetcher')
 const namedNode = require('./data-factory').namedNode
@@ -11,8 +13,20 @@ const Serializer = require('./serializer')
 const uriJoin = require('./uri').join
 const Util = require('./util')
 
+/** Update Manager
+*
+* The update manager is a helper object for a store.
+* Just as a Fetcher provides the store with the ability to read and write,
+* the Update Manager provides functionality for making small patches in real time,
+* and also looking out for concurrent updates from other agents
+*/
+
 class UpdateManager {
+  /** @constructor
+   * @param {IndexedFormula} store - the quadstore to store data and metadata. Created if not passed.f
+  */
   constructor (store) {
+    store = store || new IndexedFormula() // If none provided make a store
     this.store = store
     if (store.updater) {
       throw new Error("You can't have two UpdateManagers for the same store")
@@ -73,7 +87,7 @@ class UpdateManager {
 
       var sts = kb.statementsMatching(kb.sym(uri))
 
-      console.log('sparql.editable: Not MachineEditableDocument file ' +
+      console.log('UpdateManager.editable: Not MachineEditableDocument file ' +
         uri + '\n')
       console.log(sts.map((x) => { return x.toNT() }).join('\n'))
 
@@ -89,7 +103,6 @@ class UpdateManager {
     if (kb.holds(namedNode(uri), this.ns.rdf('type'), this.ns.ldp('Resource'))) {
       return 'SPARQL'
     }
-    var i
     var method
     for (var r = 0; r < requests.length; r++) {
       request = requests[r]
@@ -98,14 +111,14 @@ class UpdateManager {
         if (request !== undefined) {
           var acceptPatch = kb.each(response, this.ns.httph('accept-patch'))
           if (acceptPatch.length) {
-            for (i = 0; i < acceptPatch.length; i++) {
+            for (let i = 0; i < acceptPatch.length; i++) {
               method = acceptPatch[i].value.trim()
               if (method.indexOf('application/sparql-update') >= 0) return 'SPARQL'
             }
           }
           var authorVia = kb.each(response, this.ns.httph('ms-author-via'))
           if (authorVia.length) {
-            for (i = 0; i < authorVia.length; i++) {
+            for (let i = 0; i < authorVia.length; i++) {
               method = authorVia[i].value.trim()
               if (method.indexOf('SPARQL') >= 0) {
                 return 'SPARQL'
@@ -117,7 +130,7 @@ class UpdateManager {
           }
           var status = kb.each(response, this.ns.http('status'))
           if (status.length) {
-            for (i = 0; i < status.length; i++) {
+            for (let i = 0; i < status.length; i++) {
               if (status[i] === 200 || status[i] === 404) {
                 definitive = true
                 // return false // A definitive answer
@@ -125,18 +138,18 @@ class UpdateManager {
             }
           }
         } else {
-          console.log('sparql.editable: No response for ' + uri + '\n')
+          console.log('UpdateManager.editable: No response for ' + uri + '\n')
         }
       }
     }
     if (requests.length === 0) {
-      console.log('sparql.editable: No request for ' + uri + '\n')
+      console.log('UpdateManager.editable: No request for ' + uri + '\n')
     } else {
       if (definitive) {
         return false // We have got a request and it did NOT say editable => not editable
       }
     }
-    console.log('sparql.editable: inconclusive for ' + uri + '\n')
+    console.log('UpdateManager.editable: inconclusive for ' + uri + '\n')
     return undefined // We don't know (yet) as we haven't had a response (yet)
   }
 
@@ -168,12 +181,12 @@ class UpdateManager {
    */
   statementArrayBnodes (sts) {
     var bnodes = []
-    for (var i = 0; i < sts.length; i++) {
+    for (let i = 0; i < sts.length; i++) {
       bnodes = bnodes.concat(this.statementBnodes(sts[i]))
     }
     bnodes.sort() // in place sort - result may have duplicates
     var bnodes2 = []
-    for (var j = 0; j < bnodes.length; j++) {
+    for (let j = 0; j < bnodes.length; j++) {
       if (j === 0 || !bnodes[j].sameTerm(bnodes[j - 1])) {
         bnodes2.push(bnodes[j])
       }
@@ -189,12 +202,12 @@ class UpdateManager {
     this.ifps = {}
     var a = this.store.each(undefined, this.ns.rdf('type'),
       this.ns.owl('InverseFunctionalProperty'))
-    for (var i = 0; i < a.length; i++) {
+    for (let i = 0; i < a.length; i++) {
       this.ifps[a[i].uri] = true
     }
     this.fps = {}
     a = this.store.each(undefined, this.ns.rdf('type'), this.ns.owl('FunctionalProperty'))
-    for (i = 0; i < a.length; i++) {
+    for (let i = 0; i < a.length; i++) {
       this.fps[a[i].uri] = true
     }
   }
@@ -210,7 +223,7 @@ class UpdateManager {
     var sts = this.store.statementsMatching(undefined, undefined, x, source) // incoming links
     var y
     var res
-    for (var i = 0; i < sts.length; i++) {
+    for (let i = 0; i < sts.length; i++) {
       if (this.fps[sts[i].predicate.uri]) {
         y = sts[i].subject
         if (!y.isBlank) {
@@ -226,7 +239,7 @@ class UpdateManager {
     }
     // outgoing links
     sts = this.store.statementsMatching(x, undefined, undefined, source)
-    for (i = 0; i < sts.length; i++) {
+    for (let i = 0; i < sts.length; i++) {
       if (this.ifps[sts[i].predicate.uri]) {
         y = sts[i].object
         if (!y.isBlank) {
@@ -275,7 +288,7 @@ class UpdateManager {
     var context = []
     if (bnodes.length) {
       this.cacheIfps()
-      for (var i = 0; i < bnodes.length; i++) { // Does this occur in old graph?
+      for (let i = 0; i < bnodes.length; i++) { // Does this occur in old graph?
         var bnode = bnodes[i]
         if (!this.mentioned(bnode)) continue
         context = context.concat(this.bnodeContext1(bnode, doc))
@@ -297,12 +310,12 @@ class UpdateManager {
    * @private
    */
   contextWhere (context) {
-    var sparql = this
+    var updater = this
     return (!context || context.length === 0)
       ? ''
       : 'WHERE { ' +
       context.map(function (x) {
-        return sparql.anonymizeNT(x)
+        return updater.anonymizeNT(x)
       }).join('\n') + ' }\n'
   }
 
@@ -315,7 +328,7 @@ class UpdateManager {
         if (!uri) {
           throw new Error('No URI given for remote editing operation: ' + query)
         }
-        console.log('sparql: sending update to <' + uri + '>')
+        console.log('UpdateManager: sending update to <' + uri + '>')
 
         let options = {
           noMeta: true,
@@ -327,14 +340,14 @@ class UpdateManager {
       })
       .then(response => {
         if (!response.ok) {
-          let message = 'sparql: update failed for <' + uri + '> status=' +
+          let message = 'UpdateManager: update failed for <' + uri + '> status=' +
             response.status + ', ' + response.statusText +
             '\n   for query: ' + query
           console.log(message)
           throw new Error(message)
         }
 
-        console.log('sparql: update Ok for <' + uri + '>')
+        console.log('UpdateManager: update Ok for <' + uri + '>')
 
         callback(uri, response.ok, response.responseText, response)
       })
@@ -343,20 +356,23 @@ class UpdateManager {
       })
   }
 
-  // This does NOT update the statement.
-  // It returns an object which includes
-  //  function which can be used to change the object of the statement.
+  /** return a statemnet updating function
+   *
+   * This does NOT update the statement.
+   * It returns an object which includes
+   *  function which can be used to change the object of the statement.
+   */
   update_statement (statement) {
     if (statement && !statement.why) {
       return
     }
-    var sparql = this
+    var updater = this
     var context = this.statementContext(statement)
 
     return {
       statement: statement ? [statement.subject, statement.predicate, statement.object, statement.why] : undefined,
       statementNT: statement ? this.anonymizeNT(statement) : undefined,
-      where: sparql.contextWhere(context),
+      where: updater.contextWhere(context),
 
       set_object: function (obj, callback) {
         var query = this.where
@@ -366,7 +382,7 @@ class UpdateManager {
           this.anonymize(this.statement[1]) + ' ' +
           this.anonymize(obj) + ' ' + ' . }\n'
 
-        sparql.fire(this.statement[3].uri, query, callback)
+        updater.fire(this.statement[3].uri, query, callback)
       }
     }
   }
@@ -377,7 +393,7 @@ class UpdateManager {
 
     if (st instanceof Array) {
       var stText = ''
-      for (var i = 0; i < st.length; i++) stText += st[i] + '\n'
+      for (let i = 0; i < st.length; i++) stText += st[i] + '\n'
       query += 'INSERT DATA { ' + stText + ' }\n'
     } else {
       query += 'INSERT DATA { ' +
@@ -395,7 +411,7 @@ class UpdateManager {
 
     if (st instanceof Array) {
       var stText = ''
-      for (var i = 0; i < st.length; i++) stText += st[i] + '\n'
+      for (let i = 0; i < st.length; i++) stText += st[i] + '\n'
       query += 'DELETE DATA { ' + stText + ' }\n'
     } else {
       query += 'DELETE DATA { ' +
@@ -471,7 +487,7 @@ class UpdateManager {
         control.reloading = false
         if (ok) {
           if (control.downstreamChangeListeners) {
-            for (var i = 0; i < control.downstreamChangeListeners.length; i++) {
+            for (let i = 0; i < control.downstreamChangeListeners.length; i++) {
               console.log('        Calling downstream listener ' + i)
               control.downstreamChangeListeners[i]()
             }
@@ -601,21 +617,23 @@ class UpdateManager {
     return true
   }
 
-  /**
+  /** Update
+   *
    * This high-level function updates the local store iff the web is changed
    * successfully.
    *
-   * deletions, insertions may be undefined or single statements or lists or formulae
-   * (may contain bnodes which can be indirectly identified by a where clause)
+   * Deletions, insertions may be undefined or single statements or lists or formulae
+   * (may contain bnodes which can be indirectly identified by a where clause).
+   * The `why` property of each statement must be the same and give the web document to be updated
    *
-   * @param deletions
-   * @param insertions
+   * @param deletions - Statement or statments to be deleted.
+   * @param insertions - Statement or statements to be inserted
    *
    * @param callback {Function} called as callback(uri, success, errorbody)
    *
    * @returns {*}
    */
-  update (deletions, insertions, callback) {
+  update (deletions, insertions, callback, secondTry) {
     try {
       var kb = this.store
       var ds = !deletions ? []
@@ -660,11 +678,21 @@ class UpdateManager {
       })
 
       var protocol = this.editable(doc.uri, kb)
-      if (!protocol) {
-        throw new Error("Can't make changes in uneditable " + doc)
+      if (protocol === false) {
+        throw new Error("Update: Can't make changes in uneditable " + doc)
       }
-      var i
-      if (protocol.indexOf('SPARQL') >= 0) {
+      if (protocol === undefined) { // Not enough metadata
+        if (secondTry) {
+          throw new Error("Update: Loaded " + doc + "but stil can't figure out what editing protcol it supports.")
+        }
+        console.log(`Update: have not loaded ${doc} before: loading now...`)
+        this.store.fetcher.load(doc).then( response => {
+          this.update(deletions, insertions, callback, true) // secondTry
+        }, err => {
+          throw new Error(`Update: Can't read ${doc} before patching: ${err}`)
+        })
+        return
+      } else if (protocol.indexOf('SPARQL') >= 0) {
         var bnodes = []
         if (ds.length) bnodes = this.statementArrayBnodes(ds)
         if (is.length) bnodes = bnodes.concat(this.statementArrayBnodes(is))
@@ -674,14 +702,14 @@ class UpdateManager {
         if (whereClause.length) { // Is there a WHERE clause?
           if (ds.length) {
             query += 'DELETE { '
-            for (i = 0; i < ds.length; i++) {
+            for (let i = 0; i < ds.length; i++) {
               query += this.anonymizeNT(ds[i]) + '\n'
             }
             query += ' }\n'
           }
           if (is.length) {
             query += 'INSERT { '
-            for (i = 0; i < is.length; i++) {
+            for (let i = 0; i < is.length; i++) {
               query += this.anonymizeNT(is[i]) + '\n'
             }
             query += ' }\n'
@@ -690,7 +718,7 @@ class UpdateManager {
         } else { // no where clause
           if (ds.length) {
             query += 'DELETE DATA { '
-            for (i = 0; i < ds.length; i++) {
+            for (let i = 0; i < ds.length; i++) {
               query += this.anonymizeNT(ds[i]) + '\n'
             }
             query += ' } \n'
@@ -698,7 +726,7 @@ class UpdateManager {
           if (is.length) {
             if (ds.length) query += ' ; '
             query += 'INSERT DATA { '
-            for (i = 0; i < is.length; i++) {
+            for (let i = 0; i < is.length; i++) {
               query += this.anonymizeNT(is[i]) + '\n'
             }
             query += ' }\n'
@@ -713,7 +741,7 @@ class UpdateManager {
 
         this.fire(doc.uri, query, (uri, success, body, response) => {
           response.elapsedTimeMs = Date.now() - startTime
-          console.log('    sparql: Return ' +
+          console.log('    UpdateManager: Return ' +
             (success ? 'success ' : 'FAILURE ') + response.status +
             ' elapsed ' + response.elapsedTimeMs + 'ms')
           if (success) {
@@ -723,7 +751,7 @@ class UpdateManager {
               success = false
               body = 'Remote Ok BUT error deleting ' + ds.length + ' from store!!! ' + e
             } // Add in any case -- help recover from weirdness??
-            for (var i = 0; i < is.length; i++) {
+            for (let i = 0; i < is.length; i++) {
               kb.add(is[i].subject, is[i].predicate, is[i].object, doc)
             }
           }
@@ -756,7 +784,7 @@ class UpdateManager {
       }
     } catch (e) {
       callback(undefined, false, 'Exception in update: ' + e + '\n' +
-        $rdf.Util.stackString(e))
+        Util.stackString(e))
     }
   }
 
@@ -777,10 +805,10 @@ class UpdateManager {
     // prepare contents of revised document
     let i
     let newSts = kb.statementsMatching(undefined, undefined, undefined, doc).slice() // copy!
-    for (i = 0; i < ds.length; i++) {
+    for (let i = 0; i < ds.length; i++) {
       Util.RDFArrayRemove(newSts, ds[i])
     }
-    for (i = 0; i < is.length; i++) {
+    for (let i = 0; i < is.length; i++) {
       newSts.push(is[i])
     }
 
@@ -805,10 +833,10 @@ class UpdateManager {
           throw new Error(response.error)
         }
 
-        for (var i = 0; i < ds.length; i++) {
+        for (let i = 0; i < ds.length; i++) {
           kb.remove(ds[i])
         }
-        for (i = 0; i < is.length; i++) {
+        for (let i = 0; i < is.length; i++) {
           kb.add(is[i].subject, is[i].predicate, is[i].object, doc)
         }
 
@@ -835,10 +863,10 @@ class UpdateManager {
     let newSts = kb.statementsMatching(undefined, undefined, undefined, doc).slice() // copy!
 
     let i
-    for (i = 0; i < ds.length; i++) {
+    for (let i = 0; i < ds.length; i++) {
       Util.RDFArrayRemove(newSts, ds[ i ])
     }
-    for (i = 0; i < is.length; i++) {
+    for (let i = 0; i < is.length; i++) {
       newSts.push(is[ i ])
     }
     // serialize to the appropriate format
@@ -882,10 +910,10 @@ class UpdateManager {
     stream.write(documentString, documentString.length)
     stream.close()
 
-    for (i = 0; i < ds.length; i++) {
+    for (let i = 0; i < ds.length; i++) {
       kb.remove(ds[ i ])
     }
-    for (i = 0; i < is.length; i++) {
+    for (let i = 0; i < is.length; i++) {
       kb.add(is[ i ].subject, is[ i ].predicate, is[ i ].object, doc)
     }
     callback(doc.uri, true, '') // success!

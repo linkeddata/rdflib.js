@@ -1,7 +1,7 @@
 {
   "name": "rdflib",
   "description": "an RDF library for node.js. Suitable for client and server side.",
-  "version": "0.17.0",
+  "version": "0.19.0",
   "engines": {
     "node": ">=6.0"
   },
@@ -35,33 +35,39 @@
     "async": "^0.9.x",
     "jsonld": "^0.4.5",
     "n3": "^0.4.1",
-    "node-fetch": "^1.7.1",
-    "solid-auth-client": ">=0.5.1",
+    "solid-auth-client": "^2.2.3",
     "xmldom": "^0.1.22"
   },
   "devDependencies": {
-    "babel-cli": "^6.26.0",
-    "babel-core": "^6.26.0",
-    "babel-loader": "^7.1.2",
-    "babel-minify-webpack-plugin": "^0.2.0",
-    "babel-preset-env": "^1.6.0",
-    "babel-register": "^6.26.0",
+    "@babel/cli": "^7.1.0",
+    "@babel/core": "^7.1.0",
+    "@babel/preset-env": "^7.1.0",
+    "@babel/register": "^7.0.0",
+    "babel-core": "^7.0.0-bridge.0",
+    "babel-loader": "^8.0.2",
+    "babel-minify-webpack-plugin": "^0.3.1",
     "chai": "^4.1.0",
     "diff": "^3.2.0",
     "dirty-chai": "^2.0.0",
     "fs-grep": "^0.0.5",
-    "mocha": "^3.4.2",
+    "jsdoc": "^3.5.5",
+    "mocha": "^5.2.0",
     "nock": "^9.0.13",
+    "node-fetch": "^1.7.0",
     "node-mkdirp": "0.0.1",
     "rimraf": "^2.6.1",
     "sinon": "^2.3.6",
     "sinon-chai": "^2.11.0",
-    "webpack": "^2.5.1"
+    "webpack": "^4.20.1",
+    "webpack-cli": "^3.1.1",
+    "webpack-sources": "^1.0.1",
+    "wrapper-webpack-plugin": "^2.0.0"
   },
   "scripts": {
     "build": "babel src -d lib",
-    "build:browser": "webpack --progress --colors",
-    "prepare": "npm run build",
+    "build:browser": "webpack --progress",
+    "doc": "jsdoc -d doc README.md src/*.js",
+    "prepare": "npm run build && npm run build:browser",
     "test": "npm run test:unit && npm run test:serialize",
     "test:clean": "rimraf tests/serialize/,*",
     "test:serialize": "npm run build && npm run test:serialize:all && npm run test:clean",
@@ -79,12 +85,14 @@
     "test:serialize:11": "cd ./tests/serialize && node ./data.js -in=structures.n3 -format=application/rdf+xml  -out=,structures.xml && node diff ,structures.xml t11-ref.xml",
     "test:serialize:12": "cd ./tests/serialize && node ./data.js -in=structures.n3 -format=text/turtle -out=,structures.ttl && node diff ,structures.ttl t12-ref.ttl",
     "test:serialize:13": "cd ./tests/serialize && node ./data.js -in=structures.n3 -format=application/n-triples -out=,structures.nt && node ./data.js -format=application/n-triples -in=,structures.nt -format=text/turtle -out=,structures.nt.ttl && node diff ,structures.nt.ttl t13-ref.ttl",
-    "test:unit": "mocha --growl --require babel-register tests/unit/**-test.js",
-    "test:unit:egp": "mocha --require babel-register tests/unit/fetcher-egp-test.js",
-    "test:unit:dev": "mocha --watch --growl --require babel-register tests/unit/**-test.js"
+    "test:unit": "mocha --growl --compilers js:@babel/register tests/unit/**-test.js",
+    "test:unit:egp": "mocha --compilers js:@babel/register tests/unit/fetcher-egp-test.js",
+    "test:unit:dev": "mocha --watch --growl --compilers js:@babel/register tests/unit/**-test.js"
   },
   "files": [
-    "lib"
+    "src",
+    "lib",
+    "dist"
   ],
   "main": "lib/index.js",
   "keywords": [

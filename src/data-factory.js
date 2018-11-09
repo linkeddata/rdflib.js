@@ -3,7 +3,7 @@ const BlankNode = require('./blank-node')
 const Collection = require('./collection')
 const DefaultGraph = require('./default-graph')
 const Fetcher = require('./fetcher')
-import IndexedFormula from './indexed-formula'
+const IndexedFormula = require('./indexed-formula')
 const Literal = require('./literal')
 const NamedNode = require('./named-node')
 const Statement = require('./statement')

@@ -1,0 +1,360 @@
+<html>
+<head>
+<title>rdflib: Introduction to Turtle</title>
+<style type="text/css">
+body {
+font-family: Trebuchet MS, Palatino, sans-serif;
+color: black;
+background: white;
+margin-left: 3em ;  margin-right: 2em;
+}
+p , ul, ol { text-indent : 0em ;
+margin-left: 0em  ; /* a bit of white space */ }
+pre { margin-left: 1em; background-color: #eee; padding: 1em; font-size: 120%;}
+
+table { border: collapse; }
+td { background-color: #eee; padding: 0.3em;}
+
+li { text-indent: 0; margin-bottom: 0.5em;}
+h1 { text-align: center  }
+h2 { font-style: bold;  margin-left: -1em; }
+h3 { font-style: bold;  margin-left: 0em; }
+h4 { font-style: italic;  margin-left: 0em; }
+
+address { text-align: right }
+a:link, a:active { color: #00e; background: transparent; text-decoration: none; }
+
+a:visited {color: #529; background: transparent;}
+div.intro {margin-left: 5%; margin-right: 5%; font-style: italic}
+pre { font-family: monospace }
+a:link img, a:visited img { border-style: none }
+
+tt { font-size: 120%; background-color: #eee; padding: 0.1em }
+</style>
+</head>
+<body>
+<h1>Using Turtle</h1>
+
+<p>Turtle is a language.
+  It is desiged for expressing data, partuicularly linked data on the web.
+Just as HTML is used for linked text, Turtle is used for linked data.
+Turtle expresses stuff about things.  Abstract things, real things, people,
+documents,  So where HTML uses the hash sign like in <tt>foo.html#intro</tt>
+to refer to an anchor, which is a part of the document, Turtle uses
+the same hash sign to refer to something defined by the dococument, like <tt>students.ttl#bob</tt>
+or <tt>profile.ttl#me</tt>.
+</p>
+<p>
+Turtle is simple.  The data model it uses, called RDF, is simple.
+Turtle was originally designed for writing in chat messages, and on whiteboards,
+and making quick configuration files or test files, so it tries to be concise.
+</p>
+<pre>
+  &lt;profile.ttl#me>   &lt;http://xmlns.com/foaf/0.1/knows>   &lt;students.ttl#bob>  .
+</pre>
+<p>
+That is the simplest thing you can say in Turtle: one fact, one subject-verb-object triple.
+Note it ends with a dot.
+</p>
+<ul>
+<li>The data is sets of <i>triples</i>, or sentences with just a subject,
+  a precdicate, and an object.  Like "I know bob".
+</li>
+<li> URIs like <tt>students.ttl#bob</tt> are used for the subjects, predicates and the objects.</li>
+</ul>
+<p>
+
+</p>
+  <p>
+    There is a shorthand <tt>a</tt> which you can use as a verb to give the class of a thing, to say what sort of thing it is.
+    Classes, like properties,  also have URIs.
+</p>
+    <pre>
+      &lt;profile.ttl#me>   a   &lt;http://xmlns.com/foaf/0.1/Person>  .
+    </pre>
+</p>
+<h3>Prefixes</h3>
+<p>Turtle uses URIs to identify people all the time, so it has a
+  way of abbrevating them.
+  You declare a prefix say at the top of the file, and then use <tt>foo:</tt> prefix with a colon:
+  <pre>
+@prefix foaf: &lt;http://xmlns.com/foaf/0.1/> .
+
+&lt;profile.ttl#me>   a   foaf:Person  .
+  </pre>
+<p>
+Tip: There are a ste of common prefixes for vocabularies we use a lot in @@@.
+</p>
+
+<p>When you use URIs in angle brackets, then they relative URIs, relative
+to the URI of the current document.  So if the document is, say,
+<tt>https://alice.example.com/public/profile.ttl</tt> then</p>
+
+<table>
+  <tr>
+    <td>&lt;#me></td>
+    <td>means</td>
+    <td>&lt;https://alice.example.com/public/profile.ttl#me></td>
+  </tr>
+  <tr>
+    <td>&lt;#myHome></td>
+    <td>means</td>
+    <td>&lt;https://alice.example.com/public/profile.ttl#myHome></td>
+  </tr>
+  <tr>
+    <td>&lt;students.ttl#bill></td>
+    <td>means</td>
+    <td>&lt;https://alice.example.com/public/students.ttl#bill></td>
+  </tr>
+</table>
+<p>
+  Things like <tt>&lt;#me></tt> and <tt>&lt;myhome></tt> are local identifiers
+  within the file you are creating. They are like <tt>const</tt> in a JS file
+  in a way, local identifiers. The business of the data document you are writing
+  is done in terms of those local identifiers.  Becasue local identifiers
+  are used quite a lot, it is useful to declare a prefix, the empty string
+  prefix <tt>:</tt>, so that they can be just written with a leading colon:
+</p>
+<pre>
+  @prefix : &lt;#>.  # The empty prefix means this document
+
+  :alice a :Person; :age 77 . # All local IDs
+</pre>
+<p>
+  In what follows we will often assume a file starts with
+</p>
+<pre>
+  @prefix : &lt;#>.
+</pre>
+<h3>Property trees</h3>
+
+<p>As a shorthand, when you have more than one fact about the same subject, you
+  can just use a semicolon <tt>";"</tt> to add more :
+
+  <pre>
+@prefix foaf: &lt;http://xmlns.com/foaf/0.1/> .
+
+&lt;profile.ttl#me>   a   foaf:Person ;
+          foaf:name "Alice";
+          foaf:knows  &lt;students.ttl#bob> .
+  </pre>
+<p>You can also, when have multiple objects with the same subject <i>and</i>
+   predicate, just list them with commas between them, so
+ </p>
+
+  <pre>
+&lt;profile.ttl#me> a foaf:Person ;
+                    foaf:knows  &lt;students.ttl#bob>,
+                                &lt;students.ttl#charlie>,
+                                &lt;students.ttl#david>;
+                    foaf:name "Alice".
+  </pre>
+<p>means the same as:</p>
+<pre>
+  # Means the same as above
+  &lt;profile.ttl#me> a           foaf:Person.
+  &lt;profile.ttl#me> foaf:knows  &lt;students.ttl#bob>.
+  &lt;profile.ttl#me> foaf:knows  &lt;students.ttl#charlie> .
+  &lt;profile.ttl#me> foaf:knows  &lt;students.ttl#david>.
+  &lt;profile.ttl#me> foaf:name   "Alice".
+</pre>
+<p>Periods are stronger than semicolons, which are stronger than commas, like in English.
+</p>
+<p>Turtle is a free form language: you can add or remove spaces and new lines
+   anywhere.  Comments start with a hash sign.
+</p>
+<h3>Data Values</h3>
+
+<p>Above we have shown the triples each expressing the ralationship between things: people
+  and classes. You can also put data values in the object position, like the strng "Alice" above.
+  In Turtle (and the RDF data model underneath) values are typed.
+</p>
+
+<table>
+  <tr>
+    <td>"Alice"</td>
+    <td>means the string Alice</td>
+  </tr>
+  <tr>
+    <td>"20"</td>
+    <td>means a string "20", not the number 20</td>
+  </tr>
+  <tr>
+    <td>20</td>
+    <td>means the integer (whole number) 20.</td>
+  </tr>
+  <tr>
+    <td>20.0</td>
+    <td>means a decimal number</td>
+  </tr>
+  <tr>
+    <td>2.0e1</td>
+    <td>means a (double precision) floating point number 2*10^1</td>
+  </tr>
+</table>
+<p>These data types cover a lot of values.
+  You can also explictly write something
+  with and explicit data type from the XML data types @@link standard, XSD.
+  To do that you write the data value as a string, then two carets
+  <tt>^^</tt> and then the XSD datatype itself.
+</p>
+
+<pre>
+  @prefix xsd: &lt;http://www.w3.org/2001/XMLShema#>.
+  &lt;profile.ttl#me>   a   foaf:Person ;
+                        foaf:name "Alice";
+                        foaf:age  21;
+                        foaf:height  1.76e0;
+                        foaf:bithDate @@@ "1990-03-31"^^xsd:date .
+</pre>
+
+<p>Its also worth mentioning that URIs are yor freind if you wat to
+  given email addresses or telephone numbers, as there are RI schemes for those.
+</p>
+
+<table>
+  <tr>
+  <td>&lt;tel:+1781-555-1212></td>
+  <td>How to do a phone number as a URI</td>
+</tr>
+<tr>
+<td>&lt;mailto:alice@example.com></td>
+<td>How to put in an email address.</td>
+</tr>
+</table>
+
+<p>Why give an explicit <tt>tel:</tt> URI or an explictly typed data field instead of
+  just a string?  Because it means that the systems which re-use the data
+  will be able to be smarter, to automatically pick the appropriate way of
+  displaying it or converting into an other format, and so on.
+  The tradition in linked data is stronger data typing, like Python or C rather than
+  JS.
+</p>
+
+<h2>Structure</h2>
+You can add structure to your data in Turtle using the square brackets <tt>[ ... ]</tt>,
+which can be read as "Something which has ...".   So instead of a flat set of properties like
+<pre>
+  :Alice :homeAddressStreet "Accaia Ave";
+         :homeAddressNumber 123;
+         :homeAddressCity "Anytown";
+         :homePhone &lt;tel:+1-781-555-1212> .
+</pre>
+<p>its best to add structure for the home and the address.</p>
+
+
+<pre>
+  :Alice :home [
+            :address [
+                :street "Accaia Ave";
+                :number 123;
+                :city "Anytown"
+            ]
+            :phone &lt;tel:+1-781-555-1212>
+         ] .
+</pre>
+<p>This reads in English like "Alice has a home which has an address with
+street "Aaccia Avenue", number 123 and city ANytown, and has a phone number of +1785551212."
+<p>
+<p>This sort of tree structure is very common: in JSON the nested things
+  are objects; in XML they are elements. In Turtle they are called blank nodes,
+  because they are not labelled with a URI.  There is another way of
+  writing them in Turtle, where you make up local ids for them like <tt>_:foo</tt>
+  to keep track of them but <b>these are not URIs</b>. The <tt>_:</tt>
+    is a special one for blank nodes.
+</p>
+<pre>
+:Alice :home _:a .
+          _:a address _:b .
+          _:b   street "Accaia Ave";
+                number 123;
+                city "Anytown" .
+          _a :phone &lt;tel:+1-781-555-1212> .
+</pre>
+<p>
+The square bracket syntax is obviously clearer.  You can use it in place of object or subject.
+</p>
+
+<h3>Lists</h3>
+In turtle, ordered arrays of things are given with <b>round</b> brackets.
+They are called collections or lists, and are like LISP lists, or
+JS or Python arrays.
+<pre>
+<#alice>  foaf:children  ( &lt;#bob> &lt;#charlie>  &lt;#dave>  )  .
+</pre>
+<p>Imagine we store user input as a string, but separately generate the list of words.
+</p>
+<pre>
+<#userInput>  ex:line   "turn on light";
+              ex:inWords ("turn" "on" "light") .
+</pre>
+<h3>Conclusion
+</h3>
+<p>That's it.  That's all there is to turtle.  You now know it.
+  It is good to get used to reading bits of turtle
+  as though it was English.  Yu can now use it in code snippits in chats
+  and in code for things like forms, configuration parameters, and so on.
+  <p>
+<hr>
+<div style="background-color: #ffe">
+  <h3>Extensions in rdflib</h3>
+<p>There a few things which you should not use in data shared
+  generally, but are shortcts for test data and quick scripts.
+  rdflib.js will understand these sytatax but never generate them
+</p>
+<h4>Naked Dates</h4>
+<table>
+  <tr>
+    <td><pre>
+      :Alice foaf:birthdate 2018-02-31 .
+    </pre>
+  </td>
+  <td>A raw ISO format date can be put in without explicit type</td>
+  </tr>
+  <tr>
+    <td><pre>
+      :x4 :lastModifiedTime  2018-02-31T08:24:00.0Z .
+    </pre>
+  </td>
+  <td>A raw ISO format date-time can be put in without explicit type</td>
+  </tr>
+</table>
+<h4>Reverse properties</h4>
+
+<p>A good philosphy is that when there two relations which are inverse of
+  each other, like <tt>parent</tt> and <tt>child</tt>, that we just use one,
+  say  <tt>child</tt>, in the data, like
+</p>
+<pre>
+  :grampa fam:child  :alice, :bob.
+  :gramma fam:child  :alice, :bob.
+  :alice  fam:child  :charlie, :davie, :ellie .
+</pre>
+<p>This makes the graph of relationships easier to query.
+  In this example, you can infact express all the information about Alice at once:
+</p>
+<pre>
+  :alice  is fam:child of :grampa, :gramma;
+          fam:child :charlie, :davie, :ellie .
+</pre>
+<p>The <tt>is</tt> ... <tt>of</tt> syntax was in the original N3 language
+  which Turtle was derived from but unfortunately left out of the turtle standard.
+</p>
+<h4>Local document prefix</h4>
+<p>It is handy to define the empty string prefix <tt>:</tt>
+  as being for the local document, so it can be used for local identifiers.
+</p>
+<pre>
+@prefix : &lt;#>.
+</pre>
+<p>This is in fact assumed by default by rdflib.js
+  so you can miss it out.
+</p>
+
+<pre>
+  :this a :Example; :age 123.
+</pre>
+  <p>is a fine test file.</p>
+</div>
+</body>
+</html>
