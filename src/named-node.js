@@ -42,7 +42,7 @@ class NamedNode extends Node {
      var p = str.slice(0, -1).lastIndexOf('/')
      var q = str.indexOf('//')
      if ((q >= 0 && p < q + 2) || p < 0) return null
-     return new NamedNode(str.slice(0, p + 1))
+     return Node.namedNodeByIRI(str.slice(0, p + 1))
    }
    /**
     * Returns an NN for the whole web site, ending in slash.
@@ -54,15 +54,20 @@ class NamedNode extends Node {
      if (p < 0) throw new Error('This URI does not have a web site part (origin)')
      var q = str.indexOf('/', p+2)
      if (q < 0) throw new Error('This URI does not have a web site part. (origin)')
-     return new NamedNode(str.slice(0, q + 1))
+     return Node.namedNodeByIRI(str.slice(0, q + 1))
    }
   doc () {
     if (this.uri.indexOf('#') < 0) {
       return this
     } else {
-      return new NamedNode(this.uri.split('#')[0])
+      return Node.namedNodeByIRI(this.uri.split('#')[0])
     }
   }
+
+  hashString () {
+    return this.sI
+  }
+
   toString () {
     return '<' + this.uri + '>'
   }
@@ -77,14 +82,7 @@ class NamedNode extends Node {
     this.value = uri
   }
   static fromValue (value) {
-    if (typeof value === 'undefined' || value === null) {
-      return value
-    }
-    const isNode = value && value.termType
-    if (isNode) {
-      return value
-    }
-    return new NamedNode(value)
+    return Node.namedNodeByIRI(value)
   }
 }
 NamedNode.termType = 'NamedNode'

@@ -1,16 +1,15 @@
 'use strict'
-const BlankNode = require('./blank-node')
 const Collection = require('./collection')
 const DefaultGraph = require('./default-graph')
 const Fetcher = require('./fetcher')
 const IndexedFormula = require('./store')
 const Literal = require('./literal')
-const NamedNode = require('./named-node')
+const Node = require('./node')
 const Statement = require('./statement')
 const Variable = require('./variable')
 
 function blankNode (value) {
-  return new BlankNode(value)
+  return Node.blankNodeByID(value)
 }
 function collection (elements) {
   return new Collection(elements)
@@ -39,7 +38,7 @@ function literal (value, languageOrDatatype) {
   }
 }
 function namedNode (value) {
-  return new NamedNode(value)
+  return Node.namedNodeByIRI(value)
 }
 function quad (subject, predicate, object, graph) {
   graph = graph || new DefaultGraph()

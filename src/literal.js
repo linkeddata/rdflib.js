@@ -29,7 +29,7 @@ class Literal extends Node {
       (this.value === other.value) &&
       (this.language === other.language) &&
       ((!this.datatype && !other.datatype) ||
-        (this.datatype && this.datatype.equals(other.datatype)))
+        (this.datatype && this.datatype === other.datatype))
   }
   get language () {
     return this.lang
@@ -52,7 +52,7 @@ class Literal extends Node {
 
     if (this.language) {
       str += '@' + this.language
-    } else if (!this.datatype.equals(XSD.string)) {
+    } else if (this.datatype !== XSD.string) {
       // Only add datatype if it's not a string
       str += '^^' + this.datatype.toCanonical()
     }

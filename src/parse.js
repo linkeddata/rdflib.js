@@ -1,11 +1,10 @@
 module.exports = parse
 
-const BlankNode = require('./blank-node')
 const jsonld = require('jsonld')
 const Literal = require('./literal')
 const N3 = require('n3')  // @@ Goal: remove this dependency
 const N3Parser = require('./n3parser')
-const NamedNode = require('./named-node')
+const Node = require('./node')
 const parseRDFaDOM = require('./rdfaparser').parseRDFaDOM
 const RDFParser = require('./rdfxmlparser')
 const sparqlUpdateParser = require('./patch-parser')
@@ -147,13 +146,13 @@ function parse (str, kb, base, contentType, callback) {
     if (N3.Util.isLiteral(termString)) {
       value = N3.Util.getLiteralValue(termString)
       var language = N3.Util.getLiteralLanguage(termString)
-      var datatype = new NamedNode(N3.Util.getLiteralType(termString))
+      var datatype = Node.namedNodeByIRI(N3.Util.getLiteralType(termString))
       return new Literal(value, language, datatype)
     } else if (N3.Util.isIRI(termString)) {
-      return new NamedNode(termString)
+      return Node.namedNodeByIRI(termString)
     } else if (N3.Util.isBlank(termString)) {
       value = termString.substring(2, termString.length)
-      return new BlankNode(value)
+      return Node.blankNodeByID(value)
     } else {
       return null
     }

@@ -48,6 +48,10 @@ class BlankNode extends Node {
     return bnodeNew
   }
 
+  hashString () {
+    return this.sI
+  }
+
   toCanonical () {
     return '_:' + this.value
   }
