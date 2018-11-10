@@ -42,6 +42,26 @@ installed.
 npm install --save rdflib
 ```
 
+#### Webpack web applications
+
+This library has some transitive dependencies to other libraries that are primarily designed for Nodejs servers.
+Some of these are not needed because the functionality they provide are already provided by the web browser,
+while others will and are by design not supposed to work at all.
+
+When using this library in a webpacked web application,
+those dependencies must be "externalized" by using the
+[`externals` section in the Webpack config](https://webpack.js.org/configuration/externals/):
+
+```javascript
+externals: {
+  'node-fetch': 'fetch',
+  'text-encoding': 'TextEncoder',
+  'whatwg-url': 'window',
+  'isomorphic-fetch': 'fetch',
+  '@trust/webcrypto': 'crypto'
+},
+```
+
 ## Contribute
 
 #### Subdirectories
