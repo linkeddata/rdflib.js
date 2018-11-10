@@ -30,10 +30,10 @@ const log = require('./log')
 const N3Parser = require('./n3parser')
 const NamedNode = require('./named-node')
 const Namespace = require('./namespace')
-const Node = require('./node')
 const rdfParse = require('./parse')
 const parseRDFaDOM = require('./rdfaparser').parseRDFaDOM
 const RDFParser = require('./rdfxmlparser')
+const Term = require('./term')
 const Uri = require('./uri')
 const Util = require('./util')
 const serialize = require('./serialize')
@@ -1067,7 +1067,7 @@ class Fetcher {
    */
   putBack (uri, options = {}) {
     uri = uri.uri || uri // Accept object or string
-    let doc = Node.namedNodeByIRI(uri).doc() // strip off #
+    let doc = Term.namedNodeByIRI(uri).doc() // strip off #
     options.contentType = options.contentType || 'text/turtle'
     options.data = serialize(doc, this.store, doc.uri, options.contentType)
     return this.webOperation('PUT', uri, options)

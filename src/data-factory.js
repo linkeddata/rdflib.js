@@ -3,12 +3,12 @@ const Collection = require('./collection')
 const DefaultGraph = require('./default-graph')
 const Fetcher = require('./fetcher')
 const IndexedFormula = require('./store')
-const Node = require('./node')
 const Statement = require('./statement')
+const Term = require('./term')
 const Variable = require('./variable')
 
 function blankNode (value) {
-  return Node.blankNodeByID(value)
+  return Term.blankNodeByID(value)
 }
 function collection (elements) {
   return new Collection(elements)
@@ -23,21 +23,21 @@ function graph () {
   return new IndexedFormula()
 }
 function lit (val, lang, dt) {
-  return Node.literalByValue('' + val, lang, dt)
+  return Term.literalByValue('' + val, lang, dt)
 }
 function literal (value, languageOrDatatype) {
   if (typeof languageOrDatatype === 'string') {
     if (languageOrDatatype.indexOf(':') === -1) {
-      return Node.literalByValue(value, languageOrDatatype)
+      return Term.literalByValue(value, languageOrDatatype)
     } else {
-      return Node.literalByValue(value, null, namedNode(languageOrDatatype))
+      return Term.literalByValue(value, null, namedNode(languageOrDatatype))
     }
   } else {
-    return Node.literalByValue(value, null, languageOrDatatype)
+    return Term.literalByValue(value, null, languageOrDatatype)
   }
 }
 function namedNode (value) {
-  return Node.namedNodeByIRI(value)
+  return Term.namedNodeByIRI(value)
 }
 function quad (subject, predicate, object, graph) {
   graph = graph || new DefaultGraph()

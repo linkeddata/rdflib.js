@@ -26,6 +26,7 @@ var $rdf = {
   sparqlUpdateParser: require('./patch-parser'),
   Statement: require('./statement'),
   term: require('./node').fromValue,
+  Term: require('./term'),
   UpdateManager: require('./update-manager'),
   UpdatesSocket: require('./updates-via').UpdatesSocket,
   UpdatesVia: require('./updates-via').UpdatesVia,

@@ -7,6 +7,7 @@ const NamedNode = require('./named-node')
 const Node = require('./node')
 const Serializer = require('./serialize')
 const Statement = require('./statement')
+const Term = require('./term')
 const Variable = require('./variable')
 
 /** @module formula */
@@ -43,7 +44,7 @@ class Formula extends Node {
     return this.statements.push(st)
   }
   bnode (id) {
-    return Node.blankNodeByID(id)
+    return Term.blankNodeByID(id)
   }
 
   addAll (statements) {
@@ -438,7 +439,7 @@ class Formula extends Node {
         str = str.replace(/\\\\/g, '\\')
         return this.literal(str, lang, dt)
       case '_':
-        return Node.blankNodeByID(str.slice(2))
+        return Term.blankNodeByID(str.slice(2))
       case '?':
         return new Variable(str.slice(1))
     }
@@ -479,7 +480,7 @@ class Formula extends Node {
     return collection
   }
   literal (val, lang, dt) {
-    return Node.literalByValue('' + val, lang, dt)
+    return Term.literalByValue('' + val, lang, dt)
   }
   /**
    * transform a collection of NTriple URIs into their URI strings
@@ -540,7 +541,7 @@ class Formula extends Node {
     if (name) {
       throw new Error('This feature (kb.sym with 2 args) is removed. Do not assume prefix mappings.')
     }
-    return Node.namedNodeByIRI(uri)
+    return Term.namedNodeByIRI(uri)
   }
   the (s, p, o, g) {
     var x = this.any(s, p, o, g)

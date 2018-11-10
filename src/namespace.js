@@ -1,14 +1,12 @@
-const NamedNode = require('./named-node')
-const Node = require('./node');
+const Term = require('./term');
 
 function Namespace (nsuri) {
-  return function (ln) {
-    const fullIRI = nsuri + ln
-    if (Node.nsMap[fullIRI] !== undefined) {
-      return Node.nsMap[fullIRI]
-    }
+  Term.namedNodeByIRI(nsuri)
 
-    return Node.addNN(new NamedNode(nsuri + (ln || '')), ln)
+  return function (ln) {
+    const fullIRI = nsuri + (ln || '')
+
+    return Term.namedNodeByIRI(fullIRI, ln)
   }
 }
 

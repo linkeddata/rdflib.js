@@ -5,7 +5,7 @@
 ** This is or was https://github.com/linkeddata/rdflib.js/blob/master/src/serializer.js
 ** Licence: MIT
 */
-const Node = require('./node')
+const Term = require('./term')
 const Uri = require('./uri')
 const Util = require('./util')
 const XSD = require('./xsd')
@@ -215,7 +215,7 @@ var Serializer = (function () {
       var list = x.elements
       var rest = kb.sym(rdfns + 'nill')
       for (var i = list.length - 1; i >= 0; i--) {
-        var bnode = Node.blankNodeByID()
+        var bnode = Term.blankNodeByID()
         str += termToNT(bnode) + ' ' + termToNT(kb.sym(rdfns + 'first')) + ' ' + termToNT(list[i]) + '.\n'
         str += termToNT(bnode) + ' ' + termToNT(kb.sym(rdfns + 'rest')) + ' ' + termToNT(rest) + '.\n'
         rest = bnode
@@ -479,7 +479,7 @@ var Serializer = (function () {
         var str = this.stringToN3(expr.value)
         if (expr.language) {
           str += '@' + expr.language
-        } else if (!expr.datatype.equals(XSD.string)) {
+        } else if (expr.datatype !== XSD.string) {
           str += '^^' + this.atomicTermToN3(expr.datatype, stats)
         }
         return str
@@ -803,7 +803,7 @@ var Serializer = (function () {
           if (number === intNumber.toString()) {
             // was numeric; don't need to worry about ordering since we've already
             // sorted the statements
-            pred = Node.namedNodeByIRI('http://www.w3.org/1999/02/22-rdf-syntax-ns#li')
+            pred = Term.namedNodeByIRI('http://www.w3.org/1999/02/22-rdf-syntax-ns#li')
           }
         }
 
@@ -825,7 +825,7 @@ var Serializer = (function () {
             break
           case 'Literal':
             results = results.concat(['<' + t +
-            (st.object.datatype.equals(XSD.string)
+            (st.object.datatype === XSD.string
               ? ''
               : ' rdf:datatype="' + escapeForXML(st.object.datatype.uri) + '"') +
             (st.object.language ? ' xml:lang="' + st.object.language + '"' : '') +
@@ -891,7 +891,7 @@ var Serializer = (function () {
             break
           case 'Literal':
             results = results.concat(['<' + qname(st.predicate) +
-              (st.object.datatype.equals(XSD.string) ? '' : ' rdf:datatype="' + escapeForXML(st.object.datatype.value) + '"') +
+              (st.object.datatype === XSD.string ? '' : ' rdf:datatype="' + escapeForXML(st.object.datatype.value) + '"') +
               (st.object.language ? ' xml:lang="' + st.object.language + '"' : '') +
               '>' + escapeForXML(st.object.value) +
               '</' + qname(st.predicate) + '>'])

@@ -1,10 +1,10 @@
 'use strict'
 const ClassOrder = require('./class-order')
 const NamedNode = require('./named-node')
-const Node = require('./node')
+const Term = require('./term')
 const XSD = require('./xsd')
 
-class Literal extends Node {
+class Literal extends Term {
   constructor (value, language, datatype) {
     super()
     this.termType = Literal.termType
@@ -19,17 +19,7 @@ class Literal extends Node {
     }
   }
   copy () {
-    return Node.literalByValue(this.value, this.lang, this.datatype)
-  }
-  equals (other) {
-    if (!other) {
-      return false
-    }
-    return (this.termType === other.termType) &&
-      (this.value === other.value) &&
-      (this.language === other.language) &&
-      ((!this.datatype && !other.datatype) ||
-        (this.datatype && this.datatype === other.datatype))
+    return Term.literalByValue(this.value, this.lang, this.datatype)
   }
   get language () {
     return this.lang
@@ -58,9 +48,6 @@ class Literal extends Node {
     }
     return str
   }
-  toString () {
-    return '' + this.value
-  }
   /**
    * @method fromBoolean
    * @static
@@ -69,8 +56,7 @@ class Literal extends Node {
    */
   static fromBoolean (value) {
     let strValue = value ? '1' : '0'
-    return Node.literalByValue(strValue, null, XSD.boolean) ||
-      Node.addLit(Node.literalByValue(strValue, null, XSD.boolean))
+    return Term.literalByValue(strValue, null, XSD.boolean)
   }
   /**
    * @method fromDate
@@ -88,8 +74,7 @@ class Literal extends Node {
     let date = '' + value.getUTCFullYear() + '-' + d2(value.getUTCMonth() + 1) +
       '-' + d2(value.getUTCDate()) + 'T' + d2(value.getUTCHours()) + ':' +
       d2(value.getUTCMinutes()) + ':' + d2(value.getUTCSeconds()) + 'Z'
-    return Node.literalByValue(date, null, XSD.dateTime) ||
-      Node.addLit(Node.literalByValue(date, null, XSD.dateTime))
+    return Term.literalByValue(date, null, XSD.dateTime)
   }
   /**
    * @method fromNumber
@@ -108,8 +93,7 @@ class Literal extends Node {
     } else {
       datatype = XSD.double
     }
-    return Node.literalByValue(strValue, null, datatype) ||
-      Node.addLit(Node.literalByValue(strValue, null, datatype))
+    return Term.literalByValue(strValue, null, datatype)
   }
   /**
    * @method fromValue
@@ -133,7 +117,7 @@ class Literal extends Node {
       case 'number':
         return Literal.fromNumber(value)
       case 'string':
-        return Node.literalByValue(value, null, XSD.string)
+        return Term.literalByValue(value, null, XSD.string)
     }
     throw new Error("Can't make literal from " + value + ' of type ' +
       typeof value)

@@ -1,8 +1,8 @@
 'use strict'
 const ClassOrder = require('./class-order')
-const Node = require('./node')
+const Term = require('./term')
 
-class BlankNode extends Node {
+class BlankNode extends Term {
   constructor (id) {
     super()
     this.termType = BlankNode.termType
@@ -48,15 +48,11 @@ class BlankNode extends Node {
     return bnodeNew
   }
 
-  hashString () {
-    return this.sI
-  }
-
   toCanonical () {
     return '_:' + this.value
   }
 
-  toString () {
+  generateString () {
     return BlankNode.NTAnonymousNodePrefix + this.id
   }
 }
