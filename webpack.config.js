@@ -1,5 +1,5 @@
 const path = require('path')
-const MinifyPlugin = require('babel-minify-webpack-plugin')
+//const MinifyPlugin = require('babel-minify-webpack-plugin')
 const WrapperPlugin = require('wrapper-webpack-plugin');
 
 module.exports = (env, args) => {
@@ -31,9 +31,9 @@ module.exports = (env, args) => {
       })
     ],
     optimization: {
-      minimizer: [
-        new MinifyPlugin({ deadcode: false }),
-      ]
+      //minimizer: [
+      //  new MinifyPlugin({ deadcode: false }),
+      //]
     },
     externals: {
       'fs': 'null',
