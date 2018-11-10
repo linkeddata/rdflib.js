@@ -1,7 +1,7 @@
 /* eslint-env mocha */
 import { expect } from 'chai'
 
-import IndexedFormula from '../../src/indexed-formula'
+import IndexedFormula from '../../src/store'
 import NamedNode from '../../src/named-node'
 import { triple } from '../../src/data-factory'
 

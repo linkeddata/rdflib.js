@@ -1,4 +1,4 @@
-/**  Identity management and indexing for RDF
+/*  Identity management and indexing for RDF
  *
  * This file provides  IndexedFormula a formula (set of triples) which
  * indexed by predicate, subject and object.
@@ -14,6 +14,8 @@
  *
 */
 
+/** @module store */
+
 const ArrayIndexOf = require('./util').ArrayIndexOf
 const Formula = require('./formula')
 // const log = require('./log')
@@ -22,13 +24,13 @@ const Statement = require('./statement')
 const Node = require('./node')
 const Variable = require('./variable')
 
-const owl_ns = 'http://www.w3.org/2002/07/owl#'
+const owlNamespaceURI = 'http://www.w3.org/2002/07/owl#'
 
 const defaultGraphURI = 'chrome:theSession'
 // var link_ns = 'http://www.w3.org/2007/ont/link#'
 
 // Handle Functional Property
-function handle_FP (formula, subj, pred, obj) {
+function handleFP (formula, subj, pred, obj) {
   var o1 = formula.any(subj, pred, undefined)
   if (!o1) {
     return false // First time with this value
@@ -36,10 +38,10 @@ function handle_FP (formula, subj, pred, obj) {
   // log.warn("Equating "+o1.uri+" and "+obj.uri + " because FP "+pred.uri);  //@@
   formula.equate(o1, obj)
   return true
-} // handle_FP
+} // handleFP
 
 // Handle Inverse Functional Property
-function handle_IFP (formula, subj, pred, obj) {
+function handleIFP (formula, subj, pred, obj) {
   var s1 = formula.any(undefined, pred, obj)
   if (!s1) {
     return false // First time with this value
@@ -47,7 +49,7 @@ function handle_IFP (formula, subj, pred, obj) {
   // log.warn("Equating "+s1.uri+" and "+subj.uri + " because IFP "+pred.uri);  //@@
   formula.equate(s1, subj)
   return true
-} // handle_IFP
+} // handleIFP
 
 function handleRDFType (formula, subj, pred, obj, why) {
   if (formula.typeCallback) {
@@ -64,7 +66,7 @@ function handleRDFType (formula, subj, pred, obj, why) {
   return done // statement given is not needed if true
 }
 /**
- * IndexedFormula
+ * Indexed Formula aka Store
  */
 class IndexedFormula extends Formula { // IN future - allow pass array of statements to constructor
   /**
@@ -74,8 +76,6 @@ class IndexedFormula extends Formula { // IN future - allow pass array of statem
    */
   constructor (features) {
     super()
-    // this.statements = [] // As in Formula NO don't overwrite inherited
-    // this.optional = []
 
     this.propertyActions = [] // Array of functions to call when getting statement with {s X o}
     // maps <uri> to [f(F,s,p,o),...]
@@ -102,18 +102,16 @@ class IndexedFormula extends Formula { // IN future - allow pass array of statem
     this.initPropertyActions(this.features)
   }
 
-  static get defaultGraphURI() {
-   return defaultGraphURI;
+  static get defaultGraphURI () {
+    return defaultGraphURI
   }
 
   substitute (bindings) {
     var statementsCopy = this.statements.map(function (ea) {
       return ea.substitute(bindings)
     })
-    // console.log('IndexedFormula subs statemnts:' + statementsCopy)
     var y = new IndexedFormula()
     y.add(statementsCopy)
-    // console.log('indexed-form subs formula:' + y)
     return y
   }
 
@@ -229,17 +227,17 @@ class IndexedFormula extends Formula { // IN future - allow pass array of statem
       ] // sameAs -> equate & don't add to index
     }
     if (ArrayIndexOf(features, 'InverseFunctionalProperty') >= 0) {
-      this.classActions['<' + owl_ns + 'InverseFunctionalProperty>'] = [
+      this.classActions['<' + owlNamespaceURI + 'InverseFunctionalProperty>'] = [
         function (formula, subj, pred, obj, addFn) {
           // yes subj not pred!
-          return formula.newPropertyAction(subj, handle_IFP)
+          return formula.newPropertyAction(subj, handleIFP)
         }
-      ] // IFP -> handle_IFP, do add to index
+      ] // IFP -> handleIFP, do add to index
     }
     if (ArrayIndexOf(features, 'FunctionalProperty') >= 0) {
-      this.classActions['<' + owl_ns + 'FunctionalProperty>'] = [
+      this.classActions['<' + owlNamespaceURI + 'FunctionalProperty>'] = [
         function (formula, subj, proj, obj, addFn) {
-          return formula.newPropertyAction(subj, handle_FP)
+          return formula.newPropertyAction(subj, handleFP)
         }
       ] // FP => handleFP, do add to index
     }
@@ -314,38 +312,6 @@ class IndexedFormula extends Formula { // IN future - allow pass array of statem
     // log.debug("ADDING    {"+subj+" "+pred+" "+obj+"} "+why)
     this.statements.push(st)
     return st
-  }
-
-  addAll (statements) {
-    statements.forEach(quad => {
-      this.add(quad.subject, quad.predicate, quad.object, quad.graph)
-    })
-  }
-  any (s, p, o, g) {
-    var st = this.anyStatementMatching(s, p, o, g)
-    if (st == null) {
-      return void 0
-    } else if (s == null) {
-      return st.subject
-    } else if (p == null) {
-      return st.predicate
-    } else if (o == null) {
-      return st.object
-    }
-    return void 0
-  }
-
-  anyValue (s, p, o, g) {
-    var y = this.any(s, p, o, g)
-    return y ? y.value : void 0
-  }
-
-  anyStatementMatching (subj, pred, obj, why) {
-    var x = this.statementsMatching(subj, pred, obj, why, true)
-    if (!x || x.length === 0) {
-      return undefined
-    }
-    return x[0]
   }
 
   /**
@@ -480,7 +446,7 @@ class IndexedFormula extends Formula { // IN future - allow pass array of statem
    *    var kb = rdf.graph()
    *    kb.length  // -> 0
    *    ```
-   * @return {Number}
+   * @returns {Number}
    */
   get length () {
     return this.statements.length
@@ -739,9 +705,15 @@ class IndexedFormula extends Formula { // IN future - allow pass array of statem
     this.namespaces[prefix] = nsuri
   }
 
-  /**
-   * Return statements matching a pattern
+  /** Search the Store
+   *
    * ALL CONVENIENCE LOOKUP FUNCTIONS RELY ON THIS!
+   * @param {Node} subject - A node to search for as subject, or if null, a wildcard
+   * @param {Node} predicate - A node to search for as predicate, or if null, a wildcard
+   * @param {Node} object - A node to search for as object, or if null, a wildcard
+   * @param {Node} graph - A node to search for as graph, or if null, a wildcard
+   * @param {Boolean} justOne - flag - stop when found one rather than get all of them?
+   * @returns {Array<Node>} - An array of nodes which match the wildcard position
    */
   statementsMatching (subj, pred, obj, why, justOne) {
     // log.debug("Matching {"+subj+" "+pred+" "+obj+"}")
@@ -779,7 +751,7 @@ class IndexedFormula extends Formula { // IN future - allow pass array of statem
     // We hope that the scale-free nature of the data will mean we tend to get
     // a short index in there somewhere!
     var best = 1e10 // really bad
-    var best_i
+    var iBest
     var i
     for (i = 0; i < given.length; i++) {
       p = given[i] // Which part we are dealing with
@@ -789,13 +761,13 @@ class IndexedFormula extends Formula { // IN future - allow pass array of statem
       }
       if (list.length < best) {
         best = list.length
-        best_i = i // (not p!)
+        iBest = i // (not p!)
       }
     }
     // Ok, we have picked the shortest index but now we have to filter it
-    var best_p = given[best_i]
-    var possibles = this.index[best_p][hash[best_p]]
-    var check = given.slice(0, best_i).concat(given.slice(best_i + 1)) // remove best_i
+    var pBest = given[iBest]
+    var possibles = this.index[pBest][hash[pBest]]
+    var check = given.slice(0, iBest).concat(given.slice(iBest + 1)) // remove iBest
     var results = []
     var parts = [ 'subject', 'predicate', 'object', 'why' ]
     for (var j = 0; j < possibles.length; j++) {

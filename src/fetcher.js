@@ -25,7 +25,7 @@
  * To do:
  * Firing up a mail client for mid:  (message:) URLs
  */
-const IndexedFormula = require('./indexed-formula')
+const IndexedFormula = require('./store')
 const log = require('./log')
 const N3Parser = require('./n3parser')
 const NamedNode = require('./named-node')
@@ -384,11 +384,8 @@ class N3Handler extends Handler {
   }
 
   parse (fetcher, responseText, options, response) {
-    // Parse the text of this non-XML file
+    // Parse the text of this N3 file
     let kb = fetcher.store
-    // console.log('web.js: Parsing as N3 ' + xhr.resource.uri + ' base: ' +
-    // xhr.original.uri) // @@@@ comment me out
-    // fetcher.addStatus(xhr.req, "N3 not parsed yet...")
     let p = N3Parser(kb, kb, options.original.uri, options.original.uri,
       null, null, '', null)
     //                p.loadBuf(xhr.responseText)
@@ -396,14 +393,12 @@ class N3Handler extends Handler {
       p.loadBuf(responseText)
     } catch (err) {
       let msg = 'Error trying to parse ' + options.resource +
-        ' as Notation3:\n' + err + ':\n' + err.stack
-      // dump(msg+"\n")
+        ' as Notation3:\n' + err  // not err.stack -- irrelevant
       return fetcher.failFetch(options, msg, 'parse_error', response)
     }
 
     fetcher.addStatus(options.req, 'N3 parsed: ' + p.statementCount + ' triples in ' + p.lines + ' lines.')
     fetcher.store.add(options.original, ns.rdf('type'), ns.link('RDFDocument'), fetcher.appNode)
-    // var args = [xhr.original.uri] // Other args needed ever?
 
     return fetcher.doneFetch(options, this.response)
   }

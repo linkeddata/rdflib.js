@@ -63,6 +63,18 @@ function parse (str, kb, base, contentType, callback) {
     executeErrorCallback(e)
   }
 
+  parse.handled = {
+    'text/n3': true,
+    'text/turtle': true,
+    'application/rdf+xml': true,
+    'application/xhtml+xml': true,
+    'text/html': true,
+    'application/sparql-update': true,
+    'application/ld+json': true,
+    'application/nquads' : true,
+    'application/n-quads' : true
+  }
+
   function executeCallback () {
     if (callback) {
       callback(null, kb)

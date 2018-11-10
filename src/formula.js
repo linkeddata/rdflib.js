@@ -10,7 +10,16 @@ const Serializer = require('./serialize')
 const Statement = require('./statement')
 const Variable = require('./variable')
 
+/** @module formula */
+
 class Formula extends Node {
+  /**
+  * @constructor
+  * @param statements - Initial array of statements
+  * @param constraints - initial array of constraints
+  * @param initBindings - initial bindings used in Query
+  * @param optional - optional
+  */
   constructor (statements, constraints, initBindings, optional) {
     super()
     this.termType = Formula.termType
@@ -19,14 +28,89 @@ class Formula extends Node {
     this.initBindings = initBindings || []
     this.optional = optional || []
   }
-  add (s, p, o, g) {
-    return this.statements.push(new Statement(s, p, o, g))
+  /** Add a statement from its parts
+  * @param {Node} subject - the first part of the statemnt
+  * @param {Node} predicate - the second part of the statemnt
+  * @param {Node} obbject - the third part of the statemnt
+  * @param {Node} graph - the last part of the statemnt
+  */
+  add (subject, predicate, object, graph) {
+    return this.statements.push(new Statement(subject, predicate, object, graph))
   }
+  /** Add a statment object
+  * @param {Statement} statement - an existing constructed statement to add
+  */
   addStatement (st) {
     return this.statements.push(st)
   }
   bnode (id) {
     return new BlankNode(id)
+  }
+
+  addAll (statements) {
+    statements.forEach(quad => {
+      this.add(quad.subject, quad.predicate, quad.object, quad.graph)
+    })
+  }
+
+  /** Follow link from one node, using one wildcard, looking for one
+  *
+  * For example, any(me, knows, null, profile)  - a person I know accoring to my profile .
+  * any(me, knows, null, null)  - a person I know accoring to anything in store .
+  * any(null, knows, me, null)  - a person who know me accoring to anything in store .
+  *
+  * @param {Node} subject - A node to search for as subject, or if null, a wildcard
+  * @param {Node} predicate - A node to search for as predicate, or if null, a wildcard
+  * @param {Node} object - A node to search for as object, or if null, a wildcard
+  * @param {Node} graph - A node to search for as graph, or if null, a wildcard
+  * @returns {Node} - A node which match the wildcard position, or null
+  */
+  any (s, p, o, g) {
+    var st = this.anyStatementMatching(s, p, o, g)
+    if (st == null) {
+      return void 0
+    } else if (s == null) {
+      return st.subject
+    } else if (p == null) {
+      return st.predicate
+    } else if (o == null) {
+      return st.object
+    }
+    return void 0
+  }
+
+  anyValue (s, p, o, g) {
+    var y = this.any(s, p, o, g)
+    return y ? y.value : void 0
+  }
+
+  anyStatementMatching (subj, pred, obj, why) {
+    var x = this.statementsMatching(subj, pred, obj, why, true)
+    if (!x || x.length === 0) {
+      return undefined
+    }
+    return x[0]
+  }
+
+  /** Search the Store
+   *
+   * This is really a teaching method as to do this properly you would use IndexedFormula
+   *
+   * @param {Node} subject - A node to search for as subject, or if null, a wildcard
+   * @param {Node} predicate - A node to search for as predicate, or if null, a wildcard
+   * @param {Node} object - A node to search for as object, or if null, a wildcard
+   * @param {Node} graph - A node to search for as graph, or if null, a wildcard
+   * @param {Boolean} justOne - flag - stop when found one rather than get all of them?
+   * @returns {Array<Node>} - An array of nodes which match the wildcard position
+   */
+  statementsMatching (subj, pred, obj, why, justOne) {
+    let found = this.statements.filter(st =>
+      (!subj || subj.sameTerm(st.subject)) &&
+      (!pred || pred.sameTerm(st.predicate)) &&
+      (!obj || subj.sameTerm(st.object)) &&
+      (!why || why.sameTerm(st.subject))
+     )
+    return found
   }
   /**
    * Finds the types in the list which have no *stored* subtypes
@@ -68,6 +152,19 @@ class Formula extends Node {
   collection () {
     return new Collection()
   }
+
+  /** Follow links from one node, using one wildcard
+  *
+  * For example, each(me, knows, null, profile)  - people I know accoring to my profile .
+  * each(me, knows, null, null)  - people I know accoring to anything in store .
+  * each(null, knows, me, null)  - people who know me accoring to anything in store .
+  *
+  * @param {Node} subject - A node to search for as subject, or if null, a wildcard
+  * @param {Node} predicate - A node to search for as predicate, or if null, a wildcard
+  * @param {Node} object - A node to search for as object, or if null, a wildcard
+  * @param {Node} graph - A node to search for as graph, or if null, a wildcard
+  * @returns {Array<Node>} - An array of nodes which match the wildcard position
+  */
   each (s, p, o, g) {
     var elt, i, l, m, q
     var len, len1, len2, len3
@@ -319,7 +416,7 @@ class Formula extends Node {
    * This will only parse the strings generated by the vaious toNT() methods.
    */
   fromNT (str) {
-    var dt, k, lang, x
+    var dt, k, lang
     switch (str[0]) {
       case '<':
         return this.sym(str.slice(1, -1))

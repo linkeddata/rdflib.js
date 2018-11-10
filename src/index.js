@@ -6,7 +6,7 @@ var $rdf = {
   Empty: require('./empty'),
   Fetcher: require('./fetcher'),
   Formula: require('./formula'),
-  IndexedFormula: require('./indexed-formula'),
+  Store: require('./store'),
   jsonParser: require('./jsonparser'),
   Literal: require('./literal'),
   log: require('./log'),
@@ -32,6 +32,8 @@ var $rdf = {
   Util: require('./util'),
   Variable: require('./variable')
 }
+
+$rdf.IndexedFormula = $rdf.Store // Alias
 
 $rdf.NextId = $rdf.BlankNode.nextId
 
