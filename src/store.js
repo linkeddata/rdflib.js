@@ -65,8 +65,8 @@ function handleRDFType (formula, subj, pred, obj, why) {
   }
   return done // statement given is not needed if true
 }
-/*
- * PanicPanic
+/**
+ * Indexed Formula aka Store
  */
 class IndexedFormula extends Formula { // IN future - allow pass array of statements to constructor
   /**

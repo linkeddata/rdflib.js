@@ -351,7 +351,7 @@ __SinkParser.prototype.tok = function(tok, str, i) {
     Check for keyword.  Space must have been stripped on entry and
     we must not be at end of file.*/
     var whitespace = "\t\n\v\f\r ";
-    if ((pyjslib_slice(str, i,  ( i + 1 ) ) == "@")) {
+    if ((str.slice( i,  ( i + 1 ) ) == "@")) {
         var i =  ( i + 1 ) ;
     }
     else {
@@ -360,7 +360,7 @@ __SinkParser.prototype.tok = function(tok, str, i) {
         }
     }
     var k =  ( i + pyjslib_len(tok) ) ;
-    if ((pyjslib_slice(str, i, k) == tok) && (_notQNameChars.indexOf(str.charAt(k)) >= 0)) {
+    if ((str.slice( i, k) == tok) && (_notQNameChars.indexOf(str.charAt(k)) >= 0)) {
         return k;
     }
     else {
@@ -578,19 +578,19 @@ __SinkParser.prototype.verb = function(str, i, res) {
         res.push(new pyjslib_Tuple(["->", this._store.sym(RDF_type_URI)]));
         return j;
     }
-    if ((pyjslib_slice(str, i,  ( i + 2 ) ) == "<=")) {
+    if ((str.slice( i,  ( i + 2 ) ) == "<=")) {
         res.push(new pyjslib_Tuple(["<-", this._store.sym( ( Logic_NS + "implies" ) )]));
         return  ( i + 2 ) ;
     }
-    if ((pyjslib_slice(str, i,  ( i + 1 ) ) == "=")) {
-        if ((pyjslib_slice(str,  ( i + 1 ) ,  ( i + 2 ) ) == ">")) {
+    if ((str.slice( i,  ( i + 1 ) ) == "=")) {
+        if ((str.slice(  ( i + 1 ) ,  ( i + 2 ) ) == ">")) {
             res.push(new pyjslib_Tuple(["->", this._store.sym( ( Logic_NS + "implies" ) )]));
             return  ( i + 2 ) ;
         }
         res.push(new pyjslib_Tuple(["->", this._store.sym(DAML_sameAs_URI)]));
         return  ( i + 1 ) ;
     }
-    if ((pyjslib_slice(str, i,  ( i + 2 ) ) == ":=")) {
+    if ((str.slice( i,  ( i + 2 ) ) == ":=")) {
         res.push(new pyjslib_Tuple(["->",  ( Logic_NS + "becomes" ) ]));
         return  ( i + 2 ) ;
     }
@@ -599,7 +599,7 @@ __SinkParser.prototype.verb = function(str, i, res) {
         res.push(new pyjslib_Tuple(["->", r[0]]));
         return j;
     }
-    if ((pyjslib_slice(str, i,  ( i + 2 ) ) == ">-") || (pyjslib_slice(str, i,  ( i + 2 ) ) == "<-")) {
+    if ((str.slice( i,  ( i + 2 ) ) == ">-") || (str.slice( i,  ( i + 2 ) ) == "<-")) {
         throw BadSyntax(this._thisDoc, this.lines, str, j, ">- ... -> syntax is obsolete.");
     }
     return -1;
@@ -622,10 +622,10 @@ __SinkParser.prototype.path = function(str, i, res) {
     if ((j < 0)) {
         return j;
     }
-    while (("!^.".indexOf(pyjslib_slice(str, j,  ( j + 1 ) )) >= 0)) {
-        var ch = pyjslib_slice(str, j,  ( j + 1 ) );
+    while (("!^.".indexOf(str.slice( j,  ( j + 1 ) )) >= 0)) {
+        var ch = str.slice( j,  ( j + 1 ) );
         if ((ch == ".")) {
-            var ahead = pyjslib_slice(str,  ( j + 1 ) ,  ( j + 2 ) );
+            var ahead = str.slice(  ( j + 1 ) ,  ( j + 2 ) );
             if (!(ahead) || (_notNameChars.indexOf(ahead) >= 0) && (":?<[{(".indexOf(ahead) < 0)) {
                 break;
             }
@@ -674,14 +674,14 @@ __SinkParser.prototype.node = function(str, i, res, subjectAlready) {
         return j;
     }
     var i = j;
-    var ch = pyjslib_slice(str, i,  ( i + 1 ) );
+    var ch = str.slice( i,  ( i + 1 ) );
     if ((ch == "[")) {
         var bnodeID = this.here(i);
         var j = this.skipSpace(str,  ( i + 1 ) );
         if ((j < 0)) {
             throw BadSyntax(this._thisDoc, this.lines, str, i, "EOF after '['");
         }
-        if ((pyjslib_slice(str, j,  ( j + 1 ) ) == "=")) {
+        if ((str.slice( j,  ( j + 1 ) ) == "=")) {
             var i =  ( j + 1 ) ;
             var objs = new pyjslib_List([]);
             var j = this.objectList(str, i, objs);
@@ -710,7 +710,7 @@ __SinkParser.prototype.node = function(str, i, res, subjectAlready) {
                 if ((j < 0)) {
                     throw BadSyntax(this._thisDoc, this.lines, str, i, "EOF when objectList expected after [ = ");
                 }
-                if ((pyjslib_slice(str, j,  ( j + 1 ) ) == ";")) {
+                if ((str.slice( j,  ( j + 1 ) ) == ";")) {
                     var j =  ( j + 1 ) ;
                 }
             }
@@ -729,14 +729,14 @@ __SinkParser.prototype.node = function(str, i, res, subjectAlready) {
         if ((j < 0)) {
             throw BadSyntax(this._thisDoc, this.lines, str, i, "EOF when ']' expected after [ <propertyList>");
         }
-        if ((pyjslib_slice(str, j,  ( j + 1 ) ) != "]")) {
+        if ((str.slice( j,  ( j + 1 ) ) != "]")) {
             throw BadSyntax(this._thisDoc, this.lines, str, j, "']' expected");
         }
         res.push(subj);
         return  ( j + 1 ) ;
     }
     if ((ch == "{")) {
-        var ch2 = pyjslib_slice(str,  ( i + 1 ) ,  ( i + 2 ) );
+        var ch2 = str.slice(  ( i + 1 ) ,  ( i + 2 ) );
         if ((ch2 == "$")) {
             i += 1;
             var j =  ( i + 1 ) ;
@@ -747,12 +747,12 @@ __SinkParser.prototype.node = function(str, i, res, subjectAlready) {
                 if ((i < 0)) {
                     throw BadSyntax(this._thisDoc, this.lines, str, i, "needed '$}', found end.");
                 }
-                if ((pyjslib_slice(str, i,  ( i + 2 ) ) == "$}")) {
+                if ((str.slice( i,  ( i + 2 ) ) == "$}")) {
                     var j =  ( i + 2 ) ;
                     break;
                 }
                 if (!(first_run)) {
-                    if ((pyjslib_slice(str, i,  ( i + 1 ) ) == ",")) {
+                    if ((str.slice( i,  ( i + 1 ) ) == ",")) {
                         i += 1;
                     }
                     else {
@@ -792,7 +792,7 @@ __SinkParser.prototype.node = function(str, i, res, subjectAlready) {
                 if ((i < 0)) {
                     throw BadSyntax(this._thisDoc, this.lines, str, i, "needed '}', found end.");
                 }
-                if ((pyjslib_slice(str, i,  ( i + 1 ) ) == "}")) {
+                if ((str.slice( i,  ( i + 1 ) ) == "}")) {
                     var j =  ( i + 1 ) ;
                     break;
                 }
@@ -813,7 +813,7 @@ __SinkParser.prototype.node = function(str, i, res, subjectAlready) {
     }
     if ((ch == "(")) {
         var thing_type = this._store.list;
-        var ch2 = pyjslib_slice(str,  ( i + 1 ) ,  ( i + 2 ) );
+        var ch2 = str.slice(  ( i + 1 ) ,  ( i + 2 ) );
         if ((ch2 == "$")) {
             var thing_type = this._store.newSet;
             i += 1;
@@ -825,7 +825,7 @@ __SinkParser.prototype.node = function(str, i, res, subjectAlready) {
             if ((i < 0)) {
                 throw BadSyntax(this._thisDoc, this.lines, str, i, "needed ')', found end.");
             }
-            if ((pyjslib_slice(str, i,  ( i + 1 ) ) == ")")) {
+            if ((str.slice( i,  ( i + 1 ) ) == ")")) {
                 var j =  ( i + 1 ) ;
                 break;
             }
@@ -875,7 +875,7 @@ __SinkParser.prototype.property_list = function(str, i, subj) {
             throw BadSyntax(this._thisDoc, this.lines, str, i, "EOF found when expected verb in property list");
             return j;
         }
-        if ((pyjslib_slice(str, j,  ( j + 2 ) ) == ":-")) {
+        if ((str.slice( j,  ( j + 2 ) ) == ":-")) {
             var i =  ( j + 2 ) ;
             var res = new pyjslib_List([]);
             var j = this.node(str, i, res, subj);
@@ -925,7 +925,7 @@ __SinkParser.prototype.property_list = function(str, i, subj) {
             throw BadSyntax(this._thisDoc, this.lines, str, j, "EOF found in list of objects");
             return j;
         }
-        if ((pyjslib_slice(str, i,  ( i + 1 ) ) != ";")) {
+        if ((str.slice( i,  ( i + 1 ) ) != ";")) {
             return i;
         }
         var i =  ( i + 1 ) ;
@@ -962,7 +962,7 @@ __SinkParser.prototype.commaSeparatedList = function(str, j, res, ofUris) {
         if ((j < 0)) {
             return j;
         }
-        var ch = pyjslib_slice(str, j,  ( j + 1 ) );
+        var ch = str.slice( j,  ( j + 1 ) );
         if ((ch != ",")) {
             if ((ch != ".")) {
                 return -1;
@@ -992,7 +992,7 @@ __SinkParser.prototype.objectList = function(str, i, res) {
             throw BadSyntax(this._thisDoc, this.lines, str, j, "EOF found after object");
             return j;
         }
-        if ((pyjslib_slice(str, j,  ( j + 1 ) ) != ",")) {
+        if ((str.slice( j,  ( j + 1 ) ) != ",")) {
             return j;
         }
         var i = this.object(str,  ( j + 1 ) , res);
@@ -1006,13 +1006,13 @@ __SinkParser.prototype.checkDot = function(str, i) {
     if ((j < 0)) {
         return j;
     }
-    if ((pyjslib_slice(str, j,  ( j + 1 ) ) == ".")) {
+    if ((str.slice( j,  ( j + 1 ) ) == ".")) {
         return  ( j + 1 ) ;
     }
-    if ((pyjslib_slice(str, j,  ( j + 1 ) ) == "}")) {
+    if ((str.slice( j,  ( j + 1 ) ) == "}")) {
         return j;
     }
-    if ((pyjslib_slice(str, j,  ( j + 1 ) ) == "]")) {
+    if ((str.slice( j,  ( j + 1 ) ) == "]")) {
         return j;
     }
     throw BadSyntax(this._thisDoc, this.lines, str, j, "expected '.' or '}' or ']' at end of statement");
@@ -1074,14 +1074,14 @@ __SinkParser.prototype.uri_ref2 = function(str, i, res) {
         var st = i;
         while ((i < pyjslib_len(str))) {
             if ((str.charAt(i) == ">")) {
-                var uref = pyjslib_slice(str, st, i);
+                var uref = str.slice( st, i);
                 if (this._baseURI) {
                     var uref = uripath_join(this._baseURI, uref);
                 }
                 else {
                     assertFudge((uref.indexOf(":") >= 0), "With no base URI, cannot deal with relative URIs");
                 }
-                if ((pyjslib_slice(str,  ( i - 1 ) , i) == "#") && !((pyjslib_slice(uref, -1, null) == "#"))) {
+                if ((str.slice(  ( i - 1 ) , i) == "#") && !((pyjslib_slice(uref, -1, null) == "#"))) {
                     var uref =  ( uref + "#" ) ;
                 }
                 var symb = this._store.sym(uref);
@@ -1159,7 +1159,7 @@ __SinkParser.prototype.variable = function(str, i, res) {
     if ((j < 0)) {
         return -1;
     }
-    if ((pyjslib_slice(str, j,  ( j + 1 ) ) != "?")) {
+    if ((str.slice( j,  ( j + 1 ) ) != "?")) {
         return -1;
     }
     var j =  ( j + 1 ) ;
@@ -1172,9 +1172,9 @@ __SinkParser.prototype.variable = function(str, i, res) {
         var i =  ( i + 1 ) ;
     }
     if ((this._parentContext == null)) {
-        throw BadSyntax(this._thisDoc, this.lines, str, j,  ( "Can't use ?xxx syntax for variable in outermost level: " + pyjslib_slice(str,  ( j - 1 ) , i) ) );
+        throw BadSyntax(this._thisDoc, this.lines, str, j,  ( "Can't use ?xxx syntax for variable in outermost level: " + str.slice(  ( j - 1 ) , i) ) );
     }
-    res.push(this._store.variable(pyjslib_slice(str, j, i)));
+    res.push(this._store.variable(str.slice( j, i)));
     return i;
 };
 __SinkParser.prototype.bareWord = function(str, i, res) {
@@ -1197,7 +1197,7 @@ __SinkParser.prototype.bareWord = function(str, i, res) {
     while ((i < pyjslib_len(str)) && (_notNameChars.indexOf(str.charAt(i)) < 0)) {
         var i =  ( i + 1 ) ;
     }
-    res.push(pyjslib_slice(str, j, i));
+    res.push(str.slice( j, i));
     return i;
 };
 __SinkParser.prototype.qname = function(str, i, res) {
@@ -1328,11 +1328,11 @@ __SinkParser.prototype.nodeOrLiteral = function(str, i, res) {
 		    throw BadSyntax(this._thisDoc, this.lines, str, i, "Bad number or date syntax");
 		}
 		j =  ( i + number_syntax.lastIndex ) ;
-		var val = pyjslib_slice(str, i, j);
+		var val = str.slice( i, j);
 		if ((val.indexOf("e") >= 0)) {
 		    res.push(this._store.literal(parseFloat(val), undefined, this._store.sym(FLOAT_DATATYPE)));
 		}
-		else if ((pyjslib_slice(str, i, j).indexOf(".") >= 0)) {
+		else if ((str.slice( i, j).indexOf(".") >= 0)) {
 		    res.push(this._store.literal(parseFloat(val), undefined, this._store.sym(DECIMAL_DATATYPE)));
 		}
 		else {
@@ -1342,7 +1342,7 @@ __SinkParser.prototype.nodeOrLiteral = function(str, i, res) {
 	    return j; // Where we have got up to
         }
         if ((str.charAt(i) == "\"")) {
-            if ((pyjslib_slice(str, i,  ( i + 3 ) ) == "\"\"\"")) {
+            if ((str.slice( i,  ( i + 3 ) ) == "\"\"\"")) {
                 var delim = "\"\"\"";
             }
             else {
@@ -1354,7 +1354,7 @@ __SinkParser.prototype.nodeOrLiteral = function(str, i, res) {
             var j = pairFudge[0];
             var s = pairFudge[1];
             var lang = null;
-            if ((pyjslib_slice(str, j,  ( j + 1 ) ) == "@")) {
+            if ((str.slice( j,  ( j + 1 ) ) == "@")) {
                 langcode.lastIndex = 0;
 
                 var m = langcode.exec(str.slice( ( j + 1 ) ));
@@ -1363,10 +1363,10 @@ __SinkParser.prototype.nodeOrLiteral = function(str, i, res) {
                 }
                 var i =  (  ( langcode.lastIndex + j )  + 1 ) ;
 
-                var lang = pyjslib_slice(str,  ( j + 1 ) , i);
+                var lang = str.slice(  ( j + 1 ) , i);
                 var j = i;
             }
-            if ((pyjslib_slice(str, j,  ( j + 2 ) ) == "^^")) {
+            if ((str.slice( j,  ( j + 2 ) ) == "^^")) {
                 var res2 = new pyjslib_List([]);
                 var j = this.uri_ref2(str,  ( j + 2 ) , res2);
                 var dt = res2[0];
@@ -1390,7 +1390,7 @@ __SinkParser.prototype.strconst = function(str, i, delim) {
     var startline = this.lines;
     while ((j < pyjslib_len(str))) {
         var i =  ( j + pyjslib_len(delim) ) ;
-        if ((pyjslib_slice(str, j, i) == delim)) {
+        if ((str.slice( j, i) == delim)) {
             return new pyjslib_Tuple([i, ustr]);
         }
         if ((str.charAt(j) == "\"")) {
@@ -1401,10 +1401,10 @@ __SinkParser.prototype.strconst = function(str, i, delim) {
         interesting.lastIndex = 0;
         var m = interesting.exec(str.slice(j));
         if (!(m)) {
-            throw BadSyntax(this._thisDoc, startline, str, j,  (  (  ( "Closing quote missing in string at ^ in " + pyjslib_slice(str,  ( j - 20 ) , j) )  + "^" )  + pyjslib_slice(str, j,  ( j + 20 ) ) ) );
+            throw BadSyntax(this._thisDoc, startline, str, j,  (  (  ( "Closing quote missing in string at ^ in " + str.slice(  ( j - 20 ) , j) )  + "^" )  + str.slice( j,  ( j + 20 ) ) ) );
         }
         var i =  (  ( j + interesting.lastIndex )  - 1 ) ;
-        var ustr =  ( ustr + pyjslib_slice(str, j, i) ) ;
+        var ustr =  ( ustr + str.slice( j, i) ) ;
         var ch = str.charAt(i);
         if ((ch == "\"")) {
             var j = i;
@@ -1426,7 +1426,7 @@ __SinkParser.prototype.strconst = function(str, i, delim) {
         }
         else if ((ch == "\\")) {
             var j =  ( i + 1 ) ;
-            var ch = pyjslib_slice(str, j,  ( j + 1 ) );
+            var ch = str.slice( j,  ( j + 1 ) );
             if (!(ch)) {
                 throw BadSyntax(this._thisDoc, startline, str, i, "unterminated string literal (2)");
             }
@@ -1460,7 +1460,7 @@ __SinkParser.prototype.uEscape = function(str, i, startline) {
     var count = 0;
     var value = 0;
     while ((count < 4)) {
-        var chFudge = pyjslib_slice(str, j,  ( j + 1 ) );
+        var chFudge = str.slice( j,  ( j + 1 ) );
         var ch = chFudge.toLowerCase();
         var j =  ( j + 1 ) ;
         if ((ch == "")) {
@@ -1481,7 +1481,7 @@ __SinkParser.prototype.UEscape = function(str, i, startline) {
     var count = 0;
     var value = "\\U";
     while ((count < 8)) {
-        var chFudge = pyjslib_slice(str, j,  ( j + 1 ) );
+        var chFudge = str.slice( j,  ( j + 1 ) );
         var ch = chFudge.toLowerCase();
         var j =  ( j + 1 ) ;
         if ((ch == "")) {
@@ -1525,10 +1525,15 @@ __OLD_BadSyntax.prototype.toString = function() {
     else {
         var post = "";
     }
-    return "Line %i of <%s>: Bad syntax (%s) at ^ in:\n\"%s%s^%s%s\"" % new pyjslib_Tuple([ ( this.lines + 1 ) , this._uri, this._why, pre, pyjslib_slice(str, st, i), pyjslib_slice(str, i,  ( i + 60 ) ), post]);
+    return "Line %i of <%s>: Bad syntax (%s) at ^ in:\n\"%s%s^%s%s\"" % new pyjslib_Tuple([ ( this.lines + 1 ) , this._uri, this._why, pre, str.slice( st, i), str.slice( i,  ( i + 60 ) ), post]);
 };
 function BadSyntax(uri, lines, str, i, why) {
-    return  (  (  (  (  (  (  (  ( "Line " +  ( lines + 1 )  )  + " of <" )  + uri )  + ">: Bad syntax: " )  + why )  + "\nat: \"" )  + pyjslib_slice(str, i,  ( i + 30 ) ) )  + "\"" ) ;
+    let msg =  (  (  (  (  (  (  (  ( "Line " +  ( lines + 1 )  )  + " of <" )  + uri )  + ">: Bad syntax: " )  + why )  + "\nat: \"" )  + str.slice( i,  ( i + 30 ) ) )  + "\"" ) ;
+    let e = new Error(msg)
+    e.lineNumber = lines + 1
+    e.characterInFile = i
+    e.syntaxProblem = why
+    return e
 }
 
 
