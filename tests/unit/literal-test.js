@@ -1,6 +1,7 @@
 /* eslint-env mocha */
 import { expect } from 'chai'
 
+import Node from '../../src/node';
 import Literal from '../../src/literal'
 import XSD from '../../src/xsd'
 
@@ -8,45 +9,45 @@ describe('Literal', () => {
   describe('fromValue', () => {
     describe('for numbers', () => {
       it('detects integers', () => {
-        expect(Literal.fromValue(0)).to.eql(new Literal('0', null, XSD.integer))
-        expect(Literal.fromValue(1)).to.eql(new Literal('1', null, XSD.integer))
+        expect(Literal.fromValue(0)).to.eql(Node.literalByValue('0', null, XSD.integer))
+        expect(Literal.fromValue(1)).to.eql(Node.literalByValue('1', null, XSD.integer))
         expect(Literal.fromValue(Number.MAX_SAFE_INTEGER))
-          .to.eql(new Literal(Number.MAX_SAFE_INTEGER.toString(), null, XSD.integer))
+          .to.eql(Node.literalByValue(Number.MAX_SAFE_INTEGER.toString(), null, XSD.integer))
         expect(Literal.fromValue(Number.MIN_SAFE_INTEGER))
-          .to.eql(new Literal(Number.MIN_SAFE_INTEGER.toString(), null, XSD.integer))
+          .to.eql(Node.literalByValue(Number.MIN_SAFE_INTEGER.toString(), null, XSD.integer))
       })
 
       it('detects decimals', () => {
-        expect(Literal.fromValue(1.1)).to.eql(new Literal('1.1', null, XSD.decimal))
+        expect(Literal.fromValue(1.1)).to.eql(Node.literalByValue('1.1', null, XSD.decimal))
       })
 
       it('detects doubles', () => {
         expect(Literal.fromValue(Number.MAX_SAFE_INTEGER + 1))
-          .to.eql(new Literal((Number.MAX_SAFE_INTEGER + 1).toString(), null, XSD.double))
+          .to.eql(Node.literalByValue((Number.MAX_SAFE_INTEGER + 1).toString(), null, XSD.double))
         expect(Literal.fromValue(Number.MIN_SAFE_INTEGER - 1))
-          .to.eql(new Literal((Number.MIN_SAFE_INTEGER - 1).toString(), null, XSD.double))
+          .to.eql(Node.literalByValue((Number.MIN_SAFE_INTEGER - 1).toString(), null, XSD.double))
         expect(Literal.fromValue(Number.MAX_VALUE))
-          .to.eql(new Literal(Number.MAX_VALUE.toString(), null, XSD.double))
+          .to.eql(Node.literalByValue(Number.MAX_VALUE.toString(), null, XSD.double))
         expect(Literal.fromValue(-Number.MAX_VALUE))
-          .to.eql(new Literal((-Number.MAX_VALUE).toString(), null, XSD.double))
+          .to.eql(Node.literalByValue((-Number.MAX_VALUE).toString(), null, XSD.double))
         expect(Literal.fromValue(Number.MIN_VALUE))
-          .to.eql(new Literal(Number.MIN_VALUE.toString(), null, XSD.double))
+          .to.eql(Node.literalByValue(Number.MIN_VALUE.toString(), null, XSD.double))
       })
     })
 
     it('detects string values', () => {
-      expect(Literal.fromValue('foo')).to.eql(new Literal('foo', null, null))
+      expect(Literal.fromValue('foo')).to.eql(Node.literalByValue('foo', null, XSD.string))
     })
 
     it('detects boolean values', () => {
-      expect(Literal.fromValue(true)).to.eql(new Literal('1', null, XSD.boolean))
-      expect(Literal.fromValue(false)).to.eql(new Literal('0', null, XSD.boolean))
+      expect(Literal.fromValue(true)).to.eql(Node.literalByValue('1', null, XSD.boolean))
+      expect(Literal.fromValue(false)).to.eql(Node.literalByValue('0', null, XSD.boolean))
     })
 
     it('constructs a literal representing a date value', () => {
       const date = new Date(Date.UTC(2010, 5, 10, 1, 2, 3))
       expect(Literal.fromValue(date))
-        .to.eql(new Literal('2010-06-10T01:02:03Z', null, XSD.dateTime))
+        .to.eql(Node.literalByValue('2010-06-10T01:02:03Z', null, XSD.dateTime))
     })
   })
 
@@ -58,7 +59,7 @@ describe('Literal', () => {
       })
 
       it('serializes strings with a language', () => {
-        const node = new Literal('foo', 'en')
+        const node = Node.literalByValue('foo', 'en')
         expect(node.toNT()).to.equal('"foo"@en')
       })
     })
@@ -102,8 +103,8 @@ describe('Literal', () => {
 
   describe('equals', () => {
     it('compares termType, value, language, and datatype', () => {
-      const a = new Literal('hello world', 'en', XSD.langString)
-      const b = new Literal('', '', null)
+      const a = Node.literalByValue('hello world', 'en', XSD.langString)
+      const b = Node.literalByValue('', '', null)
       expect(a.equals(b)).to.be.false
       expect(b.equals(a)).to.be.false
       b.value = 'hello world'

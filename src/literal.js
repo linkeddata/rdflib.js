@@ -19,7 +19,7 @@ class Literal extends Node {
     }
   }
   copy () {
-    return new Literal(this.value, this.lang, this.datatype)
+    return Node.literalByValue(this.value, this.lang, this.datatype)
   }
   equals (other) {
     if (!other) {
@@ -69,7 +69,8 @@ class Literal extends Node {
    */
   static fromBoolean (value) {
     let strValue = value ? '1' : '0'
-    return new Literal(strValue, null, XSD.boolean)
+    return Node.literalByValue(strValue, null, XSD.boolean) ||
+      Node.addLit(Node.literalByValue(strValue, null, XSD.boolean))
   }
   /**
    * @method fromDate
@@ -87,7 +88,8 @@ class Literal extends Node {
     let date = '' + value.getUTCFullYear() + '-' + d2(value.getUTCMonth() + 1) +
       '-' + d2(value.getUTCDate()) + 'T' + d2(value.getUTCHours()) + ':' +
       d2(value.getUTCMinutes()) + ':' + d2(value.getUTCSeconds()) + 'Z'
-    return new Literal(date, null, XSD.dateTime)
+    return Node.literalByValue(date, null, XSD.dateTime) ||
+      Node.addLit(Node.literalByValue(date, null, XSD.dateTime))
   }
   /**
    * @method fromNumber
@@ -106,7 +108,8 @@ class Literal extends Node {
     } else {
       datatype = XSD.double
     }
-    return new Literal(strValue, null, datatype)
+    return Node.literalByValue(strValue, null, datatype) ||
+      Node.addLit(Node.literalByValue(strValue, null, datatype))
   }
   /**
    * @method fromValue
@@ -130,7 +133,7 @@ class Literal extends Node {
       case 'number':
         return Literal.fromNumber(value)
       case 'string':
-        return new Literal(value)
+        return Node.literalByValue(value, null, XSD.string)
     }
     throw new Error("Can't make literal from " + value + ' of type ' +
       typeof value)

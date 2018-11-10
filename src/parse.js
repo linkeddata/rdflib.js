@@ -1,7 +1,6 @@
 module.exports = parse
 
 const jsonld = require('jsonld')
-const Literal = require('./literal')
 const N3 = require('n3')  // @@ Goal: remove this dependency
 const N3Parser = require('./n3parser')
 const Node = require('./node')
@@ -147,7 +146,7 @@ function parse (str, kb, base, contentType, callback) {
       value = N3.Util.getLiteralValue(termString)
       var language = N3.Util.getLiteralLanguage(termString)
       var datatype = Node.namedNodeByIRI(N3.Util.getLiteralType(termString))
-      return new Literal(value, language, datatype)
+      return Node.literalByValue(value, language, datatype)
     } else if (N3.Util.isIRI(termString)) {
       return Node.namedNodeByIRI(termString)
     } else if (N3.Util.isBlank(termString)) {

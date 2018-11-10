@@ -12,7 +12,6 @@
 // options.base = base URI    not really an option, shopuld always be set.
 //
 
-const Literal = require('./literal')
 const rdf = require('./data-factory')
 const Uri = require('./uri')
 const Util = require('./util')
@@ -877,16 +876,16 @@ class RDFaProcessor {
         }
         return rdf.namedNode(x.value)
       case RDFaProcessor.PlainLiteralURI:
-        return new Literal(x.value, x.language || '')
+        return Node.literalByValue(x.value, x.language || '')
       case RDFaProcessor.XMLLiteralURI:
       case RDFaProcessor.HTMLLiteralURI:
         var string = ''
         Object.keys(x.value).forEach(function (i) {
           string += Util.domToString(x.value[i], this.htmlOptions)
         })
-        return new Literal(string, '', Node.namedNodeByIRI(x.type))
+        return Node.literalByValue(string, null, Node.namedNodeByIRI(x.type))
       default:
-        return new Literal(x.value, '', Node.namedNodeByIRI(x.type))
+        return Node.literalByValue(x.value, null, Node.namedNodeByIRI(x.type))
     }
   }
 

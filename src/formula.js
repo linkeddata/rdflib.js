@@ -2,7 +2,6 @@
 
 const ClassOrder = require('./class-order')
 const Collection = require('./collection')
-const Literal = require('./literal')
 const log = require('./log')
 const NamedNode = require('./named-node')
 const Node = require('./node')
@@ -480,7 +479,7 @@ class Formula extends Node {
     return collection
   }
   literal (val, lang, dt) {
-    return new Literal('' + val, lang, dt)
+    return Node.literalByValue('' + val, lang, dt)
   }
   /**
    * transform a collection of NTriple URIs into their URI strings

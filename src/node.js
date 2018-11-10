@@ -24,6 +24,34 @@ class Node {
   }
 
   /**
+   * Assigns an index number and adds a Literal instance to the indices
+   * @internal
+   * @param lit The Literal instance to register
+   * @return {Literal} The updated Literal instance
+   */
+  static addLit(lit) {
+    if (lit.sI) {
+      throw new Error(`Literal ${lit} already registered`)
+    }
+
+    lit.sI = ++this.termIndex
+    const dtIndex = (lit.datatype || require('./xsd').string).sI
+    if (lit.language) {
+      if (!this.litMap[dtIndex][lit.value]) {
+        this.litMap[dtIndex][lit.value] = []
+      }
+      this.termMap[lit.sI] = this.litMap[dtIndex][lit.value][lit.language] = lit
+    } else {
+      if (!this.litMap[dtIndex]) {
+        this.litMap[dtIndex] = []
+      }
+      this.termMap[lit.sI] = this.litMap[dtIndex][lit.value] = lit
+    }
+
+    return lit
+  }
+
+  /**
    * Assigns an index number and adds a NamedNode instance to the indices
    * @internal
    * @param nn {NamedNode} The NamedNode instance to register
@@ -54,6 +82,35 @@ class Node {
     }
     const BlankNode = require('./blank-node')
     return this.addBn(new BlankNode(id))
+  }
+
+  /**
+   * Retrieve or create a Literal by its datatype, value, and language
+   * @param value {Object} The value of the literal
+   * @param datatype? {NamedNode} The IRI of the datatype
+   * @param lang? {any} The language of the literal (will force datatype xsd:langString)
+   * @return {Literal} The resolved or created Literal
+   */
+  static literalByValue(value, lang = undefined, datatype) {
+    const strValue = value.toString()
+    let fromMap
+    // Language strings need an additional index layer
+    if (lang) {
+      if (!this.litMap[require('./xsd').langString.sI][strValue]) {
+        this.litMap[require('./xsd').langString.sI][strValue] = []
+      }
+      fromMap = this.litMap[require('./xsd').langString.sI][strValue][lang.sI]
+    } else {
+      const dtIndex = (datatype || require('./xsd').string).sI
+      fromMap = this.litMap[dtIndex] && this.litMap[dtIndex][strValue]
+    }
+
+    if (fromMap) {
+      return fromMap
+    }
+
+    const Literal = require('./literal')
+    return this.addLit(new Literal(strValue, lang, datatype))
   }
 
   /**
@@ -170,6 +227,13 @@ Node.nsMap = {}
  */
 Node.bnMap = {}
 
+/**
+ * Maps literals to their Literal counterparts
+ * @type {Array<Array<Literal|Array<Literal>>>}
+ */
+Node.litMap = []
+// Define an additional index layer required for langStrings, saving an additional access run-time
+Node.litMap[require('./xsd').langString.sI] = []
 
 /**
  * Creates an RDF Node from a native javascript value.

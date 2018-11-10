@@ -3,7 +3,6 @@ const Collection = require('./collection')
 const DefaultGraph = require('./default-graph')
 const Fetcher = require('./fetcher')
 const IndexedFormula = require('./store')
-const Literal = require('./literal')
 const Node = require('./node')
 const Statement = require('./statement')
 const Variable = require('./variable')
@@ -24,17 +23,17 @@ function graph () {
   return new IndexedFormula()
 }
 function lit (val, lang, dt) {
-  return new Literal('' + val, lang, dt)
+  return Node.literalByValue('' + val, lang, dt)
 }
 function literal (value, languageOrDatatype) {
   if (typeof languageOrDatatype === 'string') {
     if (languageOrDatatype.indexOf(':') === -1) {
-      return new Literal(value, languageOrDatatype)
+      return Node.literalByValue(value, languageOrDatatype)
     } else {
-      return new Literal(value, null, namedNode(languageOrDatatype))
+      return Node.literalByValue(value, null, namedNode(languageOrDatatype))
     }
   } else {
-    return new Literal(value, null, languageOrDatatype)
+    return Node.literalByValue(value, null, languageOrDatatype)
   }
 }
 function namedNode (value) {
