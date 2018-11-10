@@ -14,9 +14,7 @@ class Literal extends Term {
       datatype = XSD.langString
     }
     // If not specified, a literal has the implied XSD.string default datatype
-    if (datatype) {
-      this.datatype = NamedNode.fromValue(datatype)
-    }
+    this.datatype = datatype ? NamedNode.fromValue(datatype) : XSD.string
   }
   copy () {
     return Term.literalByValue(this.value, this.lang, this.datatype)
