@@ -19,7 +19,7 @@ if [[ `git log -1 --pretty=%B` == *$TRAVIS_COMMIT* ]]; then exit; fi
 
 # Update pages
 rm -r * 2> /dev/null
-cp -r $REPO_PATH/dist $REPO_PATH/doc .
+cp -r $REPO_PATH/dist $REPO_PATH/doc $REPO_PATH/Documentation .
 
 # Commit and push latest version
 git add .
