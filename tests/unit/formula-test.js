@@ -8,6 +8,7 @@ import Namespace from '../../src/namespace'
 import Formula from '../../src/formula'
 
 const alice = new NamedNode('https://alice.example.com/profile#alice')
+const doc = alice.doc()
 const bob = new NamedNode('https://bob.example.com/profile#me')
 const charlie = new NamedNode('https://charlie.example.com/profile#me')
 const foaf = new Namespace('http://xmlns.com/foaf/0.1/')
@@ -56,9 +57,7 @@ describe('Formula', () => {
       let friends = kb.each(alice, knows)
       expect(friends.length).to.equal(2)
     })
-  })
 
-  describe('Formula', () => {
     it('can find one terms with any()', () => {
       const kb = new Formula()
       const doc = alice.doc()
@@ -68,9 +67,7 @@ describe('Formula', () => {
       let x = kb.any(alice, age)
       expect(x.value).to.equal("21")
     })
-  })
 
-  describe('Formula', () => {
     it('can find one terms with anyValue()', () => {
       const kb = new Formula()
       const doc = alice.doc()
@@ -80,19 +77,51 @@ describe('Formula', () => {
       let s = kb.anyValue(alice, age)
       expect(s).to.equal("21")
     })
-  })
 
-  describe('Formula', () => {
-    it('can find one terms with anyJS()', () => {
+    it('can find one true boolean with anyJS()', () => {
       const kb = new Formula()
       const doc = alice.doc()
-      kb.add(alice, knows, bob, doc)
-      kb.add(alice, knows, charlie, doc)
-      kb.add(alice, age, 21)
+      kb.add(alice, age, true, doc)
+      let n = kb.anyJS(alice, age)
+      expect(typeof n).to.equal('boolean')
+      expect(n).to.equal(true)
+    })
+    it('can find one false boolean with anyJS()', () => {
+      const kb = new Formula()
+      const doc = alice.doc()
+      kb.add(alice, age, false, doc)
+      let n = kb.anyJS(alice, age)
+      expect(typeof n).to.equal('boolean')
+      expect(n).to.equal(false)
+    })
+    it('can find one string with anyJS()', () => {
+      const kb = new Formula()
+      kb.add(alice, age, "21", doc)
+      let n = kb.anyJS(alice, age)
+      expect(typeof n).to.equal('string')
+      expect(n).to.equal("21")
+    })
+    it('can find one integer with anyJS()', () => {
+      const kb = new Formula()
+      const doc = alice.doc()
+      kb.add(alice, age, 21, doc)
       let n = kb.anyJS(alice, age)
       expect(n).to.equal(21)
     })
+    it('can find one float with anyJS()', () => {
+      const kb = new Formula()
+      const doc = alice.doc()
+      kb.add(alice, age, 21.6574e-2, doc)
+      let n = kb.anyJS(alice, age)
+      expect(n).to.equal(21.6574e-2)
+    })
+    it('can find one date with anyJS()', () => {
+      const kb = new Formula()
+      kb.add(alice, age, new Date('2000-10-10'), doc)
+      let d = kb.anyJS(alice, age)
+      expect(d instanceof Date).to.equal(true)
+      expect(d.toISOString()).to.equal('2000-10-10T00:00:00.000Z')
+    })
   })
-
 
 })
