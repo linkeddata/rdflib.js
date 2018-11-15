@@ -1,10 +1,14 @@
 'use strict'
+
 /**
  * The superclass of all RDF Statement objects, that is
  * NamedNode, Literal, BlankNode, etc.
  * @class Node
  */
+
+
 class Node {
+
   substitute (bindings) {
     console.log('@@@ node substitute' + this)
     return this
@@ -74,23 +78,27 @@ Node.fromValue = function fromValue (value) {
   return Literal.fromValue(value)
 }
 
-Node.toJS = function fromJS (term) {
+const Namespace = require('./namespace')
+const ns = { xsd: Namespace('http://www.w3.org/2001/XMLSchema#') }
+
+Node.toJS = function toJS (term) {
   if (term.elements) {
     return term.elements.map(Node.toJS) // Array node (not standard RDFJS)
   }
   if (!term.datatype) return term // Objects remain objects
-  if (term.datatype.equals(ns.xsd('boolean'))) {
+  if (term.datatype.sameTerm(ns.xsd('boolean'))) {
     return term.value === '1'
   }
-  if (term.datatype.equals(ns.xsd('dateTime')) ||
-    term.datatype.equals(ns.xsd('date'))) {
+  if (term.datatype.sameTerm(ns.xsd('dateTime')) ||
+    term.datatype.sameTerm(ns.xsd('date'))) {
     return new Date(term.value)
   }
   if (
-    term.datatype.equals(ns.xsd('integer')) ||
-    term.datatype.equals(ns.xsd('float')) ||
-    term.datatype.equals(ns.xsd('decimal'))
+    term.datatype.sameTerm(ns.xsd('integer')) ||
+    term.datatype.sameTerm(ns.xsd('float')) ||
+    term.datatype.sameTerm(ns.xsd('decimal'))
   ) {
+    let z = Number(term.value)
     return Number(term.value)
   }
   return term.value

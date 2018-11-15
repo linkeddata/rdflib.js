@@ -7,6 +7,13 @@ import NamedNode from '../../src/named-node'
 import Namespace from '../../src/namespace'
 import Formula from '../../src/formula'
 
+const alice = new NamedNode('https://alice.example.com/profile#alice')
+const bob = new NamedNode('https://bob.example.com/profile#me')
+const charlie = new NamedNode('https://charlie.example.com/profile#me')
+const foaf = new Namespace('http://xmlns.com/foaf/0.1/')
+const knows = foaf('knows')
+const age = foaf('age')
+
 describe('Formula', () => {
   it('can be constructed and serialized', () => {
     ;[
@@ -38,4 +45,54 @@ describe('Formula', () => {
       expect(kb.toNT()).to.equal(expected)
     })
   })
+
+  describe('Formula', () => {
+    it('can find all terms with each', () => {
+      const kb = new Formula()
+      const doc = alice.doc()
+      kb.add(alice, knows, bob, doc)
+      kb.add(alice, knows, charlie, doc)
+      kb.add(alice, age, 21)
+      let friends = kb.each(alice, knows)
+      expect(friends.length).to.equal(2)
+    })
+  })
+
+  describe('Formula', () => {
+    it('can find one terms with any()', () => {
+      const kb = new Formula()
+      const doc = alice.doc()
+      kb.add(alice, knows, bob, doc)
+      kb.add(alice, knows, charlie, doc)
+      kb.add(alice, age, 21)
+      let x = kb.any(alice, age)
+      expect(x.value).to.equal("21")
+    })
+  })
+
+  describe('Formula', () => {
+    it('can find one terms with anyValue()', () => {
+      const kb = new Formula()
+      const doc = alice.doc()
+      kb.add(alice, knows, bob, doc)
+      kb.add(alice, knows, charlie, doc)
+      kb.add(alice, age, 21)
+      let s = kb.anyValue(alice, age)
+      expect(s).to.equal("21")
+    })
+  })
+
+  describe('Formula', () => {
+    it('can find one terms with anyJS()', () => {
+      const kb = new Formula()
+      const doc = alice.doc()
+      kb.add(alice, knows, bob, doc)
+      kb.add(alice, knows, charlie, doc)
+      kb.add(alice, age, 21)
+      let n = kb.anyJS(alice, age)
+      expect(n).to.equal(21)
+    })
+  })
+
+
 })
