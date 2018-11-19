@@ -32,6 +32,11 @@ class NamedNode extends Term {
       throw new Error(message)
     }
 
+    const existing = Term.nsMap[iri]
+    if (existing) {
+      return existing
+    }
+
     this.value = iri
   }
   /**

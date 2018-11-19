@@ -15,6 +15,11 @@ class Literal extends Term {
     }
     // If not specified, a literal has the implied XSD.string default datatype
     this.datatype = datatype ? NamedNode.fromValue(datatype) : XSD.string
+
+    const existing = Term.findLiteralByValue(value, language, datatype)
+    if (existing) {
+      return existing
+    }
   }
   copy () {
     return Term.literalByValue(this.value, this.lang, this.datatype)

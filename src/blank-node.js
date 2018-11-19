@@ -3,6 +3,17 @@ const ClassOrder = require('./class-order')
 const Term = require('./term')
 
 class BlankNode extends Term {
+  /** @private */
+  static normalizeID (id) {
+    if (typeof id === 'string' && id.includes('#')) {
+      // Is a URI with hash fragment
+      let fragments = id.split('#')
+      return fragments[fragments.length - 1]
+    }
+
+    return id
+  }
+
   constructor (id) {
     super()
     this.termType = BlankNode.termType
@@ -12,13 +23,13 @@ class BlankNode extends Term {
         console.log('Bad blank id:', id)
         throw new Error('Bad id argument to new blank node: ' + id)
       }
-      if (id.includes('#')) {
-        // Is a URI with hash fragment
-        let fragments = id.split('#')
-        id = fragments[fragments.length - 1]
+
+      this.id = BlankNode.normalizeID(id)
+
+      const existing = Term.bnMap[this.id]
+      if (existing) {
+        return existing
       }
-      this.id = id
-      // this.id = '' + BlankNode.nextId++
     } else {
       this.id = 'n' + BlankNode.nextId++
     }

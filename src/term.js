@@ -68,16 +68,18 @@ class Term extends Node {
 
   /**
    * Retrieve or create a BlankNode by its ID
-   * @param id? {string} The ID of the blank node
+   * @param idOrIRI? {string} The ID of the blank node or a hash fragment IRI
    * @return {BlankNode} The resolved or created BlankNode
    */
-  static blankNodeByID(id) {
+  static blankNodeByID(idOrIRI) {
+    const BlankNode = require('./blank-node')
+    const id = BlankNode.normalizeID(idOrIRI)
     const fromMap = this.bnMap[id]
     if (fromMap !== undefined) {
       return fromMap
     }
-    const BlankNode = require('./blank-node')
-    return this.addBn(new BlankNode(id))
+    const newBN = new BlankNode(id)
+    return this.addBn(newBN)
   }
 
   /**
@@ -89,6 +91,18 @@ class Term extends Node {
    */
   static literalByValue(value, lang = undefined, datatype) {
     const strValue = value.toString()
+
+    const existing = Term.findLiteralByValue(strValue, lang, datatype)
+    if (existing) {
+      return existing
+    }
+
+    const Literal = require('./literal')
+    return this.addLit(new Literal(strValue, lang, datatype))
+  }
+
+  /** @private */
+  static findLiteralByValue(strValue, lang = undefined, datatype) {
     let fromMap
     // Language strings need an additional index layer
     if (lang) {
@@ -105,12 +119,7 @@ class Term extends Node {
       fromMap = this.litMap[dtIndex] && this.litMap[dtIndex][strValue]
     }
 
-    if (fromMap) {
-      return fromMap
-    }
-
-    const Literal = require('./literal')
-    return this.addLit(new Literal(strValue, lang, datatype))
+    return fromMap
   }
 
   /**
@@ -187,6 +196,7 @@ class Term extends Node {
 
 /**
  * Running counter which assigns ids
+ * @private
  * @type {number}
  */
 Term.termIndex = 0
@@ -199,18 +209,21 @@ Term.termMap = []
 
 /**
  * Maps IRIs to their NamedNode counterparts
+ * @private
  * @type {Object<string, NamedNode>}
  */
 Term.nsMap = {}
 
 /**
  * Maps blank ids to their BlankNode counterparts
+ * @private
  * @type {Object<string, BlankNode>}
  */
 Term.bnMap = {}
 
 /**
  * Maps literals to their Literal counterparts
+ * @private
  * @type {Array<Array<Literal|Array<Literal>>>}
  */
 Term.litMap = []
