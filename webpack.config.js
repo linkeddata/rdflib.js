@@ -25,9 +25,14 @@ module.exports = (env, args) => {
     },
     plugins: [
       new WrapperPlugin({
-        // Ensure `solid` namespace exists for externals
-        header: `if (typeof window !== 'undefined' && !window.solid)
-                   window.solid = {};`
+        // Fall back to window.fetch when solid-auth-client is not present,
+        // so rdflib.js can still work outside of Solid
+        header: `if (typeof window !== 'undefined') {
+                   if (!window.solid)
+                     window.solid = {}
+                   if (!window.solid.auth)
+                     window.solid.auth = { fetch: (a, b) => window.fetch(a, b) }
+                 }`
       })
     ],
     optimization: {
