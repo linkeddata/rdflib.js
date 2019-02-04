@@ -1484,7 +1484,10 @@ class Fetcher {
 
     const reqNode = options.req
 
-    const responseNode = this.saveResponseMetadata(response, options)
+    let responseNode
+    if (!options.noMeta) {
+      responseNode = this.saveResponseMetadata(response, options)
+    }
 
     const contentType = this.normalizedContentType(options, headers) || ''
 
@@ -1505,6 +1508,7 @@ class Fetcher {
         this.nonexistent[docuri] = true
       }
 
+      responseNode = responseNode || this.saveResponseMetadata(response, options)
       return this.saveErrorResponse(response, responseNode)
         .then(() => {
           let errorMessage = options.resource + ' ' + response.statusText
