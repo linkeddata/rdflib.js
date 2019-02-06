@@ -141,34 +141,18 @@ class IndexedFormula extends Formula { // IN future - allow pass array of statem
         // console.log('ds before substitute: ' + ds)
         if (binding) ds = ds.substitute(binding)
         // console.log('applyPatch: delete: ' + ds)
-        ds = ds.statements
-        var bad = []
-        var ds2 = ds.map(function (st) { // Find the actual statemnts in the store
+        ds.statements.forEach(function (st) { // Find the actual statemnts in the store
           var sts = targetKB.statementsMatching(st.subject, st.predicate, st.object, target)
-          if (sts.length === 0) {
-            // log.info("NOT FOUND deletable " + st)
-            bad.push(st)
-            return null
-          } else {
-            // log.info("Found deletable " + st)
-            return sts[0]
+          if (sts.length > 0) {
+            targetKB.remove(sts[0])
           }
-        })
-        if (bad.length) {
-          // console.log('Could not find to delete ' + bad.length + 'statements')
-          // console.log('despite ' + targetKB.statementsMatching(bad[0].subject, bad[0].predicate)[0])
-          return patchCallback('Could not find to delete: ' + bad.join('\n or '))
-        }
-        ds2.map(function (st) {
-          targetKB.remove(st)
         })
       }
       if (patch['insert']) {
         // log.info("doPatch insert "+patch['insert'])
         ds = patch['insert']
         if (binding) ds = ds.substitute(binding)
-        ds = ds.statements
-        ds.map(function (st) {
+        ds.statements.forEach(function (st) {
           st.why = target
           targetKB.add(st.subject, st.predicate, st.object, st.why)
         })
