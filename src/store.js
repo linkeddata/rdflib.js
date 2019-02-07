@@ -135,36 +135,12 @@ class IndexedFormula extends Formula { // IN future - allow pass array of statem
     const { delete: deletions, insert: insertions, where } = patch
     const mustExist = 'mustExist' in patch ? !!patch.mustExist : true
 
-    function doPatch(binding, onDonePatch) {
-      if (deletions) {
-        const graph = !binding ? deletions : deletions.substitute(binding)
-        const toRemove = []
-        const notFound = []
-        graph.statements.forEach(function (st) { // Find the actual statemnts in the store
-          const sts = targetKB.statementsMatching(st.subject, st.predicate, st.object, target)
-          if (sts.length === 0) {
-            notFound.push(st)
-          } else {
-            toRemove.push(sts[0])
-          }
-        })
-        if (mustExist && notFound.length !== 0) {
-          return patchCallback('Could not find to delete: ' + notFound.join('\n or '))
-        }
-        toRemove.forEach(function (st) {
-          targetKB.remove(st)
-        })
-      }
-      if (insertions) {
-        const graph = !binding ? insertions : insertions.substitute(binding)
-        graph.statements.forEach(function (st) {
-          st.why = target
-          targetKB.add(st.subject, st.predicate, st.object, st.why)
-        })
-      }
-      onDonePatch()
-    }
-    if (where) {
+    const toBeAdded = []
+    const toBeRemoved = []
+
+    if (!where) {
+      createChanges([null])
+    } else {
       const query = new Query('patch')
       query.pat.statements = where.statements.map(function (st) {
         const { subject, predicate, object } = st
@@ -172,21 +148,59 @@ class IndexedFormula extends Formula { // IN future - allow pass array of statem
       })
 
       const bindingsFound = []
-      targetKB.query(query, function onBinding (binding) {
-          bindingsFound.push(binding)
-        },
+      targetKB.query(query, b => bindingsFound.push(b),
         targetKB.fetcher,
-        function onDone () {
+        () => {
           if (bindingsFound.length === 0) {
-            return patchCallback('No match found to be patched:' + patch.where)
+            if (mustExist || insertions)
+              return patchCallback('No match found to be patched:' + patch.where)
+            bindingsFound.push(null);
           }
-          if (bindingsFound.length > 1) {
-            return patchCallback('Patch ambiguous. No patch done.')
-          }
-          doPatch(bindingsFound[0], patchCallback)
+          createChanges(bindingsFound);
         })
-    } else {
-      doPatch(null, patchCallback)
+    }
+
+    function createChanges(bindings) {
+      try {
+        for (const binding of bindings) {
+          createChange(binding)
+        }
+      }
+      catch (error) {
+        return patchCallback(error)
+      }
+      applyChanges()
+    }
+
+    function createChange(binding) {
+      if (deletions) {
+        const graph = !binding ? deletions : deletions.substitute(binding)
+        const notFound = []
+        graph.statements.forEach(function (st) { // Find the actual statemnts in the store
+          const sts = targetKB.statementsMatching(st.subject, st.predicate, st.object, target)
+          if (sts.length === 0) {
+            notFound.push(st)
+          } else {
+            toBeRemoved.push(sts[0])
+          }
+        })
+        if (mustExist && notFound.length !== 0) {
+          throw new Error('Could not find to delete: ' + notFound.join('\n or '))
+        }
+      }
+      if (insertions) {
+        const graph = !binding ? insertions : insertions.substitute(binding)
+        graph.statements.forEach(function (st) {
+          st.why = target
+          toBeAdded.push(st)
+        })
+      }
+    }
+
+    function applyChanges() {
+      toBeRemoved.forEach(st => targetKB.remove(st))
+      toBeAdded.forEach(st => targetKB.add(st))
+      patchCallback()
     }
   }
 
