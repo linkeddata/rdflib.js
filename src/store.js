@@ -118,8 +118,6 @@ class IndexedFormula extends Formula { // IN future - allow pass array of statem
   applyPatch (patch, target, patchCallback) { // patchCallback(err)
     const Query = require('./query').Query
     var targetKB = this
-    var ds
-    var binding = null
 
     // /////////// Debug strings
     /*
@@ -134,61 +132,49 @@ class IndexedFormula extends Formula { // IN future - allow pass array of statem
       return str
     }
 */
-    var doPatch = function (onDonePatch) {
-      if (patch['delete']) {
-        ds = patch['delete']
-        // console.log(bindingDebug(binding))
-        // console.log('ds before substitute: ' + ds)
-        if (binding) ds = ds.substitute(binding)
-        // console.log('applyPatch: delete: ' + ds)
-        ds = ds.statements
-        var bad = []
-        var ds2 = ds.map(function (st) { // Find the actual statemnts in the store
-          var sts = targetKB.statementsMatching(st.subject, st.predicate, st.object, target)
+    const { delete: deletions, insert: insertions, where } = patch
+    const mustExist = 'mustExist' in patch ? !!patch.mustExist : true
+
+    function doPatch(binding, onDonePatch) {
+      if (deletions) {
+        const graph = !binding ? deletions : deletions.substitute(binding)
+        const toRemove = []
+        const notFound = []
+        graph.statements.forEach(function (st) { // Find the actual statemnts in the store
+          const sts = targetKB.statementsMatching(st.subject, st.predicate, st.object, target)
           if (sts.length === 0) {
-            // log.info("NOT FOUND deletable " + st)
-            bad.push(st)
-            return null
+            notFound.push(st)
           } else {
-            // log.info("Found deletable " + st)
-            return sts[0]
+            toRemove.push(sts[0])
           }
         })
-        if (bad.length) {
-          // console.log('Could not find to delete ' + bad.length + 'statements')
-          // console.log('despite ' + targetKB.statementsMatching(bad[0].subject, bad[0].predicate)[0])
-          return patchCallback('Could not find to delete: ' + bad.join('\n or '))
+        if (mustExist && notFound.length !== 0) {
+          return patchCallback('Could not find to delete: ' + notFound.join('\n or '))
         }
-        ds2.map(function (st) {
+        toRemove.forEach(function (st) {
           targetKB.remove(st)
         })
       }
-      if (patch['insert']) {
-        // log.info("doPatch insert "+patch['insert'])
-        ds = patch['insert']
-        if (binding) ds = ds.substitute(binding)
-        ds = ds.statements
-        ds.map(function (st) {
+      if (insertions) {
+        const graph = !binding ? insertions : insertions.substitute(binding)
+        graph.statements.forEach(function (st) {
           st.why = target
           targetKB.add(st.subject, st.predicate, st.object, st.why)
         })
       }
       onDonePatch()
     }
-    if (patch.where) {
-      // log.info("Processing WHERE: " + patch.where + '\n')
-      var query = new Query('patch')
-      query.pat = patch.where
-      query.pat.statements.map(function (st) {
-        st.why = target
+    if (where) {
+      const query = new Query('patch')
+      query.pat.statements = where.statements.map(function (st) {
+        const { subject, predicate, object } = st
+        return { subject, predicate, object, why: target }
       })
 
-      var bindingsFound = []
-
+      const bindingsFound = []
       targetKB.query(query, function onBinding (binding) {
-        bindingsFound.push(binding)
-        // console.log('   got a binding: ' + bindingDebug(binding))
-      },
+          bindingsFound.push(binding)
+        },
         targetKB.fetcher,
         function onDone () {
           if (bindingsFound.length === 0) {
@@ -197,11 +183,10 @@ class IndexedFormula extends Formula { // IN future - allow pass array of statem
           if (bindingsFound.length > 1) {
             return patchCallback('Patch ambiguous. No patch done.')
           }
-          binding = bindingsFound[0]
-          doPatch(patchCallback)
+          doPatch(bindingsFound[0], patchCallback)
         })
     } else {
-      doPatch(patchCallback)
+      doPatch(null, patchCallback)
     }
   }
 
