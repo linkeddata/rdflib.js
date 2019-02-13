@@ -1159,6 +1159,9 @@ class Fetcher {
     return new Promise(function (resolve, reject) {
       fetcher._fetch(uri, options).then(response => {
         if (response.ok) {
+          if (method === 'PUT' || method === 'PATCH'|| method === 'DELETE') {
+            delete fetcher.requested[uri] // invalidate read cache
+          }
           if (response.body) {
             response.text().then(data => {
               response.responseText = data
@@ -1226,7 +1229,7 @@ class Fetcher {
         let response = kb.any(request, ns.link('response'))
 
         if (response !== undefined) {
-          console.log('@@@ looking for ' + ns.httph(header.toLowerCase()))
+          // console.log('@@@ looking for ' + ns.httph(header.toLowerCase()))
           let results = kb.each(response, ns.httph(header.toLowerCase()))
 
           if (results.length) {

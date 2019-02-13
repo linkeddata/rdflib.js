@@ -480,15 +480,15 @@ class UpdateManager {
     var updater = this
 
     if (control.reloading) {
-      console.log('   Already reloading - stop')
-      return // once only needed
+      console.log('   Already reloading - note this load may be out of date')
+      control.outOfDate = true
+      return // once only needed @@ Not true, has changed again
     }
     control.reloading = true
     var retryTimeout = 1000 // ms
     var tryReload = function () {
       console.log('try reload - timeout = ' + retryTimeout)
       updater.reload(updater.store, doc, function (ok, message, response) {
-        control.reloading = false
         if (ok) {
           if (control.downstreamChangeListeners) {
             for (let i = 0; i < control.downstreamChangeListeners.length; i++) {
@@ -496,7 +496,14 @@ class UpdateManager {
               control.downstreamChangeListeners[i]()
             }
           }
+          control.reloading = false
+          if (control.outOfDate){
+            console.log('   Extra reload because of extra update.')
+            control.outOfDate = false
+            tryReload()
+          }
         } else {
+          control.reloading = false
           if (response.status === 0) {
             console.log('Network error refreshing the data. Retrying in ' +
               retryTimeout / 1000)
