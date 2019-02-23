@@ -24,7 +24,7 @@ const Statement = require('./statement')
 const Node = require('./node')
 const Variable = require('./variable')
 
-const indexedFormulaQuery = require('./query').indexedFormulaQuery
+// const indexedFormulaQuery = require('./query').indexedFormulaQuery
 
 
 const owlNamespaceURI = 'http://www.w3.org/2002/07/owl#'
@@ -520,6 +520,8 @@ class IndexedFormula extends Formula { // IN future - allow pass array of statem
   }
 
   query (myQuery, callback, dummy, onDone) {
+    let indexedFormulaQuery = require('./query').indexedFormulaQuery
+
     return indexedFormulaQuery.call(this, myQuery, callback, dummy, onDone)
   }
 
@@ -530,7 +532,7 @@ class IndexedFormula extends Formula { // IN future - allow pass array of statem
  */
   querySync (myQuery) {
     function saveBinginds (bindings) {
-      results.push(b)
+      results.push(bindings)
     }
     function onDone () {
       done = true
@@ -538,6 +540,8 @@ class IndexedFormula extends Formula { // IN future - allow pass array of statem
     var results = []
     var done = false
     myQuery.sync = true
+    let indexedFormulaQuery = require('./query').indexedFormulaQuery
+
     indexedFormulaQuery.call(this, myQuery, saveBinginds, null, onDone)
     if (!done) {
       throw new Error('Sync query should have called done function')
