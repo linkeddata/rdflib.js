@@ -12,10 +12,7 @@
 // options.base = base URI    not really an option, shopuld always be set.
 //
 
-const BlankNode = require('./blank-node')
-const Literal = require('./literal')
 const rdf = require('./data-factory')
-const NamedNode = require('./named-node')
 const Uri = require('./uri')
 const Util = require('./util')
 
@@ -863,7 +860,7 @@ class RDFaProcessor {
     if (typeof x === 'string') {
       if (x.substring(0, 2) === '_:') {
         if (typeof this.blankNodes[x.substring(2)] === 'undefined') {
-          this.blankNodes[x.substring(2)] = new BlankNode(x.substring(2))
+          this.blankNodes[x.substring(2)] = Node.blankNodeByID(x.substring(2))
         }
         return this.blankNodes[x.substring(2)]
       }
@@ -873,22 +870,22 @@ class RDFaProcessor {
       case RDFaProcessor.objectURI:
         if (x.value.substring(0, 2) === '_:') {
           if (typeof this.blankNodes[x.value.substring(2)] === 'undefined') {
-            this.blankNodes[x.value.substring(2)] = new BlankNode(x.value.substring(2))
+            this.blankNodes[x.value.substring(2)] = Node.blankNodeByID(x.value.substring(2))
           }
           return this.blankNodes[x.value.substring(2)]
         }
         return rdf.namedNode(x.value)
       case RDFaProcessor.PlainLiteralURI:
-        return new Literal(x.value, x.language || '')
+        return Node.literalByValue(x.value, x.language || '')
       case RDFaProcessor.XMLLiteralURI:
       case RDFaProcessor.HTMLLiteralURI:
         var string = ''
         Object.keys(x.value).forEach(function (i) {
           string += Util.domToString(x.value[i], this.htmlOptions)
         })
-        return new Literal(string, '', new NamedNode(x.type))
+        return Node.literalByValue(string, null, Node.namedNodeByIRI(x.type))
       default:
-        return new Literal(x.value, '', new NamedNode(x.type))
+        return Node.literalByValue(x.value, null, Node.namedNodeByIRI(x.type))
     }
   }
 

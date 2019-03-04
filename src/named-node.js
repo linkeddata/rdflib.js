@@ -1,12 +1,12 @@
 'use strict'
 const ClassOrder = require('./class-order')
-const Node = require('./node')
+const Term = require('./term')
 
 /**
  * @class NamedNode
- * @extends Node
+ * @extends Term
  */
-class NamedNode extends Node {
+class NamedNode extends Term {
   /**
    * @constructor
    * @param iri {String}
@@ -32,6 +32,11 @@ class NamedNode extends Node {
       throw new Error(message)
     }
 
+    const existing = Term.nsMap[iri]
+    if (existing) {
+      return existing
+    }
+
     this.value = iri
   }
   /**
@@ -42,7 +47,7 @@ class NamedNode extends Node {
      var p = str.slice(0, -1).lastIndexOf('/')
      var q = str.indexOf('//')
      if ((q >= 0 && p < q + 2) || p < 0) return null
-     return new NamedNode(str.slice(0, p + 1))
+     return Term.namedNodeByIRI(str.slice(0, p + 1))
    }
    /**
     * Returns an NN for the whole web site, ending in slash.
@@ -54,17 +59,18 @@ class NamedNode extends Node {
      if (p < 0) throw new Error('This URI does not have a web site part (origin)')
      var q = str.indexOf('/', p+2)
      if (q < 0) throw new Error('This URI does not have a web site part. (origin)')
-     return new NamedNode(str.slice(0, q + 1))
+     return Term.namedNodeByIRI(str.slice(0, q + 1))
    }
   doc () {
     if (this.uri.indexOf('#') < 0) {
       return this
     } else {
-      return new NamedNode(this.uri.split('#')[0])
+      return Term.namedNodeByIRI(this.uri.split('#')[0])
     }
   }
-  toString () {
-    return '<' + this.uri + '>'
+
+  generateString () {
+     return '<' + this.uri + '>'
   }
 
   /**
@@ -77,14 +83,7 @@ class NamedNode extends Node {
     this.value = uri
   }
   static fromValue (value) {
-    if (typeof value === 'undefined' || value === null) {
-      return value
-    }
-    const isNode = value && value.termType
-    if (isNode) {
-      return value
-    }
-    return new NamedNode(value)
+    return Term.namedNodeByIRI(value)
   }
 }
 NamedNode.termType = 'NamedNode'

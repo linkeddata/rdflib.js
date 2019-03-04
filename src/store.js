@@ -22,12 +22,10 @@ const Formula = require('./formula')
 const RDFArrayRemove = require('./util').RDFArrayRemove
 const Statement = require('./statement')
 const Node = require('./node')
+const ns = require('./ns')
 const Variable = require('./variable')
 
-const owlNamespaceURI = 'http://www.w3.org/2002/07/owl#'
-
 const defaultGraphURI = 'chrome:theSession'
-// var link_ns = 'http://www.w3.org/2007/ont/link#'
 
 // Handle Functional Property
 function handleFP (formula, subj, pred, obj) {
@@ -213,12 +211,12 @@ class IndexedFormula extends Formula { // IN future - allow pass array of statem
 
   initPropertyActions (features) {
     // If the predicate is #type, use handleRDFType to create a typeCallback on the object
-    this.propertyActions['<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>'] =
+    this.propertyActions[ns.rdf('type').hashString()] =
       [ handleRDFType ]
 
     // Assumption: these terms are not redirected @@fixme
     if (ArrayIndexOf(features, 'sameAs') >= 0) {
-      this.propertyActions['<http://www.w3.org/2002/07/owl#sameAs>'] = [
+      this.propertyActions[ns.owl('sameAs').hashString()] = [
         function (formula, subj, pred, obj, why) {
           // log.warn("Equating "+subj.uri+" sameAs "+obj.uri);  //@@
           formula.equate(subj, obj)
@@ -227,7 +225,7 @@ class IndexedFormula extends Formula { // IN future - allow pass array of statem
       ] // sameAs -> equate & don't add to index
     }
     if (ArrayIndexOf(features, 'InverseFunctionalProperty') >= 0) {
-      this.classActions['<' + owlNamespaceURI + 'InverseFunctionalProperty>'] = [
+      this.classActions[ns.owl('InverseFunctionalProperty').hashString()] = [
         function (formula, subj, pred, obj, addFn) {
           // yes subj not pred!
           return formula.newPropertyAction(subj, handleIFP)
@@ -235,7 +233,7 @@ class IndexedFormula extends Formula { // IN future - allow pass array of statem
       ] // IFP -> handleIFP, do add to index
     }
     if (ArrayIndexOf(features, 'FunctionalProperty') >= 0) {
-      this.classActions['<' + owlNamespaceURI + 'FunctionalProperty>'] = [
+      this.classActions[ns.owl('FunctionalProperty')] = [
         function (formula, subj, proj, obj, addFn) {
           return formula.newPropertyAction(subj, handleFP)
         }

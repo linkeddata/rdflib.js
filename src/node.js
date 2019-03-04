@@ -1,4 +1,5 @@
 'use strict'
+
 /**
  * The superclass of all RDF Statement objects, that is
  * NamedNode, Literal, BlankNode, etc.
@@ -75,22 +76,19 @@ Node.fromValue = function fromValue (value) {
 }
 
 Node.toJS = function fromJS (term) {
+  const ns = require('./ns')
   if (term.elements) {
     return term.elements.map(Node.toJS) // Array node (not standard RDFJS)
   }
   if (!term.datatype) return term // Objects remain objects
-  if (term.datatype.equals(ns.xsd('boolean'))) {
+  if (term.datatype === ns.xsd('boolean')) {
     return term.value === '1'
   }
-  if (term.datatype.equals(ns.xsd('dateTime')) ||
-    term.datatype.equals(ns.xsd('date'))) {
+  if (term.datatype === ns.xsd('dateTime') ||
+    term.datatype === ns.xsd('date')) {
     return new Date(term.value)
   }
-  if (
-    term.datatype.equals(ns.xsd('integer')) ||
-    term.datatype.equals(ns.xsd('float')) ||
-    term.datatype.equals(ns.xsd('decimal'))
-  ) {
+  if ([ns.xsd('integer'), ns.xsd('float'), ns.xsd('decimal')].includes(term.datatype)) {
     return Number(term.value)
   }
   return term.value
