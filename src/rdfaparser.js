@@ -179,7 +179,10 @@ class RDFaProcessor {
 
   static parseRDFaDOM (dom, kb, base) {
     var p = new RDFaProcessor(kb, { 'base': base })
-    dom.baseURI = base
+    //  Cannot assign to read only property 'baseURI' of object '#<XMLDocument>':
+    if (!dom.baseURI) { // Note this became a read-only attribute some time before 2018
+      dom.baseURI = base // oinly set if not already set
+    }
     p.process(dom)
   }
 
