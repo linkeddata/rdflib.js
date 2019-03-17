@@ -38,9 +38,9 @@ const Util = require('./util')
 const serialize = require('./serialize')
 
 // This is a special fetch which does OIDC auth, catching 401 errors
-const { fetch } = (typeof window === "undefined")
-                ? require('solid-auth-cli')
-                : require('solid-auth-client');
+const {fetch} = (typeof window === "undefined")
+         ? require('solid-auth-cli')
+         : require('solid-auth-client');
 
 const Parsable = {
   'text/n3': true,
