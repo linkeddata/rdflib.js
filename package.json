@@ -45,7 +45,6 @@
     "@babel/register": "^7.0.0",
     "babel-core": "^7.0.0-bridge.0",
     "babel-loader": "^8.0.5",
-    "babel-minify-webpack-plugin": "^0.3.1",
     "chai": "^4.2.0",
     "diff": "^3.2.0",
     "dirty-chai": "^2.0.0",
@@ -60,7 +59,6 @@
     "sinon-chai": "^2.11.0",
     "webpack": "^4.29.6",
     "webpack-cli": "^3.3.0",
-    "webpack-sources": "1.0.1",
     "wrapper-webpack-plugin": "^2.1.0"
   },
   "scripts": {
