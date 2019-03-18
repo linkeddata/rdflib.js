@@ -1160,7 +1160,7 @@ class Fetcher {
     return new Promise(function (resolve, reject) {
       fetcher._fetch(uri, options).then(response => {
         if (response.ok) {
-          if (method === 'PUT' || method === 'PATCH'|| method === 'DELETE') {
+          if (method === 'PUT' || method === 'PATCH'|| method === 'POST'|| method === 'DELETE') {
             delete fetcher.requested[uri] // invalidate read cache
           }
           if (response.body) {
