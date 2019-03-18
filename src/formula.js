@@ -84,6 +84,11 @@ class Formula extends Node {
     return y ? y.value : void 0
   }
 
+  anyJS (s, p, o, g) {
+    var y = this.any(s, p, o, g)
+    return y ? Node.toJS(y) : void 0
+  }
+
   anyStatementMatching (subj, pred, obj, why) {
     var x = this.statementsMatching(subj, pred, obj, why, true)
     if (!x || x.length === 0) {

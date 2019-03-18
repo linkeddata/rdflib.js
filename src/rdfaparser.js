@@ -179,7 +179,10 @@ class RDFaProcessor {
 
   static parseRDFaDOM (dom, kb, base) {
     var p = new RDFaProcessor(kb, { 'base': base })
-    dom.baseURI = base
+    //  Cannot assign to read only property 'baseURI' of object '#<XMLDocument>':
+    if (!dom.baseURI) { // Note this became a read-only attribute some time before 2018
+      dom.baseURI = base // oinly set if not already set
+    }
     p.process(dom)
   }
 
@@ -258,12 +261,14 @@ class RDFaProcessor {
     /*
     if (!window.console) {
        window.console = { log: function() {} }
-    }*/
+    } */
     var base
     if (node.nodeType === Node.DOCUMENT_NODE) {
       base = node.baseURI
       node = node.documentElement
-      node.baseURI = base
+      if (!node.baseURI) {
+        node.baseURI = base
+      }
       this.setContext(node)
     } else if (node.parentNode.nodeType === Node.DOCUMENT_NODE) {
       this.setContext(node)
@@ -666,12 +671,12 @@ class RDFaProcessor {
                 list = []
                 listMapping[predicate] = list
               }
-              list.push((datatype === RDFaProcessor.XMLLiteralURI || datatype === RDFaProcessor.HTMLLiteralURI) ? { type: datatype, value: current.childNodes } : { type: datatype ? datatype : RDFaProcessor.PlainLiteralURI, value: content, language: language })
+              list.push((datatype === RDFaProcessor.XMLLiteralURI || datatype === RDFaProcessor.HTMLLiteralURI) ? { type: datatype, value: current.childNodes } : { type: datatype || RDFaProcessor.PlainLiteralURI, value: content, language: language })
             } else {
               if (datatype === RDFaProcessor.XMLLiteralURI || datatype === RDFaProcessor.HTMLLiteralURI) {
                 this.addTriple(current, newSubject, predicate, { type: datatype, value: current.childNodes })
               } else {
-                this.addTriple(current, newSubject, predicate, { type: datatype ? datatype : RDFaProcessor.PlainLiteralURI, value: content, language: language })
+                this.addTriple(current, newSubject, predicate, { type: datatype || RDFaProcessor.PlainLiteralURI, value: content, language: language })
               // console.log(newSubject+" "+predicate+"="+content)
               }
             }
@@ -708,7 +713,7 @@ class RDFaProcessor {
         childContext.vocabulary = vocabulary
       } else {
         childContext = this.push(context, newSubject)
-        childContext.parentObject = currentObjectResource ? currentObjectResource : (newSubject ? newSubject : context.subject)
+        childContext.parentObject = currentObjectResource || (newSubject || context.subject)
         childContext.prefixes = prefixes
         childContext.incomplete = incomplete
         if (currentObjectResource) {
@@ -728,7 +733,7 @@ class RDFaProcessor {
       for (var child = current.lastChild; child; child = child.previousSibling) {
         if (child.nodeType === Node.ELEMENT_NODE) {
           // console.log("Pushing child "+child.localName)
-          child.baseURI = current.baseURI
+          // child.baseURI = current.baseURI
           queue.unshift({ current: child, context: childContext })
         }
       }
@@ -744,7 +749,7 @@ class RDFaProcessor {
   push (parent, subject) {
     return {
       parent: parent,
-      subject: subject ? subject : (parent ? parent.subject : null),
+      subject: subject || (parent ? parent.subject : null),
       parentObject: null,
       incomplete: [],
       listMapping: parent ? parent.listMapping : {},
@@ -857,6 +862,9 @@ class RDFaProcessor {
   tokenize (str) {
     return this.trim(str).split(/\s+/)
   }
+  static tokenize (str) {
+    return this.trim(str).split(/\s+/)
+  }
 
   toRDFNodeObject (x) {
     if (typeof x === 'undefined') return undefined
@@ -895,6 +903,9 @@ class RDFaProcessor {
   trim (str) {
     return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '')
   }
+  static trim (str) {
+    return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '')
+  }
 }
 
 RDFaProcessor.XMLLiteralURI =
@@ -922,17 +933,17 @@ RDFaProcessor.prototype.resolveAndNormalize = function(base,href) {
 
 RDFaProcessor.dateTimeTypes = [
   { pattern: /-?P(?:[0-9]+Y)?(?:[0-9]+M)?(?:[0-9]+D)?(?:T(?:[0-9]+H)?(?:[0-9]+M)?(?:[0-9]+(?:\.[0-9]+)?S)?)?/,
-  type: 'http://www.w3.org/2001/XMLSchema#duration' },
+    type: 'http://www.w3.org/2001/XMLSchema#duration' },
   { pattern: /-?(?:[1-9][0-9][0-9][0-9]|0[1-9][0-9][0-9]|00[1-9][0-9]|000[1-9])-[0-9][0-9]-[0-9][0-9]T(?:[0-1][0-9]|2[0-4]):[0-5][0-9]:[0-5][0-9](?:\.[0-9]+)?(?:Z|[+\-][0-9][0-9]:[0-9][0-9])?/,
-  type: 'http://www.w3.org/2001/XMLSchema#dateTime' },
+    type: 'http://www.w3.org/2001/XMLSchema#dateTime' },
   { pattern: /-?(?:[1-9][0-9][0-9][0-9]|0[1-9][0-9][0-9]|00[1-9][0-9]|000[1-9])-[0-9][0-9]-[0-9][0-9](?:Z|[+\-][0-9][0-9]:[0-9][0-9])?/,
-  type: 'http://www.w3.org/2001/XMLSchema#date' },
+    type: 'http://www.w3.org/2001/XMLSchema#date' },
   { pattern: /(?:[0-1][0-9]|2[0-4]):[0-5][0-9]:[0-5][0-9](?:\.[0-9]+)?(?:Z|[+\-][0-9][0-9]:[0-9][0-9])?/,
-  type: 'http://www.w3.org/2001/XMLSchema#time' },
+    type: 'http://www.w3.org/2001/XMLSchema#time' },
   { pattern: /-?(?:[1-9][0-9][0-9][0-9]|0[1-9][0-9][0-9]|00[1-9][0-9]|000[1-9])-[0-9][0-9]/,
-  type: 'http://www.w3.org/2001/XMLSchema#gYearMonth' },
+    type: 'http://www.w3.org/2001/XMLSchema#gYearMonth' },
   { pattern: /-?[1-9][0-9][0-9][0-9]|0[1-9][0-9][0-9]|00[1-9][0-9]|000[1-9]/,
-  type: 'http://www.w3.org/2001/XMLSchema#gYear' }
+    type: 'http://www.w3.org/2001/XMLSchema#gYear' }
 ]
 
 module.exports = RDFaProcessor

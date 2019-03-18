@@ -15,7 +15,7 @@
 // Compare with BlankNode.  They are similar, but a variable
 // stands for something whose value is to be returned.
 // Also, users name variables and want the same name back when stuff is printed
-/* jsl:option explicit*/ // Turn on JavaScriptLint variable declaration checking
+/* jsl:option explicit */ // Turn on JavaScriptLint variable declaration checking
 
 const IndexedFormula = require('./store')
 const log = require('./log')
@@ -43,17 +43,16 @@ class Query {
  * currently not in the kb. The fetcher function needs to be defined manualy and
  * should call $rdf.Util.AJAR_handleNewTerm to process the requested resource.
  *
- * @param	myQuery,	a knowledgebase containing a pattern to use as query
- * @param	callback, 	whenever the pattern in myQuery is met this is called with
- * 						the new bindings as parameter
- * @param	fetcher,	whenever a resource needs to be loaded this gets called  IGNORED OBSOLETE
- *                              f.fetecher is used as a Fetcher instance to do this.
- * @param       onDone          callback when
+ * @param myQuery - a knowledgebase containing a pattern to use as query
+ * @param callback - whenever the pattern in myQuery is met this is called with
+ *  the new bindings as parameter
+ * @param fetcher - IGNORED OBSOLETE  f.fetecher is used as a Fetcher instance to do this.
+ * @param onDone -  callback when query finished
  */
 function indexedFormulaQuery (myQuery, callback, fetcher, onDone) {
-  // var kb = this
-  // /////////// Debug strings
-  var bindingDebug = function (b) {
+  /** Debug strings
+  */
+  function bindingDebug (b) {
     var str = ''
     var v
     for (v in b) {
@@ -64,7 +63,7 @@ function indexedFormulaQuery (myQuery, callback, fetcher, onDone) {
     return str
   }
 
-  var bindingsDebug = function (nbs) {
+  function bindingsDebug (nbs) {
     var str = 'Bindings: '
     var i
     var n = nbs.length
@@ -74,24 +73,17 @@ function indexedFormulaQuery (myQuery, callback, fetcher, onDone) {
     return str
   } // bindingsDebug
 
-  // Unification: see also
-  //  http://www.w3.org/2000/10/swap/term.py
-  // for similar things in python
-  //
-  // Unification finds all bindings such that when the binding is applied
-  // to one term it is equal to the other.
-  // Returns: a list of bindings, where a binding is an associative array
-  //  mapping variuable to value.
-
-  var unifyTerm = function (self, other, bindings, formula) {
+  /** Unification
+   *
+   * Unification finds all bindings such that when the binding is applied
+   * to one term it is equal to the other.
+   * @returns {Arrray}-  a list of bindings, where a binding is an associative array
+   *  mapping variuable to value.
+   */
+  function unifyTerm (self, other, bindings, formula) {
     var actual = bindings[self]
     if (actual === undefined) { // Not mapped
       if (self.isVar) {
-        /* if (self.isBlank)  //bnodes are existential variables
-        {
-                if (self.toString() == other.toString()) return [[ [], null]]
-                else return []
-        }*/
         var b = []
         b[self] = other
         return [[ b, null ]] // Match
@@ -121,7 +113,7 @@ function indexedFormulaQuery (myQuery, callback, fetcher, onDone) {
   //    return actual.unifyContents(other, bindings)
   } // unifyTerm
 
-  var unifyContents = function (self, other, bindings, formula) {
+  function unifyContents (self, other, bindings, formula) {
     var nbs2
     if (self.length !== other.length) {
       return [] // no way
@@ -176,7 +168,7 @@ function indexedFormulaQuery (myQuery, callback, fetcher, onDone) {
   // to one term it is equal to the other term.  We only match formulae.
 
   /** if x is not in the bindings array, return the var; otherwise, return the bindings **/
-  var bind = function (x, binding) {
+  function bind (x, binding) {
     var y = binding[x]
     if (y === undefined) {
       return x
@@ -189,7 +181,7 @@ function indexedFormulaQuery (myQuery, callback, fetcher, onDone) {
   // tracked. The problem currently is (2011/7) that when several optionals exist, and they
   // all match, multiple sets of bindings are returned, each with one optional filled in.)
 
-  var union = function (a, b) {
+  function union (a, b) {
     var c = {}
     var x
     for (x in a) {
@@ -205,7 +197,7 @@ function indexedFormulaQuery (myQuery, callback, fetcher, onDone) {
     return c
   }
 
-  var OptionalBranchJunction = function (originalCallback, trunkBindings) {
+  function OptionalBranchJunction (originalCallback, trunkBindings) {
     this.trunkBindings = trunkBindings
     this.originalCallback = originalCallback
     this.branches = []
@@ -239,7 +231,7 @@ function indexedFormulaQuery (myQuery, callback, fetcher, onDone) {
   // A mandatory branch is the normal one, where callbacks
   // are made immediately and no junction is needed.
   // Might be useful for onFinsihed callback for query API.
-  var MandatoryBranch = function (callback, onDone) {
+  function MandatoryBranch (callback, onDone) {
     this.count = 0
     this.success = false
     this.done = false
@@ -290,11 +282,12 @@ function indexedFormulaQuery (myQuery, callback, fetcher, onDone) {
   }
 
   /** prepare -- sets the index of the item to the possible matches
-      * @param f - formula
-      * @param item - an Statement, possibly w/ vars in it
-      * @param bindings - Bindings so far
-  * @returns false if the query fails -- there are no items that match **/
-  var prepare = function (f, item, bindings) {
+   * @param f - formula
+   * @param item - an Statement, possibly w/ vars in it
+   * @param bindings - Bindings so far
+   * @returns false if the query fails -- there are no items that match
+  */
+  function prepare (f, item, bindings) {
     var terms, termIndex, i, ind
     item.nvars = 0
     item.index = null
@@ -345,7 +338,7 @@ function indexedFormulaQuery (myQuery, callback, fetcher, onDone) {
     return self.index.length - other.index.length
   }
 
-  var match_index = 0 // index
+  var matchIndex = 0 // index
   /** matches a pattern formula against the knowledge base, e.g. to find matches for table-view
   *
   * @param f - knowledge base formula
@@ -393,7 +386,7 @@ function indexedFormulaQuery (myQuery, callback, fetcher, onDone) {
 
     // Follow links from variables in query
     if (sf) { // Fetcher is used to fetch URIs, function first term is a URI term, second is the requester
-      var id = 'match' + match_index++
+      var id = 'match' + matchIndex++
       var fetchResource = function (requestedTerm, id) {
         var docuri = requestedTerm.uri.split('#')[0]
         sf.nowOrWhenFetched(docuri, undefined, function (ok, body, xhr) {
@@ -422,7 +415,6 @@ function indexedFormulaQuery (myQuery, callback, fetcher, onDone) {
       }
     } // if sf
     match2(f, g, bindingsSoFar, level, fetcher, localCallback, branch)
-    return
   } // match
 
   var constraintsSatisfied = function (bindings, constraints) {
@@ -519,32 +511,19 @@ function indexedFormulaQuery (myQuery, callback, fetcher, onDone) {
     }
   } // match2
   // ////////////////////////// Body of query()  ///////////////////////
-  /*
-  if(!fetcher) {
-      fetcher=function (x, requestedBy) {
-          if (x === null) {
-              return
-          }
-          $rdf.Util.AJAR_handleNewTerm(kb, x, requestedBy)
-      }
-  }
-  */
-  // prepare, oncallback: match1
-  // match1: fetcher, oncallback: match2
-  // match2, oncallback: populatetable
-  //    log.debug("Query F length"+this.statements.length+" G="+myQuery)
   var f = this
   log.debug('Query on ' + this.statements.length)
-  // kb.remoteQuery(myQuery,'http://jena.hpl.hp.com:3040/backstage',callback)
-  // return
   var trunck = new MandatoryBranch(callback, onDone)
   trunck.count++ // count one branch to complete at the moment
-  setTimeout(function () {
-    match(f, myQuery.pat, myQuery.pat.initBindings, '', fetcher, callback,
-      trunck /* branch */)
-  }, 0)
+  if (myQuery.sync) {
+    match(f, myQuery.pat, myQuery.pat.initBindings, '', fetcher, callback, trunck)
+  } else { // Give up thread: Allow other activities to run
+    setTimeout(function () {
+      match(f, myQuery.pat, myQuery.pat.initBindings, '', fetcher, callback, trunck)
+    }, 0)
+  }
 
-  return // returns nothing; callback does the work
+   // returns nothing; callback does the work
 } // query
 
 module.exports.Query = Query

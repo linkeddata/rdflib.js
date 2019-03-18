@@ -38,7 +38,9 @@ const Util = require('./util')
 const serialize = require('./serialize')
 
 // This is a special fetch which does OIDC auth, catching 401 errors
-const { fetch } = require('solid-auth-client')
+const {fetch} = (typeof window === "undefined")
+         ? require('solid-auth-cli')
+         : require('solid-auth-client');
 
 const Parsable = {
   'text/n3': true,
@@ -1158,6 +1160,9 @@ class Fetcher {
     return new Promise(function (resolve, reject) {
       fetcher._fetch(uri, options).then(response => {
         if (response.ok) {
+          if (method === 'PUT' || method === 'PATCH'|| method === 'POST'|| method === 'DELETE') {
+            delete fetcher.requested[uri] // invalidate read cache
+          }
           if (response.body) {
             response.text().then(data => {
               response.responseText = data
@@ -1225,7 +1230,7 @@ class Fetcher {
         let response = kb.any(request, ns.link('response'))
 
         if (response !== undefined) {
-          console.log('@@@ looking for ' + ns.httph(header.toLowerCase()))
+          // console.log('@@@ looking for ' + ns.httph(header.toLowerCase()))
           let results = kb.each(response, ns.httph(header.toLowerCase()))
 
           if (results.length) {

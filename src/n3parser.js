@@ -1526,16 +1526,17 @@ __OLD_BadSyntax.prototype.toString = function() {
         var post = "";
     }
     return "Line %i of <%s>: Bad syntax (%s) at ^ in:\n\"%s%s^%s%s\"" % new pyjslib_Tuple([ ( this.lines + 1 ) , this._uri, this._why, pre, str.slice( st, i), str.slice( i,  ( i + 60 ) ), post]);
-};
+}
+
 function BadSyntax(uri, lines, str, i, why) {
-    let msg =  (  (  (  (  (  (  (  ( "Line " +  ( lines + 1 )  )  + " of <" )  + uri )  + ">: Bad syntax: " )  + why )  + "\nat: \"" )  + str.slice( i,  ( i + 30 ) ) )  + "\"" ) ;
-    let e = new Error(msg)
-    e.lineNumber = lines + 1
+    let lineNo = lines + 1
+    let msg =  (  (  (  (  (  (  (  ( "Line " +  ( lineNo )  )  + " of <" )  + uri )  + ">: Bad syntax: " )  + why )  + "\nat: \"" )  + str.slice( i,  ( i + 30 ) ) )  + "\"" ) ;
+    let e = new SyntaxError(msg, uri , lineNo)
+    e.lineNo = lineNo
     e.characterInFile = i
     e.syntaxProblem = why
     return e
 }
-
 
 function stripCR(str) {
     var res = "";

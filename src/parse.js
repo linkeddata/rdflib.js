@@ -90,8 +90,9 @@ function parse (str, kb, base, contentType, callback) {
       if (callback) {
         callback(e, kb)
       } else {
-        throw new Error('Error trying to parse <' + base + '> as ' +
-          contentType + ':\n' + e + ':\n' + e.stack)
+        let e2 = new Error('' + e + ' while trying to parse <' + base + '> as ' + contentType)
+        e2.cause = e
+        throw e2
       }
     }
   }

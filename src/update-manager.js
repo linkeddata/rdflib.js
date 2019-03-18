@@ -322,7 +322,7 @@ class UpdateManager {
   /**
    * @private
    */
-  fire (uri, query, callback) {
+  fire (uri, query, callbackFunction) {
     return Promise.resolve()
       .then(() => {
         if (!uri) {
@@ -349,12 +349,14 @@ class UpdateManager {
 
         console.log('UpdateManager: update Ok for <' + uri + '>')
 
-        callback(uri, response.ok, response.responseText, response)
+        callbackFunction(uri, response.ok, response.responseText, response)
       })
       .catch(err => {
-        callback(uri, false, err.message, err)
+        callbackFunction(uri, false, err.message, err)
       })
   }
+
+// ARE THESE THEE FUNCTIONS USED? DEPROCATE?
 
   /** return a statemnet updating function
    *
@@ -374,7 +376,7 @@ class UpdateManager {
       statementNT: statement ? this.anonymizeNT(statement) : undefined,
       where: updater.contextWhere(context),
 
-      set_object: function (obj, callback) {
+      set_object: function (obj, callbackFunction) {
         var query = this.where
         query += 'DELETE DATA { ' + this.statementNT + ' } ;\n'
         query += 'INSERT DATA { ' +
@@ -382,12 +384,12 @@ class UpdateManager {
           this.anonymize(this.statement[1]) + ' ' +
           this.anonymize(obj) + ' ' + ' . }\n'
 
-        updater.fire(this.statement[3].uri, query, callback)
+        updater.fire(this.statement[3].uri, query, callbackFunction)
       }
     }
   }
 
-  insert_statement (st, callback) {
+  insert_statement (st, callbackFunction) {
     var st0 = st instanceof Array ? st[0] : st
     var query = this.contextWhere(this.statementContext(st0))
 
@@ -402,10 +404,10 @@ class UpdateManager {
         this.anonymize(st.object) + ' ' + ' . }\n'
     }
 
-    this.fire(st0.why.uri, query, callback)
+    this.fire(st0.why.uri, query, callbackFunction)
   }
 
-  delete_statement (st, callback) {
+  delete_statement (st, callbackFunction) {
     var st0 = st instanceof Array ? st[0] : st
     var query = this.contextWhere(this.statementContext(st0))
 
@@ -420,8 +422,10 @@ class UpdateManager {
         this.anonymize(st.object) + ' ' + ' . }\n'
     }
 
-    this.fire(st0.why.uri, query, callback)
+    this.fire(st0.why.uri, query, callbackFunction)
   }
+
+/// //////////////////////
 
   /**
    * Requests a now or future action to refresh changes coming downstream
@@ -476,15 +480,15 @@ class UpdateManager {
     var updater = this
 
     if (control.reloading) {
-      console.log('   Already reloading - stop')
-      return // once only needed
+      console.log('   Already reloading - note this load may be out of date')
+      control.outOfDate = true
+      return // once only needed @@ Not true, has changed again
     }
     control.reloading = true
     var retryTimeout = 1000 // ms
     var tryReload = function () {
       console.log('try reload - timeout = ' + retryTimeout)
       updater.reload(updater.store, doc, function (ok, message, response) {
-        control.reloading = false
         if (ok) {
           if (control.downstreamChangeListeners) {
             for (let i = 0; i < control.downstreamChangeListeners.length; i++) {
@@ -492,7 +496,14 @@ class UpdateManager {
               control.downstreamChangeListeners[i]()
             }
           }
+          control.reloading = false
+          if (control.outOfDate){
+            console.log('   Extra reload because of extra update.')
+            control.outOfDate = false
+            tryReload()
+          }
         } else {
+          control.reloading = false
           if (response.status === 0) {
             console.log('Network error refreshing the data. Retrying in ' +
               retryTimeout / 1000)
@@ -629,11 +640,24 @@ class UpdateManager {
    * @param deletions - Statement or statments to be deleted.
    * @param insertions - Statement or statements to be inserted
    *
-   * @param callback {Function} called as callback(uri, success, errorbody)
+   * @param callbackFunction {Function} called as callbackFunction(uri, success, errorbody)
+   *              OR returns a promise
    *
    * @returns {*}
    */
-  update (deletions, insertions, callback, secondTry) {
+  update (deletions, insertions, callbackFunction, secondTry) {
+    if (!callbackFunction) {
+      return new Promise(function (resolve, reject) { // Promise version
+        this.update(deletions, insertions, function (uri, ok, errorBody) {
+          if (!ok) {
+            reject(new Error(errorBody))
+          } else {
+            resolve()
+          }
+        }) // callbackFunction
+      }) // promise
+    } // if
+
     try {
       var kb = this.store
       var ds = !deletions ? []
@@ -649,7 +673,7 @@ class UpdateManager {
         throw new Error('Type Error ' + (typeof is) + ': ' + is)
       }
       if (ds.length === 0 && is.length === 0) {
-        return callback(null, true) // success -- nothing needed to be done.
+        return callbackFunction(null, true) // success -- nothing needed to be done.
       }
       var doc = ds.length ? ds[0].why : is[0].why
       if (!doc) {
@@ -679,15 +703,15 @@ class UpdateManager {
 
       var protocol = this.editable(doc.uri, kb)
       if (protocol === false) {
-        throw new Error("Update: Can't make changes in uneditable " + doc)
+        throw new Error('Update: Can\'t make changes in uneditable ' + doc)
       }
       if (protocol === undefined) { // Not enough metadata
         if (secondTry) {
-          throw new Error("Update: Loaded " + doc + "but stil can't figure out what editing protcol it supports.")
+          throw new Error('Update: Loaded ' + doc + "but stil can't figure out what editing protcol it supports.")
         }
         console.log(`Update: have not loaded ${doc} before: loading now...`)
-        this.store.fetcher.load(doc).then( response => {
-          this.update(deletions, insertions, callback, true) // secondTry
+        this.store.fetcher.load(doc).then(response => {
+          this.update(deletions, insertions, callbackFunction, true) // secondTry
         }, err => {
           throw new Error(`Update: Can't read ${doc} before patching: ${err}`)
         })
@@ -732,7 +756,7 @@ class UpdateManager {
             query += ' }\n'
           }
         }
-        // Track pending upstream patches until they have finished their callback
+        // Track pending upstream patches until they have finished their callbackFunction
         control.pendingUpstream = control.pendingUpstream ? control.pendingUpstream + 1 : 1
         if ('upstreamCount' in control) {
           control.upstreamCount += 1 // count changes we originated ourselves
@@ -756,7 +780,7 @@ class UpdateManager {
             }
           }
 
-          callback(uri, success, body, response)
+          callbackFunction(uri, success, body, response)
           control.pendingUpstream -= 1
           // When upstream patches have been sent, reload state if downstream waiting
           if (control.pendingUpstream === 0 && control.downstreamAction) {
@@ -767,13 +791,13 @@ class UpdateManager {
           }
         })
       } else if (protocol.indexOf('DAV') >= 0) {
-        this.updateDav(doc, ds, is, callback)
+        this.updateDav(doc, ds, is, callbackFunction)
       } else {
         if (protocol.indexOf('LOCALFILE') >= 0) {
           try {
-            this.updateLocalFile(doc, ds, is, callback)
+            this.updateLocalFile(doc, ds, is, callbackFunction)
           } catch (e) {
-            callback(doc.uri, false,
+            callbackFunction(doc.uri, false,
               'Exception trying to write back file <' + doc.uri + '>\n'
               // + tabulator.Util.stackString(e))
             )
@@ -783,12 +807,12 @@ class UpdateManager {
         }
       }
     } catch (e) {
-      callback(undefined, false, 'Exception in update: ' + e + '\n' +
+      callbackFunction(undefined, false, 'Exception in update: ' + e + '\n' +
         Util.stackString(e))
     }
   }
 
-  updateDav (doc, ds, is, callback) {
+  updateDav (doc, ds, is, callbackFunction) {
     let kb = this.store
     // The code below is derived from Kenny's UpdateCenter.js
     var request = kb.any(doc, this.ns.link('request'))
@@ -803,7 +827,6 @@ class UpdateManager {
     var contentType = kb.the(response, this.ns.httph('content-type')).value
 
     // prepare contents of revised document
-    let i
     let newSts = kb.statementsMatching(undefined, undefined, undefined, doc).slice() // copy!
     for (let i = 0; i < ds.length; i++) {
       Util.RDFArrayRemove(newSts, ds[i])
@@ -840,10 +863,10 @@ class UpdateManager {
           kb.add(is[i].subject, is[i].predicate, is[i].object, doc)
         }
 
-        callback(doc.uri, response.ok, response.responseText, response)
+        callbackFunction(doc.uri, response.ok, response.responseText, response)
       })
       .catch(err => {
-        callback(doc.uri, false, err.message, err)
+        callbackFunction(doc.uri, false, err.message, err)
       })
   }
 
@@ -853,16 +876,15 @@ class UpdateManager {
    * @param doc
    * @param ds
    * @param is
-   * @param callback
+   * @param callbackFunction
    */
-  updateLocalFile (doc, ds, is, callback) {
+  updateLocalFile (doc, ds, is, callbackFunction) {
     const kb = this.store
     console.log('Writing back to local file\n')
     // See http://simon-jung.blogspot.com/2007/10/firefox-extension-file-io.html
     // prepare contents of revised document
     let newSts = kb.statementsMatching(undefined, undefined, undefined, doc).slice() // copy!
 
-    let i
     for (let i = 0; i < ds.length; i++) {
       Util.RDFArrayRemove(newSts, ds[ i ])
     }
@@ -916,7 +938,7 @@ class UpdateManager {
     for (let i = 0; i < is.length; i++) {
       kb.add(is[ i ].subject, is[ i ].predicate, is[ i ].object, doc)
     }
-    callback(doc.uri, true, '') // success!
+    callbackFunction(doc.uri, true, '') // success!
   }
 
   /**
@@ -965,13 +987,13 @@ class UpdateManager {
    * @param doc {Node}
    * @param data {string|Array<Statement>}
    * @param contentType {string}
-   * @param callback {Function}  callback(uri, ok, message, response)
+   * @param callbackFunction {Function}  callbackFunction(uri, ok, message, response)
    *
    * @throws {Error} On unsupported content type (via serialize())
    *
    * @returns {Promise}
    */
-  put (doc, data, contentType, callback) {
+  put (doc, data, contentType, callbackFunction) {
     const kb = this.store
     let documentString
 
@@ -984,7 +1006,7 @@ class UpdateManager {
       })
       .then(response => {
         if (!response.ok) {
-          return callback(doc.uri, response.ok, response.error, response)
+          return callbackFunction(doc.uri, response.ok, response.error, response)
         }
 
         delete kb.fetcher.nonexistent[doc.uri]
@@ -996,10 +1018,10 @@ class UpdateManager {
           })
         }
 
-        callback(doc.uri, response.ok, '', response)
+        callbackFunction(doc.uri, response.ok, '', response)
       })
       .catch(err => {
-        callback(doc.uri, false, err.message)
+        callbackFunction(doc.uri, false, err.message)
       })
   }
 
@@ -1013,9 +1035,9 @@ class UpdateManager {
    *
    * @param kb
    * @param doc {NamedNode}
-   * @param callback
+   * @param callbackFunction
    */
-  reload (kb, doc, callback) {
+  reload (kb, doc, callbackFunction) {
     var startTime = Date.now()
     // force sets no-cache and
     const options = { force: true, noMeta: true, clearPreviousData: true }
@@ -1023,11 +1045,11 @@ class UpdateManager {
     kb.fetcher.nowOrWhenFetched(doc.uri, options, function (ok, body, response) {
       if (!ok) {
         console.log('    ERROR reloading data: ' + body)
-        callback(false, 'Error reloading data: ' + body, response)
+        callbackFunction(false, 'Error reloading data: ' + body, response)
       } else if (response.onErrorWasCalled || response.status !== 200) {
         console.log('    Non-HTTP error reloading data! onErrorWasCalled=' +
           response.onErrorWasCalled + ' status: ' + response.status)
-        callback(false, 'Non-HTTP error reloading data: ' + body, response)
+        callbackFunction(false, 'Non-HTTP error reloading data: ' + body, response)
       } else {
         var elapsedTimeMs = Date.now() - startTime
 
@@ -1041,7 +1063,7 @@ class UpdateManager {
           doc.reloadTimeCount + ' = ' +
           (doc.reloadTimeTotal / doc.reloadTimeCount) + 'ms.')
 
-        callback(true)
+        callbackFunction(true)
       }
     })
   }

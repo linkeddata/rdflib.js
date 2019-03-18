@@ -24,6 +24,9 @@ const Statement = require('./statement')
 const Node = require('./node')
 const Variable = require('./variable')
 
+// const indexedFormulaQuery = require('./query').indexedFormulaQuery
+
+
 const owlNamespaceURI = 'http://www.w3.org/2002/07/owl#'
 
 const defaultGraphURI = 'chrome:theSession'
@@ -121,20 +124,7 @@ class IndexedFormula extends Formula { // IN future - allow pass array of statem
     var ds
     var binding = null
 
-    // /////////// Debug strings
-    /*
-    var bindingDebug = function (b) {
-      var str = ''
-      var v
-      for (v in b) {
-        if (b.hasOwnProperty(v)) {
-          str += '    ' + v + ' -> ' + b[v]
-        }
-      }
-      return str
-    }
-*/
-    var doPatch = function (onDonePatch) {
+    function doPatch (onDonePatch) {
       if (patch['delete']) {
         ds = patch['delete']
         // console.log(bindingDebug(binding))
@@ -182,6 +172,7 @@ class IndexedFormula extends Formula { // IN future - allow pass array of statem
       query.pat.statements.map(function (st) {
         st.why = target
       })
+      query.sync = true
 
       var bindingsFound = []
 
@@ -528,9 +519,34 @@ class IndexedFormula extends Formula { // IN future - allow pass array of statem
     }
   }
 
-  query (myQuery, callback, fetcher, onDone) {
+  query (myQuery, callback, dummy, onDone) {
     let indexedFormulaQuery = require('./query').indexedFormulaQuery
-    return indexedFormulaQuery.call(this, myQuery, callback, fetcher, onDone)
+
+    return indexedFormulaQuery.call(this, myQuery, callback, dummy, onDone)
+  }
+
+/** Query this store synchhronously and return bindings
+ *
+ * @param myQuery {Query} - the query object
+ * @returns {Array<Bindings>}
+ */
+  querySync (myQuery) {
+    function saveBinginds (bindings) {
+      results.push(bindings)
+    }
+    function onDone () {
+      done = true
+    }
+    var results = []
+    var done = false
+    myQuery.sync = true
+    let indexedFormulaQuery = require('./query').indexedFormulaQuery
+
+    indexedFormulaQuery.call(this, myQuery, saveBinginds, null, onDone)
+    if (!done) {
+      throw new Error('Sync query should have called done function')
+    }
+    return results
   }
 
   /**
