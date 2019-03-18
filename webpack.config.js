@@ -42,6 +42,7 @@ module.exports = (env, args) => {
         commonjs: 'solid-auth-client',
         commonjs2: 'solid-auth-client',
       },
+      'solid-auth-cli': 'null',
       'xmldom': 'window'
     },
     devtool: 'source-map'
