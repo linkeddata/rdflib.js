@@ -254,7 +254,7 @@ to distinguish the ones from others from our own.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="update-manager.js.html">update-manager.js</a>, <a href="update-manager.js.html#line454">line 454</a>
+        <a href="update-manager.js.html">update-manager.js</a>, <a href="update-manager.js.html#line458">line 458</a>
     </li></ul></dd>
     
 
@@ -478,7 +478,7 @@ We don't actually check for write access on files.
     
 
     
-    <h4 class="name" id="put"><span class="type-signature"></span>put<span class="signature">(doc, data, contentType, callback)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
+    <h4 class="name" id="put"><span class="type-signature"></span>put<span class="signature">(doc, data, contentType, callbackFunction)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
     
 
     
@@ -594,7 +594,7 @@ We don't actually check for write access on files.
 
         <tr>
             
-                <td class="name"><code>callback</code></td>
+                <td class="name"><code>callbackFunction</code></td>
             
 
             <td class="type">
@@ -610,7 +610,7 @@ We don't actually check for write access on files.
 
             
 
-            <td class="description last">callback(uri, ok, message, response)</td>
+            <td class="description last">callbackFunction(uri, ok, message, response)</td>
         </tr>
 
     
@@ -651,7 +651,7 @@ We don't actually check for write access on files.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="update-manager.js.html">update-manager.js</a>, <a href="update-manager.js.html#line974">line 974</a>
+        <a href="update-manager.js.html">update-manager.js</a>, <a href="update-manager.js.html#line996">line 996</a>
     </li></ul></dd>
     
 
@@ -732,7 +732,7 @@ We don't actually check for write access on files.
     
 
     
-    <h4 class="name" id="reload"><span class="type-signature"></span>reload<span class="signature">(kb, doc, callback)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="reload"><span class="type-signature"></span>reload<span class="signature">(kb, doc, callbackFunction)</span><span class="type-signature"></span></h4>
     
 
     
@@ -822,7 +822,7 @@ document in the meantime.
 
         <tr>
             
-                <td class="name"><code>callback</code></td>
+                <td class="name"><code>callbackFunction</code></td>
             
 
             <td class="type">
@@ -874,7 +874,7 @@ document in the meantime.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="update-manager.js.html">update-manager.js</a>, <a href="update-manager.js.html#line1018">line 1018</a>
+        <a href="update-manager.js.html">update-manager.js</a>, <a href="update-manager.js.html#line1040">line 1040</a>
     </li></ul></dd>
     
 
@@ -1025,7 +1025,7 @@ If the websocket, by contrast, has sent a patch, then this may not be necessary.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="update-manager.js.html">update-manager.js</a>, <a href="update-manager.js.html#line435">line 435</a>
+        <a href="update-manager.js.html">update-manager.js</a>, <a href="update-manager.js.html#line439">line 439</a>
     </li></ul></dd>
     
 
@@ -1205,7 +1205,7 @@ If the websocket, by contrast, has sent a patch, then this may not be necessary.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="update-manager.js.html">update-manager.js</a>, <a href="update-manager.js.html#line931">line 931</a>
+        <a href="update-manager.js.html">update-manager.js</a>, <a href="update-manager.js.html#line953">line 953</a>
     </li></ul></dd>
     
 
@@ -1409,7 +1409,7 @@ kb contains the HTTP  metadata from previous operations
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="update-manager.js.html">update-manager.js</a>, <a href="update-manager.js.html#line529">line 529</a>
+        <a href="update-manager.js.html">update-manager.js</a>, <a href="update-manager.js.html#line540">line 540</a>
     </li></ul></dd>
     
 
@@ -1461,7 +1461,7 @@ kb contains the HTTP  metadata from previous operations
     
 
     
-    <h4 class="name" id="update"><span class="type-signature"></span>update<span class="signature">(deletions, insertions, callback)</span><span class="type-signature"> &rarr; {*}</span></h4>
+    <h4 class="name" id="update"><span class="type-signature"></span>update<span class="signature">(deletions, insertions, callbackFunction)</span><span class="type-signature"> &rarr; {*}</span></h4>
     
 
     
@@ -1548,7 +1548,7 @@ The `why` property of each statement must be the same and give the web document 
 
         <tr>
             
-                <td class="name"><code>callback</code></td>
+                <td class="name"><code>callbackFunction</code></td>
             
 
             <td class="type">
@@ -1564,7 +1564,8 @@ The `why` property of each statement must be the same and give the web document 
 
             
 
-            <td class="description last">called as callback(uri, success, errorbody)</td>
+            <td class="description last">called as callbackFunction(uri, success, errorbody)
+             OR returns a promise</td>
         </tr>
 
     
@@ -1605,7 +1606,7 @@ The `why` property of each statement must be the same and give the web document 
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="update-manager.js.html">update-manager.js</a>, <a href="update-manager.js.html#line636">line 636</a>
+        <a href="update-manager.js.html">update-manager.js</a>, <a href="update-manager.js.html#line648">line 648</a>
     </li></ul></dd>
     
 
@@ -1713,7 +1714,7 @@ It returns an object which includes
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="update-manager.js.html">update-manager.js</a>, <a href="update-manager.js.html#line365">line 365</a>
+        <a href="update-manager.js.html">update-manager.js</a>, <a href="update-manager.js.html#line367">line 367</a>
     </li></ul></dd>
     
 
@@ -1747,7 +1748,7 @@ It returns an object which includes
     
 
     
-    <h4 class="name" id="updateLocalFile"><span class="type-signature"></span>updateLocalFile<span class="signature">(doc, ds, is, callback)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="updateLocalFile"><span class="type-signature"></span>updateLocalFile<span class="signature">(doc, ds, is, callbackFunction)</span><span class="type-signature"></span></h4>
     
 
     
@@ -1845,7 +1846,7 @@ It returns an object which includes
 
         <tr>
             
-                <td class="name"><code>callback</code></td>
+                <td class="name"><code>callbackFunction</code></td>
             
 
             <td class="type">
@@ -1897,7 +1898,7 @@ It returns an object which includes
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="update-manager.js.html">update-manager.js</a>, <a href="update-manager.js.html#line858">line 858</a>
+        <a href="update-manager.js.html">update-manager.js</a>, <a href="update-manager.js.html#line881">line 881</a>
     </li></ul></dd>
     
 
@@ -1947,7 +1948,7 @@ It returns an object which includes
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Mon Feb 18 2019 00:10:27 GMT+0000 (UTC)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Mon Mar 18 2019 18:19:33 GMT+0000 (UTC)
 </footer>
 
 <script> prettyPrint(); </script>
