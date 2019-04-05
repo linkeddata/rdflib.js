@@ -647,8 +647,9 @@ class UpdateManager {
    */
   update (deletions, insertions, callbackFunction, secondTry) {
     if (!callbackFunction) {
+      var thisUpdater = this
       return new Promise(function (resolve, reject) { // Promise version
-        this.update(deletions, insertions, function (uri, ok, errorBody) {
+        thisUpdater.update(deletions, insertions, function (uri, ok, errorBody) {
           if (!ok) {
             reject(new Error(errorBody))
           } else {
