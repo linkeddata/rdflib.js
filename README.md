@@ -7,7 +7,7 @@ Javascript RDF library for browsers and Node.js.
 - Reads and writes RDF/XML, Turtle and N3; Reads RDFa and JSON-LD
 - Read/Write Linked Data client, using WebDav or SPARQL/Update
 - Local API for querying a store
-- Compatible with [RDFJS task force spec](https://github.com/rdfjs/representation-task-force/blob/master/interface-spec.md)
+- Compatible with [RDFJS task force spec](https://rdf.js.org)
 - SPARQL queries (not full SPARQL)
 - Smushing of nodes from `owl:sameAs`, and `owl:{f,inverseF}unctionProperty`
 - Tracks provenance of triples keeps metadata (in RDF) from HTTP accesses
