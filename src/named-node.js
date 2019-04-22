@@ -37,7 +37,7 @@ class NamedNode extends Node {
   /**
    * Returns an $rdf node for the containing directory, ending in slash.
    */
-   dir () {
+  dir () {
      var str = this.uri.split('#')[0]
      var p = str.slice(0, -1).lastIndexOf('/')
      var q = str.indexOf('//')
@@ -48,7 +48,7 @@ class NamedNode extends Node {
     * Returns an NN for the whole web site, ending in slash.
     * Contrast with the "origin" which does NOT have a trailing slash
     */
-   site () {
+  site () {
      var str = this.uri.split('#')[0]
      var p = str.indexOf('//')
      if (p < 0) throw new Error('This URI does not have a web site part (origin)')
@@ -65,6 +65,12 @@ class NamedNode extends Node {
   }
   toString () {
     return '<' + this.uri + '>'
+  }
+
+  /* The local identifier with the document
+  */
+  id () {
+    return this.uri.split('#')[1]
   }
 
   /**

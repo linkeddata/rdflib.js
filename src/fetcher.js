@@ -38,9 +38,9 @@ const Util = require('./util')
 const serialize = require('./serialize')
 
 // This is a special fetch which does OIDC auth, catching 401 errors
-const {fetch} = (typeof window === "undefined")
+const {fetch} = (typeof window === 'undefined')
          ? require('solid-auth-cli')
-         : require('solid-auth-client');
+         : require('solid-auth-client')
 
 const Parsable = {
   'text/n3': true,
@@ -1105,30 +1105,31 @@ class Fetcher {
    * @param doc {NamedNode} - The resource
    * @returns {Promise}
   */
-   createIfNotExists (doc) {
-     return new Promise(function (resolve, reject) {
-       kb.fetcher.load(doc).then(response => {
-         console.log('createIfNotExists doc exists, all good ' + doc)
-         resolve(response)
-       }, err => {
-         if (err.response.status === 404) {
-           console.log('createIfNotExists doc does NOT exist, will create... ' + doc)
+  createIfNotExists (doc) {
+    const kb = this
+    return new Promise(function (resolve, reject) {
+      kb.fetcher.load(doc).then(response => {
+        console.log('createIfNotExists doc exists, all good ' + doc)
+        resolve(response)
+      }, err => {
+        if (err.response.status === 404) {
+          console.log('createIfNotExists doc does NOT exist, will create... ' + doc)
 
-           kb.fetcher.webOperation('PUT', doc.uri, {data: '', contentType: 'text/turtle'}).then(response => {
-             delete kb.fetcher.requested[doc.uri] // delete cached 404 error
-             console.log('createIfNotExists doc created ok ' + doc)
-             resolve(response)
-           }, err => {
-             console.log('createIfNotExists doc FAILED: ' + doc + ': ' + err)
-             reject(err)
-           })
-         } else {
-           console.log('createIfNotExists doc load error NOT 404:  ' + doc + ': ' + err)
-           reject(err)
-         }
-       })
-     })
-   }
+          kb.fetcher.webOperation('PUT', doc.uri, {data: '', contentType: 'text/turtle'}).then(response => {
+            delete kb.fetcher.requested[doc.uri] // delete cached 404 error
+            console.log('createIfNotExists doc created ok ' + doc)
+            resolve(response)
+          }, err => {
+            console.log('createIfNotExists doc FAILED: ' + doc + ': ' + err)
+            reject(err)
+          })
+        } else {
+          console.log('createIfNotExists doc load error NOT 404:  ' + doc + ': ' + err)
+          reject(err)
+        }
+      })
+    })
+  }
 
   /**
    * @param parentURI {string} URI of parent container
@@ -1191,7 +1192,7 @@ class Fetcher {
     return new Promise(function (resolve, reject) {
       fetcher._fetch(uri, options).then(response => {
         if (response.ok) {
-          if (method === 'PUT' || method === 'PATCH'|| method === 'POST'|| method === 'DELETE') {
+          if (method === 'PUT' || method === 'PATCH' || method === 'POST' || method === 'DELETE') {
             delete fetcher.requested[uri] // invalidate read cache
           }
           if (response.body) {
@@ -1260,8 +1261,8 @@ class Fetcher {
       if (request !== undefined) {
         let response = kb.any(request, ns.link('response'))
 
-        if (response !== undefined) {
-          // console.log('@@@ looking for ' + ns.httph(header.toLowerCase()))
+        if (response !== undefined && kb.anyValue(response, ns.http('status')) && kb.anyValue(response, ns.http('status')).startsWith('2')) {
+          // Only look at success returns - not 401 error messagess etc
           let results = kb.each(response, ns.httph(header.toLowerCase()))
 
           if (results.length) {
