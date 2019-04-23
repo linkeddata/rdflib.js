@@ -1083,6 +1083,92 @@ class Fetcher {
   }
 
   /**
+   * Recursively copies a folder tree from one Solid space to another
+   *
+   * @param src {Node|string}
+   * @param dest {Node|string}
+   * @param [options={}]
+   *
+   * @returns {Promise}
+   */
+  recursiveCopy(src, dest, options){
+    let st = this.store
+    let ft = this.store.fetcher
+    src  = st.sym( src.uri || src )
+    dest = st.sym( dest.uri || dest )
+    src.uri = (src.uri.match(/\/$/)) ? src.uri : src.uri + "/";
+    dest.uri = (dest.uri.match(/\/$/)) ? dest.uri : dest.uri + "/";
+    options = options || {}
+    function mapURI(src, dest, x){
+      if (!x.uri.startsWith(src.uri)){
+        throw new Error("source '"+x+"' is not in tree "+src)
+      }
+      return st.sym(dest.uri + x.uri.slice(src.uri.length))
+    }
+    function fetchAclDoc(url,there){
+     return new Promise(function(resolve, reject){
+      fetch(url).then( response => {
+        let ctype=response.headers.get("content-type");
+        let path = url.replace(/[^\/]*$/,'');
+        let aclDoc = path + response.headers.get("link")
+                          .replace(/>; rel="acl".*$/,'').replace(/.*</,'');
+        fetch(aclDoc).then( aclRes => {
+          if(!aclRes.ok) return {ctype:ctype}
+          else {
+            return(resolve({
+              doc   : st.sym(aclDoc),
+              there : st.sym(there.replace(/[^\/]*$/,'')+aclDoc.replace(/^.*\//,'')),
+              ctype : ctype
+            }))
+          }
+        },e=>{reject("Could not fetch ACL : "+e)})
+      },e=>{reject("Could not fetch DOC : "+e)})
+     })
+    }
+    return new Promise(function(resolve, reject){
+      ft.load(src).then(function(response) {
+        if (!response.ok) throw new Error(
+          'Error reading container ' + src + ' : ' + response.status
+        )
+        let contents = st.each(src, ns.ldp('contains'))
+        let promises = []
+        fetchAclDoc(src.uri,dest.uri).then( aclDoc => {
+          if(aclDoc.doc) {
+            console.log('copying ACL ' + aclDoc.doc+"\n  to "+aclDoc.there+"\n")
+            promises.push(ft.webCopy(aclDoc.doc, aclDoc.there, {contentType:"text/turtle"}))
+          }
+        });
+        for (let i=0; i < contents.length; i++){
+          let here = contents[i]
+          let there = mapURI(src, dest, here)
+          if (st.holds(here, ns.rdf('type'), ns.ldp('Container'))){
+            console.log('copying folder ' + here+"\n  to "+there+"\n")
+            promises.push(ft.recursiveCopy(here, there, options))
+          }
+          else { // copy a leaf
+            fetchAclDoc(here.uri,there.uri).then( aclDoc => {
+              if(aclDoc.doc) {
+                console.log('copying ACL ' + aclDoc.doc+"\n  to "+aclDoc.there+"\n")
+                promises.push(ft.webCopy(aclDoc.doc, aclDoc.there, {contentType:"text/turtle"}))
+              }
+              let ctype = (aclDoc.ctype) ? aclDoc.ctype  : "text/turtle"
+              console.log('copying file ' + here+"\n  to "+ there+"\n")
+              promises.push(ft.webCopy(here, there, {contentType:ctype}))
+            });
+          }
+        }
+        Promise.all(promises).then(resolve("Copying Successful")).catch(function (e) {
+          console.log("Overall promise rejected: " + e)
+          reject(e)
+        })
+      })
+      .catch( function(error) {
+        reject('Load error: ' + error)
+      })
+    })
+  }
+
+  /**
    * @param uri {string}
    * @param [options] {Object}
    *

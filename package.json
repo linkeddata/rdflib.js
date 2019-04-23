@@ -35,7 +35,7 @@
     "async": "^0.9.x",
     "jsonld": "^0.4.5",
     "n3": "^0.4.1",
-    "solid-auth-cli": "^0.1.12",
+    "solid-auth-cli": "^0.2.3",
     "solid-auth-client": "^2.3.0",
     "xmldom": "^0.1.22"
   },
