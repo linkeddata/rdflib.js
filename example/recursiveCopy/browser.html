@@ -1,0 +1,46 @@
+<html><head><meta charset="UTF-8" />
+<script src="../../dist/rdflib.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/solid-auth-client@2.3.0/dist-lib/solid-auth-client.bundle.js">
+</script>
+
+<script>document.addEventListener('DOMContentLoaded', function() {
+
+  const solid = { auth:SolidAuthClient }
+  const store = $rdf.graph()
+  const fetcher = $rdf.fetcher(store,{fetch:solid.auth.fetch})
+
+
+  go.addEventListener('click', event => {
+  login().then(()=>{
+    var here = document.getElementById('from').value
+    var there = document.getElementById('to').value
+      fetcher.recursiveCopy($rdf.sym(here),$rdf.sym(there)).then( res => {
+          console.log(res)
+      }, err => { console.log("recursiveCopy error : "+err) });
+   }, err => { console.log("login error : "+err) });
+  })
+
+async function login(){
+    await solid.auth.logout();
+    let popupUri = 'https://solid.community/common/popup.html';
+    const session = await solid.auth.popupLogin({ popupUri });
+}
+
+})</script>
+</head>
+<body>
+  <div>
+  <p>
+<b>Testing fetcher.recursiveCopy</b>
+  </p>
+  <p><label for "from">Copy From Folder</label><input type="text" name="from" id="from" style="border: 0.1em solid green; font-size: 100%; margin=0.5em; width:400px"/></p>
+  <p><label for "to">To Folder</label><input type="text" id="to" style="border: 0.1em solid red; width:400px"/>
+  <button id="go">go</button></p>
+  </div>
+<style>
+label { display:inline-block; text-align:right; margin-right:1em; width:150px !important; font-weight:bold; }
+button { margin-left:1em; }
+</style>
+</body>
+</html>
+

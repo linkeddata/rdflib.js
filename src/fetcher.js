@@ -1107,13 +1107,13 @@ class Fetcher {
     }
     function fetchAclDoc(url,there){
      return new Promise(function(resolve, reject){
-      fetch(url).then( response => {
+      ft._fetch(url).then( response => {
         let ctype=response.headers.get("content-type");
         let path = url.replace(/[^\/]*$/,'');
         let aclDoc = path + response.headers.get("link")
                           .replace(/>; rel="acl".*$/,'').replace(/.*</,'');
-        fetch(aclDoc).then( aclRes => {
-          if(!aclRes.ok) return {ctype:ctype}
+        ft._fetch(aclDoc).then( aclRes => {
+          if(!aclRes.ok) return resolve({ctype:ctype})
           else {
             return(resolve({
               doc   : st.sym(aclDoc),
@@ -1121,7 +1121,7 @@ class Fetcher {
               ctype : ctype
             }))
           }
-        },e=>{reject("Could not fetch ACL : "+e)})
+        },e=>{return resolve({ctype:ctype})})
       },e=>{reject("Could not fetch DOC : "+e)})
      })
     }
@@ -1135,7 +1135,9 @@ class Fetcher {
         fetchAclDoc(src.uri,dest.uri).then( aclDoc => {
           if(aclDoc.doc) {
             console.log('copying ACL ' + aclDoc.doc+"\n  to "+aclDoc.there+"\n")
-            promises.push(ft.webCopy(aclDoc.doc, aclDoc.there, {contentType:"text/turtle"}))
+            promises.push(
+                ft.webCopy(aclDoc.doc, aclDoc.there, {contentType:"text/turtle"})
+            )
           }
         });
         for (let i=0; i < contents.length; i++){
@@ -1149,7 +1151,9 @@ class Fetcher {
             fetchAclDoc(here.uri,there.uri).then( aclDoc => {
               if(aclDoc.doc) {
                 console.log('copying ACL ' + aclDoc.doc+"\n  to "+aclDoc.there+"\n")
-                promises.push(ft.webCopy(aclDoc.doc, aclDoc.there, {contentType:"text/turtle"}))
+                promises.push(
+                    ft.webCopy(aclDoc.doc, aclDoc.there, {contentType:"text/turtle"})
+                )
               }
               let ctype = (aclDoc.ctype) ? aclDoc.ctype  : "text/turtle"
               console.log('copying file ' + here+"\n  to "+ there+"\n")
