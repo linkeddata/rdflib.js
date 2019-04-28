@@ -1105,30 +1105,29 @@ class Fetcher {
    * @param doc {NamedNode} - The resource
    * @returns {Promise}
   */
-  createIfNotExists (doc) {
-    const kb = this
-    return new Promise(function (resolve, reject) {
-      kb.fetcher.load(doc).then(response => {
-        console.log('createIfNotExists doc exists, all good ' + doc)
-        resolve(response)
-      }, err => {
-        if (err.response.status === 404) {
-          console.log('createIfNotExists doc does NOT exist, will create... ' + doc)
-
-          kb.fetcher.webOperation('PUT', doc.uri, {data: '', contentType: 'text/turtle'}).then(response => {
-            delete kb.fetcher.requested[doc.uri] // delete cached 404 error
-            console.log('createIfNotExists doc created ok ' + doc)
-            resolve(response)
-          }, err => {
-            console.log('createIfNotExists doc FAILED: ' + doc + ': ' + err)
-            reject(err)
-          })
-        } else {
-          console.log('createIfNotExists doc load error NOT 404:  ' + doc + ': ' + err)
-          reject(err)
+  async createIfNotExists (doc, contentType = 'text/turtle', data = '') {
+    const fetcher = this
+    try {
+      var response = fetcher.load(doc)
+    } catch (err) {
+      if (err.response.status === 404) {
+        console.log('createIfNotExists: doc does NOT exist, will create... ' + doc)
+        try {
+          response = fetcher.webOperation('PUT', doc.uri, {data, contentType})
+        } catch (err) {
+          console.log('createIfNotExists doc FAILED: ' + doc + ': ' + err)
+          throw err
         }
-      })
-    })
+        delete fetcher.requested[doc.uri] // delete cached 404 error
+        // console.log('createIfNotExists doc created ok ' + doc)
+        return response
+      } else {
+        console.log('createIfNotExists doc load error NOT 404:  ' + doc + ': ' + err)
+        throw err
+      }
+    }
+    // console.log('createIfNotExists: doc exists, all good: ' + doc)
+    return response
   }
 
   /**
