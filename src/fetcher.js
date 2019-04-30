@@ -1108,12 +1108,12 @@ class Fetcher {
   async createIfNotExists (doc, contentType = 'text/turtle', data = '') {
     const fetcher = this
     try {
-      var response = fetcher.load(doc)
+      var response = await fetcher.load(doc)
     } catch (err) {
       if (err.response.status === 404) {
         console.log('createIfNotExists: doc does NOT exist, will create... ' + doc)
         try {
-          response = fetcher.webOperation('PUT', doc.uri, {data, contentType})
+          response = await fetcher.webOperation('PUT', doc.uri, {data, contentType})
         } catch (err) {
           console.log('createIfNotExists doc FAILED: ' + doc + ': ' + err)
           throw err
