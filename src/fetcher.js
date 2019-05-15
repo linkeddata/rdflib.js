@@ -33,9 +33,10 @@ const Namespace = require('./namespace')
 const rdfParse = require('./parse')
 const parseRDFaDOM = require('./rdfaparser').parseRDFaDOM
 const RDFParser = require('./rdfxmlparser')
-const Uri = require('./uri')
+const Uri= require('./uri')
 const Util = require('./util')
 const serialize = require('./serialize')
+const linkParse = require('parse-link-header')
 
 // This is a special fetch which does OIDC auth, catching 401 errors
 const {fetch} = (typeof window === "undefined")
@@ -1107,7 +1108,7 @@ class Fetcher {
         )
         let contents = st.each(src, ns.ldp('contains'))
         promises = []
-        copyContainer(src,dest,options) //   HANDLE THE TOP FOLDER 
+        copyContainer(src,dest,options) // HANDLE THE TOP FOLDER 
         for (let i=0; i < contents.length; i++){
           let here = contents[i]
           let there = mapURI(src, dest, here)
@@ -1121,7 +1122,7 @@ class Fetcher {
             promises.push(ft.webCopy(here,there,{contentType:"text/turtle"}))
           }
         }
-        Promise.all(promises).then(resolve(""))
+        Promise.all(promises).then(()=>{resolve("")})
         .catch(function (e) {
           console.log("Overall promise rejected: " + e)
           reject(e)
@@ -1152,10 +1153,10 @@ class Fetcher {
     function fetchAclDoc(url,there){
      return new Promise(function(resolve, reject){
       ft._fetch(url).then( response => {
-        let ctype=response.headers.get("content-type");
         let path = url.replace(/[^\/]*$/,'');
-        let aclDoc = path + response.headers.get("link")
-                          .replace(/>; rel="acl".*$/,'').replace(/.*</,'');
+        let header = linkParse( response.headers.get("link") );
+        let link = header.acl.url.replace(/^Link:\s*</,'')
+        let aclDoc =  Uri.join( link, path )
         ft._fetch(aclDoc).then( aclRes => {
           if(!aclRes.ok) return resolve()
           else {
@@ -1172,94 +1173,6 @@ class Fetcher {
      })
     }
   }
-
-  /**
-   * Recursively deletes a folder tree from a Solid space
-   *
-   * @param src {Node|string}
-   * @param [options={}]
-   *
-   * @returns {Promise}
-   */
-  recursiveDelete(target, options, repeat){
-    let st = this.store
-    let ft = this.store.fetcher
-    options = options || {}
-    target = (typeof target === "string") ? st.sym(target) : target;
-    target.uri = (target.uri.match(/\/$/)) ? target.uri : target.uri + "/";
-    repeat = repeat || target
-    let promises=[]
-    let cpromises=[]
-    return new Promise(function (resolve, reject) {
-      try {
-      ft._fetch(target.uri).then( res => {
-        if(res.status===404) return resolve("Nothing to delete!")
-        if(!res.ok) return resolve("bad fetch "+res.status)
-        try {
-        ft.load(target).then(function () {
-          promises = st.each(target, ns.ldp('contains')).map(file => {
-            if (st.holds(file, ns.rdf('type'), ns.ldp('BasicContainer'))) {
-              return ( ft.recursiveDelete(file,options,repeat) )
-            }
-            else {
-              if (!_isoConfirm(' Really DELETE File y/n? ' + file.uri)) {
-                throw new Error('User aborted delete file')
-              }
-              delAclDoc(file.uri);
-              try{
-                return ft._fetch(file.uri,{method:"DELETE"}).then( res=>{
-                    if(res.ok) console.log('Deleted file: ', file.uri)
-                },err=>{})
-              }
-              catch(e){}
-            }
-          })
-          promises.push(delContainer(target));
-        },e=>{})
-        } catch(e){ }
-        promises.push(delContainer(repeat));
-        Promise.all(promises).then(res => { 
-          return resolve("") 
-        },e=>{ throw new Error("Bad Delete : "+e) });
-
-      },e=>{console.log(e)})
-    }catch(e){}
-  })
-  function delContainer( target ) {
-    if (!_isoConfirm('Really DELETE folder? ' + target.uri)) {
-      throw new Error('User aborted delete file')
-    }
-    try{
-      ft._fetch(target.uri,{method:"DELETE"} ).then(r=>{
-        if(!r.ok) { return true }
-        ft._fetch(target.uri,{method:"DELETE"} ).then(r=>{
-            console.log("Deleted folder : ", target.uri)
-            return;
-        },err=>{console.log("DELETE ERROR "+err)})
-      },err=>{})
-    } catch(e){console.log("DELETE FOLDER ERROR "+e)}
-  }
-  function delAclDoc(url){
-    return new Promise(function(resolve, reject){
-     try {
-      ft._fetch(url).then( response => {
-        if(!response.ok) resolve(response.status,response.statusText)
-        let path = url.replace(/[^\/]*$/,'');
-        let aclDoc = path + response.headers.get("link")
-                          .replace(/>; rel="acl".*$/,'').replace(/.*</,'');
-        ft._fetch(aclDoc,{method:"DELETE"}).then( aclRes => {
-            if(aclRes.ok) console.log('Deleted ACL file: ', aclDoc)
-            return resolve("")
-        },e=>{ return resolve(e) })
-      },e=>{return resolve("Could not fetch DOC : "+e)})
-     } catch(e){}
-    })
-  }
-  function _isoConfirm(msg){
-    if(typeof window != "undefined") return Promise.resolve( confirm(msg) )
-    else return(true); // don't confirm from console
-  }
-}
 
   /**
    * @param uri {string}

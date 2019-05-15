@@ -14,16 +14,20 @@
   login().then(()=>{
     var here = document.getElementById('from').value
     var there = document.getElementById('to').value
-      fetcher.recursiveCopy($rdf.sym(here),$rdf.sym(there)).then( res => {
+      let hereDoc = $rdf.sym(here)
+      let thereDoc = $rdf.sym(there)
+      fetcher.recursiveCopy(hereDoc,thereDoc,{aclCopy:true}).then( res => {
           console.log(res)
       }, err => { console.log("recursiveCopy error : "+err) });
    }, err => { console.log("login error : "+err) });
   })
 
 async function login(){
-    await solid.auth.logout();
-    let popupUri = 'https://solid.community/common/popup.html';
-    const session = await solid.auth.popupLogin({ popupUri });
+    let session = await solid.auth.currentSession();
+    if(!session){
+        let popupUri = 'https://solid.community/common/popup.html';
+        session = await solid.auth.popupLogin({ popupUri });
+    }
 }
 
 })</script>
@@ -34,9 +38,6 @@ async function login(){
   <p><label for "from">Copy From Folder</label><input type="text" name="from" id="from" style="border: 0.1em solid green; font-size: 100%; margin=0.5em; width:400px"/></p>
   <p><label for "to">To Folder</label><input type="text" id="to" style="border: 0.1em solid red; width:400px"/>
   <button id="go">go</button></p>
-  <p><b>Testing fetcher.recursiveDelete</b></p>
-  <p><label for "del">Delete Folder</label><input type="text" id="del" style="border: 0.1em solid orange; width:400px"/>
-  <button id="del">go</button></p>
   </div>
 <style>
 label { display:inline-block; text-align:right; margin-right:1em; width:150px !important; font-weight:bold; }
