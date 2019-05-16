@@ -16,7 +16,7 @@
     var there = document.getElementById('to').value
       let hereDoc = $rdf.sym(here)
       let thereDoc = $rdf.sym(there)
-      fetcher.recursiveCopy(hereDoc,thereDoc,{aclCopy:true}).then( res => {
+      fetcher.recursiveCopy(hereDoc,thereDoc,{copyACL:true}).then( res => {
           console.log(res)
       }, err => { console.log("recursiveCopy error : "+err) });
    }, err => { console.log("login error : "+err) });
