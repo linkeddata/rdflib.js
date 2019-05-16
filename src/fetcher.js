@@ -1117,7 +1117,7 @@ class Fetcher {
             promises.push(ft.recursiveCopy(here, there, options))
           }
           else { // COPY THE FILE
-            if(options.copyACL)fetchAclDoc(here.uri,there.uri).then()
+            if(options.copyACL)fetchAclDoc(here,there.uri).then()
             console.log('Copying file ' + here+"\n  to "+ there+"\n")
             promises.push(ft.webCopy(here,there,{contentType:"text/turtle"}))
           }
@@ -1139,7 +1139,7 @@ class Fetcher {
       return st.sym(dest.uri + x.uri.slice(src.uri.length))
     }
     function copyContainer(src,dest,options){
-      if(options.copyACL) fetchAclDoc(src.uri,dest.uri).then();
+      if(options.copyACL) fetchAclDoc(src,dest.uri).then();
       let fnew=  dest.uri.replace(/\/$/,'').replace(/^.*\//,'')
       let fparent= new RegExp ( fnew )
           fparent=dest.uri.replace(fparent,'').replace(/\/$/,'')
@@ -1152,15 +1152,15 @@ class Fetcher {
     }
     function fetchAclDoc(url,there){
      return new Promise(function(resolve, reject){
-      ft._fetch(url).then( response => {
-        let path = url.replace(/[^\/]*$/,'');
-        let header = linkParse( response.headers.get("link") );
-        let link = header.acl.url.replace(/^Link:\s*</,'')
-        let aclDoc =  Uri.join( link, path )
-        ft._fetch(aclDoc).then( aclRes => {
+      ft.load(url).then( response => {
+        let aclRel = $rdf.sym(
+            'http://www.iana.org/assignments/link-relations/acl'
+        )
+        let aclDoc = st.any(url,aclRel)
+        if(!aclDoc) resolve()
+        ft._fetch(aclDoc.uri).then( aclRes => {
           if(!aclRes.ok) return resolve()
           else {
-            aclDoc = st.sym(aclDoc)
             there = st.sym(
               there.replace(/[^\/]*$/,'') + aclDoc.uri.replace(/^.*\//,'')
             )
