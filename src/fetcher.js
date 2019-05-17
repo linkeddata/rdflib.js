@@ -1153,7 +1153,7 @@ class Fetcher {
     function fetchAclDoc(url,there){
      return new Promise(function(resolve, reject){
       ft.load(url).then( response => {
-        let aclRel = $rdf.sym(
+        let aclRel = st.sym(
             'http://www.iana.org/assignments/link-relations/acl'
         )
         let aclDoc = st.any(url,aclRel)
