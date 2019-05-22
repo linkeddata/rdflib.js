@@ -1108,7 +1108,7 @@ class Fetcher {
         )
         let contents = st.each(src, ns.ldp('contains'))
         promises = []
-        copyContainer(src,dest,options) // HANDLE THE TOP FOLDER 
+        copyContainer(src,dest,options,contents.length) // HANDLE THE TOP FOLDER 
         for (let i=0; i < contents.length; i++){
           let here = contents[i]
           let there = mapURI(src, dest, here)
@@ -1138,15 +1138,16 @@ class Fetcher {
       }
       return st.sym(dest.uri + x.uri.slice(src.uri.length))
     }
-    function copyContainer(src,dest,options){
+    function copyContainer(src,dest,options,hasFiles){
       if(options.copyACL) fetchAclDoc(src,dest.uri).then();
+      if(hasFiles) return
       let fnew=  dest.uri.replace(/\/$/,'').replace(/^.*\//,'')
       let fparent= new RegExp ( fnew )
           fparent=dest.uri.replace(fparent,'').replace(/\/$/,'')
       ft._fetch(dest.uri).then( response => {
         if(response.status===404){
           console.log('Copying folder ' + fnew+"\n  into "+fparent+"\n")
-          promises.push(ft.createContainer(fparent,fnew))
+          ft.createContainer(fparent,fnew)
         }
       })
     }
@@ -1157,7 +1158,7 @@ class Fetcher {
             'http://www.iana.org/assignments/link-relations/acl'
         )
         let aclDoc = st.any(url,aclRel)
-        if(!aclDoc) resolve()
+        if(typeof aclDoc==="undefined") return resolve()
         ft._fetch(aclDoc.uri).then( aclRes => {
           if(!aclRes.ok) return resolve()
           else {
@@ -1165,7 +1166,7 @@ class Fetcher {
               there.replace(/[^\/]*$/,'') + aclDoc.uri.replace(/^.*\//,'')
             )
             console.log('Copying ACL '+aclDoc.uri+"\n  to "+there.uri+"\n")
-            promises.push(ft.webCopy(aclDoc,there,{contentType:"text/turtle"}))
+            ft.webCopy(aclDoc,there,{contentType:"text/turtle"})
             return resolve();
           }
         },e=>{return resolve()})
@@ -1173,6 +1174,69 @@ class Fetcher {
      })
     }
   }
+
+  /**
+   * Recursively deletes a folder tree
+   *
+   * @param src {Node|string}
+   * @returns {Promise}
+   *
+   */
+  recursiveDelete(target) { return new Promise( resolve => {
+    let st = this.store
+    let ft = this.store.fetcher
+    target = (typeof target === "string") ? st.sym(target) : target;
+    target.uri = (target.uri.match(/\/$/)) ? target.uri : target.uri + "/";
+    ft.load(target).then( res => {
+      if(res.status===404) return resolve("Nothing to delete!")
+      if(!res.ok) return resolve("bad fetch "+res.status)
+      const contents = st.each(target, ns.ldp('contains'))
+      const promises = contents.map( item => {
+          if (st.holds(item, ns.rdf('type'), ns.ldp('BasicContainer'))) {
+            return ft.recursiveDelete(item)
+          }
+          else {
+            return deleteResource(item,"file");
+          }
+      })
+      return resolve( Promise.all(promises)
+         .then(()=> deleteResource(target,"folder"))
+         .catch(e=>{return resolve(e)})
+      )
+    }).catch(res=>{return resolve(res+res.status+" "+res.statusText)})
+    function deleteResource( namedNode, type ) {
+     return new Promise( (resolve)=> {
+      try{
+        delAclDoc(namedNode).then(r=>{
+          ft._fetch(namedNode.uri,{method:"DELETE"} ).then(r=>{
+            console.log(`Deleted ${type} : ${namedNode.uri}`)
+            return resolve();
+          },e=>{return resolve(e)})
+        },e=>{return resolve(e)})
+      } catch(e){return resolve(e)}
+     })
+    }
+    function delAclDoc(namedNode){
+      return new Promise(function(resolve, reject){
+        try {
+          ft.load(namedNode).then( ()=> {
+            let aclRel = st.sym(
+              'http://www.iana.org/assignments/link-relations/acl'
+            )
+            let aclDoc = st.any(namedNode,aclRel)
+            if(typeof aclDoc==="undefined") return resolve("")
+            ft._fetch(aclDoc.uri,{method:"DELETE"}).then( aclRes => {
+              if(aclRes.ok){
+                console.log('Deleted ACL file: ', aclDoc.uri)
+                return resolve()
+              }
+              else return resolve(aclRes)
+            },e=>{ return resolve(e) })    // delete acl file
+          },e=>{ return resolve(e) })      // load namedNode
+        } catch(e){return resolve(e)}      // try all
+      })
+    }
+  })}
 
   /**
    * @param uri {string}
