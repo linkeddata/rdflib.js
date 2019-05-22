@@ -36,7 +36,6 @@ const RDFParser = require('./rdfxmlparser')
 const Uri= require('./uri')
 const Util = require('./util')
 const serialize = require('./serialize')
-const linkParse = require('parse-link-header')
 
 // This is a special fetch which does OIDC auth, catching 401 errors
 const {fetch} = (typeof window === "undefined")
