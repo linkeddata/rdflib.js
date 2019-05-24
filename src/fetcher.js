@@ -1096,26 +1096,27 @@ class Fetcher {
     let ft = this.store.fetcher
     src  = st.sym( src.uri || src )
     dest = st.sym( dest.uri || dest )
-    src.uri = (src.uri.match(/\/$/)) ? src.uri : src.uri + "/";
-    dest.uri = (dest.uri.match(/\/$/)) ? dest.uri : dest.uri + "/";
+    src.uri  = (src.uri.endsWith('/'))  ? src.uri  : src.uri  + "/";
+    dest.uri = (dest.uri.endsWith('/')) ? dest.uri : dest.uri + "/";
     options = options || {}
-    let promises = []
     return new Promise(function(resolve, reject){
+      if( dest.uri.startsWith(src.uri) ){
+          return reject("Cowardly refusing to copy a folder into itself!")
+      }
       ft.load(src).then(function(response) {
         if (!response.ok) throw new Error(
           'Error reading container ' + src + ' : ' + response.status
         )
         let contents = st.each(src, ns.ldp('contains'))
-        promises = []
-        copyContainer(src,dest,options,contents.length) // HANDLE THE TOP FOLDER 
+        let promises = []
+        copyContainer(src,dest,options,contents.length)
         for (let i=0; i < contents.length; i++){
           let here = contents[i]
           let there = mapURI(src, dest, here)
-          // SEND SUB-FOLDER BACK FOR PROCESSING 
           if (st.holds(here, ns.rdf('type'), ns.ldp('Container'))){
             promises.push(ft.recursiveCopy(here, there, options))
           }
-          else { // COPY THE FILE
+          else {
             if(options.copyACL)fetchAclDoc(here,there.uri).then()
             console.log('Copying file ' + here+"\n  to "+ there+"\n")
             promises.push(ft.webCopy(here,there,{contentType:"text/turtle"}))
@@ -1144,9 +1145,9 @@ class Fetcher {
       let fparent= new RegExp ( fnew )
           fparent=dest.uri.replace(fparent,'').replace(/\/$/,'')
       ft._fetch(dest.uri).then( response => {
-        if(response.status===404){
+        if(response.status===404 && typeof fparent !="undefined" && typeof fnew != "undefined" ){
           console.log('Copying folder ' + fnew+"\n  into "+fparent+"\n")
-          ft.createContainer(fparent,fnew)
+          ft.createContainer(fparent,fnew).catch(e=>{"ERROR "+e})
         }
       })
     }
@@ -1181,18 +1182,29 @@ class Fetcher {
    * @returns {Promise}
    *
    */
-  recursiveDelete(target) { return new Promise( resolve => {
+  recursiveDelete(target,isRepeatVisit) { return new Promise( (resolve,reject) => {
     let st = this.store
     let ft = this.store.fetcher
     target = (typeof target === "string") ? st.sym(target) : target;
-    target.uri = (target.uri.match(/\/$/)) ? target.uri : target.uri + "/";
-    ft.load(target).then( res => {
-      if(res.status===404) return resolve("Nothing to delete!")
-      if(!res.ok) return resolve("bad fetch "+res.status)
+    target.uri = (target.uri.endsWith('/')) ? target.uri : target.uri + "/";
+    if(!isRepeatVisit){
+      let pod = `${Uri.protocol(target.uri)}://${Uri.hostpart(target.uri)}`
+      if( target.uri === `${pod}/public/`
+       || target.uri.startsWith(`${pod}/profile/`)
+       || target.uri.startsWith(`${pod}/settings/`)
+       || target.uri.startsWith(`${pod}/inbox/`)
+       || target.uri.startsWith(`${pod}/.well-known/`)
+      ){
+        return reject(`Cowardly refusing to delete <${target.uri}>!`)
+      }
+    }
+    ft.load(target.uri).then( res => {
+      // if(res.status===404) return resolve("Nothing to delete!")
+      // if(!res.ok) return resolve("bad fetch "+res.status)
       const contents = st.each(target, ns.ldp('contains'))
       const promises = contents.map( item => {
           if (st.holds(item, ns.rdf('type'), ns.ldp('BasicContainer'))) {
-            return ft.recursiveDelete(item)
+            return ft.recursiveDelete(item,true)
           }
           else {
             return deleteResource(item,"file");
@@ -1204,24 +1216,20 @@ class Fetcher {
       )
     }).catch(res=>{return resolve(res+res.status+" "+res.statusText)})
     function deleteResource( namedNode, type ) {
-     return new Promise( (resolve)=> {
-      try{
+      return new Promise( (resolve)=> {
         delAclDoc(namedNode).then(r=>{
           ft._fetch(namedNode.uri,{method:"DELETE"} ).then(r=>{
             console.log(`Deleted ${type} : ${namedNode.uri}`)
             return resolve();
-          },e=>{return resolve(e)})
-        },e=>{return resolve(e)})
-      } catch(e){return resolve(e)}
-     })
+          }).catch(e=>{return resolve(e)})
+        }).catch(e=>{return resolve(e)})
+      })
     }
     function delAclDoc(namedNode){
       return new Promise(function(resolve, reject){
         try {
           ft.load(namedNode).then( ()=> {
-            let aclRel = st.sym(
-              'http://www.iana.org/assignments/link-relations/acl'
-            )
+            let aclRel = st.sym('http://www.iana.org/assignments/link-relations/acl')
             let aclDoc = st.any(namedNode,aclRel)
             if(typeof aclDoc==="undefined") return resolve("")
             ft._fetch(aclDoc.uri,{method:"DELETE"}).then( aclRes => {
