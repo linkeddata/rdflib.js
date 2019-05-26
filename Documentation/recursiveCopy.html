@@ -19,16 +19,6 @@ or app:// scheme.  In the case of the https:// addresses, the same webId
 must have read access to the fromURL and write access to the toURL locations.
 </p>
 <p>
-By default, access control files (.acl) will not be copied.  If you want them
-to be copied, specify the options parameter like this:
-<code>{ copyACL:true }<code>
-</p>
-<p>
-<b>Important!</b> if your .acl files use absolute addresses to refer to 
-the resources being controlled, they will not work as expected in the new
-location.
-</p>
-<p>
 In a nodejs app, you may copy files to and from the user's local file system
 by using the file:// scheme (requires 
 <a href="https://github.com/jeff-zucker/solid-auth-cli">solid-auth-cli</a>).
@@ -38,6 +28,35 @@ In a browser app, you may copy files to and from the user's browser local
 storage by using the app:// scheme (requires 
 <a href="https://github.com/jeff-zucker/solid-rest-browser">solid-rest-browser</a>).
 .
+</p>
+
+<h3>Copy Options</h3>
+<p>
+The **default behaviour** of recursiveCopy is to copy all .acl and .meta files
+it finds in the source, creating or replacing existing files in the destination.
+If a .acl or .meta file exists in the destination but not the source, it will 
+be deleted.  This is done so that the source's control and relationships will
+be duplicated in the destination regardless of what was in the destination
+previously.
+</p>
+<p>
+If you set the **filesOnly flag** to true, no .acl or .meta files from the source
+will be copied and any pre-existing .acl and .meta files on the destination will
+be left untouched.  Here's how to set the flag:
+<code>
+    fetcher.recursiveCopy(fromURL,toURL,{filesOnly:true})
+</code>
+</p>
+<p>
+When using the default behavior the location of the source .acl and .meta will
+be derived from the source's Link header.  But the destination might be another
+Solid server with a different location scehme so the location of the .acl and 
+.meta files in the destination will be derived from the destination's Link header.
+</p>
+<p>
+<b>Important!</b> if your .acl files use absolute addresses to refer to 
+the resources being controlled, they will not work as expected in the new
+location, so don't do that!
 </p>
 
 <style type="text/css">

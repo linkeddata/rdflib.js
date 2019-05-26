@@ -1107,8 +1107,8 @@ class Fetcher {
         if (!response.ok) throw new Error(
           'Error reading container ' + src + ' : ' + response.status
         )
-        let contents = st.each(src, ns.ldp('contains'))
         let promises = []
+        let contents = st.each(src, ns.ldp('contains'))
         copyContainer(src,dest,options,contents.length)
         for (let i=0; i < contents.length; i++){
           let here = contents[i]
@@ -1117,9 +1117,14 @@ class Fetcher {
             promises.push(ft.recursiveCopy(here, there, options))
           }
           else {
-            if(options.copyACL)fetchAclDoc(here,there.uri).then()
             console.log('Copying file ' + here+"\n  to "+ there+"\n")
-            promises.push(ft.webCopy(here,there,{contentType:"text/turtle"}))
+            ft.webCopy(here,there,{contentType:"text/turtle"}).then( ()=>{
+              if(!options.filesOnly){
+                handleLink(here,there,'acl').then( ()=> {
+                  handleLink(here,there,'describedBy')
+                })
+              }              
+            })
           }
         }
         Promise.all(promises).then(()=>{resolve("")})
@@ -1139,40 +1144,59 @@ class Fetcher {
       return st.sym(dest.uri + x.uri.slice(src.uri.length))
     }
     function copyContainer(src,dest,options,hasFiles){
-      if(options.copyACL) fetchAclDoc(src,dest.uri).then();
-      if(hasFiles) return
       let fnew=  dest.uri.replace(/\/$/,'').replace(/^.*\//,'')
       let fparent= new RegExp ( fnew )
           fparent=dest.uri.replace(fparent,'').replace(/\/$/,'')
       ft._fetch(dest.uri).then( response => {
-        if(response.status===404 && typeof fparent !="undefined" && typeof fnew != "undefined" ){
+        if(response.status===404  && !hasFiles){
           console.log('Copying folder ' + fnew+"\n  into "+fparent+"\n")
-          ft.createContainer(fparent,fnew).catch(e=>{"ERROR "+e})
+          ft.createContainer(fparent,fnew).then( ()=>{
+            if(!options.filesOnly){
+              handleLink(src,dest,'acl').then( ()=>{
+                 handleLink(src,dest,'meta')
+              })
+            }
+          }).catch(e=>{return reject("ERROR "+e)})
+        }
+        else if(!options.filesOnly){
+          handleLink(src,dest,'acl').then( ()=>{
+            handleLink(src,dest,'meta')
+          })
         }
       })
     }
-    function fetchAclDoc(url,there){
-     return new Promise(function(resolve, reject){
-      ft.load(url).then( response => {
-        let aclRel = st.sym(
-            'http://www.iana.org/assignments/link-relations/acl'
-        )
-        let aclDoc = st.any(url,aclRel)
-        if(typeof aclDoc==="undefined") return resolve()
-        ft._fetch(aclDoc.uri).then( aclRes => {
-          if(!aclRes.ok) return resolve()
-          else {
-            there = st.sym(
-              there.replace(/[^\/]*$/,'') + aclDoc.uri.replace(/^.*\//,'')
-            )
-            console.log('Copying ACL '+aclDoc.uri+"\n  to "+there.uri+"\n")
-            ft.webCopy(aclDoc,there,{contentType:"text/turtle"})
-            return resolve();
-          }
-        },e=>{return resolve()})
-      },e=>{reject("Could not fetch DOC : "+e)})
-     })
-    }
+    /* linkType = "acl" or "describedBy"
+    *    assumes we have already copied here to the there
+    *    load here, get the hereLink
+    *    load there, get the thereLink
+    *    fetch the hereLink
+    *    if hereLink loaded, copy it to thereLink
+    *    else delete the thereLink
+    *
+    */
+    function handleLink(here,there,linkType){return new Promise(resolve=>{
+      var linkRel = st.sym('http://www.iana.org/assignments/link-relations/'+linkType)
+      ft.load(here.uri).then( response => {
+        let hereLink = st.any(here,linkRel)
+        ft.load(there.uri).then( response => {
+          let thereLink = st.any(there,linkRel)
+          ft._fetch(hereLink.uri).then( hereLinkRes => {
+            ft._fetch(thereLink.uri).then( thereLinkRes => {
+              if(hereLinkRes.status===404 && thereLinkRes.status.ok){
+                console.log(`Deleting linkType <${thereLink.uri}>\n`)
+                ft.delete(thereLink.uri).then( ()=>{return resolve()})
+              }
+              else if(hereLinkRes.status != 404){
+                console.log('Copying '+linkType+" "+hereLink.uri+"\n  to "+thereLink.uri+"\n")
+                ft.webCopy(hereLink,thereLink,{contentType:"text/turtle"}).then( ()=>{
+                  return resolve();
+                })
+              }
+            }).catch(e=>{return resolve()}) // fetch thereLink
+          }).catch(e=>{return resolve()})   // fetch hereLink
+        }).catch(e=>{return resolve()})     // load there
+      }).catch(e=>{return resolve()})       // load here
+    })}
   }
 
   /**
@@ -1198,9 +1222,7 @@ class Fetcher {
         return reject(`Cowardly refusing to delete <${target.uri}>!`)
       }
     }
-    ft.load(target.uri).then( res => {
-      // if(res.status===404) return resolve("Nothing to delete!")
-      // if(!res.ok) return resolve("bad fetch "+res.status)
+    ft.load(target.uri).then( () => {
       const contents = st.each(target, ns.ldp('contains'))
       const promises = contents.map( item => {
           if (st.holds(item, ns.rdf('type'), ns.ldp('BasicContainer'))) {
@@ -1214,7 +1236,7 @@ class Fetcher {
          .then(()=> deleteResource(target,"folder"))
          .catch(e=>{return resolve(e)})
       )
-    }).catch(res=>{return resolve(res+res.status+" "+res.statusText)})
+    }).catch(e=>{return resolve(e)})
     function deleteResource( namedNode, type ) {
       return new Promise( (resolve)=> {
         delAclDoc(namedNode).then(r=>{
