@@ -1156,7 +1156,7 @@ class Fetcher {
         else return resolve( handleLinks(src,dest,options) )
       })
     })}
-   function handleLinks(here,there,options){return new Promise(resolve=>{
+    function ZZZhandleLinks(here,there,options){return new Promise(resolve=>{
      if(options.filesOnly) return resolve()
      getLink(here,there,'acl').then( aclLinks => {
        getLink(here,there,'describedBy').then( metaLinks => {
@@ -1172,21 +1172,47 @@ class Fetcher {
        }).catch(e=>{return resolve(do_err(e))})
      })
    })}         
-    function getLink(here,there,linkType){ return new Promise(resolve=>{
-      var linkRel = st.sym(
-        'http://www.iana.org/assignments/link-relations/'+linkType
+    function handleLinks(here,there,opts){return new Promise(resolve=>{
+      if(opts.filesOnly) return resolve()
+      getLinks(here,there).then( links => {
+        handleLink(here,there,'acl',links.acl).then( ()=> {
+          handleLink(here,there,'describedBy',links.meta).then( ()=> {
+            return resolve()
+          }).catch(e=>{return resolve(do_err(e))})
+        }).catch(e=>{
+          handleLink(here,there,'describedBy',links.meta).then( ()=> {
+            return resolve()
+          }).catch(e=>{return resolve(do_err(e))})
+        })
+      }).catch(e=>{return resolve(do_err(e))})
+    })}         
+    function getLinks(here,there){ return new Promise(resolve=>{
+      let aclRel = st.sym(
+        'http://www.iana.org/assignments/link-relations/acl'
+      )
+      let metaRel = st.sym(
+        'http://www.iana.org/assignments/link-relations/describedBy'
       )
       self._fetch(here.uri,{method:"HEAD"}).then( response => {
         self.parseLinkHeader( 
           response.headers.get('link'), here, here.uri
         )
-        let hereLink = st.any(here,linkRel)
+        let hereLink = {
+          acl  : st.any(here,aclRel),
+          meta : st.any(here,metaRel),
+        }
         ft._fetch(there.uri,{method:"HEAD"}).then( response => {
           self.parseLinkHeader( 
             response.headers.get('link'), there, there.uri
           )
-          let thereLink = st.any(there,linkRel)
-          return resolve( {here:hereLink,there:thereLink} )
+          let thereLink = {
+            acl  : st.any(there,aclRel),
+            meta : st.any(there,metaRel),
+          }
+          return resolve({
+            acl:{here:hereLink.acl,there:thereLink.acl},
+            meta:{here:hereLink.meta,there:thereLink.meta},
+          })
         }).catch(e=>{return resolve(do_err(e))})
       }).catch(e=>{return resolve(do_err(e))})
     })}
