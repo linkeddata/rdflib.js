@@ -1087,7 +1087,7 @@ class Fetcher {
    *
    * @param src {Node|string}
    * @param dest {Node|string}
-   * @param [options={}]  // {filesOnly:true} omits .acl and .meta files
+   * @param [options={}] // {filesOnly:true} omits .acl and .meta files
    *
    * @returns {Promise}
    */
@@ -1102,7 +1102,7 @@ class Fetcher {
     options = options || {}
     return new Promise(function(resolve, reject){
       if( dest.uri.startsWith(src.uri) ){
-        return reject("Cowardly refusing to copy a folder into itself!")
+        return reject("Cowardly refusing to copy folder into itself!")
       }
       ft.load(src).then(function(response) {
         if (!response.ok) throw new Error(
@@ -1141,7 +1141,7 @@ class Fetcher {
       }
       return st.sym(dest.uri + x.uri.slice(src.uri.length))
     }
-    function copyContainer(src,dest,options,hasFiles){
+    function copyContainer(src,dest,options,hasFiles){return new Promise(resolve=>{
       let fnew=  dest.uri.replace(/\/$/,'').replace(/^.*\//,'')
       let fparent= new RegExp ( fnew )
           fparent=dest.uri.replace(fparent,'').replace(/\/$/,'')
@@ -1150,25 +1150,29 @@ class Fetcher {
         if(response.status===404  && !hasFiles){
           console.log('Copying folder ' + fnew+"\n  into "+fparent+"\n")
           ft.createContainer(fparent,fnew).then( ()=>{
-            handleLinks(src,dest,options)
+            return resolve( handleLinks(src,dest,options) )
           }).catch(e=>{})
         }
-        else handleLinks(src,dest,options)
+        else return resolve( handleLinks(src,dest,options) )
       })
-    }
-    function handleLinks(here,there,options){
-      if(options.filesOnly) return Promise.resolve()
-      getLinks(here,there,'acl').then( aclLinks => {
-        getLinks(here,there,'describedBy').then( metaLinks => {
-          handleLink(here,there,'acl',aclLinks).then( ()=> {
-            handleLink(here,there,'describedBy',metaLinks).then( ()=> {
-              return Promise.resolve()
-            }).catch(e=>{return resolve(do_err(e))})
-          }).catch(e=>{return resolve(do_err(e))})
-        }).catch(e=>{return resolve(do_err(e))})
-      })
-    }         
-    function getLinks(here,there,linkType){ return new Promise(resolve=>{
+    })}
+   function handleLinks(here,there,options){return new Promise(resolve=>{
+     if(options.filesOnly) return resolve()
+     getLink(here,there,'acl').then( aclLinks => {
+       getLink(here,there,'describedBy').then( metaLinks => {
+         handleLink(here,there,'acl',aclLinks).then( ()=> {
+           handleLink(here,there,'describedBy',metaLinks).then( ()=> {
+             return resolve()
+           }).catch(e=>{return resolve(do_err(e))})
+         }).catch(e=>{
+           handleLink(here,there,'describedBy',metaLinks).then( ()=> {
+             return resolve()
+           }).catch(e=>{return resolve(do_err(e))})
+         })
+       }).catch(e=>{return resolve(do_err(e))})
+     })
+   })}         
+    function getLink(here,there,linkType){ return new Promise(resolve=>{
       var linkRel = st.sym(
         'http://www.iana.org/assignments/link-relations/'+linkType
       )
@@ -1183,8 +1187,8 @@ class Fetcher {
           )
           let thereLink = st.any(there,linkRel)
           return resolve( {here:hereLink,there:thereLink} )
-        }).catch(e=>{return resolve(do_err(e))}) // fetch thereLink
-      }).catch(e=>{return resolve(do_err(e))})   // fetch hereLink
+        }).catch(e=>{return resolve(do_err(e))})
+      }).catch(e=>{return resolve(do_err(e))})
     })}
     function handleLink(here,there,lkType,lk){ 
      return new Promise(resolve=>{
@@ -1206,6 +1210,7 @@ class Fetcher {
                 return resolve();
             })
           }
+          return resolve();
         }).catch(e=>{return resolve(do_err(e))})     // load there
       }).catch(e=>{return resolve(do_err(e))})       // load here
      })
