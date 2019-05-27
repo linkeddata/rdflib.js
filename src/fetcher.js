@@ -1092,6 +1092,7 @@ class Fetcher {
    * @returns {Promise}
    */
   recursiveCopy(src, dest, options){
+    let self = this
     let st = this.store
     let ft = this.store.fetcher
     src  = st.sym( src.uri || src )
@@ -1153,14 +1154,14 @@ class Fetcher {
           ft.createContainer(fparent,fnew).then( ()=>{
             if(!options.filesOnly){
               handleLink(src,dest,'acl').then( ()=>{
-                 handleLink(src,dest,'meta')
+                 handleLink(src,dest,'describedBy')
               })
             }
-          }).catch(e=>{return reject("ERROR "+e)})
+          }).catch(e=>{console.log("CREATE CONTAINER ERROR "+e)})
         }
         else if(!options.filesOnly){
           handleLink(src,dest,'acl').then( ()=>{
-            handleLink(src,dest,'meta')
+            handleLink(src,dest,'describedBy')
           })
         }
       })
@@ -1176,12 +1177,18 @@ class Fetcher {
     */
     function handleLink(here,there,linkType){return new Promise(resolve=>{
       var linkRel = st.sym('http://www.iana.org/assignments/link-relations/'+linkType)
-      ft.load(here.uri).then( response => {
+      self._fetch(here.uri,{method:"HEAD"}).then( response => {
+        self.parseLinkHeader( 
+          response.headers.get('link'), here, here.uri
+        )
         let hereLink = st.any(here,linkRel)
-        ft.load(there.uri).then( response => {
+        ft._fetch(there.uri,{method:"HEAD"}).then( response => {
+          self.parseLinkHeader( 
+            response.headers.get('link'), there, there.uri
+          )
           let thereLink = st.any(there,linkRel)
-          ft._fetch(hereLink.uri).then( hereLinkRes => {
-            ft._fetch(thereLink.uri).then( thereLinkRes => {
+          ft._fetch(hereLink.uri,{method:"HEAD"}).then( hereLinkRes => {
+            ft._fetch(thereLink.uri,{method:"HEAD"}).then( thereLinkRes => {
               if(hereLinkRes.status===404 && thereLinkRes.status.ok){
                 console.log(`Deleting linkType <${thereLink.uri}>\n`)
                 ft.delete(thereLink.uri).then( ()=>{return resolve()})
@@ -1192,11 +1199,15 @@ class Fetcher {
                   return resolve();
                 })
               }
-            }).catch(e=>{return resolve()}) // fetch thereLink
-          }).catch(e=>{return resolve()})   // fetch hereLink
-        }).catch(e=>{return resolve()})     // load there
-      }).catch(e=>{return resolve()})       // load here
+            }).catch(e=>{return resolve(do_err(e))}) // fetch thereLink
+          }).catch(e=>{return resolve(do_err(e))})   // fetch hereLink
+        }).catch(e=>{return resolve(do_err(e))})     // load there
+      }).catch(e=>{return resolve(do_err(e))})       // load here
     })}
+    function do_err(msg){
+        console.log(msg)
+        return(msg)
+    }
   }
 
   /**
