@@ -1,9 +1,9 @@
 <html>
 <head>
-<title>rdflib: Using RecursiveCopy and RecursiveDelete</title>
+<title>rdflib: Using recursiveCopy and recursiveDelete</title>
 </head>
 <body>
-<h1>Using RecursiveCopy</h1>
+<h1>Using recursiveCopy</h1>
 
 <p>The recursiveCopy method copies a folder and all of its contents 
 from one Solid space to another.  For example: from one location 
@@ -32,7 +32,7 @@ storage by using the app:// scheme (requires
 
 <h3>Copy Options</h3>
 <p>
-The **default behaviour** of recursiveCopy is to copy all .acl and .meta files
+The <b>default behaviour</b> of recursiveCopy is to copy all .acl and .meta files
 it finds in the source, creating or replacing existing files in the destination.
 If a .acl or .meta file exists in the destination but not the source, it will 
 be deleted.  This is done so that the source's control and relationships will
@@ -40,7 +40,7 @@ be duplicated in the destination regardless of what was in the destination
 previously.
 </p>
 <p>
-If you set the **filesOnly flag** to true, no .acl or .meta files from the source
+If you set the <b>filesOnly flag</b> to true, no .acl or .meta files from the source
 will be copied and any pre-existing .acl and .meta files on the destination will
 be left untouched.  Here's how to set the flag:
 <code>
@@ -50,13 +50,25 @@ be left untouched.  Here's how to set the flag:
 <p>
 When using the default behavior the location of the source .acl and .meta will
 be derived from the source's Link header.  But the destination might be another
-Solid server with a different location scehme so the location of the .acl and 
+Solid server with a different location scheme so the location of the .acl and 
 .meta files in the destination will be derived from the destination's Link header.
 </p>
 <p>
 <b>Important!</b> if your .acl files use absolute addresses to refer to 
 the resources being controlled, they will not work as expected in the new
 location, so don't do that!
+</p>
+
+<h1>Using recursiveDelete</h1>
+<p>
+The fetcher.recursiveDelete method deletes a Solid container and all of
+its contents.  It deletes all resources, containers, .acl, and .meta files.  It would be wise to have a confirm action prior to the delete, but
+the developer is responsible for that. See the scripts in
+example/recursiveOps for examples of confirm dialogs.
+</p>
+<p>
+The recursiveDelete method may be used in any Solid information space -
+https://, file://, app://.
 </p>
 
 <style type="text/css">
