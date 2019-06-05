@@ -53,8 +53,11 @@ class NamedNode extends Node {
      var p = str.indexOf('//')
      if (p < 0) throw new Error('This URI does not have a web site part (origin)')
      var q = str.indexOf('/', p+2)
-     if (q < 0) throw new Error('This URI does not have a web site part. (origin)')
-     return new NamedNode(str.slice(0, q + 1))
+     if (q < 0) {
+       return new NamedNode(str.slice(0) + '/')   // Add slash to a bare origin
+     } else {
+       return new NamedNode(str.slice(0, q + 1))
+     }
    }
   doc () {
     if (this.uri.indexOf('#') < 0) {
