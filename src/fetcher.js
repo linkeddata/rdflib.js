@@ -416,7 +416,7 @@ const HANDLERS = {
  * which turns it from an offline store to an online store.
  * The fetcher deals with loading data files rom the web,
   * figuring how to parse them.  It will also refresh, remove, the data
-  * and put back the fata to the web.
+  * and put back the data to the web.
  */
 class Fetcher {
   /**
