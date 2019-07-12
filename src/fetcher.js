@@ -1069,6 +1069,20 @@ class Fetcher {
     uri = uri.uri || uri // Accept object or string
     let doc = new NamedNode(uri).doc() // strip off #
     options.contentType = options.contentType || 'text/turtle'
+    if (options.contentType === 'application/ld+json') {
+      return new Promise((resolve, reject) => {
+        serialize(doc, this.store, doc.uri, options.contentType, (err, jsonString) => {
+          if (err) {
+            reject(err)
+          } else {
+            options.data = jsonString
+            this.webOperation('PUT', uri, options)
+              .then((res) => resolve(res))
+              .catch((error) => reject(error))
+          }
+        })
+      })
+    }
     options.data = serialize(doc, this.store, doc.uri, options.contentType)
     return this.webOperation('PUT', uri, options)
   }
