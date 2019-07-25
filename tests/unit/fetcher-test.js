@@ -355,31 +355,45 @@ describe('Fetcher', () => {
     })
   })
 
-  describe('withCredentials', () => {
-    it('should return true for an https uri', () => {
-      let uri = 'https://example.com/newdoc.ttl'
+  describe('setCredentials', () => {
+    it('should work for empty options object', () => {
+      let uri = 'http://example.com/newdoc2.ttl'
+      let options = {}
 
-      expect(Fetcher.withCredentials(uri)).to.be.true()
+      Fetcher.setCredentials(uri, options)
+      expect(options.credentials).to.equal('include')
     })
 
-    it('should return false for an http uri with no override', () => {
+    it('should work for withCredentials: true (legacy)', () => {
       let uri = 'http://example.com/newdoc2.ttl'
+      let options = { withCredentials: true }
 
-      expect(Fetcher.withCredentials(uri)).to.be.false()
+      Fetcher.setCredentials(uri, options)
+      expect(options.credentials).to.equal('include')
+    })
+
+    it('should work for withCredentials:false (legacy)', () => {
+      let uri = 'http://example.com/newdoc2.ttl'
+      let options = { withCredentials: false }
+
+      Fetcher.setCredentials(uri, options)
+      expect(options.credentials).to.equal('omit')
     })
 
     it('should return true for an http uri with an override', () => {
       let uri = 'http://example.com/newdoc2.ttl'
-      let options = { withCredentials: true }
+      let options = { credentials: true }
 
-      expect(Fetcher.withCredentials(uri, options)).to.be.true()
+      Fetcher.setCredentials(uri, options)
+      expect(options.credentials).to.be.true()
     })
 
     it('should return false for an https uri with an override', () => {
       let uri = 'https://example.com/newdoc2.ttl'
-      let options = { withCredentials: false }
+      let options = { credentials: false }
 
-      expect(Fetcher.withCredentials(uri, options)).to.be.false()
+      Fetcher.setCredentials(uri, options)
+      expect(options.credentials).to.be.false()
     })
   })
 
