@@ -302,7 +302,7 @@ and put back the fata to the web.</div>
     
 
     
-    <h4 class="name" id=".unsupportedProtocol"><span class="type-signature">(static) </span>unsupportedProtocol<span class="signature">(uri)</span><span class="type-signature"> &rarr; {boolean}</span></h4>
+    <h4 class="name" id=".setCredentials"><span class="type-signature">(static) </span>setCredentials<span class="signature">(requestedURI, options)</span><span class="type-signature"></span></h4>
     
 
     
@@ -310,157 +310,8 @@ and put back the fata to the web.</div>
 
 
 <div class="description">
-    Tests whether the uri's protocol is supported by the Fetcher.
+    Decide on credentials using old XXHR api or new fetch()  one
 </div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>uri</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fetcher.js.html">fetcher.js</a>, <a href="fetcher.js.html#line564">line 564</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">boolean</span>
-
-
-    </dd>
-</dl>
-
-    
-
-
-
-
-
-        
-            
-
-    
-
-    
-    <h4 class="name" id=".withCredentials"><span class="type-signature">(static) </span>withCredentials<span class="signature">(requestedURI, options)</span><span class="type-signature"> &rarr; {boolean}</span></h4>
-    
-
-    
-
-
 
 
 
@@ -576,6 +427,147 @@ and put back the fata to the web.</div>
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
         <a href="fetcher.js.html">fetcher.js</a>, <a href="fetcher.js.html#line576">line 576</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id=".unsupportedProtocol"><span class="type-signature">(static) </span>unsupportedProtocol<span class="signature">(uri)</span><span class="type-signature"> &rarr; {boolean}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Tests whether the uri's protocol is supported by the Fetcher.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>uri</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="fetcher.js.html">fetcher.js</a>, <a href="fetcher.js.html#line564">line 564</a>
     </li></ul></dd>
     
 
@@ -752,7 +744,7 @@ request's metadata status collection.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fetcher.js.html">fetcher.js</a>, <a href="fetcher.js.html#line909">line 909</a>
+        <a href="fetcher.js.html">fetcher.js</a>, <a href="fetcher.js.html#line908">line 908</a>
     </li></ul></dd>
     
 
@@ -959,7 +951,7 @@ request's metadata status collection.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fetcher.js.html">fetcher.js</a>, <a href="fetcher.js.html#line1140">line 1140</a>
+        <a href="fetcher.js.html">fetcher.js</a>, <a href="fetcher.js.html#line1139">line 1139</a>
     </li></ul></dd>
     
 
@@ -1011,7 +1003,7 @@ request's metadata status collection.
     
 
     
-    <h4 class="name" id="createIfNotExists"><span class="type-signature"></span>createIfNotExists<span class="signature">(doc)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
+    <h4 class="name" id="createIfNotExists"><span class="type-signature">(async) </span>createIfNotExists<span class="signature">(doc)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
     
 
     
@@ -1114,7 +1106,7 @@ as otherwise existing could  be deleted.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fetcher.js.html">fetcher.js</a>, <a href="fetcher.js.html#line1108">line 1108</a>
+        <a href="fetcher.js.html">fetcher.js</a>, <a href="fetcher.js.html#line1107">line 1107</a>
     </li></ul></dd>
     
 
@@ -1306,7 +1298,7 @@ as otherwise existing could  be deleted.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fetcher.js.html">fetcher.js</a>, <a href="fetcher.js.html#line1091">line 1091</a>
+        <a href="fetcher.js.html">fetcher.js</a>, <a href="fetcher.js.html#line1090">line 1090</a>
     </li></ul></dd>
     
 
@@ -1533,7 +1525,7 @@ as otherwise existing could  be deleted.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fetcher.js.html">fetcher.js</a>, <a href="fetcher.js.html#line940">line 940</a>
+        <a href="fetcher.js.html">fetcher.js</a>, <a href="fetcher.js.html#line939">line 939</a>
     </li></ul></dd>
     
 
@@ -1709,7 +1701,7 @@ as otherwise existing could  be deleted.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fetcher.js.html">fetcher.js</a>, <a href="fetcher.js.html#line751">line 751</a>
+        <a href="fetcher.js.html">fetcher.js</a>, <a href="fetcher.js.html#line749">line 749</a>
     </li></ul></dd>
     
 
@@ -1879,7 +1871,7 @@ as otherwise existing could  be deleted.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fetcher.js.html">fetcher.js</a>, <a href="fetcher.js.html#line1254">line 1254</a>
+        <a href="fetcher.js.html">fetcher.js</a>, <a href="fetcher.js.html#line1273">line 1273</a>
     </li></ul></dd>
     
 
@@ -2038,7 +2030,7 @@ Looks for { [] link:requestedURI ?uri; link:response [ httph:header-name  ?value
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fetcher.js.html">fetcher.js</a>, <a href="fetcher.js.html#line1648">line 1648</a>
+        <a href="fetcher.js.html">fetcher.js</a>, <a href="fetcher.js.html#line1667">line 1667</a>
     </li></ul></dd>
     
 
@@ -2241,7 +2233,7 @@ with status of 0.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fetcher.js.html">fetcher.js</a>, <a href="fetcher.js.html#line1455">line 1455</a>
+        <a href="fetcher.js.html">fetcher.js</a>, <a href="fetcher.js.html#line1474">line 1474</a>
     </li></ul></dd>
     
 
@@ -2440,7 +2432,7 @@ with status of 0.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fetcher.js.html">fetcher.js</a>, <a href="fetcher.js.html#line1517">line 1517</a>
+        <a href="fetcher.js.html">fetcher.js</a>, <a href="fetcher.js.html#line1536">line 1536</a>
     </li></ul></dd>
     
 
@@ -2571,7 +2563,7 @@ with status of 0.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fetcher.js.html">fetcher.js</a>, <a href="fetcher.js.html#line1631">line 1631</a>
+        <a href="fetcher.js.html">fetcher.js</a>, <a href="fetcher.js.html#line1650">line 1650</a>
     </li></ul></dd>
     
 
@@ -2900,7 +2892,7 @@ of retrying with a proxy)
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fetcher.js.html">fetcher.js</a>, <a href="fetcher.js.html#line1434">line 1434</a>
+        <a href="fetcher.js.html">fetcher.js</a>, <a href="fetcher.js.html#line1453">line 1453</a>
     </li></ul></dd>
     
 
@@ -3715,7 +3707,7 @@ Looks up all the URIs a things has.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fetcher.js.html">fetcher.js</a>, <a href="fetcher.js.html#line1232">line 1232</a>
+        <a href="fetcher.js.html">fetcher.js</a>, <a href="fetcher.js.html#line1251">line 1251</a>
     </li></ul></dd>
     
 
@@ -3887,7 +3879,7 @@ Looks up all the URIs a things has.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fetcher.js.html">fetcher.js</a>, <a href="fetcher.js.html#line1658">line 1658</a>
+        <a href="fetcher.js.html">fetcher.js</a>, <a href="fetcher.js.html#line1677">line 1677</a>
     </li></ul></dd>
     
 
@@ -3993,7 +3985,7 @@ which will make sure all the URIs are dereferenced
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fetcher.js.html">fetcher.js</a>, <a href="fetcher.js.html#line1047">line 1047</a>
+        <a href="fetcher.js.html">fetcher.js</a>, <a href="fetcher.js.html#line1046">line 1046</a>
     </li></ul></dd>
     
 
@@ -4103,7 +4095,7 @@ Calling methods:
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fetcher.js.html">fetcher.js</a>, <a href="fetcher.js.html#line854">line 854</a>
+        <a href="fetcher.js.html">fetcher.js</a>, <a href="fetcher.js.html#line853">line 853</a>
     </li></ul></dd>
     
 
@@ -4474,7 +4466,7 @@ Calling methods:
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fetcher.js.html">fetcher.js</a>, <a href="fetcher.js.html#line1068">line 1068</a>
+        <a href="fetcher.js.html">fetcher.js</a>, <a href="fetcher.js.html#line1067">line 1067</a>
     </li></ul></dd>
     
 
@@ -4650,7 +4642,7 @@ Calling methods:
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fetcher.js.html">fetcher.js</a>, <a href="fetcher.js.html#line1689">line 1689</a>
+        <a href="fetcher.js.html">fetcher.js</a>, <a href="fetcher.js.html#line1708">line 1708</a>
     </li></ul></dd>
     
 
@@ -4812,7 +4804,7 @@ Calling methods:
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fetcher.js.html">fetcher.js</a>, <a href="fetcher.js.html#line1283">line 1283</a>
+        <a href="fetcher.js.html">fetcher.js</a>, <a href="fetcher.js.html#line1302">line 1302</a>
     </li></ul></dd>
     
 
@@ -4982,7 +4974,7 @@ does not invole the quadstore.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="fetcher.js.html">fetcher.js</a>, <a href="fetcher.js.html#line1173">line 1173</a>
+        <a href="fetcher.js.html">fetcher.js</a>, <a href="fetcher.js.html#line1194">line 1194</a>
     </li></ul></dd>
     
 
@@ -5050,7 +5042,7 @@ does not invole the quadstore.
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Fri Apr 05 2019 20:04:49 GMT+0000 (UTC)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Fri Jul 26 2019 15:05:29 GMT+0000 (UTC)
 </footer>
 
 <script> prettyPrint(); </script>
