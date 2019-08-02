@@ -20,6 +20,8 @@ const Util = require('./util')
 function parse (str, kb, base, contentType, callback) {
   contentType = contentType || 'text/turtle'
   contentType = contentType.split(';')[0]
+  const doc = kb.sym(base)
+
   try {
     if (contentType === 'text/n3' || contentType === 'text/turtle') {
       var p = N3Parser(kb, kb, base, base, null, null, '', null)
@@ -136,7 +138,7 @@ function parse (str, kb, base, contentType, callback) {
     var subject = createTerm(triple.subject)
     var predicate = createTerm(triple.predicate)
     var object = createTerm(triple.object)
-    var why = null
+    var why = doc
     if (triple.graph) {
       why = createTerm(triple.graph)
     }
