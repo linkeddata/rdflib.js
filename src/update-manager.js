@@ -1011,7 +1011,7 @@ class UpdateManager {
         }
 
         delete kb.fetcher.nonexistent[doc.uri]
-        delete kb.fetcher.requested[doc.uri]
+        delete kb.fetcher.requested[doc.uri] // @@ could this mess with the requested state machine? if a fetch is in progress  
 
         if (typeof data !== 'string') {
           data.map((st) => {

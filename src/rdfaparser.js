@@ -183,7 +183,7 @@ class RDFaProcessor {
     if (!dom.baseURI) { // Note this became a read-only attribute some time before 2018
       dom.baseURI = base // oinly set if not already set
     }
-    p.process(dom)
+    p.process(dom, { baseURI: base})
   }
 
   parseSafeCURIEOrCURIEOrURI (value, prefixes, base) {
@@ -262,8 +262,12 @@ class RDFaProcessor {
     if (!window.console) {
        window.console = { log: function() {} }
     } */
+    options = options || {}
     var base
     if (node.nodeType === Node.DOCUMENT_NODE) {
+      if (node.baseURI && !options.baseURI) {
+        options.baseURI = node.baseURI  // be defensive as DOM implementations vary
+      }
       base = node.baseURI
       node = node.documentElement
       if (!node.baseURI) {

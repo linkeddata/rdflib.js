@@ -32,6 +32,7 @@
   "homepage": "http://github.com/linkeddata/rdflib.js",
   "bugs": "http://github.com/linkeddata/rdflib.js/issues",
   "dependencies": {
+    "@babel/runtime": "^7.4.4",
     "async": "^0.9.x",
     "jsonld": "^0.4.5",
     "n3": "^0.4.1",
@@ -42,6 +43,7 @@
   "devDependencies": {
     "@babel/cli": "^7.2.3",
     "@babel/core": "^7.3.4",
+    "@babel/plugin-transform-runtime": "^7.4.4",
     "@babel/preset-env": "^7.3.4",
     "@babel/register": "^7.0.0",
     "babel-core": "^7.0.0-bridge.0",
