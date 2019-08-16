@@ -76,6 +76,7 @@ class UpdateManager {
     if (!kb) {
       kb = this.store
     }
+    uri = uri.uri || uri // Allow Named Node to be passed
 
     if (uri.slice(0, 8) === 'file:///') {
       if (kb.holds(
@@ -99,16 +100,22 @@ class UpdateManager {
     var definitive = false
     var requests = kb.each(undefined, this.ns.link('requestedURI'), docpart(uri))
 
-    // Hack for the moment @@@@ 2016-02-12
-    if (kb.holds(namedNode(uri), this.ns.rdf('type'), this.ns.ldp('Resource'))) {
-      return 'SPARQL'
-    }
     var method
     for (var r = 0; r < requests.length; r++) {
       request = requests[r]
       if (request !== undefined) {
         var response = kb.any(request, this.ns.link('response'))
         if (request !== undefined) {
+          var wacAllow = kb.anyValue(response, this.ns.httph('wac-allow'))
+          if (wacAllow) {
+            for (var bit of wacAllow.split(',')) {
+              var lr = bit.split('=')
+              if (lr[0].includes('user') && !lr[1].includes('write') && !lr[1].includes('append') ) {
+                console.log('    editable? excluded by WAC-Allow: ', wacAllow)
+                return false
+              }
+            }
+          }
           var acceptPatch = kb.each(response, this.ns.httph('accept-patch'))
           if (acceptPatch.length) {
             for (let i = 0; i < acceptPatch.length; i++) {
@@ -1011,7 +1018,7 @@ class UpdateManager {
         }
 
         delete kb.fetcher.nonexistent[doc.uri]
-        delete kb.fetcher.requested[doc.uri] // @@ could this mess with the requested state machine? if a fetch is in progress  
+        delete kb.fetcher.requested[doc.uri] // @@ could this mess with the requested state machine? if a fetch is in progress
 
         if (typeof data !== 'string') {
           data.map((st) => {
