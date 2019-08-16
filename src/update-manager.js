@@ -100,10 +100,11 @@ class UpdateManager {
     var definitive = false
     var requests = kb.each(undefined, this.ns.link('requestedURI'), docpart(uri))
 
-    // Hack for the moment @@@@ 2016-02-12
+    /* "Hack for the moment" @@@@ 2016-02-12 - Dimitri added (why?); timbl removed 2019-08
     if (kb.holds(namedNode(uri), this.ns.rdf('type'), this.ns.ldp('Resource'))) {
       return 'SPARQL'
-    }
+    }      -- is not the solid protocol and ignored wac-allow
+    */
     var method
     for (var r = 0; r < requests.length; r++) {
       request = requests[r]
@@ -113,8 +114,8 @@ class UpdateManager {
           var wacAllow = kb.anyValue(response, this.ns.httph('wac-allow'))
           if (wacAllow) {
             for (var bit of wacAllow.split(',')) {
-              lr = bit.split('=')
-              if (l[0].includes('user') && !lr[1].includes('write') && !lr[1].includes('append') ) {
+              var lr = bit.split('=')
+              if (lr[0].includes('user') && !lr[1].includes('write') && !lr[1].includes('append') ) {
                 console.log('    editable? excluded by WAC-Allow: ', wacAllow)
                 return false
               }
