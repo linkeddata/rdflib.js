@@ -100,11 +100,6 @@ class UpdateManager {
     var definitive = false
     var requests = kb.each(undefined, this.ns.link('requestedURI'), docpart(uri))
 
-    /* "Hack for the moment" @@@@ 2016-02-12 - Dimitri added (why?); timbl removed 2019-08
-    if (kb.holds(namedNode(uri), this.ns.rdf('type'), this.ns.ldp('Resource'))) {
-      return 'SPARQL'
-    }      -- is not the solid protocol and ignored wac-allow
-    */
     var method
     for (var r = 0; r < requests.length; r++) {
       request = requests[r]
