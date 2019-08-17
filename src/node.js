@@ -1,57 +1,12 @@
 'use strict'
 
-/**
- * The superclass of all RDF Statement objects, that is
- * NamedNode, Literal, BlankNode, etc.
- * @class Node
- */
+// This file attaches all functionality to Node
+// that would otherwise require circular dependencies.
+import Node from './node-internal'
+import Collection from './collection'
+import Literal from './literal'
 
-
-class Node {
-
-  substitute (bindings) {
-    console.log('@@@ node substitute' + this)
-    return this
-  }
-  compareTerm (other) {
-    if (this.classOrder < other.classOrder) {
-      return -1
-    }
-    if (this.classOrder > other.classOrder) {
-      return +1
-    }
-    if (this.value < other.value) {
-      return -1
-    }
-    if (this.value > other.value) {
-      return +1
-    }
-    return 0
-  }
-  equals (other) {
-    if (!other) {
-      return false
-    }
-    return (this.termType === other.termType) &&
-      (this.value === other.value)
-  }
-  hashString () {
-    return this.toCanonical()
-  }
-  sameTerm (other) {
-    return this.equals(other)
-  }
-  toCanonical () {
-    return this.toNT()
-  }
-  toNT () {
-    return this.toString()
-  }
-  toString () {
-    throw new Error('Node.toString() is abstract - see the subclasses instead')
-  }
-}
-module.exports = Node
+export default Node
 
 /**
  * Creates an RDF Node from a native javascript value.
@@ -62,9 +17,6 @@ module.exports = Node
  * @return {Node|Collection}
  */
 Node.fromValue = function fromValue (value) {
-  const Collection = require('./collection')
-  const Literal = require('./literal')
-  const NamedNode = require('./named-node')
   if (typeof value === 'undefined' || value === null) {
     return value
   }
@@ -78,7 +30,7 @@ Node.fromValue = function fromValue (value) {
   return Literal.fromValue(value)
 }
 
-const Namespace = require('./namespace')
+import Namespace from './namespace'
 const ns = { xsd: Namespace('http://www.w3.org/2001/XMLSchema#') }
 
 Node.toJS = function toJS (term) {

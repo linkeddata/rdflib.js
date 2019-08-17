@@ -9,15 +9,14 @@ function SQuery () {
 STerm.prototype.toString = STerm.val
 SQuery.prototype.add = function (str) {this.terms.push()}*/
 
-const log = require('./log')
-const Query = require('./query').Query
-// const Fetcher = require('./fetcher')
+import log from './log'
+import { Query } from './query'
 
 /**
  * @SPARQL: SPARQL text that is converted to a query object which is returned.
  * @testMode: testing flag. Prevents loading of sources.
  */
-function SPARQLToQuery (SPARQL, testMode, kb) {
+export default function SPARQLToQuery (SPARQL, testMode, kb) {
   // AJAR_ClearTable()
   var variableHash = []
   function makeVar (name) {
@@ -517,5 +516,3 @@ function SPARQLToQuery (SPARQL, testMode, kb) {
 // checkVars()
 // *******************************************************************//
 }
-
-module.exports = SPARQLToQuery

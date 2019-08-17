@@ -1,6 +1,6 @@
-const log = require('./log')
+import log from './log'
 
-function queryToSPARQL (query) {
+export default function queryToSPARQL (query) {
   var indent = 0
   function getSelect (query) {
     var str = addIndent() + 'SELECT '
@@ -71,5 +71,3 @@ function queryToSPARQL (query) {
 
   return getSPARQL(query)
 }
-
-module.exports = queryToSPARQL

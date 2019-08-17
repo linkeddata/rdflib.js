@@ -61,6 +61,7 @@
     "sinon-chai": "^3.3.0",
     "webpack": "^4.39.2",
     "webpack-cli": "^3.3.6",
+    "webpack-dev-server": "^3.8.0",
     "wrapper-webpack-plugin": "^2.1.0"
   },
   "scripts": {
@@ -68,6 +69,7 @@
     "build:browser": "webpack --progress",
     "doc": "rm -r doc ; jsdoc -d doc README.md src/*.js",
     "prepare": "npm run build && npm run build:browser",
+    "start": "webpack-dev-server --https --port 4800",
     "test": "npm run test:unit && npm run test:serialize",
     "test:clean": "rimraf tests/serialize/,*",
     "test:serialize": "npm run build && npm run test:serialize:all && npm run test:clean",

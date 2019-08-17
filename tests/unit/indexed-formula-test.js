@@ -3,26 +3,26 @@ import { expect } from 'chai'
 
 import IndexedFormula from '../../src/store'
 import NamedNode from '../../src/named-node'
-import { triple } from '../../src/data-factory'
+import DataFactory from '../../src/data-factory'
 
 describe('IndexedFormula', () => {
   describe('match', () => {
     const s1 = NamedNode.fromValue('https://example.com/subject1')
     const p1 = NamedNode.fromValue('https://example.com/predicate1')
     const o1 = NamedNode.fromValue('https://example.com/object1')
-    const triple1 = triple(s1, p1, o1)
+    const triple1 = DataFactory.triple(s1, p1, o1)
 
     const s2 = NamedNode.fromValue('https://example.com/subject2')
     const p2 = NamedNode.fromValue('https://example.com/predicate2')
     const o2 = NamedNode.fromValue('https://example.com/object2')
-    const triple2 = triple(s2, p2, o2)
+    const triple2 = DataFactory.triple(s2, p2, o2)
 
     const s3 = NamedNode.fromValue('https://example.com/subject3')
     const p3 = NamedNode.fromValue('https://example.com/predicate3')
     const o3 = NamedNode.fromValue('https://example.com/object3')
-    const triple3 = triple(s3, p3, o3)
+    const triple3 = DataFactory.triple(s3, p3, o3)
 
-    const triple4 = triple(s1, p2, o3)
+    const triple4 = DataFactory.triple(s1, p2, o3)
 
     it('when given no arguments returns all statements', () => {
       const kb = new IndexedFormula()

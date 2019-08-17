@@ -5,12 +5,10 @@
 // (not necessarily in that order)
 // as though it were the n3
 //   <#query> patch:where {xxx}; patch:delete {yyy}; patch:insert {zzz}.
-module.exports = sparqlUpdateParser
+import N3Parser from './n3parser'
+import Namespace from './namespace'
 
-const N3Parser = require('./n3parser')
-const Namespace = require('./namespace')
-
-function sparqlUpdateParser (str, kb, base) {
+export default function sparqlUpdateParser (str, kb, base) {
   var i, j, k
   var keywords = [ 'INSERT', 'DELETE', 'WHERE' ]
   var SQNS = Namespace('http://www.w3.org/ns/pim/patch#')

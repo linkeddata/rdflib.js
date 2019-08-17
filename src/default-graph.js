@@ -1,7 +1,7 @@
 'use strict'
-const Node = require('./node')
+import Node from './node'
 
-class DefaultGraph extends Node {
+export default class DefaultGraph extends Node {
   constructor () {
     super()
     this.termType = 'DefaultGraph'
@@ -11,5 +11,3 @@ class DefaultGraph extends Node {
     return this.value
   }
 }
-
-module.exports = DefaultGraph

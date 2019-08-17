@@ -10,16 +10,9 @@
  */
 var alert = alert || console.log
 
-module.exports.docpart = docpart
-module.exports.document = document
-module.exports.hostpart = hostpart
-module.exports.join = join
-module.exports.protocol = protocol
-module.exports.refTo = refTo
+import NamedNode from './named-node'
 
-const NamedNode = require('./named-node')
-
-function docpart (uri) {
+export function docpart (uri) {
   var i
   i = uri.indexOf('#')
   if (i < 0) {
@@ -29,11 +22,11 @@ function docpart (uri) {
   }
 }
 
-function document (x) {
+export function document (x) {
   return new NamedNode(docpart(x.uri))
 }
 
-function hostpart (u) {
+export function hostpart (u) {
   var m = /[^\/]*\/\/([^\/]*)\//.exec(u)
   if (m) {
     return m[1]
@@ -42,7 +35,7 @@ function hostpart (u) {
   }
 }
 
-function join (given, base) {
+export function join (given, base) {
   var baseColon, baseScheme, baseSingle
   var colon, lastSlash, path
   var baseHash = base.indexOf('#')
@@ -110,7 +103,7 @@ function join (given, base) {
   return base.slice(0, baseSingle) + path
 }
 
-function protocol (uri) {
+export function protocol (uri) {
   var i
   i = uri.indexOf(':')
   if (i < 0) {
@@ -120,7 +113,7 @@ function protocol (uri) {
   }
 }
 
-function refTo (base, uri) {
+export function refTo (base, uri) {
   var c, i, k, l, len, len1, n, o, p, q, ref, ref1, s
   var commonHost = new RegExp('^[-_a-zA-Z0-9.]+:(//[^/]*)?/[^/]*$')
   if (!base) {

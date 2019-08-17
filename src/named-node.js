@@ -1,12 +1,12 @@
 'use strict'
-const ClassOrder = require('./class-order')
-const Node = require('./node')
+import ClassOrder from './class-order'
+import Node from './node-internal'
 
 /**
  * @class NamedNode
  * @extends Node
  */
-class NamedNode extends Node {
+export default class NamedNode extends Node {
   /**
    * @constructor
    * @param iri {String}
@@ -99,5 +99,3 @@ class NamedNode extends Node {
 NamedNode.termType = 'NamedNode'
 NamedNode.prototype.classOrder = ClassOrder['NamedNode']
 NamedNode.prototype.isVar = 0
-
-module.exports = NamedNode

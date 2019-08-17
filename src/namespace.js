@@ -1,9 +1,7 @@
-const NamedNode = require('./named-node')
+import NamedNode from './named-node'
 
-function Namespace (nsuri) {
+export default function Namespace (nsuri) {
   return function (ln) {
     return new NamedNode(nsuri + (ln || ''))
   }
 }
-
-module.exports = Namespace

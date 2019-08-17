@@ -1,7 +1,7 @@
 'use strict'
-const Node = require('./node')
+import Node from './node'
 
-class Statement {
+export default class Statement {
   /* Construct a new statment
   **
   ** @param {Term} subject - The subject of the triple.  What the efact is about
@@ -62,5 +62,3 @@ class Statement {
     return this.toNT()
   }
 }
-
-module.exports = Statement

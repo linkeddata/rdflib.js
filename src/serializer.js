@@ -5,13 +5,13 @@
 ** This is or was https://github.com/linkeddata/rdflib.js/blob/master/src/serializer.js
 ** Licence: MIT
 */
-const NamedNode = require('./named-node')
-const BlankNode = require('./blank-node')
-const Uri = require('./uri')
-const Util = require('./util')
-const XSD = require('./xsd')
+import NamedNode from './named-node'
+import BlankNode from './blank-node'
+import * as Uri from './uri'
+import * as Util from './util'
+import XSD from './xsd'
 
-var Serializer = (function () {
+export default (function () {
   var __Serializer = function (store) {
     this.flags = ''
     this.base = null
@@ -959,5 +959,3 @@ var Serializer = (function () {
   var Serializer = function (store) { return new __Serializer(store) }
   return Serializer
 }())
-
-module.exports = Serializer

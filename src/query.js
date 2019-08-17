@@ -17,15 +17,17 @@
 // Also, users name variables and want the same name back when stuff is printed
 /* jsl:option explicit */ // Turn on JavaScriptLint variable declaration checking
 
-const IndexedFormula = require('./store')
-const log = require('./log')
-const docpart = require('./uri').docpart
+import {
+  default as IndexedFormula,
+  defaultGraphURI as defaultDocumentURI
+}  from './store'
+import log from './log'
+import { docpart } from './uri'
 
-const defaultDocumentURI = IndexedFormula.defaultGraphURI
 /**
  * Query class, for tracking queries the user has in the UI.
  */
-class Query {
+export class Query {
   constructor (name, id) {
     this.pat = new IndexedFormula() // The pattern to search for
     this.vars = [] // Used by UI code but not in query.js
@@ -49,7 +51,7 @@ class Query {
  * @param fetcher - IGNORED OBSOLETE  f.fetecher is used as a Fetcher instance to do this.
  * @param onDone -  callback when query finished
  */
-function indexedFormulaQuery (myQuery, callback, fetcher, onDone) {
+export function indexedFormulaQuery (myQuery, callback, fetcher, onDone) {
   /** Debug strings
   */
   function bindingDebug (b) {
@@ -525,6 +527,3 @@ function indexedFormulaQuery (myQuery, callback, fetcher, onDone) {
 
    // returns nothing; callback does the work
 } // query
-
-module.exports.Query = Query
-module.exports.indexedFormulaQuery = indexedFormulaQuery

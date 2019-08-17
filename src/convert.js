@@ -1,11 +1,8 @@
-module.exports.convertToJson = convertToJson
-module.exports.convertToNQuads = convertToNQuads
+import asyncLib from 'async' // @@ Goal: remove this dependency
+import jsonld from 'jsonld'
+import N3 from 'n3'  // @@ Goal: remove this dependency
 
-var asyncLib = require('async') // @@ Goal: remove this dependency
-var jsonld = require('jsonld')
-var N3 = require('n3')  // @@ Goal: remove this dependency
-
-function convertToJson (n3String, jsonCallback) {
+export function convertToJson (n3String, jsonCallback) {
   var jsonString
   var n3Parser = N3.Parser()
   var n3Writer = N3.Writer({
@@ -42,7 +39,7 @@ function convertToJson (n3String, jsonCallback) {
   )
 }
 
-function convertToNQuads (n3String, nquadCallback) {
+export function convertToNQuads (n3String, nquadCallback) {
   var nquadString
   var n3Parser = N3.Parser()
   var n3Writer = N3.Writer({

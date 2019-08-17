@@ -2,23 +2,12 @@
  * A Dummy log
  * @module log
  */
-module.exports = {
-  debug: function debug (x) {
-    return
-  },
-  warn: function warn (x) {
-    return
-  },
-  info: function info (x) {
-    return
-  },
-  error: function error (x) {
-    return
-  },
-  success: function success (x) {
-    return
-  },
-  msg: function msg (x) {
-    return
-  }
+const log = {
+  debug (x) {},
+  warn (x) {},
+  info (x) {},
+  error (x) {},
+  success (x) {},
+  msg (x) {},
 }
+export default log

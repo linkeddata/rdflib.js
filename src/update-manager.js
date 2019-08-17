@@ -4,14 +4,14 @@
 ** 2010-08-08 TimBL folded in Kenny's WEBDAV
 ** 2010-12-07 TimBL addred local file write code
 */
-const IndexedFormula = require('./store')
-const docpart = require('./uri').docpart
-const Fetcher = require('./fetcher')
-const namedNode = require('./data-factory').namedNode
-const Namespace = require('./namespace')
-const Serializer = require('./serializer')
-const uriJoin = require('./uri').join
-const Util = require('./util')
+import IndexedFormula from './store'
+import { docpart } from './uri'
+import Fetcher from './fetcher'
+import { namedNode } from './data-factory'
+import Namespace from './namespace'
+import Serializer from './serializer'
+import { join as uriJoin } from './uri'
+import * as Util from './util'
 
 /** Update Manager
 *
@@ -21,7 +21,7 @@ const Util = require('./util')
 * and also looking out for concurrent updates from other agents
 */
 
-class UpdateManager {
+export default class UpdateManager {
   /** @constructor
    * @param {IndexedFormula} store - the quadstore to store data and metadata. Created if not passed.f
   */
@@ -1076,5 +1076,3 @@ class UpdateManager {
     })
   }
 }
-
-module.exports = UpdateManager

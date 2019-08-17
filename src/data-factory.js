@@ -1,13 +1,28 @@
 'use strict'
-const BlankNode = require('./blank-node')
-const Collection = require('./collection')
-const DefaultGraph = require('./default-graph')
-const Fetcher = require('./fetcher')
-const IndexedFormula = require('./store')
-const Literal = require('./literal')
-const NamedNode = require('./named-node')
-const Statement = require('./statement')
-const Variable = require('./variable')
+import BlankNode from './blank-node'
+import Collection from './collection'
+import DefaultGraph from './default-graph'
+import Fetcher from './fetcher'
+import IndexedFormula from './store'
+import Literal from './literal'
+import NamedNode from './named-node'
+import Statement from './statement'
+import Variable from './variable'
+
+const DataFactory = {
+  blankNode,
+  defaultGraph,
+  fetcher,
+  graph,
+  lit,
+  literal,
+  namedNode,
+  quad,
+  st,
+  triple,
+  variable,
+}
+export default DataFactory
 
 function blankNode (value) {
   return new BlankNode(value)
@@ -54,19 +69,3 @@ function triple (subject, predicate, object) {
 function variable (name) {
   return new Variable(name)
 }
-
-// rdfjs spec factory methods
-module.exports.blankNode = blankNode
-module.exports.defaultGraph = defaultGraph
-module.exports.graph = graph
-module.exports.literal = literal
-module.exports.namedNode = namedNode
-module.exports.quad = quad
-module.exports.triple = triple
-module.exports.variable = variable
-
-// rdflib only
-module.exports.collection = collection
-module.exports.fetcher = fetcher
-module.exports.lit = lit
-module.exports.st = st

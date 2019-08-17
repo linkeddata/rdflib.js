@@ -4,10 +4,10 @@
 *  http://www.webtoolkit.info/
 *
 **/
-const Uri = require('./uri')
-const ArrayIndexOf = require('./util').ArrayIndexOf
+import * as Uri from './uri'
+import { ArrayIndexOf } from './util'
 
-var N3Parser = (function () {
+export default (function () {
 
 function hexify (str) { // also used in parser
   return encodeURI(str);
@@ -1568,5 +1568,3 @@ function dummyWrite(x) {
 return SinkParser;
 
 })();
-
-module.exports = N3Parser

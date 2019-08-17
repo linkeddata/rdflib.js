@@ -16,20 +16,18 @@
 
 /** @module store */
 
-const ArrayIndexOf = require('./util').ArrayIndexOf
-const Formula = require('./formula')
-// const log = require('./log')
-const RDFArrayRemove = require('./util').RDFArrayRemove
-const Statement = require('./statement')
-const Node = require('./node')
-const Variable = require('./variable')
-
-// const indexedFormulaQuery = require('./query').indexedFormulaQuery
-
+import { ArrayIndexOf } from './util'
+import Formula from './formula'
+import { RDFArrayRemove } from './util'
+import Statement from './statement'
+import Node from './node'
+import Variable from './variable'
+import { Query, indexedFormulaQuery } from './query'
 
 const owlNamespaceURI = 'http://www.w3.org/2002/07/owl#'
 
 const defaultGraphURI = 'chrome:theSession'
+export { defaultGraphURI }
 // var link_ns = 'http://www.w3.org/2007/ont/link#'
 
 // Handle Functional Property
@@ -71,7 +69,7 @@ function handleRDFType (formula, subj, pred, obj, why) {
 /**
  * Indexed Formula aka Store
  */
-class IndexedFormula extends Formula { // IN future - allow pass array of statements to constructor
+export default class IndexedFormula extends Formula { // IN future - allow pass array of statements to constructor
   /**
    * @constructor
    * @param {Array<String>} features - What sort of autmatic processing to do? Array of string
@@ -119,7 +117,6 @@ class IndexedFormula extends Formula { // IN future - allow pass array of statem
   }
 
   applyPatch (patch, target, patchCallback) { // patchCallback(err)
-    const Query = require('./query').Query
     var targetKB = this
     var ds
     var binding = null
@@ -520,8 +517,6 @@ class IndexedFormula extends Formula { // IN future - allow pass array of statem
   }
 
   query (myQuery, callback, dummy, onDone) {
-    let indexedFormulaQuery = require('./query').indexedFormulaQuery
-
     return indexedFormulaQuery.call(this, myQuery, callback, dummy, onDone)
   }
 
@@ -540,7 +535,6 @@ class IndexedFormula extends Formula { // IN future - allow pass array of statem
     var results = []
     var done = false
     myQuery.sync = true
-    let indexedFormulaQuery = require('./query').indexedFormulaQuery
 
     indexedFormulaQuery.call(this, myQuery, saveBinginds, null, onDone)
     if (!done) {
@@ -820,5 +814,4 @@ class IndexedFormula extends Formula { // IN future - allow pass array of statem
     return res
   }
 }
-module.exports = IndexedFormula
 IndexedFormula.handleRDFType = handleRDFType

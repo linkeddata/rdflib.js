@@ -1,4 +1,4 @@
-var jsonParser = (function () {
+export default (function () {
   return {
     parseJSON: function (data, source, store) {
       var subject, predicate, object
@@ -51,5 +51,3 @@ var jsonParser = (function () {
     }
   }
 })()
-
-module.exports = jsonParser

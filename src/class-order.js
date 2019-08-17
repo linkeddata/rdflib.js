@@ -1,4 +1,4 @@
-var ClassOrder = {
+export default {
   'Literal': 1,
   'Collection': 3,
   'Graph': 4,
@@ -6,5 +6,3 @@ var ClassOrder = {
   'BlankNode': 6,
   'Variable': 7
 }
-
-module.exports = ClassOrder
