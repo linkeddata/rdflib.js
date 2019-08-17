@@ -35,7 +35,7 @@
     "@babel/runtime": "^7.5.5",
     "async": "^3.1.x",
     "jsonld": "^1.6.2",
-    "n3": "^1.1.1",
+    "n3": "^0.4.1",
     "solid-auth-cli": "^1.0.8",
     "solid-auth-client": "^2.3.0",
     "xmldom": "^0.1.27"
@@ -85,9 +85,9 @@
     "test:serialize:11": "cd ./tests/serialize && node ./data.js -in=structures.n3 -format=application/rdf+xml  -out=,structures.xml && node diff ,structures.xml t11-ref.xml",
     "test:serialize:12": "cd ./tests/serialize && node ./data.js -in=structures.n3 -format=text/turtle -out=,structures.ttl && node diff ,structures.ttl t12-ref.ttl",
     "test:serialize:13": "cd ./tests/serialize && node ./data.js -in=structures.n3 -format=application/n-triples -out=,structures.nt && node ./data.js -format=application/n-triples -in=,structures.nt -format=text/turtle -out=,structures.nt.ttl && node diff ,structures.nt.ttl t13-ref.ttl",
-    "test:unit": "mocha --growl --compilers js:@babel/register tests/unit/**-test.js",
-    "test:unit:egp": "mocha --compilers js:@babel/register tests/unit/fetcher-egp-test.js",
-    "test:unit:dev": "mocha --watch --growl --compilers js:@babel/register tests/unit/**-test.js"
+    "test:unit": "mocha --growl --require @babel/register tests/unit/**-test.js",
+    "test:unit:egp": "mocha --require @babel/register tests/unit/fetcher-egp-test.js",
+    "test:unit:dev": "mocha --watch --growl --require @babel/register tests/unit/**-test.js"
   },
   "files": [
     "src",
