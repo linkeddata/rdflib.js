@@ -1433,6 +1433,7 @@ class Fetcher {
     options.retriedWithNoCredentials = true // protect against being called twice
 
     delete this.requested[docuri] // forget the original request happened
+    delete this.fetchQueue[docuri]
     // Note: XHR property was withCredentials, but fetch property is just credentials
     let newOptions = Object.assign({}, options, { credentials: false })
 
