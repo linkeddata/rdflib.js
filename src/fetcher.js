@@ -1435,7 +1435,7 @@ class Fetcher {
     delete this.requested[docuri] // forget the original request happened
     delete this.fetchQueue[docuri]
     // Note: XHR property was withCredentials, but fetch property is just credentials
-    let newOptions = Object.assign({}, options, { credentials: false })
+    let newOptions = Object.assign({}, options, { credentials: 'omit' })
 
     this.addStatus(options.req,
       'Abort: Will retry with credentials SUPPRESSED to see if that helps')
