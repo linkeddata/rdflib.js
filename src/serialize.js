@@ -1,14 +1,12 @@
-module.exports = serialize
-
-const convert = require('./convert')
-const Serializer = require('./serializer')
+import * as convert from './convert'
+import Serializer from './serializer'
 
 /**
  * Serialize to the appropriate format
  * @@ Currently NQuads and JSON/LD are deal with extrelemently inefficiently
  * through mutiple conversions.
  */
-function serialize (target, kb, base, contentType, callback, options) {
+export default function serialize (target, kb, base, contentType, callback, options) {
   base = base || target.uri
   options = options || {}
   contentType = contentType || 'text/turtle' // text/n3 if complex?

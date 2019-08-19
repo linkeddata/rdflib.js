@@ -25,22 +25,23 @@
  * To do:
  * Firing up a mail client for mid:  (message:) URLs
  */
-const IndexedFormula = require('./store')
-const log = require('./log')
-const N3Parser = require('./n3parser')
-const NamedNode = require('./named-node')
-const Namespace = require('./namespace')
-const rdfParse = require('./parse')
-const parseRDFaDOM = require('./rdfaparser').parseRDFaDOM
-const RDFParser = require('./rdfxmlparser')
-const Uri = require('./uri')
-const Util = require('./util')
-const serialize = require('./serialize')
+import IndexedFormula from './store'
+import log from './log'
+import N3Parser from './n3parser'
+import NamedNode from './named-node'
+import Namespace from './namespace'
+import rdfParse from './parse'
+import { parseRDFaDOM } from './rdfaparser'
+import RDFParser from './rdfxmlparser'
+import * as Uri from './uri'
+import * as Util from './util'
+import serialize from './serialize'
+
+import { fetch as solidAuthCli } from 'solid-auth-cli'
+import { fetch as solidAuthClient } from 'solid-auth-client'
 
 // This is a special fetch which does OIDC auth, catching 401 errors
-const {fetch} = (typeof window === 'undefined')
-         ? require('solid-auth-cli')
-         : require('solid-auth-client')
+const fetch = typeof window === 'undefined' ? solidAuthCli : solidAuthClient
 
 const Parsable = {
   'text/n3': true,
@@ -418,7 +419,7 @@ const HANDLERS = {
   * figuring how to parse them.  It will also refresh, remove, the data
   * and put back the fata to the web.
  */
-class Fetcher {
+export default class Fetcher {
   /**
   * @constructor
   */
@@ -1777,6 +1778,5 @@ class Fetcher {
 // whether we want to track it ot not. including ontologies loaed though the XSSproxy
 }
 
-module.exports = Fetcher
-module.exports.HANDLERS = HANDLERS
-module.exports.CONTENT_TYPE_BY_EXT = CONTENT_TYPE_BY_EXT
+Fetcher.HANDLERS = HANDLERS
+Fetcher.CONTENT_TYPE_BY_EXT = CONTENT_TYPE_BY_EXT

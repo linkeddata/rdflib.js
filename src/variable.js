@@ -1,7 +1,7 @@
 'use strict'
-const ClassOrder = require('./class-order')
-const Node = require('./node')
-const Uri = require('./uri')
+import ClassOrder from './class-order'
+import Node from './node'
+import * as Uri from './uri'
 
 /**
  * Variables are placeholders used in patterns to be matched.
@@ -11,7 +11,7 @@ const Uri = require('./uri')
  * but the ? notation has an implicit base uri of 'varid:'
  * @class Variable
  */
-class Variable extends Node {
+export default class Variable extends Node {
   constructor (name = '') {
     super()
     this.termType = Variable.termType
@@ -43,5 +43,3 @@ class Variable extends Node {
 Variable.termType = 'Variable'
 Variable.prototype.classOrder = ClassOrder['Variable']
 Variable.prototype.isVar = 1
-
-module.exports = Variable

@@ -1,8 +1,8 @@
 'use strict'
-const ClassOrder = require('./class-order')
-const Node = require('./node')
+import ClassOrder from './class-order'
+import Node from './node-internal'
 
-class BlankNode extends Node {
+export default class BlankNode extends Node {
   constructor (id) {
     super()
     this.termType = BlankNode.termType
@@ -63,5 +63,3 @@ BlankNode.NTAnonymousNodePrefix = '_:'
 BlankNode.prototype.classOrder = ClassOrder['BlankNode']
 BlankNode.prototype.isBlank = 1
 BlankNode.prototype.isVar = 1
-
-module.exports = BlankNode

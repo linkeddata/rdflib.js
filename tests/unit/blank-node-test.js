@@ -2,7 +2,7 @@
 
 import { expect } from 'chai'
 import fs from 'fs'
-import rdf from '../../src/index'
+import * as rdf from '../../src/index'
 
 import BlankNode from '../../src/blank-node'
 

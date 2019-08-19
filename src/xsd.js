@@ -1,6 +1,6 @@
-const NamedNode = require('./named-node')
+import NamedNode from './named-node'
 
-class XSD {}
+export default class XSD {}
 
 XSD.boolean = new NamedNode('http://www.w3.org/2001/XMLSchema#boolean')
 XSD.dateTime = new NamedNode('http://www.w3.org/2001/XMLSchema#dateTime')
@@ -10,5 +10,3 @@ XSD.integer = new NamedNode('http://www.w3.org/2001/XMLSchema#integer')
 XSD.langString =
   new NamedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#langString')
 XSD.string = new NamedNode('http://www.w3.org/2001/XMLSchema#string')
-
-module.exports = XSD

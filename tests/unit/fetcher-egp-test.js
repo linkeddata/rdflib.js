@@ -3,7 +3,7 @@
 
 import chai from 'chai'
 import nock from 'nock'
-import rdf from '../../src/index'
+import * as rdf from '../../src/index'
 
 const { expect } = chai
 chai.should()

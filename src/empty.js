@@ -1,10 +1,10 @@
 'use strict'
-const Node = require('./node')
+import Node from './node'
 
 /**
  * Singleton subclass of an empty Collection.
  */
-class Empty extends Node {
+export default class Empty extends Node {
   constructor () {
     super()
     this.termType = Empty.termType
@@ -14,5 +14,3 @@ class Empty extends Node {
   }
 }
 Empty.termType = 'empty'
-
-module.exports = Empty

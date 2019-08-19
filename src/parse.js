@@ -1,15 +1,13 @@
-module.exports = parse
-
-const BlankNode = require('./blank-node')
-const jsonld = require('jsonld')
-const Literal = require('./literal')
-const N3 = require('n3')  // @@ Goal: remove this dependency
-const N3Parser = require('./n3parser')
-const NamedNode = require('./named-node')
-const parseRDFaDOM = require('./rdfaparser').parseRDFaDOM
-const RDFParser = require('./rdfxmlparser')
-const sparqlUpdateParser = require('./patch-parser')
-const Util = require('./util')
+import BlankNode from './blank-node'
+import jsonld from 'jsonld'
+import Literal from './literal'
+import N3 from 'n3'  // @@ Goal: remove this dependency
+import N3Parser from './n3parser'
+import NamedNode from './named-node'
+import { parseRDFaDOM } from './rdfaparser'
+import RDFParser from './rdfxmlparser'
+import sparqlUpdateParser from './patch-parser'
+import * as Util from './util'
 
 /**
  * Parse a string and put the result into the graph kb.
@@ -17,7 +15,7 @@ const Util = require('./util')
  * Unfortunately jsdonld is currently written to need to be called async.
  * Hence the mess below with executeCallback.
  */
-function parse (str, kb, base, contentType, callback) {
+export default function parse (str, kb, base, contentType, callback) {
   contentType = contentType || 'text/turtle'
   contentType = contentType.split(';')[0]
   const doc = kb.sym(base)

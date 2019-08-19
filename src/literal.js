@@ -1,10 +1,10 @@
 'use strict'
-const ClassOrder = require('./class-order')
-const NamedNode = require('./named-node')
-const Node = require('./node')
-const XSD = require('./xsd')
+import ClassOrder from './class-order'
+import NamedNode from './named-node'
+import Node from './node-internal'
+import XSD from './xsd'
 
-class Literal extends Node {
+export default class Literal extends Node {
   constructor (value, language, datatype) {
     super()
     this.termType = Literal.termType
@@ -142,5 +142,3 @@ Literal.prototype.classOrder = ClassOrder['Literal']
 Literal.prototype.datatype = XSD.string
 Literal.prototype.lang = ''
 Literal.prototype.isVar = 0
-
-module.exports = Literal

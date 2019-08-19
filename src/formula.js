@@ -1,18 +1,19 @@
 'use strict'
-const BlankNode = require('./blank-node')
-const ClassOrder = require('./class-order')
-const Collection = require('./collection')
-const Literal = require('./literal')
-const log = require('./log')
-const NamedNode = require('./named-node')
-const Node = require('./node')
-const Serializer = require('./serialize')
-const Statement = require('./statement')
-const Variable = require('./variable')
+import BlankNode from './blank-node'
+import ClassOrder from './class-order'
+import Collection from './collection'
+import Literal from './literal'
+import log from './log'
+import NamedNode from './named-node'
+import Namespace from './namespace'
+import Node from './node'
+import Serializer from './serialize'
+import Statement from './statement'
+import Variable from './variable'
 
 /** @module formula */
 
-class Formula extends Node {
+export default class Formula extends Node {
   /**
   * @constructor
   * @param statements - Initial array of statements
@@ -645,7 +646,5 @@ Formula.termType = 'Graph'
 Formula.prototype.classOrder = ClassOrder['Graph']
 Formula.prototype.isVar = 0
 
-Formula.prototype.ns = require('./namespace')
+Formula.prototype.ns = Namespace
 Formula.prototype.variable = name => new Variable(name)
-
-module.exports = Formula

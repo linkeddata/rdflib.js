@@ -6,7 +6,7 @@ import sinon from 'sinon'
 import sinonChai from 'sinon-chai'
 import dirtyChai from 'dirty-chai'
 import nock from 'nock'
-import rdf from '../../src/index'
+import * as rdf from '../../src/index'
 
 const $rdf = rdf
 

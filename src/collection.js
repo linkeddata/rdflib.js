@@ -1,9 +1,9 @@
 'use strict'
-const BlankNode = require('./blank-node')
-const ClassOrder = require('./class-order')
-const Node = require('./node')
+import BlankNode from './blank-node'
+import ClassOrder from './class-order'
+import Node from './node-internal'
 
-class Collection extends Node {
+export default class Collection extends Node {
   constructor (initial) {
     super()
     this.termType = Collection.termType
@@ -46,5 +46,3 @@ Collection.termType = 'Collection'
 Collection.prototype.classOrder = ClassOrder['Collection']
 Collection.prototype.compareTerm = BlankNode.prototype.compareTerm
 Collection.prototype.isVar = 0
-
-module.exports = Collection

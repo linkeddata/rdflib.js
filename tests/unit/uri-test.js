@@ -1,7 +1,7 @@
 /* eslint-env mocha */
 import { expect } from 'chai'
 
-import uri from '../../src/uri'
+import * as uri from '../../src/uri'
 
 describe('uri', () => {
   const testData = [

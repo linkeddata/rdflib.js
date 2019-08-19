@@ -55,14 +55,14 @@
  * @author David Sheets <dsheets@mit.edu>
  *
 */
- const uriUtil = require('./uri')
+import * as uriUtil from './uri'
 
 /*
  * @constructor
  * @param {RDFStore} store An RDFStore object
  */
 
-var RDFParser = function (store) {
+export default function RDFParser(store) {
   var RDFParser = {}
 
   /** Standard namespaces that we know how to handle @final
@@ -453,5 +453,3 @@ var RDFParser = function (store) {
     return frame
   }
 }
-
-module.exports = RDFParser

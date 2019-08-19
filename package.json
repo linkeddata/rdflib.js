@@ -92,11 +92,14 @@
     "test:unit:dev": "mocha --watch --growl --require @babel/register tests/unit/**-test.js"
   },
   "files": [
+    ".babelrc",
     "src",
     "lib",
     "dist"
   ],
   "main": "lib/index.js",
+  "module": "src/index.js",
+  "sideEffects": false,
   "keywords": [
     "linkeddata",
     "linked data",
