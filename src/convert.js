@@ -1,11 +1,11 @@
 import asyncLib from 'async' // @@ Goal: remove this dependency
 import jsonld from 'jsonld'
-import N3 from 'n3'  // @@ Goal: remove this dependency
+import { Parser, Writer } from 'n3'  // @@ Goal: remove this dependency
 
 export function convertToJson (n3String, jsonCallback) {
   var jsonString
-  var n3Parser = N3.Parser()
-  var n3Writer = N3.Writer({
+  var n3Parser = new Parser()
+  var n3Writer = new Writer({
     format: 'N-Quads'
   })
   asyncLib.waterfall([
@@ -41,8 +41,8 @@ export function convertToJson (n3String, jsonCallback) {
 
 export function convertToNQuads (n3String, nquadCallback) {
   var nquadString
-  var n3Parser = N3.Parser()
-  var n3Writer = N3.Writer({
+  var n3Parser = new Parser()
+  var n3Writer = new Writer({
     format: 'N-Quads'
   })
   asyncLib.waterfall([
