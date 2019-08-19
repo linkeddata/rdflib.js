@@ -5,6 +5,8 @@ env:
 node_js:
   - "8.10"
   - "10.0"
+  - "12.0"
+  - "lts/*"
   - "node"
 
 before_install:
