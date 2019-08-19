@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Class: Node</title>
+    <title>JSDoc: Source: node-internal.js</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,138 +17,69 @@
 
 <div id="main">
 
-    <h1 class="page-title">Class: Node</h1>
+    <h1 class="page-title">Source: node-internal.js</h1>
 
     
 
 
 
-
-<section>
-
-<header>
     
-        <h2><span class="attribs"><span class="type-signature"></span></span>Node<span class="signature">()</span><span class="type-signature"></span></h2>
-        
-    
-</header>
-
-<article>
-    <div class="container-overview">
-    
-        
-
-    
-
-    
-    <h4 class="name" id="Node"><span class="type-signature"></span>new Node<span class="signature">()</span><span class="type-signature"></span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    The superclass of all RDF Statement objects, that is
-NamedNode, Literal, BlankNode, etc.
-</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="node-internal.js.html">node-internal.js</a>, <a href="node-internal.js.html#line3">line 3</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-    </div>
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</article>
-
-</section>
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>'use strict'
+
+/**
+ * The superclass of all RDF Statement objects, that is
+ * NamedNode, Literal, BlankNode, etc.
+ * @class Node
+ */
+
+export default class Node {
+  substitute (bindings) {
+    console.log('@@@ node substitute' + this)
+    return this
+  }
+  compareTerm (other) {
+    if (this.classOrder &lt; other.classOrder) {
+      return -1
+    }
+    if (this.classOrder > other.classOrder) {
+      return +1
+    }
+    if (this.value &lt; other.value) {
+      return -1
+    }
+    if (this.value > other.value) {
+      return +1
+    }
+    return 0
+  }
+  equals (other) {
+    if (!other) {
+      return false
+    }
+    return (this.termType === other.termType) &amp;&amp;
+      (this.value === other.value)
+  }
+  hashString () {
+    return this.toCanonical()
+  }
+  sameTerm (other) {
+    return this.equals(other)
+  }
+  toCanonical () {
+    return this.toNT()
+  }
+  toNT () {
+    return this.toString()
+  }
+  toString () {
+    throw new Error('Node.toString() is abstract - see the subclasses instead')
+  }
+}
+</code></pre>
+        </article>
+    </section>
 
 
 
