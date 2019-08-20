@@ -1,7 +1,7 @@
 /*
  * Updates-Via
  */
-import { namedNode } from './data-factory'
+import DataFactory from './data-factory'
 
 export class UpdatesSocket {
   constructor (parent, via) {
@@ -131,7 +131,7 @@ export class UpdatesVia {
     return true
   }
   onUpdate (uri, d) {
-    return this.fetcher.refresh(namedNode(uri))
+    return this.fetcher.refresh(DataFactory.namedNode(uri))
   }
   register (via, uri) {
     if (this.via[via] == null) {
