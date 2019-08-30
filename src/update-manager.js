@@ -7,7 +7,7 @@
 import IndexedFormula from './store'
 import { docpart } from './uri'
 import Fetcher from './fetcher'
-import { namedNode } from './data-factory'
+import DataFactory from './data-factory'
 import Namespace from './namespace'
 import Serializer from './serializer'
 import { join as uriJoin } from './uri'
@@ -81,8 +81,8 @@ export default class UpdateManager {
     if (uri.slice(0, 8) === 'file:///') {
       if (kb.holds(
             kb.sym(uri),
-            namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
-            namedNode('http://www.w3.org/2007/ont/link#MachineEditableDocument'))) {
+            DataFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
+            DataFactory.namedNode('http://www.w3.org/2007/ont/link#MachineEditableDocument'))) {
         return 'LOCALFILE'
       }
 
