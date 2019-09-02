@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Test</title>
+</head>
+<body>
+<script src="rdflib.min.js"></script>
+<script>
+const store = $rdf.graph();
+const fetcher = new $rdf.Fetcher(store);
+fetcher.load('https://www.w3.org/ns/ui')
+       .then(result => console.log('Resolved to', result),
+             error  => console.error('Rejected with', error));
+</script>
+</body>
+</html>
