@@ -46,14 +46,15 @@ tt { font-size: 120%; background-color: #eee; padding: 0.1em }
 </ul>
 
 <p>The rdflib library is modular.  Higher level functions such as the Update Manager and the Fetcher depend on the
-  core modules stch as the Store, which depends on low level parts such as the basic RDF model.
-<p>
- <img src="diagrams/rdflib-block-diagram.svg" alt="Separate modules perform different functions to provide local query, web access, and live update." />
+  core modules such as the Store, which depends on low level parts such as the basic RDF model.
+</p>
+ 
+<img src="diagrams/rdflib-block-diagram.svg" alt="Separate modules perform different functions to provide local query, web access, and live update." />
 
 <p>
   The Fetcher module adds an awareness of the web of linked data, rather than just abstract RDF.
   It implements http(s): and file: URIs and tracks the metadata from the HTTP transaction and stores that also in the store.
-  This diagram points out that the responsability for retrying accesss based which fail because of different HTTP errors and browser blocking in CORS
+  This diagram points out that the responsibility for retrying access attempts which fail because of different HTTP errors and/or browser blocking in CORS
   are handled in various different places.
 </p>
 
