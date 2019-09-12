@@ -8,7 +8,7 @@ Javascript RDF library for browsers and Node.js.
 - Read/Write Linked Data client, using WebDav or SPARQL/Update
 - Local API for querying a store
 - Compatible with [RDFJS task force spec](https://github.com/rdfjs/representation-task-force/blob/master/interface-spec.md)
-- SPARQL queries (not full SPARQL)
+- SPARQL queries (not full SPARQL - just graph match and optional)
 - Smushing of nodes from `owl:sameAs`, and `owl:{f,inverseF}unctionProperty`
 - Tracks provenance of triples keeps metadata (in RDF) from HTTP accesses
 
@@ -17,9 +17,14 @@ Javascript RDF library for browsers and Node.js.
 See:
 
 * The [API documentation](https://linkeddata.github.io/rdflib.js/doc/) is partial but useful
-* [Using rdflib in a web app](https://linkeddata.github.io/rdflib.js/Documentation/webapp-intro.html)
-* [Tutorial for using rdflib.js](https://github.com/solid/solid-tutorial-rdflib.js)
-* [Using Turtle](https://linkeddata.github.io/rdflib.js/Documentation/turtle-intro.html)
+* [Tutorial: Using rdflib in a Solid web app](https://linkeddata.github.io/rdflib.js/Documentation/webapp-intro.html)
+* [Tutorial: Using rdflib.js](https://github.com/solid/solid-tutorial-rdflib.js)
+* [Tutorial: Using Turtle](https://linkeddata.github.io/rdflib.js/Documentation/turtle-intro.html)
+* [Block diagram: rdflib modules](https://linkeddata.github.io/rdflib.js/Documentation/diagrams/rdflib-block-diagram.svg)
+* [Block diagram: The Fetcher](https://linkeddata.github.io/rdflib.js/Documentation/diagrams/fetcher-block-diagram.svg)
+* [Block diagram: The Fetcher - handling retries](https://linkeddata.github.io/rdflib.js/Documentation/diagrams/fetcher-block-diagram-2.svg)
+
+
 * [The Solid developer portal at Inrupt](https://solid.inrupt.com/)
 
 for more information.
