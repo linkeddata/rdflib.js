@@ -282,8 +282,7 @@ class HTMLHandler extends Handler {
 
     // We only handle XHTML so we have to figure out if this is XML
     // log.info("Sniffing HTML " + xhr.resource + " for XHTML.")
-
-    if (responseText.match(/\s*<\?xml\s+version\s*=[^<>]+\?>/)) {
+    if (isXML(responseText)) {
       fetcher.addStatus(options.req, "Has an XML declaration. We'll assume " +
         "it's XHTML as the content-type was text/html.\n")
 
@@ -291,9 +290,8 @@ class HTMLHandler extends Handler {
       return xhtmlHandler.parse(fetcher, responseText, options, response)
     }
 
-    // DOCTYPE
-    // There is probably a smarter way to do this
-    if (responseText.match(/.*<!DOCTYPE\s+html[^<]+-\/\/W3C\/\/DTD XHTML[^<]+http:\/\/www.w3.org\/TR\/xhtml[^<]+>/)) {
+    // DOCTYPE html
+    if (isXHTML(responseText)) {
       fetcher.addStatus(options.req,
         'Has XHTML DOCTYPE. Switching to XHTMLHandler.\n')
 
@@ -302,7 +300,7 @@ class HTMLHandler extends Handler {
     }
 
     // xmlns
-    if (responseText.match(/[^(<html)]*<html\s+[^<]*xmlns=['"]http:\/\/www.w3.org\/1999\/xhtml["'][^<]*>/)) {
+    if (isXMLNS(responseText)) {
       fetcher.addStatus(options.req,
         'Has default namespace for XHTML, so switching to XHTMLHandler.\n')
 
@@ -340,7 +338,7 @@ class TextHandler extends Handler {
     // We only speak dialects of XML right now. Is this XML?
 
     // Look for an XML declaration
-    if (responseText.match(/\s*<\?xml\s+version\s*=[^<>]+\?>/)) {
+    if (isXML(responseText)) {
       fetcher.addStatus(options.req, 'Warning: ' + options.resource +
         " has an XML declaration. We'll assume " +
         "it's XML but its content-type wasn't XML.\n")
@@ -409,6 +407,23 @@ N3Handler.pattern = new RegExp('(application|text)/(x-)?(rdf\\+)?(n3|turtle)')
 
 const HANDLERS = {
   RDFXMLHandler, XHTMLHandler, XMLHandler, HTMLHandler, TextHandler, N3Handler
+}
+
+function isXHTML (responseText) {
+  const docTypeStart = responseText.indexOf('<!DOCTYPE html')
+  const docTypeEnd = responseText.indexOf('>')
+  if (docTypeStart === -1 || docTypeEnd === -1 || docTypeStart > docTypeEnd) {
+    return false
+  }
+  return responseText.substr(docTypeStart, docTypeEnd - docTypeStart).indexOf('XHTML') !== -1
+}
+
+function isXML (responseText) {
+  return responseText.match(/\s*<\?xml\s+version\s*=[^<>]+\?>/)
+}
+
+function isXMLNS (responseText) {
+  return responseText.match(/[^(<html)]*<html\s+[^<]*xmlns=['"]http:\/\/www.w3.org\/1999\/xhtml["'][^<]*>/)
 }
 
 /** Fetcher
