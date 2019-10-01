@@ -5,7 +5,7 @@ module.exports = (env, args) => {
   return {
     mode: 'production',
     entry: [
-      './src/index.js'
+      './src/index.ts'
     ],
     output: {
       path: path.join(__dirname, '/dist/'),
@@ -16,9 +16,13 @@ module.exports = (env, args) => {
     module: {
       rules: [
         {
-          test: /\.js$/,
+          test: /\.(js|ts)$/,
           loader: 'babel-loader',
           exclude: /node_modules/
+        },
+        {
+          test: /\.(js|ts)$/,
+          loader: "source-map-loader"
         }
       ]
     },
@@ -32,7 +36,7 @@ module.exports = (env, args) => {
                    if (!window.solid.auth)
                      window.solid.auth = { fetch: (a, b) => window.fetch(a, b) }
                  }`
-      })
+      }),
     ],
     externals: {
       '@trust/webcrypto': 'crypto',
