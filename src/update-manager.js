@@ -11,6 +11,7 @@ import DataFactory from './data-factory'
 import Namespace from './namespace'
 import Serializer from './serializer'
 import { join as uriJoin } from './uri'
+import { isStore } from './util'
 import * as Util from './util'
 
 /** Update Manager
@@ -194,7 +195,7 @@ export default class UpdateManager {
     bnodes.sort() // in place sort - result may have duplicates
     var bnodes2 = []
     for (let j = 0; j < bnodes.length; j++) {
-      if (j === 0 || !bnodes[j].sameTerm(bnodes[j - 1])) {
+      if (j === 0 || !bnodes[j].equals(bnodes[j - 1])) {
         bnodes2.push(bnodes[j])
       }
     }
@@ -669,10 +670,10 @@ export default class UpdateManager {
     try {
       var kb = this.store
       var ds = !deletions ? []
-        : deletions instanceof IndexedFormula ? deletions.statements
+        : isStore(deletions) ? deletions.statements
           : deletions instanceof Array ? deletions : [ deletions ]
       var is = !insertions ? []
-        : insertions instanceof IndexedFormula ? insertions.statements
+        : isStore(insertions) ? insertions.statements
           : insertions instanceof Array ? insertions : [ insertions ]
       if (!(ds instanceof Array)) {
         throw new Error('Type Error ' + (typeof ds) + ': ' + ds)
@@ -697,7 +698,7 @@ export default class UpdateManager {
       var clauses = { 'delete': ds, 'insert': is }
       verbs.map(function (verb) {
         clauses[verb].map(function (st) {
-          if (!doc.sameTerm(st.why)) {
+          if (!doc.equals(st.why)) {
             throw new Error('update: destination ' + doc +
               ' inconsistent with delete quad ' + st.why)
           }

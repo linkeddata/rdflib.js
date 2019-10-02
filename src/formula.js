@@ -2,13 +2,14 @@
 import BlankNode from './blank-node'
 import ClassOrder from './class-order'
 import Collection from './collection'
-import Literal from './literal'
+import CanonicalDataFactory from './data-factory-internal'
 import log from './log'
 import NamedNode from './named-node'
 import Namespace from './namespace'
 import Node from './node'
 import Serializer from './serialize'
 import Statement from './statement'
+import { appliedFactoryMethods, isStatement } from './util'
 import Variable from './variable'
 
 /** @module formula */
@@ -20,14 +21,22 @@ export default class Formula extends Node {
   * @param constraints - initial array of constraints
   * @param initBindings - initial bindings used in Query
   * @param optional - optional
+  * @param opts
+  * @param {DataFactory} opts.rdfFactory - The rdf factory that should be used by the store
   */
-  constructor (statements, constraints, initBindings, optional) {
+  constructor (statements, constraints, initBindings, optional, opts = {}) {
     super()
     this.termType = Formula.termType
     this.statements = statements || []
     this.constraints = constraints || []
     this.initBindings = initBindings || []
     this.optional = optional || []
+
+    this.rdfFactory = (opts && opts.rdfFactory) || CanonicalDataFactory
+    // Enable default factory methods on this while preserving factory context.
+    for(const factoryMethod of appliedFactoryMethods) {
+      this[factoryMethod] = (...args) => this.rdfFactory[factoryMethod](...args)
+    }
   }
   /** Add a statement from its parts
   * @param {Node} subject - the first part of the statemnt
@@ -36,7 +45,7 @@ export default class Formula extends Node {
   * @param {Node} graph - the last part of the statemnt
   */
   add (subject, predicate, object, graph) {
-    return this.statements.push(new Statement(subject, predicate, object, graph))
+    return this.statements.push(this.rdfFactory.quad(subject, predicate, object, graph))
   }
   /** Add a statment object
   * @param {Statement} statement - an existing constructed statement to add
@@ -45,7 +54,7 @@ export default class Formula extends Node {
     return this.statements.push(st)
   }
   bnode (id) {
-    return new BlankNode(id)
+    return this.rdfFactory.blankNode(id)
   }
 
   addAll (statements) {
@@ -98,6 +107,15 @@ export default class Formula extends Node {
     return x[0]
   }
 
+  /**
+   * Returns a unique index-safe identifier for the given term.
+   *
+   * Falls back to the rdflib hashString implementation if the given factory doesn't support id.
+   */
+  id (term) {
+    return this.rdfFactory.id(term)
+  }
+
   /** Search the Store
    *
    * This is really a teaching method as to do this properly you would use IndexedFormula
@@ -111,10 +129,10 @@ export default class Formula extends Node {
    */
   statementsMatching (subj, pred, obj, why, justOne) {
     let found = this.statements.filter(st =>
-      (!subj || subj.sameTerm(st.subject)) &&
-      (!pred || pred.sameTerm(st.predicate)) &&
-      (!obj || subj.sameTerm(st.object)) &&
-      (!why || why.sameTerm(st.subject))
+      (!subj || subj.equals(st.subject)) &&
+      (!pred || pred.equals(st.predicate)) &&
+      (!obj || subj.equals(st.object)) &&
+      (!why || why.equals(st.subject))
      )
     return found
   }
@@ -443,9 +461,9 @@ export default class Formula extends Node {
         str = str.replace(/\\"/g, '"')
         str = str.replace(/\\n/g, '\n')
         str = str.replace(/\\\\/g, '\\')
-        return this.literal(str, lang, dt)
+        return this.literal(str, lang || dt)
       case '_':
-        return new BlankNode(str.slice(2))
+        return this.rdfFactory.blankNode(str.slice(2))
       case '?':
         return new Variable(str.slice(1))
     }
@@ -465,7 +483,7 @@ export default class Formula extends Node {
           }
         }
         return true
-      } else if (s instanceof Statement) {
+      } else if (isStatement(s)) {
         return this.holds(s.subject, s.predicate, s.object, s.why)
       } else if (s.statements) {
         return this.holds(s.statements)
@@ -484,9 +502,6 @@ export default class Formula extends Node {
       collection.append(val)
     })
     return collection
-  }
-  literal (val, lang, dt) {
-    return new Literal('' + val, lang, dt)
   }
   /**
    * transform a collection of NTriple URIs into their URI strings
@@ -547,7 +562,7 @@ export default class Formula extends Node {
     if (name) {
       throw new Error('This feature (kb.sym with 2 args) is removed. Do not assume prefix mappings.')
     }
-    return new NamedNode(uri)
+    return this.rdfFactory.namedNode(uri)
   }
   the (s, p, o, g) {
     var x = this.any(s, p, o, g)

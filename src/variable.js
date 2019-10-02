@@ -33,10 +33,13 @@ export default class Variable extends Node {
     return (ref = bindings[this.toNT()]) != null ? ref : this
   }
   toString () {
-    if (this.uri.slice(0, this.base.length) === this.base) {
-      return '?' + this.uri.slice(this.base.length)
+    return Variable.toString(this)
+  }
+  static toString (variable) {
+    if (variable.uri.slice(0, variable.base.length) === variable.base) {
+      return '?' + variable.uri.slice(variable.base.length)
     }
-    return '?' + this.uri
+    return '?' + variable.uri
   }
 }
 

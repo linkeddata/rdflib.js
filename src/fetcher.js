@@ -34,6 +34,7 @@ import rdfParse from './parse'
 import { parseRDFaDOM } from './rdfaparser'
 import RDFParser from './rdfxmlparser'
 import * as Uri from './uri'
+import { isNamedNode } from './util'
 import * as Util from './util'
 import serialize from './serialize'
 
@@ -874,7 +875,7 @@ export default class Fetcher {
       userCallback = p2
     } else if (typeof p2 === 'undefined') { // original calling signature
       // referringTerm = undefined
-    } else if (p2 instanceof NamedNode) {
+    } else if (isNamedNode(p2)) {
       // referringTerm = p2
       options.referringTerm = p2
     } else {
@@ -963,7 +964,7 @@ export default class Fetcher {
     let isGet = meth === 'GET' || meth === 'HEAD'
 
     if (isGet) {  // only cache the status code on GET or HEAD
-      if (!options.resource.sameTerm(options.original)) {
+      if (!options.resource.equals(options.original)) {
         // console.log('@@ Recording failure  ' + meth + '  original ' + options.original +option '( as ' + options.resource + ') : ' + statusCode)
       } else {
         // console.log('@@ Recording ' + meth + ' failure for ' + options.original + ': ' + statusCode)

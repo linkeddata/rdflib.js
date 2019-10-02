@@ -110,7 +110,6 @@ export default function SPARQLToQuery (SPARQL, testMode, kb) {
       // alert(end2)
       res[1] = kb.literal(
         str.slice(ind + 1, ind + 1 + end),
-        '',
         kb.sym(removeBrackets(
           str.slice(ind + 4 + end, ind + 2 + end + end2))
         )
@@ -129,7 +128,7 @@ export default function SPARQLToQuery (SPARQL, testMode, kb) {
         parseLiterals(str.slice(end + ind + 2 + end2))
       )
     } else {
-      res[1] = kb.literal(str.slice(ind + 1, ind + 1 + end), '', null)
+      res[1] = kb.literal(str.slice(ind + 1, ind + 1 + end))
       log.info('Literal found: ' + res[1])
       res = res.concat(parseLiterals(str.slice(end + ind + 2))) // finds any other literals
     }
@@ -337,7 +336,7 @@ export default function SPARQLToQuery (SPARQL, testMode, kb) {
       return varstr + ' = ' + value.toNT()
     }
     this.test = function (term) {
-      return value.sameTerm(term)
+      return value.equals(term)
     }
     return this
   }

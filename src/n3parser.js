@@ -1316,9 +1316,9 @@ __SinkParser.prototype.nodeOrLiteral = function(str, i, res) {
 		var val = m[0];
 		j = i + val.length;
 		if ((val.indexOf("T") >= 0)) {
-		    res.push(this._store.literal(val, undefined, this._store.sym(DATETIME_DATATYPE)));
+		    res.push(this._store.literal(val, this._store.sym(DATETIME_DATATYPE)));
 		} else {
-		    res.push(this._store.literal(val, undefined, this._store.sym(DATE_DATATYPE)));
+		    res.push(this._store.literal(val, this._store.sym(DATE_DATATYPE)));
 		}
 
 	    } else {
@@ -1330,13 +1330,13 @@ __SinkParser.prototype.nodeOrLiteral = function(str, i, res) {
 		j =  ( i + number_syntax.lastIndex ) ;
 		var val = str.slice( i, j);
 		if ((val.indexOf("e") >= 0)) {
-		    res.push(this._store.literal(parseFloat(val), undefined, this._store.sym(FLOAT_DATATYPE)));
+		    res.push(this._store.literal(parseFloat(val), this._store.sym(FLOAT_DATATYPE)));
 		}
 		else if ((str.slice( i, j).indexOf(".") >= 0)) {
-		    res.push(this._store.literal(parseFloat(val), undefined, this._store.sym(DECIMAL_DATATYPE)));
+		    res.push(this._store.literal(parseFloat(val), this._store.sym(DECIMAL_DATATYPE)));
 		}
 		else {
-		    res.push(this._store.literal(parseInt(val), undefined, this._store.sym(INTEGER_DATATYPE)));
+		    res.push(this._store.literal(parseInt(val), this._store.sym(INTEGER_DATATYPE)));
 		}
 	    };
 	    return j; // Where we have got up to
@@ -1371,7 +1371,7 @@ __SinkParser.prototype.nodeOrLiteral = function(str, i, res) {
                 var j = this.uri_ref2(str,  ( j + 2 ) , res2);
                 var dt = res2[0];
             }
-            res.push(this._store.literal(s, lang, dt));
+            res.push(this._store.literal(s, lang || dt));
             return j;
         }
         else {

@@ -1,3 +1,5 @@
+import { isNamedNode } from '../src/util'
+
 const log = require('./log')
 const N3Parser = require('./n3parser')
 const NamedNode = require('./named-node')
@@ -459,7 +461,7 @@ class Fetcher {
     if (!xhr.options.noMeta) {
       kb.add(xhr.original, ns.link('error'), status)
     }
-    if (!xhr.resource.sameTerm(xhr.original)) {
+    if (!xhr.resource.equals(xhr.original)) {
       console.log('@@ Recording failure original ' + xhr.original +
         '( as ' + xhr.resource + ') : ' + xhr.status)
     } else {
@@ -666,7 +668,7 @@ class Fetcher {
       userCallback = p2
     } else if (typeof p2 === 'undefined') { // original calling signature
       // referingTerm = undefined
-    } else if (p2 instanceof NamedNode) {
+    } else if (isNamedNode(p2)) {
       // referingTerm = p2
       options = {referingTerm: p2}
     } else {

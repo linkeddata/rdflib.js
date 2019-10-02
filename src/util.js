@@ -20,6 +20,28 @@ export function linkRelationProperty(relation){
   return new NamedNode('http://www.w3.org/ns/iana/link-relations/relation#' + relation.trim())
 }
 
+export const appliedFactoryMethods = [
+  'blankNode',
+  'defaultGraph',
+  'literal',
+  'namedNode',
+  'quad',
+  'variable',
+  'supports',
+]
+
+export function isStatement(obj) {
+  return obj && Object.prototype.hasOwnProperty.call(obj, "subject")
+}
+
+export function isStore(obj) {
+  return obj && Object.prototype.hasOwnProperty.call(obj, "statements")
+}
+
+export function isNamedNode(obj) {
+  return obj && Object.prototype.hasOwnProperty.call(obj, "termType") && obj.termType === "NamedNode"
+}
+
 /**
  * Loads ontologies of the data we load (this is the callback from the kb to
  * the fetcher).
@@ -271,17 +293,21 @@ export function heavyCompare (x, y, g, uriMap) {
     lis.sort()
     return lis.join('\n')
   }
+  const comparison = Object.prototype.hasOwnProperty.call(g, "compareTerm")
+    ? g.compareTerm(x, y)
+    : x.compareTerm(y)
+
   if ((x.termType === 'BlankNode') && (y.termType === 'BlankNode')) {
-    if (x.compareTerm(y) === 0) return 0 // Same
+    if (comparison === 0) return 0 // Same
     if (signature(x) > signature(y)) return +1
     if (signature(x) < signature(y)) return -1
-    return x.compareTerm(y)  // Too bad -- this order not canonical.
+    return comparison  // Too bad -- this order not canonical.
     // throw "different bnodes indistinquishable for sorting"
   } else {
     if (uriMap && x.uri && y.uri){
       return (uriMap[x.uri] || x.uri).localeCompare(uriMap[y.uri] || y.uri)
     }
-    return x.compareTerm(y)
+    return comparison
   }
 }
 
@@ -330,10 +356,10 @@ export function RDFArrayRemove (a, x) {
   for (var i = 0; i < a.length; i++) {
     // TODO: This used to be the following, which didnt always work..why
     // if(a[i] === x)
-    if (a[i].subject.sameTerm(x.subject) &&
-      a[i].predicate.sameTerm(x.predicate) &&
-      a[i].object.sameTerm(x.object) &&
-      a[i].why.sameTerm(x.why)) {
+    if (a[i].subject.equals(x.subject) &&
+      a[i].predicate.equals(x.predicate) &&
+      a[i].object.equals(x.object) &&
+      a[i].why.equals(x.why)) {
       a.splice(i, 1)
       return
     }

@@ -590,7 +590,7 @@ So all you have to do is provide a function which will sync changes in the store
 
       for (i = 0; i < table.children.length; i++) {
         row = table.children[i]
-        if (row.subject && row.subject.sameTerm(thing)) {
+        if (row.subject && row.subject.equals(thing)) {
           row.trashMe = false
           foundOne = true
           break
