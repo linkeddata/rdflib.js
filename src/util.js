@@ -2,6 +2,7 @@
  * Utility functions for $rdf
  * @module util
  */
+import { jsonldObjectToTerm } from './jsonldparser'
 import { docpart } from './uri'
 import log from './log'
 import * as uri from './uri'
@@ -89,6 +90,39 @@ export function AJAR_handleNewTerm (kb, p, requestedBy) {
   }
 
   return sf.fetch(docuri, { referringTerm: requestedBy })
+}
+
+const rdf = {
+  first: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#first',
+  rest: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#rest',
+  nil: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#nil'
+}
+
+/**
+ * Expands an array of Terms to a set of statements representing the rdf:list.
+ * @param rdfFactory - The factory to use
+ * @param {NamedNode|BlankNode} subject - The iri of the first list item.
+ * @param {Term[]} data - The terms to expand into the list.
+ * @return {Statement[]} - The {data} as a set of statements.
+ */
+export function arrayToStatements(rdfFactory, subject, data) {
+  const statements = []
+
+  data.reduce((id, listObj, i, listData) => {
+    statements.push(rdfFactory.quad(id, rdfFactory.namedNode(rdf.first), listData[i]))
+
+    let nextNode
+    if (i < listData.length - 1) {
+      nextNode = rdfFactory.blankNode()
+      statements.push(rdfFactory.quad(id, rdfFactory.namedNode(rdf.rest), nextNode))
+    } else {
+      statements.push(rdfFactory.quad(id, rdfFactory.namedNode(rdf.rest), rdfFactory.namedNode(rdf.nil)))
+    }
+
+    return nextNode
+  }, subject)
+
+  return statements
 }
 
 export function ArrayIndexOf (arr, item, i) {
