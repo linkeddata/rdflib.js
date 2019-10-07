@@ -13,7 +13,7 @@ export default Node
  * @method fromValue
  * @param value - Any native Javascript value
  */
-Node.fromValue = function (value: ValueType | null): Node | Literal | undefined | null | Collection {
+Node.fromValue = function (value: ValueType): Node | Literal | undefined | null | Collection {
   if (typeof value === 'undefined' || value === null) {
     return value
   }

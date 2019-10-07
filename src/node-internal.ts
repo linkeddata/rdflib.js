@@ -23,7 +23,7 @@ export default abstract class Node {
   /**
    * Whether this node is a variable
    */
-  isVar!: boolean | 1 | 0;
+  isVar!: boolean;
 
   /**
    * The class order for this node

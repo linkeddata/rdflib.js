@@ -1,54 +1,58 @@
-'use strict'
 import ClassOrder from './class-order'
 import Node from './node-internal'
+import { ValueType } from './types';
 
 /**
- * @class NamedNode
- * @extends Node
- */
+* A named (IRI) RDF node
+*/
 export default class NamedNode extends Node {
+  static termType: string;
+
   /**
-   * @constructor
-   * @param iri {String}
+   * Initializes this node
+   * @param iri The IRI for this node
    */
-  constructor (iri) {
+  constructor (iri: NamedNode | string) {
     super()
     this.termType = NamedNode.termType
 
-    if (iri && iri.termType === NamedNode.termType) {  // param is a named node
-      iri = iri.value
+    if (iri && (iri as NamedNode).termType === NamedNode.termType) {  // param is a named node
+      iri = (iri as NamedNode).value
     }
 
     if (!iri) {
       throw new Error('Missing IRI for NamedNode')
     }
 
-    if (!iri.includes(':')) {
+    const iriString = iri as string
+
+    if (!iriString.includes(':')) {
       throw new Error('NamedNode IRI "' + iri + '" must be absolute.')
     }
 
-    if (iri.includes(' ')) {
+    if (iriString.includes(' ')) {
       var message = 'Error: NamedNode IRI "' + iri + '" must not contain unencoded spaces.'
       throw new Error(message)
     }
 
-    this.value = iri
+    this.value = iriString
   }
   /**
-   * Returns an $rdf node for the containing directory, ending in slash.
+   * Returns an RDF node for the containing directory, ending in slash.
    */
-  dir () {
+  dir (): NamedNode | null{
      var str = this.uri.split('#')[0]
      var p = str.slice(0, -1).lastIndexOf('/')
      var q = str.indexOf('//')
      if ((q >= 0 && p < q + 2) || p < 0) return null
      return new NamedNode(str.slice(0, p + 1))
    }
-   /**
-    * Returns an NN for the whole web site, ending in slash.
-    * Contrast with the "origin" which does NOT have a trailing slash
-    */
-  site () {
+
+  /**
+   * Returns an NamedNOde for the whole web site, ending in slash.
+   * Contrast with the "origin" which does NOT have a trailing slash
+   */
+  site (): NamedNode {
      var str = this.uri.split('#')[0]
      var p = str.indexOf('//')
      if (p < 0) throw new Error('This URI does not have a web site part (origin)')
@@ -59,19 +63,28 @@ export default class NamedNode extends Node {
        return new NamedNode(str.slice(0, q + 1))
      }
    }
-  doc () {
+
+  /**
+   * Gets the named node for the document
+   */
+  doc (): NamedNode {
     if (this.uri.indexOf('#') < 0) {
       return this
     } else {
       return new NamedNode(this.uri.split('#')[0])
     }
   }
-  toString () {
+
+  /**
+   * Returns the URI including <brackets>
+   */
+  toString (): string {
     return '<' + this.uri + '>'
   }
 
-  /* The local identifier with the document
-  */
+  /**
+   * The local identifier with the document
+   */
   id () {
     return this.uri.split('#')[1]
   }
@@ -79,23 +92,29 @@ export default class NamedNode extends Node {
   /**
    * Legacy getter and setter alias, node.uri
    */
-  get uri () {
+  get uri (): string {
     return this.value
   }
-  set uri (uri) {
+  set uri (uri: string) {
     this.value = uri
   }
-  static fromValue (value) {
+
+  /**
+   * Gets a named node from the specified input value
+   * @param value An input value
+   */
+  static fromValue(value: ValueType): NamedNode | null | undefined | Node {
     if (typeof value === 'undefined' || value === null) {
       return value
     }
+    // @ts-ignore
     const isNode = value && value.termType
     if (isNode) {
-      return value
+      return value as NamedNode
     }
-    return new NamedNode(value)
+    return new NamedNode(value as string)
   }
 }
 NamedNode.termType = 'NamedNode'
 NamedNode.prototype.classOrder = ClassOrder['NamedNode']
-NamedNode.prototype.isVar = 0
+NamedNode.prototype.isVar = false
