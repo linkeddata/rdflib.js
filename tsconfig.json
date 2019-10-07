@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
+    "checkJs": false,
+    "allowJs": true,
+    "target": "es6",
+    "module": "es6",
+    "strict": true,
+    "noImplicitAny": false,
+    "lib": [
+      "es2019"
+    ]
+  },
+  "include": [
+    "src/**/*"
+  ]
+}

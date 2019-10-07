@@ -45,7 +45,11 @@
     "@babel/core": "^7.5.5",
     "@babel/plugin-transform-runtime": "^7.5.5",
     "@babel/preset-env": "^7.5.5",
+    "@babel/preset-typescript": "^7.6.0",
     "@babel/register": "^7.5.5",
+    "@types/chai": "^4.2.3",
+    "@types/express": "^4.17.1",
+    "@types/mocha": "^5.2.7",
     "babel-loader": "^8.0.6",
     "chai": "^4.2.0",
     "diff": "^4.0.1",
@@ -59,14 +63,17 @@
     "rimraf": "^3.0.0",
     "sinon": "^7.4.1",
     "sinon-chai": "^3.3.0",
+    "source-map-loader": "^0.2.4",
+    "typescript": "^3.6.3",
     "webpack": "^4.39.2",
     "webpack-cli": "^3.3.6",
     "webpack-dev-server": "^3.8.0",
     "wrapper-webpack-plugin": "^2.1.0"
   },
   "scripts": {
-    "build": "babel src -d lib",
+    "build": "babel src --extensions \".ts,.js\" -d lib",
     "build:browser": "webpack --progress",
+    "build:types": "tsc --emitDeclarationOnly -d --declarationDir lib --allowJs false",
     "doc": "rm -r doc ; jsdoc -d doc README.md src/*.js",
     "prepare": "npm run build && npm run build:browser",
     "start": "webpack-dev-server --https --port 4800",
@@ -87,9 +94,9 @@
     "test:serialize:11": "cd ./tests/serialize && node ./data.js -in=structures.n3 -format=application/rdf+xml  -out=,structures.xml && node diff ,structures.xml t11-ref.xml",
     "test:serialize:12": "cd ./tests/serialize && node ./data.js -in=structures.n3 -format=text/turtle -out=,structures.ttl && node diff ,structures.ttl t12-ref.ttl",
     "test:serialize:13": "cd ./tests/serialize && node ./data.js -in=structures.n3 -format=application/n-triples -out=,structures.nt && node ./data.js -format=application/n-triples -in=,structures.nt -format=text/turtle -out=,structures.nt.ttl && node diff ,structures.nt.ttl t13-ref.ttl",
-    "test:unit": "mocha --growl --require @babel/register tests/unit/**-test.js",
-    "test:unit:egp": "mocha --require @babel/register tests/unit/fetcher-egp-test.js",
-    "test:unit:dev": "mocha --watch --growl --require @babel/register tests/unit/**-test.js"
+    "test:unit": "mocha --growl --require ./tests/babel-register.js tests/unit/**-test.js",
+    "test:unit:egp": "mocha --require ./tests/babel-register.js tests/unit/fetcher-egp-test.js",
+    "test:unit:dev": "mocha --watch --growl --require ./tests/babel-register.js tests/unit/**-test.js"
   },
   "files": [
     ".babelrc",
@@ -98,6 +105,7 @@
     "dist"
   ],
   "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "module": "src/index.js",
   "sideEffects": false,
   "keywords": [
