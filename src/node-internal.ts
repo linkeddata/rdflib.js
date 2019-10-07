@@ -7,6 +7,9 @@
  */
 
 export default class Node {
+  classOrder!: number;
+  termType!: string;
+
   substitute (bindings) {
     console.log('@@@ node substitute' + this)
     return this
