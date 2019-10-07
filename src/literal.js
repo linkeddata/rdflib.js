@@ -141,4 +141,4 @@ Literal.termType = 'Literal'
 Literal.prototype.classOrder = ClassOrder['Literal']
 Literal.prototype.datatype = XSD.string
 Literal.prototype.lang = ''
-Literal.prototype.isVar = 0
+Literal.prototype.isVar = false

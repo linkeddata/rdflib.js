@@ -1,5 +1,5 @@
 'use strict'
-import Node from './node'
+import Node from './node-internal'
 
 /**
  * Singleton subclass of an empty Collection.
