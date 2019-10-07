@@ -1,13 +1,15 @@
 // This is a Temporary file to help with the migration to typescript.
 // See issue: https://github.com/linkeddata/rdflib.js/issues/355
+// Migrate these types and comments to the according files, then remove them from this list.
 // Don't import types from this file.
-// When you do use a type from this file, move it to `./types.ts`
+// When you do want to use a type from this file, move it to `./types.ts`
 // And import it here.
 
 import {
     Bindings,
     ValueType,
 } from './src/types';
+import { NamedNode } from './src';
 
 // Type definitions for rdflib 0.20
 // Project: http://github.com/linkeddata/rdflib.js
@@ -16,86 +18,6 @@ import {
 // TypeScript Version: 3.0
 // Acknowledgements: This work has been financed by Logilab SA, FRANCE, logilab.fr
 
-/**
-* Class orders
-*/
-export const ClassOrder: {
-  [id: string]: number;
-};
-/**
-* The superclass of all RDF Statement objects, that is NamedNode, Literal, BlankNode, etc.
-*/
-export interface Node {
-  /**
-   * The type of node
-   */
-  termType: string;
-  /**
-   * Whether this node is a variable
-   */
-  isVar: boolean;
-  /**
-   * The class order for this node
-   */
-  classOrder: number;
-  /**
-   * The nod's value
-   */
-  value: string;
-  /**
-   * Gets the substituted node for this one, according to the specified bindings
-   * @param bindings Bindings of identifiers to nodes
-   */
-  substitute(bindings: Bindings): Node;
-  /**
-   * Compares this node with another
-   * @param term The other node
-   */
-  compareTerm(term: Node): number;
-  /**
-   * Gets whether the two nodes are equal
-   * @param other The other node
-   */
-  equals(other: Node): boolean;
-  /**
-   * Gets a hash for this node
-   */
-  hashString(): string;
-  /**
-   * Gets whether this node is the same as the other one
-   * @param other Another node
-   */
-  sameTerm(other: Node): boolean;
-  /**
-   * Gets the canonical string representation of this node
-   */
-  toCanonical(): string;
-  /**
-   * Gets the n-triples string representation of this node
-   */
-  toNT(): string;
-  /**
-   * Gets the string representation of this node
-   */
-  toString(): string;
-  /**
-   * Gets a node for the specifed input
-   * @param value An input value
-   */
-  static fromValue(value: ValueType | Node): Node;
-  /**
-   * Gets the javascript object equivalent to a node
-   * @param term The RDF node
-   */
-  static toJS(term: Node): any;
-}
-/**
-* An empty node
-*/
-export interface Empty extends Node {
-  constructor();
-  static termType: string;
-}
 /**
 * A collection of other RDF nodes
 */
@@ -137,117 +59,7 @@ export interface Collection extends Node {
   unshift(element: Node): number;
   static termType: string;
 }
-/**
-* An RDF blank node
-*/
-export interface BlankNode extends Node {
-  /**
-   * The identifier for the blank node
-   */
-  id: string;
-  /**
-   * Whether this is a blank node
-   */
-  isBlank: boolean;
-  /**
-   * Initializes this node
-   * @param id The identifier for the blank node
-   */
-  constructor(id: string);
-  /**
-   * Gets a copy of this blank node in the specified formula
-   * @param formula The formula
-   */
-  copy(formula: Formula): BlankNode;
-  /**
-   * The next unique identifier for blank nodes
-   */
-  static nextId: number;
-  static termType: string;
-  static NTAnonymousNodePrefix: string;
-}
-/**
-* A named (IRI) RDF node
-*/
-export interface NamedNode extends Node {
-  /**
-   * The URI for this node
-   */
-  uri: string;
-  /**
-   * Initializes this node
-   * @param iri The IRI for this node
-   */
-  constructor(iri: NamedNode | string);
-  /**
-   * Returns an RDF node for the containing directory, ending in slash.
-   */
-  dir(): NamedNode;
-  /**
-   * Returns an named node for the whole web site, ending in slash.
-   * Contrast with the "origin" which does NOT have a trailing slash
-   */
-  site(): NamedNode;
-  /**
-   * Gets the named node for the document
-   */
-  doc(): NamedNode;
-  static termType: string;
-  /**
-   * Gets a named node from the specified input value
-   * @param value An input value
-   */
-  static fromValue(value: ValueType): NamedNode | ValueType;
-}
-/**
-* A RDF literal node
-*/
-export interface Literal extends Node {
-  /**
-   * The language for the literal
-   */
-  lang: string;
-  /**
-   * The language for the literal
-   */
-  language: string;
-  /**
-   * The literal's datatype as a named node
-   */
-  datatype: NamedNode;
-  /**
-   * Initializes this literal
-   * @param value The literal's lexical value
-   * @param language The language for the literal
-   * @param datatype The literal's datatype as a named node
-   */
-  constructor(value: string, language?: string, datatype?: NamedNode);
-  /**
-   * Gets a copy of this literal
-   */
-  copy(): Literal;
-  static termType: string;
-  /**
-   * Builds a literal node from a boolean value
-   * @param value The value
-   */
-  static fromBoolean(value: boolean): Literal;
-  /**
-   * Builds a literal node from a date value
-   * @param value The value
-   */
-  static fromDate(value: Date): Literal;
-  /**
-   * Builds a literal node from a number value
-   * @param value The value
-   */
-  static fromNumber(value: number): Literal;
-  /**
-   * Builds a literal node from an input value
-   * @param value The input value
-   */
-  static fromValue(value: ValueType): Literal | ValueType;
-}
+
 /**
 * Variables are placeholders used in patterns to be matched.
 * In cwm they are symbols which are the formula's list of quantified variables.
@@ -346,66 +158,7 @@ export namespace log {
    */
   function msg(x: any): void;
 }
-/**
-* An RDF statement (subject, predicate, object)
-*/
-export interface Statement {
-  /**
-   * The statement's subject
-   */
-  subject: Node;
-  /**
-   * The statement's predicate
-   */
-  predicate: Node;
-  /**
-   * The statement's object
-   */
-  object: Node;
-  /**
-   * The origin of this statement
-   */
-  why: ValueType;
-  /**
-   * The graph the contains this statement
-   */
-  graph: ValueType;
-  /**
-   * Initializes this statement
-   * @param subject The statement's subject
-   * @param predicate The statement's predicate
-   * @param object The statement's object
-   * @param graph The graph the contains this statement
-   */
-  constructor(
-      subject: ValueType,
-      predicate: ValueType,
-      object: ValueType,
-      graph: ValueType
-  );
-  /**
-   * Gets whether two statements are the same
-   * @param other The other statement
-   */
-  equals(other: Statement): boolean;
-  /**
-   * Gets this statement with the bindings substituted
-   * @param bindings The bindings
-   */
-  substitute(bindings: Bindings): Statement;
-  /**
-   * Gets the canonical string representation of this statement
-   */
-  toCanonical(): string;
-  /**
-   * Gets the n-triples string representation of this statement
-   */
-  toNT(): string;
-  /**
-   * Gets the string representation of this statement
-   */
-  toString(): string;
-}
+
 export namespace convert {
   /**
    * Converts an n3 string to JSON
