@@ -19,48 +19,6 @@ import { NamedNode } from './src';
 // Acknowledgements: This work has been financed by Logilab SA, FRANCE, logilab.fr
 
 /**
-* A collection of other RDF nodes
-*/
-export interface Collection extends Node {
-  /**
-   * The identifier for this collection
-   */
-  id: string;
-  /**
-   * The nodes in this collection
-   */
-  elements: Node[];
-  /**
-   * Whether this collection is closed
-   */
-  closed: boolean;
-  /**
-   * Initializes this collection
-   * @param initial The initial elements
-   */
-  constructor(initial: ReadonlyArray<ValueType>);
-  /**
-   * Appends an element to this collection
-   * @param element The new element
-   */
-  append(element: Node): number;
-  /**
-   * Closes this collection
-   */
-  close(): boolean;
-  /**
-   * Removes the first element from the collection (and return it)
-   */
-  shift(): Node;
-  /**
-   * Preprends the specified element to the colelction's front
-   * @param element The element to preprend
-   */
-  unshift(element: Node): number;
-  static termType: string;
-}
-
-/**
 * Variables are placeholders used in patterns to be matched.
 * In cwm they are symbols which are the formula's list of quantified variables.
 * In sparql they are not visibly URIs.  Here we compromise, by having
