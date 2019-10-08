@@ -67,7 +67,7 @@ export default class Statement {
     return (
       other.subject.equals(this.subject) &&
       other.predicate.equals(this.predicate) &&
-      other.object.equals(this.object as Node) &&
+      other.object.equals(this.object as Literal) &&
       other.graph.equals(this.graph)
     )
   }

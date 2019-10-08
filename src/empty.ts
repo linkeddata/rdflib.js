@@ -1,11 +1,12 @@
-'use strict'
 import Node from './node-internal'
 
 /**
 * An empty node
 */
 export default class Empty extends Node {
-  static termType: string
+
+  static termType: 'empty'
+
   constructor () {
     super()
     this.termType = Empty.termType

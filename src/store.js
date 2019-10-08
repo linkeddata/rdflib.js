@@ -20,7 +20,7 @@ import { ArrayIndexOf } from './util'
 import Formula from './formula'
 import { RDFArrayRemove } from './util'
 import Statement from './statement'
-import Node from './node-internal'
+import Node from './node'
 import Variable from './variable'
 import { Query, indexedFormulaQuery } from './query'
 

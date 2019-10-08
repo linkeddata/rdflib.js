@@ -6,7 +6,8 @@ import { ValueType } from './types';
 * A named (IRI) RDF node
 */
 export default class NamedNode extends Node {
-  static termType: string;
+
+  static termType: 'NamedNode';
 
   /**
    * Initializes this node
@@ -37,6 +38,7 @@ export default class NamedNode extends Node {
 
     this.value = iriString
   }
+
   /**
    * Returns an RDF node for the containing directory, ending in slash.
    */
@@ -49,7 +51,7 @@ export default class NamedNode extends Node {
    }
 
   /**
-   * Returns an NamedNOde for the whole web site, ending in slash.
+   * Returns a NamedNode for the whole web site, ending in slash.
    * Contrast with the "origin" which does NOT have a trailing slash
    */
   site (): NamedNode {
@@ -107,8 +109,7 @@ export default class NamedNode extends Node {
     if (typeof value === 'undefined' || value === null) {
       return value
     }
-    // @ts-ignore
-    const isNode = value && value.termType
+    const isNode = value && (value as Node).termType
     if (isNode) {
       return value as NamedNode
     }

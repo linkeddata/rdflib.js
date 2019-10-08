@@ -1,4 +1,3 @@
-'use strict'
 import NamedNode from './named-node'
 import Node from './node-internal'
 import XSD from './xsd'
@@ -6,10 +5,13 @@ import { ValueType } from './types'
 import classOrder from './class-order'
 
 /**
-* An RDF literal node, containing something different than a URI.
-* @link https://rdf.js.org/data-model-spec/#literal-interface
-*/
+ * An RDF literal node, containing something different than a URI.
+ * @link https://rdf.js.org/data-model-spec/#literal-interface
+ */
 export default class Literal extends Node {
+
+  termType: 'Literal'
+
   /**
    * The language for the literal
    */
@@ -19,8 +21,6 @@ export default class Literal extends Node {
    * The literal's datatype as a named node
    */
   datatype!: NamedNode
-
-  termType: string
 
   /**
    * Initializes this literal
@@ -34,23 +34,29 @@ export default class Literal extends Node {
     this.value = value
     if (language) {
       this.lang = language
-      datatype = XSD.langString
+      this.datatype = XSD.langString
     }
     // If not specified, a literal has the implied XSD.string default datatype
     if (datatype) {
       this.datatype = NamedNode.fromValue(datatype)
     }
-    if (!datatype) {
+    if (!datatype && !this.datatype) {
       this.datatype = XSD.string
     }
   }
-   /**
+
+  /**
    * Gets a copy of this literal
    */
   copy (): Literal {
     return new Literal(this.value, this.lang, this.datatype)
   }
-  equals (other) {
+
+  /**
+   * Gets whether two literals are the same
+   * @param other The other statement
+   */
+  equals (other: Literal): boolean {
     if (!other) {
       return false
     }
@@ -146,8 +152,7 @@ export default class Literal extends Node {
     if (typeof value === 'undefined' || value === null) {
       return value
     }
-    // @ts-ignore
-    if (typeof value === 'object' && value.termType) {  // this is a Node instance
+    if (Object.prototype.hasOwnProperty.call(value, 'termType')) {  // this is a Node instance
       return value as Node
     }
     switch (typeof value) {

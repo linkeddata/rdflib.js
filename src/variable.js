@@ -1,6 +1,6 @@
 'use strict'
 import ClassOrder from './class-order'
-import Node from './node-internal'
+import Node from './node'
 import * as Uri from './uri'
 
 /**

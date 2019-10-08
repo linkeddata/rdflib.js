@@ -7,6 +7,9 @@ import { IndexedFormula } from './index';
  * @link https://rdf.js.org/data-model-spec/#blanknode-interface
  */
 export default class BlankNode extends Node {
+
+  static termType: 'BlankNode';
+
   /**
    * The identifier for the blank node
    */
@@ -21,7 +24,6 @@ export default class BlankNode extends Node {
    * The next unique identifier for blank nodes
    */
   static nextId: number;
-  static termType: string;
   static NTAnonymousNodePrefix: string;
 
   /**

@@ -7,18 +7,25 @@ import { ValueType, Bindings } from './types';
 * A collection of other RDF nodes
 */
 export default class Collection extends Node {
+
+  static termType: 'Collection';
+
   /**
    * The identifier for this collection
    */
   id: number;
+
   /**
    * The nodes in this collection
    */
-  elements: Node[];
+
+   elements: Node[];
+
   /**
    * Whether this collection is closed
    */
   closed: boolean;
+
   /**
    * Initializes this collection
    * @param initial The initial elements
@@ -35,6 +42,7 @@ export default class Collection extends Node {
       })
     }
   }
+
   /**
    * Appends an element to this collection
    * @param element The new element
@@ -42,6 +50,7 @@ export default class Collection extends Node {
   append (element: Node): number {
     return this.elements.push(element)
   }
+
   /**
    * Closes this collection
    */
@@ -49,12 +58,14 @@ export default class Collection extends Node {
     this.closed = true
     return this.closed
   }
+
   /**
    * Removes the first element from the collection (and return it)
    */
   shift (): Node | undefined {
     return this.elements.shift()
   }
+
   /**
    * Gets a new Collection with the substituting bindings applied
    * @param bindings The bindings to substitute
@@ -68,6 +79,7 @@ export default class Collection extends Node {
   toNT () {
     return BlankNode.NTAnonymousNodePrefix + this.id
   }
+
   /**
    * Serializes the collection to a string.
    * Surounded by (parantheses) and seperated by spaces.
@@ -75,6 +87,7 @@ export default class Collection extends Node {
   toString () {
     return '(' + this.elements.join(' ') + ')'
   }
+
   /**
    * Preprends the specified element to the colelction's front
    * @param element The element to preprend
@@ -82,7 +95,6 @@ export default class Collection extends Node {
   unshift (element: Node): number {
     return this.elements.unshift(element)
   }
-  static termType: string;
 }
 Collection.termType = 'Collection'
 Collection.prototype.classOrder = ClassOrder['Collection']

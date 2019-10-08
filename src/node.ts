@@ -4,6 +4,7 @@ import Node from './node-internal'
 import Collection from './collection'
 import Literal from './literal'
 import { ValueType } from './types'
+import Namespace from './namespace'
 
 export default Node
 
@@ -19,7 +20,6 @@ Node.fromValue = function (value: ValueType): Node | Literal | undefined | null 
   }
   const isNode = Object.prototype.hasOwnProperty.call(value, 'termType')
   if (isNode) {  // a Node subclass or a Collection
-    // @ts-ignore
     return value
   }
   if (Array.isArray(value)) {
@@ -28,7 +28,6 @@ Node.fromValue = function (value: ValueType): Node | Literal | undefined | null 
   return Literal.fromValue(value)
 }
 
-import Namespace from './namespace'
 const ns = { xsd: Namespace('http://www.w3.org/2001/XMLSchema#') }
 
 /**
@@ -40,14 +39,12 @@ Node.toJS = function (term: Node | Literal) {
     return term.elements.map(Node.toJS) // Array node (not standard RDFJS)
   }
   // Node remains Node
-  // @ts-ignore
   if (!term.datatype) return term // Objects remain objects
   const literalTerm = term as Literal
   // if (!Object.prototype.hasOwnProperty.call(term, 'dataType')) return term // Objects remain objects
   if (literalTerm.datatype.sameTerm(ns.xsd('boolean'))) {
     return literalTerm.value === '1'
   }
-  console.log("4", term)
   if (literalTerm.datatype.sameTerm(ns.xsd('dateTime')) ||
     literalTerm.datatype.sameTerm(ns.xsd('date'))) {
     return new Date(literalTerm.value)
@@ -60,6 +57,5 @@ Node.toJS = function (term: Node | Literal) {
     let z = Number(literalTerm.value)
     return Number(literalTerm.value)
   }
-  console.log("7", term)
   return literalTerm.value
 }
