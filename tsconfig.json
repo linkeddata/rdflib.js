@@ -3,7 +3,7 @@
     "allowSyntheticDefaultImports": true,
     "checkJs": false,
     "allowJs": true,
-    "target": "es6",
+    "target": "es5",
     "module": "es6",
     "strict": true,
     "noImplicitAny": false,
