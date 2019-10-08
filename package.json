@@ -37,8 +37,10 @@
     "jsonld": "^1.6.2",
     "n3": "^1.2.0",
     "solid-auth-cli": "^1.0.8",
-    "solid-auth-client": "^2.3.0",
     "xmldom": "^0.1.27"
+  },
+  "peerDependencies": {
+    "solid-auth-client": "^2.3.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.5.5",
@@ -63,6 +65,7 @@
     "rimraf": "^3.0.0",
     "sinon": "^7.4.1",
     "sinon-chai": "^3.3.0",
+    "solid-auth-client": "^2.3.0",
     "source-map-loader": "^0.2.4",
     "typescript": "^3.6.3",
     "webpack": "^4.39.2",
