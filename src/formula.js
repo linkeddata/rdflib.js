@@ -644,7 +644,7 @@ export default class Formula extends Node {
 Formula.termType = 'Graph'
 
 Formula.prototype.classOrder = ClassOrder['Graph']
-Formula.prototype.isVar = 0
+Formula.prototype.isVar = false
 
 Formula.prototype.ns = Namespace
 Formula.prototype.variable = name => new Variable(name)

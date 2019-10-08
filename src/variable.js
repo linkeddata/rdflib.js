@@ -42,4 +42,4 @@ export default class Variable extends Node {
 
 Variable.termType = 'Variable'
 Variable.prototype.classOrder = ClassOrder['Variable']
-Variable.prototype.isVar = 1
+Variable.prototype.isVar = true
