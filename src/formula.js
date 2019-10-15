@@ -9,7 +9,7 @@ import Namespace from './namespace'
 import Node from './node'
 import Serializer from './serialize'
 import Statement from './statement'
-import { appliedFactoryMethods, isStatement } from './util'
+import { appliedFactoryMethods, arrayToStatements, isStatement } from './util'
 import Variable from './variable'
 
 /** @module formula */
@@ -496,12 +496,26 @@ export default class Formula extends Node {
   holdsStatement (st) {
     return this.holds(st.subject, st.predicate, st.object, st.why)
   }
-  list (values) {
-    let collection = new Collection()
-    values.forEach(function (val) {
-      collection.append(val)
-    })
-    return collection
+
+  /**
+   * Used by the n3parser to generate list elements
+   * @param values - The values of the collection
+   * @param context - The store
+   * @return {BlankNode|Collection} - The term for the statement
+   */
+  list (values, context) {
+    if (context.rdfFactory.supports["COLLECTIONS"]) {
+      const collection = context.rdfFactory.collection()
+      values.forEach(function (val) {
+        collection.append(val)
+      })
+      return collection
+    } else {
+      const node = context.rdfFactory.blankNode()
+      const statements = arrayToStatements(context.rdfFactory, node, values)
+      context.addAll(statements)
+      return node
+    }
   }
   /**
    * transform a collection of NTriple URIs into their URI strings

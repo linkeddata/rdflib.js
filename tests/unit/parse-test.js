@@ -19,7 +19,43 @@ describe('Parse', () => {
         expect(store.statements[0].object.lang).to.eql('be-x-old')
       })
     })
+
+    describe('collections', () => {
+      describe('with collection term support', () => {
+        let base = 'https://www.wikidata.org/wiki/Special:EntityData/Q2005.ttl'
+        let mimeType = 'text/turtle'
+        let store = DataFactory.graph()
+        let content = '<http://www.wikidata.org/entity/Q328> <http://www.w3.org/2000/01/rdf-schema#label> ( "0" "1"^^<http://www.w3.org/2001/XMLSchema#number> <http://example.org/> ) .'
+        parse(content, store, base, mimeType)
+        expect(store.statements[0].object.termType).to.eql('Collection')
+      })
+
+      describe('without collection term support', () => {
+        let base = 'https://www.wikidata.org/wiki/Special:EntityData/Q2005.ttl'
+        let mimeType = 'text/turtle'
+        let store = DataFactory.graph(undefined, { rdfFactory: CanonicalDataFactory })
+        let content = '<http://www.wikidata.org/entity/Q328> <http://www.w3.org/2000/01/rdf-schema#label> ( "0" "1"^^<http://www.w3.org/2001/XMLSchema#number> <http://example.org/> ) .'
+        parse(content, store, base, mimeType)
+        expect(store.statements.length).to.eql(1 + 3 * 2)
+
+        expect(store.statements[0].predicate.value).to.eql('http://www.w3.org/1999/02/22-rdf-syntax-ns#first')
+        expect(store.statements[0].object.value).to.eql('0')
+
+        expect(store.statements[2].predicate.value).to.eql('http://www.w3.org/1999/02/22-rdf-syntax-ns#first')
+        expect(store.statements[2].object.value).to.eql('1')
+        expect(store.statements[2].object.datatype.value).to.eql('http://www.w3.org/2001/XMLSchema#number')
+
+        expect(store.statements[4].predicate.value).to.eql('http://www.w3.org/1999/02/22-rdf-syntax-ns#first')
+        expect(store.statements[4].object.termType).to.eql('NamedNode')
+        expect(store.statements[4].object.value).to.eql('http://example.org/')
+
+        expect(store.statements[6].predicate.value).to.eql('http://www.w3.org/2000/01/rdf-schema#label')
+        expect(store.statements[6].object.termType).to.eql('BlankNode')
+        expect(store.statements[6].object.value).to.eql(store.statements[0].subject.value)
+      })
+    })
   })
+
   describe('ttl with charset', () => {
     describe('literals', () => {
       it('handles language subtags', () => {
@@ -32,6 +68,7 @@ describe('Parse', () => {
       })
     })
   })
+
   describe('a JSON-LD document', () => {
     describe('with a base IRI', () => {
       let store
@@ -80,7 +117,7 @@ describe('Parse', () => {
         expect(store.rdfFactory.supports["COLLECTIONS"]).to.be.false
         const homePageHeight = 5 // homepage + height + 3 x name
         const list = 2 * 3 + 1 // (rdf:first + rdf:rest) * 3 items + listProp
-        expect(store.statements).to.have.length(homePageHeight + list);
+        expect(store.statements).to.have.length(homePageHeight + list)
 
         const height = store.statements[0]
         expect(height.subject.value).to.equal('https://www.example.org/#me')
@@ -172,8 +209,7 @@ describe('Parse', () => {
 
       it('uses the specified base IRI', () => {
         expect(store.rdfFactory.supports["COLLECTIONS"]).to.be.true
-        console.log(store.statements)
-        expect(store.statements).to.have.length(1);
+        expect(store.statements).to.have.length(1)
 
         const collection = store.statements[0]
         expect(collection.subject.value).to.equal('https://www.example.org/#me')
