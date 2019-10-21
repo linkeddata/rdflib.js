@@ -109,7 +109,7 @@ export default class UpdateManager {
     // https://github.com/solid/node-solid-server/pull/1313
     // Once that release has been published to the major Pod hosters, the commit that introduced
     // this statement should be reverted:
-    if (kb.holds(namedNode(uri), this.ns.rdf('type'), this.ns.ldp('Resource'))) {
+    if (kb.holds(DataFactory.namedNode(uri), this.ns.rdf('type'), this.ns.ldp('Resource'))) {
         return 'SPARQL'
     }
     var method
