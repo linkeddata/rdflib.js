@@ -100,6 +100,18 @@ export default class UpdateManager {
     var definitive = false
     var requests = kb.each(undefined, this.ns.link('requestedURI'), docpart(uri))
 
+    // This if-statement does not follow the Solid spec, but temporarily reverts this change:
+    // https://github.com/linkeddata/rdflib.js/commit/11519162df4d31067a5c175686a29532552f2bea#diff-0aaa1c3585187a3868b62f3bcdca96f4L103
+    // It is necessary because Node Solid Server does not currently send the required header that
+    // lets rdflib know that it accepts SPARQL queries:
+    // https://github.com/linkeddata/rdflib.js/issues/359#issuecomment-537952239
+    // A fix has been submitted to Node Solid Server that will be included in its next release:
+    // https://github.com/solid/node-solid-server/pull/1313
+    // Once that release has been published to the major Pod hosters, the commit that introduced
+    // this statement should be reverted:
+    if (kb.holds(namedNode(uri), this.ns.rdf('type'), this.ns.ldp('Resource'))) {
+        return 'SPARQL'
+    }
     var method
     for (var r = 0; r < requests.length; r++) {
       request = requests[r]
