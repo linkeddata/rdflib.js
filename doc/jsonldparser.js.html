@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Class: Query</title>
+    <title>JSDoc: Source: jsonldparser.js</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,144 +17,116 @@
 
 <div id="main">
 
-    <h1 class="page-title">Class: Query</h1>
+    <h1 class="page-title">Source: jsonldparser.js</h1>
 
     
 
 
 
-
-<section>
-
-<header>
     
-        <h2><span class="attribs"><span class="type-signature"></span></span>Query<span class="signature">()</span><span class="type-signature"></span></h2>
-        
-            <div class="class-description">Query class, for tracking queries the user has in the UI.</div>
-        
-    
-</header>
-
-<article>
-    <div class="container-overview">
-    
-        
-
-    
-    <h2>Constructor</h2>
-    
-
-    
-    <h4 class="name" id="Query"><span class="type-signature"></span>new Query<span class="signature">()</span><span class="type-signature"></span></h4>
-    
-
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="query.js.html">query.js</a>, <a href="query.js.html#line31">line 31</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-    </div>
-
-    
-
-    
-
-    
-        <h3 class="subsection-title">Classes</h3>
-
-        <dl>
-            <dt><a href="Query.html">Query</a></dt>
-            <dd></dd>
-        </dl>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-</article>
-
-</section>
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import jsonld from 'jsonld'
+
+import { arrayToStatements } from './util'
+
+/**
+ * Parses json-ld formatted JS objects to a rdf Term.
+ * @param kb - The DataFactory to use.
+ * @param obj - The json-ld object to process.
+ * @return {Literal|NamedNode|BlankNode|Collection}
+ */
+export function jsonldObjectToTerm (kb, obj) {
+  if (typeof obj === 'string') {
+    return kb.rdfFactory.literal(obj)
+  }
+
+  if (Object.prototype.hasOwnProperty.call(obj, '@list')) {
+    if (kb.rdfFactory.supports["COLLECTIONS"] === true) {
+      return listToCollection(kb, obj['@list'])
+    }
+
+    return listToStatements(kb, obj)
+  }
+
+  if (Object.prototype.hasOwnProperty.call(obj, '@id')) {
+    return kb.rdfFactory.namedNode(obj['@id'])
+  }
+
+  if (Object.prototype.hasOwnProperty.call(obj, '@language')) {
+    return kb.rdfFactory.literal(obj['@value'], obj['@language'])
+  }
+
+  if (Object.prototype.hasOwnProperty.call(obj, '@type')) {
+    return kb.rdfFactory.literal(obj['@value'], kb.rdfFactory.namedNode(obj['@type']))
+  }
+
+  if (Object.prototype.hasOwnProperty.call(obj, '@value')) {
+    return kb.rdfFactory.literal(obj['@value'])
+  }
+
+  return kb.rdfFactory.literal(obj)
+}
+
+/**
+ * Adds the statements in a json-ld list object to {kb}.
+ */
+function listToStatements (kb, obj) {
+  const listId = obj['@id'] ? kb.rdfFactory.namedNode(obj['@id']) : kb.rdfFactory.blankNode()
+
+  const items = obj['@list'].map((listItem => jsonldObjectToTerm(kb, listItem)))
+  const statements = arrayToStatements(kb.rdfFactory, listId, items)
+  kb.addAll(statements)
+
+  return listId
+}
+
+function listToCollection (kb, obj) {
+  if (!Array.isArray(obj)) {
+    throw new TypeError("Object must be an array")
+  }
+  return kb.rdfFactory.collection(obj.map((o) => jsonldObjectToTerm(kb, o)))
+}
+
+/**
+ * Takes a json-ld formatted string {str} and adds its statements to {kb}.
+ *
+ * Ensure that {kb.rdfFactory} is a DataFactory.
+ */
+export default function jsonldParser (str, kb, base, callback) {
+  const baseString = base &amp;&amp; Object.prototype.hasOwnProperty.call(base, 'termType')
+    ? base.value
+    : base
+
+  return jsonld
+    .flatten(JSON.parse(str), null, { base: baseString })
+    .then((flattened) => flattened.reduce((store, flatResource) => {
+      const id = flatResource['@id']
+        ? kb.rdfFactory.namedNode(flatResource['@id'])
+        : kb.rdfFactory.blankNode()
+
+      for (const property of Object.keys(flatResource)) {
+        if (property === '@id') {
+          continue
+        }
+        const value = flatResource[property]
+        if (Array.isArray(value)) {
+          for (let i = 0; i &lt; value.length; i++) {
+            kb.addStatement(kb.rdfFactory.quad(id, kb.rdfFactory.namedNode(property), jsonldObjectToTerm(kb, value[i])))
+          }
+        } else {
+          kb.addStatement(kb.rdfFactory.quad(id, kb.rdfFactory.namedNode(property), jsonldObjectToTerm(kb, value)))
+        }
+      }
+
+      return kb
+    }, kb))
+    .then(callback)
+    .catch(callback)
+}
+</code></pre>
+        </article>
+    </section>
 
 
 
