@@ -1,0 +1,6 @@
+doc
+.vscode/
+npm-debug.log
+# The following (and `.npmignore` in general) can be removed again once this bug is fixed:
+# https://github.com/linkeddata/rdflib.js/issues/369
+lib/index.d.ts
