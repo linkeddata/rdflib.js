@@ -1,10 +1,7 @@
-import BlankNode from './blank-node'
 import DataFactory from './data-factory'
-import jsonld from 'jsonld'
-import Literal from './literal'
+import jsonldParser from './jsonldparser'
 import { Parser as N3jsParser } from 'n3'  // @@ Goal: remove this dependency
 import N3Parser from './n3parser'
-import NamedNode from './named-node'
 import { parseRDFaDOM } from './rdfaparser'
 import RDFParser from './rdfxmlparser'
 import sparqlUpdateParser from './patch-parser'
@@ -37,24 +34,12 @@ export default function parse (str, kb, base, contentType, callback) {
     } else if (contentType === 'application/sparql-update') { // @@ we handle a subset
       sparqlUpdateParser(str, kb, base)
       executeCallback()
-    } else if (contentType === 'application/ld+json' ||
-               contentType === 'application/nquads' ||
+    } else if (contentType === 'application/ld+json') {
+      jsonldParser(str, kb, base, executeCallback)
+    } else if (contentType === 'application/nquads' ||
                contentType === 'application/n-quads') {
       var n3Parser = new N3jsParser({ factory: DataFactory })
-      var triples = []
-      if (contentType === 'application/ld+json') {
-        var jsonDocument
-        try {
-          jsonDocument = JSON.parse(str)
-        } catch (parseErr) {
-          return callback(parseErr, null)
-        }
-        jsonld.toRDF(jsonDocument,
-          {format: 'application/nquads', base},
-          nquadCallback)
-      } else {
-        nquadCallback(null, str)
-      }
+      nquadCallback(null, str)
     } else {
       throw new Error("Don't know how to parse " + contentType + ' yet')
     }

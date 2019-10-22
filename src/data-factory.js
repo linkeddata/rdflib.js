@@ -1,71 +1,72 @@
 'use strict'
-import BlankNode from './blank-node'
 import Collection from './collection'
-import DefaultGraph from './default-graph'
+import CanonicalDataFactory from './data-factory-internal'
 import Fetcher from './fetcher'
-import IndexedFormula from './store'
 import Literal from './literal'
-import NamedNode from './named-node'
 import Statement from './statement'
-import Variable from './variable'
+import IndexedFormula from './store'
 
+/**
+ * Data factory which also supports Collections
+ *
+ * Necessary for preventing circular dependencies.
+ */
+const ExtendedTermFactory = {
+  ...CanonicalDataFactory,
+  collection,
+  id,
+  supports: {
+    COLLECTIONS: true,
+    DEFAULT_GRAPH_TYPE: true,
+    EQUALS_METHOD: true,
+    NODE_LOOKUP: false,
+    VARIABLE_TYPE: true,
+  }
+}
+
+/** Full RDFLib.js Data Factory */
 const DataFactory = {
-  blankNode,
-  defaultGraph,
+  ...ExtendedTermFactory,
   fetcher,
   graph,
   lit,
-  literal,
-  namedNode,
-  quad,
   st,
   triple,
-  variable,
 }
 export default DataFactory
 
-function blankNode (value) {
-  return new BlankNode(value)
+function id (term) {
+  if (!term) {
+    return term
+  }
+  if (Object.prototype.hasOwnProperty.call(term, "id") && typeof term.id === "function") {
+    return term.id()
+  }
+  if (Object.prototype.hasOwnProperty.call(term, "hashString")) {
+    return term.hashString()
+  }
+
+  if (term.termType === "Collection") {
+    Collection.toNT(term)
+  }
+
+  return CanonicalDataFactory.id(term)
 }
 function collection (elements) {
   return new Collection(elements)
 }
-function defaultGraph () {
-  return new DefaultGraph()
-}
 function fetcher (store, options) {
   return new Fetcher(store, options)
 }
-function graph () {
-  return new IndexedFormula()
+function graph (features = undefined, opts = undefined) {
+  return new IndexedFormula(features, opts || { rdfFactory: ExtendedTermFactory })
 }
 function lit (val, lang, dt) {
   return new Literal('' + val, lang, dt)
-}
-function literal (value, languageOrDatatype) {
-  if (typeof languageOrDatatype === 'string') {
-    if (languageOrDatatype.indexOf(':') === -1) {
-      return new Literal(value, languageOrDatatype)
-    } else {
-      return new Literal(value, null, namedNode(languageOrDatatype))
-    }
-  } else {
-    return new Literal(value, null, languageOrDatatype)
-  }
-}
-function namedNode (value) {
-  return new NamedNode(value)
-}
-function quad (subject, predicate, object, graph) {
-  graph = graph || new DefaultGraph()
-  return new Statement(subject, predicate, object, graph)
 }
 function st (subject, predicate, object, graph) {
   return new Statement(subject, predicate, object, graph)
 }
 function triple (subject, predicate, object) {
-  return quad(subject, predicate, object)
-}
-function variable (name) {
-  return new Variable(name)
+  return CanonicalDataFactory.quad(subject, predicate, object)
 }

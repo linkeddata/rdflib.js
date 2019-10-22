@@ -33,7 +33,10 @@ export default class Collection extends Node {
     return new Collection(elementsCopy)
   }
   toNT () {
-    return BlankNode.NTAnonymousNodePrefix + this.id
+    return Collection.toNT(this)
+  }
+  static toNT (collection) {
+    return BlankNode.NTAnonymousNodePrefix + collection.id
   }
   toString () {
     return '(' + this.elements.join(' ') + ')'

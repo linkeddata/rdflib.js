@@ -2,6 +2,7 @@
  * Utility functions for $rdf
  * @module util
  */
+import { jsonldObjectToTerm } from './jsonldparser'
 import { docpart } from './uri'
 import log from './log'
 import * as uri from './uri'
@@ -18,6 +19,28 @@ export function mediaTypeClass(mediaType){
 
 export function linkRelationProperty(relation){
   return new NamedNode('http://www.w3.org/ns/iana/link-relations/relation#' + relation.trim())
+}
+
+export const appliedFactoryMethods = [
+  'blankNode',
+  'defaultGraph',
+  'literal',
+  'namedNode',
+  'quad',
+  'variable',
+  'supports',
+]
+
+export function isStatement(obj) {
+  return obj && Object.prototype.hasOwnProperty.call(obj, "subject")
+}
+
+export function isStore(obj) {
+  return obj && Object.prototype.hasOwnProperty.call(obj, "statements")
+}
+
+export function isNamedNode(obj) {
+  return obj && Object.prototype.hasOwnProperty.call(obj, "termType") && obj.termType === "NamedNode"
 }
 
 /**
@@ -67,6 +90,39 @@ export function AJAR_handleNewTerm (kb, p, requestedBy) {
   }
 
   return sf.fetch(docuri, { referringTerm: requestedBy })
+}
+
+const rdf = {
+  first: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#first',
+  rest: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#rest',
+  nil: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#nil'
+}
+
+/**
+ * Expands an array of Terms to a set of statements representing the rdf:list.
+ * @param rdfFactory - The factory to use
+ * @param {NamedNode|BlankNode} subject - The iri of the first list item.
+ * @param {Term[]} data - The terms to expand into the list.
+ * @return {Statement[]} - The {data} as a set of statements.
+ */
+export function arrayToStatements(rdfFactory, subject, data) {
+  const statements = []
+
+  data.reduce((id, listObj, i, listData) => {
+    statements.push(rdfFactory.quad(id, rdfFactory.namedNode(rdf.first), listData[i]))
+
+    let nextNode
+    if (i < listData.length - 1) {
+      nextNode = rdfFactory.blankNode()
+      statements.push(rdfFactory.quad(id, rdfFactory.namedNode(rdf.rest), nextNode))
+    } else {
+      statements.push(rdfFactory.quad(id, rdfFactory.namedNode(rdf.rest), rdfFactory.namedNode(rdf.nil)))
+    }
+
+    return nextNode
+  }, subject)
+
+  return statements
 }
 
 export function ArrayIndexOf (arr, item, i) {
@@ -271,17 +327,21 @@ export function heavyCompare (x, y, g, uriMap) {
     lis.sort()
     return lis.join('\n')
   }
+  const comparison = Object.prototype.hasOwnProperty.call(g, "compareTerm")
+    ? g.compareTerm(x, y)
+    : x.compareTerm(y)
+
   if ((x.termType === 'BlankNode') && (y.termType === 'BlankNode')) {
-    if (x.compareTerm(y) === 0) return 0 // Same
+    if (comparison === 0) return 0 // Same
     if (signature(x) > signature(y)) return +1
     if (signature(x) < signature(y)) return -1
-    return x.compareTerm(y)  // Too bad -- this order not canonical.
+    return comparison  // Too bad -- this order not canonical.
     // throw "different bnodes indistinquishable for sorting"
   } else {
     if (uriMap && x.uri && y.uri){
       return (uriMap[x.uri] || x.uri).localeCompare(uriMap[y.uri] || y.uri)
     }
-    return x.compareTerm(y)
+    return comparison
   }
 }
 
@@ -330,10 +390,10 @@ export function RDFArrayRemove (a, x) {
   for (var i = 0; i < a.length; i++) {
     // TODO: This used to be the following, which didnt always work..why
     // if(a[i] === x)
-    if (a[i].subject.sameTerm(x.subject) &&
-      a[i].predicate.sameTerm(x.predicate) &&
-      a[i].object.sameTerm(x.object) &&
-      a[i].why.sameTerm(x.why)) {
+    if (a[i].subject.equals(x.subject) &&
+      a[i].predicate.equals(x.predicate) &&
+      a[i].object.equals(x.object) &&
+      a[i].why.equals(x.why)) {
       a.splice(i, 1)
       return
     }

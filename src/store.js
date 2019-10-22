@@ -16,9 +16,11 @@
 
 /** @module store */
 
-import { ArrayIndexOf } from './util'
+import ClassOrder from './class-order'
+import { defaultGraphURI } from './data-factory-internal'
+import DataFactory from './data-factory'
 import Formula from './formula'
-import { RDFArrayRemove } from './util'
+import { ArrayIndexOf, isStatement, isStore, RDFArrayRemove } from './util'
 import Statement from './statement'
 import Node from './node'
 import Variable from './variable'
@@ -26,7 +28,6 @@ import { Query, indexedFormulaQuery } from './query'
 
 const owlNamespaceURI = 'http://www.w3.org/2002/07/owl#'
 
-const defaultGraphURI = 'chrome:theSession'
 export { defaultGraphURI }
 // var link_ns = 'http://www.w3.org/2007/ont/link#'
 
@@ -57,7 +58,7 @@ function handleRDFType (formula, subj, pred, obj, why) {
     formula.typeCallback(formula, obj, why)
   }
 
-  var x = formula.classActions[obj.hashString()]
+  var x = formula.classActions[formula.id(obj)]
   var done = false
   if (x) {
     for (var i = 0; i < x.length; i++) {
@@ -74,9 +75,11 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
    * @constructor
    * @param {Array<String>} features - What sort of autmatic processing to do? Array of string
    * @param {Boolean} features.sameAs - Smush together A and B nodes whenever { A sameAs B }
+   * @param opts
+   * @param {DataFactory} opts.rdfFactory - The data factory that should be used by the store
    */
-  constructor (features) {
-    super()
+  constructor (features, opts = {}) {
+    super(undefined, undefined, undefined, undefined, opts)
 
     this.propertyActions = [] // Array of functions to call when getting statement with {s X o}
     // maps <uri> to [f(F,s,p,o),...]
@@ -98,8 +101,9 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     this.features = features || [
       'sameAs',
       'InverseFunctionalProperty',
-      'FunctionalProperty'
+      'FunctionalProperty',
     ]
+
     this.initPropertyActions(this.features)
   }
 
@@ -201,12 +205,12 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
 
   initPropertyActions (features) {
     // If the predicate is #type, use handleRDFType to create a typeCallback on the object
-    this.propertyActions['<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>'] =
+    this.propertyActions[this.rdfFactory.id(this.rdfFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'))] =
       [ handleRDFType ]
 
     // Assumption: these terms are not redirected @@fixme
     if (ArrayIndexOf(features, 'sameAs') >= 0) {
-      this.propertyActions['<http://www.w3.org/2002/07/owl#sameAs>'] = [
+      this.propertyActions[this.rdfFactory.id(this.rdfFactory.namedNode(`${owlNamespaceURI}sameAs`))] = [
         function (formula, subj, pred, obj, why) {
           // log.warn("Equating "+subj.uri+" sameAs "+obj.uri);  //@@
           formula.equate(subj, obj)
@@ -215,7 +219,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
       ] // sameAs -> equate & don't add to index
     }
     if (ArrayIndexOf(features, 'InverseFunctionalProperty') >= 0) {
-      this.classActions['<' + owlNamespaceURI + 'InverseFunctionalProperty>'] = [
+      this.classActions[this.rdfFactory.id(this.rdfFactory.namedNode(`${owlNamespaceURI}InverseFunctionalProperty`))] = [
         function (formula, subj, pred, obj, addFn) {
           // yes subj not pred!
           return formula.newPropertyAction(subj, handleIFP)
@@ -223,7 +227,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
       ] // IFP -> handleIFP, do add to index
     }
     if (ArrayIndexOf(features, 'FunctionalProperty') >= 0) {
-      this.classActions['<' + owlNamespaceURI + 'FunctionalProperty>'] = [
+      this.classActions[this.rdfFactory.id(this.rdfFactory.namedNode(`${owlNamespaceURI}FunctionalProperty`))] = [
         function (formula, subj, proj, obj, addFn) {
           return formula.newPropertyAction(subj, handleFP)
         }
@@ -247,9 +251,9 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
         for (i = 0; i < subj.length; i++) {
           this.add(subj[i])
         }
-      } else if (subj instanceof Statement) {
+      } else if (isStatement(subj)) {
         this.add(subj.subject, subj.predicate, subj.object, subj.why)
-      } else if (subj instanceof IndexedFormula) {
+      } else if (isStore(subj)) {
         this.add(subj.statements)
       }
       return this
@@ -258,7 +262,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     var st
     if (!why) {
       // system generated
-      why = this.fetcher ? this.fetcher.appNode : this.sym(defaultGraphURI)
+      why = this.fetcher ? this.fetcher.appNode : this.defaultGraph()
     }
     subj = Node.fromValue(subj)
     pred = Node.fromValue(pred)
@@ -268,7 +272,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
       this.predicateCallback(this, pred, why)
     }
     // Action return true if the statement does not need to be added
-    var predHash = this.canon(pred).hashString()
+    var predHash = this.id(this.canon(pred))
     actions = this.propertyActions[predHash] // Predicate hash
     var done = false
     if (actions) {
@@ -282,12 +286,16 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
       return null // @@better to return self in all cases?
     }
     // If we are tracking provenance, every thing should be loaded into the store
-    // if (done) return new Statement(subj, pred, obj, why)
+    // if (done) return this.rdfFactory.quad(subj, pred, obj, why)
     // Don't put it in the store
     // still return this statement for owl:sameAs input
-    var hash = [ this.canon(subj).hashString(), predHash,
-      this.canon(obj).hashString(), this.canon(why).hashString()]
-    st = new Statement(subj, pred, obj, why)
+    var hash = [
+      this.id(this.canon(subj)),
+      predHash,
+      this.id(this.canon(obj)),
+      this.id(this.canon(why))
+    ]
+    st = this.rdfFactory.quad(subj, pred, obj, why)
     for (i = 0; i < 4; i++) {
       var ix = this.index[i]
       var h = hash[i]
@@ -309,7 +317,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     if (!term) {
       return term
     }
-    var y = this.redirections[term.hashString()]
+    var y = this.redirections[this.id(term)]
     if (!y) {
       return term
     }
@@ -341,17 +349,17 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
       var term = [ st.subject, st.predicate, st.object, st.why ]
       var arrayContains = function (a, x) {
         for (var i = 0; i < a.length; i++) {
-          if (a[i].subject.sameTerm(x.subject) &&
-            a[i].predicate.sameTerm(x.predicate) &&
-            a[i].object.sameTerm(x.object) &&
-            a[i].why.sameTerm(x.why)) {
+          if (a[i].subject.equals(x.subject) &&
+            a[i].predicate.equals(x.predicate) &&
+            a[i].object.equals(x.object) &&
+            a[i].why.equals(x.why)) {
             return true
           }
         }
       }
       for (var p = 0; p < 4; p++) {
         var c = this.canon(term[p])
-        var h = c.hashString()
+        var h = this.id(c)
         if (!this.index[p][h]) {
           // throw new Error('No ' + name[p] + ' index for statement ' + st + '@' + st.why + origin)
         } else {
@@ -368,6 +376,27 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
 
   close () {
     return this
+  }
+
+  compareTerm(u1, u2) {
+    // Keep compatibility with downstream classOrder changes
+    if (Object.prototype.hasOwnProperty.call(u1, "compareTerm")) {
+      return u1.compareTerm(u2)
+    }
+
+    if (ClassOrder[u1.termType] < ClassOrder[u2.termType]) {
+      return -1
+    }
+    if (ClassOrder[u1.termType] > ClassOrder[u2.termType]) {
+      return +1
+    }
+    if (u1.value < u2.value) {
+      return -1
+    }
+    if (u1.value > u2.value) {
+      return +1
+    }
+    return 0
   }
 
   /**
@@ -409,7 +438,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     // 03-21-2010
     u1 = this.canon(u1)
     u2 = this.canon(u2)
-    var d = u1.compareTerm(u2)
+    var d = this.compareTerm(u1, u2)
     if (!d) {
       return true // No information in {a = a}
     }
@@ -478,7 +507,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
 
   newPropertyAction (pred, action) {
     // log.debug("newPropertyAction:  "+pred)
-    var hash = pred.hashString()
+    var hash = this.id(pred)
     if (!this.propertyActions[hash]) {
       this.propertyActions[hash] = []
     }
@@ -553,7 +582,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
       }
       return this
     }
-    if (st instanceof IndexedFormula) {
+    if (isStore(st)) {
       return this.remove(st.statements)
     }
     var sts = this.statementsMatching(st.subject, st.predicate, st.object,
@@ -610,7 +639,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     var term = [ st.subject, st.predicate, st.object, st.why ]
     for (var p = 0; p < 4; p++) {
       var c = this.canon(term[p])
-      var h = c.hashString()
+      var h = this.id(c)
       if (!this.index[p][h]) {
         // log.warn ("Statement removal: no index '+p+': "+st)
       } else {
@@ -632,9 +661,9 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
    * Replace big with small, obsoleted with obsoleting.
    */
   replaceWith (big, small) {
-    // log.debug("Replacing "+big+" with "+small) // @@
-    var oldhash = big.hashString()
-    var newhash = small.hashString()
+    // log.debug("Replacing "+big+" with "+small) // this.id(@@
+    var oldhash = this.id(big)
+    var newhash = this.id(small)
     var moveIndex = function (ix) {
       var oldlist = ix[oldhash]
       if (!oldlist) {
@@ -661,7 +690,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
       this.aliases[newhash].push(big) // Back link
       if (this.aliases[oldhash]) {
         for (i = 0; i < this.aliases[oldhash].length; i++) {
-          this.redirections[this.aliases[oldhash][i].hashString()] = small
+          this.redirections[this.id(this.aliases[oldhash][i])] = small
           this.aliases[newhash].push(this.aliases[oldhash][i])
         }
       }
@@ -681,7 +710,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
    * Return all equivalent URIs by which this is known
    */
   allAliases (x) {
-    var a = this.aliases[this.canon(x).hashString()] || []
+    var a = this.aliases[this.id(this.canon(x))] || []
     a.push(this.canon(x))
     return a
   }
@@ -690,7 +719,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
    * Compare by canonical URI as smushed
    */
   sameThings (x, y) {
-    if (x.sameTerm(y)) {
+    if (x.equals(y)) {
       return true
     }
     var x1 = this.canon(x)
@@ -740,7 +769,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
         wild.push(p)
       } else {
         given.push(p)
-        hash[p] = pattern[p].hashString()
+        hash[p] = this.id(pattern[p])
       }
     }
     if (given.length === 0) {
@@ -785,7 +814,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
 
       for (i = 0; i < check.length; i++) { // for each position to be checked
         p = check[i]
-        if (!this.canon(st[parts[p]]).sameTerm(pattern[p])) {
+        if (!this.canon(st[parts[p]]).equals(pattern[p])) {
           st = null
           break
         }
@@ -803,7 +832,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
    */
   uris (term) {
     var cterm = this.canon(term)
-    var terms = this.aliases[cterm.hashString()]
+    var terms = this.aliases[this.id(cterm)]
     if (!cterm.uri) return []
     var res = [ cterm.uri ]
     if (terms) {

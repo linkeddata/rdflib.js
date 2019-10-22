@@ -99,7 +99,7 @@ export function indexedFormulaQuery (myQuery, callback, fetcher, onDone) {
       if (formula.redirections[other]) {
         other = formula.redirections[other]
       }
-      if (actual.sameTerm(other) || (actual.uri && actual.uri === defaultDocumentURI)) { // Used to mean 'any graph' in a query
+      if (actual.equals(other) || (actual.uri && actual.uri === defaultDocumentURI)) { // Used to mean 'any graph' in a query
         return [[ [], null ]]
       }
       return []
@@ -309,10 +309,10 @@ export function indexedFormulaQuery (myQuery, callback, fetcher, onDone) {
       } else {
         t = bind(terms[i], bindings) // returns the RDF binding if bound, otherwise itself
         // if (terms[i]!=bind(terms[i],bindings) alert("Term: "+terms[i]+"Binding: "+bind(terms[i], bindings))
-        if (f.redirections[t.hashString()]) {
-          t = f.redirections[t.hashString()] // redirect
+        if (f.redirections[f.id(t)]) {
+          t = f.redirections[f.id(t)] // redirect
         }
-        termIndex = ind[i][t.hashString()]
+        termIndex = ind[i][f.id(t)]
 
         if (!termIndex) {
           item.index = []

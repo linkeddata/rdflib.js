@@ -38,17 +38,17 @@ Node.toJS = function toJS (term) {
     return term.elements.map(Node.toJS) // Array node (not standard RDFJS)
   }
   if (!term.datatype) return term // Objects remain objects
-  if (term.datatype.sameTerm(ns.xsd('boolean'))) {
+  if (term.datatype.equals(ns.xsd('boolean'))) {
     return term.value === '1'
   }
-  if (term.datatype.sameTerm(ns.xsd('dateTime')) ||
-    term.datatype.sameTerm(ns.xsd('date'))) {
+  if (term.datatype.equals(ns.xsd('dateTime')) ||
+    term.datatype.equals(ns.xsd('date'))) {
     return new Date(term.value)
   }
   if (
-    term.datatype.sameTerm(ns.xsd('integer')) ||
-    term.datatype.sameTerm(ns.xsd('float')) ||
-    term.datatype.sameTerm(ns.xsd('decimal'))
+    term.datatype.equals(ns.xsd('integer')) ||
+    term.datatype.equals(ns.xsd('float')) ||
+    term.datatype.equals(ns.xsd('decimal'))
   ) {
     let z = Number(term.value)
     return Number(term.value)

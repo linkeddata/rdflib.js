@@ -2,7 +2,7 @@
 import ClassOrder from './class-order'
 import NamedNode from './named-node'
 import Node from './node-internal'
-import XSD from './xsd'
+import XSD from './xsd-internal'
 
 export default class Literal extends Node {
   constructor (value, language, datatype) {
@@ -37,24 +37,27 @@ export default class Literal extends Node {
   set language (language) {
     this.lang = language || ''
   }
-  toNT () {
-    if (typeof this.value === 'number') {
-      return this.toString()
-    } else if (typeof this.value !== 'string') {
+  toNT() {
+    return Literal.toNT(this)
+  }
+  static toNT (literal) {
+    if (typeof literal.value === 'number') {
+      return '' + literal.value
+    } else if (typeof literal.value !== 'string') {
       throw new Error('Value of RDF literal is not string or number: ' +
-        this.value)
+        literal.value)
     }
-    var str = this.value
+    var str = literal.value
     str = str.replace(/\\/g, '\\\\')
     str = str.replace(/\"/g, '\\"')
     str = str.replace(/\n/g, '\\n')
     str = '"' + str + '"'
 
-    if (this.language) {
-      str += '@' + this.language
-    } else if (!this.datatype.equals(XSD.string)) {
+    if (literal.language) {
+      str += '@' + literal.language
+    } else if (!literal.datatype.equals(XSD.string)) {
       // Only add datatype if it's not a string
-      str += '^^' + this.datatype.toCanonical()
+      str += '^^' + literal.datatype.toCanonical()
     }
     return str
   }
