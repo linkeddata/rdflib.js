@@ -70,6 +70,7 @@ describe('Fetcher', () => {
         status: 200,
       })
       const options = {
+        req: store.rdfFactory.blankNode(),
         resource: store.rdfFactory.namedNode('https://example.com/resource/1')
       }
 

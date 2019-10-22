@@ -4,7 +4,6 @@ import { expect } from 'chai'
 import parse from '../../src/parse'
 import CanonicalDataFactory from '../../src/data-factory-internal'
 import DataFactory from '../../src/data-factory'
-import Node from '../../src/node'
 import defaultXSD from '../../src/xsd'
 
 describe('Parse', () => {

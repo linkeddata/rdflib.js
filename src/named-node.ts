@@ -1,17 +1,17 @@
 'use strict'
 import ClassOrder from './class-order'
 import Node from './node-internal'
-import { TermType } from './types';
-import { termValue } from "./utils/terms";
+import { NamedNodeTermType, TermType, TFNamedNode } from './types'
+import { termValue } from './utils/terms'
 
 /**
  * A named (IRI) RDF node
  */
-export default class NamedNode extends Node {
+export default class NamedNode extends Node implements TFNamedNode {
   static termType = TermType.NamedNode
 
   classOrder = ClassOrder.NamedNode
-  termType = TermType.NamedNode
+  termType: NamedNodeTermType = TermType.NamedNode
 
   /**
    * Create a named (IRI) RDF Node
@@ -39,7 +39,7 @@ export default class NamedNode extends Node {
    * Returns an $rdf node for the containing directory, ending in slash.
    */
   dir () {
-     var str = this.uri.split('#')[0]
+     var str = this.value.split('#')[0]
      var p = str.slice(0, -1).lastIndexOf('/')
      var q = str.indexOf('//')
      if ((q >= 0 && p < q + 2) || p < 0) return null
@@ -51,7 +51,7 @@ export default class NamedNode extends Node {
    * Contrast with the "origin" which does NOT have a trailing slash
    */
   site () {
-     var str = this.uri.split('#')[0]
+     var str = this.value.split('#')[0]
      var p = str.indexOf('//')
      if (p < 0) throw new Error('This URI does not have a web site part (origin)')
      var q = str.indexOf('/', p+2)
@@ -67,10 +67,10 @@ export default class NamedNode extends Node {
    * Removes everything from the # anchor tag.
    */
   doc () {
-    if (this.uri.indexOf('#') < 0) {
+    if (this.value.indexOf('#') < 0) {
       return this
     } else {
-      return new NamedNode(this.uri.split('#')[0])
+      return new NamedNode(this.value.split('#')[0])
     }
   }
 
@@ -78,12 +78,12 @@ export default class NamedNode extends Node {
    * Returns the URI including <brackets>
    */
   toString () {
-    return '<' + this.uri + '>'
+    return '<' + this.value + '>'
   }
 
   /** The local identifier with the document */
   id () {
-    return this.uri.split('#')[1]
+    return this.value.split('#')[1]
   }
 
   /**

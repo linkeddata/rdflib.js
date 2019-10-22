@@ -5,11 +5,11 @@ import CanonicalDataFactory from '../../src/data-factory-internal'
 import Literal from '../../src/literal'
 import NamedNode from '../../src/named-node'
 import Statement from '../../src/statement'
-import { arrayToStatements } from '../../src/util'
-import { isNamedNode, isStatement, isTerm } from '../../src/utils/terms'
+import { arrayToStatements } from '../../src/utils'
+import { isNamedNode, isStatement, isTFTerm } from '../../src/utils/terms'
 
 describe('util', () => {
-  describe('isTerm', () => {
+  describe('isTFTerm', () => {
     it('handles undefined', () => {
       expect(isNamedNode(undefined)).to.be.false()
     })
@@ -26,7 +26,7 @@ describe('util', () => {
     })
 
     it ('handles literals', () => {
-      expect(isTerm(new Literal('test'))).to.be.true()
+      expect(isTFTerm(new Literal('test'))).to.be.true()
     });
   })
 

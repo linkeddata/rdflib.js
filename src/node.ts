@@ -1,11 +1,10 @@
-'use strict'
-
 // This file attaches all functionality to Node
 // that would otherwise require circular dependencies.
+import { fromValue } from './collection'
 import Node from './node-internal'
-import Collection, { fromValue } from "./collection";
-
-export default Node
+import { TFTerm } from './types'
+import Namespace from './namespace'
+import { isCollection, isTFLiteral } from './utils/terms'
 
 /**
  * Creates an RDF Node from a native javascript value.
@@ -15,18 +14,23 @@ export default Node
  * @param value {Node|Date|String|Number|Boolean|Undefined}
  * @return {Node|Collection}
  */
-Node.fromValue = fromValue
+Node.fromValue = fromValue;
 
-import Namespace from './namespace'
+export default Node
+
 const ns = { xsd: Namespace('http://www.w3.org/2001/XMLSchema#') }
 
-Node.toJS = function toJS (term) {
-  if (term.elements) {
+/**
+ * Gets the javascript object equivalent to a node
+ * @param term The RDF node
+ */
+Node.toJS = function (term: TFTerm): TFTerm | boolean | number | Date | string | any[] {
+  if (isCollection(term)) {
     return term.elements.map(Node.toJS) // Array node (not standard RDFJS)
   }
-  if (!term.datatype) return term // Objects remain objects
+  if (!isTFLiteral(term)) return term
   if (term.datatype.equals(ns.xsd('boolean'))) {
-    return term.value === '1'
+    return term.value === '1' || term.value === 'true'
   }
   if (term.datatype.equals(ns.xsd('dateTime')) ||
     term.datatype.equals(ns.xsd('date'))) {

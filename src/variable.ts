@@ -1,25 +1,23 @@
-'use strict'
 import ClassOrder from './class-order'
 import Node from './node-internal'
-import { TermType } from "./types";
+import { TermType, TFVariable, VariableTermType } from './types'
 import * as Uri from './uri'
 
 /**
- * Variables are placeholders used in patterns to be matched.
- * In cwm they are symbols which are the formula's list of quantified variables.
- * In sparql they are not visibly URIs.  Here we compromise, by having
- * a common special base URI for variables. Their names are uris,
- * but the ? notation has an implicit base uri of 'varid:'
- * @class Variable
- */
-export default class Variable extends Node {
+* Variables are placeholders used in patterns to be matched.
+* In cwm they are symbols which are the formula's list of quantified variables.
+* In sparql they are not visibly URIs.  Here we compromise, by having
+* a common special base URI for variables. Their names are uris,
+* but the ? notation has an implicit base uri of 'varid:'
+*/
+export default class Variable extends Node implements TFVariable {
   static termType = TermType.Variable
 
   /** The base string for a variable's name */
   base = 'varid:'
   classOrder = ClassOrder.Variable
   isVar = 1
-  termType = TermType.Variable
+  termType: VariableTermType = TermType.Variable
   /** The unique identifier of this variable */
   uri: string
 
@@ -29,6 +27,7 @@ export default class Variable extends Node {
    */
   constructor (name = '') {
     super(name)
+    this.base = 'varid:'
     this.uri = Uri.join(name, this.base)
   }
 

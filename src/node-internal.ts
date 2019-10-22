@@ -1,3 +1,5 @@
+import { ValueType, Bindings, TFTerm, FromValueReturns } from './types'
+
 /**
  * The superclass of all RDF Statement objects, that is
  * NamedNode, Literal, BlankNode, etc.
@@ -6,23 +8,23 @@
  * @link https://rdf.js.org/data-model-spec/#term-interface
  * @class Node
  */
-export default class Node {
-  static fromValue: <T = unknown>(value: any) => T;
+export default abstract class Node {
+  // Specified in './node.ts' to prevent circular dependency
+  static fromValue: <T extends FromValueReturns>(value: ValueType) => T
+  // Specified in './node.ts' to prevent circular dependency
   static toJS: (term: any) => Date | Number | string | boolean | object | Array<Date | Number | string | boolean | object>;
-
   /**
-   * The type of node
+   * The nodes in this collection
    */
+  elements!: Node[];
+
+  /** The type of node */
   termType!: string;
 
-  /**
-   * The class order for this node
-   */
+  /** The class order for this node */
   classOrder!: number;
 
-  /**
-   * The node's value
-   */
+  /** The node's value */
   value: string;
 
   constructor(value: string) {
@@ -33,16 +35,16 @@ export default class Node {
    * Creates the substituted node for this one, according to the specified bindings
    * @param bindings - Bindings of identifiers to nodes
    */
-  substitute (bindings): Node | any {
+  substitute <T extends Node = Node>(bindings: Bindings): T {
     console.log('@@@ node substitute' + this)
-    return this
+    return this as unknown as T
   }
 
   /**
    * Compares this node with another
    * @param other - The other node
    */
-  compareTerm (other): number {
+  compareTerm (other: Node): number {
     if (this.classOrder < other.classOrder) {
       return -1
     }
@@ -62,7 +64,7 @@ export default class Node {
    * Compares whether the two nodes are equal
    * @param other The other node
    */
-  equals (other): boolean {
+  equals (other: TFTerm): boolean {
     if (!other) {
       return false
     }
@@ -82,8 +84,9 @@ export default class Node {
    * Compares whether this node is the same as the other one
    * @param other - Another node
    */
-  sameTerm (other): boolean {
+  sameTerm(other: Node): boolean {
     return this.equals(other)
+
   }
 
   /**

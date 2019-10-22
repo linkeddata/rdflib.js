@@ -1,8 +1,7 @@
-import { isNamedNode } from '../src/util'
+import { isTFNamedNode } from '../src/utils'
 
 const log = require('./log')
 const N3Parser = require('./n3parser')
-const NamedNode = require('./named-node')
 const Namespace = require('./namespace')
 const rdfParse = require('./parse')
 const parseRDFaDOM = require('./rdfaparser').parseRDFaDOM
@@ -668,7 +667,7 @@ class Fetcher {
       userCallback = p2
     } else if (typeof p2 === 'undefined') { // original calling signature
       // referingTerm = undefined
-    } else if (isNamedNode(p2)) {
+    } else if (isTFNamedNode(p2)) {
       // referingTerm = p2
       options = {referingTerm: p2}
     } else {

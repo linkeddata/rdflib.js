@@ -12,8 +12,12 @@ var alert = alert || console.log
 
 import NamedNode from './named-node'
 
-export function docpart (uri) {
-  var i
+/**
+ * Gets the document part of an URI
+ * @param uri The URI
+ */
+export function docpart(uri: string): string {
+  var i: number
   i = uri.indexOf('#')
   if (i < 0) {
     return uri
@@ -22,11 +26,19 @@ export function docpart (uri) {
   }
 }
 
-export function document (x) {
-  return new NamedNode(docpart(x.uri))
+/**
+ * Gets the document part of an URI as a named node
+ * @param x - The URI
+ */
+export function document(x: string): NamedNode {
+  return new NamedNode(docpart(x))
 }
 
-export function hostpart (u) {
+/**
+ * Gets the hostname in an URI
+ * @param u The URI
+ */
+export function hostpart(u: string): string {
   var m = /[^\/]*\/\/([^\/]*)\//.exec(u)
   if (m) {
     return m[1]
@@ -35,7 +47,12 @@ export function hostpart (u) {
   }
 }
 
-export function join (given, base) {
+/**
+ * Joins an URI with a base
+ * @param given - The relative part
+ * @param base - The base URI
+ */
+export function join(given: string, base: string): string {
   var baseColon, baseScheme, baseSingle
   var colon, lastSlash, path
   var baseHash = base.indexOf('#')
@@ -103,9 +120,12 @@ export function join (given, base) {
   return base.slice(0, baseSingle) + path
 }
 
-export function protocol (uri) {
-  var i
-  i = uri.indexOf(':')
+/**
+ * Gets the protocol part of an URI
+ * @param uri The URI
+ */
+export function protocol(uri: string): string | null {
+  const i = uri.indexOf(':')
   if (i < 0) {
     return null
   } else {
@@ -113,8 +133,25 @@ export function protocol (uri) {
   }
 }
 
-export function refTo (base, uri) {
-  var c, i, k, l, len, len1, n, o, p, q, ref, ref1, s
+/**
+ * Gets a relative uri
+ * @param base The base URI
+ * @param uri The absolute URI
+ */
+export function refTo(base: string, uri: string): string {
+  var c: string,
+      i: number,
+      k: number,
+      l: number,
+      len: number,
+      len1: number,
+      n: number,
+      o: number,
+      p: number,
+      q: number,
+      ref: string,
+      ref1: number,
+      s: string
   var commonHost = new RegExp('^[-_a-zA-Z0-9.]+:(//[^/]*)?/[^/]*$')
   if (!base) {
     return uri
@@ -123,7 +160,7 @@ export function refTo (base, uri) {
     return ''
   }
   for (i = o = 0, len = uri.length; o < len; i = ++o) {
-    c = uri[i]
+    const c = uri[i]
     if (c !== base[i]) {
       break
     }

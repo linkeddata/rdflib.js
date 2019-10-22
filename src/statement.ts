@@ -1,29 +1,33 @@
-import BlankNode from './blank-node'
-import Collection from './collection'
-import DefaultGraph from './default-graph'
-import Empty from './empty'
+import { defaultGraph } from './data-factory-internal'
 import NamedNode from './named-node'
 import Node from './node-internal'
-import IndexedFormula from './store'
-import Variable from './variable'
+import {
+  Bindings,
+  GraphType,
+  ObjectType,
+  PredicateType,
+  SubjectType,
+  TermType,
+  TFQuad,
+} from './types'
+import Literal from './literal'
 
 /** A Statement represents an RDF Triple or Quad. */
-export default class Statement {
+export default class Statement implements TFQuad<SubjectType, PredicateType, ObjectType, GraphType> {
   /** The subject of the triple.  What the Statement is about. */
-  subject: NamedNode | BlankNode | Variable
+  subject: SubjectType
 
   /** The relationship which is asserted between the subject and object */
-  predicate: NamedNode | Variable
+  predicate: PredicateType
 
   /** The thing or data value which is asserted to be related to the subject */
-  object: NamedNode | BlankNode | Collection | Empty | Variable
+  object: ObjectType
 
   /**
    * The graph param is a named node of the document in which the triple when
    *  it is stored on the web.
    */
-  graph: NamedNode | DefaultGraph | IndexedFormula
-
+  graph: GraphType
 
   /**
    * Construct a new statement
@@ -42,11 +46,16 @@ export default class Statement {
    *  and give the document you are patching. In future, we may have a more
    *  powerful update() which can update more than one document.
    */
-  constructor (subject, predicate, object, graph) {
+  constructor (
+    subject: SubjectType,
+    predicate: PredicateType,
+    object: ObjectType,
+    graph?: GraphType,
+  ) {
     this.subject = Node.fromValue(subject)
     this.predicate = Node.fromValue(predicate)
     this.object = Node.fromValue(object)
-    this.graph = graph  // property currently used by rdflib
+    this.graph = graph == undefined ? defaultGraph() : graph  // property currently used by rdflib
   }
 
   /** @deprecated use {graph} instead */
@@ -62,21 +71,26 @@ export default class Statement {
    * Checks whether two statements are the same
    * @param other - The other statement
    */
-  equals (other): boolean {
-    return other.subject.equals(this.subject) && other.predicate.equals(this.predicate) &&
-      other.object.equals(this.object) && other.graph.equals(this.graph)
+  equals (other: TFQuad): boolean {
+    return (
+      other.subject.equals(this.subject) &&
+      other.predicate.equals(this.predicate) &&
+      other.object.equals(this.object as Literal) &&
+      other.graph.equals(this.graph)
+    )
   }
 
   /**
    * Creates a statement with the bindings substituted
-   * @param bindings - The bindings
+   * @param bindings The bindings
    */
-  substitute (bindings): Statement {
+  substitute (bindings: Bindings): Statement {
     const y = new Statement(
       this.subject.substitute(bindings),
       this.predicate.substitute(bindings),
       this.object.substitute(bindings),
-      this.graph.substitute(bindings)) // 2016
+      this.graph.substitute<GraphType>(bindings),
+    ) // 2016
     console.log('@@@ statement substitute:' + y)
     return y
   }
@@ -88,7 +102,7 @@ export default class Statement {
       this.predicate.toCanonical(),
       this.object.toCanonical()
     ]
-    if (this.graph && this.graph.termType !== 'DefaultGraph') {
+    if (this.graph && this.graph.termType !== TermType.DefaultGraph) {
         terms.push(this.graph.toCanonical())
     }
     return terms.join(' ') + ' .'

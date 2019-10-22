@@ -1,27 +1,46 @@
-'use strict'
 import ClassOrder from './class-order'
 import NamedNode from './named-node'
 import Node from './node-internal'
-import { TermType } from './types';
+import {
+  LiteralTermType,
+  TermType,
+  TFLiteral,
+  TFTerm,
+  ValueType
+} from './types'
+import { isTFLiteral } from './utils/terms'
 import XSD from './xsd-internal'
 
 /**
  * An RDF literal, containing some value which isn't expressed as an IRI.
  * @link https://rdf.js.org/data-model-spec/#literal-interface
  */
-export default class Literal extends Node {
+// @ts-ignore Incorrectly extends due to fromValue()
+export default class Literal extends Node implements TFLiteral {
   static termType = TermType.Literal
 
   classOrder = ClassOrder.Literal
-  datatype = XSD.string
+
+  /**
+   * The literal's datatype as a named node
+   */
+  datatype: NamedNode = XSD.string
+
   isVar = 0
+
   /**
    * The language for the literal
    */
   language: string = ''
-  termType = TermType.Literal
 
+  termType: LiteralTermType = TermType.Literal
 
+  /**
+   * Initializes a literal
+   * @param value - The literal's lexical value
+   * @param language - The language for the literal. Defaults to ''.
+   * @param datatype - The literal's datatype as a named node. Defaults to xsd:string.
+   */
   constructor (value: string, language?: string | null, datatype?) {
     super(value)
 
@@ -46,31 +65,31 @@ export default class Literal extends Node {
    * Gets whether two literals are the same
    * @param other The other statement
    */
-  equals (other: any): boolean {
+  equals (other: TFTerm): boolean {
     if (!other) {
       return false
     }
 
     return (this.termType === other.termType) &&
       (this.value === other.value) &&
-      (this.language === other.language) &&
-      ((!this.datatype && !other.datatype) ||
-        (this.datatype && this.datatype.equals(other.datatype)))
+      (this.language === (other as Literal).language) &&
+      ((!this.datatype && !(other as Literal).datatype) ||
+        (this.datatype && this.datatype.equals((other as Literal).datatype)))
   }
 
   /**
    * The language for the literal
    * @deprecated use {language} instead
    */
-  get lang () {
+  get lang (): string {
     return this.language
   }
 
-  set lang (language) {
+  set lang (language: string) {
     this.language = language || ''
   }
 
-  toNT() {
+  toNT(): string {
     return Literal.toNT(this)
   }
 
@@ -103,7 +122,7 @@ export default class Literal extends Node {
 
   /**
    * Builds a literal node from a boolean value
-   * @param value {Boolean} The value
+   * @param value - The value
    */
   static fromBoolean (value: boolean): Literal {
     let strValue = value ? '1' : '0'
@@ -129,13 +148,13 @@ export default class Literal extends Node {
 
   /**
    * Builds a literal node from a number value
-   * @param value The value
+   * @param value - The value
    */
   static fromNumber(value: number): Literal {
     if (typeof value !== 'number') {
       throw new TypeError('Invalid argument to Literal.fromNumber()')
     }
-    let datatype
+    let datatype: NamedNode
     const strValue = value.toString()
     if (strValue.indexOf('e') < 0 && Math.abs(value) <= Number.MAX_SAFE_INTEGER) {
       datatype = Number.isInteger(value) ? XSD.integer : XSD.decimal
@@ -147,29 +166,26 @@ export default class Literal extends Node {
 
   /**
    * Builds a literal node from an input value
-   * @param value The input value
+   * @param value - The input value
    */
-  static fromValue (value) {
-    if (typeof value === 'undefined' || value === null) {
-      return value
-    }
-    if (typeof value === 'object' && value.termType) {  // this is a Node instance
-      return value
+  static fromValue<T extends Literal>(value: ValueType): T {
+    if (isTFLiteral(value)) {
+      return value as T
     }
     switch (typeof value) {
       case 'object':
         if (value instanceof Date) {
-          return Literal.fromDate(value)
+          return Literal.fromDate(value) as T
         }
       case 'boolean':
-        return Literal.fromBoolean(value)
+        return Literal.fromBoolean(value as boolean) as T
       case 'number':
-        return Literal.fromNumber(value)
+        return Literal.fromNumber(value as number) as T
       case 'string':
-        return new Literal(value)
+        return new Literal(value) as T
     }
+
     throw new Error("Can't make literal from " + value + ' of type ' +
       typeof value)
-
   }
 }

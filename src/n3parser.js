@@ -5,7 +5,7 @@
 *
 **/
 import * as Uri from './uri'
-import { ArrayIndexOf } from './util'
+import { ArrayIndexOf } from './utils'
 
 export default (function () {
 

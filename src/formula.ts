@@ -1,4 +1,3 @@
-'use strict'
 import BlankNode from './blank-node'
 import ClassOrder from './class-order'
 import Collection from './collection'
@@ -6,18 +5,50 @@ import CanonicalDataFactory from './data-factory-internal'
 import log from './log'
 import NamedNode from './named-node'
 import Namespace from './namespace'
-import Node from './node'
+import Node from './node-internal'
 import Serializer from './serialize'
 import Statement from './statement'
-import { TermType } from "./types";
-import { appliedFactoryMethods, arrayToStatements } from './util'
+import {
+  Bindings,
+  TermType,
+  TFBlankNode,
+  TFGraph,
+  TFObject,
+  TFPredicate,
+  TFQuad,
+  TFSubject,
+  TFTerm
+} from './types'
 import { isStatement } from './utils/terms'
 import Variable from './variable'
+import {
+  DataFactory,
+  IdentityFactory,
+  Indexable,
+  TFIDFactoryTypes
+} from './data-factory-type'
+import { appliedFactoryMethods, arrayToStatements } from './utils'
 
-/** @module formula */
+export function isFormula<T>(value: T | TFTerm): value is Formula {
+  return (value as Node).termType === TermType.Graph
+}
 
 export interface FormulaOpts {
-  rdfFactory?: any
+  dataCallback?: (q: TFQuad) => void
+  rdfArrayRemove?: (arr: TFQuad[], q: TFQuad) => void
+  rdfFactory?: IdentityFactory & DataFactory
+}
+
+interface BooleanMap {
+  [uri: string]: boolean;
+}
+
+interface MembersMap {
+  [uri: string]: TFQuad;
+}
+
+interface UriMap {
+  [uri: string]: string;
 }
 
 /**
@@ -27,22 +58,35 @@ export default class Formula extends Node {
   static termType = TermType.Graph
 
   classOrder = ClassOrder.Graph
+
   /** The additional constraints */
   constraints: ReadonlyArray<any>;
+
   /**
    * The accompanying fetcher instance.
    *
    * Is set by the fetcher when initialized.
    */
   fetcher?: any
-  initBindings: { [id: string]: Node; }
+
+  initBindings: ReadonlyArray<any>
+
   isVar = 0
+
+  /**
+   * A namespace for the specified namespace's URI
+   * @param nsuri The URI for the namespace
+   */
   ns = Namespace
-  optional: any[]
+
+  optional: ReadonlyArray<any>
+
   /** The factory used to generate statements and terms */
   rdfFactory: any
+
   /** The stored statements */
-  statements: Statement[];
+  statements: TFQuad[];
+
   termType = TermType.Graph
 
   /**
@@ -53,9 +97,15 @@ export default class Formula extends Node {
    * @param initBindings - initial bindings used in Query
    * @param optional - optional
    * @param opts
-   * @param {DataFactory} opts.rdfFactory - The rdf factory that should be used by the store
+   * @param opts.rdfFactory - The rdf factory that should be used by the store
 */
-  constructor (statements?: Statement[], constraints?, initBindings?, optional?, opts: Partial<FormulaOpts> = {}) {
+  constructor (
+    statements?: TFQuad[],
+    constraints?: ReadonlyArray<any>,
+    initBindings?: ReadonlyArray<any>,
+    optional?: ReadonlyArray<any>,
+    opts: FormulaOpts = {}
+    ) {
     super('')
     this.termType = Formula.termType
     this.statements = statements || []
@@ -69,25 +119,32 @@ export default class Formula extends Node {
       this[factoryMethod] = (...args) => this.rdfFactory[factoryMethod](...args)
     }
   }
+
   /** Add a statement from its parts
-   * @param {Node} subject - the first part of the statement
-   * @param {Node} predicate - the second part of the statement
-   * @param {Node} object - the third part of the statement
-   * @param {Node} graph - the last part of the statement
+   * @param subject - the first part of the statement
+   * @param predicate - the second part of the statement
+   * @param object - the third part of the statement
+   * @param graph - the last part of the statement
    */
-  add (subject, predicate, object, graph) {
-    return this.statements.push(this.rdfFactory.quad(subject, predicate, object, graph))
+  add (
+    subject: TFSubject,
+    predicate: TFPredicate,
+    object: TFObject,
+    graph?: TFGraph
+  ): number {
+    return this.statements
+      .push(this.rdfFactory.quad(subject, predicate, object, graph))
   }
 
   /** Add a statment object
    * @param {Statement} statement - An existing constructed statement to add
    */
-  addStatement (statement) {
+  addStatement (statement: TFQuad): number {
     return this.statements.push(statement)
   }
 
   /** @deprecated use {this.rdfFactory.blankNode} instead */
-  bnode (id) {
+  bnode (id?: string): TFBlankNode {
     return this.rdfFactory.blankNode(id)
   }
 
@@ -95,7 +152,7 @@ export default class Formula extends Node {
    * Adds all the statements to this formula
    * @param statements - A collection of statements
    */
-  addAll (statements) {
+  addAll (statements: TFQuad[]): void {
     statements.forEach(quad => {
       this.add(quad.subject, quad.predicate, quad.object, quad.graph)
     })
@@ -107,14 +164,19 @@ export default class Formula extends Node {
   * any(me, knows, null, null)  - a person I know accoring to anything in store .
   * any(null, knows, me, null)  - a person who know me accoring to anything in store .
   *
-  * @param {Node} s - A node to search for as subject, or if null, a wildcard
-  * @param {Node} p - A node to search for as predicate, or if null, a wildcard
-  * @param {Node} o - A node to search for as object, or if null, a wildcard
-  * @param {Node} g - A node to search for as graph, or if null, a wildcard
-  * @returns {Node} - A node which match the wildcard position, or null
+  * @param s - A node to search for as subject, or if null, a wildcard
+  * @param p - A node to search for as predicate, or if null, a wildcard
+  * @param o - A node to search for as object, or if null, a wildcard
+  * @param g - A node to search for as graph, or if null, a wildcard
+  * @returns A node which match the wildcard position, or null
   */
-  any (s, p, o, g): any | undefined {
-    let st = this.anyStatementMatching(s, p, o, g)
+  any(
+    s?: TFSubject | null,
+    p?: TFPredicate | null,
+    o?: TFObject | null,
+    g?: TFGraph | null
+  ): TFTerm | null | undefined {
+    const st = this.anyStatementMatching(s, p, o, g)
     if (st == null) {
       return void 0
     } else if (s == null) {
@@ -130,28 +192,52 @@ export default class Formula extends Node {
 
   /**
    * Gets the value of a node that matches the specified pattern
+   * @param s The subject
+   * @param p The predicate
+   * @param o The object
+   * @param g The graph that contains the statement
    */
-  anyValue (s, p, o, g) {
-    let y = this.any(s, p, o, g)
+  anyValue(
+    s?: TFSubject | null,
+    p?: TFPredicate | null,
+    o?: TFObject | null,
+    g?: TFGraph | null
+  ): string | void {
+    const y = this.any(s, p, o, g)
     return y ? y.value : void 0
   }
 
   /**
    * Gets the first JavaScript object equivalent to a node based on the specified pattern
+   * @param s The subject
+   * @param p The predicate
+   * @param o The object
+   * @param g The graph that contains the statement
    */
-  anyJS (s, p, o, g) {
-    let y = this.any(s, p, o, g)
+  anyJS(
+    s?: TFSubject | null,
+    p?: TFPredicate | null,
+    o?: TFObject | null,
+    g?: TFGraph | null
+  ): any {
+    const y = this.any(s, p, o, g)
     return y ? Node.toJS(y) : void 0
   }
 
   /**
    * Gets the first statement that matches the specified pattern
    */
-  anyStatementMatching (subj, pred, obj, why) {
-    let x = this.statementsMatching(subj, pred, obj, why, true)
+  anyStatementMatching(
+    s?: TFSubject | null,
+    p?: TFPredicate | null,
+    o?: TFObject | null,
+    g?: TFGraph | null
+  ): TFQuad | undefined {
+    let x = this.statementsMatching(s, p, o, g, true)
     if (!x || x.length === 0) {
       return undefined
     }
+
     return x[0]
   }
 
@@ -160,7 +246,7 @@ export default class Formula extends Node {
    *
    * Falls back to the rdflib hashString implementation if the given factory doesn't support id.
    */
-  id (term): string | number {
+  id (term: TFIDFactoryTypes): Indexable {
     return this.rdfFactory.id(term)
   }
 
@@ -168,20 +254,32 @@ export default class Formula extends Node {
    * Search the Store
    * This is really a teaching method as to do this properly you would use IndexedFormula
    *
-   * @param {Node} subj - A node to search for as subject, or if null, a wildcard
-   * @param {Node} pred - A node to search for as predicate, or if null, a wildcard
-   * @param {Node} obj - A node to search for as object, or if null, a wildcard
-   * @param {Node} graph - A node to search for as graph, or if null, a wildcard
-   * @param {Boolean} justOne - flag - stop when found one rather than get all of them?
+   * @param s - A node to search for as subject, or if null, a wildcard
+   * @param p - A node to search for as predicate, or if null, a wildcard
+   * @param o - A node to search for as object, or if null, a wildcard
+   * @param g - A node to search for as graph, or if null, a wildcard
+   * @param justOne - flag - stop when found one rather than get all of them?
    * @returns {Array<Node>} - An array of nodes which match the wildcard position
    */
-  statementsMatching (subj?, pred?, obj?, graph?, justOne = false): Statement[] {
-    return this.statements.filter(st =>
-      (!subj || subj.equals(st.subject)) &&
-      (!pred || pred.equals(st.predicate)) &&
-      (!obj || subj.equals(st.object)) &&
-      (!graph || graph.equals(st.subject))
-     )
+  statementsMatching<JustOne extends boolean = false>(
+    s?: TFSubject | null,
+    p?: TFPredicate | null,
+    o?: TFObject | null,
+    g?: TFGraph | null,
+    justOne?: boolean
+  ): TFQuad[] {
+    const sts = this.statements.filter(st =>
+      (!s || s.equals(st.subject)) &&
+      (!p || p.equals(st.predicate)) &&
+      (!o || o.equals(st.object)) &&
+      (!g || g.equals(st.subject))
+    )
+
+    if (justOne) {
+      return sts.length === 0 ? [] : [sts[0]]
+    }
+
+    return sts
   }
 
   /**
@@ -237,14 +335,19 @@ export default class Formula extends Node {
   * each(me, knows, null, null)  - people I know accoring to anything in store .
   * each(null, knows, me, null)  - people who know me accoring to anything in store .
   *
-  * @param {Node} s - A node to search for as subject, or if null, a wildcard
-  * @param {Node} p - A node to search for as predicate, or if null, a wildcard
-  * @param {Node} o - A node to search for as object, or if null, a wildcard
-  * @param {Node} g - A node to search for as graph, or if null, a wildcard
+  * @param s - A node to search for as subject, or if null, a wildcard
+  * @param p - A node to search for as predicate, or if null, a wildcard
+  * @param o - A node to search for as object, or if null, a wildcard
+  * @param g - A node to search for as graph, or if null, a wildcard
   * @returns {Array<Node>} - An array of nodes which match the wildcard position
   */
-  each (s?: any | null, p?: any | null, o?: any | null, g?: any | null) {
-    const results: any[] = []
+  each(
+    s?: TFSubject | null,
+    p?: TFPredicate | null,
+    o?: TFObject | null,
+    g?: TFGraph | null
+  ): TFTerm[] {
+    const results: TFTerm[] = []
     let sts = this.statementsMatching(s, p, o, g, false)
     if (s == null) {
       for (let i = 0, len = sts.length; i < len; i++) {
@@ -288,20 +391,20 @@ export default class Formula extends Node {
    * @return a hash of URIs
    */
   findMembersNT (thisClass) {
-    let len2
-    let len4
-    let m
-    let members
-    let pred
+    let len2: number
+    let len4: number
+    let m: number
+    let members: MembersMap
+    let pred: TFPredicate
     let ref
-    let ref1
-    let ref2
-    let ref3
-    let ref4
-    let ref5
+    let ref1: TFQuad[]
+    let ref2: TFTerm[]
+    let ref3: TFQuad[]
+    let ref4: TFTerm[]
+    let ref5: TFQuad[]
     let seeds
     let st
-    let u
+    let u: number
     seeds = {}
     seeds[thisClass.toNT()] = true
     members = {}
@@ -319,7 +422,7 @@ export default class Formula extends Node {
         this.rdfFactory.namedNode('http://www.w3.org/2000/01/rdf-schema#domain'),
         this.fromNT(t))
       for (let l = 0, len1 = ref2.length; l < len1; l++) {
-        pred = ref2[l]
+        pred = ref2[l] as TFPredicate
         ref3 = this.statementsMatching(void 0, pred)
         for (m = 0, len2 = ref3.length; m < len2; m++) {
           st = ref3[m]
@@ -330,7 +433,7 @@ export default class Formula extends Node {
         this.rdfFactory.namedNode('http://www.w3.org/2000/01/rdf-schema#range'),
         this.fromNT(t))
       for (let q = 0, len3 = ref4.length; q < len3; q++) {
-        pred = ref4[q]
+        pred = ref4[q] as TFPredicate
         ref5 = this.statementsMatching(void 0, pred)
         for (u = 0, len4 = ref5.length; u < len4; u++) {
           st = ref5[u]
@@ -351,7 +454,7 @@ export default class Formula extends Node {
    * Get all the Classes of which we can RDFS-infer the subject is a member
    * @param subject - A named node
    */
-  findMemberURIs (subject) {
+  findMemberURIs(subject: Node): UriMap {
     return this.NTtoURI(this.findMembersNT(subject))
   }
 
@@ -362,7 +465,7 @@ export default class Formula extends Node {
    * Does NOT return terms, returns URI strings.
    * We use NT representations in this version because they handle blank nodes.
    */
-  findSubClassesNT (subject) {
+  findSubClassesNT(subject: Node): { [uri: string]: boolean } {
     let types = {}
     types[subject.toNT()] = true
     return this.transitiveClosure(
@@ -380,7 +483,7 @@ export default class Formula extends Node {
    * Does NOT return terms, returns URI strings.
    * We use NT representations in this version because they handle blank nodes.
    */
-  findSuperClassesNT (subject) {
+  findSuperClassesNT(subject: Node): { [uri: string]: boolean } {
     let types = {}
     types[subject.toNT()] = true
     return this.transitiveClosure(types,
@@ -443,22 +546,36 @@ export default class Formula extends Node {
     )
   }
 
-  findTypeURIs (subject) {
+  /**
+   * Get all the Classes of which we can RDFS-infer the subject is a member
+   * todo: This will loop is there is a class subclass loop (Sublass loops are
+   * not illegal)
+   * Returns a hash table where key is NT of type and value is statement why we
+   * think so.
+   * Does NOT return terms, returns URI strings.
+   * We use NT representations in this version because they handle blank nodes.
+   * @param subject - A subject node
+   */
+  findTypeURIs(subject: TFSubject): UriMap {
     return this.NTtoURI(this.findTypesNT(subject))
   }
 
   /** Trace statements which connect directly, or through bnodes
    *
-   * @param {NamedNode} subject - The node to start looking for statments
-   * @param {NamedNode} doc - The document to be searched, or null to search all documents
+   * @param subject - The node to start looking for statments
+   * @param doc - The document to be searched, or null to search all documents
    * @returns an array of statements, duplicate statements are suppresssed.
    */
-  connectedStatements (subject, doc, excludePredicateURIs): Statement[] {
+  connectedStatements(
+    subject: TFSubject,
+    doc: TFGraph,
+    excludePredicateURIs?: ReadonlyArray<string>
+  ): TFQuad[] {
     excludePredicateURIs = excludePredicateURIs || []
     let todo = [subject]
     let done: { [k: string]: boolean } = {}
     let doneArcs: { [k: string]: boolean }  = {}
-    let result: Statement[] = []
+    let result: TFQuad[] = []
     let self = this
     let follow = function (x) {
       let queue = function (x) {
@@ -469,15 +586,15 @@ export default class Formula extends Node {
       }
       let sts = self.statementsMatching(null, null, x, doc)
         .concat(self.statementsMatching(x, null, null, doc))
-      sts = sts.filter(function (st) {
-        if (excludePredicateURIs[st.predicate.uri]) return false
-        let hash = st.toNT()
+      sts = sts.filter(function (st): boolean {
+        if (excludePredicateURIs![st.predicate.value]) return false
+        let hash = (st as Statement).toNT()
         if (doneArcs[hash]) return false
         doneArcs[hash] = true
         return true
       }
       )
-      sts.forEach(function (st, i) {
+      sts.forEach(function (st) {
         queue(st.subject)
         queue(st.object)
       })
@@ -490,7 +607,12 @@ export default class Formula extends Node {
     return result
   }
 
-  formula () {
+  /**
+   * Creates a new empty formula
+   *
+   * @param _features - Not applicable, but necessary for typing to pass
+   */
+  formula(_features?: ReadonlyArray<string>): Formula {
     return new Formula()
   }
 
@@ -546,7 +668,7 @@ export default class Formula extends Node {
         }
         return true
       } else if (isStatement(s)) {
-        return this.holds(s.subject, s.predicate, s.object, s.why)
+        return this.holds(s.subject, s.predicate, s.object, s.graph)
       } else if (s.statements) {
         return this.holds(s.statements)
       }
@@ -646,13 +768,14 @@ export default class Formula extends Node {
    * Creates a new formula with the substituting bindings applied
    * @param bindings - The bindings to substitute
    */
-  substitute (bindings) {
+  //@ts-ignore signature not compatible with Node
+  substitute(bindings: Bindings): Formula {
     let statementsCopy = this.statements.map(function (ea) {
-      return ea.substitute(bindings)
+      return (ea as Statement).substitute(bindings)
     })
     console.log('Formula subs statmnts:' + statementsCopy)
     const y = new Formula()
-    y.addAll(statementsCopy)
+    y.addAll(statementsCopy as TFQuad[])
     console.log('indexed-form subs formula:' + y)
     return y
   }
@@ -669,12 +792,22 @@ export default class Formula extends Node {
 
   /**
    * Gets the node matching the specified pattern. Throws when no match could be made.
+   * @param s - The subject
+   * @param p - The predicate
+   * @param o - The object
+   * @param g - The graph that contains the statement
    */
-  the (s, p, o, g) {
+  the (
+    s?: TFSubject | null,
+    p?: TFPredicate | null,
+    o?: TFObject | null,
+    g?: TFGraph | null
+  ): TFTerm | null | undefined {
     let x = this.any(s, p, o, g)
     if (x == null) {
       log.error('No value found for the() {' + s + ' ' + p + ' ' + o + '}.')
     }
+
     return x
   }
 
@@ -682,11 +815,17 @@ export default class Formula extends Node {
    * RDFS Inference
    * These are hand-written implementations of a backward-chaining reasoner
    * over the RDFS axioms.
-   * @param seeds {Object} - A hash of NTs of classes to start with
+   * @param seeds - A hash of NTs of classes to start with
    * @param predicate - The property to trace though
    * @param inverse - Trace inverse direction
    */
-  transitiveClosure (seeds, predicate, inverse) {
+  transitiveClosure(
+    seeds: BooleanMap,
+    predicate: TFPredicate,
+    inverse?: boolean
+  ): {
+    [uri: string]: boolean;
+  } {
     let elt, i, len, s, sups, t
     let agenda = {}
     Object.assign(agenda, seeds)  // make a copy
@@ -701,7 +840,9 @@ export default class Formula extends Node {
       if (t == null) {
         return done
       }
-      sups = inverse ? this.each(void 0, predicate, this.fromNT(t)) : this.each(this.fromNT(t), predicate)
+      sups = inverse ?
+        this.each(void 0, predicate, this.fromNT(t))
+        : this.each(this.fromNT(t) as TFPredicate, predicate)
       for (i = 0, len = sups.length; i < len; i++) {
         elt = sups[i]
         s = elt.toNT()
@@ -722,8 +863,13 @@ export default class Formula extends Node {
    * Finds the types in the list which have no *stored* supertypes
    * We exclude the universal class, owl:Things and rdf:Resource, as it is
    * information-free.
+   * @param types - The types
    */
-  topTypeURIs (types) {
+  topTypeURIs(types: {
+    [id: string]: string | NamedNode;
+  }): {
+    [id: string]: string | NamedNode;
+  } {
     let i
     let j
     let k
@@ -783,7 +929,12 @@ export default class Formula extends Node {
    * @param o - The object
    * @param g - The graph that contains the statement
    */
-  whether (s, p, o, g): number {
+  whether(
+    s?: TFSubject | null,
+    p?: TFPredicate | null,
+    o?: TFObject | null,
+    g?: TFGraph | null
+  ): number {
     return this.statementsMatching(s, p, o, g, false).length
   }
 }

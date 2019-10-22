@@ -1,10 +1,9 @@
-'use strict'
 import Node from './node-internal'
-import { TermType } from "./types";
+import { TermType } from './types'
 
 /**
- * Singleton subclass of an empty Collection.
- */
+* An empty node
+*/
 export default class Empty extends Node {
   static termType = TermType.Empty
 

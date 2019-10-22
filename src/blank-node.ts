@@ -1,13 +1,19 @@
-'use strict'
 import ClassOrder from './class-order'
 import Node from './node-internal'
-import { TermType } from './types'
+import IndexedFormula from './store'
+import { BlankNodeTermType, TermType, TFBlankNode } from './types'
 
-export default class BlankNode extends Node {
-  static termType = TermType.BlankNode
-  static NTAnonymousNodePrefix = '_:'
-  /** The next unique identifier for blank nodes */
-  static nextId = 0
+/**
+ * An RDF blank node is a Node without a URI
+ * @link https://rdf.js.org/data-model-spec/#blanknode-interface
+ */
+export default class BlankNode extends Node implements TFBlankNode {
+  /**
+   * The next unique identifier for blank nodes
+   */
+  static nextId: number = 0;
+  static NTAnonymousNodePrefix: string = '_:'
+  static termType: BlankNodeTermType;
 
   private static getId (id: string | unknown): string {
     if (id) {
@@ -30,18 +36,18 @@ export default class BlankNode extends Node {
 
   classOrder = ClassOrder.BlankNode
   /** Whether this is a blank node */
-  isBlank = 1
+  isBlank: number = 1
   /**
    * This type of node is a variable.
    *
    * Note that the existence of this property already indicates that it is a variable.
    */
   isVar = 1
-  termType = BlankNode.termType
+  termType: BlankNodeTermType = TermType.BlankNode;
 
   /**
    * Initializes this node
-   * @param [id] - The identifier for the blank node
+   * @param [id] The identifier for the blank node
    */
   constructor (id?: string | unknown) {
     super(BlankNode.getId(id))
@@ -59,7 +65,7 @@ export default class BlankNode extends Node {
     this.value = value
   }
 
-  compareTerm (other) {
+  compareTerm (other: BlankNode): number {
     if (this.classOrder < other.classOrder) {
       return -1
     }
@@ -75,7 +81,11 @@ export default class BlankNode extends Node {
     return 0
   }
 
-  copy (formula) { // depends on the formula
+  /**
+   * Gets a copy of this blank node in the specified formula
+   * @param formula The formula
+   */
+  copy (formula: IndexedFormula): BlankNode { // depends on the formula
     var bnodeNew = new BlankNode()
     formula.copyTo(this, bnodeNew)
     return bnodeNew

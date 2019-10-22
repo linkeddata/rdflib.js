@@ -1,5 +1,6 @@
 const path = require('path')
 const WrapperPlugin = require('wrapper-webpack-plugin');
+const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
 module.exports = (env, args) => {
   return {
@@ -26,6 +27,7 @@ module.exports = (env, args) => {
         }
       ]
     },
+    resolve: { extensions: ['.js', '.ts'] },
     plugins: [
       new WrapperPlugin({
         // Fall back to window.fetch when solid-auth-client is not present,
@@ -37,6 +39,8 @@ module.exports = (env, args) => {
                      window.solid.auth = { fetch: (a, b) => window.fetch(a, b) }
                  }`
       }),
+      // Comment out the next line if you want to disable type checking.
+      new ForkTsCheckerWebpackPlugin()
     ],
     externals: {
       '@trust/webcrypto': 'crypto',

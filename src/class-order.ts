@@ -1,7 +1,9 @@
 /**
 * Class orders
 */
-export default {
+const ClassOrder: {
+  [id: string]: number;
+} = {
   'Literal': 1,
   'Collection': 3,
   'Graph': 4,
@@ -9,3 +11,5 @@ export default {
   'BlankNode': 6,
   'Variable': 7
 }
+
+export default ClassOrder

@@ -1,31 +1,33 @@
-'use strict'
 import BlankNode from './blank-node'
 import ClassOrder from './class-order'
-import Literal from "./literal";
+import Literal from './literal'
 import Node from './node-internal'
-import { TermType } from './types';
-import Variable from "./variable";
+import { Bindings, FromValueReturns, TermType, ValueType } from './types'
+import Variable from './variable'
+import { isTFTerm } from './utils/terms'
 
 /**
  * Creates an RDF Node from a native javascript value.
  * RDF Nodes are returned unchanged, undefined returned as itself.
+ * Arrays return Collections.
+ * Strings, numbers and booleans return Literals.
  * @param value {Node|Date|String|Number|Boolean|Undefined}
  * @return {Node|Collection}
  */
-export function fromValue <T extends Node = any>(value) {
+export function fromValue <T extends FromValueReturns<C> = any, C extends Node = any>(value: ValueType): T {
   if (typeof value === 'undefined' || value === null) {
-    return value
+    return value as T
   }
-  const isNode = value && value.termType
-  if (isNode) {  // a Node subclass or a Collection
-    return value
+
+  if (isTFTerm(value)) {  // a Node subclass or a Collection
+    return value as T
   }
 
   if (Array.isArray(value)) {
-    return new Collection<T>(value)
+    return new Collection<C>(value) as T
   }
 
-  return Literal.fromValue(value)
+  return Literal.fromValue<any>(value)
 }
 
 /**
@@ -46,7 +48,7 @@ export default class Collection<T extends Node = Node | BlankNode | Collection<a
   isVar = 0
   termType = TermType.Collection
 
-  constructor (initial?) {
+  constructor (initial?: ReadonlyArray<ValueType>) {
     super((BlankNode.nextId++).toString())
 
     if (initial && initial.length > 0) {
@@ -68,7 +70,7 @@ export default class Collection<T extends Node = Node | BlankNode | Collection<a
    * Appends an element to this collection
    * @param element - The new element
    */
-  append (element): number {
+  append (element: T): number {
     return this.elements.push(element)
   }
 
@@ -83,18 +85,16 @@ export default class Collection<T extends Node = Node | BlankNode | Collection<a
   /**
    * Removes the first element from the collection (and return it)
    */
-  shift () {
+  shift (): T | undefined {
     return this.elements.shift()
   }
 
   /**
-   * Gets a new Collection with the substituting bindings applied
+   * Creates a new Collection with the substituting bindings applied
    * @param bindings - The bindings to substitute
    */
-  substitute (bindings) {
-    const elementsCopy = this.elements.map(function (ea) {
-      ea.substitute(bindings)
-    })
+  substitute (bindings: Bindings) {
+    const elementsCopy = this.elements.map((ea) => ea.substitute(bindings))
 
     return new Collection(elementsCopy)
   }
@@ -119,7 +119,7 @@ export default class Collection<T extends Node = Node | BlankNode | Collection<a
    * Prepends the specified element to the collection's front
    * @param element - The element to prepend
    */
-  unshift (element) {
+  unshift (element: T): number {
     return this.elements.unshift(element)
   }
 }

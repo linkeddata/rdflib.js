@@ -1,12 +1,12 @@
 'use strict'
 import Node from './node-internal'
-import { TermType } from "./types";
+import { TFDefaultGraph, TermType, DefaultGraphTermType } from './types'
 
 /** The RDF default graph */
-export default class DefaultGraph extends Node {
+export default class DefaultGraph extends Node implements TFDefaultGraph {
   static termType = TermType.DefaultGraph;
 
-  termType = TermType.DefaultGraph;
+  termType: DefaultGraphTermType = TermType.DefaultGraph;
 
   constructor () {
     super('')
