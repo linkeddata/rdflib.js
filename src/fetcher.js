@@ -70,15 +70,18 @@ const CONTENT_TYPE_BY_EXT = {
 // make its own list and not rely on the prefixes used here,
 // and not be tempted to add to them, and them clash with those of another
 // application.
-const ns = {
-  link: Namespace('http://www.w3.org/2007/ont/link#'),
-  http: Namespace('http://www.w3.org/2007/ont/http#'),
-  httph: Namespace('http://www.w3.org/2007/ont/httph#'),  // headers
-  rdf: Namespace('http://www.w3.org/1999/02/22-rdf-syntax-ns#'),
-  rdfs: Namespace('http://www.w3.org/2000/01/rdf-schema#'),
-  dc: Namespace('http://purl.org/dc/elements/1.1/'),
-  ldp: Namespace('http://www.w3.org/ns/ldp#')
+const getNS = (factory) => {
+  return {
+    link: Namespace('http://www.w3.org/2007/ont/link#', factory),
+    http: Namespace('http://www.w3.org/2007/ont/http#', factory),
+    httph: Namespace('http://www.w3.org/2007/ont/httph#', factory),  // headers
+    rdf: Namespace('http://www.w3.org/1999/02/22-rdf-syntax-ns#', factory),
+    rdfs: Namespace('http://www.w3.org/2000/01/rdf-schema#', factory),
+    dc: Namespace('http://purl.org/dc/elements/1.1/', factory),
+    ldp: Namespace('http://www.w3.org/ns/ldp#', factory)
+  }
 }
+const ns = getNS()
 
 class Handler {
   constructor (response, dom) {
@@ -441,6 +444,7 @@ export default class Fetcher {
   */
   constructor (store, options = {}) {
     this.store = store || new IndexedFormula()
+    this.ns = getNS(this.store.rdfFactory)
     this.timeout = options.timeout || 30000
 
     this._fetch = options.fetch || fetch
@@ -930,7 +934,7 @@ export default class Fetcher {
     // </Debug>
     let kb = this.store
 
-    let statusNode = kb.the(req, ns.link('status'))
+    let statusNode = kb.the(req, this.ns.link('status'))
     if (statusNode && statusNode.append) {
       statusNode.append(kb.literal(statusMessage))
     } else {
@@ -957,7 +961,7 @@ export default class Fetcher {
     this.addStatus(options.req, errorMessage)
 
     if (!options.noMeta) {
-      this.store.add(options.original, ns.link('error'), errorMessage)
+      this.store.add(options.original, this.ns.link('error'), errorMessage)
     }
 
     let meth = (options.method || 'GET').toUpperCase()
@@ -995,7 +999,7 @@ export default class Fetcher {
     if (rel === 'alternate' || rel === 'seeAlso' || rel === 'meta' ||
         rel === 'describedby') {
       if (obj.uri === originalUri.uri) { return }
-      predicate = ns.rdfs('seeAlso')
+      predicate = this.ns.rdfs('seeAlso')
     } else if (rel === 'type') {
       predicate = kb.sym('http://www.w3.org/1999/02/22-rdf-syntax-ns#type')
     } else {
@@ -1157,7 +1161,7 @@ export default class Fetcher {
     let headers = {
       // Force the right mime type for containers
       'content-type': 'text/turtle',
-      'link': ns.ldp('BasicContainer') + '; rel="type"'
+      'link': this.ns.ldp('BasicContainer') + '; rel="type"'
     }
 
     if (folderName) {
@@ -1289,16 +1293,16 @@ export default class Fetcher {
    */
   getHeader (doc, header) {
     const kb = this.store
-    const requests = kb.each(undefined, ns.link('requestedURI'), doc.uri)
+    const requests = kb.each(undefined, this.ns.link('requestedURI'), doc.uri)
 
     for (let r = 0; r < requests.length; r++) {
       let request = requests[r]
       if (request !== undefined) {
-        let response = kb.any(request, ns.link('response'))
+        let response = kb.any(request, this.ns.link('response'))
 
-        if (response !== undefined && kb.anyValue(response, ns.http('status')) && kb.anyValue(response, ns.http('status')).startsWith('2')) {
+        if (response !== undefined && kb.anyValue(response, this.ns.http('status')) && kb.anyValue(response, this.ns.http('status')).startsWith('2')) {
           // Only look at success returns - not 401 error messagess etc
-          let results = kb.each(response, ns.httph(header.toLowerCase()))
+          let results = kb.each(response, this.ns.httph(header.toLowerCase()))
 
           if (results.length) {
             return results.map(v => { return v.value })
@@ -1324,11 +1328,11 @@ export default class Fetcher {
     this.addStatus(options.req, 'Accept: ' + options.headers['accept'])
 
     if (rterm && rterm.uri) {
-      kb.add(docuri, ns.link('requestedBy'), rterm.uri, this.appNode)
+      kb.add(docuri, this.ns.link('requestedBy'), rterm.uri, this.appNode)
     }
 
     if (options.original && options.original.uri !== docuri) {
-      kb.add(req, ns.link('orginalURI'), kb.literal(options.original.uri),
+      kb.add(req, this.ns.link('orginalURI'), kb.literal(options.original.uri),
         this.appNode)
     }
 
@@ -1336,10 +1340,10 @@ export default class Fetcher {
     const timeNow = '[' + now.getHours() + ':' + now.getMinutes() + ':' +
       now.getSeconds() + '] '
 
-    kb.add(req, ns.rdfs('label'),
+    kb.add(req, this.ns.rdfs('label'),
       kb.literal(timeNow + ' Request for ' + docuri), this.appNode)
-    kb.add(req, ns.link('requestedURI'), kb.literal(docuri), this.appNode)
-    kb.add(req, ns.link('status'), kb.collection(), this.appNode)
+    kb.add(req, this.ns.link('requestedURI'), kb.literal(docuri), this.appNode)
+    kb.add(req, this.ns.link('status'), kb.collection(), this.appNode)
   }
 
   saveResponseMetadata (response, options) {
@@ -1347,10 +1351,10 @@ export default class Fetcher {
 
     let responseNode = kb.bnode()
 
-    kb.add(options.req, ns.link('response'), responseNode, responseNode)
-    kb.add(responseNode, ns.http('status'),
+    kb.add(options.req, this.ns.link('response'), responseNode, responseNode)
+    kb.add(responseNode, this.ns.http('status'),
       kb.literal(response.status), responseNode)
-    kb.add(responseNode, ns.http('statusText'),
+    kb.add(responseNode, this.ns.http('statusText'),
       kb.literal(response.statusText), responseNode)
 
     if (!options.resource.uri.startsWith('http')) {
@@ -1359,12 +1363,12 @@ export default class Fetcher {
 
     // Save the response headers
     response.headers.forEach((value, header) => {
-      kb.add(responseNode, ns.httph(header), value, responseNode)
+      kb.add(responseNode, this.ns.httph(header), value, responseNode)
 
       if (header === 'content-type') {
         kb.add(
           options.resource,
-          ns.rdf('type'),
+          this.ns.rdf('type'),
           kb.namedNode(Util.mediaTypeClass(value).value),
           responseNode
         )
@@ -1529,15 +1533,15 @@ export default class Fetcher {
   addType (rdfType, req, kb, locURI) { // add type to all redirected resources too
     let prev = req
     if (locURI) {
-      var reqURI = kb.any(prev, ns.link('requestedURI'))
+      var reqURI = kb.any(prev, this.ns.link('requestedURI'))
       if (reqURI && reqURI !== locURI) {
-        kb.add(kb.sym(locURI), ns.rdf('type'), rdfType, this.appNode)
+        kb.add(kb.sym(locURI), this.ns.rdf('type'), rdfType, this.appNode)
       }
     }
     for (;;) {
-      const doc = kb.any(prev, ns.link('requestedURI'))
+      const doc = kb.any(prev, this.ns.link('requestedURI'))
       if (doc && doc.value) {
-        kb.add(kb.sym(doc.value), ns.rdf('type'), rdfType, this.appNode)
+        kb.add(kb.sym(doc.value), this.ns.rdf('type'), rdfType, this.appNode)
       } // convert Literal
       prev = kb.any(undefined, kb.sym('http://www.w3.org/2007/ont/link#redirectedRequest'), prev)
       if (!prev) { break }
@@ -1600,9 +1604,9 @@ export default class Fetcher {
       }
     }
     if (response.status === 200) {
-      this.addType(ns.link('Document'), reqNode, kb, docuri)
+      this.addType(this.ns.link('Document'), reqNode, kb, docuri)
       if (diffLocation) {
-        this.addType(ns.link('Document'), reqNode, kb,
+        this.addType(this.ns.link('Document'), reqNode, kb,
           diffLocation)
       }
 
@@ -1660,7 +1664,7 @@ export default class Fetcher {
     return response.text()
       .then(content => {
         if (content.length > 10) {
-          kb.add(responseNode, ns.http('content'), kb.literal(content), responseNode)
+          kb.add(responseNode, this.ns.http('content'), kb.literal(content), responseNode)
         }
       })
   }
@@ -1737,7 +1741,7 @@ export default class Fetcher {
     const oldReq = options.req  // request metadata blank node
 
     if (!options.noMeta) {
-      kb.add(oldReq, ns.link('redirectedTo'), kb.sym(newURI), oldReq)
+      kb.add(oldReq, this.ns.link('redirectedTo'), kb.sym(newURI), oldReq)
       this.addStatus(oldReq, 'redirected to new request') // why
     }
 
@@ -1750,7 +1754,7 @@ export default class Fetcher {
     return this.fetchUri(newURI, newOptions)
       .then(response => {
         if (!newOptions.noMeta) {
-          kb.add(oldReq, ns.link('redirectedRequest'), newOptions.req, this.appNode)
+          kb.add(oldReq, this.ns.link('redirectedRequest'), newOptions.req, this.appNode)
         }
 
         return response
