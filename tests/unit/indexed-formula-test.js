@@ -1,6 +1,7 @@
 /* eslint-env mocha */
 import { expect } from 'chai'
 import CanonicalDataFactory from '../../src/data-factory-internal'
+import Formula from '../../src/formula'
 
 import IndexedFormula from '../../src/store'
 import NamedNode from '../../src/named-node'
@@ -94,6 +95,23 @@ describe('IndexedFormula', () => {
       expect(matches.length).to.equal(1)
       expect(matches[0].subject).to.eql(s1)
       expect(matches[0].object).to.eql(o1)
+    })
+  })
+
+  describe('addStatement', () => {
+    it ('is not inherited', () => {
+      const store = new IndexedFormula()
+      expect(store.addStatement).not.to.eq(Formula.prototype.addStatement)
+    })
+
+    it ('is indexed', () => {
+      const store = new IndexedFormula()
+      store.addStatement(triple1)
+
+      expect(Object.values(store.subjectIndex)).to.have.length(1)
+      expect(Object.values(store.predicateIndex)).to.have.length(1)
+      expect(Object.values(store.objectIndex)).to.have.length(1)
+      expect(Object.values(store.whyIndex)).to.have.length(1)
     })
   })
 

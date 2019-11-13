@@ -248,6 +248,11 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     }
   }
 
+  /** @deprecated Use {add} instead */
+  addStatement (st) {
+    return this.add(st.subject, st.predicate, st.object, st.graph)
+  }
+
   /**
    * Adds a triple (quad) to the store.
    *
