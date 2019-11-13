@@ -5,13 +5,14 @@ import Statement from './statement'
 import Variable from './variable'
 
 export const defaultGraphURI = 'chrome:theSession'
+const defaultGraphNode = new NamedNode(defaultGraphURI)
 
 function blankNode (value) {
   return new BlankNode(value)
 }
 
 function defaultGraph () {
-  return new NamedNode(defaultGraphURI)
+  return defaultGraphNode
 }
 
 /**
