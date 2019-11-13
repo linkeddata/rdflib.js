@@ -2,7 +2,6 @@
  * Utility functions for $rdf
  * @module util
  */
-import { jsonldObjectToTerm } from './jsonldparser'
 import { docpart } from './uri'
 import log from './log'
 import * as uri from './uri'
