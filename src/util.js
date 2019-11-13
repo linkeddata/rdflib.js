@@ -30,6 +30,13 @@ export const appliedFactoryMethods = [
   'supports',
 ]
 
+export function isTerm(obj) {
+  return typeof obj === "object"
+    && obj !== null
+    && "termType" in obj
+    && "value" in obj
+}
+
 export function isStatement(obj) {
   return typeof obj === "object" && obj !== null && "subject" in obj
 }
@@ -39,7 +46,7 @@ export function isStore(obj) {
 }
 
 export function isNamedNode(obj) {
-  return typeof obj === "object" && obj !== null && "termType" in obj && obj.termType === "NamedNode"
+  return isTerm(obj) && obj.termType === "NamedNode"
 }
 
 /**
