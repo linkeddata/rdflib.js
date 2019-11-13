@@ -31,15 +31,15 @@ export const appliedFactoryMethods = [
 ]
 
 export function isStatement(obj) {
-  return obj && Object.prototype.hasOwnProperty.call(obj, "subject")
+  return typeof obj === "object" && obj !== null && "subject" in obj
 }
 
 export function isStore(obj) {
-  return obj && Object.prototype.hasOwnProperty.call(obj, "statements")
+  return typeof obj === "object" && obj !== null && "statements" in obj
 }
 
 export function isNamedNode(obj) {
-  return obj && Object.prototype.hasOwnProperty.call(obj, "termType") && obj.termType === "NamedNode"
+  return typeof obj === "object" && obj !== null && "termType" in obj && obj.termType === "NamedNode"
 }
 
 /**
