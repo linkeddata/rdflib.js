@@ -77,6 +77,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
    * @param {Boolean} features.sameAs - Smush together A and B nodes whenever { A sameAs B }
    * @param opts
    * @param {DataFactory} opts.rdfFactory - The data factory that should be used by the store
+   * @param {DataFactory} opts.rdfArrayRemove - Function which removes statements from the store
    */
   constructor (features, opts = {}) {
     super(undefined, undefined, undefined, undefined, opts)
@@ -103,6 +104,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
       'InverseFunctionalProperty',
       'FunctionalProperty',
     ]
+    this.rdfArrayRemove = opts.rdfArrayRemove || RDFArrayRemove
 
     this.initPropertyActions(this.features)
   }
@@ -643,10 +645,10 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
       if (!this.index[p][h]) {
         // log.warn ("Statement removal: no index '+p+': "+st)
       } else {
-        RDFArrayRemove(this.index[p][h], st)
+        this.rdfArrayRemove(this.index[p][h], st)
       }
     }
-    RDFArrayRemove(this.statements, st)
+    this.rdfArrayRemove(this.statements, st)
     return this
   }
 
