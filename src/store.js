@@ -76,8 +76,9 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
    * @param {Array<String>} features - What sort of autmatic processing to do? Array of string
    * @param {Boolean} features.sameAs - Smush together A and B nodes whenever { A sameAs B }
    * @param opts
-   * @param {DataFactory} opts.rdfFactory - The data factory that should be used by the store
-   * @param {DataFactory} opts.rdfArrayRemove - Function which removes statements from the store
+   * @param {DataFactory} [opts.rdfFactory] - The data factory that should be used by the store
+   * @param {DataFactory} [opts.rdfArrayRemove] - Function which removes statements from the store
+   * @param {DataFactory} [opts.dataCallback] - Callback when a statement is added to the store, will not trigger when adding duplicates
    */
   constructor (features, opts = {}) {
     super(undefined, undefined, undefined, undefined, opts)
@@ -105,6 +106,9 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
       'FunctionalProperty',
     ]
     this.rdfArrayRemove = opts.rdfArrayRemove || RDFArrayRemove
+    if (opts.dataCallback) {
+      this.dataCallbacks = [opts.dataCallback]
+    }
 
     this.initPropertyActions(this.features)
   }
@@ -120,6 +124,13 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     var y = new IndexedFormula()
     y.add(statementsCopy)
     return y
+  }
+
+  addDataCallback(cb) {
+    if (!this.dataCallbacks) {
+      this.dataCallbacks = []
+    }
+    this.dataCallbacks.push(cb)
   }
 
   applyPatch (patch, target, patchCallback) { // patchCallback(err)
@@ -309,6 +320,13 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
 
     // log.debug("ADDING    {"+subj+" "+pred+" "+obj+"} "+why)
     this.statements.push(st)
+
+    if (this.dataCallbacks) {
+      for (const callback of this.dataCallbacks) {
+        callback(st)
+      }
+    }
+
     return st
   }
 
