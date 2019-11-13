@@ -1362,7 +1362,12 @@ export default class Fetcher {
       kb.add(responseNode, ns.httph(header), value, responseNode)
 
       if (header === 'content-type') {
-        kb.add(options.resource, ns.rdf('type'), Util.mediaTypeClass(value), responseNode)
+        kb.add(
+          options.resource,
+          ns.rdf('type'),
+          kb.namedNode(Util.mediaTypeClass(value).value),
+          responseNode
+        )
       }
     })
 
