@@ -6,7 +6,11 @@ import sinon from 'sinon'
 import sinonChai from 'sinon-chai'
 import dirtyChai from 'dirty-chai'
 import nock from 'nock'
+
 import * as rdf from '../../src/index'
+import NamedNode from '../../src/named-node'
+import IndexedFormula from '../../src/store'
+import CanonicalDataFactory from '../../src/data-factory-internal'
 
 chai.use(sinonChai)
 chai.use(dirtyChai)
@@ -46,7 +50,41 @@ describe('Fetcher', () => {
     })
   })
 
+  describe('saveResponseMetadata', () => {
+    it('uses the datafactory', () => {
+      let createdNodes = []
+      const store = new IndexedFormula(undefined, {
+        rdfFactory: {
+          ...CanonicalDataFactory,
+          namedNode: (value) => {
+            createdNodes.push(value)
+            return new NamedNode(value)
+          }
+        }
+      })
+      const fetcher = new Fetcher(store)
+      const response = new Response(null, {
+        headers: new Headers({
+          'Content-Type': 'image/png'
+        }),
+        status: 200,
+      })
+      const options = {
+        resource: store.rdfFactory.namedNode('https://example.com/resource/1')
+      }
 
+      createdNodes = []
+      fetcher.saveResponseMetadata(response, options)
+
+      expect(createdNodes).to.include('http://www.w3.org/1999/02/22-rdf-syntax-ns#type')
+      expect(createdNodes).to.include('http://www.w3.org/ns/iana/media-types/image/png#Resource')
+      expect(store.holds(
+        options.resource,
+        store.rdfFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
+        store.rdfFactory.namedNode('http://www.w3.org/ns/iana/media-types/image/png#Resource')
+      )).to.be.true()
+    })
+  })
 
   describe('nowOrWhenFetched 1', () => {
     let fetcher, docuri, rterm, options, userCallback

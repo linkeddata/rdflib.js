@@ -2,7 +2,6 @@
  * Utility functions for $rdf
  * @module util
  */
-import { jsonldObjectToTerm } from './jsonldparser'
 import { docpart } from './uri'
 import log from './log'
 import * as uri from './uri'
@@ -31,16 +30,23 @@ export const appliedFactoryMethods = [
   'supports',
 ]
 
+export function isTerm(obj) {
+  return typeof obj === "object"
+    && obj !== null
+    && "termType" in obj
+    && "value" in obj
+}
+
 export function isStatement(obj) {
-  return obj && Object.prototype.hasOwnProperty.call(obj, "subject")
+  return typeof obj === "object" && obj !== null && "subject" in obj
 }
 
 export function isStore(obj) {
-  return obj && Object.prototype.hasOwnProperty.call(obj, "statements")
+  return typeof obj === "object" && obj !== null && "statements" in obj
 }
 
 export function isNamedNode(obj) {
-  return obj && Object.prototype.hasOwnProperty.call(obj, "termType") && obj.termType === "NamedNode"
+  return isTerm(obj) && obj.termType === "NamedNode"
 }
 
 /**
