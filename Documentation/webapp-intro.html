@@ -48,7 +48,7 @@ td: { background-color: #eee; }
 	<li><b>Statement</b> - Another word for quad.</li>
 </ul><h3>Setting up rdflib.js</h3>
 
-<p>Typically people define rdflib in your module as $rdf, so that you an easily cut and paste code between projects and examples here, without confusion.</p>
+<p>Typically people define rdflib in your module as $rdf, so that you can easily cut and paste code between projects and examples here, without confusion.</p>
 
 <p>Installation steps (using npm):</p>
 
@@ -64,7 +64,7 @@ td: { background-color: #eee; }
 
 <h3>Setting up a Store</h3>
 
-<p>Suppose we have a store, and we set up a person and their profile. Their webid is the URI '<a href="https://example.com/alice/card#me">https://example.com/alice/card#me</a>', which is, if you like, a local variable ‘me’ within the the file '<a href="https://example.com/alice/card">https://example.com/alice/card</a>'. </p>
+<p>Suppose we have a store, and we set up a person and their profile. Their WebID is the URI '<a href="https://example.com/alice/card#me">https://example.com/alice/card#me</a>', which is, if you like, a local variable ‘me’ within the the file '<a href="https://example.com/alice/card">https://example.com/alice/card</a>'. </p>
 
 <p>There are two ways of creating a store:  </p>
 
@@ -84,7 +84,7 @@ td: { background-color: #eee; }
 
 <pre>
 <code>const me = store.sym('https://example.com/alice/card#me');
-const profile = me.doc();       //i.e. store.sym(''https://example.com/alice/card#me')</code></pre>
+const profile = me.doc();       //i.e. store.sym(''https://example.com/alice/card#me').doc()</code></pre>
 
 <p>We are going to be using the VCARD terms, and so we set up a <b>Namespace</b> object to which generates the right predicate URIs for each term.</p>
 
@@ -122,12 +122,12 @@ const profile = me.doc();       //i.e. store.sym(''https://example.com/alice/car
 
 <h4>Using the Store with Turtle</h4>
 
-<p>Let’s look at two more local operations.  If you have turtle text for some data, you can load it into the store using $rdf.parse:</p>
+<p>Let’s look at two more local operations.  If you have a turtle text for some data, you can load it into the store using $rdf.parse:</p>
 
 <pre>
 <code class="language-javascript">let text = '&lt;#this&gt;  a  &lt;#Example&gt; .';
 
-let doc = $rdf.sym(‘’https://example.com/alice/card”);
+let doc = $rdf.sym("https://example.com/alice/card");
 let store = $rdf.graph();
 $rdf.parse(text, store, doc.uri, ‘text/turtle’);  // pass base URI
 </code></pre>
@@ -145,7 +145,7 @@ $rdf.parse(text, store, doc.uri, ‘text/turtle’);  // pass base URI
 <code class="language-javascript">console.log($rdf.serialize(doc, store, aclDoc.uri, 'text/turtle'));
 </code></pre>
 
-<p>If you omit the document parameter to serialize, or pass null, then you will get all the triples in the store.  This may, if you have used a Fetcher,  possibly metadata which the fetcher has stored about the HTTP requests it made in fetching your documents.  Which might be interesting... but not what you were expecting.</p>
+<p>If you omit the document parameter to serialize, or pass null, then you will get all the triples in the store. If you have used a Fetcher, this may display metadata which the fetcher has stored about the HTTP requests it made in fetching your documents.  Which might be interesting... but not what you were expecting.</p>
 
 <h4>Using match() to Search the store</h4>
 
@@ -282,7 +282,7 @@ $rdf.parse(text, store, doc.uri, ‘text/turtle’);  // pass base URI
   or the data corresponding to one data document out there.
 </p>
 
-<img src="https://raw.githubusercontent.com/linkeddata/rdflib.js/Documentation/diagrams/rdflib_block_diagram.png" />
+<img src="https://raw.githubusercontent.com/linkeddata/rdflib.js/master/diagrams/rdflib_block_diagram.png" />
 
 <p>Let's set up a store as before.</p>
 
@@ -296,7 +296,7 @@ const VCARD = new $rdf.Namespace(‘http://www.w3.org/2006/vcard/ns#‘);
 <p>This time, we'll also make a Fetcher for the store. The Fetcher is a helper object which allows you to transfer data to and from the web of data. </p>
 
 <pre>
-<code class="language-javascript">const fetcher =new $rdf Fetcher(store);
+<code class="language-javascript">const fetcher = new $rdf Fetcher(store);
 </code></pre>
 
 <p>Now let's load the document we have been talking about.</p>
@@ -371,14 +371,14 @@ function cardFor (person) {
 <p>Then inside of our web application, we could run the following commands:</p>
 
 <pre>
-<code class="language-javascript">div.appendChild(card(me)); // My card
+<code class="language-javascript">div.appendChild(cardFor(me)); // My card
 
 fetcher.load(me.doc).then(resp -&gt; {
-	store.each(me, FOAF(‘friend’)).forEach(friend =&gt; div.appendChild(card(friend)));
+	store.each(me, FOAF(‘friend’)).forEach(friend =&gt; div.appendChild(cardFor(friend)));
 });
 </code></pre>
 
-<p>This will pull in the user’s profile to make the picture and name for my own card.  Then we explicitly pull it in again to find the list of friends.  This is reasonable as the fetcher’s `load` method really means “load if you haven’t already” so continues immediately if it has already been fetched.  It’s wise to explicitly load the things you need and let the system track what has already been loaded.</p>
+<p>This will pull in the user’s profile to make the picture and name for my own card. Then we explicitly pull it in again to find the list of friends. This is reasonable as the fetcher’s `load` method really means “load if you haven’t already”, so it continues immediately if it has already been fetched. It’s wise to explicitly load the things you need and let the system track what has already been loaded.</p>
 
 <p>Then for each of the friends it will load their profile to fill in the name and picture of the friend.</p>
 
@@ -386,7 +386,7 @@ fetcher.load(me.doc).then(resp -&gt; {
 
 <h3>Listing Data</h3>
 
-<p>Everything in RDF is a thing.  We store data about all things in the same sort of way, just using different vocabulary.  Suppose you want to list the content of the folder in someone’s solid space.  It is very like listing their friends.  The namespace for the contents of folders is LDP. So..</p>
+<p>Everything in RDF is a thing.  We store data about all things in the same sort of way, just using different vocabulary. Suppose you want to list the content of the folder in someone’s solid space.  It is very like listing their friends.  The namespace for the contents of folders is LDP. So..</p>
 
 <pre>
 <code class="language-javascript">const LDP = $rdf.Namespace(‘http://www.w3.org/ns/ldp#&gt;’);
@@ -452,7 +452,7 @@ list(rdf.sym(‘https://alice.example.com/Public/’));</code></pre>
   The first parameter to update() is the array of statements to be deleted.
 If it is empty then update() just adds data to the store.
 (Note for this the user only needs Append privileges, not full Write).
-The second parameter to update() is the array of statements to be deleted.
+The second parameter to update() is the array of statements to be inserted.
 </p>
 <pre>
   function modifyName(person, name, doc) {
@@ -467,7 +467,7 @@ The second parameter to update() is the array of statements to be deleted.
 </pre>
 
   <p>So in this second case, the function will first find any statements which
-    give the name of the person. It then asked update to in one operation
+    gives the name of the person. It is then asked to do two updates in one operation:
     remove the old statements (quads) from the store, and add the new one.
   </p>
   <h4>409 Conflict</h4>
@@ -620,8 +620,8 @@ So all you have to do is provide a function which will sync changes in the store
 <h2>Conclusion</h2>
 <p>
   We've looked at how to interact directly with the store as a local in-memory triple store, and we
-  have looked at how to load it and save it, web resource at a time.
-  We see how it ina away acts as a local in-memory cache of the big wide web of linked data,
+  have looked at how to load it and save it, one web resource at a time.
+  We see how it in a way acts as a local in-memory cache of the big wide web of linked data,
   allowing a user-interface to keep in sync with the state of the data web.
   As developers we can now write code which will allow users to explore, create, modify and link together
   a web of linked data which can grow to encompass more and more domains, different applications.
