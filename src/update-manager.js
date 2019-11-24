@@ -151,7 +151,7 @@ export default class UpdateManager {
           var status = kb.each(response, this.ns.http('status'))
           if (status.length) {
             for (let i = 0; i < status.length; i++) {
-              if (status[i] === 200 || status[i] === 404) {
+              if (status[i].value === '200' || status[i].value === '404') {
                 definitive = true
                 // return false // A definitive answer
               }
