@@ -9,7 +9,8 @@ import Namespace from './namespace'
 import Node from './node'
 import Serializer from './serialize'
 import Statement from './statement'
-import { appliedFactoryMethods, arrayToStatements, isStatement } from './util'
+import { appliedFactoryMethods, arrayToStatements } from './util'
+import { isStatement } from './utils/terms'
 import Variable from './variable'
 
 /** @module formula */

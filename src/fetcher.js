@@ -34,7 +34,7 @@ import rdfParse from './parse'
 import { parseRDFaDOM } from './rdfaparser'
 import RDFParser from './rdfxmlparser'
 import * as Uri from './uri'
-import { isNamedNode } from './util'
+import { isNamedNode } from './utils/terms'
 import * as Util from './util'
 import serialize from './serialize'
 

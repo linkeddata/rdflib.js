@@ -30,6 +30,8 @@ import * as uri from './uri'
 import * as Util from './util'
 import Variable from './variable'
 
+export * from './utils/terms'
+
 const NextId = BlankNode.nextId
 
 const { fromNT } = Formula.prototype;

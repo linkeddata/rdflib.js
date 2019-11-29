@@ -11,7 +11,7 @@ import DataFactory from './data-factory'
 import Namespace from './namespace'
 import Serializer from './serializer'
 import { join as uriJoin } from './uri'
-import { isStore } from './util'
+import { isStore } from './utils/terms'
 import * as Util from './util'
 
 /** Update Manager

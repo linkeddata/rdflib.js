@@ -5,7 +5,8 @@ import CanonicalDataFactory from '../../src/data-factory-internal'
 import Literal from '../../src/literal'
 import NamedNode from '../../src/named-node'
 import Statement from '../../src/statement'
-import { arrayToStatements, isNamedNode, isStatement, isTerm } from '../../src/util'
+import { arrayToStatements } from '../../src/util'
+import { isNamedNode, isStatement, isTerm } from '../../src/utils/terms'
 
 describe('util', () => {
   describe('isTerm', () => {
