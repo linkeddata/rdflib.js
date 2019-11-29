@@ -7,7 +7,7 @@
  * @class Node
  */
 export default class Node {
-  static fromValue: (value: any) => unknown;
+  static fromValue: <T = unknown>(value: any) => T;
   static toJS: (term: any) => Date | Number | string | boolean | object | Array<Date | Number | string | boolean | object>;
 
   /**
