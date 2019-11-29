@@ -1,3 +1,6 @@
+/**
+* Class orders
+*/
 export default {
   'Literal': 1,
   'Collection': 3,

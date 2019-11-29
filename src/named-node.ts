@@ -1,39 +1,40 @@
 'use strict'
 import ClassOrder from './class-order'
 import Node from './node-internal'
+import { TermType } from './types';
+import { termValue } from "./utils/terms";
 
 /**
- * @class NamedNode
- * @extends Node
+ * A named (IRI) RDF node
  */
 export default class NamedNode extends Node {
+  static termType = TermType.NamedNode
+
+  classOrder = ClassOrder.NamedNode
+  termType = TermType.NamedNode
+
   /**
+   * Create a named (IRI) RDF Node
    * @constructor
-   * @param iri {String}
+   * @param iri {String} - The IRI for this node
    */
   constructor (iri) {
-    super()
-    this.termType = NamedNode.termType
+    super(termValue(iri))
 
-    if (iri && iri.termType === NamedNode.termType) {  // param is a named node
-      iri = iri.value
-    }
-
-    if (!iri) {
+    if (!this.value) {
       throw new Error('Missing IRI for NamedNode')
     }
 
-    if (!iri.includes(':')) {
+    if (!this.value.includes(':')) {
       throw new Error('NamedNode IRI "' + iri + '" must be absolute.')
     }
 
-    if (iri.includes(' ')) {
+    if (this.value.includes(' ')) {
       var message = 'Error: NamedNode IRI "' + iri + '" must not contain unencoded spaces.'
       throw new Error(message)
     }
-
-    this.value = iri
   }
+
   /**
    * Returns an $rdf node for the containing directory, ending in slash.
    */
@@ -44,10 +45,11 @@ export default class NamedNode extends Node {
      if ((q >= 0 && p < q + 2) || p < 0) return null
      return new NamedNode(str.slice(0, p + 1))
    }
-   /**
-    * Returns an NN for the whole web site, ending in slash.
-    * Contrast with the "origin" which does NOT have a trailing slash
-    */
+
+  /**
+   * Returns an NN for the whole web site, ending in slash.
+   * Contrast with the "origin" which does NOT have a trailing slash
+   */
   site () {
      var str = this.uri.split('#')[0]
      var p = str.indexOf('//')
@@ -59,6 +61,11 @@ export default class NamedNode extends Node {
        return new NamedNode(str.slice(0, q + 1))
      }
    }
+
+  /**
+   * Creates the fetchable named node for the document.
+   * Removes everything from the # anchor tag.
+   */
   doc () {
     if (this.uri.indexOf('#') < 0) {
       return this
@@ -66,25 +73,35 @@ export default class NamedNode extends Node {
       return new NamedNode(this.uri.split('#')[0])
     }
   }
+
+  /**
+   * Returns the URI including <brackets>
+   */
   toString () {
     return '<' + this.uri + '>'
   }
 
-  /* The local identifier with the document
-  */
+  /** The local identifier with the document */
   id () {
     return this.uri.split('#')[1]
   }
 
   /**
    * Legacy getter and setter alias, node.uri
+   * @deprecated use {value}
    */
   get uri () {
     return this.value
   }
+
   set uri (uri) {
     this.value = uri
   }
+
+  /**
+   * Creates a named node from the specified input value
+   * @param value - An input value
+   */
   static fromValue (value) {
     if (typeof value === 'undefined' || value === null) {
       return value
@@ -96,6 +113,3 @@ export default class NamedNode extends Node {
     return new NamedNode(value)
   }
 }
-NamedNode.termType = 'NamedNode'
-NamedNode.prototype.classOrder = ClassOrder['NamedNode']
-NamedNode.prototype.isVar = 0

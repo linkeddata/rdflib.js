@@ -3,8 +3,7 @@
 // This file attaches all functionality to Node
 // that would otherwise require circular dependencies.
 import Node from './node-internal'
-import Collection from './collection'
-import Literal from './literal'
+import Collection, { fromValue } from "./collection";
 
 export default Node
 
@@ -16,19 +15,7 @@ export default Node
  * @param value {Node|Date|String|Number|Boolean|Undefined}
  * @return {Node|Collection}
  */
-Node.fromValue = function fromValue (value) {
-  if (typeof value === 'undefined' || value === null) {
-    return value
-  }
-  const isNode = value && value.termType
-  if (isNode) {  // a Node subclass or a Collection
-    return value
-  }
-  if (Array.isArray(value)) {
-    return new Collection(value)
-  }
-  return Literal.fromValue(value)
-}
+Node.fromValue = fromValue
 
 import Namespace from './namespace'
 const ns = { xsd: Namespace('http://www.w3.org/2001/XMLSchema#') }

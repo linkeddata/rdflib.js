@@ -26,7 +26,7 @@ export default class Formula extends Node {
   * @param {DataFactory} opts.rdfFactory - The rdf factory that should be used by the store
   */
   constructor (statements, constraints, initBindings, optional, opts = {}) {
-    super()
+    super('')
     this.termType = Formula.termType
     this.statements = statements || []
     this.constraints = constraints || []

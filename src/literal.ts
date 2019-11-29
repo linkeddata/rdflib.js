@@ -2,45 +2,80 @@
 import ClassOrder from './class-order'
 import NamedNode from './named-node'
 import Node from './node-internal'
+import { TermType } from './types';
 import XSD from './xsd-internal'
 
+/**
+ * An RDF literal, containing some value which isn't expressed as an IRI.
+ * @link https://rdf.js.org/data-model-spec/#literal-interface
+ */
 export default class Literal extends Node {
-  constructor (value, language, datatype) {
-    super()
-    this.termType = Literal.termType
-    this.value = value
+  static termType = TermType.Literal
+
+  classOrder = ClassOrder.Literal
+  datatype = XSD.string
+  isVar = 0
+  /**
+   * The language for the literal
+   */
+  language: string = ''
+  termType = TermType.Literal
+
+
+  constructor (value: string, language?: string | null, datatype?) {
+    super(value)
+
     if (language) {
-      this.lang = language
-      datatype = XSD.langString
-    }
-    // If not specified, a literal has the implied XSD.string default datatype
-    if (datatype) {
+      this.language = language
+      this.datatype = XSD.langString
+    } else if (datatype) {
       this.datatype = NamedNode.fromValue(datatype)
+    } else {
+      this.datatype = XSD.string
     }
   }
-  copy () {
+
+  /**
+   * Gets a copy of this literal
+   */
+  copy (): Literal {
     return new Literal(this.value, this.lang, this.datatype)
   }
-  equals (other) {
+
+  /**
+   * Gets whether two literals are the same
+   * @param other The other statement
+   */
+  equals (other: any): boolean {
     if (!other) {
       return false
     }
+
     return (this.termType === other.termType) &&
       (this.value === other.value) &&
       (this.language === other.language) &&
       ((!this.datatype && !other.datatype) ||
         (this.datatype && this.datatype.equals(other.datatype)))
   }
-  get language () {
-    return this.lang
+
+  /**
+   * The language for the literal
+   * @deprecated use {language} instead
+   */
+  get lang () {
+    return this.language
   }
-  set language (language) {
-    this.lang = language || ''
+
+  set lang (language) {
+    this.language = language || ''
   }
+
   toNT() {
     return Literal.toNT(this)
   }
-  static toNT (literal) {
+
+  /** Serializes a literal to an N-Triples string */
+  static toNT (literal: Literal): string {
     if (typeof literal.value === 'number') {
       return '' + literal.value
     } else if (typeof literal.value !== 'string') {
@@ -61,26 +96,25 @@ export default class Literal extends Node {
     }
     return str
   }
+
   toString () {
     return '' + this.value
   }
+
   /**
-   * @method fromBoolean
-   * @static
-   * @param value {Boolean}
-   * @return {Literal}
+   * Builds a literal node from a boolean value
+   * @param value {Boolean} The value
    */
-  static fromBoolean (value) {
+  static fromBoolean (value: boolean): Literal {
     let strValue = value ? '1' : '0'
     return new Literal(strValue, null, XSD.boolean)
   }
+
   /**
-   * @method fromDate
-   * @static
-   * @param value {Date}
-   * @return {Literal}
+   * Builds a literal node from a date value
+   * @param value The value
    */
-  static fromDate (value) {
+  static fromDate(value: Date): Literal {
     if (!(value instanceof Date)) {
       throw new TypeError('Invalid argument to Literal.fromDate()')
     }
@@ -92,13 +126,12 @@ export default class Literal extends Node {
       d2(value.getUTCMinutes()) + ':' + d2(value.getUTCSeconds()) + 'Z'
     return new Literal(date, null, XSD.dateTime)
   }
+
   /**
-   * @method fromNumber
-   * @static
-   * @param value {Number}
-   * @return {Literal}
+   * Builds a literal node from a number value
+   * @param value The value
    */
-  static fromNumber (value) {
+  static fromNumber(value: number): Literal {
     if (typeof value !== 'number') {
       throw new TypeError('Invalid argument to Literal.fromNumber()')
     }
@@ -111,10 +144,10 @@ export default class Literal extends Node {
     }
     return new Literal(strValue, null, datatype)
   }
+
   /**
-   * @method fromValue
-   * @param value
-   * @return {Literal}
+   * Builds a literal node from an input value
+   * @param value The input value
    */
   static fromValue (value) {
     if (typeof value === 'undefined' || value === null) {
@@ -140,8 +173,3 @@ export default class Literal extends Node {
 
   }
 }
-Literal.termType = 'Literal'
-Literal.prototype.classOrder = ClassOrder['Literal']
-Literal.prototype.datatype = XSD.string
-Literal.prototype.lang = ''
-Literal.prototype.isVar = 0
