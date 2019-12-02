@@ -34,7 +34,17 @@ import Node from './node'
 import Variable from './variable'
 import { Query, indexedFormulaQuery } from './query'
 import UpdateManager from './update-manager'
-import { Bindings, TFTerm, TFPredicate, TFSubject, TFObject, TFGraph, TFQuad, TFNamedNode, TFBlankNode } from './types'
+import {
+  Bindings,
+  TFTerm,
+  TFPredicate,
+  TFSubject,
+  TFObject,
+  TFGraph,
+  TFQuad,
+  TFNamedNode,
+  TFBlankNode,
+} from './types'
 import Statement from './statement'
 import { Indexable } from './data-factory-type'
 import NamedNode from './named-node'
@@ -430,7 +440,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
       this.predicateCallback(this, pred, why)
     }
     // Action return true if the statement does not need to be added
-    var predHash = this.id(this.canon(pred))
+    var predHash = this.id(this.canon(pred!))
     actions = this.propertyActions[predHash] // Predicate hash
     var done = false
     if (actions) {

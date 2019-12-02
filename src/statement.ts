@@ -1,4 +1,3 @@
-import { defaultGraph } from './data-factory-internal'
 import NamedNode from './named-node'
 import Node from './node-internal'
 import {
@@ -11,6 +10,7 @@ import {
   TFQuad,
 } from './types'
 import Literal from './literal'
+import { defaultGraphNode } from './utils/default-graph-uri'
 
 /** A Statement represents an RDF Triple or Quad. */
 export default class Statement implements TFQuad<SubjectType, PredicateType, ObjectType, GraphType> {
@@ -55,7 +55,7 @@ export default class Statement implements TFQuad<SubjectType, PredicateType, Obj
     this.subject = Node.fromValue(subject)
     this.predicate = Node.fromValue(predicate)
     this.object = Node.fromValue(object)
-    this.graph = graph == undefined ? defaultGraph() : graph  // property currently used by rdflib
+    this.graph = graph == undefined ? defaultGraphNode : graph  // property currently used by rdflib
   }
 
   /** @deprecated use {graph} instead */

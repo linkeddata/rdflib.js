@@ -34,8 +34,8 @@ import rdfParse from './parse'
 import { parseRDFaDOM } from './rdfaparser'
 import RDFParser from './rdfxmlparser'
 import * as Uri from './uri'
+import { isCollection, isTFNamedNode} from './utils/terms'
 import * as Util from './util'
-import { isCollection, isTFNamedNode, termValue } from './utils/terms'
 import serialize from './serialize'
 
 // @ts-ignore This is injected
@@ -51,6 +51,7 @@ import {
   TFDataFactory,
   TFPredicate
 } from './types'
+import { termValue } from './utils/termValue'
 
 // This is a special fetch which does OIDC auth, catching 401 errors
 const fetch = typeof window === 'undefined' ? solidAuthCli : solidAuthClient

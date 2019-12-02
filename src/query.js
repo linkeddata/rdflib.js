@@ -17,10 +17,8 @@
 // Also, users name variables and want the same name back when stuff is printed
 /* jsl:option explicit */ // Turn on JavaScriptLint variable declaration checking
 
-import {
-  default as IndexedFormula,
-  defaultGraphURI as defaultDocumentURI
-}  from './store'
+import IndexedFormula  from './store'
+import { defaultGraphURI as defaultDocumentURI } from './utils/default-graph-uri'
 import log from './log'
 import { docpart } from './uri'
 

@@ -2,7 +2,7 @@
 import ClassOrder from './class-order'
 import Node from './node-internal'
 import { NamedNodeTermType, TermType, TFNamedNode } from './types'
-import { termValue } from './utils/terms'
+import { termValue } from './utils/termValue'
 
 /**
  * A named (IRI) RDF node

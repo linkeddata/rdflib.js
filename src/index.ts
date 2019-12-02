@@ -1,7 +1,6 @@
 import BlankNode from './blank-node'
 import Collection from './collection'
 import * as convert from './convert'
-import DataFactory from './data-factory'
 import Empty from './empty'
 import Fetcher from './fetcher'
 import Formula from './formula'
@@ -29,6 +28,7 @@ import { UpdatesVia } from './updates-via'
 import * as uri from './uri'
 import * as Util from './util'
 import Variable from './variable'
+import DataFactory from './rdflib-data-factory'
 
 export * from './utils/terms'
 
@@ -106,3 +106,4 @@ export {
   triple,
   variable,
 }
+export { termValue } from './utils/termValue'

@@ -5,8 +5,8 @@ import Formula from '../../src/formula'
 
 import IndexedFormula from '../../src/store'
 import NamedNode from '../../src/named-node'
-import DataFactory from '../../src/data-factory'
 import { RDFArrayRemove } from '../../src/util'
+import DataFactory from '../../src/rdflib-data-factory'
 
 describe('IndexedFormula', () => {
   const g0 = NamedNode.fromValue('https://example.com/graph0')

@@ -13,11 +13,11 @@ import {
   TFDataFactory,
   TFTerm,
 } from './types'
-import { Feature, IdentityFactory, Indexable } from './data-factory-type'
+import { defaultGraphNode } from './utils/default-graph-uri'
+import { Feature, IdentityFactory } from './data-factory-type'
 import Node from './node-internal'
 
-export const defaultGraphURI = 'chrome:theSession'
-const defaultGraphNode = new NamedNode(defaultGraphURI)
+export { defaultGraphURI } from './utils/default-graph-uri'
 
 /**
  * Creates a new blank node

@@ -5,7 +5,10 @@ import Collection from './collection'
 import Literal from './literal'
 import NamedNode from './named-node'
 import DefaultGraph from './default-graph'
-import { SupportTable } from './data-factory-type'
+import { DataFactory, SupportTable } from './data-factory-type'
+import IndexedFormula from './store'
+import Fetcher from './fetcher'
+import Statement from './statement'
 
 /**
  * Types that support both Enums (for typescript) and regular strings
@@ -245,3 +248,20 @@ export type TFGraph = TFNamedNode | TFDefaultGraph | TFBlankNode | TFVariable
 
 /** All the types that a .fromValue() method might return */
 export type FromValueReturns<C extends Node = any> = TFTerm | undefined | null | Collection<C>
+
+export interface IRDFlibDataFactory extends DataFactory<NamedNode> {
+  fetcher: (store: IndexedFormula, options: any) => Fetcher
+  graph: (features, opts) => IndexedFormula
+  lit: (val: string, lang?: string, dt?: TFNamedNode) => Literal
+  st: (
+    subject: SubjectType,
+    predicate: PredicateType,
+    object: ObjectType,
+    graph?: GraphType
+  ) => Statement
+  triple: (
+    subject: SubjectType,
+    predicate: PredicateType,
+    object: ObjectType
+  ) => Statement
+}

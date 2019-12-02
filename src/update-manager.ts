@@ -10,11 +10,12 @@ import Fetcher from './fetcher'
 import Namespace from './namespace'
 import Serializer from './serializer'
 import { join as uriJoin } from './uri'
-import { isStore, isTFBlankNode, termValue } from './utils/terms'
+import { isStore, isTFBlankNode } from './utils/terms'
 import * as Util from './util'
 import Statement from './statement'
-import { NamedNode } from './index'
+import NamedNode from './named-node'
 import { TFNamedNode, TFQuad, TFBlankNode, TFSubject, TFPredicate, TFObject, TFGraph, TFTerm } from './types'
+import { termValue } from './utils/termValue'
 
 interface UpdateManagerFormula extends IndexedFormula {
   fetcher: Fetcher

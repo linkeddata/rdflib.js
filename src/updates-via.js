@@ -1,7 +1,7 @@
 /*
  * Updates-Via
  */
-import DataFactory from './data-factory'
+import DataFactory from './rdflib-data-factory'
 
 export class UpdatesSocket {
   constructor (parent, via) {

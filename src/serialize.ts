@@ -1,8 +1,8 @@
 import * as convert from './convert'
+import Formula from './formula'
 import Serializer from './serializer'
 import { ContentType, TFNamedNode, TFBlankNode } from './types'
 import IndexedFormula from './store'
-import { Formula } from './index'
 
 /**
  * Serialize to the appropriate format
