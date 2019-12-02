@@ -7,7 +7,12 @@ import {
   PredicateType,
   SubjectType,
   TermType,
+  TFGraph,
+  TFObject,
+  TFPredicate,
   TFQuad,
+  TFSubject,
+  TFTerm,
 } from './types'
 import Literal from './literal'
 import { defaultGraphNode } from './utils/default-graph-uri'
@@ -47,15 +52,15 @@ export default class Statement implements TFQuad<SubjectType, PredicateType, Obj
    *  powerful update() which can update more than one document.
    */
   constructor (
-    subject: SubjectType,
-    predicate: PredicateType,
-    object: ObjectType,
-    graph?: GraphType,
+    subject: TFSubject | TFTerm,
+    predicate: TFPredicate | TFTerm,
+    object: TFObject | TFTerm,
+    graph?: TFGraph | TFTerm,
   ) {
     this.subject = Node.fromValue(subject)
     this.predicate = Node.fromValue(predicate)
     this.object = Node.fromValue(object)
-    this.graph = graph == undefined ? defaultGraphNode : graph  // property currently used by rdflib
+    this.graph = graph == undefined ? defaultGraphNode : Node.fromValue(graph) // property currently used by rdflib
   }
 
   /** @deprecated use {graph} instead */

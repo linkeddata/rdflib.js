@@ -458,10 +458,10 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     // Don't put it in the store
     // still return this statement for owl:sameAs input
     var hash = [
-      this.id(this.canon(subj as TFSubject)),
+      this.id(this.canon(subj)),
       predHash,
-      this.id(this.canon(obj as TFObject)),
-      this.id(this.canon(why as TFGraph))
+      this.id(this.canon(obj)),
+      this.id(this.canon(why))
     ]
     // @ts-ignore this will fail if you pass a collection and the factory does not allow Collections
     st = this.rdfFactory.quad(subj, pred, obj, why)
@@ -547,7 +547,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
         }
       }
       for (var p = 0; p < 4; p++) {
-        var c = this.canon(term[p]) as TFNamedNode
+        var c = this.canon(term[p])
         var h = this.id(c)
         if (!this.index[p][h]) {
           // throw new Error('No ' + name[p] + ' index for statement ' + st + '@' + st.why + origin)

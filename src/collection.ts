@@ -2,7 +2,14 @@ import BlankNode from './blank-node'
 import ClassOrder from './class-order'
 import Literal from './literal'
 import Node from './node-internal'
-import { Bindings, FromValueReturns, TermType, ValueType } from './types'
+import {
+  Bindings,
+  CollectionTermType,
+  FromValueReturns,
+  TermType,
+  TFTerm,
+  ValueType
+} from './types'
 import Variable from './variable'
 import { isTFTerm } from './utils/terms'
 
@@ -35,7 +42,9 @@ export function fromValue <T extends FromValueReturns<C> = any, C extends Node =
  *
  * Use generic T to control the contents of the array.
  */
-export default class Collection<T extends Node = Node | BlankNode | Collection<any> | Literal | Variable> extends Node {
+export default class Collection<
+  T extends Node = Node | BlankNode | Collection<any> | Literal | Variable
+> extends Node implements TFTerm {
   static termType = TermType.Collection
 
   classOrder = ClassOrder.Collection
@@ -46,7 +55,7 @@ export default class Collection<T extends Node = Node | BlankNode | Collection<a
    */
   elements: T[] = []
   isVar = 0
-  termType = TermType.Collection
+  termType: CollectionTermType = TermType.Collection
 
   constructor (initial?: ReadonlyArray<ValueType>) {
     super((BlankNode.nextId++).toString())

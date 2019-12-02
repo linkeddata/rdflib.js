@@ -9,6 +9,7 @@ import { DataFactory, SupportTable } from './data-factory-type'
 import IndexedFormula from './store'
 import Fetcher from './fetcher'
 import Statement from './statement'
+import Empty from './empty'
 
 /**
  * Types that support both Enums (for typescript) and regular strings
@@ -25,11 +26,12 @@ export type DefaultGraphTermType = "DefaultGraph" | TermType.DefaultGraph
  * @todo Convert these to const enums when it's supported https://github.com/babel/babel/issues/8741
  */
 export enum TermType {
-  NamedNode = 'NamedNode',
   BlankNode = 'BlankNode',
-  Literal = 'Literal',
-  Variable = 'Variable',
   DefaultGraph = 'DefaultGraph',
+  Literal = 'Literal',
+  NamedNode = 'NamedNode',
+  Variable = 'Variable',
+
   // The next ones are not specified by the rdf.js taskforce
   Collection = 'Collection',
   Empty = 'Empty',
@@ -72,7 +74,7 @@ export type SubjectType = BlankNode | NamedNode | Variable
 /** An RDF/JS Predicate */
 export type PredicateType = NamedNode | Variable
 /** An RDF/JS Object */
-export type ObjectType = NamedNode | Literal | Collection | BlankNode | Variable // | Empty
+export type ObjectType = NamedNode | Literal | Collection | BlankNode | Variable | Empty
 /** An RDF/JS Graph */
 export type GraphType = DefaultGraph | NamedNode | Variable // | Formula
 
@@ -83,7 +85,7 @@ export type GraphType = DefaultGraph | NamedNode | Variable // | Formula
 export interface TFTerm {
   termType: string
   value: string
-  equals(other: TFTerm): boolean
+  equals(other: any): boolean
 }
 
 /**
@@ -93,7 +95,6 @@ export interface TFTerm {
 export interface TFNamedNode extends TFTerm {
   termType: NamedNodeTermType
   value: string
-  equals(other: TFTerm): boolean
 }
 
 /**
@@ -103,7 +104,6 @@ export interface TFNamedNode extends TFTerm {
 export interface TFBlankNode extends TFTerm {
   termType: BlankNodeTermType
   value: string
-  equals(other: TFTerm): boolean
 }
 
 /**
@@ -111,16 +111,15 @@ export interface TFBlankNode extends TFTerm {
  * @link https://rdf.js.org/data-model-spec/#quad-interface
  */
 export interface TFQuad<
-  S extends TFSubject = TFSubject,
-  P extends TFPredicate = TFPredicate,
+  S extends TFTerm = TFSubject,
+  P extends TFTerm = TFPredicate,
   O extends TFTerm = TFObject,
-  G extends TFGraph = TFGraph
+  G extends TFTerm = TFGraph
 > {
   subject: S
   predicate: P
   object: O
   graph: G
-  equals(other: TFQuad): boolean
 }
 
 /**
@@ -139,7 +138,6 @@ export interface TFLiteral extends TFTerm {
   language: string
   /** A NamedNode whose IRI represents the datatype of the literal. */
   datatype: TFNamedNode
-  equals(other: TFTerm): boolean
 }
 
 /**
@@ -151,11 +149,6 @@ export interface TFVariable extends TFTerm {
   termType: VariableTermType
   /** The name of the variable without leading "?" (example: "a"). */
   value: string
-  /**
-   * Returns true if all general Term.equals conditions hold and term.value
-   * is the same string as other.value; otherwise, it returns false.
-   */
-  equals(other: TFTerm): boolean
 }
 
 /**
@@ -168,43 +161,40 @@ export interface TFDefaultGraph extends TFTerm {
   termType: DefaultGraphTermType;
   /** should return and empty string'' */
   value: string;
-  equals(other: TFTerm): boolean
 }
 
 /**
  * RDF/JS taskforce DataFactory
+ *
+ * Not 100% compliant due to to practicality problems.
+ *
  * @link https://rdf.js.org/data-model-spec/#datafactory-interface
  */
-export interface TFDataFactory<
-  DFNamedNode extends TFNamedNode = TFNamedNode,
-  DFBlankNode extends TFBlankNode = TFBlankNode,
-  DFLiteral extends TFLiteral = TFLiteral,
-  DFSubject = TFSubject,
-  DFPredicate = TFPredicate,
-  DFObject = TFObject,
-  DFGraph = TFGraph,
-  DFDefaultGraph = TFDefaultGraph,
-  DFQuad = TFQuad,
-> {
+export interface TFDataFactory {
   /** Returns a new instance of NamedNode. */
-  namedNode: (value: string) => DFNamedNode,
+  namedNode: (value: string) => TFNamedNode,
+
   /**
    * Returns a new instance of BlankNode.
    * If the value parameter is undefined a new identifier for the
    * blank node is generated for each call.
    */
-  blankNode: (value?: string) => DFBlankNode,
+  blankNode: (value?: string) => TFBlankNode,
+
   /**
    * Returns a new instance of Literal.
    * If languageOrDatatype is a NamedNode, then it is used for the value of datatype.
    * Otherwise languageOrDatatype is used for the value of language. */
-  literal: (value: string, languageOrDatatype: string | DFNamedNode) => DFLiteral,
+  literal: (value: string, languageOrDatatype: string | TFNamedNode) => TFLiteral,
+
   /** Returns a new instance of Variable. This method is optional. */
   variable?: (value: string) => TFVariable,
+
   /**
    * Returns an instance of DefaultGraph.
   */
-  defaultGraph: () => DFDefaultGraph,
+  defaultGraph: () => TFDefaultGraph | TFNamedNode | TFBlankNode,
+
   /**
    * Returns a new instance of the specific Term subclass given by original.termType
    * (e.g., NamedNode, BlankNode, Literal, etc.),
@@ -212,22 +202,27 @@ export interface TFDataFactory<
    * Not implemented in RDFJS, so optional.
    */
   fromTerm?: (original: TFTerm) => TFTerm
+
   /**
    * Returns a new instance of Quad, such that newObject.equals(original) returns true.
    * Not implemented in RDFJS, so optional.
    */
-  fromQuad?: (original: DFQuad) => DFQuad
+  fromQuad?: (original: TFQuad) => TFQuad
+
   /**
    * Returns a new instance of Quad.
    * If graph is undefined or null it MUST set graph to a DefaultGraph.
    */
   quad: (
-    subject: DFSubject,
-    predicate: DFPredicate,
-    object: DFObject,
-    graph?: DFGraph,
-  ) => DFQuad
+    subject: TFTerm,
+    predicate: TFTerm,
+    object: TFTerm,
+    graph?: TFTerm,
+  ) => TFQuad<any, any, any, any>
+
   /**
+   * Check for specific features/behaviour on the factory.
+   *
    * This does not exist on the original RDF/JS spec
    */
   supports: SupportTable
@@ -249,7 +244,9 @@ export type TFGraph = TFNamedNode | TFDefaultGraph | TFBlankNode | TFVariable
 /** All the types that a .fromValue() method might return */
 export type FromValueReturns<C extends Node = any> = TFTerm | undefined | null | Collection<C>
 
-export interface IRDFlibDataFactory extends DataFactory<NamedNode> {
+export interface IRDFlibDataFactory extends DataFactory<
+  NamedNode | BlankNode | Literal | Collection | Statement
+> {
   fetcher: (store: IndexedFormula, options: any) => Fetcher
   graph: (features, opts) => IndexedFormula
   lit: (val: string, lang?: string, dt?: TFNamedNode) => Literal

@@ -3,8 +3,8 @@
     "allowSyntheticDefaultImports": true,
     "checkJs": false,
     "allowJs": true,
-    "target": "es5",
-    "module": "es6",
+    "target": "es2019",
+    "module": "esnext",
     "strict": true,
     "noImplicitAny": false,
     "lib": [

@@ -12,6 +12,7 @@ import {
   Bindings,
   TermType,
   TFBlankNode,
+  TFDataFactory,
   TFGraph,
   TFObject,
   TFPredicate,
@@ -22,8 +23,6 @@ import {
 import { isStatement } from './utils/terms'
 import Variable from './variable'
 import {
-  DataFactory,
-  IdentityFactory,
   Indexable,
   TFIDFactoryTypes
 } from './data-factory-type'
@@ -36,7 +35,7 @@ export function isFormula<T>(value: T | TFTerm): value is Formula {
 export interface FormulaOpts {
   dataCallback?: (q: TFQuad) => void
   rdfArrayRemove?: (arr: TFQuad[], q: TFQuad) => void
-  rdfFactory?: IdentityFactory & DataFactory
+  rdfFactory?: TFDataFactory
 }
 
 interface BooleanMap {
