@@ -1,4 +1,3 @@
-import BlankNode from './blank-node'
 import ClassOrder from './class-order'
 import Collection from './collection'
 import CanonicalDataFactory from './factories/canonical-data-factory'
@@ -27,10 +26,6 @@ import {
   TFIDFactoryTypes
 } from './data-factory-type'
 import { appliedFactoryMethods, arrayToStatements } from './utils'
-
-export function isFormula<T>(value: T | TFTerm): value is Formula {
-  return (value as Node).termType === TermType.Graph
-}
 
 export interface FormulaOpts {
   dataCallback?: (q: TFQuad) => void

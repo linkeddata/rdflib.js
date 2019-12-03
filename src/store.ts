@@ -48,7 +48,6 @@ import {
 import Statement from './statement'
 import { Indexable } from './data-factory-type'
 import NamedNode from './named-node'
-import Collection from './collection'
 import Fetcher from './fetcher'
 
 const owlNamespaceURI = 'http://www.w3.org/2002/07/owl#'

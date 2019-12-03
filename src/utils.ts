@@ -86,7 +86,7 @@ export function arrayToStatements(
   const statements: TFQuad[] = []
 
   data.reduce<TFSubject>((id, _listObj, i, listData) => {
-    statements.push(rdfFactory.quad(id, rdfFactory.namedNode(rdf.first), listData[i] as TFLiteral))
+    statements.push(rdfFactory.quad(id, rdfFactory.namedNode(rdf.first), listData[i]))
 
     let nextNode
     if (i < listData.length - 1) {

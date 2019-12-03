@@ -41,7 +41,6 @@ Node.toJS = function (term: TFTerm): TFTerm | boolean | number | Date | string |
     term.datatype.equals(ns.xsd('float')) ||
     term.datatype.equals(ns.xsd('decimal'))
   ) {
-    let z = Number(term.value)
     return Number(term.value)
   }
   return term.value

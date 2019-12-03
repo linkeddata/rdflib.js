@@ -72,8 +72,7 @@ const RDFlibDataFactory: IRDFlibDataFactory = {
     predicate: PredicateType,
     object: ObjectType
   ): Statement {
-    // Statement is inherited from data-factory-internal#quad
-    return this.quad(subject, predicate, object) as Statement
+    return this.quad(subject, predicate, object)
   },
 }
 

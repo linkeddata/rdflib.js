@@ -128,7 +128,7 @@ const CanonicalDataFactory: DataFactory = {
     languageOrDatatype?: string | TFNamedNode
   ): Literal {
     if (typeof value !== "string" && !languageOrDatatype) {
-      return Literal.fromValue(value) as Literal
+      return Literal.fromValue(value)
     }
 
     const strValue = typeof value === 'string' ? value : '' + value

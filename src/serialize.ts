@@ -18,7 +18,7 @@ export default function serialize (
    * Defaults to Turtle.
    */
   contentType?: string | ContentType,
-  callback?: (err?: Error | null, result?: string ) => any,
+  callback?: (err: Error | undefined | null, result?: string | null) => any,
   options?: {
     /**
      * A string of letters, each of which set an options
@@ -74,17 +74,17 @@ export default function serialize (
     }
   } catch (err) {
     if (callback) {
-      return callback(err)
+      return callback(err, undefined)
     }
     throw err // Don't hide problems from caller in sync mode
   }
 
-  function executeCallback (err?: Error | null, result?: string) {
+  function executeCallback (err: Error | null | undefined, result: string | null | undefined): string | undefined {
     if (callback) {
       callback(err, result)
       return
     } else {
-      return result
+      return result as string
     }
   }
 }

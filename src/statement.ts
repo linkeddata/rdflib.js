@@ -1,4 +1,3 @@
-import NamedNode from './named-node'
 import Node from './node-internal'
 import {
   Bindings,
@@ -14,7 +13,6 @@ import {
   TFSubject,
   TFTerm,
 } from './types'
-import Literal from './literal'
 import { defaultGraphNode } from './utils/default-graph-uri'
 
 /** A Statement represents an RDF Triple or Quad. */
@@ -80,7 +78,7 @@ export default class Statement implements TFQuad<SubjectType, PredicateType, Obj
     return (
       other.subject.equals(this.subject) &&
       other.predicate.equals(this.predicate) &&
-      other.object.equals(this.object as Literal) &&
+      other.object.equals(this.object) &&
       other.graph.equals(this.graph)
     )
   }
