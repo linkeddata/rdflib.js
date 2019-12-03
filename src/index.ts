@@ -28,7 +28,7 @@ import { UpdatesVia } from './updates-via'
 import * as uri from './uri'
 import * as Util from './util'
 import Variable from './variable'
-import DataFactory from './rdflib-data-factory'
+import DataFactory from './factories/rdflib-data-factory'
 
 export * from './utils/terms'
 

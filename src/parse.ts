@@ -1,4 +1,4 @@
-import DataFactory from './data-factory'
+import DataFactory from './factories/extended-term-factory'
 import jsonldParser from './jsonldparser'
 // @ts-ignore is this injected?
 import { Parser as N3jsParser } from 'n3'  // @@ Goal: remove this dependency

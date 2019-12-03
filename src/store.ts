@@ -18,7 +18,7 @@
 /** @module store */
 
 import ClassOrder from './class-order'
-import { defaultGraphURI } from './data-factory-internal'
+import { defaultGraphURI } from './factories/canonical-data-factory'
 import Formula, { FormulaOpts } from './formula'
 import { ArrayIndexOf } from './utils'
 import { RDFArrayRemove } from './util'
@@ -394,7 +394,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
   add (
     subj: TFSubject | TFQuad | TFQuad[] | Statement | Statement[],
     pred?: TFPredicate,
-    obj?: TFObject | Collection,
+    obj?: TFTerm,
     why?: TFGraph
   ): TFQuad | null | IndexedFormula {
     var i: number

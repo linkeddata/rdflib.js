@@ -15,6 +15,7 @@ import Collection from '../collection'
 import IndexedFormula from '../store'
 import Statement from '../statement'
 import NamedNode from '../named-node'
+import Variable from '../variable'
 
 export function isStatement(obj): obj is Statement {
   return typeof obj === 'object' && obj !== null && 'subject' in obj
@@ -46,6 +47,12 @@ export function isRDFObject (obj: any): obj is ObjectType {
   )
 }
 
+/** TypeGuard for RDFLib Variables */
+export function isVariable(obj: any): obj is Variable {
+  return isTFTerm(obj)
+    && (obj as TFTerm).termType === TermType.Variable
+}
+
 /** TypeGuard for RDF/JS TaskForce Terms */
 export function isTFTerm (obj: any): obj is TFTerm {
   return typeof obj === 'object'
@@ -60,8 +67,12 @@ export function isTFLiteral (value: any): value is TFLiteral {
 }
 
 /** TypeGuard for RDF/JS TaskForce Quads */
-export function isTFStatement (obj: any): obj is TFQuad {
-  return typeof obj === "object" && obj !== null && 'subject' in obj
+export function isTFStatement (obj: any): obj is TFQuad<any, any, any, any> {
+  return typeof obj === "object" && obj !== null && (
+    'subject' in obj
+    && 'predicate' in obj
+    && 'object' in obj
+  )
 }
 
 /** TypeGuard for RDF/JS TaskForce NamedNodes */

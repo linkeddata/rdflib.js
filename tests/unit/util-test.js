@@ -1,7 +1,7 @@
 /* eslint-env mocha */
 import { expect } from 'chai'
 
-import CanonicalDataFactory from '../../src/data-factory-internal'
+import CanonicalDataFactory from '../../src/factories/canonical-data-factory'
 import Literal from '../../src/literal'
 import NamedNode from '../../src/named-node'
 import Statement from '../../src/statement'

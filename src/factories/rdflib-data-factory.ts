@@ -1,20 +1,18 @@
 import {
-  GraphType,
   IRDFlibDataFactory,
   ObjectType,
   PredicateType,
   SubjectType,
-  TFNamedNode
-} from './types'
-import Literal from './literal'
-import Statement from './statement'
-import IndexedFormula from './store'
-import Fetcher from './fetcher'
-import ExtendedTermFactory from './data-factory'
+  TFNamedNode,
+  TFTerm
+} from '../types'
+import Literal from '../literal'
+import Statement from '../statement'
+import IndexedFormula from '../store'
+import Fetcher from '../fetcher'
+import ExtendedTermFactory from './extended-term-factory'
 
-/** Full RDFLib.js Data Factory
- *  @todo Add missing functions (isQuad, equals, toNQ), so Partial can be removed
- */
+/** Full RDFLib.js Data Factory */
 const RDFlibDataFactory: IRDFlibDataFactory = {
   ...ExtendedTermFactory,
 
@@ -39,9 +37,10 @@ const RDFlibDataFactory: IRDFlibDataFactory = {
    * @param val The lexical value
    * @param lang The language
    * @param dt The datatype
+   * @deprecated use {literal} with the second and third argument combined
    */
   lit (val: string, lang?: string, dt?: TFNamedNode): Literal {
-    return new Literal('' + val, lang, dt)
+    return this.literal('' + val, lang || dt)
   },
 
   /**
@@ -50,14 +49,15 @@ const RDFlibDataFactory: IRDFlibDataFactory = {
    * @param predicate The predicate
    * @param object The object
    * @param graph The containing graph
+   * @deprecated use {quad} instead
    */
   st (
-    subject: SubjectType,
-    predicate: PredicateType,
-    object: ObjectType,
-    graph?: GraphType
+    subject: TFTerm,
+    predicate: TFTerm,
+    object: TFTerm,
+    graph?: TFTerm
   ): Statement {
-    return new Statement(subject, predicate, object, graph)
+    return this.quad(subject, predicate, object, graph)
   },
 
   /**
@@ -65,6 +65,7 @@ const RDFlibDataFactory: IRDFlibDataFactory = {
    * @param subject The subject
    * @param predicate The predicate
    * @param object The object
+   * @deprecated use {quad} without the last argument instead
    */
   triple (
     subject: SubjectType,

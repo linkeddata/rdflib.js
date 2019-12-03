@@ -2,9 +2,9 @@
 import { expect } from 'chai'
 
 import parse from '../../src/parse'
-import CanonicalDataFactory from '../../src/data-factory-internal'
+import CanonicalDataFactory from '../../src/factories/canonical-data-factory'
 import defaultXSD from '../../src/xsd'
-import DataFactory from '../../src/rdflib-data-factory'
+import DataFactory from '../../src/factories/rdflib-data-factory'
 
 describe('Parse', () => {
   describe('ttl', () => {

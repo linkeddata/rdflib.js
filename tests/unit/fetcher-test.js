@@ -10,7 +10,7 @@ import nock from 'nock'
 import * as rdf from '../../src/index'
 import NamedNode from '../../src/named-node'
 import IndexedFormula from '../../src/store'
-import CanonicalDataFactory from '../../src/data-factory-internal'
+import CanonicalDataFactory from '../../src/factories/canonical-data-factory'
 
 chai.use(sinonChai)
 chai.use(dirtyChai)

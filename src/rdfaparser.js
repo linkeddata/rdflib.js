@@ -17,7 +17,7 @@ import Literal from './literal'
 import NamedNode from './named-node'
 import * as Uri from './uri'
 import * as Util from './util'
-import rdf from './data-factory-internal'
+import rdf from './factories/canonical-data-factory'
 
 if (typeof Node === 'undefined') { //  @@@@@@ Global. Interface to xmldom.
   var Node = {

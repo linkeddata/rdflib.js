@@ -13,10 +13,6 @@ export default abstract class Node {
   static fromValue: <T extends FromValueReturns>(value: ValueType) => T
   // Specified in './node.ts' to prevent circular dependency
   static toJS: (term: any) => Date | Number | string | boolean | object | Array<Date | Number | string | boolean | object>;
-  /**
-   * The nodes in this collection
-   */
-  elements!: Node[];
 
   /** The type of node */
   termType!: string;
@@ -27,7 +23,7 @@ export default abstract class Node {
   /** The node's value */
   value: string;
 
-  constructor(value: string) {
+  protected constructor(value: string) {
     this.value = value
   }
 

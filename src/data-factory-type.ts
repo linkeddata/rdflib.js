@@ -11,12 +11,14 @@ import Literal from './literal'
 import Statement from './statement'
 import NamedNode from './named-node'
 import BlankNode from './blank-node'
+import Variable from './variable'
 
-export type DefaultFactoryTypes = NamedNode | BlankNode | Literal | Statement
+export type DefaultFactoryTypes = NamedNode | BlankNode | Literal | Variable | Statement
 
 /**
  * Defines a DataFactory as used in rdflib, based on the RDF/JS: Data model specification,
  * but with additional extensions
+ *
  * bnIndex is optional but useful.
  */
 export interface DataFactory<
@@ -37,7 +39,18 @@ export interface DataFactory<
 
   equals(a: Comparable, b: Comparable): boolean
 
-  toNQ(term: FactoryTypes): string
+  toNQ(term: TFTerm | FactoryTypes): string
+
+  quad(
+    subject: TFTerm,
+    predicate: TFTerm,
+    object: TFTerm,
+    graph?: TFTerm,
+  ): Statement;
+
+  quadToNQ(term: Statement | TFQuad): string
+
+  termToNQ(term: TFTerm): string
 
   /**
    * Generates a unique session-idempotent identifier for the given object.
@@ -47,13 +60,12 @@ export interface DataFactory<
    *
    * @return {Indexable} A unique value which must also be a valid JS object key type.
    */
-  id(obj: FactoryTypes): IndexType
+  id(obj: TFTerm | FactoryTypes): IndexType
 }
 
 export type TFIDFactoryTypes = TFNamedNode | TFBlankNode | TFLiteral | TFQuad | TFVariable | TFTerm
 
 export type Namespace = (term:string) => TFNamedNode
-export type NamespaceCreator = (ns: string) => Namespace
 
 /** A set of features that may be supported by a Data Factory */
 export type SupportTable = Record<Feature, boolean>
@@ -78,6 +90,6 @@ export enum Feature {
   variableType = "VARIABLE_TYPE",
 }
 
-export type Comparable = TFNamedNode | TFBlankNode | TFLiteral | TFQuad | undefined | null
+export type Comparable = TFTerm | TFNamedNode | TFBlankNode | TFLiteral | TFQuad | undefined | null
 
 export type Indexable = number | string

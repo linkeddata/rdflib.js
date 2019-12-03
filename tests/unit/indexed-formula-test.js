@@ -1,12 +1,12 @@
 /* eslint-env mocha */
 import { expect } from 'chai'
-import CanonicalDataFactory from '../../src/data-factory-internal'
+import CanonicalDataFactory from '../../src/factories/canonical-data-factory'
 import Formula from '../../src/formula'
 
 import IndexedFormula from '../../src/store'
 import NamedNode from '../../src/named-node'
 import { RDFArrayRemove } from '../../src/util'
-import DataFactory from '../../src/rdflib-data-factory'
+import DataFactory from '../../src/factories/rdflib-data-factory'
 
 describe('IndexedFormula', () => {
   const g0 = NamedNode.fromValue('https://example.com/graph0')
