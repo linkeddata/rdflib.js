@@ -4,23 +4,21 @@ import NamedNode from '../named-node'
 import Statement from '../statement'
 import Variable from '../variable'
 import {
-  TFNamedNode,
   SubjectType,
   PredicateType,
   ObjectType,
   GraphType,
   TermType,
-  TFTerm,
-  TFQuad,
 } from '../types'
 import { defaultGraphNode } from '../utils/default-graph-uri'
 import {
   Comparable,
   DataFactory,
   DefaultFactoryTypes,
-  Feature
-} from '../data-factory-type'
+  Feature,
+} from './factory-types'
 import { isTFStatement, isTFTerm } from '../utils/terms'
+import { TFNamedNode, TFQuad, TFTerm } from '../tf-types'
 
 export { defaultGraphURI } from '../utils/default-graph-uri'
 

@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 
 import Factory from '../../../src/factories/extended-term-factory';
-import { Feature } from '../../../src/data-factory-type'
+import { Feature } from '../../../src/factories/factory-types'
 import Collection from '../../../src/collection'
 
 /**

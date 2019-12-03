@@ -6,14 +6,9 @@ import {
   PredicateType,
   SubjectType,
   TermType,
-  TFGraph,
-  TFObject,
-  TFPredicate,
-  TFQuad,
-  TFSubject,
-  TFTerm,
 } from './types'
 import { defaultGraphNode } from './utils/default-graph-uri'
+import { TFGraph, TFObject, TFPredicate, TFQuad, TFSubject, TFTerm } from './tf-types'
 
 /** A Statement represents an RDF Triple or Quad. */
 export default class Statement implements TFQuad<SubjectType, PredicateType, ObjectType, GraphType> {

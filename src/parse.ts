@@ -8,7 +8,8 @@ import RDFParser from './rdfxmlparser'
 import sparqlUpdateParser from './patch-parser'
 import * as Util from './util'
 import Formula from './formula'
-import { TFQuad, ContentType } from './types'
+import { ContentType } from './types'
+import { TFQuad } from './tf-types'
 
 type CallbackFunc = (error: any, kb: Formula | null) => void
 

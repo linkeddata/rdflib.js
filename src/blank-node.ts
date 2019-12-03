@@ -1,7 +1,8 @@
 import ClassOrder from './class-order'
 import Node from './node-internal'
 import IndexedFormula from './store'
-import { BlankNodeTermType, TermType, TFBlankNode } from './types'
+import { BlankNodeTermType, TermType} from './types'
+import { TFBlankNode } from './tf-types'
 
 /**
  * An RDF blank node is a Node without a URI

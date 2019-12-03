@@ -1,5 +1,6 @@
 import Node from './node-internal'
-import { TermType, TFTerm } from './types'
+import { TermType} from './types'
+import { TFTerm } from './tf-types'
 
 /**
 * An empty node

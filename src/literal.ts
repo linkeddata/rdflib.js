@@ -4,12 +4,11 @@ import Node from './node-internal'
 import {
   LiteralTermType,
   TermType,
-  TFLiteral,
-  TFTerm,
   ValueType
 } from './types'
 import { isTFLiteral } from './utils/terms'
 import XSD from './xsd-internal'
+import { TFLiteral, TFTerm } from './tf-types'
 
 /**
  * An RDF literal, containing some value which isn't expressed as an IRI.

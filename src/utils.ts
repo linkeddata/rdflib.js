@@ -1,8 +1,8 @@
 import Fetcher from './fetcher'
 import log from './log'
-import { TFDataFactory, TFLiteral, TFQuad, TFSubject, TFTerm } from './types'
 import { docpart } from './uri'
 import { string_startswith } from './util'
+import { TFDataFactory, TFQuad, TFSubject, TFTerm } from './tf-types'
 
 /** RDF/JS Taskforce Typeguards */
 

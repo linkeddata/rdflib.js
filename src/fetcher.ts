@@ -43,15 +43,17 @@ import { fetch as solidAuthCli } from 'solid-auth-cli'
 // @ts-ignore This is injected
 import { fetch as solidAuthClient } from 'solid-auth-client'
 import {
-  TFBlankNode,
-  TFNamedNode,
-  TFGraph,
-  TFSubject,
-  ContentType,
-  TFDataFactory,
-  TFPredicate
+  ContentType
 } from './types'
 import { termValue } from './utils/termValue'
+import {
+  TFBlankNode,
+  TFDataFactory,
+  TFGraph,
+  TFNamedNode,
+  TFPredicate,
+  TFSubject
+} from './tf-types'
 
 // This is a special fetch which does OIDC auth, catching 401 errors
 const fetch = typeof window === 'undefined' ? solidAuthCli : solidAuthClient

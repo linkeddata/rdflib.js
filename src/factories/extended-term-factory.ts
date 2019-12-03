@@ -1,9 +1,10 @@
 import Collection from '../collection'
 import CanonicalDataFactory from './canonical-data-factory'
-import { TermType, TFTerm, ValueType } from '../types'
-import { DataFactory, DefaultFactoryTypes, Feature, Indexable } from '../data-factory-type'
+import { TermType, ValueType } from '../types'
+import { DataFactory, DefaultFactoryTypes, Feature, Indexable } from './factory-types'
 import { isCollection, isVariable } from '../utils/terms'
 import Variable from '../variable'
+import { TFTerm } from '../tf-types'
 
 interface CollectionFactory extends DataFactory {
   collection(elements: ReadonlyArray<ValueType>): Collection

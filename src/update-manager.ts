@@ -14,8 +14,15 @@ import { isStore, isTFBlankNode } from './utils/terms'
 import * as Util from './util'
 import Statement from './statement'
 import NamedNode from './named-node'
-import { TFNamedNode, TFQuad, TFBlankNode, TFSubject, TFPredicate, TFObject, TFGraph, TFTerm } from './types'
 import { termValue } from './utils/termValue'
+import {
+  TFBlankNode,
+  TFGraph, TFNamedNode,
+  TFObject,
+  TFPredicate,
+  TFQuad,
+  TFSubject, TFTerm
+} from './tf-types'
 
 interface UpdateManagerFormula extends IndexedFormula {
   fetcher: Fetcher

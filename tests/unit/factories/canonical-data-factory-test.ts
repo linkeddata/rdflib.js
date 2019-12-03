@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 
 import Factory from '../../../src/factories/canonical-data-factory';
-import { Feature } from '../../../src/data-factory-type'
+import { Feature } from '../../../src/factories/factory-types'
 import NamedNode from '../../../src/named-node'
 import Literal from '../../../src/literal'
 import DefaultGraph from '../../../src/default-graph'

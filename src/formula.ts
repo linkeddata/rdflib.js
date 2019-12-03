@@ -10,6 +10,15 @@ import Statement from './statement'
 import {
   Bindings,
   TermType,
+} from './types'
+import { isStatement } from './utils/terms'
+import Variable from './variable'
+import {
+  Indexable,
+  TFIDFactoryTypes,
+} from './factories/factory-types'
+import { appliedFactoryMethods, arrayToStatements } from './utils'
+import {
   TFBlankNode,
   TFDataFactory,
   TFGraph,
@@ -17,15 +26,8 @@ import {
   TFPredicate,
   TFQuad,
   TFSubject,
-  TFTerm
-} from './types'
-import { isStatement } from './utils/terms'
-import Variable from './variable'
-import {
-  Indexable,
-  TFIDFactoryTypes
-} from './data-factory-type'
-import { appliedFactoryMethods, arrayToStatements } from './utils'
+  TFTerm,
+} from './tf-types'
 
 export interface FormulaOpts {
   dataCallback?: (q: TFQuad) => void

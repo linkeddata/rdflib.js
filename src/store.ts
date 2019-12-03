@@ -36,19 +36,22 @@ import { Query, indexedFormulaQuery } from './query'
 import UpdateManager from './update-manager'
 import {
   Bindings,
-  TFTerm,
-  TFPredicate,
-  TFSubject,
-  TFObject,
-  TFGraph,
-  TFQuad,
-  TFNamedNode,
-  TFBlankNode,
+
+
+
 } from './types'
 import Statement from './statement'
-import { Indexable } from './data-factory-type'
+import { Indexable } from './factories/factory-types'
 import NamedNode from './named-node'
 import Fetcher from './fetcher'
+import {
+  TFBlankNode,
+  TFGraph, TFNamedNode,
+  TFObject,
+  TFPredicate,
+  TFQuad,
+  TFSubject, TFTerm
+} from './tf-types'
 
 const owlNamespaceURI = 'http://www.w3.org/2002/07/owl#'
 

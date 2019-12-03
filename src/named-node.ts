@@ -1,8 +1,9 @@
 'use strict'
 import ClassOrder from './class-order'
 import Node from './node-internal'
-import { NamedNodeTermType, TermType, TFNamedNode } from './types'
+import { NamedNodeTermType, TermType} from './types'
 import { termValue } from './utils/termValue'
+import { TFNamedNode } from './tf-types'
 
 /**
  * A named (IRI) RDF node

@@ -1,21 +1,21 @@
 import {
   ObjectType,
-  TermType,
-  TFBlankNode,
-  TFGraph,
-  TFLiteral,
-  TFNamedNode,
-  TFObject,
-  TFPredicate,
-  TFQuad,
-  TFSubject,
-  TFTerm
+  TermType
 } from '../types'
 import Collection from '../collection'
 import IndexedFormula from '../store'
 import Statement from '../statement'
 import NamedNode from '../named-node'
 import Variable from '../variable'
+import {
+  TFBlankNode,
+  TFGraph,
+  TFLiteral, TFNamedNode,
+  TFObject,
+  TFPredicate,
+  TFQuad,
+  TFSubject, TFTerm
+} from '../tf-types'
 
 export function isStatement(obj): obj is Statement {
   return typeof obj === 'object' && obj !== null && 'subject' in obj

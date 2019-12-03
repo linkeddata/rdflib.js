@@ -7,11 +7,11 @@ import {
   CollectionTermType,
   FromValueReturns,
   TermType,
-  TFTerm,
   ValueType
 } from './types'
 import Variable from './variable'
 import { isTFTerm } from './utils/terms'
+import { TFTerm } from './tf-types'
 
 /**
  * Creates an RDF Node from a native javascript value.

@@ -1,4 +1,5 @@
-import { ValueType, Bindings, TFTerm, FromValueReturns } from './types'
+import { ValueType, Bindings, FromValueReturns } from './types'
+import { TFTerm } from './tf-types'
 
 /**
  * The superclass of all RDF Statement objects, that is
@@ -38,6 +39,7 @@ export default abstract class Node {
 
   /**
    * Compares this node with another
+   * @see {equals} to check if two nodes are equal
    * @param other - The other node
    */
   compareTerm (other: Node): number {

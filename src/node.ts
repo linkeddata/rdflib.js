@@ -2,9 +2,9 @@
 // that would otherwise require circular dependencies.
 import { fromValue } from './collection'
 import Node from './node-internal'
-import { TFTerm } from './types'
 import Namespace from './namespace'
 import { isCollection, isTFLiteral } from './utils/terms'
+import { TFTerm } from './tf-types'
 
 /**
  * Creates an RDF Node from a native javascript value.

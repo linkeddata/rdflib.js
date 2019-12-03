@@ -1,5 +1,5 @@
 import NamedNode from './named-node'
-import { TFDataFactory, TFNamedNode } from './types'
+import { TFDataFactory, TFNamedNode } from './tf-types'
 
 /**
  * Gets a namespace for the specified namespace's URI

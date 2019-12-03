@@ -3,14 +3,13 @@ import {
   ObjectType,
   PredicateType,
   SubjectType,
-  TFNamedNode,
-  TFTerm
 } from '../types'
 import Literal from '../literal'
 import Statement from '../statement'
 import IndexedFormula from '../store'
 import Fetcher from '../fetcher'
 import ExtendedTermFactory from './extended-term-factory'
+import { TFNamedNode, TFTerm } from '../tf-types'
 
 /** Full RDFLib.js Data Factory */
 const RDFlibDataFactory: IRDFlibDataFactory = {
