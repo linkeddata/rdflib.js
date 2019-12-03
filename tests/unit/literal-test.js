@@ -104,17 +104,17 @@ describe('Literal', () => {
     it('compares termType, value, language, and datatype', () => {
       const a = new Literal('hello world', 'en', XSD.langString)
       const b = new Literal('', '', null)
-      expect(a.equals(b)).to.be.false
-      expect(b.equals(a)).to.be.false
+      expect(a.equals(b)).to.be.false()
+      expect(b.equals(a)).to.be.false()
       b.value = 'hello world'
-      expect(a.equals(b)).to.be.false
-      expect(b.equals(a)).to.be.false
+      expect(a.equals(b)).to.be.false()
+      expect(b.equals(a)).to.be.false()
       b.language = 'en'
-      expect(a.equals(b)).to.be.false
-      expect(b.equals(a)).to.be.false
+      expect(a.equals(b)).to.be.false()
+      expect(b.equals(a)).to.be.false()
       b.datatype = XSD.langString
-      expect(a.equals(b)).to.be.true
-      expect(b.equals(a)).to.be.true
+      expect(a.equals(b)).to.be.true()
+      expect(b.equals(a)).to.be.true()
     })
   })
 })

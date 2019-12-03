@@ -189,8 +189,8 @@ describe('Query', () => {
         result[(bindings['?x'].value)] = true
       }, null, () => { // fetcher, done callback
         result.sort()
-        expect(result[alice.uri]).to.be.true
-        expect(result[bob.uri]).to.be.true
+        expect(result[alice.uri]).to.be.true()
+        expect(result[bob.uri]).to.be.true()
         done()
       })
     })
@@ -365,8 +365,8 @@ describe('Synchronous Query', () => {
         result[(bindings['?x'].value)] = true
       }, null, () => { // fetcher, done callback
         result.sort()
-        expect(result[alice.uri]).to.be.true
-        expect(result[bob.uri]).to.be.true
+        expect(result[alice.uri]).to.be.true()
+        expect(result[bob.uri]).to.be.true()
         done()
       })
     })

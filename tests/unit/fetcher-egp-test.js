@@ -22,7 +22,7 @@ describe('Fetcher', () => {
       let kb = rdf.graph();
       let fetcher = rdf.fetcher(kb, {a:1})
       fetcher.nowOrWhenFetched(kb.sym(goodServer + path), {force: true}, trywrap(done, function (ok, statusOrErrorText, resp) {
-        expect(ok).to.be.true
+        expect(ok).to.be.true()
         expect(resp.status).to.equal(200)
         expect(statusOrErrorText).to.equal('OK')
         expect(resp.responseText.length).to.equal(bodyText.length)
@@ -51,7 +51,7 @@ describe('Fetcher', () => {
         console.log('@@@@@@ resp is ' + resp)
         console.log('@@@@@@ resp.status is ' + resp.status)
 
-        expect(ok).to.be.false
+        expect(ok).to.be.false()
         expect(statusOrErrorText).to.include(404)
         expect(resp.status).to.match(/404/)
       }))
@@ -64,7 +64,7 @@ describe('Fetcher', () => {
       let kb = rdf.graph();
       let fetcher = rdf.fetcher(kb, {a:1})
       fetcher.nowOrWhenFetched(kb.sym(badServer + path), {force: true}, trywrap(done, function (ok, statusOrErrorText, resp) {
-        expect(ok).to.be.false
+        expect(ok).to.be.false()
         expect(statusOrErrorText).to.match(/ENOTFOUND/);
         expect(resp.status).to.equal(999)
       }))

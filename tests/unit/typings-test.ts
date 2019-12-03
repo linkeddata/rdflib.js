@@ -8,7 +8,7 @@ import { expect } from 'chai'
  */
 describe('typings', () => {
   it('allows calling Literal.equal with non-literal', () => {
-    const test = (): Statement => undefined as unknown as Statement
+    const test = (): Statement => ({}) as unknown as Statement
 
     const b = test()
     const c = new Literal("")

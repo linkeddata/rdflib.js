@@ -113,7 +113,7 @@ describe('Parse', () => {
       })
 
       it('uses the specified base IRI', () => {
-        expect(store.rdfFactory.supports["COLLECTIONS"]).to.be.false
+        expect(store.rdfFactory.supports["COLLECTIONS"]).to.be.false()
         const homePageHeight = 5 // homepage + height + 3 x name
         const list = 2 * 3 + 1 // (rdf:first + rdf:rest) * 3 items + listProp
         expect(store.statements).to.have.length(homePageHeight + list)
@@ -207,7 +207,7 @@ describe('Parse', () => {
       })
 
       it('uses the specified base IRI', () => {
-        expect(store.rdfFactory.supports["COLLECTIONS"]).to.be.true
+        expect(store.rdfFactory.supports["COLLECTIONS"]).to.be.true()
         expect(store.statements).to.have.length(1)
 
         const collection = store.statements[0]

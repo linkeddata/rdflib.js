@@ -46,7 +46,7 @@ describe('Fetcher', () => {
       }
       let fetcher = new Fetcher()
 
-      expect(fetcher.store.fetcher === fetcher).to.be.true
+      expect(fetcher.store.fetcher === fetcher).to.be.true()
     })
   })
 
@@ -171,11 +171,11 @@ describe('Fetcher', () => {
     })
   })
 
-  describe('load', () => {
-    // let fetcher, uri, options, xhr
-
-    it('should load multiple docs')
-  })
+  // describe('load', () => {
+  //   // let fetcher, uri, options, xhr
+  //
+  //   it('should load multiple docs')
+  // })
 
   describe('load', () => {
     let fetcher, uri, options
@@ -436,35 +436,35 @@ describe('Fetcher', () => {
     })
   })
 
-  describe('guessContentType', () => {
-    it('should return null if uri has no extension')
-
-    it('should return null if unknown extension')
-
-    it('it should return the content type for a known extension')
-  })
-
-  describe('normalizedContentType', () => {
-    it('should return the forced content type if present')
-
-    it('should try to guess content type if none returned in header')
-
-    it('should try to guess content type for octet-stream generic type')
-
-    it('should return the content type in the headers')
-
-    it('should default to text/xml for file: protocol uris')
-
-    it('should default to text/xml for chrome: protocol uris')
-  })
-
-  describe('handlerForContentType', () => {
-    it('should return null when no contentType given')
-
-    it('should return a handler instance if content type matches')
-
-    it('should return null when no handler match is found')
-  })
+  // describe('guessContentType', () => {
+  //   it('should return null if uri has no extension')
+  //
+  //   it('should return null if unknown extension')
+  //
+  //   it('it should return the content type for a known extension')
+  // })
+  //
+  // describe('normalizedContentType', () => {
+  //   it('should return the forced content type if present')
+  //
+  //   it('should try to guess content type if none returned in header')
+  //
+  //   it('should try to guess content type for octet-stream generic type')
+  //
+  //   it('should return the content type in the headers')
+  //
+  //   it('should default to text/xml for file: protocol uris')
+  //
+  //   it('should default to text/xml for chrome: protocol uris')
+  // })
+  //
+  // describe('handlerForContentType', () => {
+  //   it('should return null when no contentType given')
+  //
+  //   it('should return a handler instance if content type matches')
+  //
+  //   it('should return null when no handler match is found')
+  // })
 
   describe('load nock tests', () => {
     let fetcher
@@ -566,7 +566,7 @@ describe('Fetcher', () => {
     })
   })
 
-  describe('createContainer', () => {
-    it('should invoke webOperation with the right options')
-  })
+  // describe('createContainer', () => {
+  //   it('should invoke webOperation with the right options')
+  // })
 })
