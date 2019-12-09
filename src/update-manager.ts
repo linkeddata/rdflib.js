@@ -10,7 +10,7 @@ import Fetcher from './fetcher'
 import Namespace from './namespace'
 import Serializer from './serializer'
 import { join as uriJoin } from './uri'
-import { isStore, isTFBlankNode } from './utils/terms'
+import { isStore, isBlankNode } from './utils/terms'
 import * as Util from './util'
 import Statement from './statement'
 import NamedNode from './named-node'
@@ -217,7 +217,7 @@ export default class UpdateManager {
    */
   statementBnodes (st: Quad): TFBlankNode[] {
     return [st.subject, st.predicate, st.object].filter(function (x) {
-      return isTFBlankNode(x)
+      return isBlankNode(x)
     }) as TFBlankNode[]
   }
 

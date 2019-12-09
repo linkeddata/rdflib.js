@@ -34,7 +34,7 @@ import rdfParse from './parse'
 import { parseRDFaDOM } from './rdfaparser'
 import RDFParser from './rdfxmlparser'
 import * as Uri from './uri'
-import { isCollection, isTFNamedNode} from './utils/terms'
+import { isCollection, isNamedNode} from './utils/terms'
 import * as Util from './util'
 import serialize from './serialize'
 
@@ -1149,7 +1149,7 @@ export default class Fetcher implements CallbackifyInterface {
       userCallback = p2
     } else if (typeof p2 === 'undefined') { // original calling signature
       // referringTerm = undefined
-    } else if (isTFNamedNode(p2)) {
+    } else if (isNamedNode(p2)) {
       // referringTerm = p2
       options.referringTerm = p2
     } else {
@@ -1616,7 +1616,7 @@ export default class Fetcher implements CallbackifyInterface {
 
     this.addStatus(options.req, 'Accept: ' + options.headers['accept'])
 
-    if (isTFNamedNode(rterm)) {
+    if (isNamedNode(rterm)) {
       kb.add(kb.rdfFactory.namedNode(docuri), this.ns.link('requestedBy'), rterm, this.appNode)
     }
 

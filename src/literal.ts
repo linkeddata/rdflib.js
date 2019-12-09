@@ -6,7 +6,7 @@ import {
   TermType,
   ValueType
 } from './types'
-import { isTFLiteral } from './utils/terms'
+import { isLiteral } from './utils/terms'
 import XSD from './xsd-internal'
 import { TFLiteral, Term } from './tf-types'
 
@@ -168,7 +168,7 @@ export default class Literal extends Node implements TFLiteral {
    * @param value - The input value
    */
   static fromValue<T extends Literal>(value: ValueType): T {
-    if (isTFLiteral(value)) {
+    if (isLiteral(value)) {
       return value as T
     }
     switch (typeof value) {

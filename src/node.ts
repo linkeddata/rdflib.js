@@ -3,7 +3,7 @@
 import { fromValue } from './collection'
 import Node from './node-internal'
 import Namespace from './namespace'
-import { isCollection, isTFLiteral } from './utils/terms'
+import { isCollection, isLiteral } from './utils/terms'
 import { Term } from './tf-types'
 
 /**
@@ -28,7 +28,7 @@ Node.toJS = function (term: Term): Term | boolean | number | Date | string | any
   if (isCollection(term)) {
     return term.elements.map(Node.toJS) // Array node (not standard RDFJS)
   }
-  if (!isTFLiteral(term)) return term
+  if (!isLiteral(term)) return term
   if (term.datatype.equals(ns.xsd('boolean'))) {
     return term.value === '1' || term.value === 'true'
   }

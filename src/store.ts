@@ -23,12 +23,12 @@ import Formula, { FormulaOpts } from './formula'
 import { ArrayIndexOf } from './utils'
 import { RDFArrayRemove } from './util'
 import {
-  isRDFObject,
+  isRDFlibObject,
   isStore,
-  isTFGraph,
-  isTFPredicate,
+  isGraph,
+  isPredicate,
   isQuad,
-  isTFSubject
+  isSubject
 } from './utils/terms'
 import Node from './node'
 import Variable from './variable'
@@ -36,9 +36,6 @@ import { Query, indexedFormulaQuery } from './query'
 import UpdateManager from './update-manager'
 import {
   Bindings,
-
-
-
 } from './types'
 import Statement from './statement'
 import { Indexable } from './factories/factory-types'
@@ -424,16 +421,16 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     pred = Node.fromValue(pred)
     obj = Node.fromValue(obj)
     why = Node.fromValue(why)
-    if (!isTFSubject(subj)) {
+    if (!isSubject(subj)) {
       throw new Error('Subject is not a subject type')
     }
-    if (!isTFPredicate(pred)) {
+    if (!isPredicate(pred)) {
       throw new Error(`Predicate ${pred} is not a predicate type`)
     }
-    if (!isRDFObject(obj)) {
+    if (!isRDFlibObject(obj)) {
       throw new Error(`Object ${obj} is not an object type`)
     }
-    if (!isTFGraph(why)) {
+    if (!isGraph(why)) {
       throw new Error("Why is not a graph type")
     }
     //@ts-ignore This is not used internally
