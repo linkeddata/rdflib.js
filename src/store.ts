@@ -27,7 +27,7 @@ import {
   isStore,
   isTFGraph,
   isTFPredicate,
-  isTFStatement,
+  isQuad,
   isTFSubject
 } from './utils/terms'
 import Node from './node'
@@ -49,8 +49,8 @@ import {
   TFGraph, TFNamedNode,
   TFObject,
   TFPredicate,
-  TFQuad,
-  TFSubject, TFTerm
+  Quad,
+  TFSubject, Term
 } from './tf-types'
 
 const owlNamespaceURI = 'http://www.w3.org/2002/07/owl#'
@@ -137,20 +137,20 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
   /** Reverse mapping to redirection: aliases for this */
   aliases: any[]
   /** Redirections we got from HTTP */
-  HTTPRedirects: TFQuad[]
+  HTTPRedirects: Quad[]
   /** Array of statements with this X as subject */
-  subjectIndex: TFQuad[]
+  subjectIndex: Quad[]
   /** Array of statements with this X as predicate */
-  predicateIndex: TFQuad[]
+  predicateIndex: Quad[]
   /** Array of statements with this X as object */
-  objectIndex: TFQuad[]
+  objectIndex: Quad[]
   /** Array of statements with X as provenance */
-  whyIndex: TFQuad[]
+  whyIndex: Quad[]
   index: [
-    TFQuad[],
-    TFQuad[],
-    TFQuad[],
-    TFQuad[]
+    Quad[],
+    Quad[],
+    Quad[],
+    Quad[]
   ]
   features: FeaturesType
   static handleRDFType: Function
@@ -158,9 +158,9 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
   _existentialVariables?: TFBlankNode[]
 
   /** Function to remove quads from the store arrays with */
-  private rdfArrayRemove: (arr: TFQuad[], q: TFQuad) => void
+  private rdfArrayRemove: (arr: Quad[], q: Quad) => void
   /** Callbacks which are triggered after a statement has been added to the store */
-  private dataCallbacks?: Array<(q: TFQuad) => void>
+  private dataCallbacks?: Array<(q: Quad) => void>
 
   /**
    * Creates a new formula
@@ -216,7 +216,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
    */
   //@ts-ignore different from signature in Formula
   substitute(bindings: Bindings): IndexedFormula {
-    var statementsCopy = this.statements.map(function (ea: TFQuad) {
+    var statementsCopy = this.statements.map(function (ea: Quad) {
       return (ea as Statement).substitute(bindings)
     })
     var y = new IndexedFormula()
@@ -228,7 +228,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
    * Add a callback which will be triggered after a statement has been added to the store.
    * @param cb
    */
-  addDataCallback(cb: (q: TFQuad) => void): void {
+  addDataCallback(cb: (q: Quad) => void): void {
     if (!this.dataCallbacks) {
       this.dataCallbacks = []
     }
@@ -263,8 +263,8 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
         if (binding) ds = ds.substitute(binding)
         // console.log('applyPatch: delete: ' + ds)
         ds = ds.statements as Statement[]
-        var bad: TFQuad[] = []
-        var ds2 = ds.map(function (st: TFQuad) { // Find the actual statemnts in the store
+        var bad: Quad[] = []
+        var ds2 = ds.map(function (st: Quad) { // Find the actual statemnts in the store
           var sts = targetKB.statementsMatching(st.subject, st.predicate, st.object, target)
           if (sts.length === 0) {
             // log.info("NOT FOUND deletable " + st)
@@ -280,7 +280,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
           // console.log('despite ' + targetKB.statementsMatching(bad[0].subject, bad[0].predicate)[0])
           return patchCallback('Could not find to delete: ' + bad.join('\n or '))
         }
-        ds2.map(function (st: TFQuad) {
+        ds2.map(function (st: Quad) {
           targetKB.remove(st)
         })
       }
@@ -289,7 +289,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
         ds = patch['insert']
         if (binding) ds = ds.substitute(binding)
         ds = ds.statements
-        ds.map(function (st: TFQuad) {
+        ds.map(function (st: Quad) {
           st.graph = target
           targetKB.add(st.subject, st.predicate, st.object, st.graph)
         })
@@ -377,7 +377,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
   }
 
   /** @deprecated Use {add} instead */
-  addStatement (st: TFQuad): number {
+  addStatement (st: Quad): number {
     this.add(st.subject, st.predicate, st.object, st.graph)
     return this.statements.length
   }
@@ -394,18 +394,18 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
    */
   // @ts-ignore differs from signature in Formula
   add (
-    subj: TFSubject | TFQuad | TFQuad[] | Statement | Statement[],
+    subj: TFSubject | Quad | Quad[] | Statement | Statement[],
     pred?: TFPredicate,
-    obj?: TFTerm,
+    obj?: Term,
     why?: TFGraph
-  ): TFQuad | null | IndexedFormula {
+  ): Quad | null | IndexedFormula {
     var i: number
     if (arguments.length === 1) {
       if (subj instanceof Array) {
         for (i = 0; i < subj.length; i++) {
           this.add(subj[i])
         }
-      } else if (isTFStatement(subj)) {
+      } else if (isQuad(subj)) {
         this.add(subj.subject, subj.predicate, subj.object, subj.graph)
       } else if (isStore(subj)) {
         this.add(subj.statements)
@@ -413,7 +413,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
       return this
     }
     var actions: Function[]
-    var st: TFQuad
+    var st: Quad
     if (!why) {
       // system generated
       why = this.fetcher ? this.fetcher.appNode : this.rdfFactory.defaultGraph()
@@ -492,7 +492,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
    * Returns the symbol with canonical URI as smushed
    * @param term - An RDF node
    */
-  canon(term: TFTerm): TFTerm {
+  canon(term: Term): Term {
     if (!term) {
       return term
     }
@@ -526,7 +526,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
    * @param from - An index with the array ['subject', 'predicate', 'object', 'why']
    */
   checkStatementList(
-    sts: ReadonlyArray<TFQuad>,
+    sts: ReadonlyArray<Quad>,
     from?: number
   ): boolean | void {
     if (from === undefined) {
@@ -534,11 +534,11 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     }
     var names = ['subject', 'predicate', 'object', 'why']
     var origin = ' found in ' + names[from] + ' index.'
-    var st: TFQuad
+    var st: Quad
     for (var j = 0; j < sts.length; j++) {
       st = sts[j]
       var term = [ st.subject, st.predicate, st.object, st.graph ]
-      var arrayContains = function (a: Array<any>, x: TFQuad) {
+      var arrayContains = function (a: Array<any>, x: Quad) {
         for (var i = 0; i < a.length; i++) {
           if (a[i].subject.equals(x.subject) &&
             a[i].predicate.equals(x.predicate) &&
@@ -573,7 +573,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
   }
 
   // @ts-ignore incompatible with Forumala.compareTerm
-  compareTerm(u1: TFTerm, u2: TFTerm): number {
+  compareTerm(u1: Term, u2: Term): number {
     // Keep compatibility with downstream classOrder changes
     if (Object.prototype.hasOwnProperty.call(u1, "compareTerm")) {
       return (u1 as Node).compareTerm(u2 as Node)
@@ -636,7 +636,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
    * @param u1in The first node
    * @param u2in The second node
    */
-  equate(u1in: TFTerm, u2in : TFTerm): boolean {
+  equate(u1in: Term, u2in : Term): boolean {
     // log.warn("Equating "+u1+" and "+u2); // @@
     // @@JAMBO Must canonicalize the uris to prevent errors from a=b=c
     // 03-21-2010
@@ -693,7 +693,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     predicate?: TFPredicate | null,
     object?: TFObject | null,
     graph?: TFGraph | null
-  ): TFQuad[] {
+  ): Quad[] {
     return this.statementsMatching(
       Node.fromValue(subject),
       Node.fromValue(predicate),
@@ -717,7 +717,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
    * Existentials are BNodes - something exists without naming
    * @param uri An URI
    */
-  newExistential(uri: string): TFTerm {
+  newExistential(uri: string): Term {
     if (!uri) return this.bnode()
     var x = this.sym(uri)
     // @ts-ignore x should be blanknode, but is namedNode.
@@ -828,7 +828,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
    * Removes one or multiple statement(s) from this formula
    * @param st - A Statement or array of Statements to remove
    */
-  remove(st: TFQuad | TFQuad[]): IndexedFormula {
+  remove(st: Quad | Quad[]): IndexedFormula {
     if (st instanceof Array) {
       for (var i = 0; i < st.length; i++) {
         this.remove(st[i])
@@ -851,7 +851,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
    * @param doc - The document / graph
    */
   removeDocument(doc: TFGraph): IndexedFormula {
-    var sts: TFQuad[] = this.statementsMatching(undefined, undefined, undefined, doc).slice() // Take a copy as this is the actual index
+    var sts: Quad[] = this.statementsMatching(undefined, undefined, undefined, doc).slice() // Take a copy as this is the actual index
     for (var i = 0; i < sts.length; i++) {
       this.removeStatement(sts[i])
     }
@@ -879,7 +879,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     // The fact is, this.statementsMatching returns this.whyIndex instead of a copy of it
     // but for perfromance consideration, it's better to just do that
     // so make a copy here.
-    var statements: TFQuad[] = []
+    var statements: Quad[] = []
     for (var i = 0; i < sts.length; i++) statements.push(sts[i])
     if (limit) statements = statements.slice(0, limit)
     for (i = 0; i < statements.length; i++) this.remove(statements[i])
@@ -911,7 +911,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
    *        Make sure you only use this for these.
    *        Otherwise, you should use remove() above.
    */
-  removeStatement(st: TFQuad): IndexedFormula {
+  removeStatement(st: Quad): IndexedFormula {
     // log.debug("entering remove w/ st=" + st)
     var term = [ st.subject, st.predicate, st.object, st.graph ]
     for (var p = 0; p < 4; p++) {
@@ -931,7 +931,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
    * Removes statements
    * @param sts The statements to remove
    */
-  removeStatements(sts: ReadonlyArray<TFQuad>): IndexedFormula {
+  removeStatements(sts: ReadonlyArray<Quad>): IndexedFormula {
     for (var i = 0; i < sts.length; i++) {
       this.remove(sts[i])
     }
@@ -1044,10 +1044,10 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     obj?: TFObject | null,
     why?: TFGraph | null,
     justOne?: boolean
-  ): TFQuad[] {
+  ): Quad[] {
     // log.debug("Matching {"+subj+" "+pred+" "+obj+"}")
     var pat = [ subj, pred, obj, why ]
-    var pattern: TFTerm[] = []
+    var pattern: Term[] = []
     var hash: Indexable[] = []
     var wild: number[] = [] // wildcards
     var given: number[] = [] // Not wild
@@ -1095,12 +1095,12 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     }
     // Ok, we have picked the shortest index but now we have to filter it
     var pBest = given[iBest]
-    var possibles: TFQuad[] = this.index[pBest][hash[pBest]]
+    var possibles: Quad[] = this.index[pBest][hash[pBest]]
     var check = given.slice(0, iBest).concat(given.slice(iBest + 1)) // remove iBest
-    var results: TFQuad[] = []
+    var results: Quad[] = []
     var parts = [ 'subject', 'predicate', 'object', 'why' ]
     for (var j = 0; j < possibles.length; j++) {
-      var st: TFQuad | null = possibles[j]
+      var st: Quad | null = possibles[j]
 
       for (i = 0; i < check.length; i++) { // for each position to be checked
         p = check[i]

@@ -1,11 +1,11 @@
 import Node from './node-internal'
 import { TermType} from './types'
-import { TFTerm } from './tf-types'
+import { Term } from './tf-types'
 
 /**
 * An empty node
 */
-export default class Empty extends Node implements TFTerm {
+export default class Empty extends Node implements Term {
   static termType = TermType.Empty
 
   termType = TermType.Empty

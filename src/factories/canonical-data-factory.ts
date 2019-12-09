@@ -17,8 +17,8 @@ import {
   DefaultFactoryTypes,
   Feature,
 } from './factory-types'
-import { isTFStatement, isTFTerm } from '../utils/terms'
-import { TFNamedNode, TFQuad, TFTerm } from '../tf-types'
+import { isQuad, isTerm } from '../utils/terms'
+import { TFNamedNode, Quad, Term } from '../tf-types'
 
 export { defaultGraphURI } from '../utils/default-graph-uri'
 
@@ -60,8 +60,8 @@ const CanonicalDataFactory: DataFactory = {
       return true
     }
 
-    if (isTFStatement(a) || isTFStatement(b)) {
-      if (isTFStatement(a) && isTFStatement(b)) {
+    if (isQuad(a) || isQuad(b)) {
+      if (isQuad(a) && isQuad(b)) {
         return (
           this.equals(a.subject, b.subject) &&
           this.equals(a.predicate, b.predicate) &&
@@ -73,7 +73,7 @@ const CanonicalDataFactory: DataFactory = {
       return false
     }
 
-    if (isTFTerm(a) && isTFTerm(b)) {
+    if (isTerm(a) && isTerm(b)) {
       return this.id(a) === this.id(b)
     }
 
@@ -88,12 +88,12 @@ const CanonicalDataFactory: DataFactory = {
    * @example Use this to associate data with a term in an object
    *   { obj[id(term)] = "myData" }
    */
-  id (term: TFTerm | Statement | undefined): string {
+  id (term: Term | Statement | undefined): string {
     if (!term) {
       return 'undefined'
     }
 
-    if (isTFStatement(term)) {
+    if (isQuad(term)) {
       return this.quadToNQ(term)
     }
 
@@ -157,21 +157,21 @@ const CanonicalDataFactory: DataFactory = {
    * @param graph - The containing graph
    */
   quad(
-    subject: TFTerm | SubjectType,
-    predicate: TFTerm | PredicateType,
-    object: TFTerm | ObjectType,
-    graph?: TFTerm | GraphType
+    subject: Term | SubjectType,
+    predicate: Term | PredicateType,
+    object: Term | ObjectType,
+    graph?: Term | GraphType
   ): Statement {
     graph = graph || defaultGraph()
     return new Statement(subject, predicate, object, graph)
   },
 
-  quadToNQ(q: Statement | TFQuad): string {
+  quadToNQ(q: Statement | Quad): string {
     return `${this.termToNQ(q.subject)} ${this.termToNQ(q.predicate)} ${this.termToNQ(q.object)} ${this.termToNQ(q.graph)} .`;
   },
 
   /** Stringify a {term} to n-quads serialization. */
-  termToNQ(term: TFTerm): string {
+  termToNQ(term: Term): string {
     switch (term.termType) {
       case TermType.BlankNode:
         return '_:' + term.value
@@ -189,7 +189,7 @@ const CanonicalDataFactory: DataFactory = {
   },
 
   /** Convert an rdf object (term or quad) to n-quads serialization. */
-  toNQ (term: TFTerm | (DefaultFactoryTypes & Variable)): string {
+  toNQ (term: Term | (DefaultFactoryTypes & Variable)): string {
     if (this.isQuad(term)) {
       return this.quadToNQ(term);
     }

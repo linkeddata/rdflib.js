@@ -2,7 +2,7 @@ import Fetcher from './fetcher'
 import log from './log'
 import { docpart } from './uri'
 import { string_startswith } from './util'
-import { TFDataFactory, TFQuad, TFSubject, TFTerm } from './tf-types'
+import { TFDataFactory, Quad, TFSubject, Term } from './tf-types'
 
 /** RDF/JS Taskforce Typeguards */
 
@@ -81,9 +81,9 @@ const rdf = {
 export function arrayToStatements(
   rdfFactory: TFDataFactory,
   subject: TFSubject,
-  data: TFTerm[]
-): TFQuad[] {
-  const statements: TFQuad[] = []
+  data: Term[]
+): Quad[] {
+  const statements: Quad[] = []
 
   data.reduce<TFSubject>((id, _listObj, i, listData) => {
     statements.push(rdfFactory.quad(id, rdfFactory.namedNode(rdf.first), listData[i]))

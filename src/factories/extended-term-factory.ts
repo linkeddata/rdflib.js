@@ -4,7 +4,7 @@ import { TermType, ValueType } from '../types'
 import { DataFactory, DefaultFactoryTypes, Feature, Indexable } from './factory-types'
 import { isCollection, isVariable } from '../utils/terms'
 import Variable from '../variable'
-import { TFTerm } from '../tf-types'
+import { Term } from '../tf-types'
 
 interface CollectionFactory extends DataFactory {
   collection(elements: ReadonlyArray<ValueType>): Collection
@@ -36,9 +36,9 @@ const ExtendedTermFactory: CollectionFactory = {
     return new Collection(elements)
   },
 
-  id (term: TFTerm | DefaultFactoryTypes): Indexable {
+  id (term: Term | DefaultFactoryTypes): Indexable {
     if (isCollection(term)) {
-      return `( ${term.elements.map((e) => { 
+      return `( ${term.elements.map((e) => {
         return this.id(e) }).join(', ')} )`
     }
 
@@ -49,7 +49,7 @@ const ExtendedTermFactory: CollectionFactory = {
     return CanonicalDataFactory.id(term)
   },
 
-  termToNQ (term: TFTerm): string {
+  termToNQ (term: Term): string {
     if (term.termType === TermType.Collection) {
       return Collection.toNT(term)
     }

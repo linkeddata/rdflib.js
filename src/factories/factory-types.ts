@@ -8,12 +8,12 @@ import {
   TFDataFactory,
   TFLiteral,
   TFNamedNode,
-  TFQuad,
-  TFTerm,
+  Quad,
+  Term,
   TFVariable,
 } from '../tf-types'
 
-export type Comparable = TFTerm | TFNamedNode | TFBlankNode | TFLiteral | TFQuad | undefined | null
+export type Comparable = Term | TFNamedNode | TFBlankNode | TFLiteral | Quad | undefined | null
 
 export type DefaultFactoryTypes = NamedNode | BlankNode | Literal | Variable | Statement
 
@@ -24,7 +24,7 @@ export type Namespace = (term:string) => TFNamedNode
 /** A set of features that may be supported by a Data Factory */
 export type SupportTable = Record<Feature, boolean>
 
-export type TFIDFactoryTypes = TFNamedNode | TFBlankNode | TFLiteral | TFQuad | TFVariable | TFTerm
+export type TFIDFactoryTypes = TFNamedNode | TFBlankNode | TFLiteral | Quad | TFVariable | Term
 
 export enum Feature {
   /** Whether the factory supports termType:Collection terms */
@@ -70,18 +70,18 @@ export interface DataFactory<
 
   equals(a: Comparable, b: Comparable): boolean
 
-  toNQ(term: TFTerm | FactoryTypes): string
+  toNQ(term: Term | FactoryTypes): string
 
   quad(
-    subject: TFTerm,
-    predicate: TFTerm,
-    object: TFTerm,
-    graph?: TFTerm,
+    subject: Term,
+    predicate: Term,
+    object: Term,
+    graph?: Term,
   ): Statement;
 
-  quadToNQ(term: Statement | TFQuad): string
+  quadToNQ(term: Statement | Quad): string
 
-  termToNQ(term: TFTerm): string
+  termToNQ(term: Term): string
 
   /**
    * Generates a unique session-idempotent identifier for the given object.
@@ -91,5 +91,5 @@ export interface DataFactory<
    *
    * @return {Indexable} A unique value which must also be a valid JS object key type.
    */
-  id(obj: TFTerm | FactoryTypes): IndexType
+  id(obj: Term | FactoryTypes): IndexType
 }

@@ -10,8 +10,8 @@ import {
   ValueType
 } from './types'
 import Variable from './variable'
-import { isTFTerm } from './utils/terms'
-import { TFTerm } from './tf-types'
+import { isTerm } from './utils/terms'
+import { Term } from './tf-types'
 
 /**
  * Creates an RDF Node from a native javascript value.
@@ -26,7 +26,7 @@ export function fromValue <T extends FromValueReturns<C> = any, C extends Node =
     return value as T
   }
 
-  if (isTFTerm(value)) {  // a Node subclass or a Collection
+  if (isTerm(value)) {  // a Node subclass or a Collection
     return value as T
   }
 
@@ -44,7 +44,7 @@ export function fromValue <T extends FromValueReturns<C> = any, C extends Node =
  */
 export default class Collection<
   T extends Node = Node | BlankNode | Collection<any> | Literal | Variable
-> extends Node implements TFTerm {
+> extends Node implements Term {
   static termType = TermType.Collection
 
   classOrder = ClassOrder.Collection

@@ -24,14 +24,14 @@ import {
   TFGraph,
   TFObject,
   TFPredicate,
-  TFQuad,
+  Quad,
   TFSubject,
-  TFTerm,
+  Term,
 } from './tf-types'
 
 export interface FormulaOpts {
-  dataCallback?: (q: TFQuad) => void
-  rdfArrayRemove?: (arr: TFQuad[], q: TFQuad) => void
+  dataCallback?: (q: Quad) => void
+  rdfArrayRemove?: (arr: Quad[], q: Quad) => void
   rdfFactory?: TFDataFactory
 }
 
@@ -40,7 +40,7 @@ interface BooleanMap {
 }
 
 interface MembersMap {
-  [uri: string]: TFQuad;
+  [uri: string]: Quad;
 }
 
 interface UriMap {
@@ -81,7 +81,7 @@ export default class Formula extends Node {
   rdfFactory: any
 
   /** The stored statements */
-  statements: TFQuad[];
+  statements: Quad[];
 
   termType = TermType.Graph
 
@@ -96,7 +96,7 @@ export default class Formula extends Node {
    * @param opts.rdfFactory - The rdf factory that should be used by the store
 */
   constructor (
-    statements?: TFQuad[],
+    statements?: Quad[],
     constraints?: ReadonlyArray<any>,
     initBindings?: ReadonlyArray<any>,
     optional?: ReadonlyArray<any>,
@@ -135,7 +135,7 @@ export default class Formula extends Node {
   /** Add a statment object
    * @param {Statement} statement - An existing constructed statement to add
    */
-  addStatement (statement: TFQuad): number {
+  addStatement (statement: Quad): number {
     return this.statements.push(statement)
   }
 
@@ -148,7 +148,7 @@ export default class Formula extends Node {
    * Adds all the statements to this formula
    * @param statements - A collection of statements
    */
-  addAll (statements: TFQuad[]): void {
+  addAll (statements: Quad[]): void {
     statements.forEach(quad => {
       this.add(quad.subject, quad.predicate, quad.object, quad.graph)
     })
@@ -171,7 +171,7 @@ export default class Formula extends Node {
     p?: TFPredicate | null,
     o?: TFObject | null,
     g?: TFGraph | null
-  ): TFTerm | null | undefined {
+  ): Term | null | undefined {
     const st = this.anyStatementMatching(s, p, o, g)
     if (st == null) {
       return void 0
@@ -228,7 +228,7 @@ export default class Formula extends Node {
     p?: TFPredicate | null,
     o?: TFObject | null,
     g?: TFGraph | null
-  ): TFQuad | undefined {
+  ): Quad | undefined {
     let x = this.statementsMatching(s, p, o, g, true)
     if (!x || x.length === 0) {
       return undefined
@@ -263,7 +263,7 @@ export default class Formula extends Node {
     o?: TFObject | null,
     g?: TFGraph | null,
     justOne?: boolean
-  ): TFQuad[] {
+  ): Quad[] {
     const sts = this.statements.filter(st =>
       (!s || s.equals(st.subject)) &&
       (!p || p.equals(st.predicate)) &&
@@ -342,8 +342,8 @@ export default class Formula extends Node {
     p?: TFPredicate | null,
     o?: TFObject | null,
     g?: TFGraph | null
-  ): TFTerm[] {
-    const results: TFTerm[] = []
+  ): Term[] {
+    const results: Term[] = []
     let sts = this.statementsMatching(s, p, o, g, false)
     if (s == null) {
       for (let i = 0, len = sts.length; i < len; i++) {
@@ -393,11 +393,11 @@ export default class Formula extends Node {
     let members: MembersMap
     let pred: TFPredicate
     let ref
-    let ref1: TFQuad[]
-    let ref2: TFTerm[]
-    let ref3: TFQuad[]
-    let ref4: TFTerm[]
-    let ref5: TFQuad[]
+    let ref1: Quad[]
+    let ref2: Term[]
+    let ref3: Quad[]
+    let ref4: Term[]
+    let ref5: Quad[]
     let seeds
     let st
     let u: number
@@ -566,12 +566,12 @@ export default class Formula extends Node {
     subject: TFSubject,
     doc: TFGraph,
     excludePredicateURIs?: ReadonlyArray<string>
-  ): TFQuad[] {
+  ): Quad[] {
     excludePredicateURIs = excludePredicateURIs || []
     let todo = [subject]
     let done: { [k: string]: boolean } = {}
     let doneArcs: { [k: string]: boolean }  = {}
-    let result: TFQuad[] = []
+    let result: Quad[] = []
     let self = this
     let follow = function (x) {
       let queue = function (x) {
@@ -771,7 +771,7 @@ export default class Formula extends Node {
     })
     console.log('Formula subs statmnts:' + statementsCopy)
     const y = new Formula()
-    y.addAll(statementsCopy as TFQuad[])
+    y.addAll(statementsCopy as Quad[])
     console.log('indexed-form subs formula:' + y)
     return y
   }
@@ -798,7 +798,7 @@ export default class Formula extends Node {
     p?: TFPredicate | null,
     o?: TFObject | null,
     g?: TFGraph | null
-  ): TFTerm | null | undefined {
+  ): Term | null | undefined {
     let x = this.any(s, p, o, g)
     if (x == null) {
       log.error('No value found for the() {' + s + ' ' + p + ' ' + o + '}.')

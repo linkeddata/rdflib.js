@@ -9,7 +9,7 @@ import Statement from '../statement'
 import IndexedFormula from '../store'
 import Fetcher from '../fetcher'
 import ExtendedTermFactory from './extended-term-factory'
-import { TFNamedNode, TFTerm } from '../tf-types'
+import { TFNamedNode, Term } from '../tf-types'
 
 /** Full RDFLib.js Data Factory */
 const RDFlibDataFactory: IRDFlibDataFactory = {
@@ -51,10 +51,10 @@ const RDFlibDataFactory: IRDFlibDataFactory = {
    * @deprecated use {quad} instead
    */
   st (
-    subject: TFTerm,
-    predicate: TFTerm,
-    object: TFTerm,
-    graph?: TFTerm
+    subject: Term,
+    predicate: Term,
+    object: Term,
+    graph?: Term
   ): Statement {
     return this.quad(subject, predicate, object, graph)
   },

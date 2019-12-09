@@ -8,10 +8,10 @@ import {
   TermType,
 } from './types'
 import { defaultGraphNode } from './utils/default-graph-uri'
-import { TFGraph, TFObject, TFPredicate, TFQuad, TFSubject, TFTerm } from './tf-types'
+import { TFGraph, TFObject, TFPredicate, Quad, TFSubject, Term } from './tf-types'
 
 /** A Statement represents an RDF Triple or Quad. */
-export default class Statement implements TFQuad<SubjectType, PredicateType, ObjectType, GraphType> {
+export default class Statement implements Quad<SubjectType, PredicateType, ObjectType, GraphType> {
   /** The subject of the triple.  What the Statement is about. */
   subject: SubjectType
 
@@ -45,10 +45,10 @@ export default class Statement implements TFQuad<SubjectType, PredicateType, Obj
    *  powerful update() which can update more than one document.
    */
   constructor (
-    subject: TFSubject | TFTerm,
-    predicate: TFPredicate | TFTerm,
-    object: TFObject | TFTerm,
-    graph?: TFGraph | TFTerm,
+    subject: TFSubject | Term,
+    predicate: TFPredicate | Term,
+    object: TFObject | Term,
+    graph?: TFGraph | Term,
   ) {
     this.subject = Node.fromValue(subject)
     this.predicate = Node.fromValue(predicate)
@@ -69,7 +69,7 @@ export default class Statement implements TFQuad<SubjectType, PredicateType, Obj
    * Checks whether two statements are the same
    * @param other - The other statement
    */
-  equals (other: TFQuad): boolean {
+  equals (other: Quad): boolean {
     return (
       other.subject.equals(this.subject) &&
       other.predicate.equals(this.predicate) &&

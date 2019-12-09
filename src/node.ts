@@ -4,7 +4,7 @@ import { fromValue } from './collection'
 import Node from './node-internal'
 import Namespace from './namespace'
 import { isCollection, isTFLiteral } from './utils/terms'
-import { TFTerm } from './tf-types'
+import { Term } from './tf-types'
 
 /**
  * Creates an RDF Node from a native javascript value.
@@ -24,7 +24,7 @@ const ns = { xsd: Namespace('http://www.w3.org/2001/XMLSchema#') }
  * Gets the javascript object equivalent to a node
  * @param term The RDF node
  */
-Node.toJS = function (term: TFTerm): TFTerm | boolean | number | Date | string | any[] {
+Node.toJS = function (term: Term): Term | boolean | number | Date | string | any[] {
   if (isCollection(term)) {
     return term.elements.map(Node.toJS) // Array node (not standard RDFJS)
   }

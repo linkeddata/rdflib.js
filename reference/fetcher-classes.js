@@ -1,4 +1,4 @@
-import { isTFNamedNode } from '../src/utils'
+import { isTFNamedNode} from './utils/terms'
 
 const log = require('./log')
 const N3Parser = require('./n3parser')

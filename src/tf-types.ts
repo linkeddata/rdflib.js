@@ -11,7 +11,7 @@ import {
  * RDF/JS taskforce Term
  * @link https://rdf.js.org/data-model-spec/#term-interface
  */
-export interface TFTerm {
+export interface Term {
   termType: string
   value: string
 
@@ -27,7 +27,7 @@ export interface TFTerm {
  * RDF/JS taskforce NamedNode
  * @link https://rdf.js.org/data-model-spec/#namednode-interface
  */
-export interface TFNamedNode extends TFTerm {
+export interface TFNamedNode extends Term {
   termType: NamedNodeTermType
   value: string
 }
@@ -36,7 +36,7 @@ export interface TFNamedNode extends TFTerm {
  * RDF/JS taskforce Literal
  * @link https://rdf.js.org/data-model-spec/#literal-interface
  */
-export interface TFBlankNode extends TFTerm {
+export interface TFBlankNode extends Term {
   termType: BlankNodeTermType
   value: string
 }
@@ -45,11 +45,11 @@ export interface TFBlankNode extends TFTerm {
  * RDF/JS taskforce Quad
  * @link https://rdf.js.org/data-model-spec/#quad-interface
  */
-export interface TFQuad<
-  S extends TFTerm = TFSubject,
-  P extends TFTerm = TFPredicate,
-  O extends TFTerm = TFObject,
-  G extends TFTerm = TFGraph
+export interface Quad<
+  S extends Term = TFSubject,
+  P extends Term = TFPredicate,
+  O extends Term = TFObject,
+  G extends Term = TFGraph
 > {
   subject: S
   predicate: P
@@ -61,7 +61,7 @@ export interface TFQuad<
  * RDF/JS taskforce Literal
  * @link https://rdf.js.org/data-model-spec/#literal-interface
  */
-export interface TFLiteral extends TFTerm {
+export interface TFLiteral extends Term {
   /** Contains the constant "Literal". */
   termType: LiteralTermType
   /** The text value, unescaped, without language or type (example: "Brad Pitt") */
@@ -79,7 +79,7 @@ export interface TFLiteral extends TFTerm {
  * RDF/JS taskforce Variable
  * @link https://rdf.js.org/data-model-spec/#variable-interface
  */
-export interface TFVariable extends TFTerm {
+export interface TFVariable extends Term {
   /** Contains the constant "Variable". */
   termType: VariableTermType
   /** The name of the variable without leading "?" (example: "a"). */
@@ -92,7 +92,7 @@ export interface TFVariable extends TFTerm {
  * It's only allowed to assign a DefaultGraph to the graph property of a Quad.
  * @link https://rdf.js.org/data-model-spec/#defaultgraph-interface
  */
-export interface TFDefaultGraph extends TFTerm {
+export interface TFDefaultGraph extends Term {
   termType: DefaultGraphTermType;
   /** should return and empty string'' */
   value: string;
@@ -136,24 +136,24 @@ export interface TFDataFactory {
    * such that newObject.equals(original) returns true.
    * Not implemented in RDFJS, so optional.
    */
-  fromTerm?: (original: TFTerm) => TFTerm
+  fromTerm?: (original: Term) => Term
 
   /**
    * Returns a new instance of Quad, such that newObject.equals(original) returns true.
    * Not implemented in RDFJS, so optional.
    */
-  fromQuad?: (original: TFQuad) => TFQuad
+  fromQuad?: (original: Quad) => Quad
 
   /**
    * Returns a new instance of Quad.
    * If graph is undefined or null it MUST set graph to a DefaultGraph.
    */
   quad: (
-    subject: TFTerm,
-    predicate: TFTerm,
-    object: TFTerm,
-    graph?: TFTerm,
-  ) => TFQuad<any, any, any, any>
+    subject: Term,
+    predicate: Term,
+    object: Term,
+    graph?: Term,
+  ) => Quad<any, any, any, any>
 
   /**
    * Check for specific features/behaviour on the factory.

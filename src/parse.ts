@@ -9,7 +9,7 @@ import sparqlUpdateParser from './patch-parser'
 import * as Util from './util'
 import Formula from './formula'
 import { ContentType } from './types'
-import { TFQuad } from './tf-types'
+import { Quad } from './tf-types'
 
 type CallbackFunc = (error: any, kb: Formula | null) => void
 
@@ -127,7 +127,7 @@ export default function parse (
     }
   }
 
-  function tripleCallback (err: Error, triple: TFQuad) {
+  function tripleCallback (err: Error, triple: Quad) {
     if (triple) {
       kb.add(triple.subject, triple.predicate, triple.object, triple.graph)
     } else {

@@ -10,7 +10,7 @@ import IndexedFormula from './store'
 import Fetcher from './fetcher'
 import Statement from './statement'
 import Empty from './empty'
-import { TFNamedNode, TFTerm } from './tf-types'
+import { TFNamedNode, Term } from './tf-types'
 
 /**
  * Types that support both Enums (for typescript) and regular strings
@@ -59,7 +59,7 @@ export enum ContentType {
 }
 
 /** A type for values that serves as inputs */
-export type ValueType = TFTerm | Node | Date | string | number | boolean | undefined | null | Collection
+export type ValueType = Term | Node | Date | string | number | boolean | undefined | null | Collection
 
 /**
  * In this project, there exist two types for the same kind of RDF concept.
@@ -80,11 +80,11 @@ export type ObjectType = NamedNode | Literal | Collection | BlankNode | Variable
 export type GraphType = DefaultGraph | NamedNode | Variable // | Formula
 
 export interface Bindings {
-  [id: string]: TFTerm;
+  [id: string]: Term;
 }
 
 /** All the types that a .fromValue() method might return */
-export type FromValueReturns<C extends Node = any> = TFTerm | undefined | null | Collection<C>
+export type FromValueReturns<C extends Node = any> = Term | undefined | null | Collection<C>
 
 export interface IRDFlibDataFactory extends DataFactory<
   NamedNode | BlankNode | Literal | Collection | Statement

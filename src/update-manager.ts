@@ -20,8 +20,8 @@ import {
   TFGraph, TFNamedNode,
   TFObject,
   TFPredicate,
-  TFQuad,
-  TFSubject, TFTerm
+  Quad,
+  TFSubject, Term
 } from './tf-types'
 
 interface UpdateManagerFormula extends IndexedFormula {
@@ -205,7 +205,7 @@ export default class UpdateManager {
       : obj.toNT()
   }
 
-  anonymizeNT (stmt: TFQuad) {
+  anonymizeNT (stmt: Quad) {
     return this.anonymize(stmt.subject) + ' ' +
       this.anonymize(stmt.predicate) + ' ' +
       this.anonymize(stmt.object) + ' .'
@@ -215,7 +215,7 @@ export default class UpdateManager {
    * Returns a list of all bnodes occurring in a statement
    * @private
    */
-  statementBnodes (st: TFQuad): TFBlankNode[] {
+  statementBnodes (st: Quad): TFBlankNode[] {
     return [st.subject, st.predicate, st.object].filter(function (x) {
       return isTFBlankNode(x)
     }) as TFBlankNode[]
@@ -225,7 +225,7 @@ export default class UpdateManager {
    * Returns a list of all bnodes occurring in a list of statements
    * @private
    */
-  statementArrayBnodes (sts: TFQuad[]) {
+  statementArrayBnodes (sts: Quad[]) {
     var bnodes: TFBlankNode[] = []
     for (let i = 0; i < sts.length; i++) {
       bnodes = bnodes.concat(this.statementBnodes(sts[i]))
@@ -347,7 +347,7 @@ export default class UpdateManager {
    * Returns the best context for a single statement
    * @private
    */
-  statementContext (st: TFQuad) {
+  statementContext (st: Quad) {
     var bnodes = this.statementBnodes(st)
     return this.bnodeContext(bnodes, st.graph)
   }
@@ -414,7 +414,7 @@ export default class UpdateManager {
    * It returns an object which includes
    *  function which can be used to change the object of the statement.
    */
-  update_statement (statement: TFQuad) {
+  update_statement (statement: Quad) {
     if (statement && !statement.graph) {
       return
     }
@@ -442,7 +442,7 @@ export default class UpdateManager {
     }
   }
 
-  insert_statement (st: TFQuad, callbackFunction: CallBackFunction): void {
+  insert_statement (st: Quad, callbackFunction: CallBackFunction): void {
     var st0 = st instanceof Array ? st[0] : st
     var query = this.contextWhere(this.statementContext(st0))
 
@@ -460,7 +460,7 @@ export default class UpdateManager {
     this.fire(st0.graph.value, query, callbackFunction)
   }
 
-  delete_statement (st: TFQuad | TFQuad[], callbackFunction: CallBackFunction): void {
+  delete_statement (st: Quad | Quad[], callbackFunction: CallBackFunction): void {
     var st0 = st instanceof Array ? st[0] : st
     var query = this.contextWhere(this.statementContext(st0))
 
@@ -746,7 +746,7 @@ export default class UpdateManager {
       var verbs = ['insert', 'delete']
       var clauses = { 'delete': ds, 'insert': is }
       verbs.map(function (verb) {
-        clauses[verb].map(function (st: TFQuad) {
+        clauses[verb].map(function (st: Quad) {
           if (!doc.equals(st.graph)) {
             throw new Error('update: destination ' + doc +
               ' inconsistent with delete quad ' + st.graph)
@@ -887,7 +887,7 @@ export default class UpdateManager {
     if (!response) {
       return null // throw "No record HTTP GET response for document: "+doc
     }
-    var contentType = (kb.the(response, this.ns.httph('content-type'))as TFTerm).value
+    var contentType = (kb.the(response, this.ns.httph('content-type'))as Term).value
 
     // prepare contents of revised document
     let newSts = kb.statementsMatching(undefined, undefined, undefined, doc).slice() // copy!
@@ -1013,7 +1013,7 @@ export default class UpdateManager {
    *
    * @returns {string}
    */
-  serialize (uri: string, data: string | TFQuad[], contentType: string): string {
+  serialize (uri: string, data: string | Quad[], contentType: string): string {
     const kb = this.store
     let documentString
 
@@ -1049,7 +1049,7 @@ export default class UpdateManager {
    */
   put(
     doc: NamedNode,
-    data: string | TFQuad[],
+    data: string | Quad[],
     contentType: string,
     callback: (uri: string, ok: boolean, errorMessage?: string, response?: unknown) => void,
   ): Promise<void> {

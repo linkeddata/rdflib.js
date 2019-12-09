@@ -8,7 +8,7 @@ import {
 } from './types'
 import { isTFLiteral } from './utils/terms'
 import XSD from './xsd-internal'
-import { TFLiteral, TFTerm } from './tf-types'
+import { TFLiteral, Term } from './tf-types'
 
 /**
  * An RDF literal, containing some value which isn't expressed as an IRI.
@@ -64,7 +64,7 @@ export default class Literal extends Node implements TFLiteral {
    * Gets whether two literals are the same
    * @param other The other statement
    */
-  equals (other: TFTerm): boolean {
+  equals (other: Term): boolean {
     if (!other) {
       return false
     }
