@@ -44,6 +44,10 @@ describe('util', () => {
       expect(isNamedNode(new NamedNode('http://example.org/'))).to.be.true()
     })
 
+    it('handles Literal instances', () => {
+      expect(isNamedNode(new Literal('http://example.org/'))).to.be.false()
+    })
+
     it('handles plain objects', () => {
       expect(isNamedNode({ termType: 'NamedNode', value: '' })).to.be.true()
     })
@@ -72,6 +76,11 @@ describe('util', () => {
     it ('handles Statement objects', () => {
       const t = new NamedNode('http://example.org')
       expect(isStatement(new Statement(t, t, t))).to.be.true()
+    })
+
+    it ('handles NamedNode objects', () => {
+      const t = new NamedNode('http://example.org')
+      expect(isStatement(t)).to.be.false()
     })
   })
 
