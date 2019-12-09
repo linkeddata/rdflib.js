@@ -1,4 +1,4 @@
-import BlankNode from './blank-node'
+import RdflibBlankNode from './blank-node'
 import ClassOrder from './class-order'
 import Literal from './literal'
 import Node from './node-internal'
@@ -43,13 +43,13 @@ export function fromValue <T extends FromValueReturns<C> = any, C extends Node =
  * Use generic T to control the contents of the array.
  */
 export default class Collection<
-  T extends Node = Node | BlankNode | Collection<any> | Literal | Variable
+  T extends Node = Node | RdflibBlankNode | Collection<any> | Literal | Variable
 > extends Node implements Term {
   static termType = TermType.Collection
 
   classOrder = ClassOrder.Collection
   closed: boolean = false
-  compareTerm = BlankNode.prototype.compareTerm
+  compareTerm = RdflibBlankNode.prototype.compareTerm
   /**
    * The nodes in this collection
    */
@@ -58,7 +58,7 @@ export default class Collection<
   termType: CollectionTermType = TermType.Collection
 
   constructor (initial?: ReadonlyArray<ValueType>) {
-    super((BlankNode.nextId++).toString())
+    super((RdflibBlankNode.nextId++).toString())
 
     if (initial && initial.length > 0) {
       initial.forEach(element => {
@@ -113,7 +113,7 @@ export default class Collection<
   }
 
   static toNT (collection) {
-    return BlankNode.NTAnonymousNodePrefix + collection.id
+    return RdflibBlankNode.NTAnonymousNodePrefix + collection.id
   }
 
   /**

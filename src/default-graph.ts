@@ -1,7 +1,7 @@
 'use strict'
 import Node from './node-internal'
 import { TermType, DefaultGraphTermType } from './types'
-import { TFDefaultGraph } from './tf-types'
+import { DefaultGraph as TFDefaultGraph } from './tf-types'
 
 /** The RDF default graph */
 export default class DefaultGraph extends Node implements TFDefaultGraph {

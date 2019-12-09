@@ -6,15 +6,16 @@ import Collection from '../collection'
 import IndexedFormula from '../store'
 import Statement from '../statement'
 import {
-  TFBlankNode,
-  TFGraph,
-  TFLiteral, TFNamedNode,
-  TFObject,
-  TFPredicate,
+  BlankNode,
+  Quad_Graph,
+  Literal,
+  NamedNode,
+  Quad_Object,
+  Quad_Predicate,
   Quad,
-  TFSubject,
+  Quad_Subject,
   Term,
-  TFVariable,
+  Variable,
 } from '../tf-types'
 
 /** TypeGuard for RDFLib Statements */
@@ -45,7 +46,7 @@ export function isRDFlibObject(obj: any): obj is ObjectType {
 }
 
 /** TypeGuard for RDFLib Variables */
-export function isVariable(obj: any): obj is TFVariable {
+export function isVariable(obj: any): obj is Variable {
   return isTerm(obj)
     && (obj as Term).termType === TermType.Variable
 }
@@ -58,7 +59,7 @@ export function isTerm(obj: any): obj is Term {
 }
 
 /** TypeGuard for RDF/JS TaskForce Literals */
-export function isLiteral(value: any): value is TFLiteral {
+export function isLiteral(value: any): value is Literal {
   return (value as Term).termType === TermType.Literal
 }
 
@@ -72,17 +73,17 @@ export function isQuad(obj: any): obj is Quad<any, any, any, any> {
 }
 
 /** TypeGuard for RDF/JS TaskForce NamedNodes */
-export function isNamedNode(obj: any): obj is TFNamedNode {
+export function isNamedNode(obj: any): obj is NamedNode {
   return isTerm(obj) && obj.termType === 'NamedNode'
 }
 
 /** TypeGuard for RDF/JS TaskForce BlankNodes */
-export function isBlankNode(obj: any): obj is TFBlankNode {
+export function isBlankNode(obj: any): obj is BlankNode {
   return isTerm(obj) && 'termType' in obj && obj.termType === 'BlankNode'
 }
 
 /** TypeGuard for valid RDFJS Taskforce Subject types */
-export function isSubject(obj: any): obj is TFSubject {
+export function isSubject(obj: any): obj is Quad_Subject {
   return isTerm(obj) && (
     obj.termType === TermType.NamedNode ||
     obj.termType === TermType.Variable ||
@@ -91,7 +92,7 @@ export function isSubject(obj: any): obj is TFSubject {
 }
 
 /** TypeGuard for valid RDFJS Taskforce Predicate types */
-export function isPredicate(obj: any): obj is TFPredicate {
+export function isPredicate(obj: any): obj is Quad_Predicate {
   return isTerm(obj) && (
     obj.termType === TermType.NamedNode ||
     obj.termType === TermType.Variable
@@ -99,7 +100,7 @@ export function isPredicate(obj: any): obj is TFPredicate {
 }
 
 /** TypeGuard for valid RDFJS Taskforce Object types */
-export function isRDFObject(obj: any): obj is TFObject {
+export function isRDFObject(obj: any): obj is Quad_Object {
   return isTerm(obj) && (
     obj.termType === TermType.NamedNode ||
     obj.termType === TermType.Variable ||
@@ -109,7 +110,7 @@ export function isRDFObject(obj: any): obj is TFObject {
 }
 
 /** TypeGuard for valid RDFJS Graph types */
-export function isGraph(obj: any): obj is TFGraph {
+export function isGraph(obj: any): obj is Quad_Graph {
   return isTerm(obj) && (
     obj.termType === TermType.NamedNode ||
     obj.termType === TermType.Variable ||

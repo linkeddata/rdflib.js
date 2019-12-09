@@ -13,15 +13,17 @@ import { join as uriJoin } from './uri'
 import { isStore, isBlankNode } from './utils/terms'
 import * as Util from './util'
 import Statement from './statement'
-import NamedNode from './named-node'
+import RDFlibNamedNode from './named-node'
 import { termValue } from './utils/termValue'
 import {
-  TFBlankNode,
-  TFGraph, TFNamedNode,
-  TFObject,
-  TFPredicate,
+  BlankNode,
+  NamedNode,
+  Quad_Graph,
+  Quad_Object,
+  Quad_Predicate,
+  Quad_Subject,
   Quad,
-  TFSubject, Term
+  Term,
 } from './tf-types'
 
 interface UpdateManagerFormula extends IndexedFormula {
@@ -78,7 +80,7 @@ export default class UpdateManager {
     this.patchControl = []
   }
 
-  patchControlFor (doc: TFNamedNode) {
+  patchControlFor (doc: NamedNode) {
     if (!this.patchControl[doc.value]) {
       this.patchControl[doc.value] = []
     }
@@ -94,7 +96,7 @@ export default class UpdateManager {
    * @returns The method string SPARQL or DAV or
    *   LOCALFILE or false if known, undefined if not known.
    */
-  editable (uri: string | TFNamedNode, kb: IndexedFormula): string | boolean | undefined {
+  editable (uri: string | NamedNode, kb: IndexedFormula): string | boolean | undefined {
     if (!uri) {
       return false // Eg subject is bnode, no known doc to write to
     }
@@ -142,7 +144,7 @@ export default class UpdateManager {
     for (var r = 0; r < requests.length; r++) {
       request = requests[r]
       if (request !== undefined) {
-        var response = kb.any(request, this.ns.link('response')) as TFSubject
+        var response = kb.any(request, this.ns.link('response')) as Quad_Subject
         if (request !== undefined) {
           var wacAllow = kb.anyValue(response, this.ns.httph('wac-allow'))
           if (wacAllow) {
@@ -215,10 +217,10 @@ export default class UpdateManager {
    * Returns a list of all bnodes occurring in a statement
    * @private
    */
-  statementBnodes (st: Quad): TFBlankNode[] {
+  statementBnodes (st: Quad): BlankNode[] {
     return [st.subject, st.predicate, st.object].filter(function (x) {
       return isBlankNode(x)
-    }) as TFBlankNode[]
+    }) as BlankNode[]
   }
 
   /**
@@ -226,12 +228,12 @@ export default class UpdateManager {
    * @private
    */
   statementArrayBnodes (sts: Quad[]) {
-    var bnodes: TFBlankNode[] = []
+    var bnodes: BlankNode[] = []
     for (let i = 0; i < sts.length; i++) {
       bnodes = bnodes.concat(this.statementBnodes(sts[i]))
     }
     bnodes.sort() // in place sort - result may have duplicates
-    var bnodes2: TFBlankNode[] = []
+    var bnodes2: BlankNode[] = []
     for (let j = 0; j < bnodes.length; j++) {
       if (j === 0 || !bnodes[j].equals(bnodes[j - 1])) {
         bnodes2.push(bnodes[j])
@@ -437,7 +439,7 @@ export default class UpdateManager {
           // @ts-ignore
           this.anonymize(obj) + ' ' + ' . }\n'
 
-        updater.fire((this.statement as [TFSubject, TFPredicate, TFObject, TFGraph])[3].value, query, callbackFunction)
+        updater.fire((this.statement as [Quad_Subject, Quad_Predicate, Quad_Object, Quad_Graph])[3].value, query, callbackFunction)
       }
     }
   }
@@ -489,7 +491,7 @@ export default class UpdateManager {
    * @param doc
    * @param action
    */
-  requestDownstreamAction (doc: TFNamedNode, action): void {
+  requestDownstreamAction (doc: NamedNode, action): void {
     var control = this.patchControlFor(doc)
     if (!control.pendingUpstream) {
       action(doc)
@@ -508,27 +510,27 @@ export default class UpdateManager {
    * We want to start counting websocket notifications
    * to distinguish the ones from others from our own.
    */
-  clearUpstreamCount (doc: TFNamedNode): void {
+  clearUpstreamCount (doc: NamedNode): void {
     var control = this.patchControlFor(doc)
     control.upstreamCount = 0
   }
 
-  getUpdatesVia (doc: TFNamedNode): string | null {
+  getUpdatesVia (doc: NamedNode): string | null {
     var linkHeaders = this.store.fetcher.getHeader(doc, 'updates-via')
     if (!linkHeaders || !linkHeaders.length) return null
     return linkHeaders[0].trim()
   }
 
-  addDownstreamChangeListener (doc: TFNamedNode, listener): void {
+  addDownstreamChangeListener (doc: NamedNode, listener): void {
     var control = this.patchControlFor(doc)
     if (!control.downstreamChangeListeners) { control.downstreamChangeListeners = [] }
     control.downstreamChangeListeners.push(listener)
-    this.setRefreshHandler(doc, (doc: TFNamedNode) => {
+    this.setRefreshHandler(doc, (doc: NamedNode) => {
       this.reloadAndSync(doc)
     })
   }
 
-  reloadAndSync (doc: TFNamedNode): void {
+  reloadAndSync (doc: NamedNode): void {
     var control = this.patchControlFor(doc)
     var updater = this
 
@@ -590,7 +592,7 @@ export default class UpdateManager {
    *
    * @returns {boolean}
    */
-  setRefreshHandler (doc: TFNamedNode, handler): boolean {
+  setRefreshHandler (doc: NamedNode, handler): boolean {
     let wssURI = this.getUpdatesVia(doc) // relative
     // var kb = this.store
     var theHandler = handler
@@ -775,7 +777,7 @@ export default class UpdateManager {
         })
         return
       } else if ((protocol as string).indexOf('SPARQL') >= 0) {
-        var bnodes: TFBlankNode[] = []
+        var bnodes: BlankNode[] = []
         if (ds.length) bnodes = this.statementArrayBnodes(ds)
         if (is.length) bnodes = bnodes.concat(this.statementArrayBnodes(is))
         var context = this.bnodeContext(bnodes, doc)
@@ -871,7 +873,7 @@ export default class UpdateManager {
   }
 
   updateDav (
-    doc: TFSubject,
+    doc: Quad_Subject,
     ds,
     is,
     callbackFunction
@@ -883,7 +885,7 @@ export default class UpdateManager {
       throw new Error('No record of our HTTP GET request for document: ' +
         doc)
     } // should not happen
-    var response = kb.any(request as TFNamedNode, this.ns.link('response')) as TFSubject
+    var response = kb.any(request as NamedNode, this.ns.link('response')) as Quad_Subject
     if (!response) {
       return null // throw "No record HTTP GET response for document: "+doc
     }
@@ -941,7 +943,7 @@ export default class UpdateManager {
    * @param is
    * @param callbackFunction
    */
-  updateLocalFile (doc: TFNamedNode, ds, is, callbackFunction): void {
+  updateLocalFile (doc: NamedNode, ds, is, callbackFunction): void {
     const kb = this.store
     console.log('Writing back to local file\n')
     // See http://simon-jung.blogspot.com/2007/10/firefox-extension-file-io.html
@@ -1048,7 +1050,7 @@ export default class UpdateManager {
    * This is suitable for an initial creation of a document.
    */
   put(
-    doc: NamedNode,
+    doc: RDFlibNamedNode,
     data: string | Quad[],
     contentType: string,
     callback: (uri: string, ok: boolean, errorMessage?: string, response?: unknown) => void,
@@ -1093,7 +1095,7 @@ export default class UpdateManager {
    * document in the meantime.
    *
    * @param kb
-   * @param doc {NamedNode}
+   * @param doc {RDFlibNamedNode}
    * @param callbackFunction
    */
   reload (
@@ -1138,7 +1140,7 @@ export default class UpdateManager {
   }
 }
 
-interface docReloadType extends TFNamedNode {
+interface docReloadType extends NamedNode {
   reloadTimeCount?: number
   reloadTimeTotal?: number
 }

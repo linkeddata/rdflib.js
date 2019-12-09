@@ -18,7 +18,7 @@ import {
   Feature,
 } from './factory-types'
 import { isQuad, isTerm } from '../utils/terms'
-import { TFNamedNode, Quad, Term } from '../tf-types'
+import { NamedNode as TFNamedNode, Quad, Term } from '../tf-types'
 
 export { defaultGraphURI } from '../utils/default-graph-uri'
 

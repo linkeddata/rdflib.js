@@ -1,16 +1,16 @@
 import Node from './node-internal'
-import Variable from './variable'
-import BlankNode from './blank-node'
+import RDFlibVariable from './variable'
+import RDFlibBlankNode from './blank-node'
 import Collection from './collection'
-import Literal from './literal'
-import NamedNode from './named-node'
-import DefaultGraph from './default-graph'
+import RDFlibLiteral from './literal'
+import RDFlibNamedNode from './named-node'
+import RDFlibDefaultGraph from './default-graph'
 import { DataFactory } from './factories/factory-types'
 import IndexedFormula from './store'
 import Fetcher from './fetcher'
 import Statement from './statement'
 import Empty from './empty'
-import { TFNamedNode, Term } from './tf-types'
+import { NamedNode, Term } from './tf-types'
 
 /**
  * Types that support both Enums (for typescript) and regular strings
@@ -71,13 +71,13 @@ export type ValueType = Term | Node | Date | string | number | boolean | undefin
  */
 
 /** An RDF/JS Subject */
-export type SubjectType = BlankNode | NamedNode | Variable
+export type SubjectType = RDFlibBlankNode | RDFlibNamedNode | RDFlibVariable
 /** An RDF/JS Predicate */
-export type PredicateType = NamedNode | Variable
+export type PredicateType = RDFlibNamedNode | RDFlibVariable
 /** An RDF/JS Object */
-export type ObjectType = NamedNode | Literal | Collection | BlankNode | Variable | Empty
+export type ObjectType = RDFlibNamedNode | RDFlibLiteral | Collection | RDFlibBlankNode | RDFlibVariable | Empty
 /** An RDF/JS Graph */
-export type GraphType = DefaultGraph | NamedNode | Variable // | Formula
+export type GraphType = RDFlibDefaultGraph | RDFlibNamedNode | RDFlibVariable // | Formula
 
 export interface Bindings {
   [id: string]: Term;
@@ -87,11 +87,11 @@ export interface Bindings {
 export type FromValueReturns<C extends Node = any> = Term | undefined | null | Collection<C>
 
 export interface IRDFlibDataFactory extends DataFactory<
-  NamedNode | BlankNode | Literal | Collection | Statement
+  RDFlibNamedNode | RDFlibBlankNode | RDFlibLiteral | Collection | Statement
 > {
   fetcher: (store: IndexedFormula, options: any) => Fetcher
   graph: (features, opts) => IndexedFormula
-  lit: (val: string, lang?: string, dt?: TFNamedNode) => Literal
+  lit: (val: string, lang?: string, dt?: NamedNode) => RDFlibLiteral
   st: (
     subject: SubjectType,
     predicate: PredicateType,

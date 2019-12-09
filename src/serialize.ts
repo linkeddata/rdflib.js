@@ -3,14 +3,14 @@ import Formula from './formula'
 import Serializer from './serializer'
 import { ContentType} from './types'
 import IndexedFormula from './store'
-import { TFBlankNode, TFNamedNode } from './tf-types'
+import { BlankNode, NamedNode } from './tf-types'
 
 /**
  * Serialize to the appropriate format
  */
 export default function serialize (
   /** The graph or nodes that should be serialized */
-  target: Formula | TFNamedNode | TFBlankNode,
+  target: Formula | NamedNode | BlankNode,
   /** The store */
   kb?: IndexedFormula,
   base?: unknown,
@@ -35,7 +35,7 @@ export default function serialize (
   try {
     var sz = Serializer(kb)
     if ((opts as any).flags) sz.setFlags((opts as any).flags)
-    var newSts = kb!.statementsMatching(undefined, undefined, undefined, target as TFNamedNode)
+    var newSts = kb!.statementsMatching(undefined, undefined, undefined, target as NamedNode)
     var n3String: string
     sz.suggestNamespaces(kb!.namespaces)
     sz.setBase(base)

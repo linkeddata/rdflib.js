@@ -1,5 +1,5 @@
 import ClassOrder from './class-order'
-import NamedNode from './named-node'
+import RDFlibNamedNode from './named-node'
 import Node from './node-internal'
 import {
   LiteralTermType,
@@ -8,7 +8,7 @@ import {
 } from './types'
 import { isLiteral } from './utils/terms'
 import XSD from './xsd-internal'
-import { TFLiteral, Term } from './tf-types'
+import { Literal as TFLiteral, Term } from './tf-types'
 
 /**
  * An RDF literal, containing some value which isn't expressed as an IRI.
@@ -23,7 +23,7 @@ export default class Literal extends Node implements TFLiteral {
   /**
    * The literal's datatype as a named node
    */
-  datatype: NamedNode = XSD.string
+  datatype: RDFlibNamedNode = XSD.string
 
   isVar = 0
 
@@ -47,7 +47,7 @@ export default class Literal extends Node implements TFLiteral {
       this.language = language
       this.datatype = XSD.langString
     } else if (datatype) {
-      this.datatype = NamedNode.fromValue(datatype)
+      this.datatype = RDFlibNamedNode.fromValue(datatype)
     } else {
       this.datatype = XSD.string
     }
@@ -153,7 +153,7 @@ export default class Literal extends Node implements TFLiteral {
     if (typeof value !== 'number') {
       throw new TypeError('Invalid argument to Literal.fromNumber()')
     }
-    let datatype: NamedNode
+    let datatype: RDFlibNamedNode
     const strValue = value.toString()
     if (strValue.indexOf('e') < 0 && Math.abs(value) <= Number.MAX_SAFE_INTEGER) {
       datatype = Number.isInteger(value) ? XSD.integer : XSD.decimal

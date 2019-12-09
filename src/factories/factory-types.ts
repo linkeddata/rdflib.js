@@ -4,13 +4,13 @@ import NamedNode from '../named-node'
 import BlankNode from '../blank-node'
 import Variable from '../variable'
 import {
-  TFBlankNode,
+  BlankNode as TFBlankNode,
   TFDataFactory,
-  TFLiteral,
-  TFNamedNode,
+  Literal as TFLiteral,
+  NamedNode as TFNamedNode,
   Quad,
   Term,
-  TFVariable,
+  Variable as TFVariable,
 } from '../tf-types'
 
 export type Comparable = Term | TFNamedNode | TFBlankNode | TFLiteral | Quad | undefined | null

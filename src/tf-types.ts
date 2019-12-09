@@ -27,7 +27,7 @@ export interface Term {
  * RDF/JS taskforce NamedNode
  * @link https://rdf.js.org/data-model-spec/#namednode-interface
  */
-export interface TFNamedNode extends Term {
+export interface NamedNode extends Term {
   termType: NamedNodeTermType
   value: string
 }
@@ -36,7 +36,7 @@ export interface TFNamedNode extends Term {
  * RDF/JS taskforce Literal
  * @link https://rdf.js.org/data-model-spec/#literal-interface
  */
-export interface TFBlankNode extends Term {
+export interface BlankNode extends Term {
   termType: BlankNodeTermType
   value: string
 }
@@ -46,10 +46,10 @@ export interface TFBlankNode extends Term {
  * @link https://rdf.js.org/data-model-spec/#quad-interface
  */
 export interface Quad<
-  S extends Term = TFSubject,
-  P extends Term = TFPredicate,
-  O extends Term = TFObject,
-  G extends Term = TFGraph
+  S extends Term = Quad_Subject,
+  P extends Term = Quad_Predicate,
+  O extends Term = Quad_Object,
+  G extends Term = Quad_Graph
 > {
   subject: S
   predicate: P
@@ -61,7 +61,7 @@ export interface Quad<
  * RDF/JS taskforce Literal
  * @link https://rdf.js.org/data-model-spec/#literal-interface
  */
-export interface TFLiteral extends Term {
+export interface Literal extends Term {
   /** Contains the constant "Literal". */
   termType: LiteralTermType
   /** The text value, unescaped, without language or type (example: "Brad Pitt") */
@@ -72,14 +72,14 @@ export interface TFLiteral extends Term {
    */
   language: string
   /** A NamedNode whose IRI represents the datatype of the literal. */
-  datatype: TFNamedNode
+  datatype: NamedNode
 }
 
 /**
  * RDF/JS taskforce Variable
  * @link https://rdf.js.org/data-model-spec/#variable-interface
  */
-export interface TFVariable extends Term {
+export interface Variable extends Term {
   /** Contains the constant "Variable". */
   termType: VariableTermType
   /** The name of the variable without leading "?" (example: "a"). */
@@ -92,7 +92,7 @@ export interface TFVariable extends Term {
  * It's only allowed to assign a DefaultGraph to the graph property of a Quad.
  * @link https://rdf.js.org/data-model-spec/#defaultgraph-interface
  */
-export interface TFDefaultGraph extends Term {
+export interface DefaultGraph extends Term {
   termType: DefaultGraphTermType;
   /** should return and empty string'' */
   value: string;
@@ -107,28 +107,28 @@ export interface TFDefaultGraph extends Term {
  */
 export interface TFDataFactory {
   /** Returns a new instance of NamedNode. */
-  namedNode: (value: string) => TFNamedNode,
+  namedNode: (value: string) => NamedNode,
 
   /**
    * Returns a new instance of BlankNode.
    * If the value parameter is undefined a new identifier for the
    * blank node is generated for each call.
    */
-  blankNode: (value?: string) => TFBlankNode,
+  blankNode: (value?: string) => BlankNode,
 
   /**
    * Returns a new instance of Literal.
    * If languageOrDatatype is a NamedNode, then it is used for the value of datatype.
    * Otherwise languageOrDatatype is used for the value of language. */
-  literal: (value: string, languageOrDatatype: string | TFNamedNode) => TFLiteral,
+  literal: (value: string, languageOrDatatype: string | NamedNode) => Literal,
 
   /** Returns a new instance of Variable. This method is optional. */
-  variable?: (value: string) => TFVariable,
+  variable?: (value: string) => Variable,
 
   /**
    * Returns an instance of DefaultGraph.
    */
-  defaultGraph: () => TFDefaultGraph | TFNamedNode | TFBlankNode,
+  defaultGraph: () => DefaultGraph | NamedNode | BlankNode,
 
   /**
    * Returns a new instance of the specific Term subclass given by original.termType
@@ -164,10 +164,10 @@ export interface TFDataFactory {
 }
 
 /** A RDF/JS taskforce Subject */
-export type TFSubject = TFNamedNode | TFBlankNode | TFVariable
+export type Quad_Subject = NamedNode | BlankNode | Variable
 /** A RDF/JS taskforce Predicate */
-export type TFPredicate = TFNamedNode | TFVariable
+export type Quad_Predicate = NamedNode | Variable
 /** A RDF/JS taskforce Object */
-export type TFObject = TFNamedNode | TFBlankNode | TFLiteral | TFVariable
+export type Quad_Object = NamedNode | BlankNode | Literal | Variable
 /** A RDF/JS taskforce Graph */
-export type TFGraph = TFNamedNode | TFDefaultGraph | TFBlankNode | TFVariable
+export type Quad_Graph = NamedNode | DefaultGraph | BlankNode | Variable

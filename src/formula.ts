@@ -2,7 +2,7 @@ import ClassOrder from './class-order'
 import Collection from './collection'
 import CanonicalDataFactory from './factories/canonical-data-factory'
 import log from './log'
-import NamedNode from './named-node'
+import RDFlibNamedNode from './named-node'
 import Namespace from './namespace'
 import Node from './node-internal'
 import Serializer from './serialize'
@@ -19,13 +19,13 @@ import {
 } from './factories/factory-types'
 import { appliedFactoryMethods, arrayToStatements } from './utils'
 import {
-  TFBlankNode,
+  BlankNode,
   TFDataFactory,
-  TFGraph,
-  TFObject,
-  TFPredicate,
+  Quad_Graph,
+  Quad_Object,
+  Quad_Predicate,
   Quad,
-  TFSubject,
+  Quad_Subject,
   Term,
 } from './tf-types'
 
@@ -123,10 +123,10 @@ export default class Formula extends Node {
    * @param graph - the last part of the statement
    */
   add (
-    subject: TFSubject,
-    predicate: TFPredicate,
-    object: TFObject,
-    graph?: TFGraph
+    subject: Quad_Subject,
+    predicate: Quad_Predicate,
+    object: Quad_Object,
+    graph?: Quad_Graph
   ): number {
     return this.statements
       .push(this.rdfFactory.quad(subject, predicate, object, graph))
@@ -140,7 +140,7 @@ export default class Formula extends Node {
   }
 
   /** @deprecated use {this.rdfFactory.blankNode} instead */
-  bnode (id?: string): TFBlankNode {
+  bnode (id?: string): BlankNode {
     return this.rdfFactory.blankNode(id)
   }
 
@@ -167,10 +167,10 @@ export default class Formula extends Node {
   * @returns A node which match the wildcard position, or null
   */
   any(
-    s?: TFSubject | null,
-    p?: TFPredicate | null,
-    o?: TFObject | null,
-    g?: TFGraph | null
+    s?: Quad_Subject | null,
+    p?: Quad_Predicate | null,
+    o?: Quad_Object | null,
+    g?: Quad_Graph | null
   ): Term | null | undefined {
     const st = this.anyStatementMatching(s, p, o, g)
     if (st == null) {
@@ -194,10 +194,10 @@ export default class Formula extends Node {
    * @param g The graph that contains the statement
    */
   anyValue(
-    s?: TFSubject | null,
-    p?: TFPredicate | null,
-    o?: TFObject | null,
-    g?: TFGraph | null
+    s?: Quad_Subject | null,
+    p?: Quad_Predicate | null,
+    o?: Quad_Object | null,
+    g?: Quad_Graph | null
   ): string | void {
     const y = this.any(s, p, o, g)
     return y ? y.value : void 0
@@ -211,10 +211,10 @@ export default class Formula extends Node {
    * @param g The graph that contains the statement
    */
   anyJS(
-    s?: TFSubject | null,
-    p?: TFPredicate | null,
-    o?: TFObject | null,
-    g?: TFGraph | null
+    s?: Quad_Subject | null,
+    p?: Quad_Predicate | null,
+    o?: Quad_Object | null,
+    g?: Quad_Graph | null
   ): any {
     const y = this.any(s, p, o, g)
     return y ? Node.toJS(y) : void 0
@@ -224,10 +224,10 @@ export default class Formula extends Node {
    * Gets the first statement that matches the specified pattern
    */
   anyStatementMatching(
-    s?: TFSubject | null,
-    p?: TFPredicate | null,
-    o?: TFObject | null,
-    g?: TFGraph | null
+    s?: Quad_Subject | null,
+    p?: Quad_Predicate | null,
+    o?: Quad_Object | null,
+    g?: Quad_Graph | null
   ): Quad | undefined {
     let x = this.statementsMatching(s, p, o, g, true)
     if (!x || x.length === 0) {
@@ -258,10 +258,10 @@ export default class Formula extends Node {
    * @returns {Array<Node>} - An array of nodes which match the wildcard position
    */
   statementsMatching<JustOne extends boolean = false>(
-    s?: TFSubject | null,
-    p?: TFPredicate | null,
-    o?: TFObject | null,
-    g?: TFGraph | null,
+    s?: Quad_Subject | null,
+    p?: Quad_Predicate | null,
+    o?: Quad_Object | null,
+    g?: Quad_Graph | null,
     justOne?: boolean
   ): Quad[] {
     const sts = this.statements.filter(st =>
@@ -338,10 +338,10 @@ export default class Formula extends Node {
   * @returns {Array<Node>} - An array of nodes which match the wildcard position
   */
   each(
-    s?: TFSubject | null,
-    p?: TFPredicate | null,
-    o?: TFObject | null,
-    g?: TFGraph | null
+    s?: Quad_Subject | null,
+    p?: Quad_Predicate | null,
+    o?: Quad_Object | null,
+    g?: Quad_Graph | null
   ): Term[] {
     const results: Term[] = []
     let sts = this.statementsMatching(s, p, o, g, false)
@@ -391,7 +391,7 @@ export default class Formula extends Node {
     let len4: number
     let m: number
     let members: MembersMap
-    let pred: TFPredicate
+    let pred: Quad_Predicate
     let ref
     let ref1: Quad[]
     let ref2: Term[]
@@ -418,7 +418,7 @@ export default class Formula extends Node {
         this.rdfFactory.namedNode('http://www.w3.org/2000/01/rdf-schema#domain'),
         this.fromNT(t))
       for (let l = 0, len1 = ref2.length; l < len1; l++) {
-        pred = ref2[l] as TFPredicate
+        pred = ref2[l] as Quad_Predicate
         ref3 = this.statementsMatching(void 0, pred)
         for (m = 0, len2 = ref3.length; m < len2; m++) {
           st = ref3[m]
@@ -429,7 +429,7 @@ export default class Formula extends Node {
         this.rdfFactory.namedNode('http://www.w3.org/2000/01/rdf-schema#range'),
         this.fromNT(t))
       for (let q = 0, len3 = ref4.length; q < len3; q++) {
-        pred = ref4[q] as TFPredicate
+        pred = ref4[q] as Quad_Predicate
         ref5 = this.statementsMatching(void 0, pred)
         for (u = 0, len4 = ref5.length; u < len4; u++) {
           st = ref5[u]
@@ -473,7 +473,7 @@ export default class Formula extends Node {
 
   /**
    * Get all the Classes of which we can RDFS-infer the subject is a subclass
-   * @param {NamedNode} subject - The thing whose classes are to be found
+   * @param {RDFlibNamedNode} subject - The thing whose classes are to be found
    * @returns a hash table where key is NT of type and value is statement why we
    * think so.
    * Does NOT return terms, returns URI strings.
@@ -490,7 +490,7 @@ export default class Formula extends Node {
    * Get all the Classes of which we can RDFS-infer the subject is a member
    * todo: This will loop is there is a class subclass loop (Sublass loops are
    * not illegal)
-   * @param {NamedNode} subject - The thing whose classes are to be found
+   * @param {RDFlibNamedNode} subject - The thing whose classes are to be found
    * @returns a hash table where key is NT of type and value is statement why we think so.
    * Does NOT return terms, returns URI strings.
    * We use NT representations in this version because they handle blank nodes.
@@ -552,7 +552,7 @@ export default class Formula extends Node {
    * We use NT representations in this version because they handle blank nodes.
    * @param subject - A subject node
    */
-  findTypeURIs(subject: TFSubject): UriMap {
+  findTypeURIs(subject: Quad_Subject): UriMap {
     return this.NTtoURI(this.findTypesNT(subject))
   }
 
@@ -563,8 +563,8 @@ export default class Formula extends Node {
    * @returns an array of statements, duplicate statements are suppresssed.
    */
   connectedStatements(
-    subject: TFSubject,
-    doc: TFGraph,
+    subject: Quad_Subject,
+    doc: Quad_Graph,
     excludePredicateURIs?: ReadonlyArray<string>
   ): Quad[] {
     excludePredicateURIs = excludePredicateURIs || []
@@ -794,10 +794,10 @@ export default class Formula extends Node {
    * @param g - The graph that contains the statement
    */
   the (
-    s?: TFSubject | null,
-    p?: TFPredicate | null,
-    o?: TFObject | null,
-    g?: TFGraph | null
+    s?: Quad_Subject | null,
+    p?: Quad_Predicate | null,
+    o?: Quad_Object | null,
+    g?: Quad_Graph | null
   ): Term | null | undefined {
     let x = this.any(s, p, o, g)
     if (x == null) {
@@ -817,7 +817,7 @@ export default class Formula extends Node {
    */
   transitiveClosure(
     seeds: BooleanMap,
-    predicate: TFPredicate,
+    predicate: Quad_Predicate,
     inverse?: boolean
   ): {
     [uri: string]: boolean;
@@ -838,7 +838,7 @@ export default class Formula extends Node {
       }
       sups = inverse ?
         this.each(void 0, predicate, this.fromNT(t))
-        : this.each(this.fromNT(t) as TFPredicate, predicate)
+        : this.each(this.fromNT(t) as Quad_Predicate, predicate)
       for (i = 0, len = sups.length; i < len; i++) {
         elt = sups[i]
         s = elt.toNT()
@@ -862,9 +862,9 @@ export default class Formula extends Node {
    * @param types - The types
    */
   topTypeURIs(types: {
-    [id: string]: string | NamedNode;
+    [id: string]: string | RDFlibNamedNode;
   }): {
-    [id: string]: string | NamedNode;
+    [id: string]: string | RDFlibNamedNode;
   } {
     let i
     let j
@@ -926,10 +926,10 @@ export default class Formula extends Node {
    * @param g - The graph that contains the statement
    */
   whether(
-    s?: TFSubject | null,
-    p?: TFPredicate | null,
-    o?: TFObject | null,
-    g?: TFGraph | null
+    s?: Quad_Subject | null,
+    p?: Quad_Predicate | null,
+    o?: Quad_Object | null,
+    g?: Quad_Graph | null
   ): number {
     return this.statementsMatching(s, p, o, g, false).length
   }

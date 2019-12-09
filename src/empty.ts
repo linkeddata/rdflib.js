@@ -1,5 +1,5 @@
 import Node from './node-internal'
-import { TermType} from './types'
+import { TermType } from './types'
 import { Term } from './tf-types'
 
 /**

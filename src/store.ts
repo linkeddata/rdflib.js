@@ -42,12 +42,14 @@ import { Indexable } from './factories/factory-types'
 import NamedNode from './named-node'
 import Fetcher from './fetcher'
 import {
-  TFBlankNode,
-  TFGraph, TFNamedNode,
-  TFObject,
-  TFPredicate,
+  BlankNode,
+  Quad_Graph,
+  NamedNode as TFNamedNode,
+  Quad_Object,
+  Quad_Predicate,
   Quad,
-  TFSubject, Term
+  Quad_Subject,
+  Term
 } from './tf-types'
 
 const owlNamespaceURI = 'http://www.w3.org/2002/07/owl#'
@@ -60,9 +62,9 @@ export { defaultGraphURI }
 // Handle Functional Property
 function handleFP (
   formula: IndexedFormula,
-  subj: TFSubject,
-  pred: TFPredicate,
-  obj: TFObject
+  subj: Quad_Subject,
+  pred: Quad_Predicate,
+  obj: Quad_Object
 ): boolean {
   var o1 = formula.any(subj, pred, undefined)
   if (!o1) {
@@ -76,9 +78,9 @@ function handleFP (
 // Handle Inverse Functional Property
 function handleIFP (
   formula: IndexedFormula,
-  subj: TFSubject,
-  pred: TFPredicate,
-  obj: TFObject
+  subj: Quad_Subject,
+  pred: Quad_Predicate,
+  obj: Quad_Object
 ): boolean {
   var s1 = formula.any(undefined, pred, obj)
   if (!s1) {
@@ -91,10 +93,10 @@ function handleIFP (
 
 function handleRDFType (
   formula: IndexedFormula,
-  subj: TFSubject,
-  pred: TFPredicate,
-  obj: TFObject,
-  why: TFGraph
+  subj: Quad_Subject,
+  pred: Quad_Predicate,
+  obj: Quad_Object,
+  why: Quad_Graph
 ) {
   //@ts-ignore this method does not seem to exist in this library
   if (formula.typeCallback) {
@@ -152,7 +154,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
   features: FeaturesType
   static handleRDFType: Function
   _universalVariables?: TFNamedNode[]
-  _existentialVariables?: TFBlankNode[]
+  _existentialVariables?: BlankNode[]
 
   /** Function to remove quads from the store arrays with */
   private rdfArrayRemove: (arr: Quad[], q: Quad) => void
@@ -332,7 +334,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
    *
    * @param x The blank node to be declared, supported in N3
    */
-  declareExistential(x: TFBlankNode): TFBlankNode {
+  declareExistential(x: BlankNode): BlankNode {
     if (!this._existentialVariables) this._existentialVariables = []
     this._existentialVariables.push(x)
     return x
@@ -391,10 +393,10 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
    */
   // @ts-ignore differs from signature in Formula
   add (
-    subj: TFSubject | Quad | Quad[] | Statement | Statement[],
-    pred?: TFPredicate,
+    subj: Quad_Subject | Quad | Quad[] | Statement | Statement[],
+    pred?: Quad_Predicate,
     obj?: Term,
-    why?: TFGraph
+    why?: Quad_Graph
   ): Quad | null | IndexedFormula {
     var i: number
     if (arguments.length === 1) {
@@ -599,8 +601,8 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
    * @param flags Whether or not to do a two-directional copy and/or delete triples
    */
   copyTo(
-    template: TFSubject,
-    target: TFSubject,
+    template: Quad_Subject,
+    target: Quad_Subject,
     flags?: Array<('two-direction' | 'delete')>
   ): void {
     if (!flags) flags = []
@@ -637,8 +639,8 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     // log.warn("Equating "+u1+" and "+u2); // @@
     // @@JAMBO Must canonicalize the uris to prevent errors from a=b=c
     // 03-21-2010
-    const u1 = this.canon(u1in) as TFSubject
-    const u2 = this.canon(u2in) as TFSubject
+    const u1 = this.canon(u1in) as Quad_Subject
+    const u2 = this.canon(u2in) as Quad_Subject
     var d = this.compareTerm(u1, u2)
     if (!d) {
       return true // No information in {a = a}
@@ -686,10 +688,10 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
    * @param graph The graph that contains the statement
    */
   match(
-    subject?: TFSubject | null,
-    predicate?: TFPredicate | null,
-    object?: TFObject | null,
-    graph?: TFGraph | null
+    subject?: Quad_Subject | null,
+    predicate?: Quad_Predicate | null,
+    object?: Quad_Object | null,
+    graph?: Quad_Graph | null
   ): Quad[] {
     return this.statementsMatching(
       Node.fromValue(subject),
@@ -727,12 +729,12 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
    * @param action the function that should trigger
    */
   newPropertyAction(
-    pred: TFPredicate,
+    pred: Quad_Predicate,
     action: (
       store: IndexedFormula,
-      subject: TFSubject,
-      predicate: TFPredicate,
-      object: TFObject
+      subject: Quad_Subject,
+      predicate: Quad_Predicate,
+      object: Quad_Object
     ) => boolean
   ): boolean {
     // log.debug("newPropertyAction:  "+pred)
@@ -847,7 +849,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
    * Removes all statemnts in a doc
    * @param doc - The document / graph
    */
-  removeDocument(doc: TFGraph): IndexedFormula {
+  removeDocument(doc: Quad_Graph): IndexedFormula {
     var sts: Quad[] = this.statementsMatching(undefined, undefined, undefined, doc).slice() // Take a copy as this is the actual index
     for (var i = 0; i < sts.length; i++) {
       this.removeStatement(sts[i])
@@ -864,10 +866,10 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
    * @param limit The number of statements to remove
    */
   removeMany(
-    subj?: TFSubject | null,
-    pred?: TFPredicate | null,
-    obj?: TFObject | null,
-    why?: TFGraph | null,
+    subj?: Quad_Subject | null,
+    pred?: Quad_Predicate | null,
+    obj?: Quad_Object | null,
+    why?: Quad_Graph | null,
     limit?: number
   ): void {
     // log.debug("entering removeMany w/ subj,pred,obj,why,limit = " + subj +", "+ pred+", " + obj+", " + why+", " + limit)
@@ -890,10 +892,10 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
    * @param graph The graph that contains the statement
    */
   removeMatches(
-    subject?: TFSubject | null,
-    predicate?: TFPredicate | null,
-    object?: TFObject | null,
-    graph?: TFGraph | null
+    subject?: Quad_Subject | null,
+    predicate?: Quad_Predicate | null,
+    object?: Quad_Object | null,
+    graph?: Quad_Graph | null
   ): IndexedFormula {
     this.removeStatements(
       this.statementsMatching(subject, predicate, object, graph)
@@ -938,7 +940,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
   /**
    * Replace big with small, obsoleted with obsoleting.
    */
-  replaceWith (big: TFSubject, small: TFSubject): boolean {
+  replaceWith (big: Quad_Subject, small: Quad_Subject): boolean {
     // log.debug("Replacing "+big+" with "+small) // this.id(@@
     var oldhash = this.id(big)
     var newhash = this.id(small)
@@ -1036,10 +1038,10 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
    * @returns An array of nodes which match the wildcard position
    */
   statementsMatching (
-    subj?: TFSubject | null,
-    pred?: TFPredicate | null,
-    obj?: TFObject | null,
-    why?: TFGraph | null,
+    subj?: Quad_Subject | null,
+    pred?: Quad_Predicate | null,
+    obj?: Quad_Object | null,
+    why?: Quad_Graph | null,
     justOne?: boolean
   ): Quad[] {
     // log.debug("Matching {"+subj+" "+pred+" "+obj+"}")
@@ -1118,7 +1120,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
    * A list of all the URIs by which this thing is known
    * @param term
    */
-  uris(term: TFSubject): string[] {
+  uris(term: Quad_Subject): string[] {
     var cterm = this.canon(term)
     var terms = this.aliases[this.id(cterm)]
     if (!cterm.value) return []

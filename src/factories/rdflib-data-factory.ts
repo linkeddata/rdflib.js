@@ -9,7 +9,7 @@ import Statement from '../statement'
 import IndexedFormula from '../store'
 import Fetcher from '../fetcher'
 import ExtendedTermFactory from './extended-term-factory'
-import { TFNamedNode, Term } from '../tf-types'
+import { NamedNode, Term } from '../tf-types'
 
 /** Full RDFLib.js Data Factory */
 const RDFlibDataFactory: IRDFlibDataFactory = {
@@ -38,7 +38,7 @@ const RDFlibDataFactory: IRDFlibDataFactory = {
    * @param dt The datatype
    * @deprecated use {literal} with the second and third argument combined
    */
-  lit (val: string, lang?: string, dt?: TFNamedNode): Literal {
+  lit (val: string, lang?: string, dt?: NamedNode): Literal {
     return this.literal('' + val, lang || dt)
   },
 

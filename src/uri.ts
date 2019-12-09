@@ -10,7 +10,7 @@
  */
 var alert = alert || console.log
 
-import NamedNode from './named-node'
+import RDFlibNamedNode from './named-node'
 
 /**
  * Gets the document part of an URI
@@ -30,8 +30,8 @@ export function docpart(uri: string): string {
  * Gets the document part of an URI as a named node
  * @param x - The URI
  */
-export function document(x: string): NamedNode {
-  return new NamedNode(docpart(x))
+export function document(x: string): RDFlibNamedNode {
+  return new RDFlibNamedNode(docpart(x))
 }
 
 /**

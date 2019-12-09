@@ -2,7 +2,7 @@ import ClassOrder from './class-order'
 import Node from './node-internal'
 import { TermType, VariableTermType } from './types'
 import * as Uri from './uri'
-import { TFVariable } from './tf-types'
+import { Variable as TFVariable } from './tf-types'
 
 /**
 * Variables are placeholders used in patterns to be matched.

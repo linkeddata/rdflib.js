@@ -28,7 +28,7 @@
 import IndexedFormula from './store'
 import log from './log'
 import N3Parser from './n3parser'
-import NamedNode from './named-node'
+import RDFlibNamedNode from './named-node'
 import Namespace from './namespace'
 import rdfParse from './parse'
 import { parseRDFaDOM } from './rdfaparser'
@@ -47,12 +47,12 @@ import {
 } from './types'
 import { termValue } from './utils/termValue'
 import {
-  TFBlankNode,
+  BlankNode,
   TFDataFactory,
-  TFGraph,
-  TFNamedNode,
-  TFPredicate,
-  TFSubject
+  Quad_Graph,
+  NamedNode,
+  Quad_Predicate,
+  Quad_Subject
 } from './tf-types'
 
 // This is a special fetch which does OIDC auth, catching 401 errors
@@ -108,7 +108,7 @@ interface ExtendedResponse extends Response {
   /** String representation of the Body */
   responseText?: string
   /** Identifier of the reqest */
-  req?: TFSubject
+  req?: Quad_Subject
   size?: number
   timeout?: number
   /** Used in UpdateManager.updateDav */
@@ -146,7 +146,7 @@ interface AutoInitOptions extends RequestInit{
    * referred to this (for tracking bad links).
    * The document in which this link was found.
    */
-  referringTerm?: TFNamedNode
+  referringTerm?: NamedNode
   /** Provided content type (for writes) */
   contentType?: string
   /**
@@ -183,14 +183,14 @@ interface AutoInitOptions extends RequestInit{
   retriedWithNoCredentials?: boolean
   requestedURI?: string
   // Seems to be required in some functions, such as XHTML parse and RedirectToProxy
-  resource: TFSubject
+  resource: Quad_Subject
   /** The serialized resource in the body*/
   // Used for storing metadata of requests
-  original: TFNamedNode
+  original: NamedNode
   // Like requeststatus? Can contain text with error.
   data?: string
   // Probably an identifier for request?s
-  req: TFBlankNode
+  req: BlankNode
   // Might be the same as Options.data
   body?: string
   headers: Headers
@@ -228,8 +228,8 @@ class RDFXMLHandler extends Handler {
     responseText: String,
     /** Requires .original */
     options: {
-      original: TFSubject
-      req: TFSubject
+      original: Quad_Subject
+      req: Quad_Subject
     } & Options,
   ) {
     let kb = fetcher.store
@@ -271,8 +271,8 @@ class XHTMLHandler extends Handler {
     fetcher: Fetcher,
     responseText: string,
     options: {
-      resource: TFSubject
-      original: TFSubject
+      resource: Quad_Subject
+      original: Quad_Subject
     } & Options,
   ): Promise<FetchError> | ExtendedResponse {
     let relation, reverse: boolean
@@ -349,9 +349,9 @@ class XMLHandler extends Handler {
     fetcher: Fetcher,
     responseText: string,
     options: {
-      original: TFSubject
-      req: TFBlankNode
-      resource: TFSubject
+      original: Quad_Subject
+      req: BlankNode
+      resource: Quad_Subject
     } & Options,
   ): ExtendedResponse | Promise<FetchError> {
     let dom = Util.parseXML(responseText)
@@ -432,9 +432,9 @@ class HTMLHandler extends Handler {
     fetcher: Fetcher,
     responseText: string,
     options: {
-      req: TFBlankNode,
-      resource: TFSubject,
-      original: TFSubject,
+      req: BlankNode,
+      resource: Quad_Subject,
+      original: Quad_Subject,
     } & Options
   ): Promise<FetchError> | ExtendedResponse {
     let kb = fetcher.store
@@ -497,9 +497,9 @@ class TextHandler extends Handler {
     fetcher: Fetcher,
     responseText: string,
     options: {
-      req: TFSubject
-      original: TFSubject
-      resource: TFSubject
+      req: Quad_Subject
+      original: Quad_Subject
+      resource: Quad_Subject
     } & Options
   ): ExtendedResponse | Promise<FetchError> {
     // We only speak dialects of XML right now. Is this XML?
@@ -554,8 +554,8 @@ class N3Handler extends Handler {
     fetcher: Fetcher,
     responseText: string,
     options: {
-      original: TFNamedNode
-      req: TFSubject
+      original: NamedNode
+      req: Quad_Subject
     } & Options,
     response: ExtendedResponse
   ): ExtendedResponse | Promise<FetchError> {
@@ -681,7 +681,7 @@ export default class Fetcher implements CallbackifyInterface {
   _fetch: Fetch
   mediatypes: MediatypesMap
   /** Denoting this session */
-  appNode: TFBlankNode
+  appNode: BlankNode
   /**
    * this.requested[uri] states:
    * undefined     no record of web access or records reset
@@ -707,7 +707,7 @@ export default class Fetcher implements CallbackifyInterface {
   nonexistent: BooleanMap
   lookedUp: BooleanMap
   handlers: Array<typeof Handler>
-  ns: { [k: string]: (ln: string) => TFPredicate }
+  ns: { [k: string]: (ln: string) => Quad_Predicate }
   static HANDLERS: {
     [handlerName: number]: Handler
   }
@@ -880,13 +880,13 @@ export default class Fetcher implements CallbackifyInterface {
    * By default, the HTTP headers are recorded also, in the same store, in a separate graph.
    * This allows code like editable() for example to test things about the resource.
    *
-   * @param uri {Array<NamedNode>|Array<string>|NamedNode|string}
+   * @param uri {Array<RDFlibNamedNode>|Array<string>|RDFlibNamedNode|string}
    *
    * @param [options={}] {Object}
    *
    * @param [options.fetch] {Function}
    *
-   * @param [options.referringTerm] {NamedNode} Referring term, the resource which
+   * @param [options.referringTerm] {RDFlibNamedNode} Referring term, the resource which
    *   referred to this (for tracking bad links)
    *
    * @param [options.contentType] {string} Provided content type (for writes)
@@ -916,7 +916,7 @@ export default class Fetcher implements CallbackifyInterface {
    * @returns {Promise<Result>}
    */
   load (
-    uri: TFNamedNode | string | Array<string | TFNamedNode>,
+    uri: NamedNode | string | Array<string | NamedNode>,
     options: Options = {}
   ): Promise<Result> | Promise<Result>[] {
     options = Object.assign({}, options) // Take a copy as we add stuff to the options!!
@@ -927,7 +927,7 @@ export default class Fetcher implements CallbackifyInterface {
       )
     }
 
-    let docuri = termValue(uri as NamedNode)
+    let docuri = termValue(uri as RDFlibNamedNode)
     docuri = docuri.split('#')[0]
 
     options = this.initFetchOptions(docuri, options)
@@ -1137,7 +1137,7 @@ export default class Fetcher implements CallbackifyInterface {
    *                     includes response.status as the HTTP status if any.
    */
   nowOrWhenFetched (
-    uriIn: string | TFNamedNode,
+    uriIn: string | NamedNode,
     p2?: UserCallback | Options,
     userCallback?: UserCallback,
     options: Options = {}
@@ -1194,7 +1194,7 @@ export default class Fetcher implements CallbackifyInterface {
    * request's metadata status collection.
    *
    */
-  addStatus (req: TFBlankNode, statusMessage: string) {
+  addStatus (req: BlankNode, statusMessage: string) {
     // <Debug about="parsePerformance">
     let now = new Date()
     statusMessage = '[' + now.getHours() + ':' + now.getMinutes() + ':' +
@@ -1220,8 +1220,8 @@ export default class Fetcher implements CallbackifyInterface {
    */
   failFetch (
     options: {
-      req: TFBlankNode
-      original: TFSubject
+      req: BlankNode
+      original: Quad_Subject
     } & Options,
     errorMessage: string,
     statusCode: StatusValues,
@@ -1263,10 +1263,10 @@ export default class Fetcher implements CallbackifyInterface {
   // in the why part of the quad distinguish between HTML and HTTP header
   // Reverse is set iif the link was rev= as opposed to rel=
   linkData (
-    originalUri: TFNamedNode,
+    originalUri: NamedNode,
     rel: string,
     uri: string,
-    why: TFGraph,
+    why: Quad_Graph,
     reverse?: boolean
   ) {
     if (!uri) return
@@ -1299,8 +1299,8 @@ export default class Fetcher implements CallbackifyInterface {
 
   parseLinkHeader (
     linkHeader: string,
-    originalUri: TFNamedNode,
-    reqNode: TFGraph
+    originalUri: NamedNode,
+    reqNode: Quad_Graph
   ): void {
     if (!linkHeader) { return }
 
@@ -1336,8 +1336,8 @@ export default class Fetcher implements CallbackifyInterface {
 
   doneFetch (
     options: {
-      req: TFSubject,
-      original: TFSubject
+      req: Quad_Subject,
+      original: Quad_Subject
     } & Options,
     response: ExtendedResponse
   ): Response {
@@ -1356,7 +1356,7 @@ export default class Fetcher implements CallbackifyInterface {
    * If only one was flagged as looked up, then the new node is looked up again,
    * which will make sure all the URIs are dereferenced
    */
-  nowKnownAs (was: TFSubject, now: TFSubject): void {
+  nowKnownAs (was: Quad_Subject, now: Quad_Subject): void {
     if (this.lookedUp[was.value]) {
       // Transfer userCallback
       if (!this.lookedUp[now.value]) {
@@ -1373,11 +1373,11 @@ export default class Fetcher implements CallbackifyInterface {
    * Writes back to the web what we have in the store for this uri
    */
   putBack (
-    uri: TFNamedNode | string,
+    uri: NamedNode | string,
     options: Options = {}
   ): Promise<Response> {
-    uri = (uri as TFNamedNode).value || uri // Accept object or string
-    let doc = new NamedNode(uri).doc() // strip off #
+    uri = (uri as NamedNode).value || uri // Accept object or string
+    let doc = new RDFlibNamedNode(uri).doc() // strip off #
     options.contentType = options.contentType || 'text/turtle'
     options.data = serialize(doc, this.store, doc.value, options.contentType) as string
     return this.webOperation('PUT', uri, options)
@@ -1409,13 +1409,13 @@ export default class Fetcher implements CallbackifyInterface {
    * @param doc - The resource
   */
   async createIfNotExists (
-    doc: NamedNode,
+    doc: RDFlibNamedNode,
     contentType = 'text/turtle',
     data = ''
   ): Promise<ExtendedResponse> {
     const fetcher = this
     try {
-      var response = await fetcher.load(doc as TFNamedNode)
+      var response = await fetcher.load(doc as NamedNode)
     } catch (err) {
       if (err.response.status === 404) {
         console.log('createIfNotExists: doc does NOT exist, will create... ' + doc)
@@ -1467,7 +1467,7 @@ export default class Fetcher implements CallbackifyInterface {
     return this.webOperation('POST', parentURI, options)
   }
 
-  invalidateCache (iri: string | TFNamedNode): void {
+  invalidateCache (iri: string | NamedNode): void {
     const uri = termValue(iri)
     const fetcher = this
     if (fetcher.fetchQueue && fetcher.fetchQueue[uri]) {
@@ -1499,7 +1499,7 @@ export default class Fetcher implements CallbackifyInterface {
    */
   webOperation (
     method: HTTPMethods,
-    uriIn: string | TFNamedNode,
+    uriIn: string | NamedNode,
     // Not sure about this type. Maybe this Options is different?
     options: Options = {}
   ): Promise<ExtendedResponse> {
@@ -1558,8 +1558,8 @@ export default class Fetcher implements CallbackifyInterface {
    *   (for tracking bad links)
    */
   lookUpThing (
-    term: TFSubject,
-    rterm: TFSubject
+    term: Quad_Subject,
+    rterm: Quad_Subject
   ): Promise<Response> | Promise<Response>[] {
     let uris = this.store.uris(term)  // Get all URIs
     uris = uris.map(u => Uri.docpart(u))  // Drop hash fragments
@@ -1581,16 +1581,16 @@ export default class Fetcher implements CallbackifyInterface {
    * Looks for { [] link:requestedURI ?uri; link:response [ httph:header-name  ?value ] }
    */
   getHeader (
-    doc: TFNamedNode,
+    doc: NamedNode,
     header: string
   ): undefined | string[] {
     const kb = this.store
-    const requests = kb.each(undefined, this.ns.link('requestedURI'), doc) as TFSubject[]
+    const requests = kb.each(undefined, this.ns.link('requestedURI'), doc) as Quad_Subject[]
 
     for (let r = 0; r < requests.length; r++) {
       let request = requests[r]
       if (request !== undefined) {
-        let response = kb.any(request, this.ns.link('response')) as TFSubject
+        let response = kb.any(request, this.ns.link('response')) as Quad_Subject
         if (response !== undefined && kb.anyValue(response, this.ns.http('status')) && (kb.anyValue(response, this.ns.http('status')) as string).startsWith('2')) {
           // Only look at success returns - not 401 error messagess etc
           let results = kb.each(response, this.ns.httph(header.toLowerCase()))
@@ -1638,10 +1638,10 @@ export default class Fetcher implements CallbackifyInterface {
   saveResponseMetadata (
     response: Response,
     options: {
-      req: TFBlankNode,
-      resource: TFSubject
+      req: BlankNode,
+      resource: Quad_Subject
     } & Options
-  ): TFBlankNode {
+  ): BlankNode {
     const kb = this.store
 
     let responseNode = kb.bnode()
@@ -1673,7 +1673,7 @@ export default class Fetcher implements CallbackifyInterface {
     return responseNode
   }
 
-  objectRefresh (term: TFNamedNode): void {
+  objectRefresh (term: NamedNode): void {
     let uris = this.store.uris(term) // Get all URIs
     if (typeof uris !== 'undefined') {
       for (let i = 0; i < uris.length; i++) {
@@ -1689,7 +1689,7 @@ export default class Fetcher implements CallbackifyInterface {
   ** @param userCallback - A function userCallback(ok, message, response)
   */
   refresh (
-    term: TFNamedNode,
+    term: NamedNode,
     userCallback?: UserCallback
   ): void { // sources_refresh
     this.fireCallbacks('refresh', arguments)
@@ -1704,7 +1704,7 @@ export default class Fetcher implements CallbackifyInterface {
  ** @param userCallback - A function userCallback(ok, message, response)
  */
   refreshIfExpired (
-    term: TFNamedNode,
+    term: NamedNode,
     userCallback: UserCallback
   ): void {
     let exp = this.getHeader(term, 'Expires')
@@ -1715,7 +1715,7 @@ export default class Fetcher implements CallbackifyInterface {
     }
   }
 
-  retract (term: TFGraph) { // sources_retract
+  retract (term: Quad_Graph) { // sources_retract
     this.store.removeMany(undefined, undefined, undefined, term)
     if (term.value) {
       delete this.requested[Uri.docpart(term.value)]
@@ -1744,7 +1744,7 @@ export default class Fetcher implements CallbackifyInterface {
     return this.requested[docuri] === true
   }
 
-  unload (term: TFNamedNode) {
+  unload (term: NamedNode) {
     this.store.removeDocument(term)
     delete this.requested[term.value] // So it can be load2ed again
   }
@@ -1829,8 +1829,8 @@ export default class Fetcher implements CallbackifyInterface {
 
   // deduce some things from the HTTP transaction
   addType (
-    rdfType: TFNamedNode,
-    req: TFSubject,
+    rdfType: NamedNode,
+    req: Quad_Subject,
     kb: IndexedFormula,
     locURI: string
   ): void { // add type to all redirected resources too
@@ -1846,11 +1846,11 @@ export default class Fetcher implements CallbackifyInterface {
       if (doc && doc.value) {
         kb.add(kb.rdfFactory.namedNode(doc.value), this.ns.rdf('type'), rdfType, this.appNode)
       } // convert Literal
-      prev = kb.any(undefined, kb.rdfFactory.namedNode('http://www.w3.org/2007/ont/link#redirectedRequest'), prev) as TFSubject
+      prev = kb.any(undefined, kb.rdfFactory.namedNode('http://www.w3.org/2007/ont/link#redirectedRequest'), prev) as Quad_Subject
       if (!prev) { break }
       var response = kb.any(prev, kb.rdfFactory.namedNode('http://www.w3.org/2007/ont/link#response'))
       if (!response) { break }
-      var redirection = kb.any((response as TFNamedNode), kb.rdfFactory.namedNode('http://www.w3.org/2007/ont/http#status'))
+      var redirection = kb.any((response as NamedNode), kb.rdfFactory.namedNode('http://www.w3.org/2007/ont/http#status'))
       if (!redirection) { break }
       // @ts-ignore always true?
       if ((redirection !== '301') && (redirection !== '302')) { break }
@@ -1909,9 +1909,9 @@ export default class Fetcher implements CallbackifyInterface {
       }
     }
     if (response.status === 200) {
-      this.addType(this.ns.link('Document') as TFNamedNode, reqNode, kb, docuri)
+      this.addType(this.ns.link('Document') as NamedNode, reqNode, kb, docuri)
       if (diffLocation) {
-        this.addType(this.ns.link('Document') as TFNamedNode, reqNode, kb,
+        this.addType(this.ns.link('Document') as NamedNode, reqNode, kb,
           diffLocation)
       }
 
@@ -1967,7 +1967,7 @@ export default class Fetcher implements CallbackifyInterface {
 
   saveErrorResponse (
     response: ExtendedResponse,
-    responseNode: TFSubject
+    responseNode: Quad_Subject
   ): Promise<void> {
     let kb = this.store
 
@@ -2060,8 +2060,8 @@ export default class Fetcher implements CallbackifyInterface {
   setRequestTimeout (
     uri: string,
     options: {
-      req: TFSubject
-      original: TFSubject
+      req: Quad_Subject
+      original: Quad_Subject
     } & Options
   ): Promise<number | FetchError> {
     return new Promise((resolve) => {
