@@ -248,13 +248,13 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
         where?: any
     },
     target: TFNamedNode,
-    patchCallback: (errorString: string) => void
+    patchCallback: (errorString?: string) => void
   ): void {
     var targetKB = this
     var ds
     var binding: Bindings | null = null
 
-    function doPatch (onDonePatch: Function) {
+    function doPatch (onDonePatch: (errorString?: string) => void) {
       if (patch['delete']) {
         ds = patch['delete']
         // console.log(bindingDebug(binding))

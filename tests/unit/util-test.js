@@ -168,6 +168,8 @@ describe('util', () => {
     it('handles other objects', () => {
       const t = new NamedNode('http://example.org')
       expect(isVariable(t)).to.be.false()
+      expect(isVariable(undefined)).to.be.false()
+      expect(isVariable(2)).to.be.false()
     })
   })
 
