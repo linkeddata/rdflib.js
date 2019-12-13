@@ -595,12 +595,12 @@ function isXHTML (responseText) {
 
 function isXML (responseText: string): boolean {
   const match = responseText.match(/\s*<\?xml\s+version\s*=[^<>]+\?>/)
-  return match ? true : false
+  return !!match
 }
 
 function isXMLNS (responseText: string): boolean {
   const match = responseText.match(/[^(<html)]*<html\s+[^<]*xmlns=['"]http:\/\/www.w3.org\/1999\/xhtml["'][^<]*>/)
-  return match ? true : false
+  return !!match
 }
 
 type StatusValues =
