@@ -240,7 +240,7 @@ class RDFXMLHandler extends Handler {
     if (root.nodeName === 'parsererror') { // Mozilla only See issue/issue110
       // have to fail the request
       return fetcher.failFetch(options, 'Badly formed XML in ' +
-        (options as any).resource.value, 'parse_error')
+        options.resource!.value, 'parse_error')
     }
     let parser = new RDFParser(kb)
     try {
@@ -932,7 +932,9 @@ export default class Fetcher implements CallbackifyInterface {
 
     options = this.initFetchOptions(docuri, options)
 
-    return this.pendingFetchPromise(docuri, (options as AutoInitOptions).baseURI, (options as AutoInitOptions))
+    const initialisedOptions = this.initFetchOptions(docuri, options)
+
+    return this.pendingFetchPromise(docuri, initialisedOptions.baseURI, initialisedOptions)
   }
 
   pendingFetchPromise (
@@ -954,7 +956,7 @@ export default class Fetcher implements CallbackifyInterface {
       this.fetchQueue[originalUri] = pendingPromise
 
       // Clean up the queued promise after a time, if it's resolved
-      this.cleanupFetchRequest(originalUri, this.timeout)
+      this.cleanupFetchRequest(originalUri, null, this.timeout)
     }
 
     return pendingPromise.then(x => {
@@ -966,7 +968,17 @@ export default class Fetcher implements CallbackifyInterface {
     })
   }
 
-  cleanupFetchRequest (originalUri: string, timeout: number) {
+  /**
+   * @param _options - DEPRECATED
+   */
+  cleanupFetchRequest (
+    originalUri: string,
+    _options,
+    timeout: number
+  ) {
+    if (_options !== undefined) {
+      console.warn("_options is deprecated")
+    }
     this.timeouts[originalUri] = (this.timeouts[originalUri] || []).concat(setTimeout(() => {
       if (!this.isPending(originalUri)) {
         delete this.fetchQueue[originalUri]
