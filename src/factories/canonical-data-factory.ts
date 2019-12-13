@@ -83,7 +83,7 @@ const CanonicalDataFactory: DataFactory = {
   /**
    * Generates a uniquely identifiably *idempotent* string for the given {term}.
    *
-   * Equivalent to {Term.hashString}
+   * Equivalent to [[Term.hashString]]
    *
    * @example Use this to associate data with a term in an object
    *   { obj[id(term)] = "myData" }

@@ -206,7 +206,7 @@ class Handler {
 
   constructor (response: ExtendedResponse, dom?: Document) {
     this.response = response
-    // The bang operator here might need to be removed.
+    // The type assertion operator here might need to be removed.
     this.dom = dom!
   }
 }
@@ -1867,7 +1867,7 @@ export default class Fetcher implements CallbackifyInterface {
   ): Promise<FetchError | ExtendedResponse> | ExtendedResponse {
 
     const kb = this.store
-    const headers: Headers = (response as Response).headers
+    const headers = (response as Response).headers
 
     const reqNode = options.req
 

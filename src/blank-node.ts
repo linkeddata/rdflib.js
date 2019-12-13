@@ -13,7 +13,7 @@ export default class BlankNode extends Node implements TFBlankNode {
    * The next unique identifier for blank nodes
    */
   static nextId: number = 0;
-  static NTAnonymousNodePrefix: string = '_:'
+  static NTAnonymousNodePrefix: '_:' = '_:'
   static termType: BlankNodeTermType;
 
   private static getId (id: string | unknown): string {
@@ -56,7 +56,7 @@ export default class BlankNode extends Node implements TFBlankNode {
 
   /**
    * The identifier for the blank node
-   * @deprecated use {value} instead.
+   * @deprecated use [[value]] instead.
    */
   public get id (): string {
     return this.value
@@ -93,7 +93,7 @@ export default class BlankNode extends Node implements TFBlankNode {
   }
 
   toCanonical () {
-    return '_:' + this.value
+    return BlankNode.NTAnonymousNodePrefix + this.value
   }
 
   toString () {
