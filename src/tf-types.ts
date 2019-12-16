@@ -28,7 +28,7 @@ export interface Term {
  * @link https://rdf.js.org/data-model-spec/#namednode-interface
  */
 export interface NamedNode extends Term {
-  termType: NamedNodeTermType
+  termType: typeof NamedNodeTermType
   value: string
 }
 
@@ -37,7 +37,7 @@ export interface NamedNode extends Term {
  * @link https://rdf.js.org/data-model-spec/#literal-interface
  */
 export interface BlankNode extends Term {
-  termType: BlankNodeTermType
+  termType: typeof BlankNodeTermType
   value: string
 }
 
@@ -63,7 +63,7 @@ export interface Quad<
  */
 export interface Literal extends Term {
   /** Contains the constant "Literal". */
-  termType: LiteralTermType
+  termType: typeof LiteralTermType
   /** The text value, unescaped, without language or type (example: "Brad Pitt") */
   value: string
   /**
@@ -81,7 +81,7 @@ export interface Literal extends Term {
  */
 export interface Variable extends Term {
   /** Contains the constant "Variable". */
-  termType: VariableTermType
+  termType: typeof VariableTermType
   /** The name of the variable without leading "?" (example: "a"). */
   value: string
 }
@@ -93,7 +93,7 @@ export interface Variable extends Term {
  * @link https://rdf.js.org/data-model-spec/#defaultgraph-interface
  */
 export interface DefaultGraph extends Term {
-  termType: DefaultGraphTermType;
+  termType: typeof DefaultGraphTermType;
   /** should return and empty string'' */
   value: string;
 }

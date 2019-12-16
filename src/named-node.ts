@@ -1,25 +1,24 @@
-'use strict'
 import ClassOrder from './class-order'
 import Node from './node-internal'
-import { NamedNodeTermType, TermType} from './types'
+import { NamedNodeTermType } from './types'
 import { termValue } from './utils/termValue'
 import { NamedNode as TFNamedNode } from './tf-types'
+import { isTerm } from './utils/terms'
 
 /**
  * A named (IRI) RDF node
  */
 export default class NamedNode extends Node implements TFNamedNode {
-  static termType = TermType.NamedNode
-
+  static termType: typeof NamedNodeTermType = NamedNodeTermType
+  termType: typeof NamedNodeTermType = NamedNodeTermType
   classOrder = ClassOrder.NamedNode
-  termType: NamedNodeTermType = TermType.NamedNode
 
   /**
    * Create a named (IRI) RDF Node
    * @constructor
-   * @param iri {String} - The IRI for this node
+   * @param iri - The IRI for this node
    */
-  constructor (iri) {
+  constructor (iri: string) {
     super(termValue(iri))
 
     if (!this.value) {
@@ -39,7 +38,7 @@ export default class NamedNode extends Node implements TFNamedNode {
   /**
    * Returns an $rdf node for the containing directory, ending in slash.
    */
-  dir () {
+  dir (): NamedNode | null {
      var str = this.value.split('#')[0]
      var p = str.slice(0, -1).lastIndexOf('/')
      var q = str.indexOf('//')
@@ -51,7 +50,7 @@ export default class NamedNode extends Node implements TFNamedNode {
    * Returns an NN for the whole web site, ending in slash.
    * Contrast with the "origin" which does NOT have a trailing slash
    */
-  site () {
+  site (): NamedNode {
      var str = this.value.split('#')[0]
      var p = str.indexOf('//')
      if (p < 0) throw new Error('This URI does not have a web site part (origin)')
@@ -67,7 +66,7 @@ export default class NamedNode extends Node implements TFNamedNode {
    * Creates the fetchable named node for the document.
    * Removes everything from the # anchor tag.
    */
-  doc () {
+  doc (): NamedNode {
     if (this.value.indexOf('#') < 0) {
       return this
     } else {
@@ -78,12 +77,12 @@ export default class NamedNode extends Node implements TFNamedNode {
   /**
    * Returns the URI including <brackets>
    */
-  toString () {
+  toString (): string {
     return '<' + this.value + '>'
   }
 
   /** The local identifier with the document */
-  id () {
+  id (): string {
     return this.value.split('#')[1]
   }
 
@@ -91,11 +90,11 @@ export default class NamedNode extends Node implements TFNamedNode {
    * Legacy getter and setter alias, node.uri
    * @deprecated use {value}
    */
-  get uri () {
+  get uri (): string {
     return this.value
   }
 
-  set uri (uri) {
+  set uri (uri: string) {
     this.value = uri
   }
 
@@ -107,8 +106,7 @@ export default class NamedNode extends Node implements TFNamedNode {
     if (typeof value === 'undefined' || value === null) {
       return value
     }
-    const isNode = value && value.termType
-    if (isNode) {
+    if (isTerm(value)) {
       return value
     }
     return new NamedNode(value)

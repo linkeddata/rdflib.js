@@ -8,7 +8,12 @@ import {
   PredicateType,
   ObjectType,
   GraphType,
-  TermType,
+  EmptyTermType,
+  DefaultGraphTermType,
+  VariableTermType,
+  BlankNodeTermType,
+  LiteralTermType,
+  NamedNodeTermType,
 } from '../types'
 import { defaultGraphNode } from '../utils/default-graph-uri'
 import {
@@ -98,9 +103,9 @@ const CanonicalDataFactory: DataFactory = {
     }
 
     switch (term.termType) {
-      case TermType.DefaultGraph:
+      case DefaultGraphTermType:
         return 'defaultGraph'
-      case TermType.Variable:
+      case VariableTermType:
         return Variable.toString(term)
       default:
         const nq = this.termToNQ(term)
@@ -173,15 +178,15 @@ const CanonicalDataFactory: DataFactory = {
   /** Stringify a {term} to n-quads serialization. */
   termToNQ(term: Term): string {
     switch (term.termType) {
-      case TermType.BlankNode:
+      case BlankNodeTermType:
         return '_:' + term.value
-      case TermType.DefaultGraph:
+      case DefaultGraphTermType:
         return ''
-      case TermType.Empty:
+      case EmptyTermType:
         return '<http://www.w3.org/1999/02/22-rdf-syntax-ns#nil>'
-      case TermType.Literal:
+      case LiteralTermType:
         return Literal.toNT(term as Literal)
-      case TermType.NamedNode:
+      case NamedNodeTermType:
         return '<' + term.value + '>'
       default:
         throw new Error(`Can't serialize nonstandard term type (was '${term.termType}')`)

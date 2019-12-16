@@ -1,6 +1,6 @@
 import ClassOrder from './class-order'
 import Node from './node-internal'
-import { TermType, VariableTermType } from './types'
+import { VariableTermType } from './types'
 import * as Uri from './uri'
 import { Variable as TFVariable } from './tf-types'
 
@@ -12,13 +12,13 @@ import { Variable as TFVariable } from './tf-types'
 * but the ? notation has an implicit base uri of 'varid:'
 */
 export default class Variable extends Node implements TFVariable {
-  static termType = TermType.Variable
+  static termType: typeof VariableTermType = VariableTermType
+  termType: typeof VariableTermType = VariableTermType
 
   /** The base string for a variable's name */
   base = 'varid:'
   classOrder = ClassOrder.Variable
   isVar = 1
-  termType: VariableTermType = TermType.Variable
   /** The unique identifier of this variable */
   uri: string
 

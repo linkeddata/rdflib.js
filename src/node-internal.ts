@@ -1,4 +1,4 @@
-import { ValueType, Bindings, FromValueReturns } from './types'
+import { ValueType, Bindings, FromValueReturns, TermType } from './types'
 import { Term } from './tf-types'
 
 /**
@@ -16,7 +16,7 @@ export default abstract class Node {
   static toJS: (term: any) => Date | Number | string | boolean | object | Array<Date | Number | string | boolean | object>;
 
   /** The type of node */
-  termType!: string;
+  termType!: TermType;
 
   /** The class order for this node */
   classOrder!: number;

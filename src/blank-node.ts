@@ -1,7 +1,7 @@
 import ClassOrder from './class-order'
 import Node from './node-internal'
 import IndexedFormula from './store'
-import { BlankNodeTermType, TermType} from './types'
+import { BlankNodeTermType } from './types'
 import { BlankNode as TFBlankNode } from './tf-types'
 
 /**
@@ -9,12 +9,13 @@ import { BlankNode as TFBlankNode } from './tf-types'
  * @link https://rdf.js.org/data-model-spec/#blanknode-interface
  */
 export default class BlankNode extends Node implements TFBlankNode {
+  static termType: typeof BlankNodeTermType = BlankNodeTermType;
+  termType: typeof BlankNodeTermType = BlankNodeTermType;
   /**
    * The next unique identifier for blank nodes
    */
   static nextId: number = 0;
   static NTAnonymousNodePrefix: '_:' = '_:'
-  static termType: BlankNodeTermType;
 
   private static getId (id: string | unknown): string {
     if (id) {
@@ -44,7 +45,6 @@ export default class BlankNode extends Node implements TFBlankNode {
    * Note that the existence of this property already indicates that it is a variable.
    */
   isVar = 1
-  termType: BlankNodeTermType = TermType.BlankNode;
 
   /**
    * Initializes this node

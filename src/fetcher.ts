@@ -1376,11 +1376,11 @@ export default class Fetcher implements CallbackifyInterface {
     uri: NamedNode | string,
     options: Options = {}
   ): Promise<Response> {
-    uri = (uri as NamedNode).value || uri // Accept object or string
-    let doc = new RDFlibNamedNode(uri).doc() // strip off #
+    const uriSting = termValue(uri)
+    let doc = new RDFlibNamedNode(uriSting).doc() // strip off #
     options.contentType = options.contentType || 'text/turtle'
     options.data = serialize(doc, this.store, doc.value, options.contentType) as string
-    return this.webOperation('PUT', uri, options)
+    return this.webOperation('PUT', uriSting, options)
   }
 
   webCopy (here: string, there: string, contentType): Promise<ExtendedResponse> {

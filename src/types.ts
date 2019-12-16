@@ -12,32 +12,23 @@ import Statement from './statement'
 import Empty from './empty'
 import { NamedNode, Term } from './tf-types'
 
-/**
- * Types that support both Enums (for typescript) and regular strings
- */
-export type NamedNodeTermType = "NamedNode" | TermType.NamedNode
-export type BlankNodeTermType = "BlankNode" | TermType.BlankNode
-export type LiteralTermType = "Literal" | TermType.Literal
-export type VariableTermType = "Variable" | TermType.Variable
-export type CollectionTermType = "Collection" | TermType.Collection
-export type DefaultGraphTermType = "DefaultGraph" | TermType.DefaultGraph
+export const NamedNodeTermType = "NamedNode" as const
+export const BlankNodeTermType = "BlankNode" as const
+export const LiteralTermType = "Literal" as const
+export const VariableTermType = "Variable" as const
+export const DefaultGraphTermType = "DefaultGraph" as const
+// Non-RDF/JS types:
+export const CollectionTermType = "Collection" as const
+export const EmptyTermType = "Empty" as const
+export const GraphTermType = "Graph" as const
 
-/**
- * All the possible TermTypes
- * @todo Convert these to const enums when it's supported https://github.com/babel/babel/issues/8741
- */
-export enum TermType {
-  BlankNode = 'BlankNode',
-  DefaultGraph = 'DefaultGraph',
-  Literal = 'Literal',
-  NamedNode = 'NamedNode',
-  Variable = 'Variable',
-
-  // The next ones are not specified by the rdf.js taskforce
-  Collection = 'Collection',
-  Empty = 'Empty',
-  Graph = 'Graph',
-}
+export type TermType = typeof NamedNodeTermType
+  | typeof BlankNodeTermType
+  | typeof LiteralTermType
+  | typeof VariableTermType
+  | typeof DefaultGraphTermType
+  | typeof CollectionTermType
+  | typeof EmptyTermType
 
 /**
  * A valid mime type header

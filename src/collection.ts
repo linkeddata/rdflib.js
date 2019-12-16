@@ -6,7 +6,6 @@ import {
   Bindings,
   CollectionTermType,
   FromValueReturns,
-  TermType,
   ValueType
 } from './types'
 import Variable from './variable'
@@ -45,7 +44,8 @@ export function fromValue <T extends FromValueReturns<C> = any, C extends Node =
 export default class Collection<
   T extends Node = Node | RdflibBlankNode | Collection<any> | Literal | Variable
 > extends Node implements Term {
-  static termType = TermType.Collection
+  static termType: typeof CollectionTermType = CollectionTermType
+  termType: typeof CollectionTermType = CollectionTermType
 
   classOrder = ClassOrder.Collection
   closed: boolean = false
@@ -55,7 +55,6 @@ export default class Collection<
    */
   elements: T[] = []
   isVar = 0
-  termType: CollectionTermType = TermType.Collection
 
   constructor (initial?: ReadonlyArray<ValueType>) {
     super((RdflibBlankNode.nextId++).toString())

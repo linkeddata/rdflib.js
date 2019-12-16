@@ -9,7 +9,7 @@ import Serializer from './serialize'
 import Statement from './statement'
 import {
   Bindings,
-  TermType,
+  GraphTermType,
 } from './types'
 import { isStatement } from './utils/terms'
 import Variable from './variable'
@@ -51,7 +51,7 @@ interface UriMap {
  * A formula, or store of RDF statements
  */
 export default class Formula extends Node {
-  static termType = TermType.Graph
+  static termType: typeof GraphTermType = GraphTermType
 
   classOrder = ClassOrder.Graph
 
@@ -83,8 +83,6 @@ export default class Formula extends Node {
   /** The stored statements */
   statements: Quad[];
 
-  termType = TermType.Graph
-
   /**
    * Initializes this formula
    * @constructor
@@ -103,7 +101,6 @@ export default class Formula extends Node {
     opts: FormulaOpts = {}
     ) {
     super('')
-    this.termType = Formula.termType
     this.statements = statements || []
     this.constraints = constraints || []
     this.initBindings = initBindings || []

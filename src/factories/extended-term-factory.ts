@@ -1,6 +1,6 @@
 import Collection from '../collection'
 import CanonicalDataFactory from './canonical-data-factory'
-import { TermType, ValueType } from '../types'
+import { ValueType, CollectionTermType } from '../types'
 import { DataFactory, DefaultFactoryTypes, Feature, Indexable } from './factory-types'
 import { isCollection, isVariable } from '../utils/terms'
 import Variable from '../variable'
@@ -50,7 +50,7 @@ const ExtendedTermFactory: CollectionFactory = {
   },
 
   termToNQ (term: Term): string {
-    if (term.termType === TermType.Collection) {
+    if (term.termType === CollectionTermType) {
       return Collection.toNT(term)
     }
 

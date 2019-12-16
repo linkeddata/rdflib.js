@@ -3,7 +3,6 @@ import RDFlibNamedNode from './named-node'
 import Node from './node-internal'
 import {
   LiteralTermType,
-  TermType,
   ValueType
 } from './types'
 import { isLiteral } from './utils/terms'
@@ -16,7 +15,8 @@ import { Literal as TFLiteral, Term } from './tf-types'
  */
 // @ts-ignore Incorrectly extends due to fromValue()
 export default class Literal extends Node implements TFLiteral {
-  static termType = TermType.Literal
+  static termType: typeof LiteralTermType = LiteralTermType
+  termType: typeof LiteralTermType = LiteralTermType
 
   classOrder = ClassOrder.Literal
 
@@ -31,8 +31,6 @@ export default class Literal extends Node implements TFLiteral {
    * The language for the literal
    */
   language: string = ''
-
-  termType: LiteralTermType = TermType.Literal
 
   /**
    * Initializes a literal

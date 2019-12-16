@@ -5,7 +5,7 @@ import {
   ObjectType,
   PredicateType,
   SubjectType,
-  TermType,
+  DefaultGraphTermType,
 } from './types'
 import { defaultGraphNode } from './utils/default-graph-uri'
 import { Quad_Graph, Quad_Object, Quad_Predicate, Quad, Quad_Subject, Term } from './tf-types'
@@ -100,7 +100,7 @@ export default class Statement implements Quad<SubjectType, PredicateType, Objec
       this.predicate.toCanonical(),
       this.object.toCanonical()
     ]
-    if (this.graph && this.graph.termType !== TermType.DefaultGraph) {
+    if (this.graph && this.graph.termType !== DefaultGraphTermType) {
         terms.push(this.graph.toCanonical())
     }
     return terms.join(' ') + ' .'
