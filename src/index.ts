@@ -26,7 +26,7 @@ import UpdateManager from './update-manager'
 import { UpdatesSocket } from './updates-via'
 import { UpdatesVia } from './updates-via'
 import * as uri from './uri'
-import * as Util from './util'
+import * as Util from './utils-js'
 import Variable from './variable'
 import DataFactory from './factories/rdflib-data-factory'
 

@@ -35,7 +35,7 @@ import { parseRDFaDOM } from './rdfaparser'
 import RDFParser from './rdfxmlparser'
 import * as Uri from './uri'
 import { isCollection, isNamedNode} from './utils/terms'
-import * as Util from './util'
+import * as Util from './utils-js'
 import serialize from './serialize'
 
 // @ts-ignore This is injected

@@ -5,7 +5,7 @@ import Formula from '../../src/formula'
 
 import IndexedFormula from '../../src/store'
 import NamedNode from '../../src/named-node'
-import { RDFArrayRemove } from '../../src/util'
+import { RDFArrayRemove } from '../../src/utils-js'
 import DataFactory from '../../src/factories/rdflib-data-factory'
 
 describe('IndexedFormula', () => {

@@ -18,7 +18,12 @@ describe('data-factory', () => {
       it('reversibleId', () => { expect(Factory.supports[Feature.reversibleId]).to.be.false() })
     })
 
-    describe('equals', () => {});
+    describe('equals', () => {
+      const uri = "https://w3.org/"
+      const otherUri = "https://h3h3.org/"
+      it('handles same NamedNodes', () => expect(Factory.namedNode(uri).equals(Factory.namedNode(uri))).to.be.true)
+      it('handles different NamedNodes', () => expect(Factory.namedNode(uri).equals(Factory.namedNode(otherUri))).to.be.false)
+    });
 
     describe('id', () => {
       it('handles default graph', () => expect(Factory.id(new DefaultGraph())).to.equal('defaultGraph'))

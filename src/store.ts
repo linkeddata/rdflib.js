@@ -21,7 +21,7 @@ import ClassOrder from './class-order'
 import { defaultGraphURI } from './factories/canonical-data-factory'
 import Formula, { FormulaOpts } from './formula'
 import { ArrayIndexOf } from './utils'
-import { RDFArrayRemove } from './util'
+import { RDFArrayRemove } from './utils-js'
 import {
   isRDFlibObject,
   isStore,
