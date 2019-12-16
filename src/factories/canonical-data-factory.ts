@@ -29,7 +29,7 @@ export function defaultGraph(): NamedNode {
   return defaultGraphNode
 }
 
-/** The internal RDFlib datafactory, which uses Collections  */
+/** A basic internal RDFlib datafactory, which does not support Collections  */
 const CanonicalDataFactory: DataFactory = {
 
   supports: {

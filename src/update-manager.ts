@@ -615,10 +615,6 @@ export default class UpdateManager {
       var socket
       if (typeof WebSocket !== 'undefined') {
         socket = new WebSocket(validWssURI)
-        //@ts-ignore Firefox Addon
-      } else if (typeof Services !== 'undefined') { // Firefox add on http://stackoverflow.com/questions/24244886/is-websocket-supported-in-firefox-for-android-addons
-        //@ts-ignore Firefox Addon
-        socket = (Services.wm.getMostRecentWindow('navigator:browser').WebSocket)(wssURI)
       } else if (typeof window !== 'undefined' && window.WebSocket) {
         socket = (window as any).WebSocket(validWssURI)
       } else {

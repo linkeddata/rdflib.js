@@ -10,14 +10,12 @@ import Collection from '../../../src/collection'
  * e.g. Collection
  */
 describe('extended-term-factory', () => {
-  describe('#supports', () => {
-    it('collections', () => { expect(Factory.supports[Feature.collections]).to.be.true() })
-    it('defaultGraphType', () => { expect(Factory.supports[Feature.defaultGraphType]).to.be.false() })
-    it('equalsMethod', () => { expect(Factory.supports[Feature.equalsMethod]).to.be.true() })
-    it('identity', () => { expect(Factory.supports[Feature.identity]).to.be.false() })
-    it('id', () => { expect(Factory.supports[Feature.id]).to.be.true() })
-    it('reversibleId', () => { expect(Factory.supports[Feature.reversibleId]).to.be.false() })
-  })
+  it('supports collections', () => { expect(Factory.supports[Feature.collections]).to.be.true() })
+  it('supports equalsMethod', () => { expect(Factory.supports[Feature.equalsMethod]).to.be.true() })
+  it('supports id', () => { expect(Factory.supports[Feature.id]).to.be.true() })
+  it('does not supports identity', () => { expect(Factory.supports[Feature.identity]).to.be.false() })
+  it('does not supports defaultGraphType', () => { expect(Factory.supports[Feature.defaultGraphType]).to.be.false() })
+  it('does not supports reversibleId', () => { expect(Factory.supports[Feature.reversibleId]).to.be.false() })
 
   describe('id', () => {
     it('handles collections', () => {
