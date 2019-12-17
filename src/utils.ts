@@ -4,7 +4,7 @@ import { docpart } from './uri'
 import { string_startswith } from './utils-js'
 import { TFDataFactory, Quad, Quad_Subject, Term } from './tf-types'
 
-/** RDF/JS Taskforce Typeguards */
+/** RDF/JS spec Typeguards */
 
 /**
  * Loads ontologies of the data we load (this is the callback from the kb to

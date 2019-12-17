@@ -680,7 +680,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
 
   /**
    * Returns any quads matching the given arguments.
-   * Standard RDFJS Taskforce method for Source objects, implemented as an
+   * Standard RDFJS spec method for Source objects, implemented as an
    * alias to `statementsMatching()`
    * @param subject The subject
    * @param predicate The predicate

@@ -64,7 +64,7 @@ export type ValueType = Term | Node | Date | string | number | boolean | undefin
 
 /**
  * In this project, there exist two types for the same kind of RDF concept.
- * We have RDF/JS Taskforce types (standardized, generic), and RDFlib types (internal, specific).
+ * We have RDF/JS spec types (standardized, generic), and RDFlib types (internal, specific).
  * When deciding which type to use in a function, it is preferable to accept generic inputs,
  * whenever possible, and provide strict outputs.
  * In some ways, the TF types in here are a bit more strict.

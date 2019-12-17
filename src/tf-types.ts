@@ -8,7 +8,7 @@ import {
 } from './types'
 
 /**
- * RDF/JS taskforce Term
+ * RDF/JS spec Term
  * @link https://rdf.js.org/data-model-spec/#term-interface
  */
 export interface Term {
@@ -24,7 +24,7 @@ export interface Term {
 }
 
 /**
- * RDF/JS taskforce NamedNode
+ * RDF/JS spec NamedNode
  * @link https://rdf.js.org/data-model-spec/#namednode-interface
  */
 export interface NamedNode extends Term {
@@ -33,7 +33,7 @@ export interface NamedNode extends Term {
 }
 
 /**
- * RDF/JS taskforce Literal
+ * RDF/JS spec Literal
  * @link https://rdf.js.org/data-model-spec/#literal-interface
  */
 export interface BlankNode extends Term {
@@ -42,7 +42,7 @@ export interface BlankNode extends Term {
 }
 
 /**
- * RDF/JS taskforce Quad
+ * RDF/JS spec Quad
  * @link https://rdf.js.org/data-model-spec/#quad-interface
  */
 export interface Quad<
@@ -58,7 +58,7 @@ export interface Quad<
 }
 
 /**
- * RDF/JS taskforce Literal
+ * RDF/JS spec Literal
  * @link https://rdf.js.org/data-model-spec/#literal-interface
  */
 export interface Literal extends Term {
@@ -76,7 +76,7 @@ export interface Literal extends Term {
 }
 
 /**
- * RDF/JS taskforce Variable
+ * RDF/JS spec Variable
  * @link https://rdf.js.org/data-model-spec/#variable-interface
  */
 export interface Variable extends Term {
@@ -87,7 +87,7 @@ export interface Variable extends Term {
 }
 
 /**
- * RDF/JS taskforce DefaultGraph
+ * RDF/JS spec DefaultGraph
  * An instance of DefaultGraph represents the default graph.
  * It's only allowed to assign a DefaultGraph to the graph property of a Quad.
  * @link https://rdf.js.org/data-model-spec/#defaultgraph-interface
@@ -99,7 +99,7 @@ export interface DefaultGraph extends Term {
 }
 
 /**
- * RDF/JS taskforce DataFactory
+ * RDF/JS spec DataFactory
  *
  * Not 100% compliant due to to practicality problems.
  *
@@ -163,11 +163,11 @@ export interface TFDataFactory {
   supports: SupportTable
 }
 
-/** A RDF/JS taskforce Subject */
+/** A RDF/JS spec Subject */
 export type Quad_Subject = NamedNode | BlankNode | Variable
-/** A RDF/JS taskforce Predicate */
+/** A RDF/JS spec Predicate */
 export type Quad_Predicate = NamedNode | Variable
-/** A RDF/JS taskforce Object */
+/** A RDF/JS spec Object */
 export type Quad_Object = NamedNode | BlankNode | Literal | Variable
-/** A RDF/JS taskforce Graph */
+/** A RDF/JS spec Graph */
 export type Quad_Graph = NamedNode | DefaultGraph | BlankNode | Variable
