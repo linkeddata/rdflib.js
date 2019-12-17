@@ -28,6 +28,7 @@ import {
   Quad_Subject,
   Term,
 } from './tf-types'
+import Fetcher from './fetcher'
 
 export interface FormulaOpts {
   dataCallback?: (q: Quad) => void
@@ -63,7 +64,7 @@ export default class Formula extends Node {
    *
    * Is set by the fetcher when initialized.
    */
-  fetcher?: any
+  fetcher?: Fetcher
 
   initBindings: ReadonlyArray<any>
 
