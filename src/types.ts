@@ -29,6 +29,7 @@ export type TermType = typeof NamedNodeTermType
   | typeof DefaultGraphTermType
   | typeof CollectionTermType
   | typeof EmptyTermType
+  | typeof GraphTermType
 
 /**
  * A valid mime type header

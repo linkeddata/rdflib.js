@@ -12,7 +12,6 @@ import { Variable as TFVariable } from './tf-types'
 * but the ? notation has an implicit base uri of 'varid:'
 */
 export default class Variable extends Node implements TFVariable {
-  static termType: typeof VariableTermType = VariableTermType
   termType: typeof VariableTermType = VariableTermType
 
   /** The base string for a variable's name */

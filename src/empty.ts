@@ -6,7 +6,6 @@ import { Term } from './tf-types'
 * An empty node
 */
 export default class Empty extends Node implements Term {
-  static termType: typeof EmptyTermType = EmptyTermType
   termType: typeof EmptyTermType = EmptyTermType
 
   constructor () {

@@ -9,7 +9,6 @@ import { isTerm } from './utils/terms'
  * A named (IRI) RDF node
  */
 export default class NamedNode extends Node implements TFNamedNode {
-  static termType: typeof NamedNodeTermType = NamedNodeTermType
   termType: typeof NamedNodeTermType = NamedNodeTermType
   classOrder = ClassOrder.NamedNode
 

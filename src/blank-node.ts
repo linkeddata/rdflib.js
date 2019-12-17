@@ -9,7 +9,6 @@ import { BlankNode as TFBlankNode } from './tf-types'
  * @link https://rdf.js.org/data-model-spec/#blanknode-interface
  */
 export default class BlankNode extends Node implements TFBlankNode {
-  static termType: typeof BlankNodeTermType = BlankNodeTermType;
   termType: typeof BlankNodeTermType = BlankNodeTermType;
   /**
    * The next unique identifier for blank nodes

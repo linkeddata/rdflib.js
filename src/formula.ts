@@ -51,7 +51,7 @@ interface UriMap {
  * A formula, or store of RDF statements
  */
 export default class Formula extends Node {
-  static termType: typeof GraphTermType = GraphTermType
+  termType: typeof GraphTermType = GraphTermType
 
   classOrder = ClassOrder.Graph
 

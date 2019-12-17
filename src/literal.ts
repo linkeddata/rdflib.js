@@ -15,7 +15,6 @@ import { Literal as TFLiteral, Term } from './tf-types'
  */
 // @ts-ignore Incorrectly extends due to fromValue()
 export default class Literal extends Node implements TFLiteral {
-  static termType: typeof LiteralTermType = LiteralTermType
   termType: typeof LiteralTermType = LiteralTermType
 
   classOrder = ClassOrder.Literal
