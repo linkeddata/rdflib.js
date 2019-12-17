@@ -48,7 +48,7 @@ import {
 import { termValue } from './utils/termValue'
 import {
   BlankNode,
-  TFDataFactory,
+  RdfJsDataFactory,
   Quad_Graph,
   NamedNode,
   Quad_Predicate,
@@ -84,7 +84,7 @@ const CONTENT_TYPE_BY_EXT = {
 // make its own list and not rely on the prefixes used here,
 // and not be tempted to add to them, and them clash with those of another
 // application.
-const getNS = (factory?: TFDataFactory) => {
+const getNS = (factory?: RdfJsDataFactory) => {
   return {
     link: Namespace('http://www.w3.org/2007/ont/link#', factory),
     http: Namespace('http://www.w3.org/2007/ont/http#', factory),

@@ -5,7 +5,7 @@ import BlankNode from '../blank-node'
 import Variable from '../variable'
 import {
   BlankNode as TFBlankNode,
-  TFDataFactory,
+  RdfJsDataFactory,
   Literal as TFLiteral,
   NamedNode as TFNamedNode,
   Quad,
@@ -55,7 +55,7 @@ export enum Feature {
 export interface DataFactory<
   FactoryTypes = DefaultFactoryTypes,
   IndexType = Indexable
-> extends TFDataFactory {
+> extends RdfJsDataFactory {
   /**
    * BlankNode index
    * @private

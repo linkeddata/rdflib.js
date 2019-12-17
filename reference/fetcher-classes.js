@@ -1,4 +1,4 @@
-import { isTFNamedNode} from './utils/terms'
+import { isNamedNode } from './utils/terms'
 
 const log = require('./log')
 const N3Parser = require('./n3parser')
@@ -667,7 +667,7 @@ class Fetcher {
       userCallback = p2
     } else if (typeof p2 === 'undefined') { // original calling signature
       // referingTerm = undefined
-    } else if (isTFNamedNode(p2)) {
+    } else if (isNamedNode(p2)) {
       // referingTerm = p2
       options = {referingTerm: p2}
     } else {

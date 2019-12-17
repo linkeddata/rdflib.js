@@ -20,7 +20,7 @@ import {
 import { appliedFactoryMethods, arrayToStatements } from './utils'
 import {
   BlankNode,
-  TFDataFactory,
+  RdfJsDataFactory,
   Quad_Graph,
   Quad_Object,
   Quad_Predicate,
@@ -32,7 +32,7 @@ import {
 export interface FormulaOpts {
   dataCallback?: (q: Quad) => void
   rdfArrayRemove?: (arr: Quad[], q: Quad) => void
-  rdfFactory?: TFDataFactory
+  rdfFactory?: RdfJsDataFactory
 }
 
 interface BooleanMap {

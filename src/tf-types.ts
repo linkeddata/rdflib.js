@@ -105,7 +105,7 @@ export interface DefaultGraph extends Term {
  *
  * @link https://rdf.js.org/data-model-spec/#datafactory-interface
  */
-export interface TFDataFactory {
+export interface RdfJsDataFactory {
   /** Returns a new instance of NamedNode. */
   namedNode: (value: string) => NamedNode,
 

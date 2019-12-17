@@ -2,7 +2,7 @@ import Fetcher from './fetcher'
 import log from './log'
 import { docpart } from './uri'
 import { string_startswith } from './utils-js'
-import { TFDataFactory, Quad, Quad_Subject, Term } from './tf-types'
+import { RdfJsDataFactory, Quad, Quad_Subject, Term } from './tf-types'
 
 /** RDF/JS spec Typeguards */
 
@@ -79,7 +79,7 @@ const rdf = {
  * @return The {data} as a set of statements.
  */
 export function arrayToStatements(
-  rdfFactory: TFDataFactory,
+  rdfFactory: RdfJsDataFactory,
   subject: Quad_Subject,
   data: Term[]
 ): Quad[] {

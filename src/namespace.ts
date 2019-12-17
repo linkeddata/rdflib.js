@@ -1,12 +1,12 @@
 import RDFlibNamedNode from './named-node'
-import { TFDataFactory, NamedNode } from './tf-types'
+import { RdfJsDataFactory, NamedNode } from './tf-types'
 
 /**
  * Gets a namespace for the specified namespace's URI
  * @param nsuri - The URI for the namespace
  * @param [factory] - The factory for creating named nodes with
  */
-export default function Namespace (nsuri: string, factory?: TFDataFactory): (ln: string) => NamedNode {
+export default function Namespace (nsuri: string, factory?: RdfJsDataFactory): (ln: string) => NamedNode {
   const dataFactory = factory || { namedNode: (value) => new RDFlibNamedNode(value) as NamedNode }
 
   return function (ln: string): NamedNode {
