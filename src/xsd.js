@@ -1,4 +1,4 @@
-import CanonicalDataFactory from './data-factory-internal'
+import CanonicalDataFactory from './factories/canonical-data-factory'
 
 export function createXSD(localFactory = CanonicalDataFactory) {
   class XSD {}

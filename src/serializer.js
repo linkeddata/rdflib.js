@@ -8,8 +8,8 @@
 import NamedNode from './named-node'
 import BlankNode from './blank-node'
 import * as Uri from './uri'
-import * as Util from './util'
-import CanonicalDataFactory from './data-factory-internal'
+import * as Util from './utils-js'
+import CanonicalDataFactory from './factories/canonical-data-factory'
 import { createXSD } from './xsd'
 
 export default (function () {

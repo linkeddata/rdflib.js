@@ -1,8 +1,7 @@
-import { isNamedNode } from '../src/util'
+import { isNamedNode } from './utils/terms'
 
 const log = require('./log')
 const N3Parser = require('./n3parser')
-const NamedNode = require('./named-node')
 const Namespace = require('./namespace')
 const rdfParse = require('./parse')
 const parseRDFaDOM = require('./rdfaparser').parseRDFaDOM

@@ -1,6 +1,6 @@
 import jsonld from 'jsonld'
 
-import { arrayToStatements } from './util'
+import { arrayToStatements } from './utils'
 
 /**
  * Parses json-ld formatted JS objects to a rdf Term.

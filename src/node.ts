@@ -1,12 +1,10 @@
-'use strict'
-
 // This file attaches all functionality to Node
 // that would otherwise require circular dependencies.
+import { fromValue } from './collection'
 import Node from './node-internal'
-import Collection from './collection'
-import Literal from './literal'
-
-export default Node
+import Namespace from './namespace'
+import { isCollection, isLiteral } from './utils/terms'
+import { Term } from './tf-types'
 
 /**
  * Creates an RDF Node from a native javascript value.
@@ -16,30 +14,23 @@ export default Node
  * @param value {Node|Date|String|Number|Boolean|Undefined}
  * @return {Node|Collection}
  */
-Node.fromValue = function fromValue (value) {
-  if (typeof value === 'undefined' || value === null) {
-    return value
-  }
-  const isNode = value && value.termType
-  if (isNode) {  // a Node subclass or a Collection
-    return value
-  }
-  if (Array.isArray(value)) {
-    return new Collection(value)
-  }
-  return Literal.fromValue(value)
-}
+Node.fromValue = fromValue;
 
-import Namespace from './namespace'
+export default Node
+
 const ns = { xsd: Namespace('http://www.w3.org/2001/XMLSchema#') }
 
-Node.toJS = function toJS (term) {
-  if (term.elements) {
+/**
+ * Gets the javascript object equivalent to a node
+ * @param term The RDF node
+ */
+Node.toJS = function (term: Term): Term | boolean | number | Date | string | any[] {
+  if (isCollection(term)) {
     return term.elements.map(Node.toJS) // Array node (not standard RDFJS)
   }
-  if (!term.datatype) return term // Objects remain objects
+  if (!isLiteral(term)) return term
   if (term.datatype.equals(ns.xsd('boolean'))) {
-    return term.value === '1'
+    return term.value === '1' || term.value === 'true'
   }
   if (term.datatype.equals(ns.xsd('dateTime')) ||
     term.datatype.equals(ns.xsd('date'))) {
@@ -50,7 +41,6 @@ Node.toJS = function toJS (term) {
     term.datatype.equals(ns.xsd('float')) ||
     term.datatype.equals(ns.xsd('decimal'))
   ) {
-    let z = Number(term.value)
     return Number(term.value)
   }
   return term.value

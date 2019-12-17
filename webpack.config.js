@@ -26,6 +26,7 @@ module.exports = (env, args) => {
         }
       ]
     },
+    resolve: { extensions: ['.js', '.ts'] },
     plugins: [
       new WrapperPlugin({
         // Fall back to window.fetch when solid-auth-client is not present,

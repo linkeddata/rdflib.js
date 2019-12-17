@@ -14,10 +14,10 @@
 
 import BlankNode from './blank-node'
 import Literal from './literal'
-import rdf from './data-factory'
 import NamedNode from './named-node'
 import * as Uri from './uri'
-import * as Util from './util'
+import * as Util from './utils-js'
+import rdf from './factories/canonical-data-factory'
 
 if (typeof Node === 'undefined') { //  @@@@@@ Global. Interface to xmldom.
   var Node = {

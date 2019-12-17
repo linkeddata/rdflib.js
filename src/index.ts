@@ -1,7 +1,6 @@
 import BlankNode from './blank-node'
 import Collection from './collection'
 import * as convert from './convert'
-import DataFactory from './data-factory'
 import Empty from './empty'
 import Fetcher from './fetcher'
 import Formula from './formula'
@@ -27,8 +26,11 @@ import UpdateManager from './update-manager'
 import { UpdatesSocket } from './updates-via'
 import { UpdatesVia } from './updates-via'
 import * as uri from './uri'
-import * as Util from './util'
+import * as Util from './utils-js'
 import Variable from './variable'
+import DataFactory from './factories/rdflib-data-factory'
+
+export * from './utils/terms'
 
 const NextId = BlankNode.nextId
 
@@ -104,3 +106,4 @@ export {
   triple,
   variable,
 }
+export { termValue } from './utils/termValue'

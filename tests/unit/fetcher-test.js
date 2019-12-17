@@ -10,7 +10,7 @@ import nock from 'nock'
 import * as rdf from '../../src/index'
 import NamedNode from '../../src/named-node'
 import IndexedFormula from '../../src/store'
-import CanonicalDataFactory from '../../src/data-factory-internal'
+import CanonicalDataFactory from '../../src/factories/canonical-data-factory'
 
 chai.use(sinonChai)
 chai.use(dirtyChai)
@@ -46,7 +46,7 @@ describe('Fetcher', () => {
       }
       let fetcher = new Fetcher()
 
-      expect(fetcher.store.fetcher === fetcher).to.be.true
+      expect(fetcher.store.fetcher === fetcher).to.be.true()
     })
   })
 
@@ -70,6 +70,7 @@ describe('Fetcher', () => {
         status: 200,
       })
       const options = {
+        req: store.rdfFactory.blankNode(),
         resource: store.rdfFactory.namedNode('https://example.com/resource/1')
       }
 
