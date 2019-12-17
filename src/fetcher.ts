@@ -1461,7 +1461,7 @@ export default class Fetcher implements CallbackifyInterface {
   ): Promise<Response> {
     let headers = {
       // Force the right mime type for containers
-      'content-type': ContentType.turtle,
+      'content-type': TurtleContentType,
       'link': this.ns.ldp('BasicContainer') + '; rel="type"'
     }
 

@@ -8,7 +8,7 @@ import RDFParser from './rdfxmlparser'
 import sparqlUpdateParser from './patch-parser'
 import * as Util from './utils-js'
 import Formula from './formula'
-import { ContentType } from './types'
+import { ContentType, TurtleContentType, N3ContentType, RDFXMLContentType, XHTMLContentType, HTMLContentType, SPARQLUpdateContentType, JSONLDContentType, NQuadsContentType, NQuadsAltContentType } from './types'
 import { Quad } from './tf-types'
 
 type CallbackFunc = (error: any, kb: Formula | null) => void
@@ -31,30 +31,30 @@ export default function parse (
   contentType: string | ContentType,
   callback?: CallbackFunc
 ) {
-  contentType = contentType || ContentType.turtle
+  contentType = contentType || TurtleContentType
   contentType = contentType.split(';')[0] as ContentType
   try {
-    if (contentType === ContentType.n3 || contentType === ContentType.turtle) {
+    if (contentType === N3ContentType || contentType === TurtleContentType) {
       var p = N3Parser(kb, kb, base, base, null, null, '', null)
       p.loadBuf(str)
       executeCallback()
-    } else if (contentType === ContentType.rdfxml) {
+    } else if (contentType === RDFXMLContentType) {
       var parser = new RDFParser(kb)
       parser.parse(Util.parseXML(str), base, kb.sym(base))
       executeCallback()
-    } else if (contentType === ContentType.xhtml) {
-      parseRDFaDOM(Util.parseXML(str, {contentType: ContentType.xhtml}), kb, base)
+    } else if (contentType === XHTMLContentType) {
+      parseRDFaDOM(Util.parseXML(str, {contentType: XHTMLContentType}), kb, base)
       executeCallback()
-    } else if (contentType === ContentType.html) {
-      parseRDFaDOM(Util.parseXML(str, {contentType: ContentType.html}), kb, base)
+    } else if (contentType === HTMLContentType) {
+      parseRDFaDOM(Util.parseXML(str, {contentType: HTMLContentType}), kb, base)
       executeCallback()
-    } else if (contentType === ContentType.sparqlupdate) { // @@ we handle a subset
+    } else if (contentType === SPARQLUpdateContentType) { // @@ we handle a subset
       sparqlUpdateParser(str, kb, base)
       executeCallback()
-    } else if (contentType === ContentType.jsonld) {
+    } else if (contentType === JSONLDContentType) {
       jsonldParser(str, kb, base, executeCallback)
-    } else if (contentType === ContentType.nQuads ||
-               contentType === ContentType.nQuadsAlt) {
+    } else if (contentType === NQuadsContentType ||
+               contentType === NQuadsAltContentType) {
       var n3Parser = new N3jsParser({ factory: DataFactory })
       nquadCallback(null, str)
     } else if (contentType === undefined) {
@@ -89,11 +89,11 @@ export default function parse (
   function executeErrorCallback (e: Error): void {
     if (
       // TODO: Always true, what is the right behavior
-      contentType !== ContentType.jsonld ||
+      contentType !== JSONLDContentType ||
       // @ts-ignore always true?
-      contentType !== ContentType.nQuads ||
+      contentType !== NQuadsContentType ||
       // @ts-ignore always true?
-      contentType !== ContentType.nQuadsAlt
+      contentType !== NQuadsAltContentType
     ) {
       if (callback) {
         callback(e, kb)
