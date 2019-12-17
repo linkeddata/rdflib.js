@@ -87,7 +87,7 @@ export default class NamedNode extends Node implements TFNamedNode {
 
   /**
    * Legacy getter and setter alias, node.uri
-   * @deprecated use {value}
+   * @deprecated use [[value]]
    */
   get uri (): string {
     return this.value

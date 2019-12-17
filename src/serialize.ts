@@ -1,7 +1,18 @@
 import * as convert from './convert'
 import Formula from './formula'
 import Serializer from './serializer'
-import { ContentType} from './types'
+import {
+  ContentType,
+  JSONLDContentType,
+  N3ContentType,
+  N3LegacyContentType,
+  NQuadsAltContentType,
+  NQuadsContentType,
+  NTriplesContentType,
+  RDFXMLContentType,
+  TurtleContentType,
+  TurtleLegacyContentType,
+} from './types'
 import IndexedFormula from './store'
 import { BlankNode, NamedNode } from './tf-types'
 
@@ -30,7 +41,7 @@ export default function serialize (
 ): string | undefined {
   base = base || target.value
   const opts = options || {}
-  contentType = contentType || ContentType.turtle // text/n3 if complex?
+  contentType = contentType || TurtleContentType // text/n3 if complex?
   var documentString: string | null = null
   try {
     var sz = Serializer(kb)
@@ -40,30 +51,30 @@ export default function serialize (
     sz.suggestNamespaces(kb!.namespaces)
     sz.setBase(base)
     switch (contentType) {
-      case ContentType.rdfxml:
+      case RDFXMLContentType:
         documentString = sz.statementsToXML(newSts)
         return executeCallback(null, documentString)
-      case ContentType.n3:
-      case ContentType.n3Legacy:
+      case N3ContentType:
+      case N3LegacyContentType:
         documentString = sz.statementsToN3(newSts)
         return executeCallback(null, documentString)
-      case ContentType.turtle:
-      case ContentType.turtleLegacy:
+      case TurtleContentType:
+      case TurtleLegacyContentType:
         sz.setFlags('si') // Suppress = for sameAs and => for implies
         documentString = sz.statementsToN3(newSts)
         return executeCallback(null, documentString)
-      case ContentType.nTriples:
+      case NTriplesContentType:
         sz.setFlags('deinprstux') // Suppress nice parts of N3 to make ntriples
         documentString = sz.statementsToNTriples(newSts)
         return executeCallback(null, documentString)
-      case ContentType.jsonld:
+      case JSONLDContentType:
         sz.setFlags('deinprstux') // Use adapters to connect to incmpatible parser
         n3String = sz.statementsToNTriples(newSts)
         // n3String = sz.statementsToN3(newSts)
         convert.convertToJson(n3String, callback)
         break
-      case ContentType.nQuads:
-      case ContentType.nQuadsAlt: // @@@ just outpout the quads? Does not work for collections
+      case NQuadsContentType:
+      case NQuadsAltContentType: // @@@ just outpout the quads? Does not work for collections
         sz.setFlags('deinprstux q') // Suppress nice parts of N3 to make ntriples
         documentString = sz.statementsToNTriples(newSts) // q in flag means actually quads
         return executeCallback(null, documentString)

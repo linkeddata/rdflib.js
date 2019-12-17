@@ -31,24 +31,33 @@ export type TermType = typeof NamedNodeTermType
   | typeof EmptyTermType
   | typeof GraphTermType
 
+export const HTMLContentType = "text/html" as const
+export const JSONLDContentType = "application/ld+json" as const
+export const N3ContentType = "text/n3" as const
+export const N3LegacyContentType = "application/n3" as const
+export const NQuadsAltContentType = "application/nquads" as const
+export const NQuadsContentType = "application/n-quads" as const
+export const NTriplesContentType = "application/n-triples" as const
+export const RDFXMLContentType = "application/rdf+xml" as const
+export const SPARQLUpdateContentType = "application/sparql-update" as const
+export const TurtleContentType = "text/turtle" as const
+export const TurtleLegacyContentType = "application/x-turtle" as const
+export const XHTMLContentType = "application/xhtml+xml" as const
+
 /**
  * A valid mime type header
- * @todo Convert these to const enums when it's supported https://github.com/babel/babel/issues/8741
  */
-export enum ContentType {
-  rdfxml = "application/rdf+xml",
-  turtle = "text/turtle",
-  turtleLegacy = "application/x-turtle",
-  n3 = "text/n3",
-  n3Legacy = "application/n3",
-  nTriples = "application/n-triples",
-  nQuads = "application/n-quads",
-  nQuadsAlt = "application/nquads",
-  jsonld = "application/ld+json",
-  xhtml = "application/xhtml+xml",
-  html = "text/html",
-  sparqlupdate = "application/sparql-update",
-}
+export type ContentType = typeof RDFXMLContentType
+  | typeof HTMLContentType
+  | typeof JSONLDContentType
+  | typeof N3ContentType
+  | typeof N3LegacyContentType
+  | typeof NQuadsAltContentType
+  | typeof NQuadsContentType
+  | typeof SPARQLUpdateContentType
+  | typeof TurtleContentType
+  | typeof TurtleLegacyContentType
+  | typeof XHTMLContentType
 
 /** A type for values that serves as inputs */
 export type ValueType = Term | Node | Date | string | number | boolean | undefined | null | Collection

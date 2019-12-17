@@ -43,7 +43,7 @@ import { fetch as solidAuthCli } from 'solid-auth-cli'
 // @ts-ignore This is injected
 import { fetch as solidAuthClient } from 'solid-auth-client'
 import {
-  ContentType
+  ContentType, TurtleContentType, RDFXMLContentType, XHTMLContentType
 } from './types'
 import { termValue } from './utils/termValue'
 import {
@@ -69,8 +69,8 @@ const Parsable = {
 
 // This is a minimal set to allow the use of damaged servers if necessary
 const CONTENT_TYPE_BY_EXT = {
-  'rdf': 'application/rdf+xml',
-  'owl': 'application/rdf+xml',
+  'rdf': RDFXMLContentType,
+  'owl': RDFXMLContentType,
   'n3': 'text/n3',
   'ttl': 'text/turtle',
   'nt': 'text/n3',
@@ -217,7 +217,7 @@ class RDFXMLHandler extends Handler {
   }
 
   static register (fetcher: Fetcher) {
-    fetcher.mediatypes['application/rdf+xml'] = {
+    fetcher.mediatypes[RDFXMLContentType] = {
       'q': 0.9
     }
   }
@@ -264,7 +264,7 @@ class XHTMLHandler extends Handler {
   }
 
   static register (fetcher: Fetcher) {
-    fetcher.mediatypes['application/xhtml+xml'] = {}
+    fetcher.mediatypes[XHTMLContentType] = {}
   }
 
   parse (
@@ -1390,7 +1390,7 @@ export default class Fetcher implements CallbackifyInterface {
   ): Promise<Response> {
     const uriSting = termValue(uri)
     let doc = new RDFlibNamedNode(uriSting).doc() // strip off #
-    options.contentType = options.contentType || 'text/turtle'
+    options.contentType = options.contentType || TurtleContentType
     options.data = serialize(doc, this.store, doc.value, options.contentType) as string
     return this.webOperation('PUT', uriSting, options)
   }
@@ -1422,7 +1422,7 @@ export default class Fetcher implements CallbackifyInterface {
   */
   async createIfNotExists (
     doc: RDFlibNamedNode,
-    contentType = 'text/turtle',
+    contentType = TurtleContentType,
     data = ''
   ): Promise<ExtendedResponse> {
     const fetcher = this
