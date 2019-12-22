@@ -387,7 +387,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
    * @param subj - The thing about which the fact a relationship is asserted.
    *        Also accepts a statement or an array of Statements.
    * @param pred - The relationship which is asserted
-   * @param obj - The object of the relationship, e.g. another thing or avalue
+   * @param obj - The object of the relationship, e.g. another thing or avalue. If passed a string, this will become a literal.
    * @param why - The document in which the triple (S,P,O) was or will be stored on the web
    * @returns The statement added to the store, or the store
    */
@@ -395,7 +395,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
   add (
     subj: Quad_Subject | Quad | Quad[] | Statement | Statement[],
     pred?: Quad_Predicate,
-    obj?: Term,
+    obj?: Term | string,
     why?: Quad_Graph
   ): Quad | null | IndexedFormula {
     var i: number

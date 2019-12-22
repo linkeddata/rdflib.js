@@ -1404,7 +1404,7 @@ export default class Fetcher implements CallbackifyInterface {
       })
   }
 
-  delete (uri: string, options: Options): Promise<ExtendedResponse> {
+  delete (uri: string, options?: Options): Promise<ExtendedResponse> {
     return this.webOperation('DELETE', uri, options)
       .then(response => {
         this.requested[uri] = 404

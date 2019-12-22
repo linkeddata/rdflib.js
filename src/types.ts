@@ -91,8 +91,8 @@ export interface IRDFlibDataFactory extends DataFactory<
   RDFlibNamedNode | RDFlibBlankNode | RDFlibLiteral | Collection | Statement
 > {
   fetcher: (store: IndexedFormula, options: any) => Fetcher
-  graph: (features, opts) => IndexedFormula
   lit: (val: string, lang?: string, dt?: NamedNode) => RDFlibLiteral
+  graph: (features?, opts?) => IndexedFormula
   st: (
     subject: SubjectType,
     predicate: PredicateType,
