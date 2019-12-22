@@ -778,7 +778,7 @@ export default class Formula extends Node {
   /**
    * @deprecated use {rdfFactory.namedNode} instead
    */
-  sym (uri, name?): NamedNode {
+  sym (uri: string, name?): NamedNode {
     if (name) {
       throw new Error('This feature (kb.sym with 2 args) is removed. Do not assume prefix mappings.')
     }
