@@ -10,7 +10,7 @@ import IndexedFormula from './store'
 import Fetcher from './fetcher'
 import Statement from './statement'
 import Empty from './empty'
-import { NamedNode, Term } from './tf-types'
+import { NamedNode, Term, Quad_Subject, Quad_Predicate, Quad_Object, Quad_Graph } from './tf-types'
 
 export const NamedNodeTermType = "NamedNode" as const
 export const BlankNodeTermType = "BlankNode" as const
@@ -94,14 +94,14 @@ export interface IRDFlibDataFactory extends DataFactory<
   lit: (val: string, lang?: string, dt?: NamedNode) => RDFlibLiteral
   graph: (features?, opts?) => IndexedFormula
   st: (
-    subject: SubjectType,
-    predicate: PredicateType,
-    object: ObjectType,
-    graph?: GraphType
+    subject: Quad_Subject,
+    predicate: Quad_Predicate,
+    object: Quad_Object,
+    graph?: Quad_Graph
   ) => Statement
   triple: (
-    subject: SubjectType,
-    predicate: PredicateType,
-    object: ObjectType
+    subject: Quad_Subject,
+    predicate: Quad_Predicate,
+    object: Quad_Object
   ) => Statement
 }
