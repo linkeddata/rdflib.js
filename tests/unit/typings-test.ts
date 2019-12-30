@@ -3,6 +3,7 @@ import Statement from '../../src/statement'
 import Literal from '../../src/literal'
 import { expect } from 'chai'
 import DataFactory from '../../src/factories/rdflib-data-factory'
+import IndexedFormula from '../../src/store'
 
 const URI = 'https://example.com/subject'
 
@@ -19,10 +20,19 @@ describe('typings', () => {
     expect(c.equals(b.object)).to.be.false()
   })
 
+  const s = DataFactory.namedNode(URI);
+  const p = DataFactory.namedNode(URI);
+  const o = DataFactory.namedNode(URI);
+
   it('allows S P O generation with the datafactory', () => {
-    const s = DataFactory.namedNode(URI);
-    const p = DataFactory.namedNode(URI);
-    const o = DataFactory.namedNode(URI);
     const t = DataFactory.triple(s, p, o);
+  })
+
+  it('allows passing RDF Statements as RDF/JS Quads', () => {
+    const g = DataFactory.namedNode(IndexedFormula.defaultGraphURI);
+    const q = DataFactory.quad(s, p, o, g);
+    const store = new IndexedFormula();
+    store.add(q)
+    store.remove(q);
   })
 })
