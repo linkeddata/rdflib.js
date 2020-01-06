@@ -915,10 +915,10 @@ export default class Fetcher implements CallbackifyInterface {
    *
    * @returns {Promise<Result>}
    */
-  load (
-    uri: NamedNode | string | Array<string | NamedNode>,
+  load <T extends NamedNode | string | Array<string | NamedNode>>(
+    uri: T,
     options: Options = {}
-  ): Promise<Result> | Promise<Result>[] {
+  ): T extends Array<string | NamedNode> ? Promise<Result>[] : Promise<Result> {
     options = Object.assign({}, options) // Take a copy as we add stuff to the options!!
     if (uri instanceof Array) {
       return Promise.all(
@@ -927,14 +927,16 @@ export default class Fetcher implements CallbackifyInterface {
       )
     }
 
-    let docuri = termValue(uri as RDFlibNamedNode)
+    const uriIn: NamedNode | string = uri as NamedNode
+
+    let docuri = termValue(uriIn)
     docuri = docuri.split('#')[0]
 
     options = this.initFetchOptions(docuri, options)
 
     const initialisedOptions = this.initFetchOptions(docuri, options)
 
-    return this.pendingFetchPromise(docuri, initialisedOptions.baseURI, initialisedOptions)
+    return this.pendingFetchPromise(docuri, initialisedOptions.baseURI, initialisedOptions) as any
   }
 
   pendingFetchPromise (
