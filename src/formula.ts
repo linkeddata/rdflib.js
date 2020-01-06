@@ -27,6 +27,7 @@ import {
   Quad,
   Quad_Subject,
   Term,
+  NamedNode,
 } from './tf-types'
 import Fetcher from './fetcher'
 
@@ -169,10 +170,10 @@ export default class Formula extends Node {
     p?: Quad_Predicate | null,
     o?: Quad_Object | null,
     g?: Quad_Graph | null
-  ): Term | null | undefined {
+  ): Term | null {
     const st = this.anyStatementMatching(s, p, o, g)
     if (st == null) {
-      return void 0
+      return null
     } else if (s == null) {
       return st.subject
     } else if (p == null) {
@@ -181,7 +182,7 @@ export default class Formula extends Node {
       return st.object
     }
 
-    return void 0
+    return null
   }
 
   /**
@@ -777,7 +778,7 @@ export default class Formula extends Node {
   /**
    * @deprecated use {rdfFactory.namedNode} instead
    */
-  sym (uri, name?) {
+  sym (uri: string, name?): NamedNode {
     if (name) {
       throw new Error('This feature (kb.sym with 2 args) is removed. Do not assume prefix mappings.')
     }

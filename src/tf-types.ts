@@ -168,6 +168,6 @@ export type Quad_Subject = NamedNode | BlankNode | Variable
 /** A RDF/JS spec Predicate */
 export type Quad_Predicate = NamedNode | Variable
 /** A RDF/JS spec Object */
-export type Quad_Object = NamedNode | BlankNode | Literal | Variable
+export type Quad_Object = NamedNode | BlankNode | Literal | Variable | Term
 /** A RDF/JS spec Graph */
 export type Quad_Graph = NamedNode | DefaultGraph | BlankNode | Variable

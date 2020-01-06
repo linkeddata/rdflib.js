@@ -387,7 +387,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
    * @param subj - The thing about which the fact a relationship is asserted.
    *        Also accepts a statement or an array of Statements.
    * @param pred - The relationship which is asserted
-   * @param obj - The object of the relationship, e.g. another thing or avalue
+   * @param obj - The object of the relationship, e.g. another thing or avalue. If passed a string, this will become a literal.
    * @param why - The document in which the triple (S,P,O) was or will be stored on the web
    * @returns The statement added to the store, or the store
    */
@@ -395,7 +395,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
   add (
     subj: Quad_Subject | Quad | Quad[] | Statement | Statement[],
     pred?: Quad_Predicate,
-    obj?: Term,
+    obj?: Term | string,
     why?: Quad_Graph
   ): Quad | null | IndexedFormula {
     var i: number
@@ -421,7 +421,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
       subj = this.rdfFactory.namedNode(subj)
     }
     pred = Node.fromValue(pred)
-    obj = Node.fromValue(obj)
+    const objNode = Node.fromValue(obj) as Term
     why = Node.fromValue(why)
     if (!isSubject(subj)) {
       throw new Error('Subject is not a subject type')
@@ -429,8 +429,8 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     if (!isPredicate(pred)) {
       throw new Error(`Predicate ${pred} is not a predicate type`)
     }
-    if (!isRDFlibObject(obj)) {
-      throw new Error(`Object ${obj} is not an object type`)
+    if (!isRDFlibObject(objNode)) {
+      throw new Error(`Object ${objNode} is not an object type`)
     }
     if (!isGraph(why)) {
       throw new Error("Why is not a graph type")
@@ -447,10 +447,10 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     if (actions) {
       // alert('type: '+typeof actions +' @@ actions='+actions)
       for (i = 0; i < actions.length; i++) {
-        done = done || actions[i](this, subj, pred, obj, why)
+        done = done || actions[i](this, subj, pred, objNode, why)
       }
     }
-    if (this.holds(subj, pred, obj, why)) { // Takes time but saves duplicates
+    if (this.holds(subj, pred, objNode, why)) { // Takes time but saves duplicates
       // console.log('rdflib: Ignoring dup! {' + subj + ' ' + pred + ' ' + obj + ' ' + why + '}')
       return null // @@better to return self in all cases?
     }
@@ -461,11 +461,11 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     var hash = [
       this.id(this.canon(subj)),
       predHash,
-      this.id(this.canon(obj)),
+      this.id(this.canon(objNode)),
       this.id(this.canon(why))
     ]
     // @ts-ignore this will fail if you pass a collection and the factory does not allow Collections
-    st = this.rdfFactory.quad(subj, pred, obj, why)
+    st = this.rdfFactory.quad(subj, pred, objNode, why)
     for (i = 0; i < 4; i++) {
       var ix = this.index[i]
       var h = hash[i]
@@ -475,7 +475,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
       ix[h].push(st) // Set of things with this as subject, etc
     }
 
-    // log.debug("ADDING    {"+subj+" "+pred+" "+obj+"} "+why)
+    // log.debug("ADDING    {"+subj+" "+pred+" "+objNode+"} "+why)
     this.statements.push(st)
 
     if (this.dataCallbacks) {
