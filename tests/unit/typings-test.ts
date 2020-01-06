@@ -4,6 +4,7 @@ import Literal from '../../src/literal'
 import { expect } from 'chai'
 import DataFactory from '../../src/factories/rdflib-data-factory'
 import IndexedFormula from '../../src/store'
+import NamedNode from '../../src/named-node'
 
 const URI = 'https://example.com/subject'
 
@@ -28,11 +29,19 @@ describe('typings', () => {
     const t = DataFactory.triple(s, p, o);
   })
 
-  it('allows passing RDF Statements as RDF/JS Quads', () => {
+  it('allows passing DataFactory NamedNodes and Statements as RDF/JS Quads', () => {
     const g = DataFactory.namedNode(IndexedFormula.defaultGraphURI);
     const q = DataFactory.quad(s, p, o, g);
     const store = new IndexedFormula();
     store.add(q)
     store.remove(q);
+  })
+
+  it('allows passing RDFLib NamedNode as RDF/JS Quads', () => {
+    const store = new IndexedFormula();
+    const subj = new NamedNode(URI);
+    const g = new NamedNode(URI);
+    const statement = new Statement(subj, p, o, g)
+    store.add(statement)
   })
 })

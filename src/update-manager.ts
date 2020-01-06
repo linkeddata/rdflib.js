@@ -96,7 +96,7 @@ export default class UpdateManager {
    * @returns The method string SPARQL or DAV or
    *   LOCALFILE or false if known, undefined if not known.
    */
-  editable (uri: string | NamedNode, kb: IndexedFormula): string | boolean | undefined {
+  editable (uri: string | NamedNode, kb?: IndexedFormula): string | boolean | undefined {
     if (!uri) {
       return false // Eg subject is bnode, no known doc to write to
     }
