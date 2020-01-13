@@ -121,7 +121,6 @@
   ],
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
-  "module": "src/index.js",
   "sideEffects": false,
   "keywords": [
     "linkeddata",
