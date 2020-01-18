@@ -87,10 +87,11 @@
   },
   "scripts": {
     "build": "babel src --extensions \".ts,.js\" -d lib",
+    "build:esm": "babel src --extensions \".ts,.js\" --env-name esm -d esm",
     "build:browser": "webpack --progress",
     "build:types": "tsc --emitDeclarationOnly -d --declarationDir lib --allowJs false",
     "doc": "rm -r doc ; typedoc",
-    "prepare": "npm run build && npm run build:types && npm run build:browser",
+    "prepare": "npm run build && npm run build:types && npm run build:browser && npm run build:esm",
     "start": "webpack-dev-server --https --port 4800",
     "test": "npm run test:unit && npm run test:serialize",
     "test:clean": "rimraf tests/serialize/,*",
@@ -117,9 +118,11 @@
     ".babelrc",
     "src",
     "lib",
-    "dist"
+    "dist",
+    "esm"
   ],
   "main": "lib/index.js",
+  "module": "esm/index.js",
   "types": "lib/index.d.ts",
   "sideEffects": false,
   "keywords": [
