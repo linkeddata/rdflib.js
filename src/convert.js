@@ -12,7 +12,7 @@ export function convertToJson (n3String, jsonCallback) {
     function (callback) {
       n3Parser.parse(n3String, function (error, quad, prefixes) {
         if (error) {
-          throw error;
+          callback(error);
         } else if (quad !== null) {
           n3Writer.addQuad(quad);
         } else {
@@ -49,7 +49,7 @@ export function convertToNQuads (n3String, nquadCallback) {
     function (callback) {
       n3Parser.parse(n3String, function (error, triple, prefixes) {
         if (error) {
-          throw error;
+          callback(error);
         } else if (quad !== null) {
           n3Writer.addQuad(quad);
         } else {
