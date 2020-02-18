@@ -1666,7 +1666,7 @@ export default class Fetcher implements CallbackifyInterface {
     kb.add(responseNode, this.ns.http('statusText'),
     kb.rdfFactory.literal(response.statusText), responseNode)
 
-    if (!options.resource.value.startsWith('http')) {
+    if (!response.headers) {
       return responseNode
     }
 
