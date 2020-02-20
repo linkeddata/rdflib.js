@@ -106,7 +106,7 @@ export default class UpdateManager {
     uri = termValue(uri)
 
     if ((uri as string).slice(0, 8) === 'file:///' || (uri as string).slice(0,6) === 'app://' ) {
-      if (( typeof window != "undefined" && window.hasOwnProperty('kitchen') ) || kb.holds(
+      if (( typeof window != "undefined" && Object.prototype.hasOwnProperty.call(window,'kitchen') ) || kb.holds(
           this.store.rdfFactory.namedNode(uri),
           this.store.rdfFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
           this.store.rdfFactory.namedNode('http://www.w3.org/2007/ont/link#MachineEditableDocument'))) {
