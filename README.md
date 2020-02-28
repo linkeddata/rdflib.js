@@ -6,6 +6,7 @@ Javascript RDF library for browsers and Node.js.
 
 - Reads and writes RDF/XML, Turtle and N3; Reads RDFa and JSON-LD
 - Read/Write Linked Data client, using WebDav or SPARQL/Update
+- Real-Time Collaborative editing with web sockets and PATCHes
 - Local API for querying a store
 - Compatible with [RDFJS task force spec](https://github.com/rdfjs/representation-task-force/blob/master/interface-spec.md)
 - SPARQL queries (not full SPARQL - just graph match and optional)
@@ -23,6 +24,7 @@ See:
 * [Block diagram: rdflib modules](https://linkeddata.github.io/rdflib.js/Documentation/diagrams/rdflib-block-diagram.svg)
 * [Block diagram: The Fetcher](https://linkeddata.github.io/rdflib.js/Documentation/diagrams/fetcher-block-diagram.svg)
 * [Block diagram: The Fetcher - handling retries](https://linkeddata.github.io/rdflib.js/Documentation/diagrams/fetcher-block-diagram-2.svg)
+* [Block diagram: The Update Manager](https://linkeddata.github.io/rdflib.js/Documentation/diagrams/update-manager-diagram.svg)
 
 
 * [The Solid developer portal at Inrupt](https://solid.inrupt.com/)
