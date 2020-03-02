@@ -63,7 +63,14 @@ tt { font-size: 120%; background-color: #eee; padding: 0.1em }
 <p>
 The Fetcher does not handle PATCH - that is done by the Update Manager.
 </p>
-
-</div>
+  <img src="diagrams/update-manager-diagram.svg" alt="In the Update Manager, separate modules perform different functions, calling loower level modules like the Fetcher." />
+<p>
+  The update manager has two sides, for upstream and downstream patches.
+  Upstream patches are when athe user changes something in the UI and the patch goes up to the server to change the web od data.
+  Downstream patches are when someione else out there changes the resopurce, and the UI has to be updated. 
+  For this, (currenlty) a WebSocket proctol is used, in whihc the client is sent a 'pub' flag and reloads the file.
+  In future, the server may send a patch directly to the client, which can then  update the quad store without having to reload the document.
+  </p>
+  </div>
 </body>
 </html>
