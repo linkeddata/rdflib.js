@@ -859,7 +859,6 @@ export default class Fetcher implements CallbackifyInterface {
     //   header when the credentials flag is true.
     // @ Many ontology files under http: and need CORS wildcard ->
     //   can't have credentials
-    console.log(' setCredentials: '+ requestedURI +' starts as: ' + options.credentials)
     if (options.credentials === undefined) { // Caller using new fetch convention
       if (options.withCredentials !== undefined) { // XHR style is what Fetcher specified before
         options.credentials = options.withCredentials ? 'include' : 'omit'
@@ -867,7 +866,6 @@ export default class Fetcher implements CallbackifyInterface {
         options.credentials = 'include' // default is to be logged on
       }
     }
-    console.log('   setCredentials: '+ requestedURI +' ends as: ' + options.credentials)
   }
 
   /**
