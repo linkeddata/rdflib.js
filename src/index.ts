@@ -1,3 +1,5 @@
+import { IRDFlibDataFactory } from './types'
+
 import BlankNode from './blank-node'
 import Collection from './collection'
 import * as convert from './convert'
@@ -30,12 +32,12 @@ import * as Util from './utils-js'
 import Variable from './variable'
 import DataFactory from './factories/rdflib-data-factory'
 
-export * from './utils/terms'
-
-const NextId = BlankNode.nextId
-
-const { fromNT } = Formula.prototype;
-
+// Prepare bound versions of data factory methods for export
+const boundDataFactory = {} as IRDFlibDataFactory
+for (const name in DataFactory) {
+  if (typeof DataFactory[name] === 'function')
+    boundDataFactory[name] = DataFactory[name].bind(DataFactory);
+}
 const {
   fetcher,
   graph,
@@ -48,10 +50,18 @@ const {
   literal,
   quad,
   triple,
-} = DataFactory
+} = boundDataFactory
 
-const { fromValue: term } = Node
+const formula = new Formula();
+const fromNT = str => formula.fromNT(str);
 
+const term = Node.fromValue
+
+// TODO: this export is broken;
+// it exports the _current_ value of nextId, which is always 0
+const NextId = BlankNode.nextId
+
+export * from './utils/terms'
 export {
   BlankNode,
   Collection,
