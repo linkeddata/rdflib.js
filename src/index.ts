@@ -1,3 +1,5 @@
+import { IRDFlibDataFactory } from './types'
+
 import BlankNode from './blank-node'
 import Collection from './collection'
 import * as convert from './convert'
@@ -34,8 +36,14 @@ export * from './utils/terms'
 
 const NextId = BlankNode.nextId
 
-const { fromNT } = Formula.prototype;
+const { fromNT } = Formula.prototype
 
+// Prepare bound versions of data factory methods for export
+const boundDataFactory = {} as IRDFlibDataFactory
+for (const name in DataFactory) {
+  if (typeof DataFactory[name] === 'function')
+    boundDataFactory[name] = DataFactory[name].bind(DataFactory);
+}
 const {
   fetcher,
   graph,
@@ -48,7 +56,7 @@ const {
   literal,
   quad,
   triple,
-} = DataFactory
+} = boundDataFactory
 
 const { fromValue: term } = Node
 
