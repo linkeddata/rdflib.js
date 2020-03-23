@@ -32,11 +32,6 @@ import * as Util from './utils-js'
 import Variable from './variable'
 import DataFactory from './factories/rdflib-data-factory'
 
-export * from './utils/terms'
-
-const NextId = BlankNode.nextId
-
-
 // Prepare bound versions of data factory methods for export
 const boundDataFactory = {} as IRDFlibDataFactory
 for (const name in DataFactory) {
@@ -60,8 +55,13 @@ const {
 const formula = new Formula();
 const fromNT = str => formula.fromNT(str);
 
-const { fromValue: term } = Node
+const term = Node.fromValue
 
+// TODO: this export is broken;
+// it exports the _current_ value of nextId, which is always 0
+const NextId = BlankNode.nextId
+
+export * from './utils/terms'
 export {
   BlankNode,
   Collection,
