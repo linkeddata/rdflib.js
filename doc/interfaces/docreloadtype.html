@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>Term | rdflib</title>
+	<title>docReloadType | rdflib</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -54,58 +54,27 @@
 					<a href="../globals.html">Globals</a>
 				</li>
 				<li>
-					<a href="term.html">Term</a>
+					<a href="docreloadtype.html">docReloadType</a>
 				</li>
 			</ul>
-			<h1>Interface Term</h1>
+			<h1>Interface docReloadType</h1>
 		</div>
 	</div>
 </header>
 <div class="container container-main">
 	<div class="row">
 		<div class="col-8 col-content">
-			<section class="tsd-panel tsd-comment">
-				<div class="tsd-comment tsd-typography">
-					<div class="lead">
-						<p>RDF/JS spec Term</p>
-					</div>
-					<dl class="tsd-comment-tags">
-						<dt>link</dt>
-						<dd><p><a href="https://rdf.js.org/data-model-spec/#term-interface">https://rdf.js.org/data-model-spec/#term-interface</a></p>
-						</dd>
-					</dl>
-				</div>
-			</section>
 			<section class="tsd-panel tsd-hierarchy">
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
 					<li>
-						<span class="target">Term</span>
+						<a href="../classes/namednode.html" class="tsd-signature-type">NamedNode</a>
 						<ul class="tsd-hierarchy">
 							<li>
-								<a href="../classes/literal.html" class="tsd-signature-type">Literal</a>
-							</li>
-							<li>
-								<a href="../classes/namednode.html" class="tsd-signature-type">NamedNode</a>
-							</li>
-							<li>
-								<a href="../classes/blanknode.html" class="tsd-signature-type">BlankNode</a>
-							</li>
-							<li>
-								<a href="../classes/variable.html" class="tsd-signature-type">Variable</a>
-							</li>
-							<li>
-								<a href="../classes/defaultgraph.html" class="tsd-signature-type">DefaultGraph</a>
+								<span class="target">docReloadType</span>
 							</li>
 						</ul>
 					</li>
-				</ul>
-			</section>
-			<section class="tsd-panel">
-				<h3>Implemented by</h3>
-				<ul class="tsd-hierarchy">
-					<li><a href="../classes/collection.html" class="tsd-signature-type">Collection</a></li>
-					<li><a href="../classes/empty.html" class="tsd-signature-type">Empty</a></li>
 				</ul>
 			</section>
 			<section class="tsd-panel-group tsd-index-group">
@@ -115,14 +84,16 @@
 						<section class="tsd-index-section ">
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="term.html#termtype" class="tsd-kind-icon">term<wbr>Type</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="term.html#value" class="tsd-kind-icon">value</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="docreloadtype.html#reloadtimecount" class="tsd-kind-icon">reload<wbr>Time<wbr>Count</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="docreloadtype.html#reloadtimetotal" class="tsd-kind-icon">reload<wbr>Time<wbr>Total</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-overwrite tsd-is-inherited"><a href="docreloadtype.html#termtype" class="tsd-kind-icon">term<wbr>Type</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-overwrite tsd-is-inherited"><a href="docreloadtype.html#value" class="tsd-kind-icon">value</a></li>
 							</ul>
 						</section>
-						<section class="tsd-index-section ">
+						<section class="tsd-index-section tsd-is-inherited">
 							<h3>Methods</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="term.html#equals" class="tsd-kind-icon">equals</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-interface tsd-is-inherited"><a href="docreloadtype.html#equals" class="tsd-kind-icon">equals</a></li>
 							</ul>
 						</section>
 					</div>
@@ -131,37 +102,62 @@
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Properties</h2>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="termtype" class="tsd-anchor"></a>
-					<h3>term<wbr>Type</h3>
-					<div class="tsd-signature tsd-kind-icon">term<wbr>Type<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
+					<a name="reloadtimecount" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagOptional">Optional</span> reload<wbr>Time<wbr>Count</h3>
+					<div class="tsd-signature tsd-kind-icon">reload<wbr>Time<wbr>Count<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">number</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/1e8ddfd/src/tf-types.ts#L15">src/tf-types.ts:15</a></li>
+							<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/1e8ddfd/src/update-manager.ts#L1140">src/update-manager.ts:1140</a></li>
 						</ul>
 					</aside>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
+					<a name="reloadtimetotal" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagOptional">Optional</span> reload<wbr>Time<wbr>Total</h3>
+					<div class="tsd-signature tsd-kind-icon">reload<wbr>Time<wbr>Total<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">number</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/1e8ddfd/src/update-manager.ts#L1141">src/update-manager.ts:1141</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface tsd-is-overwrite tsd-is-inherited">
+					<a name="termtype" class="tsd-anchor"></a>
+					<h3>term<wbr>Type</h3>
+					<div class="tsd-signature tsd-kind-icon">term<wbr>Type<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">typeof </span><span class="tsd-signature-type">NamedNodeTermType</span></div>
+					<aside class="tsd-sources">
+						<p>Inherited from <a href="docreloadtype.html">docReloadType</a>.<a href="docreloadtype.html#termtype">termType</a></p>
+						<p>Overrides <a href="term.html">Term</a>.<a href="term.html#termtype">termType</a></p>
+						<ul>
+							<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/1e8ddfd/src/tf-types.ts#L31">src/tf-types.ts:31</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface tsd-is-overwrite tsd-is-inherited">
 					<a name="value" class="tsd-anchor"></a>
 					<h3>value</h3>
 					<div class="tsd-signature tsd-kind-icon">value<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
+						<p>Inherited from <a href="docreloadtype.html">docReloadType</a>.<a href="docreloadtype.html#value">value</a></p>
+						<p>Overrides <a href="term.html">Term</a>.<a href="term.html#value">value</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/1e8ddfd/src/tf-types.ts#L16">src/tf-types.ts:16</a></li>
+							<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/1e8ddfd/src/tf-types.ts#L32">src/tf-types.ts:32</a></li>
 						</ul>
 					</aside>
 				</section>
 			</section>
-			<section class="tsd-panel-group tsd-member-group ">
+			<section class="tsd-panel-group tsd-member-group tsd-is-inherited">
 				<h2>Methods</h2>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface">
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface tsd-is-inherited">
 					<a name="equals" class="tsd-anchor"></a>
 					<h3>equals</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface">
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface tsd-is-inherited">
 						<li class="tsd-signature tsd-kind-icon">equals<span class="tsd-signature-symbol">(</span>other<span class="tsd-signature-symbol">: </span><a href="term.html" class="tsd-signature-type">Term</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
+								<p>Inherited from <a href="docreloadtype.html">docReloadType</a>.<a href="docreloadtype.html#equals">equals</a></p>
 								<ul>
 									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/1e8ddfd/src/tf-types.ts#L23">src/tf-types.ts:23</a></li>
 								</ul>
@@ -197,16 +193,22 @@
 				</ul>
 				<ul class="current">
 					<li class="current tsd-kind-interface">
-						<a href="term.html" class="tsd-kind-icon">Term</a>
+						<a href="docreloadtype.html" class="tsd-kind-icon">doc<wbr>Reload<wbr>Type</a>
 						<ul>
 							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="term.html#termtype" class="tsd-kind-icon">term<wbr>Type</a>
+								<a href="docreloadtype.html#reloadtimecount" class="tsd-kind-icon">reload<wbr>Time<wbr>Count</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="term.html#value" class="tsd-kind-icon">value</a>
+								<a href="docreloadtype.html#reloadtimetotal" class="tsd-kind-icon">reload<wbr>Time<wbr>Total</a>
 							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-interface">
-								<a href="term.html#equals" class="tsd-kind-icon">equals</a>
+							<li class=" tsd-kind-property tsd-parent-kind-interface tsd-is-overwrite tsd-is-inherited">
+								<a href="docreloadtype.html#termtype" class="tsd-kind-icon">term<wbr>Type</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-interface tsd-is-overwrite tsd-is-inherited">
+								<a href="docreloadtype.html#value" class="tsd-kind-icon">value</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-interface tsd-is-inherited">
+								<a href="docreloadtype.html#equals" class="tsd-kind-icon">equals</a>
 							</li>
 						</ul>
 					</li>

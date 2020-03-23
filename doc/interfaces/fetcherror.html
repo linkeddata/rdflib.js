@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>Quad | rdflib</title>
+	<title>FetchError | rdflib</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -54,57 +54,27 @@
 					<a href="../globals.html">Globals</a>
 				</li>
 				<li>
-					<a href="quad.html">Quad</a>
+					<a href="fetcherror.html">FetchError</a>
 				</li>
 			</ul>
-			<h1>Interface Quad&lt;S, P, O, G&gt;</h1>
+			<h1>Interface FetchError</h1>
 		</div>
 	</div>
 </header>
 <div class="container container-main">
 	<div class="row">
 		<div class="col-8 col-content">
-			<section class="tsd-panel tsd-comment">
-				<div class="tsd-comment tsd-typography">
-					<div class="lead">
-						<p>RDF/JS spec Quad</p>
-					</div>
-					<dl class="tsd-comment-tags">
-						<dt>link</dt>
-						<dd><p><a href="https://rdf.js.org/data-model-spec/#quad-interface">https://rdf.js.org/data-model-spec/#quad-interface</a></p>
-						</dd>
-					</dl>
-				</div>
-			</section>
-			<section class="tsd-panel tsd-type-parameters">
-				<h3>Type parameters</h3>
-				<ul class="tsd-type-parameters">
-					<li>
-						<h4>S<span class="tsd-signature-symbol">: </span><a href="term.html" class="tsd-signature-type">Term</a></h4>
-					</li>
-					<li>
-						<h4>P<span class="tsd-signature-symbol">: </span><a href="term.html" class="tsd-signature-type">Term</a></h4>
-					</li>
-					<li>
-						<h4>O<span class="tsd-signature-symbol">: </span><a href="term.html" class="tsd-signature-type">Term</a></h4>
-					</li>
-					<li>
-						<h4>G<span class="tsd-signature-symbol">: </span><a href="term.html" class="tsd-signature-type">Term</a></h4>
-					</li>
-				</ul>
-			</section>
 			<section class="tsd-panel tsd-hierarchy">
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
 					<li>
-						<span class="target">Quad</span>
+						<a href="fetcherror.html#error" class="tsd-signature-type">Error</a>
+						<ul class="tsd-hierarchy">
+							<li>
+								<span class="target">FetchError</span>
+							</li>
+						</ul>
 					</li>
-				</ul>
-			</section>
-			<section class="tsd-panel">
-				<h3>Implemented by</h3>
-				<ul class="tsd-hierarchy">
-					<li><a href="../classes/statement.html" class="tsd-signature-type">Statement</a></li>
 				</ul>
 			</section>
 			<section class="tsd-panel-group tsd-index-group">
@@ -114,10 +84,13 @@
 						<section class="tsd-index-section ">
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="quad.html#graph" class="tsd-kind-icon">graph</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="quad.html#object" class="tsd-kind-icon">object</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="quad.html#predicate" class="tsd-kind-icon">predicate</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="quad.html#subject" class="tsd-kind-icon">subject</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="fetcherror.html#error" class="tsd-kind-icon">Error</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-inherited"><a href="fetcherror.html#message" class="tsd-kind-icon">message</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-inherited"><a href="fetcherror.html#name" class="tsd-kind-icon">name</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="fetcherror.html#response" class="tsd-kind-icon">response</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-inherited"><a href="fetcherror.html#stack" class="tsd-kind-icon">stack</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="fetcherror.html#status" class="tsd-kind-icon">status</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="fetcherror.html#statustext" class="tsd-kind-icon">status<wbr>Text</a></li>
 							</ul>
 						</section>
 					</div>
@@ -126,42 +99,75 @@
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Properties</h2>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="graph" class="tsd-anchor"></a>
-					<h3>graph</h3>
-					<div class="tsd-signature tsd-kind-icon">graph<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">G</span></div>
+					<a name="error" class="tsd-anchor"></a>
+					<h3>Error</h3>
+					<div class="tsd-signature tsd-kind-icon">Error<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ErrorConstructor</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/1e8ddfd/src/tf-types.ts#L57">src/tf-types.ts:57</a></li>
+							<li>Defined in node_modules/typescript/lib/lib.es5.d.ts:984</li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface tsd-is-inherited">
+					<a name="message" class="tsd-anchor"></a>
+					<h3>message</h3>
+					<div class="tsd-signature tsd-kind-icon">message<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
+					<aside class="tsd-sources">
+						<p>Inherited from <a href="fetcherror.html">FetchError</a>.<a href="fetcherror.html#message">message</a></p>
+						<ul>
+							<li>Defined in node_modules/typescript/lib/lib.es5.d.ts:974</li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface tsd-is-inherited">
+					<a name="name" class="tsd-anchor"></a>
+					<h3>name</h3>
+					<div class="tsd-signature tsd-kind-icon">name<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
+					<aside class="tsd-sources">
+						<p>Inherited from <a href="fetcherror.html">FetchError</a>.<a href="fetcherror.html#name">name</a></p>
+						<ul>
+							<li>Defined in node_modules/typescript/lib/lib.es5.d.ts:973</li>
 						</ul>
 					</aside>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="object" class="tsd-anchor"></a>
-					<h3>object</h3>
-					<div class="tsd-signature tsd-kind-icon">object<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">O</span></div>
+					<a name="response" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagOptional">Optional</span> response</h3>
+					<div class="tsd-signature tsd-kind-icon">response<span class="tsd-signature-symbol">:</span> <a href="extendedresponse.html" class="tsd-signature-type">ExtendedResponse</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/1e8ddfd/src/tf-types.ts#L56">src/tf-types.ts:56</a></li>
+							<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/1e8ddfd/src/fetcher.ts#L103">src/fetcher.ts:103</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface tsd-is-inherited">
+					<a name="stack" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagOptional">Optional</span> stack</h3>
+					<div class="tsd-signature tsd-kind-icon">stack<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span></div>
+					<aside class="tsd-sources">
+						<p>Inherited from <a href="fetcherror.html">FetchError</a>.<a href="fetcherror.html#stack">stack</a></p>
+						<ul>
+							<li>Defined in node_modules/typescript/lib/lib.es5.d.ts:975</li>
 						</ul>
 					</aside>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="predicate" class="tsd-anchor"></a>
-					<h3>predicate</h3>
-					<div class="tsd-signature tsd-kind-icon">predicate<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">P</span></div>
+					<a name="status" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagOptional">Optional</span> status</h3>
+					<div class="tsd-signature tsd-kind-icon">status<span class="tsd-signature-symbol">:</span> <a href="../globals.html#statusvalues" class="tsd-signature-type">StatusValues</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/1e8ddfd/src/tf-types.ts#L55">src/tf-types.ts:55</a></li>
+							<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/1e8ddfd/src/fetcher.ts#L102">src/fetcher.ts:102</a></li>
 						</ul>
 					</aside>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="subject" class="tsd-anchor"></a>
-					<h3>subject</h3>
-					<div class="tsd-signature tsd-kind-icon">subject<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">S</span></div>
+					<a name="statustext" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagOptional">Optional</span> status<wbr>Text</h3>
+					<div class="tsd-signature tsd-kind-icon">status<wbr>Text<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/1e8ddfd/src/tf-types.ts#L54">src/tf-types.ts:54</a></li>
+							<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/1e8ddfd/src/fetcher.ts#L101">src/fetcher.ts:101</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -179,20 +185,29 @@
 				<ul class="before-current">
 				</ul>
 				<ul class="current">
-					<li class="current tsd-kind-interface tsd-has-type-parameter">
-						<a href="quad.html" class="tsd-kind-icon">Quad</a>
+					<li class="current tsd-kind-interface">
+						<a href="fetcherror.html" class="tsd-kind-icon">Fetch<wbr>Error</a>
 						<ul>
 							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="quad.html#graph" class="tsd-kind-icon">graph</a>
+								<a href="fetcherror.html#error" class="tsd-kind-icon">Error</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-interface tsd-is-inherited">
+								<a href="fetcherror.html#message" class="tsd-kind-icon">message</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-interface tsd-is-inherited">
+								<a href="fetcherror.html#name" class="tsd-kind-icon">name</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="quad.html#object" class="tsd-kind-icon">object</a>
+								<a href="fetcherror.html#response" class="tsd-kind-icon">response</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-interface tsd-is-inherited">
+								<a href="fetcherror.html#stack" class="tsd-kind-icon">stack</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="quad.html#predicate" class="tsd-kind-icon">predicate</a>
+								<a href="fetcherror.html#status" class="tsd-kind-icon">status</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="quad.html#subject" class="tsd-kind-icon">subject</a>
+								<a href="fetcherror.html#statustext" class="tsd-kind-icon">status<wbr>Text</a>
 							</li>
 						</ul>
 					</li>

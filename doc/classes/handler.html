@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>Query | rdflib</title>
+	<title>Handler | rdflib</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -54,28 +54,41 @@
 					<a href="../globals.html">Globals</a>
 				</li>
 				<li>
-					<a href="query.html">Query</a>
+					<a href="handler.html">Handler</a>
 				</li>
 			</ul>
-			<h1>Class Query</h1>
+			<h1>Class Handler</h1>
 		</div>
 	</div>
 </header>
 <div class="container container-main">
 	<div class="row">
 		<div class="col-8 col-content">
-			<section class="tsd-panel tsd-comment">
-				<div class="tsd-comment tsd-typography">
-					<div class="lead">
-						<p>Query class, for tracking queries the user has in the UI.</p>
-					</div>
-				</div>
-			</section>
 			<section class="tsd-panel tsd-hierarchy">
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
 					<li>
-						<span class="target">Query</span>
+						<span class="target">Handler</span>
+						<ul class="tsd-hierarchy">
+							<li>
+								<a href="rdfxmlhandler.html" class="tsd-signature-type">RDFXMLHandler</a>
+							</li>
+							<li>
+								<a href="xhtmlhandler.html" class="tsd-signature-type">XHTMLHandler</a>
+							</li>
+							<li>
+								<a href="xmlhandler.html" class="tsd-signature-type">XMLHandler</a>
+							</li>
+							<li>
+								<a href="htmlhandler.html" class="tsd-signature-type">HTMLHandler</a>
+							</li>
+							<li>
+								<a href="texthandler.html" class="tsd-signature-type">TextHandler</a>
+							</li>
+							<li>
+								<a href="n3handler.html" class="tsd-signature-type">N3Handler</a>
+							</li>
+						</ul>
 					</li>
 				</ul>
 			</section>
@@ -86,7 +99,15 @@
 						<section class="tsd-index-section ">
 							<h3>Constructors</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-constructor tsd-parent-kind-class"><a href="query.html#constructor" class="tsd-kind-icon">constructor</a></li>
+								<li class="tsd-kind-constructor tsd-parent-kind-class"><a href="handler.html#constructor" class="tsd-kind-icon">constructor</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section ">
+							<h3>Properties</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-property tsd-parent-kind-class"><a href="handler.html#dom" class="tsd-kind-icon">dom</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class"><a href="handler.html#response" class="tsd-kind-icon">response</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-static"><a href="handler.html#pattern" class="tsd-kind-icon">pattern</a></li>
 							</ul>
 						</section>
 					</div>
@@ -98,27 +119,60 @@
 					<a name="constructor" class="tsd-anchor"></a>
 					<h3>constructor</h3>
 					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">new <wbr>Query<span class="tsd-signature-symbol">(</span>name<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, id<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="query.html" class="tsd-signature-type">Query</a></li>
+						<li class="tsd-signature tsd-kind-icon">new <wbr>Handler<span class="tsd-signature-symbol">(</span>response<span class="tsd-signature-symbol">: </span><a href="../interfaces/extendedresponse.html" class="tsd-signature-type">ExtendedResponse</a>, dom<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">Document</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="handler.html" class="tsd-signature-type">Handler</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/1e8ddfd/src/query.js#L28">src/query.js:28</a></li>
+									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/1e8ddfd/src/fetcher.ts#L205">src/fetcher.ts:205</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>name: <span class="tsd-signature-type">any</span></h5>
+									<h5>response: <a href="../interfaces/extendedresponse.html" class="tsd-signature-type">ExtendedResponse</a></h5>
 								</li>
 								<li>
-									<h5>id: <span class="tsd-signature-type">any</span></h5>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> dom: <span class="tsd-signature-type">Document</span></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="query.html" class="tsd-signature-type">Query</a></h4>
+							<h4 class="tsd-returns-title">Returns <a href="handler.html" class="tsd-signature-type">Handler</a></h4>
 						</li>
 					</ul>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group ">
+				<h2>Properties</h2>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
+					<a name="dom" class="tsd-anchor"></a>
+					<h3>dom</h3>
+					<div class="tsd-signature tsd-kind-icon">dom<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Document</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/1e8ddfd/src/fetcher.ts#L204">src/fetcher.ts:204</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
+					<a name="response" class="tsd-anchor"></a>
+					<h3>response</h3>
+					<div class="tsd-signature tsd-kind-icon">response<span class="tsd-signature-symbol">:</span> <a href="../interfaces/extendedresponse.html" class="tsd-signature-type">ExtendedResponse</a></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/1e8ddfd/src/fetcher.ts#L202">src/fetcher.ts:202</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-static">
+					<a name="pattern" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> pattern</h3>
+					<div class="tsd-signature tsd-kind-icon">pattern<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">RegExp</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/1e8ddfd/src/fetcher.ts#L205">src/fetcher.ts:205</a></li>
+						</ul>
+					</aside>
 				</section>
 			</section>
 		</div>
@@ -135,10 +189,19 @@
 				</ul>
 				<ul class="current">
 					<li class="current tsd-kind-class">
-						<a href="query.html" class="tsd-kind-icon">Query</a>
+						<a href="handler.html" class="tsd-kind-icon">Handler</a>
 						<ul>
 							<li class=" tsd-kind-constructor tsd-parent-kind-class">
-								<a href="query.html#constructor" class="tsd-kind-icon">constructor</a>
+								<a href="handler.html#constructor" class="tsd-kind-icon">constructor</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class">
+								<a href="handler.html#dom" class="tsd-kind-icon">dom</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class">
+								<a href="handler.html#response" class="tsd-kind-icon">response</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-static">
+								<a href="handler.html#pattern" class="tsd-kind-icon">pattern</a>
 							</li>
 						</ul>
 					</li>
