@@ -36,7 +36,6 @@ export * from './utils/terms'
 
 const NextId = BlankNode.nextId
 
-const { fromNT } = Formula.prototype
 
 // Prepare bound versions of data factory methods for export
 const boundDataFactory = {} as IRDFlibDataFactory
@@ -57,6 +56,9 @@ const {
   quad,
   triple,
 } = boundDataFactory
+
+const formula = new Formula();
+const fromNT = str => formula.fromNT(str);
 
 const { fromValue: term } = Node
 
