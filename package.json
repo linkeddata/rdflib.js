@@ -91,7 +91,7 @@
     "build:browser": "webpack --progress",
     "build:types": "tsc --emitDeclarationOnly -d --declarationDir lib --allowJs false",
     "doc": "rm -r doc ; typedoc",
-    "prepare": "npm run build && npm run build:types && npm run build:browser && npm run build:esm",
+    "prepublishOnly": "npm ci && npm run build && npm run build:types && npm run build:browser && npm run build:esm",
     "start": "webpack-dev-server --https --port 4800",
     "test": "npm run test:unit && npm run test:serialize",
     "test:clean": "rimraf tests/serialize/,*",
