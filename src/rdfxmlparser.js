@@ -153,7 +153,7 @@ export default function RDFParser(store) {
 
         this.addSymbol(this.ARC, uri)
       },         /** Add a literal to this frame */'addLiteral': function (value) {
-        if (this.parent.datatype) {
+        if (this.parent.datatype && this.parent.datatype !== RDFParser.ns.RDF +'langString') {
           this.node = this.store.literal(value, this.store.sym(this.parent.datatype))
         } else {
           this.node = this.store.literal(value, this.lang)
