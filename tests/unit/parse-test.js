@@ -232,14 +232,26 @@ describe('Parse', () => {
     })
   })
   describe('sparlq-update', () => {
-    it.only('add a triple to an empty document', () => {
+    it('parses a query into the store as subgraphs', () => {
+      // FIXME: are subgraphs allowed in RDF?
+      // See https://github.com/linkeddata/rdflib.js/pull/401
       let base = 'https://example.com/'
       let mimeType = SPARQLUpdateContentType
-      console.log(mimeType)
       let store = DataFactory.graph()
       let content = 'INSERT DATA { <https://example.com/#s> <https://example.com/#p> <https://example.com/#o>. }'
       parse(content, store, base, mimeType)
-      expect(store.statements[0]).to.eql([])
+      expect(store.toNT()).to.eql('{<https://example.com/#query> <http://www.w3.org/ns/pim/patch#insert> {<https://example.com/#s> <https://example.com/#p> <https://example.com/#o> .} .}')
     })
+  })
+})
+
+describe('sparlqUpdateParser', () => {
+  it('adds a triple to insert graph of patch object', () => {
+    let base = 'https://example.com/'
+    let mimeType = SPARQLUpdateContentType
+    let store = DataFactory.graph()
+    let content = 'INSERT DATA { <https://example.com/#s> <https://example.com/#p> <https://example.com/#o>. }'
+    const patchObject = sparqlUpdateParser(content, store, base)
+    expect(patchObject.insert.toNT()).to.eql('{<https://example.com/#s> <https://example.com/#p> <https://example.com/#o> .}')
   })
 })
