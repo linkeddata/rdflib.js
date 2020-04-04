@@ -14,6 +14,7 @@ import {
   BlankNodeTermType,
   LiteralTermType,
   NamedNodeTermType,
+  CollectionTermType,
 } from '../types'
 import { defaultGraphNode } from '../utils/default-graph-uri'
 import {
@@ -188,6 +189,8 @@ const CanonicalDataFactory: DataFactory = {
         return Literal.toNT(term as Literal)
       case NamedNodeTermType:
         return '<' + term.value + '>'
+      case CollectionTermType:
+        return '(' + term.elements.map(t => this.termToNQ(t)).join(' ') + ')'
       default:
         throw new Error(`Can't serialize nonstandard term type (was '${term.termType}')`)
     }
