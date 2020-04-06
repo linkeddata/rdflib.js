@@ -571,8 +571,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     return this
   }
 
-  // @ts-ignore incompatible with Forumala.compareTerm
-  compareTerm(u1: Term, u2: Term): number {
+  compareTerms(u1: Term, u2: Term): number {
     // Keep compatibility with downstream classOrder changes
     if (Object.prototype.hasOwnProperty.call(u1, "compareTerm")) {
       return (u1 as Node).compareTerm(u2 as Node)
@@ -641,7 +640,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     // 03-21-2010
     const u1 = this.canon(u1in) as Quad_Subject
     const u2 = this.canon(u2in) as Quad_Subject
-    var d = this.compareTerm(u1, u2)
+    var d = this.compareTerms(u1, u2)
     if (!d) {
       return true // No information in {a = a}
     }
