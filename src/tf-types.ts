@@ -95,7 +95,7 @@ export interface Variable extends Term {
 export interface DefaultGraph extends Term {
   termType: typeof DefaultGraphTermType;
   /** should return and empty string'' */
-  value: string;
+  value: '';
 }
 
 /**
@@ -128,7 +128,7 @@ export interface RdfJsDataFactory {
   /**
    * Returns an instance of DefaultGraph.
    */
-  defaultGraph: () => DefaultGraph | NamedNode | BlankNode,
+  defaultGraph: () => DefaultGraph,
 
   /**
    * Returns a new instance of the specific Term subclass given by original.termType
