@@ -4,6 +4,7 @@ import { DefaultGraph as TFDefaultGraph } from './tf-types'
 
 /** The RDF default graph */
 export default class DefaultGraph extends Node implements TFDefaultGraph {
+  value: '' = '';
   termType: typeof DefaultGraphTermType = DefaultGraphTermType;
 
   constructor () {
@@ -12,5 +13,9 @@ export default class DefaultGraph extends Node implements TFDefaultGraph {
 
   toCanonical () {
     return this.value
+  }
+
+  toString () {
+    return 'DefaultGraph';
   }
 }

@@ -10,3 +10,4 @@ const named1: RdfJs.NamedNode = factory.namedNode('http://example.org/');
 const blank1: RdfJs.BlankNode = factory.blankNode();
 const literal1: RdfJs.Literal = factory.literal('abc');
 const var1: RdfJs.Variable = factory.variable('var');
+const default1: RdfJs.DefaultGraph = factory.defaultGraph();
