@@ -656,7 +656,6 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
    * Only applicable for IndexedFormula, but TypeScript won't allow a subclass to override a property
    * @param features The list of features
    */
-  //@ts-ignore Incompatible signature with Formula.formula
   formula(features: FeaturesType): IndexedFormula {
     return new IndexedFormula(features)
   }
@@ -762,7 +761,6 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
   }
 
   // convenience function used by N3 parser
-  // @ts-ignore does not correctly extends from Formula
   variable (name: string) {
     return new Variable(name)
   }
