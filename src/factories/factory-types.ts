@@ -3,6 +3,7 @@ import Statement from '../statement'
 import NamedNode from '../named-node'
 import BlankNode from '../blank-node'
 import Variable from '../variable'
+import DefaultGraph from '../default-graph'
 import {
   BlankNode as TFBlankNode,
   RdfJsDataFactory,
@@ -64,7 +65,15 @@ export interface DataFactory<
 
   supports: SupportTable
 
+  namedNode(value: string): NamedNode
+
+  blankNode(value?: string): BlankNode
+
   literal(value: string, languageOrDatatype?: string | TFNamedNode): Literal
+
+  variable(value: string): Variable,
+
+  defaultGraph(): DefaultGraph,
 
   isQuad(obj: any): obj is Statement
 
