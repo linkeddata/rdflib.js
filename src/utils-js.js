@@ -210,8 +210,8 @@ export function heavyCompare (x, y, g, uriMap) {
     lis.sort()
     return lis.join('\n')
   }
-  const comparison = Object.prototype.hasOwnProperty.call(g, "compareTerm")
-    ? g.compareTerm(x, y)
+  const comparison = Object.prototype.hasOwnProperty.call(g, "compareTerms")
+    ? g.compareTerms(x, y)
     : x.compareTerm(y)
 
   if ((x.termType === 'BlankNode') && (y.termType === 'BlankNode')) {
