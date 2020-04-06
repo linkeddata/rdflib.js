@@ -19,3 +19,7 @@ export default class DefaultGraph extends Node implements TFDefaultGraph {
     return 'DefaultGraph';
   }
 }
+
+export function isDefaultGraph(object: any): object is DefaultGraph {
+  return !!object && object.termType === DefaultGraphTermType;
+}
