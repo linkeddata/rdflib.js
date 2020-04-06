@@ -41,6 +41,13 @@ export interface BlankNode extends Term {
   value: string
 }
 
+export interface BaseQuad {
+  subject: Term
+  predicate: Term
+  object: Term
+  graph: Term
+}
+
 /**
  * RDF/JS spec Quad
  * @link https://rdf.js.org/data-model-spec/#quad-interface
@@ -55,6 +62,7 @@ export interface Quad<
   predicate: P
   object: O
   graph: G
+  equals (other: BaseQuad): boolean
 }
 
 /**
@@ -149,6 +157,17 @@ export interface RdfJsDataFactory {
    * If graph is undefined or null it MUST set graph to a DefaultGraph.
    */
   quad: (
+    subject: Term,
+    predicate: Term,
+    object: Term,
+    graph?: Term,
+  ) => Quad<any, any, any, any>
+
+  /**
+   * Returns a new instance of Quad.
+   * If graph is undefined or null it MUST set graph to a DefaultGraph.
+   */
+  triple: (
     subject: Term,
     predicate: Term,
     object: Term,

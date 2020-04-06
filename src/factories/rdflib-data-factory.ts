@@ -55,21 +55,6 @@ const RDFlibDataFactory: IRDFlibDataFactory = {
   ): Statement {
     return this.quad(subject, predicate, object, graph)
   },
-
-  /**
-   * Creates a new statement
-   * @param subject The subject
-   * @param predicate The predicate
-   * @param object The object
-   * @deprecated use [[quad]] without the last argument instead
-   */
-  triple (
-    subject: Quad_Subject,
-    predicate: Quad_Predicate,
-    object: Quad_Object
-  ): Statement {
-    return this.quad(subject, predicate, object)
-  },
 }
 
 export default RDFlibDataFactory

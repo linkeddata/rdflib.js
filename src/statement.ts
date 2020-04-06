@@ -7,25 +7,34 @@ import {
   SubjectType,
   DefaultGraphTermType,
 } from './types'
-import { defaultGraphNode } from './utils/default-graph-uri'
-import { Quad_Graph, Quad_Object, Quad_Predicate, Quad, Quad_Subject, Term } from './tf-types'
+import DefaultGraphNode, { isDefaultGraph } from './default-graph'
+import { Quad, DefaultGraph } from './tf-types'
+
+const defaultGraph = new DefaultGraphNode()
 
 /** A Statement represents an RDF Triple or Quad. */
-export default class Statement implements Quad<SubjectType, PredicateType, ObjectType, GraphType> {
+export default class Statement<
+    S extends SubjectType = SubjectType,
+    P extends PredicateType = PredicateType,
+    O extends ObjectType = ObjectType,
+    G extends GraphType = GraphType
+  >
+  implements Quad<S, P, O, G | DefaultGraph> {
+
   /** The subject of the triple.  What the Statement is about. */
-  subject: SubjectType
+  subject: S
 
   /** The relationship which is asserted between the subject and object */
-  predicate: PredicateType
+  predicate: P
 
   /** The thing or data value which is asserted to be related to the subject */
-  object: ObjectType
+  object: O
 
   /**
    * The graph param is a named node of the document in which the triple when
    *  it is stored on the web.
    */
-  graph: GraphType
+  graph: G | DefaultGraph
 
   /**
    * Construct a new statement
@@ -45,15 +54,15 @@ export default class Statement implements Quad<SubjectType, PredicateType, Objec
    *  powerful update() which can update more than one document.
    */
   constructor (
-    subject: Quad_Subject | Term,
-    predicate: Quad_Predicate | Term,
-    object: Quad_Object | Term,
-    graph?: Quad_Graph | Term,
+    subject: S,
+    predicate: P,
+    object: O,
+    graph?: G | DefaultGraph,
   ) {
     this.subject = Node.fromValue(subject)
     this.predicate = Node.fromValue(predicate)
     this.object = Node.fromValue(object)
-    this.graph = graph == undefined ? defaultGraphNode : Node.fromValue(graph) // property currently used by rdflib
+    this.graph = graph == undefined ? defaultGraph : Node.fromValue(graph) // property currently used by rdflib
   }
 
   /** @deprecated use {graph} instead */
@@ -87,7 +96,8 @@ export default class Statement implements Quad<SubjectType, PredicateType, Objec
       this.subject.substitute(bindings),
       this.predicate.substitute(bindings),
       this.object.substitute(bindings),
-      this.graph.substitute<GraphType>(bindings),
+      isDefaultGraph(this.graph) ? this.graph :
+        (this.graph as G).substitute(bindings)
     ) // 2016
     console.log('@@@ statement substitute:' + y)
     return y
@@ -121,7 +131,7 @@ export default class Statement implements Quad<SubjectType, PredicateType, Objec
       this.subject.toNT(),
       this.predicate.toNT(),
       this.object.toNT(),
-      this.graph.toNT(),
+      isDefaultGraph(this.graph) ? '' : (this.graph as G).toNT()
     ].join(' ') + ' .'
   }
 

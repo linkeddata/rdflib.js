@@ -160,14 +160,29 @@ const CanonicalDataFactory: DataFactory = {
    * @param object - The object
    * @param graph - The containing graph
    */
-  quad(
+  quad<
+    S extends SubjectType = SubjectType,
+    P extends PredicateType = PredicateType,
+    O extends ObjectType = ObjectType,
+    G extends GraphType = GraphType
+  >(subject: S, predicate: P, object: O, graph?: G): Statement<S, P, O, G | DefaultGraph> {
+    return new Statement(subject, predicate, object, graph || defaultGraph)
+  },
+
+  /**
+   * Creates a new statement
+   * @param subject - The subject
+   * @param predicate - The predicate
+   * @param object - The object
+   * @param graph - The containing graph
+   */
+  triple(
     subject: Term | SubjectType,
     predicate: Term | PredicateType,
     object: Term | ObjectType,
     graph?: Term | GraphType
   ): Statement {
-    graph = graph || defaultGraph
-    return new Statement(subject, predicate, object, graph)
+    return this.quad(subject, predicate, object, graph)
   },
 
   quadToNQ(q: Statement | Quad): string {
