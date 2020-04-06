@@ -122,13 +122,15 @@ export default class Formula extends Node {
    * @param graph - the last part of the statement
    */
   add (
-    subject: Quad_Subject,
-    predicate: Quad_Predicate,
-    object: Quad_Object,
+    subject: Quad_Subject | Quad | Quad[] | Statement | Statement[],
+    predicate?: Quad_Predicate,
+    object?: Term | string,
     graph?: Quad_Graph
-  ): number {
-    return this.statements
-      .push(this.rdfFactory.quad(subject, predicate, object, graph))
+  ): Quad | null | this | number {
+    if (arguments.length === 1) {
+      (subject as Quad[]).forEach(st => this.add(st.subject, st.predicate, st.object, st.graph))
+    }
+    return this.statements.push(this.rdfFactory.quad(subject, predicate, object, graph))
   }
 
   /** Add a statment object
