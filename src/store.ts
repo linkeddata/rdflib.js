@@ -391,13 +391,12 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
    * @param why - The document in which the triple (S,P,O) was or will be stored on the web
    * @returns The statement added to the store, or the store
    */
-  // @ts-ignore differs from signature in Formula
   add (
     subj: Quad_Subject | Quad | Quad[] | Statement | Statement[],
     pred?: Quad_Predicate,
     obj?: Term | string,
     why?: Quad_Graph
-  ): Quad | null | IndexedFormula {
+  ): Quad | null | this | number {
     var i: number
     if (arguments.length === 1) {
       if (subj instanceof Array) {
