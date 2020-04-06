@@ -213,14 +213,13 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
    * Gets this graph with the bindings substituted
    * @param bindings The bindings
    */
-  //@ts-ignore different from signature in Formula
-  substitute(bindings: Bindings): IndexedFormula {
+  substitute <T extends Node = IndexedFormula>(bindings: Bindings): T {
     var statementsCopy = this.statements.map(function (ea: Quad) {
       return (ea as Statement).substitute(bindings)
     })
     var y = new IndexedFormula()
     y.add(statementsCopy)
-    return y
+    return y as unknown as T
   }
 
   /**

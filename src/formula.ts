@@ -765,8 +765,7 @@ export default class Formula extends Node {
    * Creates a new formula with the substituting bindings applied
    * @param bindings - The bindings to substitute
    */
-  //@ts-ignore signature not compatible with Node
-  substitute(bindings: Bindings): Formula {
+  substitute<T extends Node = Formula>(bindings: Bindings): T {
     let statementsCopy = this.statements.map(function (ea) {
       return (ea as Statement).substitute(bindings)
     })
@@ -774,7 +773,7 @@ export default class Formula extends Node {
     const y = new Formula()
     y.addAll(statementsCopy as Quad[])
     console.log('indexed-form subs formula:' + y)
-    return y
+    return y as unknown as T
   }
 
   /**
