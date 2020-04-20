@@ -10,15 +10,15 @@ export function convertToJson (n3String, jsonCallback) {
   })
   asyncLib.waterfall([
     function (callback) {
-      n3Parser.parse(n3String, callback)
-    },
-    function (triple, prefix, callback) {
-      if (triple !== null) {
-        n3Writer.addTriple(triple)
-      }
-      if (typeof callback === 'function') {
-        n3Writer.end(callback)
-      }
+      n3Parser.parse(n3String, function (error, quad, prefixes) {
+        if (error) {
+          callback(error);
+        } else if (quad !== null) {
+          n3Writer.addQuad(quad);
+        } else {
+          n3Writer.end(callback);
+        }
+      });
     },
     function (result, callback) {
       try {
@@ -47,15 +47,15 @@ export function convertToNQuads (n3String, nquadCallback) {
   })
   asyncLib.waterfall([
     function (callback) {
-      n3Parser.parse(n3String, callback)
-    },
-    function (triple, prefix, callback) {
-      if (triple !== null) {
-        n3Writer.addTriple(triple)
-      }
-      if (typeof callback === 'function') {
-        n3Writer.end(callback)
-      }
+      n3Parser.parse(n3String, function (error, triple, prefixes) {
+        if (error) {
+          callback(error);
+        } else if (quad !== null) {
+          n3Writer.addQuad(quad);
+        } else {
+          n3Writer.end(callback);
+        }
+      });
     },
     function (result, callback) {
       nquadString = result
