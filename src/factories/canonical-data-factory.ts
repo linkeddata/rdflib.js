@@ -15,6 +15,7 @@ import {
   LiteralTermType,
   NamedNodeTermType,
   CollectionTermType,
+  GraphTermType,
 } from '../types'
 import DefaultGraph from '../default-graph'
 import {
@@ -200,6 +201,7 @@ const CanonicalDataFactory: DataFactory = {
         return '<http://www.w3.org/1999/02/22-rdf-syntax-ns#nil>'
       case LiteralTermType:
         return Literal.toNT(term as Literal)
+      case GraphTermType:
       case NamedNodeTermType:
         return '<' + term.value + '>'
       case CollectionTermType:
