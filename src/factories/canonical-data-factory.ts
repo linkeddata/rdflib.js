@@ -17,6 +17,7 @@ import {
   GraphTermType
 } from '../types'
 import DefaultGraph from '../default-graph'
+import { defaultGraphNode } from '../utils/default-graph-uri'
 import {
   Comparable,
   DataFactory,
@@ -31,7 +32,9 @@ export { defaultGraphURI } from '../utils/default-graph-uri'
 /**
  * Gets the default graph
  */
-const defaultGraph = new DefaultGraph()
+export function defaultGraph(): DefaultGraph {
+  return defaultGraphNode as unknown as DefaultGraph
+}
 
 /** A basic internal RDFlib datafactory, which does not support Collections  */
 const CanonicalDataFactory: DataFactory = {
@@ -54,7 +57,7 @@ const CanonicalDataFactory: DataFactory = {
     return new BlankNode(value)
   },
 
-  defaultGraph: () => defaultGraph,
+  defaultGraph,
 
   /**
    * Compares to (rdf) objects for equality.
@@ -166,7 +169,7 @@ const CanonicalDataFactory: DataFactory = {
     O extends ObjectType = ObjectType,
     G extends GraphType = GraphType
   >(subject: S, predicate: P, object: O, graph?: G): Statement<S, P, O, G | DefaultGraph> {
-    return new Statement(subject, predicate, object, graph || defaultGraph)
+    return new Statement(subject, predicate, object, graph || defaultGraph())
   },
 
   /**
