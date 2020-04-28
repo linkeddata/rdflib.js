@@ -4,6 +4,7 @@
 ** 2010-08-08 TimBL folded in Kenny's WEBDAV
 ** 2010-12-07 TimBL addred local file write code
 */
+/* source-trace 20209521a */
 import IndexedFormula from './store'
 import { docpart } from './uri'
 import Fetcher from './fetcher'
@@ -92,6 +93,7 @@ export default class UpdateManager {
    * Files have to have a specific annotation that they are machine written,
    *   for safety.
    * We don't actually check for write access on files.
+   * This version only looks at past HTTP requests, does not make new ones.
    *
    * @returns The method string SPARQL or DAV or
    *   LOCALFILE or false if known, undefined if not known.
@@ -127,19 +129,6 @@ export default class UpdateManager {
     var definitive = false
      // @ts-ignore passes a string to kb.each, which expects a term. Should this work?
     var requests = kb.each(undefined, this.ns.link('requestedURI'), docpart(uri))
-
-    // This if-statement does not follow the Solid spec, but temporarily reverts this change:
-    // https://github.com/linkeddata/rdflib.js/commit/11519162df4d31067a5c175686a29532552f2bea#diff-0aaa1c3585187a3868b62f3bcdca96f4L103
-    // It is necessary because Node Solid Server does not currently send the required header that
-    // lets rdflib know that it accepts SPARQL queries:
-    // https://github.com/linkeddata/rdflib.js/issues/359#issuecomment-537952239
-    // A fix has been submitted to Node Solid Server that will be included in its next release:
-    // https://github.com/solid/node-solid-server/pull/1313
-    // Once that release has been published to the major Pod hosters, the commit that introduced
-    // this statement should be reverted:
-    if (kb.holds(this.store.rdfFactory.namedNode(uri), this.ns.rdf('type'), this.ns.ldp('Resource'))) {
-        return 'SPARQL'
-    }
     var method: string
     for (var r = 0; r < requests.length; r++) {
       request = requests[r]
@@ -769,7 +758,11 @@ export default class UpdateManager {
         (this.store.fetcher.load(doc) as Promise<Response>).then(response => {
           this.update(deletions, insertions, callback, true)
         }, err => {
-          throw new Error(`Update: Can't read ${doc} before patching: ${err}`)
+            if (err.response.status === 404) { // nonexistent files are fine
+              this.update(deletions, insertions, callback, true)
+            } else  {
+              throw new Error(`Update: Can't get updatability status ${doc} before patching: ${err}`)
+            }
         })
         return
       } else if ((protocol as string).indexOf('SPARQL') >= 0) {
