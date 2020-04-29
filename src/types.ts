@@ -99,9 +99,4 @@ export interface IRDFlibDataFactory extends DataFactory<
     object: Quad_Object,
     graph?: Quad_Graph
   ) => Statement
-  triple: (
-    subject: Quad_Subject,
-    predicate: Quad_Predicate,
-    object: Quad_Object
-  ) => Statement
 }

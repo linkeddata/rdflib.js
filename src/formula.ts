@@ -122,13 +122,15 @@ export default class Formula extends Node {
    * @param graph - the last part of the statement
    */
   add (
-    subject: Quad_Subject,
-    predicate: Quad_Predicate,
-    object: Quad_Object,
+    subject: Quad_Subject | Quad | Quad[] | Statement | Statement[],
+    predicate?: Quad_Predicate,
+    object?: Term | string,
     graph?: Quad_Graph
-  ): number {
-    return this.statements
-      .push(this.rdfFactory.quad(subject, predicate, object, graph))
+  ): Quad | null | this | number {
+    if (arguments.length === 1) {
+      (subject as Quad[]).forEach(st => this.add(st.subject, st.predicate, st.object, st.graph))
+    }
+    return this.statements.push(this.rdfFactory.quad(subject, predicate, object, graph))
   }
 
   /** Add a statment object
@@ -138,7 +140,10 @@ export default class Formula extends Node {
     return this.statements.push(statement)
   }
 
-  /** @deprecated use {this.rdfFactory.blankNode} instead */
+  /**
+   * Shortcut for adding blankNodes
+   * @param [id]
+   */
   bnode (id?: string): BlankNode {
     return this.rdfFactory.blankNode(id)
   }
@@ -763,8 +768,7 @@ export default class Formula extends Node {
    * Creates a new formula with the substituting bindings applied
    * @param bindings - The bindings to substitute
    */
-  //@ts-ignore signature not compatible with Node
-  substitute(bindings: Bindings): Formula {
+  substitute<T extends Node = Formula>(bindings: Bindings): T {
     let statementsCopy = this.statements.map(function (ea) {
       return (ea as Statement).substitute(bindings)
     })
@@ -772,12 +776,9 @@ export default class Formula extends Node {
     const y = new Formula()
     y.addAll(statementsCopy as Quad[])
     console.log('indexed-form subs formula:' + y)
-    return y
+    return y as unknown as T
   }
 
-  /**
-   * @deprecated use {rdfFactory.namedNode} instead
-   */
   sym (uri: string, name?): NamedNode {
     if (name) {
       throw new Error('This feature (kb.sym with 2 args) is removed. Do not assume prefix mappings.')

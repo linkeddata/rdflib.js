@@ -213,14 +213,13 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
    * Gets this graph with the bindings substituted
    * @param bindings The bindings
    */
-  //@ts-ignore different from signature in Formula
-  substitute(bindings: Bindings): IndexedFormula {
+  substitute <T extends Node = IndexedFormula>(bindings: Bindings): T {
     var statementsCopy = this.statements.map(function (ea: Quad) {
       return (ea as Statement).substitute(bindings)
     })
     var y = new IndexedFormula()
     y.add(statementsCopy)
-    return y
+    return y as unknown as T
   }
 
   /**
@@ -391,13 +390,12 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
    * @param why - The document in which the triple (S,P,O) was or will be stored on the web
    * @returns The statement added to the store, or the store
    */
-  // @ts-ignore differs from signature in Formula
   add (
     subj: Quad_Subject | Quad | Quad[] | Statement | Statement[],
     pred?: Quad_Predicate,
     obj?: Term | string,
     why?: Quad_Graph
-  ): Quad | null | IndexedFormula {
+  ): Quad | null | this | number {
     var i: number
     if (arguments.length === 1) {
       if (subj instanceof Array) {
@@ -571,8 +569,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     return this
   }
 
-  // @ts-ignore incompatible with Forumala.compareTerm
-  compareTerm(u1: Term, u2: Term): number {
+  compareTerms(u1: Term, u2: Term): number {
     // Keep compatibility with downstream classOrder changes
     if (Object.prototype.hasOwnProperty.call(u1, "compareTerm")) {
       return (u1 as Node).compareTerm(u2 as Node)
@@ -641,7 +638,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     // 03-21-2010
     const u1 = this.canon(u1in) as Quad_Subject
     const u2 = this.canon(u2in) as Quad_Subject
-    var d = this.compareTerm(u1, u2)
+    var d = this.compareTerms(u1, u2)
     if (!d) {
       return true // No information in {a = a}
     }
@@ -659,7 +656,6 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
    * Only applicable for IndexedFormula, but TypeScript won't allow a subclass to override a property
    * @param features The list of features
    */
-  //@ts-ignore Incompatible signature with Formula.formula
   formula(features: FeaturesType): IndexedFormula {
     return new IndexedFormula(features)
   }
@@ -765,7 +761,6 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
   }
 
   // convenience function used by N3 parser
-  // @ts-ignore does not correctly extends from Formula
   variable (name: string) {
     return new Variable(name)
   }

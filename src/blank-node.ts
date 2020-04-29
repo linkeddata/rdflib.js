@@ -55,7 +55,6 @@ export default class BlankNode extends Node implements TFBlankNode {
 
   /**
    * The identifier for the blank node
-   * @deprecated use [[value]] instead.
    */
   public get id (): string {
     return this.value

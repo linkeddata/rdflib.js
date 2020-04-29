@@ -33,7 +33,6 @@ const RDFlibDataFactory: IRDFlibDataFactory = {
    * @param val The lexical value
    * @param lang The language
    * @param dt The datatype
-   * @deprecated use [[literal]] with the second and third argument combined
    */
   lit (val: string, lang?: string, dt?: NamedNode): Literal {
     return this.literal('' + val, lang || dt)
@@ -45,7 +44,6 @@ const RDFlibDataFactory: IRDFlibDataFactory = {
    * @param predicate The predicate
    * @param object The object
    * @param graph The containing graph
-   * @deprecated use [[quad]] instead
    */
   st (
     subject: Quad_Subject,
@@ -54,21 +52,6 @@ const RDFlibDataFactory: IRDFlibDataFactory = {
     graph?: Quad_Graph
   ): Statement {
     return this.quad(subject, predicate, object, graph)
-  },
-
-  /**
-   * Creates a new statement
-   * @param subject The subject
-   * @param predicate The predicate
-   * @param object The object
-   * @deprecated use [[quad]] without the last argument instead
-   */
-  triple (
-    subject: Quad_Subject,
-    predicate: Quad_Predicate,
-    object: Quad_Object
-  ): Statement {
-    return this.quad(subject, predicate, object)
   },
 }
 
