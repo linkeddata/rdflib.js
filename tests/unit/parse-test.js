@@ -230,4 +230,23 @@ describe('Parse', () => {
       })
     })
   })
+
+  describe('xml', () => {
+    describe('literals', () => {
+      it('handles language subtags', () => {
+        let base = 'http://test.com'
+        let mimeType = 'application/rdf+xml'
+        let store = DataFactory.graph()
+        let content = `<rdf:RDF
+        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        xmlns:core="http://www.w3.org/2004/02/skos/core#">
+           <rdf:Description rdf:about="http://test.com/entity1">
+               <core:prefLabel rdf:datatype="http://www.w3.org/1999/02/22-rdf-syntax-ns#langString" xml:lang="fr">Valeur de test</core:prefLabel>
+           </rdf:Description>
+       </rdf:RDF>`
+        parse(content, store, base, mimeType)
+        expect(store.statements[0].object.lang).to.eql('fr')
+      })
+    })
+  })
 })
