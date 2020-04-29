@@ -140,7 +140,10 @@ export default class Formula extends Node {
     return this.statements.push(statement)
   }
 
-  /** @deprecated use {this.rdfFactory.blankNode} instead */
+  /**
+   * Shortcut for adding blankNodes
+   * @param [id]
+   */
   bnode (id?: string): BlankNode {
     return this.rdfFactory.blankNode(id)
   }
@@ -776,9 +779,6 @@ export default class Formula extends Node {
     return y as unknown as T
   }
 
-  /**
-   * @deprecated use {rdfFactory.namedNode} instead
-   */
   sym (uri: string, name?): NamedNode {
     if (name) {
       throw new Error('This feature (kb.sym with 2 args) is removed. Do not assume prefix mappings.')
