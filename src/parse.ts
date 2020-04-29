@@ -21,14 +21,14 @@ type CallbackFunc = (error: any, kb: Formula | null) => void
  * @param str - The input string to parse
  * @param kb - The store to use
  * @param base - The base URI to use
- * @param contentType - The MIME content type string for the input
- * @param callback - The callback to call when the data has been loaded
+ * @param contentType - The MIME content type string for the input - defaults to text/turtle
+ * @param [callback] - The callback to call when the data has been loaded
  */
 export default function parse (
   str: string,
   kb: Formula,
   base: string,
-  contentType: string | ContentType,
+  contentType: string | ContentType = 'text/turtle',
   callback?: CallbackFunc
 ) {
   contentType = contentType || TurtleContentType
