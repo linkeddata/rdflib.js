@@ -65,7 +65,7 @@ export default class Statement<
     this.graph = graph == undefined ? defaultGraph : Node.fromValue(graph) // property currently used by rdflib
   }
 
-  /** @deprecated use {graph} instead */
+  /** Alias for graph, favored by Tim */
   get why () {
     return this.graph
   }
