@@ -26,6 +26,7 @@ import {
 } from './factory-types'
 import { isQuad, isTerm } from '../utils/terms'
 import { NamedNode as TFNamedNode, Quad, Term } from '../tf-types'
+import Collection from "../collection";
 
 export { defaultGraphURI } from '../utils/default-graph-uri'
 
@@ -205,7 +206,7 @@ const CanonicalDataFactory: DataFactory = {
       case NamedNodeTermType:
         return '<' + term.value + '>'
       case CollectionTermType:
-        return '(' + term.elements.map(t => this.termToNQ(t)).join(' ') + ')'
+        return '(' + (term as Collection).elements.map(t => this.termToNQ(t)).join(' ') + ')'
       default:
         throw new Error(`Can't serialize nonstandard term type (was '${term.termType}')`)
     }
