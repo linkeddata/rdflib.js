@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>CallbackifyInterface | rdflib</title>
+	<title>BaseQuad | rdflib</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -54,10 +54,10 @@
 					<a href="../globals.html">Globals</a>
 				</li>
 				<li>
-					<a href="callbackifyinterface.html">CallbackifyInterface</a>
+					<a href="basequad.html">BaseQuad</a>
 				</li>
 			</ul>
-			<h1>Interface CallbackifyInterface</h1>
+			<h1>Interface BaseQuad</h1>
 		</div>
 	</div>
 </header>
@@ -68,14 +68,8 @@
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
 					<li>
-						<span class="target">CallbackifyInterface</span>
+						<span class="target">BaseQuad</span>
 					</li>
-				</ul>
-			</section>
-			<section class="tsd-panel">
-				<h3>Implemented by</h3>
-				<ul class="tsd-hierarchy">
-					<li><a href="../classes/fetcher.html" class="tsd-signature-type">Fetcher</a></li>
 				</ul>
 			</section>
 			<section class="tsd-panel-group tsd-index-group">
@@ -85,7 +79,10 @@
 						<section class="tsd-index-section ">
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="callbackifyinterface.html#firecallbacks" class="tsd-kind-icon">fire<wbr>Callbacks</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="basequad.html#graph" class="tsd-kind-icon">graph</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="basequad.html#object" class="tsd-kind-icon">object</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="basequad.html#predicate" class="tsd-kind-icon">predicate</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="basequad.html#subject" class="tsd-kind-icon">subject</a></li>
 							</ul>
 						</section>
 					</div>
@@ -94,12 +91,42 @@
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Properties</h2>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="firecallbacks" class="tsd-anchor"></a>
-					<h3>fire<wbr>Callbacks</h3>
-					<div class="tsd-signature tsd-kind-icon">fire<wbr>Callbacks<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Function</span></div>
+					<a name="graph" class="tsd-anchor"></a>
+					<h3>graph</h3>
+					<div class="tsd-signature tsd-kind-icon">graph<span class="tsd-signature-symbol">:</span> <a href="term.html" class="tsd-signature-type">Term</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/5650e30/src/fetcher.ts#L667">src/fetcher.ts:667</a></li>
+							<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/5650e30/src/tf-types.ts#L48">src/tf-types.ts:48</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
+					<a name="object" class="tsd-anchor"></a>
+					<h3>object</h3>
+					<div class="tsd-signature tsd-kind-icon">object<span class="tsd-signature-symbol">:</span> <a href="term.html" class="tsd-signature-type">Term</a></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/5650e30/src/tf-types.ts#L47">src/tf-types.ts:47</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
+					<a name="predicate" class="tsd-anchor"></a>
+					<h3>predicate</h3>
+					<div class="tsd-signature tsd-kind-icon">predicate<span class="tsd-signature-symbol">:</span> <a href="term.html" class="tsd-signature-type">Term</a></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/5650e30/src/tf-types.ts#L46">src/tf-types.ts:46</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
+					<a name="subject" class="tsd-anchor"></a>
+					<h3>subject</h3>
+					<div class="tsd-signature tsd-kind-icon">subject<span class="tsd-signature-symbol">:</span> <a href="term.html" class="tsd-signature-type">Term</a></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/5650e30/src/tf-types.ts#L45">src/tf-types.ts:45</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -118,10 +145,19 @@
 				</ul>
 				<ul class="current">
 					<li class="current tsd-kind-interface">
-						<a href="callbackifyinterface.html" class="tsd-kind-icon">Callbackify<wbr>Interface</a>
+						<a href="basequad.html" class="tsd-kind-icon">Base<wbr>Quad</a>
 						<ul>
 							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="callbackifyinterface.html#firecallbacks" class="tsd-kind-icon">fire<wbr>Callbacks</a>
+								<a href="basequad.html#graph" class="tsd-kind-icon">graph</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-interface">
+								<a href="basequad.html#object" class="tsd-kind-icon">object</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-interface">
+								<a href="basequad.html#predicate" class="tsd-kind-icon">predicate</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-interface">
+								<a href="basequad.html#subject" class="tsd-kind-icon">subject</a>
 							</li>
 						</ul>
 					</li>
