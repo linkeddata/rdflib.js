@@ -122,8 +122,8 @@ export default class Formula extends Node {
   /** Add a statment object
    * @param {Statement} statement - An existing constructed statement to add
    */
-  addStatement (statement: Quad): number {
-    return this.add(statement) as number
+  addStatement (statement: Quad): Statement | null | this | number {
+    return this.add(statement)
   }
 
   /**
