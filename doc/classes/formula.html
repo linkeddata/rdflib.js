@@ -173,14 +173,14 @@
 					<a name="constructor" class="tsd-anchor"></a>
 					<h3>constructor</h3>
 					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class tsd-is-overwrite">
-						<li class="tsd-signature tsd-kind-icon">new <wbr>Formula<span class="tsd-signature-symbol">(</span>statements<span class="tsd-signature-symbol">?: </span><a href="../interfaces/quad.html" class="tsd-signature-type">Quad</a><span class="tsd-signature-symbol">[]</span>, constraints<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">ReadonlyArray</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span>, initBindings<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">ReadonlyArray</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span>, optional<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">ReadonlyArray</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span>, opts<span class="tsd-signature-symbol">?: </span><a href="../interfaces/formulaopts.html" class="tsd-signature-type">FormulaOpts</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="formula.html" class="tsd-signature-type">Formula</a></li>
+						<li class="tsd-signature tsd-kind-icon">new <wbr>Formula<span class="tsd-signature-symbol">(</span>statements<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">Array</span><span class="tsd-signature-symbol">&lt;</span><a href="statement.html" class="tsd-signature-type">Statement</a><span class="tsd-signature-symbol">&gt;</span>, constraints<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">ReadonlyArray</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span>, initBindings<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">ReadonlyArray</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span>, optional<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">ReadonlyArray</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span>, opts<span class="tsd-signature-symbol">?: </span><a href="../interfaces/formulaopts.html" class="tsd-signature-type">FormulaOpts</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="formula.html" class="tsd-signature-type">Formula</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<p>Overrides <a href="node.html">Node</a>.<a href="node.html#constructor">constructor</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/formula.ts#L86">src/formula.ts:86</a></li>
+									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/formula.ts#L76">src/formula.ts:76</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -191,7 +191,7 @@
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5><span class="tsd-flag ts-flagOptional">Optional</span> statements: <a href="../interfaces/quad.html" class="tsd-signature-type">Quad</a><span class="tsd-signature-symbol">[]</span></h5>
+									<h5><span class="tsd-flag ts-flagDefault value">Default value</span> statements: <span class="tsd-signature-type">Array</span><span class="tsd-signature-symbol">&lt;</span><a href="statement.html" class="tsd-signature-type">Statement</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> = []</span></h5>
 									<div class="tsd-comment tsd-typography">
 										<div class="lead">
 											<p>Initial array of statements</p>
@@ -199,7 +199,7 @@
 									</div>
 								</li>
 								<li>
-									<h5><span class="tsd-flag ts-flagOptional">Optional</span> constraints: <span class="tsd-signature-type">ReadonlyArray</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h5>
+									<h5><span class="tsd-flag ts-flagDefault value">Default value</span> constraints: <span class="tsd-signature-type">ReadonlyArray</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> = []</span></h5>
 									<div class="tsd-comment tsd-typography">
 										<div class="lead">
 											<p>initial array of constraints</p>
@@ -207,7 +207,7 @@
 									</div>
 								</li>
 								<li>
-									<h5><span class="tsd-flag ts-flagOptional">Optional</span> initBindings: <span class="tsd-signature-type">ReadonlyArray</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h5>
+									<h5><span class="tsd-flag ts-flagDefault value">Default value</span> initBindings: <span class="tsd-signature-type">ReadonlyArray</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> = []</span></h5>
 									<div class="tsd-comment tsd-typography">
 										<div class="lead">
 											<p>initial bindings used in Query</p>
@@ -215,7 +215,7 @@
 									</div>
 								</li>
 								<li>
-									<h5><span class="tsd-flag ts-flagOptional">Optional</span> optional: <span class="tsd-signature-type">ReadonlyArray</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h5>
+									<h5><span class="tsd-flag ts-flagDefault value">Default value</span> optional: <span class="tsd-signature-type">ReadonlyArray</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> = []</span></h5>
 									<div class="tsd-comment tsd-typography">
 										<div class="lead">
 											<p>optional</p>
@@ -240,7 +240,7 @@
 					<aside class="tsd-sources">
 						<p>Overrides <a href="defaultgraph.html">DefaultGraph</a>.<a href="defaultgraph.html#classorder">classOrder</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/formula.ts#L58">src/formula.ts:58</a></li>
+							<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/formula.ts#L58">src/formula.ts:58</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -250,12 +250,12 @@
 					<div class="tsd-signature tsd-kind-icon">constraints<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ReadonlyArray</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/formula.ts#L61">src/formula.ts:61</a></li>
+							<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/formula.ts#L90">src/formula.ts:90</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
 						<div class="lead">
-							<p>The additional constraints</p>
+							<p>initial array of constraints</p>
 						</div>
 					</div>
 				</section>
@@ -265,7 +265,7 @@
 					<div class="tsd-signature tsd-kind-icon">fetcher<span class="tsd-signature-symbol">:</span> <a href="fetcher.html" class="tsd-signature-type">Fetcher</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/formula.ts#L68">src/formula.ts:68</a></li>
+							<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/formula.ts#L65">src/formula.ts:65</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -281,9 +281,14 @@
 					<div class="tsd-signature tsd-kind-icon">init<wbr>Bindings<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ReadonlyArray</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/formula.ts#L70">src/formula.ts:70</a></li>
+							<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/formula.ts#L91">src/formula.ts:91</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>initial bindings used in Query</p>
+						</div>
+					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
 					<a name="isvar" class="tsd-anchor"></a>
@@ -291,7 +296,7 @@
 					<div class="tsd-signature tsd-kind-icon">is<wbr>Var<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> = 0</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/formula.ts#L72">src/formula.ts:72</a></li>
+							<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/formula.ts#L67">src/formula.ts:67</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -301,7 +306,7 @@
 					<div class="tsd-signature tsd-kind-icon">ns<span class="tsd-signature-symbol">:</span> <a href="../globals.html#namespace" class="tsd-signature-type">Namespace</a><span class="tsd-signature-symbol"> = Namespace</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/formula.ts#L78">src/formula.ts:78</a></li>
+							<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/formula.ts#L73">src/formula.ts:73</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -321,9 +326,14 @@
 					<div class="tsd-signature tsd-kind-icon">optional<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ReadonlyArray</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/formula.ts#L80">src/formula.ts:80</a></li>
+							<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/formula.ts#L92">src/formula.ts:92</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>optional</p>
+						</div>
+					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
 					<a name="rdffactory" class="tsd-anchor"></a>
@@ -331,7 +341,7 @@
 					<div class="tsd-signature tsd-kind-icon">rdf<wbr>Factory<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/formula.ts#L83">src/formula.ts:83</a></li>
+							<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/formula.ts#L76">src/formula.ts:76</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -343,15 +353,15 @@
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
 					<a name="statements" class="tsd-anchor"></a>
 					<h3>statements</h3>
-					<div class="tsd-signature tsd-kind-icon">statements<span class="tsd-signature-symbol">:</span> <a href="../interfaces/quad.html" class="tsd-signature-type">Quad</a><span class="tsd-signature-symbol">[]</span></div>
+					<div class="tsd-signature tsd-kind-icon">statements<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Array</span><span class="tsd-signature-symbol">&lt;</span><a href="statement.html" class="tsd-signature-type">Statement</a><span class="tsd-signature-symbol">&gt;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/formula.ts#L86">src/formula.ts:86</a></li>
+							<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/formula.ts#L89">src/formula.ts:89</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
 						<div class="lead">
-							<p>The stored statements</p>
+							<p>Initial array of statements</p>
 						</div>
 					</div>
 				</section>
@@ -362,7 +372,7 @@
 					<aside class="tsd-sources">
 						<p>Overrides <a href="node.html">Node</a>.<a href="node.html#termtype">termType</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/formula.ts#L56">src/formula.ts:56</a></li>
+							<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/formula.ts#L56">src/formula.ts:56</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -373,7 +383,7 @@
 					<aside class="tsd-sources">
 						<p>Inherited from <a href="collection.html">Collection</a>.<a href="collection.html#value">value</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/node-internal.ts#L25">src/node-internal.ts:25</a></li>
+							<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/node-internal.ts#L25">src/node-internal.ts:25</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -389,7 +399,7 @@
 					<aside class="tsd-sources">
 						<p>Inherited from <a href="collection.html">Collection</a>.<a href="collection.html#fromvalue">fromValue</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/node-internal.ts#L14">src/node-internal.ts:14</a></li>
+							<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/node-internal.ts#L14">src/node-internal.ts:14</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-type-declaration">
@@ -427,7 +437,7 @@
 					<aside class="tsd-sources">
 						<p>Inherited from <a href="collection.html">Collection</a>.<a href="collection.html#tojs">toJS</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/node-internal.ts#L16">src/node-internal.ts:16</a></li>
+							<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/node-internal.ts#L16">src/node-internal.ts:16</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-type-declaration">
@@ -465,7 +475,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/formula.ts#L720">src/formula.ts:720</a></li>
+									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/formula.ts#L706">src/formula.ts:706</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -494,13 +504,13 @@
 					<a name="add" class="tsd-anchor"></a>
 					<h3>add</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">add<span class="tsd-signature-symbol">(</span>subject<span class="tsd-signature-symbol">: </span><a href="../globals.html#quad_subject" class="tsd-signature-type">Quad_Subject</a><span class="tsd-signature-symbol"> | </span><a href="../interfaces/quad.html" class="tsd-signature-type">Quad</a><span class="tsd-signature-symbol"> | </span><a href="../interfaces/quad.html" class="tsd-signature-type">Quad</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol"> | </span><a href="statement.html" class="tsd-signature-type">Statement</a><span class="tsd-signature-symbol"> | </span><a href="statement.html" class="tsd-signature-type">Statement</a><span class="tsd-signature-symbol">[]</span>, predicate<span class="tsd-signature-symbol">?: </span><a href="../globals.html#quad_predicate" class="tsd-signature-type">Quad_Predicate</a>, object<span class="tsd-signature-symbol">?: </span><a href="../interfaces/term.html" class="tsd-signature-type">Term</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span>, graph<span class="tsd-signature-symbol">?: </span><a href="../globals.html#quad_graph" class="tsd-signature-type">Quad_Graph</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../interfaces/quad.html" class="tsd-signature-type">Quad</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">this</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">number</span></li>
+						<li class="tsd-signature tsd-kind-icon">add<span class="tsd-signature-symbol">(</span>subject<span class="tsd-signature-symbol">: </span><a href="../globals.html#quad_subject" class="tsd-signature-type">Quad_Subject</a><span class="tsd-signature-symbol"> | </span><a href="../interfaces/quad.html" class="tsd-signature-type">Quad</a><span class="tsd-signature-symbol"> | </span><a href="../interfaces/quad.html" class="tsd-signature-type">Quad</a><span class="tsd-signature-symbol">[]</span>, predicate<span class="tsd-signature-symbol">?: </span><a href="../globals.html#quad_predicate" class="tsd-signature-type">Quad_Predicate</a>, object<span class="tsd-signature-symbol">?: </span><a href="../interfaces/term.html" class="tsd-signature-type">Term</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span>, graph<span class="tsd-signature-symbol">?: </span><a href="../globals.html#quad_graph" class="tsd-signature-type">Quad_Graph</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="statement.html" class="tsd-signature-type">Statement</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">this</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">number</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/formula.ts#L124">src/formula.ts:124</a></li>
+									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/formula.ts#L110">src/formula.ts:110</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -511,7 +521,7 @@
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>subject: <a href="../globals.html#quad_subject" class="tsd-signature-type">Quad_Subject</a><span class="tsd-signature-symbol"> | </span><a href="../interfaces/quad.html" class="tsd-signature-type">Quad</a><span class="tsd-signature-symbol"> | </span><a href="../interfaces/quad.html" class="tsd-signature-type">Quad</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol"> | </span><a href="statement.html" class="tsd-signature-type">Statement</a><span class="tsd-signature-symbol"> | </span><a href="statement.html" class="tsd-signature-type">Statement</a><span class="tsd-signature-symbol">[]</span></h5>
+									<h5>subject: <a href="../globals.html#quad_subject" class="tsd-signature-type">Quad_Subject</a><span class="tsd-signature-symbol"> | </span><a href="../interfaces/quad.html" class="tsd-signature-type">Quad</a><span class="tsd-signature-symbol"> | </span><a href="../interfaces/quad.html" class="tsd-signature-type">Quad</a><span class="tsd-signature-symbol">[]</span></h5>
 									<div class="tsd-comment tsd-typography">
 										<p>the first part of the statement</p>
 									</div>
@@ -535,7 +545,7 @@
 									</div>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="../interfaces/quad.html" class="tsd-signature-type">Quad</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">this</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">number</span></h4>
+							<h4 class="tsd-returns-title">Returns <a href="statement.html" class="tsd-signature-type">Statement</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">this</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">number</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -549,7 +559,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/formula.ts#L155">src/formula.ts:155</a></li>
+									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/formula.ts#L141">src/formula.ts:141</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -574,13 +584,13 @@
 					<a name="addstatement" class="tsd-anchor"></a>
 					<h3>add<wbr>Statement</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">add<wbr>Statement<span class="tsd-signature-symbol">(</span>statement<span class="tsd-signature-symbol">: </span><a href="../interfaces/quad.html" class="tsd-signature-type">Quad</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></li>
+						<li class="tsd-signature tsd-kind-icon">add<wbr>Statement<span class="tsd-signature-symbol">(</span>statement<span class="tsd-signature-symbol">: </span><a href="../interfaces/quad.html" class="tsd-signature-type">Quad</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="statement.html" class="tsd-signature-type">Statement</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">this</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">number</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/formula.ts#L139">src/formula.ts:139</a></li>
+									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/formula.ts#L125">src/formula.ts:125</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -597,7 +607,7 @@
 									</div>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4>
+							<h4 class="tsd-returns-title">Returns <a href="statement.html" class="tsd-signature-type">Statement</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">this</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">number</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -605,13 +615,13 @@
 					<a name="any" class="tsd-anchor"></a>
 					<h3>any</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">any<span class="tsd-signature-symbol">(</span>s<span class="tsd-signature-symbol">?: </span><a href="../globals.html#quad_subject" class="tsd-signature-type">Quad_Subject</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span>, p<span class="tsd-signature-symbol">?: </span><a href="../globals.html#quad_predicate" class="tsd-signature-type">Quad_Predicate</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span>, o<span class="tsd-signature-symbol">?: </span><a href="../globals.html#quad_object" class="tsd-signature-type">Quad_Object</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span>, g<span class="tsd-signature-symbol">?: </span><a href="../globals.html#quad_graph" class="tsd-signature-type">Quad_Graph</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../interfaces/term.html" class="tsd-signature-type">Term</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span></li>
+						<li class="tsd-signature tsd-kind-icon">any<span class="tsd-signature-symbol">(</span>s<span class="tsd-signature-symbol">?: </span><a href="../globals.html#quad_subject" class="tsd-signature-type">Quad_Subject</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span>, p<span class="tsd-signature-symbol">?: </span><a href="../globals.html#quad_predicate" class="tsd-signature-type">Quad_Predicate</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span>, o<span class="tsd-signature-symbol">?: </span><a href="../globals.html#quad_object" class="tsd-signature-type">Quad_Object</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span>, g<span class="tsd-signature-symbol">?: </span><a href="../globals.html#quad_graph" class="tsd-signature-type">Quad_Graph</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="node.html" class="tsd-signature-type">Node</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/formula.ts#L173">src/formula.ts:173</a></li>
+									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/formula.ts#L159">src/formula.ts:159</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -649,7 +659,7 @@
 									</div>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="../interfaces/term.html" class="tsd-signature-type">Term</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span></h4>
+							<h4 class="tsd-returns-title">Returns <a href="node.html" class="tsd-signature-type">Node</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span></h4>
 							<p>A node which match the wildcard position, or null</p>
 						</li>
 					</ul>
@@ -664,7 +674,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/formula.ts#L217">src/formula.ts:217</a></li>
+									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/formula.ts#L203">src/formula.ts:203</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -707,13 +717,13 @@
 					<a name="anystatementmatching" class="tsd-anchor"></a>
 					<h3>any<wbr>Statement<wbr>Matching</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">any<wbr>Statement<wbr>Matching<span class="tsd-signature-symbol">(</span>s<span class="tsd-signature-symbol">?: </span><a href="../globals.html#quad_subject" class="tsd-signature-type">Quad_Subject</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span>, p<span class="tsd-signature-symbol">?: </span><a href="../globals.html#quad_predicate" class="tsd-signature-type">Quad_Predicate</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span>, o<span class="tsd-signature-symbol">?: </span><a href="../globals.html#quad_object" class="tsd-signature-type">Quad_Object</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span>, g<span class="tsd-signature-symbol">?: </span><a href="../globals.html#quad_graph" class="tsd-signature-type">Quad_Graph</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../interfaces/quad.html" class="tsd-signature-type">Quad</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span></li>
+						<li class="tsd-signature tsd-kind-icon">any<wbr>Statement<wbr>Matching<span class="tsd-signature-symbol">(</span>s<span class="tsd-signature-symbol">?: </span><a href="../globals.html#quad_subject" class="tsd-signature-type">Quad_Subject</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span>, p<span class="tsd-signature-symbol">?: </span><a href="../globals.html#quad_predicate" class="tsd-signature-type">Quad_Predicate</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span>, o<span class="tsd-signature-symbol">?: </span><a href="../globals.html#quad_object" class="tsd-signature-type">Quad_Object</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span>, g<span class="tsd-signature-symbol">?: </span><a href="../globals.html#quad_graph" class="tsd-signature-type">Quad_Graph</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="statement.html" class="tsd-signature-type">Statement</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/formula.ts#L230">src/formula.ts:230</a></li>
+									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/formula.ts#L216">src/formula.ts:216</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -736,7 +746,7 @@
 									<h5><span class="tsd-flag ts-flagOptional">Optional</span> g: <a href="../globals.html#quad_graph" class="tsd-signature-type">Quad_Graph</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="../interfaces/quad.html" class="tsd-signature-type">Quad</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span></h4>
+							<h4 class="tsd-returns-title">Returns <a href="statement.html" class="tsd-signature-type">Statement</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -750,7 +760,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/formula.ts#L200">src/formula.ts:200</a></li>
+									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/formula.ts#L186">src/formula.ts:186</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -793,13 +803,13 @@
 					<a name="bnode" class="tsd-anchor"></a>
 					<h3>bnode</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">bnode<span class="tsd-signature-symbol">(</span>id<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="blanknode.html" class="tsd-signature-type">BlankNode</a></li>
+						<li class="tsd-signature tsd-kind-icon">bnode<span class="tsd-signature-symbol">(</span>id<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">BlankNode</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/formula.ts#L147">src/formula.ts:147</a></li>
+									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/formula.ts#L133">src/formula.ts:133</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -813,7 +823,7 @@
 									<h5><span class="tsd-flag ts-flagOptional">Optional</span> id: <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="blanknode.html" class="tsd-signature-type">BlankNode</a></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">BlankNode</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -827,7 +837,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/formula.ts#L292">src/formula.ts:292</a></li>
+									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/formula.ts#L278">src/formula.ts:278</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -861,7 +871,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/formula.ts#L328">src/formula.ts:328</a></li>
+									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/formula.ts#L314">src/formula.ts:314</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -884,7 +894,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="defaultgraph.html">DefaultGraph</a>.<a href="defaultgraph.html#compareterm">compareTerm</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/node-internal.ts#L45">src/node-internal.ts:45</a></li>
+									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/node-internal.ts#L45">src/node-internal.ts:45</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -914,13 +924,13 @@
 					<a name="connectedstatements" class="tsd-anchor"></a>
 					<h3>connected<wbr>Statements</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">connected<wbr>Statements<span class="tsd-signature-symbol">(</span>subject<span class="tsd-signature-symbol">: </span><a href="../globals.html#quad_subject" class="tsd-signature-type">Quad_Subject</a>, doc<span class="tsd-signature-symbol">: </span><a href="../globals.html#quad_graph" class="tsd-signature-type">Quad_Graph</a>, excludePredicateURIs<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">ReadonlyArray</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../interfaces/quad.html" class="tsd-signature-type">Quad</a><span class="tsd-signature-symbol">[]</span></li>
+						<li class="tsd-signature tsd-kind-icon">connected<wbr>Statements<span class="tsd-signature-symbol">(</span>subject<span class="tsd-signature-symbol">: </span><a href="../globals.html#quad_subject" class="tsd-signature-type">Quad_Subject</a>, doc<span class="tsd-signature-symbol">: </span><a href="../globals.html#quad_graph" class="tsd-signature-type">Quad_Graph</a>, excludePredicateURIs<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">ReadonlyArray</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="statement.html" class="tsd-signature-type">Statement</a><span class="tsd-signature-symbol">[]</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/formula.ts#L569">src/formula.ts:569</a></li>
+									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/formula.ts#L555">src/formula.ts:555</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -946,7 +956,7 @@
 									<h5><span class="tsd-flag ts-flagOptional">Optional</span> excludePredicateURIs: <span class="tsd-signature-type">ReadonlyArray</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">&gt;</span></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="../interfaces/quad.html" class="tsd-signature-type">Quad</a><span class="tsd-signature-symbol">[]</span></h4>
+							<h4 class="tsd-returns-title">Returns <a href="statement.html" class="tsd-signature-type">Statement</a><span class="tsd-signature-symbol">[]</span></h4>
 							<p>an array of statements, duplicate statements are suppresssed.</p>
 						</li>
 					</ul>
@@ -955,13 +965,13 @@
 					<a name="each" class="tsd-anchor"></a>
 					<h3>each</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">each<span class="tsd-signature-symbol">(</span>s<span class="tsd-signature-symbol">?: </span><a href="../globals.html#quad_subject" class="tsd-signature-type">Quad_Subject</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span>, p<span class="tsd-signature-symbol">?: </span><a href="../globals.html#quad_predicate" class="tsd-signature-type">Quad_Predicate</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span>, o<span class="tsd-signature-symbol">?: </span><a href="../globals.html#quad_object" class="tsd-signature-type">Quad_Object</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span>, g<span class="tsd-signature-symbol">?: </span><a href="../globals.html#quad_graph" class="tsd-signature-type">Quad_Graph</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../interfaces/term.html" class="tsd-signature-type">Term</a><span class="tsd-signature-symbol">[]</span></li>
+						<li class="tsd-signature tsd-kind-icon">each<span class="tsd-signature-symbol">(</span>s<span class="tsd-signature-symbol">?: </span><a href="../globals.html#quad_subject" class="tsd-signature-type">Quad_Subject</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span>, p<span class="tsd-signature-symbol">?: </span><a href="../globals.html#quad_predicate" class="tsd-signature-type">Quad_Predicate</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span>, o<span class="tsd-signature-symbol">?: </span><a href="../globals.html#quad_object" class="tsd-signature-type">Quad_Object</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span>, g<span class="tsd-signature-symbol">?: </span><a href="../globals.html#quad_graph" class="tsd-signature-type">Quad_Graph</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="node.html" class="tsd-signature-type">Node</a><span class="tsd-signature-symbol">[]</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/formula.ts#L344">src/formula.ts:344</a></li>
+									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/formula.ts#L330">src/formula.ts:330</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -999,7 +1009,7 @@
 									</div>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="../interfaces/term.html" class="tsd-signature-type">Term</a><span class="tsd-signature-symbol">[]</span></h4>
+							<h4 class="tsd-returns-title">Returns <a href="node.html" class="tsd-signature-type">Node</a><span class="tsd-signature-symbol">[]</span></h4>
 							<ul>
 								<li>An array of nodes which match the wildcard position</li>
 							</ul>
@@ -1017,7 +1027,7 @@
 							<aside class="tsd-sources">
 								<p>Overrides <a href="collection.html">Collection</a>.<a href="collection.html#equals">equals</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/formula.ts#L377">src/formula.ts:377</a></li>
+									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/formula.ts#L363">src/formula.ts:363</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1048,7 +1058,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/formula.ts#L457">src/formula.ts:457</a></li>
+									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/formula.ts#L443">src/formula.ts:443</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1084,7 +1094,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/formula.ts#L393">src/formula.ts:393</a></li>
+									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/formula.ts#L379">src/formula.ts:379</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1118,7 +1128,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/formula.ts#L468">src/formula.ts:468</a></li>
+									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/formula.ts#L454">src/formula.ts:454</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1155,7 +1165,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/formula.ts#L486">src/formula.ts:486</a></li>
+									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/formula.ts#L472">src/formula.ts:472</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1195,7 +1205,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/formula.ts#L559">src/formula.ts:559</a></li>
+									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/formula.ts#L545">src/formula.ts:545</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1232,7 +1242,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/formula.ts#L502">src/formula.ts:502</a></li>
+									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/formula.ts#L488">src/formula.ts:488</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1273,7 +1283,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/formula.ts#L615">src/formula.ts:615</a></li>
+									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/formula.ts#L601">src/formula.ts:601</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1304,7 +1314,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/formula.ts#L625">src/formula.ts:625</a></li>
+									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/formula.ts#L611">src/formula.ts:611</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1336,7 +1346,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="collection.html">Collection</a>.<a href="collection.html#hashstring">hashString</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/node-internal.ts#L77">src/node-internal.ts:77</a></li>
+									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/node-internal.ts#L77">src/node-internal.ts:77</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1363,7 +1373,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/formula.ts#L657">src/formula.ts:657</a></li>
+									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/formula.ts#L643">src/formula.ts:643</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1400,7 +1410,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/formula.ts#L684">src/formula.ts:684</a></li>
+									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/formula.ts#L670">src/formula.ts:670</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1428,7 +1438,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/formula.ts#L249">src/formula.ts:249</a></li>
+									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/formula.ts#L235">src/formula.ts:235</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1457,7 +1467,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/formula.ts#L699">src/formula.ts:699</a></li>
+									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/formula.ts#L685">src/formula.ts:685</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1498,7 +1508,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="collection.html">Collection</a>.<a href="collection.html#sameterm">sameTerm</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/node-internal.ts#L85">src/node-internal.ts:85</a></li>
+									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/node-internal.ts#L85">src/node-internal.ts:85</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1529,7 +1539,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/formula.ts#L739">src/formula.ts:739</a></li>
+									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/formula.ts#L725">src/formula.ts:725</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1566,13 +1576,13 @@
 					<a name="statementsmatching" class="tsd-anchor"></a>
 					<h3>statements<wbr>Matching</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-has-type-parameter">
-						<li class="tsd-signature tsd-kind-icon">statements<wbr>Matching&lt;JustOne&gt;<span class="tsd-signature-symbol">(</span>s<span class="tsd-signature-symbol">?: </span><a href="../globals.html#quad_subject" class="tsd-signature-type">Quad_Subject</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span>, p<span class="tsd-signature-symbol">?: </span><a href="../globals.html#quad_predicate" class="tsd-signature-type">Quad_Predicate</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span>, o<span class="tsd-signature-symbol">?: </span><a href="../globals.html#quad_object" class="tsd-signature-type">Quad_Object</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span>, g<span class="tsd-signature-symbol">?: </span><a href="../globals.html#quad_graph" class="tsd-signature-type">Quad_Graph</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span>, justOne<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">false</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">true</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../interfaces/quad.html" class="tsd-signature-type">Quad</a><span class="tsd-signature-symbol">[]</span></li>
+						<li class="tsd-signature tsd-kind-icon">statements<wbr>Matching&lt;JustOne&gt;<span class="tsd-signature-symbol">(</span>s<span class="tsd-signature-symbol">?: </span><a href="../globals.html#quad_subject" class="tsd-signature-type">Quad_Subject</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span>, p<span class="tsd-signature-symbol">?: </span><a href="../globals.html#quad_predicate" class="tsd-signature-type">Quad_Predicate</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span>, o<span class="tsd-signature-symbol">?: </span><a href="../globals.html#quad_object" class="tsd-signature-type">Quad_Object</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span>, g<span class="tsd-signature-symbol">?: </span><a href="../globals.html#quad_graph" class="tsd-signature-type">Quad_Graph</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span>, justOne<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">false</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">true</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="statement.html" class="tsd-signature-type">Statement</a><span class="tsd-signature-symbol">[]</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/formula.ts#L264">src/formula.ts:264</a></li>
+									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/formula.ts#L250">src/formula.ts:250</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1620,7 +1630,7 @@
 									</div>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="../interfaces/quad.html" class="tsd-signature-type">Quad</a><span class="tsd-signature-symbol">[]</span></h4>
+							<h4 class="tsd-returns-title">Returns <a href="statement.html" class="tsd-signature-type">Statement</a><span class="tsd-signature-symbol">[]</span></h4>
 							<ul>
 								<li>An array of nodes which match the wildcard position</li>
 							</ul>
@@ -1638,7 +1648,7 @@
 							<aside class="tsd-sources">
 								<p>Overrides <a href="defaultgraph.html">DefaultGraph</a>.<a href="defaultgraph.html#substitute">substitute</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/formula.ts#L771">src/formula.ts:771</a></li>
+									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/formula.ts#L757">src/formula.ts:757</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1669,13 +1679,13 @@
 					<a name="sym" class="tsd-anchor"></a>
 					<h3>sym</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">sym<span class="tsd-signature-symbol">(</span>uri<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, name<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="namednode.html" class="tsd-signature-type">NamedNode</a></li>
+						<li class="tsd-signature tsd-kind-icon">sym<span class="tsd-signature-symbol">(</span>uri<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, name<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">NamedNode</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/formula.ts#L782">src/formula.ts:782</a></li>
+									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/formula.ts#L768">src/formula.ts:768</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -1687,7 +1697,7 @@
 									<h5><span class="tsd-flag ts-flagOptional">Optional</span> name: <span class="tsd-signature-type">any</span></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="namednode.html" class="tsd-signature-type">NamedNode</a></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">NamedNode</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -1695,13 +1705,13 @@
 					<a name="the" class="tsd-anchor"></a>
 					<h3>the</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">the<span class="tsd-signature-symbol">(</span>s<span class="tsd-signature-symbol">?: </span><a href="../globals.html#quad_subject" class="tsd-signature-type">Quad_Subject</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span>, p<span class="tsd-signature-symbol">?: </span><a href="../globals.html#quad_predicate" class="tsd-signature-type">Quad_Predicate</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span>, o<span class="tsd-signature-symbol">?: </span><a href="../globals.html#quad_object" class="tsd-signature-type">Quad_Object</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span>, g<span class="tsd-signature-symbol">?: </span><a href="../globals.html#quad_graph" class="tsd-signature-type">Quad_Graph</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../interfaces/term.html" class="tsd-signature-type">Term</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span></li>
+						<li class="tsd-signature tsd-kind-icon">the<span class="tsd-signature-symbol">(</span>s<span class="tsd-signature-symbol">?: </span><a href="../globals.html#quad_subject" class="tsd-signature-type">Quad_Subject</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span>, p<span class="tsd-signature-symbol">?: </span><a href="../globals.html#quad_predicate" class="tsd-signature-type">Quad_Predicate</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span>, o<span class="tsd-signature-symbol">?: </span><a href="../globals.html#quad_object" class="tsd-signature-type">Quad_Object</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span>, g<span class="tsd-signature-symbol">?: </span><a href="../globals.html#quad_graph" class="tsd-signature-type">Quad_Graph</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="node.html" class="tsd-signature-type">Node</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/formula.ts#L796">src/formula.ts:796</a></li>
+									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/formula.ts#L782">src/formula.ts:782</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1736,7 +1746,7 @@
 									</div>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="../interfaces/term.html" class="tsd-signature-type">Term</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span></h4>
+							<h4 class="tsd-returns-title">Returns <a href="node.html" class="tsd-signature-type">Node</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -1751,7 +1761,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="collection.html">Collection</a>.<a href="collection.html#tocanonical">toCanonical</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/node-internal.ts#L93">src/node-internal.ts:93</a></li>
+									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/node-internal.ts#L93">src/node-internal.ts:93</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1774,7 +1784,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="collection.html">Collection</a>.<a href="collection.html#tonq">toNQ</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/node-internal.ts#L107">src/node-internal.ts:107</a></li>
+									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/node-internal.ts#L107">src/node-internal.ts:107</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1797,7 +1807,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="defaultgraph.html">DefaultGraph</a>.<a href="defaultgraph.html#tont">toNT</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/node-internal.ts#L100">src/node-internal.ts:100</a></li>
+									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/node-internal.ts#L100">src/node-internal.ts:100</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1820,7 +1830,7 @@
 							<aside class="tsd-sources">
 								<p>Overrides <a href="node.html">Node</a>.<a href="node.html#tostring">toString</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/formula.ts#L909">src/formula.ts:909</a></li>
+									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/formula.ts#L895">src/formula.ts:895</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1842,7 +1852,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/formula.ts#L864">src/formula.ts:864</a></li>
+									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/formula.ts#L850">src/formula.ts:850</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1885,7 +1895,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/formula.ts#L818">src/formula.ts:818</a></li>
+									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/formula.ts#L804">src/formula.ts:804</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1935,7 +1945,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/formula.ts#L917">src/formula.ts:917</a></li>
+									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/formula.ts#L903">src/formula.ts:903</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1966,7 +1976,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/06a4946/src/formula.ts#L928">src/formula.ts:928</a></li>
+									<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/10e8ed6/src/formula.ts#L914">src/formula.ts:914</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
