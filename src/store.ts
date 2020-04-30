@@ -35,22 +35,28 @@ import Variable from './variable'
 import { Query, indexedFormulaQuery } from './query'
 import UpdateManager from './update-manager'
 import {
-  Bindings,
+  Bindings, BlankNodeTermType, CollectionTermType, DefaultGraphTermType, EmptyTermType, GraphTermType, LiteralTermType, NamedNodeTermType, VariableTermType
 } from './types'
 import Statement from './statement'
 import { Indexable } from './factories/factory-types'
 import NamedNode from './named-node'
 import Fetcher from './fetcher'
 import {
-  BlankNode,
   Quad_Graph,
+  Literal as TFLiteral,
   NamedNode as TFNamedNode,
   Quad_Object,
   Quad_Predicate,
   Quad,
   Quad_Subject,
-  Term
+  Term,
 } from './tf-types'
+import { namedNode } from './index'
+import BlankNode from './blank-node'
+import DefaultGraph from './default-graph'
+import Empty from './empty'
+import Literal from './literal'
+import Collection from './collection'
 
 const owlNamespaceURI = 'http://www.w3.org/2002/07/owl#'
 
@@ -136,24 +142,24 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
   /** Reverse mapping to redirection: aliases for this */
   aliases: any[]
   /** Redirections we got from HTTP */
-  HTTPRedirects: Quad[]
+  HTTPRedirects: Statement[]
   /** Array of statements with this X as subject */
-  subjectIndex: Quad[]
+  subjectIndex: Statement[]
   /** Array of statements with this X as predicate */
-  predicateIndex: Quad[]
+  predicateIndex: Statement[]
   /** Array of statements with this X as object */
-  objectIndex: Quad[]
+  objectIndex: Statement[]
   /** Array of statements with X as provenance */
-  whyIndex: Quad[]
+  whyIndex: Statement[]
   index: [
-    Quad[],
-    Quad[],
-    Quad[],
-    Quad[]
+    Statement[],
+    Statement[],
+    Statement[],
+    Statement[]
   ]
   features: FeaturesType
   static handleRDFType: Function
-  _universalVariables?: TFNamedNode[]
+  _universalVariables?: NamedNode[]
   _existentialVariables?: BlankNode[]
 
   /** Function to remove quads from the store arrays with */
@@ -299,7 +305,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
       var query = new Query('patch')
       query.pat = patch.where
       query.pat.statements.map(function (st) {
-        st.graph = target
+        st.graph = namedNode(target.value)
       })
       //@ts-ignore TODO: add sync property to Query when converting Query to typescript
       query.sync = true
@@ -395,7 +401,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     pred?: Quad_Predicate,
     obj?: Term | string,
     why?: Quad_Graph
-  ): Quad | null | this | number {
+  ): Statement | null | this | number {
     var i: number
     if (arguments.length === 1) {
       if (subj instanceof Array) {
@@ -410,7 +416,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
       return this
     }
     var actions: Function[]
-    var st: Quad
+    var st: Statement
     if (!why) {
       // system generated
       why = this.fetcher ? this.fetcher.appNode : this.rdfFactory.defaultGraph()
@@ -489,13 +495,32 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
    * Returns the symbol with canonical URI as smushed
    * @param term - An RDF node
    */
-  canon(term: Term): Term {
+  canon(term: Term): Node {
     if (!term) {
       return term
     }
     var y = this.redirections[this.id(term)]
     if (!y) {
-      return term
+      switch (term.termType) {
+        case BlankNodeTermType:
+          return new BlankNode(term.value)
+        case CollectionTermType:
+          return term as Collection // non-RDF/JS type, should just need to cast
+        case DefaultGraphTermType:
+          return new DefaultGraph()
+        case EmptyTermType: // non-RDF/JS type, should just need to cast
+          return term as Empty
+        case GraphTermType: // non-RDF/JS type, should just need to cast
+          return term as IndexedFormula
+        case LiteralTermType:
+          return new Literal(term.value, (term as TFLiteral).language, (term as TFLiteral).datatype)
+        case NamedNodeTermType:
+          return new NamedNode(term.value)
+        case VariableTermType:
+          return new Variable(term.value)
+        default:
+          throw new Error(`Term Type not recognized for canonization: ${term.termType}`)
+      }
     }
     return y
   }
@@ -1038,7 +1063,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     obj?: Quad_Object | null,
     why?: Quad_Graph | null,
     justOne?: boolean
-  ): Quad[] {
+  ): Statement[] {
     // log.debug("Matching {"+subj+" "+pred+" "+obj+"}")
     var pat = [ subj, pred, obj, why ]
     var pattern: Term[] = []
@@ -1089,12 +1114,12 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     }
     // Ok, we have picked the shortest index but now we have to filter it
     var pBest = given[iBest]
-    var possibles: Quad[] = this.index[pBest][hash[pBest]]
+    var possibles: Statement[] = this.index[pBest][hash[pBest]]
     var check = given.slice(0, iBest).concat(given.slice(iBest + 1)) // remove iBest
-    var results: Quad[] = []
+    var results: Statement[] = []
     var parts = [ 'subject', 'predicate', 'object', 'why' ]
     for (var j = 0; j < possibles.length; j++) {
-      var st: Quad | null = possibles[j]
+      var st: Statement | null = possibles[j]
 
       for (i = 0; i < check.length; i++) { // for each position to be checked
         p = check[i]
