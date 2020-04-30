@@ -495,34 +495,35 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
    * Returns the symbol with canonical URI as smushed
    * @param term - An RDF node
    */
-  canon(term: Term): Node {
+  canon(term?: Term): Node {
     if (!term) {
-      return term
+      // @@ TODO Should improve this to return proper value - doing this to keep it backward compatible
+      return term as unknown as Node
     }
-    var y = this.redirections[this.id(term)]
-    if (!y) {
-      switch (term.termType) {
-        case BlankNodeTermType:
-          return new BlankNode(term.value)
-        case CollectionTermType:
-          return term as Collection // non-RDF/JS type, should just need to cast
-        case DefaultGraphTermType:
-          return new DefaultGraph()
-        case EmptyTermType: // non-RDF/JS type, should just need to cast
-          return term as Empty
-        case GraphTermType: // non-RDF/JS type, should just need to cast
-          return term as IndexedFormula
-        case LiteralTermType:
-          return new Literal(term.value, (term as TFLiteral).language, (term as TFLiteral).datatype)
-        case NamedNodeTermType:
-          return new NamedNode(term.value)
-        case VariableTermType:
-          return new Variable(term.value)
-        default:
-          throw new Error(`Term Type not recognized for canonization: ${term.termType}`)
-      }
+    const y = this.redirections[this.id(term)]
+    if (y) {
+      return y
     }
-    return y
+    switch (term.termType) {
+      case BlankNodeTermType:
+        return new BlankNode(term.value)
+      case CollectionTermType:
+        return term as Collection // non-RDF/JS type, should just need to cast
+      case DefaultGraphTermType:
+        return new DefaultGraph()
+      case EmptyTermType: // non-RDF/JS type, should just need to cast
+        return term as Empty
+      case GraphTermType: // non-RDF/JS type, should just need to cast
+        return term as IndexedFormula
+      case LiteralTermType:
+        return new Literal(term.value, (term as TFLiteral).language, (term as TFLiteral).datatype)
+      case NamedNodeTermType:
+        return new NamedNode(term.value)
+      case VariableTermType:
+        return new Variable(term.value)
+      default:
+        throw new Error(`Term Type not recognized for canonization: ${term.termType}`)
+    }
   }
 
 
