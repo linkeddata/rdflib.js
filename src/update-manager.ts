@@ -4,7 +4,6 @@
 ** 2010-08-08 TimBL folded in Kenny's WEBDAV
 ** 2010-12-07 TimBL addred local file write code
 */
-/* source-trace 20209521a */
 import IndexedFormula from './store'
 import { docpart } from './uri'
 import Fetcher from './fetcher'
