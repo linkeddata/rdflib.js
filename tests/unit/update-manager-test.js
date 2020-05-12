@@ -74,6 +74,7 @@ describe('UpdateManager', () => {
 
   describe('update', () => {
     let updater, docuri, rterm, options, userCallback, loadStub
+    var loadStatus = 200
 
     beforeEach(() => {
       options = {}
@@ -86,7 +87,7 @@ describe('UpdateManager', () => {
       loadStub = sinon.stub(updater.store.fetcher, 'load')
        .callsFake( doc => {
          loadMeta(updater.store)
-         return Promise.resolve({ ok: true, status: 200, statusText: "Dummy stub 5"})
+         return Promise.resolve({ ok: true, status: loadStatus, statusText: "Dummy stub 5"})
       })
 
     })
@@ -103,6 +104,17 @@ describe('UpdateManager', () => {
     })
 
     it('Should patch an insert triple with no proior load', done => {
+      updater.update([], [st1], (uri, ok, text) => {
+        if (!ok) console.log(`update callback uri = ${uri}, ok = ${ok}, text = <<<${text}>>>` )
+        expect(updater.store.fetcher.load).to.have.been.calledWith(doc)
+        // expect(updater.store.fetcher.webOperation).to.have.been.called()
+        expect(ok).to.be.true()
+        done()
+      })
+    })
+
+    it('Should patch an insert triple with proior load of nonexistent file', done => {
+      loadStatus = 404
       updater.update([], [st1], (uri, ok, text) => {
         if (!ok) console.log(`update callback uri = ${uri}, ok = ${ok}, text = <<<${text}>>>` )
         expect(updater.store.fetcher.load).to.have.been.calledWith(doc)
