@@ -14,8 +14,10 @@ import {
   BlankNodeTermType,
   LiteralTermType,
   NamedNodeTermType,
+  CollectionTermType,
+  GraphTermType,
 } from '../types'
-import { defaultGraphNode } from '../utils/default-graph-uri'
+import DefaultGraph from '../default-graph'
 import {
   Comparable,
   DataFactory,
@@ -24,15 +26,14 @@ import {
 } from './factory-types'
 import { isQuad, isTerm } from '../utils/terms'
 import { NamedNode as TFNamedNode, Quad, Term } from '../tf-types'
+import Collection from "../collection";
 
 export { defaultGraphURI } from '../utils/default-graph-uri'
 
 /**
  * Gets the default graph
  */
-export function defaultGraph(): NamedNode {
-  return defaultGraphNode
-}
+const defaultGraph = new DefaultGraph()
 
 /** A basic internal RDFlib datafactory, which does not support Collections  */
 const CanonicalDataFactory: DataFactory = {
@@ -55,7 +56,7 @@ const CanonicalDataFactory: DataFactory = {
     return new BlankNode(value)
   },
 
-  defaultGraph,
+  defaultGraph: () => defaultGraph,
 
   /**
    * Compares to (rdf) objects for equality.
@@ -161,14 +162,29 @@ const CanonicalDataFactory: DataFactory = {
    * @param object - The object
    * @param graph - The containing graph
    */
-  quad(
+  quad<
+    S extends SubjectType = SubjectType,
+    P extends PredicateType = PredicateType,
+    O extends ObjectType = ObjectType,
+    G extends GraphType = GraphType
+  >(subject: S, predicate: P, object: O, graph?: G): Statement<S, P, O, G | DefaultGraph> {
+    return new Statement(subject, predicate, object, graph || defaultGraph)
+  },
+
+  /**
+   * Creates a new statement
+   * @param subject - The subject
+   * @param predicate - The predicate
+   * @param object - The object
+   * @param graph - The containing graph
+   */
+  triple(
     subject: Term | SubjectType,
     predicate: Term | PredicateType,
     object: Term | ObjectType,
     graph?: Term | GraphType
   ): Statement {
-    graph = graph || defaultGraph()
-    return new Statement(subject, predicate, object, graph)
+    return this.quad(subject, predicate, object, graph)
   },
 
   quadToNQ(q: Statement | Quad): string {
@@ -186,8 +202,11 @@ const CanonicalDataFactory: DataFactory = {
         return '<http://www.w3.org/1999/02/22-rdf-syntax-ns#nil>'
       case LiteralTermType:
         return Literal.toNT(term as Literal)
+      case GraphTermType:
       case NamedNodeTermType:
         return '<' + term.value + '>'
+      case CollectionTermType:
+        return '(' + (term as Collection).elements.map(t => this.termToNQ(t)).join(' ') + ')'
       default:
         throw new Error(`Can't serialize nonstandard term type (was '${term.termType}')`)
     }

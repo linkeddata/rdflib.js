@@ -19,7 +19,6 @@ import {
 } from './factories/factory-types'
 import { appliedFactoryMethods, arrayToStatements } from './utils'
 import {
-  BlankNode,
   RdfJsDataFactory,
   Quad_Graph,
   Quad_Object,
@@ -27,9 +26,10 @@ import {
   Quad,
   Quad_Subject,
   Term,
-  NamedNode,
 } from './tf-types'
 import Fetcher from './fetcher'
+import BlankNode from './blank-node'
+import NamedNode from './named-node'
 
 export interface FormulaOpts {
   dataCallback?: (q: Quad) => void
@@ -57,17 +57,12 @@ export default class Formula extends Node {
 
   classOrder = ClassOrder.Graph
 
-  /** The additional constraints */
-  constraints: ReadonlyArray<any>;
-
   /**
    * The accompanying fetcher instance.
    *
    * Is set by the fetcher when initialized.
    */
   fetcher?: Fetcher
-
-  initBindings: ReadonlyArray<any>
 
   isVar = 0
 
@@ -77,13 +72,8 @@ export default class Formula extends Node {
    */
   ns = Namespace
 
-  optional: ReadonlyArray<any>
-
   /** The factory used to generate statements and terms */
   rdfFactory: any
-
-  /** The stored statements */
-  statements: Quad[];
 
   /**
    * Initializes this formula
@@ -96,17 +86,13 @@ export default class Formula extends Node {
    * @param opts.rdfFactory - The rdf factory that should be used by the store
 */
   constructor (
-    statements?: Quad[],
-    constraints?: ReadonlyArray<any>,
-    initBindings?: ReadonlyArray<any>,
-    optional?: ReadonlyArray<any>,
+    public statements: Array<Statement> = [],
+    public constraints: ReadonlyArray<any> = [],
+    public initBindings: ReadonlyArray<any> = [],
+    public optional: ReadonlyArray<any> = [],
     opts: FormulaOpts = {}
     ) {
     super('')
-    this.statements = statements || []
-    this.constraints = constraints || []
-    this.initBindings = initBindings || []
-    this.optional = optional || []
 
     this.rdfFactory = (opts && opts.rdfFactory) || CanonicalDataFactory
     // Enable default factory methods on this while preserving factory context.
@@ -122,23 +108,28 @@ export default class Formula extends Node {
    * @param graph - the last part of the statement
    */
   add (
-    subject: Quad_Subject,
-    predicate: Quad_Predicate,
-    object: Quad_Object,
+    subject: Quad_Subject | Quad | Quad[],
+    predicate?: Quad_Predicate,
+    object?: Term | string,
     graph?: Quad_Graph
-  ): number {
-    return this.statements
-      .push(this.rdfFactory.quad(subject, predicate, object, graph))
+  ): Statement | null | this | number {
+    if (arguments.length === 1) {
+      (subject as Quad[]).forEach(st => this.add(st.subject, st.predicate, st.object, st.graph))
+    }
+    return this.statements.push(this.rdfFactory.quad(subject, predicate, object, graph))
   }
 
   /** Add a statment object
    * @param {Statement} statement - An existing constructed statement to add
    */
-  addStatement (statement: Quad): number {
-    return this.statements.push(statement)
+  addStatement (statement: Quad): Statement | null | this | number {
+    return this.add(statement)
   }
 
-  /** @deprecated use {this.rdfFactory.blankNode} instead */
+  /**
+   * Shortcut for adding blankNodes
+   * @param [id]
+   */
   bnode (id?: string): BlankNode {
     return this.rdfFactory.blankNode(id)
   }
@@ -170,7 +161,7 @@ export default class Formula extends Node {
     p?: Quad_Predicate | null,
     o?: Quad_Object | null,
     g?: Quad_Graph | null
-  ): Term | null {
+  ): Node | null {
     const st = this.anyStatementMatching(s, p, o, g)
     if (st == null) {
       return null
@@ -227,7 +218,7 @@ export default class Formula extends Node {
     p?: Quad_Predicate | null,
     o?: Quad_Object | null,
     g?: Quad_Graph | null
-  ): Quad | undefined {
+  ): Statement | undefined {
     let x = this.statementsMatching(s, p, o, g, true)
     if (!x || x.length === 0) {
       return undefined
@@ -262,7 +253,7 @@ export default class Formula extends Node {
     o?: Quad_Object | null,
     g?: Quad_Graph | null,
     justOne?: boolean
-  ): Quad[] {
+  ): Statement[] {
     const sts = this.statements.filter(st =>
       (!s || s.equals(st.subject)) &&
       (!p || p.equals(st.predicate)) &&
@@ -341,8 +332,8 @@ export default class Formula extends Node {
     p?: Quad_Predicate | null,
     o?: Quad_Object | null,
     g?: Quad_Graph | null
-  ): Term[] {
-    const results: Term[] = []
+  ): Node[] {
+    const results: Node[] = []
     let sts = this.statementsMatching(s, p, o, g, false)
     if (s == null) {
       for (let i = 0, len = sts.length; i < len; i++) {
@@ -358,7 +349,7 @@ export default class Formula extends Node {
       }
     } else if (g == null) {
       for (let q = 0, len3 = sts.length; q < len3; q++) {
-        results.push(sts[q].graph)
+        results.push(new NamedNode(sts[q].graph.value))
       }
     }
 
@@ -565,12 +556,12 @@ export default class Formula extends Node {
     subject: Quad_Subject,
     doc: Quad_Graph,
     excludePredicateURIs?: ReadonlyArray<string>
-  ): Quad[] {
+  ): Statement[] {
     excludePredicateURIs = excludePredicateURIs || []
     let todo = [subject]
     let done: { [k: string]: boolean } = {}
     let doneArcs: { [k: string]: boolean }  = {}
-    let result: Quad[] = []
+    let result: Statement[] = []
     let self = this
     let follow = function (x) {
       let queue = function (x) {
@@ -763,8 +754,7 @@ export default class Formula extends Node {
    * Creates a new formula with the substituting bindings applied
    * @param bindings - The bindings to substitute
    */
-  //@ts-ignore signature not compatible with Node
-  substitute(bindings: Bindings): Formula {
+  substitute<T extends Node = Formula>(bindings: Bindings): T {
     let statementsCopy = this.statements.map(function (ea) {
       return (ea as Statement).substitute(bindings)
     })
@@ -772,12 +762,9 @@ export default class Formula extends Node {
     const y = new Formula()
     y.addAll(statementsCopy as Quad[])
     console.log('indexed-form subs formula:' + y)
-    return y
+    return y as unknown as T
   }
 
-  /**
-   * @deprecated use {rdfFactory.namedNode} instead
-   */
   sym (uri: string, name?): NamedNode {
     if (name) {
       throw new Error('This feature (kb.sym with 2 args) is removed. Do not assume prefix mappings.')
@@ -797,7 +784,7 @@ export default class Formula extends Node {
     p?: Quad_Predicate | null,
     o?: Quad_Object | null,
     g?: Quad_Graph | null
-  ): Term | null | undefined {
+  ): Node | null | undefined {
     let x = this.any(s, p, o, g)
     if (x == null) {
       log.error('No value found for the() {' + s + ' ' + p + ' ' + o + '}.')

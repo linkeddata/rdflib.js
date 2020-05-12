@@ -85,10 +85,7 @@ export default class NamedNode extends Node implements TFNamedNode {
     return this.value.split('#')[1]
   }
 
-  /**
-   * Legacy getter and setter alias, node.uri
-   * @deprecated use [[value]]
-   */
+  /** Alias for value, favored by Tim */
   get uri (): string {
     return this.value
   }
