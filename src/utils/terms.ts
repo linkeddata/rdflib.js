@@ -1,5 +1,5 @@
 import {
-  ObjectType, CollectionTermType, NamedNodeTermType, VariableTermType, BlankNodeTermType, LiteralTermType, DefaultGraphTermType,
+  ObjectType, CollectionTermType, NamedNodeTermType, VariableTermType, BlankNodeTermType, LiteralTermType, GraphTermType, DefaultGraphTermType,
 } from '../types'
 import Collection from '../collection'
 import IndexedFormula from '../store'
@@ -40,7 +40,8 @@ export function isRDFlibObject(obj: any): obj is ObjectType {
     obj.termType === VariableTermType ||
     obj.termType === BlankNodeTermType ||
     obj.termType === CollectionTermType ||
-    obj.termType === LiteralTermType
+    obj.termType === LiteralTermType ||
+    obj.termType === GraphTermType
   )
 }
 
