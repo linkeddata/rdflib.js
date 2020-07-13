@@ -590,7 +590,7 @@ export default class UpdateManager {
     var retries = 0
 
     if (!wssURI) {
-      console.log('Server doies not support live updates thoughUpdates-Via :-(')
+      console.log('Server does not support live updates through Updates-Via :-(')
       return false
     }
 

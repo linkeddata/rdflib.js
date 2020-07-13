@@ -956,7 +956,7 @@ export default class Fetcher implements CallbackifyInterface {
       this.fetchQueue[originalUri] = pendingPromise
 
       // Clean up the queued promise after a time, if it's resolved
-      this.cleanupFetchRequest(originalUri, null, this.timeout)
+      this.cleanupFetchRequest(originalUri, undefined, this.timeout)
     }
 
     return pendingPromise.then(x => {
