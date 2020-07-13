@@ -1643,7 +1643,7 @@ export default class Fetcher implements CallbackifyInterface {
 
     kb.add(req, this.ns.rdfs('label'),
       kb.rdfFactory.literal(timeNow + ' Request for ' + docuri), this.appNode)
-    kb.add(req, this.ns.link('requestedURI'), kb.rdfFactory.literal(docuri), this.appNode)
+    kb.add(req, this.ns.link('requestedURI'), kb.rdfFactory.namedNode(docuri), this.appNode)
     kb.add(req, this.ns.link('status'), kb.collection(), this.appNode)
   }
 
