@@ -45,7 +45,7 @@
   "bugs": "http://github.com/linkeddata/rdflib.js/issues",
   "dependencies": {
     "@babel/runtime": "^7.10.3",
-    "async": "^3.1.x",
+    "async": "^3.2.0",
     "jsonld": "^3.1.1",
     "n3": "^1.4.0",
     "solid-auth-cli": "^1.0.14",
