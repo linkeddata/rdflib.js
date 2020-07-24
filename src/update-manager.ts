@@ -688,7 +688,7 @@ export default class UpdateManager {
     const updates = uniqueDocs.map(doc =>
       thisUpdater.update(deletions.filter(st => st.why.equals(doc)),
         insertions.filter(st => st.why.equals(doc))))
-    console.log(' @@@@@@@@@@@@     updates: ' + updates.length)
+    console.log(` @@@@@@@     updateMany to: ${updates.length} `)
     return Promise.all(updates)
   }
 
