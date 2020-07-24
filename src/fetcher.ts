@@ -919,10 +919,9 @@ export default class Fetcher implements CallbackifyInterface {
   ): T extends Array<string | NamedNode> ? Promise<Result>[] : Promise<Result> {
     options = Object.assign({}, options) // Take a copy as we add stuff to the options!!
     if (uri instanceof Array) {
-      return Promise.all(
-        // @ts-ignore Returns an array of promises. Without this ignore, the type is recursive
-        uri.map(x => { return this.load(x, Object.assign({}, options)) })
-      )
+      return uri.map((x) => {
+        return this.load(x, Object.assign({}, options)) as unknown as Promise<Result>
+      }) as T extends Array<string | NamedNode> ? Promise<Result>[] : Promise<Result>
     }
 
     const uriIn: NamedNode | string = uri as NamedNode

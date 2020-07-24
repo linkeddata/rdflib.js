@@ -411,7 +411,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
       } else if (isQuad(subj)) {
         this.add(subj.subject, subj.predicate, subj.object, subj.graph)
       } else if (isStore(subj)) {
-        this.add(subj.statements)
+        this.add((subj as any).statements)
       }
       return this
     }
