@@ -20,10 +20,15 @@ const { Fetcher, BlankNode, UpdateManager} = rdf
 const bar = $rdf.sym('https://example.com/test/foo#bar')
 const p = $rdf.sym('https://example.com/test/foo#pred')
 
+const baz = $rdf.sym('https://example.org/org/baz#baz')
+
 const doc = bar.doc()
+const doc2 = baz.doc()
+
 const meta = $rdf.sym(doc.uri + '#meta') // random graph name for meta data
 const st1 = $rdf.st(bar, p, 111, doc)
 const st2 = $rdf.st(bar, p, 222, doc)
+const st3 = $rdf.st(baz, p, 333, doc2)
 
 const httpResultsText = `
 @prefix httph: <http://www.w3.org/2007/ont/httph#> .
@@ -124,6 +129,58 @@ describe('UpdateManager', () => {
       })
     })
 
+
+  })
+
+  describe('updateMany', () => {
+    let updater, docuri, rterm, options, userCallback, loadStub
+    var loadStatus = 200
+
+    beforeEach(() => {
+      options = {}
+      userCallback = () => {}
+
+      updater = new UpdateManager()
+      updater.store.fetcher.webOperation = sinon.stub().resolves({ ok: true, status: 200, statusText: "Dummy stub 1"})
+      // updater.store.fetcher.load = sinon.stub().resolves({ ok: true, status: 200, statusText: "Dummy stub 2"})
+
+      loadStub = sinon.stub(updater.store.fetcher, 'load')
+       .callsFake( doc => {
+         loadMeta(updater.store)
+         return Promise.resolve({ ok: true, status: loadStatus, statusText: "Dummy stub 5"})
+      })
+
+    })
+
+    it('Should insert triples in more than one document', done => {
+      loadMeta(updater.store)
+      updater.updateMany([], [st1]).then(array => {
+        expect(updater.store.fetcher.webOperation).to.have.been.called() // @@ twice
+        done()
+      })
+    })
+/*
+    it('Should patch an insert triple with no proior load', done => {
+      updater.update([], [st1], (uri, ok, text) => {
+        if (!ok) console.log(`update callback uri = ${uri}, ok = ${ok}, text = <<<${text}>>>` )
+        expect(updater.store.fetcher.load).to.have.been.calledWith(doc)
+        // expect(updater.store.fetcher.webOperation).to.have.been.called()
+        expect(ok).to.be.true()
+        done()
+      })
+    })
+
+    it('Should patch an insert triple with proior load of nonexistent file', done => {
+      loadStatus = 404
+      updater.update([], [st1], (uri, ok, text) => {
+        if (!ok) console.log(`update callback uri = ${uri}, ok = ${ok}, text = <<<${text}>>>` )
+        expect(updater.store.fetcher.load).to.have.been.calledWith(doc)
+        // expect(updater.store.fetcher.webOperation).to.have.been.called()
+        expect(ok).to.be.true()
+        done()
+      })
+    })
+*/
 
   })
 

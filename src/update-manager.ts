@@ -116,9 +116,9 @@ export default class UpdateManager {
 
       var sts = kb.statementsMatching(kb.sym(uri))
 
-      console.log('UpdateManager.editable: Not MachineEditableDocument file ' +
-        uri + '\n')
-      console.log(sts.map((x) => { return (x as Statement).toNT() }).join('\n'))
+      // console.log('UpdateManager.editable: Not MachineEditableDocument file ' +
+      //   uri + '\n')
+      // console.log(sts.map((x) => { return (x as Statement).toNT() }).join('\n'))
 
       return false
       // @@ Would be nifty of course to see whether we actually have write access first.
@@ -139,7 +139,7 @@ export default class UpdateManager {
             for (var bit of wacAllow.split(',')) {
               var lr = bit.split('=')
               if (lr[0].includes('user') && !lr[1].includes('write') && !lr[1].includes('append') ) {
-                console.log('    editable? excluded by WAC-Allow: ', wacAllow)
+                // console.log('    editable? excluded by WAC-Allow: ', wacAllow)
                 return false
               }
             }
@@ -174,18 +174,18 @@ export default class UpdateManager {
             }
           }
         } else {
-          console.log('UpdateManager.editable: No response for ' + uri + '\n')
+          // console.log('UpdateManager.editable: No response for ' + uri + '\n')
         }
       }
     }
     if (requests.length === 0) {
-      console.log('UpdateManager.editable: No request for ' + uri + '\n')
+      // console.log('UpdateManager.editable: No request for ' + uri + '\n')
     } else {
       if (definitive) {
         return false // We have got a request and it did NOT say editable => not editable
       }
     }
-    console.log('UpdateManager.editable: inconclusive for ' + uri + '\n')
+    // console.log('UpdateManager.editable: inconclusive for ' + uri + '\n')
     return undefined // We don't know (yet) as we haven't had a response (yet)
   }
 
@@ -368,7 +368,7 @@ export default class UpdateManager {
         if (!uri) {
           throw new Error('No URI given for remote editing operation: ' + query)
         }
-        console.log('UpdateManager: sending update to <' + uri + '>')
+        // console.log('UpdateManager: sending update to <' + uri + '>')
 
         let options = {
           noMeta: true,
@@ -383,11 +383,11 @@ export default class UpdateManager {
           let message = 'UpdateManager: update failed for <' + uri + '> status=' +
             response.status + ', ' + response.statusText +
             '\n   for query: ' + query
-          console.log(message)
+          // console.log(message)
           throw new Error(message)
         }
 
-        console.log('UpdateManager: update Ok for <' + uri + '>')
+        // console.log('UpdateManager: update Ok for <' + uri + '>')
 
         callbackFunction(uri, response.ok, response.responseText as string, response)
       })
@@ -523,39 +523,39 @@ export default class UpdateManager {
     var updater = this
 
     if (control.reloading) {
-      console.log('   Already reloading - note this load may be out of date')
+      // console.log('   Already reloading - note this load may be out of date')
       control.outOfDate = true
       return // once only needed @@ Not true, has changed again
     }
     control.reloading = true
     var retryTimeout = 1000 // ms
     var tryReload = function () {
-      console.log('try reload - timeout = ' + retryTimeout)
+      // console.log('try reload - timeout = ' + retryTimeout)
       updater.reload(updater.store, doc, function (ok, message, response) {
         if (ok) {
           if (control.downstreamChangeListeners) {
             for (let i = 0; i < control.downstreamChangeListeners.length; i++) {
-              console.log('        Calling downstream listener ' + i)
+              // console.log('        Calling downstream listener ' + i)
               control.downstreamChangeListeners[i]()
             }
           }
           control.reloading = false
           if (control.outOfDate){
-            console.log('   Extra reload because of extra update.')
+            // console.log('   Extra reload because of extra update.')
             control.outOfDate = false
             tryReload()
           }
         } else {
           control.reloading = false
           if ((response as Response).status === 0) {
-            console.log('Network error refreshing the data. Retrying in ' +
-              retryTimeout / 1000)
+            // console.log('Network error refreshing the data. Retrying in ' +
+            // retryTimeout / 1000)
             control.reloading = true
             retryTimeout = retryTimeout * 2
             setTimeout(tryReload, retryTimeout)
           } else {
-            console.log('Error ' + (response as Response).status + 'refreshing the data:' +
-              message + '. Stopped' + doc)
+            // console.log('Error ' + (response as Response).status + 'refreshing the data:' +
+            //  message + '. Stopped' + doc)
           }
         }
       })
@@ -590,13 +590,13 @@ export default class UpdateManager {
     var retries = 0
 
     if (!wssURI) {
-      console.log('Server doies not support live updates thoughUpdates-Via :-(')
+      // console.log('Server doies not support live updates thoughUpdates-Via :-(')
       return false
     }
 
     wssURI = uriJoin(wssURI, doc.value)
     const validWssURI = wssURI.replace(/^http:/, 'ws:').replace(/^https:/, 'wss:')
-    console.log('Web socket URI ' + wssURI)
+    // console.log('Web socket URI ' + wssURI)
 
     var openWebsocket = function () {
       // From https://github.com/solid/solid-spec#live-updates
@@ -606,15 +606,15 @@ export default class UpdateManager {
       } else if (typeof window !== 'undefined' && window.WebSocket) {
         socket = (window as any).WebSocket(validWssURI)
       } else {
-        console.log('Live update disabled, as WebSocket not supported by platform :-(')
+        // console.log('Live update disabled, as WebSocket not supported by platform :-(')
         return
       }
       socket.onopen = function () {
-        console.log('    websocket open')
+        // console.log('    websocket open')
         retryTimeout = 1500 // reset timeout to fast on success
         this.send('sub ' + doc.value)
         if (retries) {
-          console.log('Web socket has been down, better check for any news.')
+          // console.log('Web socket has been down, better check for any news.')
           updater.requestDownstreamAction(doc, theHandler)
         }
       }
@@ -622,7 +622,7 @@ export default class UpdateManager {
       control.upstreamCount = 0
 
       socket.onerror = function onerror (err: Error) {
-        console.log('Error on Websocket:', err)
+        // console.log('Error on Websocket:', err)
       }
 
       // https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent
@@ -639,13 +639,13 @@ export default class UpdateManager {
       //
       //
       socket.onclose = function (event: CloseEvent) {
-        console.log('*** Websocket closed with code ' + event.code +
-          ", reason '" + event.reason + "' clean = " + event.wasClean)
+        // console.log('*** Websocket closed with code ' + event.code +
+        //   ", reason '" + event.reason + "' clean = " + event.wasClean)
         retryTimeout *= 2
         retries += 1
-        console.log('Retrying in ' + retryTimeout + 'ms') // (ask user?)
+        // console.log('Retrying in ' + retryTimeout + 'ms') // (ask user?)
         setTimeout(function () {
-          console.log('Trying websocket again')
+          // console.log('Trying websocket again')
           openWebsocket()
         }, retryTimeout)
       }
@@ -654,11 +654,11 @@ export default class UpdateManager {
           if ('upstreamCount' in control) {
             control.upstreamCount -= 1
             if (control.upstreamCount >= 0) {
-              console.log('just an echo: ' + control.upstreamCount)
+              // console.log('just an echo: ' + control.upstreamCount)
               return // Just an echo
             }
           }
-          console.log('Assume a real downstream change: ' + control.upstreamCount + ' -> 0')
+          // console.log('Assume a real downstream change: ' + control.upstreamCount + ' -> 0')
           control.upstreamCount = 0
           self.requestDownstreamAction(doc, theHandler)
         }
@@ -667,6 +667,29 @@ export default class UpdateManager {
     openWebsocket()
 
     return true
+  }
+
+  /**
+   * This high-level function updates the local store iff the web is changed successfully.
+   * Deletions, insertions may be undefined or single statements or lists or formulae (may contain bnodes which can be indirectly identified by a where clause).
+   * The `why` property of each statement must be the give the web document to be updated.
+   * The statements to be deleted and inserted may span more than one web document.
+   * @param deletions - Statement or statements to be deleted.
+   * @param insertions - Statement or statements to be inserted.
+   * @returns a promise
+   */
+  updateMany(
+    deletions: ReadonlyArray<Statement>,
+    insertions: ReadonlyArray<Statement>
+  ): Promise<void[]> {
+    const docs = deletions.concat(insertions).map(st => st.why)
+    const uniqueDocs = Array.from(new Set(docs))
+    const thisUpdater = this
+    const updates = uniqueDocs.map(doc =>
+      thisUpdater.update(deletions.filter(st => st.why.equals(doc)),
+        insertions.filter(st => st.why.equals(doc))))
+    console.log(' @@@@@@@@@@@@     updates: ' + updates.length)
+    return Promise.all(updates)
   }
 
   /**
@@ -722,7 +745,7 @@ export default class UpdateManager {
       var doc = ds.length ? ds[0].graph : is[0].graph
       if (!doc) {
         let message = 'Error patching: statement does not specify which document to patch:' + ds[0] + ', ' + is[0]
-        console.log(message)
+        // console.log(message)
         throw new Error(message)
       }
       var control = this.patchControlFor(doc)
@@ -753,7 +776,7 @@ export default class UpdateManager {
         if (secondTry) {
           throw new Error('Update: Loaded ' + doc + "but stil can't figure out what editing protcol it supports.")
         }
-        console.log(`Update: have not loaded ${doc} before: loading now...`);
+        // console.log(`Update: have not loaded ${doc} before: loading now...`);
         (this.store.fetcher.load(doc) as Promise<Response>).then(response => {
           this.update(deletions, insertions, callback, true)
         }, err => {
@@ -808,7 +831,7 @@ export default class UpdateManager {
         control.pendingUpstream = control.pendingUpstream ? control.pendingUpstream + 1 : 1
         if ('upstreamCount' in control) {
           control.upstreamCount += 1 // count changes we originated ourselves
-          console.log('upstream count up to : ' + control.upstreamCount)
+          // console.log('upstream count up to : ' + control.upstreamCount)
         }
 
         this.fire(doc.value, query, (uri, success, body, response) => {
@@ -834,7 +857,7 @@ export default class UpdateManager {
           if (control.pendingUpstream === 0 && control.downstreamAction) {
             var downstreamAction = control.downstreamAction
             delete control.downstreamAction
-            console.log('delayed downstream action:')
+            // console.log('delayed downstream action:')
             downstreamAction(doc)
           }
         })
@@ -933,7 +956,7 @@ export default class UpdateManager {
    */
   updateLocalFile (doc: NamedNode, ds, is, callbackFunction): void {
     const kb = this.store
-    console.log('Writing back to local file\n')
+    // console.log('Writing back to local file\n')
     // See http://simon-jung.blogspot.com/2007/10/firefox-extension-file-io.html
     // prepare contents of revised document
     let newSts = kb.statementsMatching(undefined, undefined, undefined, doc).slice() // copy!
@@ -960,7 +983,7 @@ export default class UpdateManager {
 
     // Write the new version back
     // create component for file writing
-    console.log('Writing back: <<<' + documentString + '>>>')
+    // console.log('Writing back: <<<' + documentString + '>>>')
     var filename = doc.value.slice(7) // chop off   file://  leaving /path
     // console.log("Writeback: Filename: "+filename+"\n")
     // @ts-ignore Where does Component come from? Perhaps deprecated?
@@ -1101,13 +1124,13 @@ export default class UpdateManager {
 
     (kb as any).fetcher.nowOrWhenFetched(doc.value, options, function (ok: boolean, body: Body, response: Response) {
       if (!ok) {
-        console.log('    ERROR reloading data: ' + body)
+        // console.log('    ERROR reloading data: ' + body)
         callbackFunction(false, 'Error reloading data: ' + body, response)
         //@ts-ignore Where does onErrorWasCalled come from?
       } else if (response.onErrorWasCalled || response.status !== 200) {
-        console.log('    Non-HTTP error reloading data! onErrorWasCalled=' +
+        // console.log('    Non-HTTP error reloading data! onErrorWasCalled=' +
           //@ts-ignore Where does onErrorWasCalled come from?
-          response.onErrorWasCalled + ' status: ' + response.status)
+          // response.onErrorWasCalled + ' status: ' + response.status)
         callbackFunction(false, 'Non-HTTP error reloading data: ' + body, response)
       } else {
         var elapsedTimeMs = Date.now() - startTime
@@ -1118,9 +1141,9 @@ export default class UpdateManager {
         doc.reloadTimeTotal += elapsedTimeMs
         doc.reloadTimeCount += 1
 
-        console.log('    Fetch took ' + elapsedTimeMs + 'ms, av. of ' +
-          doc.reloadTimeCount + ' = ' +
-          (doc.reloadTimeTotal / doc.reloadTimeCount) + 'ms.')
+        // console.log('    Fetch took ' + elapsedTimeMs + 'ms, av. of ' +
+          // doc.reloadTimeCount + ' = ' +
+          // (doc.reloadTimeTotal / doc.reloadTimeCount) + 'ms.')
 
         callbackFunction(true)
       }
