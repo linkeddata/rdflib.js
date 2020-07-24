@@ -1596,8 +1596,8 @@ export default class Fetcher implements CallbackifyInterface {
     doc: NamedNode,
     header: string
   ): undefined | string[] {
-    const kb = this.store
-    const requests = kb.each(undefined, this.ns.link('requestedURI'), doc) as Quad_Subject[]
+    const kb = this.store // look for the URI (AS A STRING NOT A NODE) for a stored request
+    const requests = kb.each(undefined, this.ns.link('requestedURI'), doc.uri) as Quad_Subject[]
 
     for (let r = 0; r < requests.length; r++) {
       let request = requests[r]
