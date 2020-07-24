@@ -916,12 +916,12 @@ export default class Fetcher implements CallbackifyInterface {
   load <T extends NamedNode | string | Array<string | NamedNode>>(
     uri: T,
     options: Options = {}
-  ): T extends Array<string | NamedNode> ? Promise<Result>[] : Promise<Result> {
+  ): T extends Array<string | NamedNode> ? Promise<Result[]> : Promise<Result> {
     options = Object.assign({}, options) // Take a copy as we add stuff to the options!!
     if (uri instanceof Array) {
-      return uri.map((x) => {
+      return Promise.all(uri.map((x) => {
         return this.load(x, Object.assign({}, options)) as unknown as Promise<Result>
-      }) as T extends Array<string | NamedNode> ? Promise<Result>[] : Promise<Result>
+      })) as T extends Array<string | NamedNode> ? Promise<Result[]> : Promise<Result>
     }
 
     const uriIn: NamedNode | string = uri as NamedNode
