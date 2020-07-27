@@ -956,7 +956,7 @@ export default class Fetcher implements CallbackifyInterface {
       this.fetchQueue[originalUri] = pendingPromise
 
       // Clean up the queued promise after a time, if it's resolved
-      this.cleanupFetchRequest(originalUri, null, this.timeout)
+      this.cleanupFetchRequest(originalUri, undefined, this.timeout)
     }
 
     return pendingPromise.then(x => {
@@ -1597,7 +1597,8 @@ export default class Fetcher implements CallbackifyInterface {
     header: string
   ): undefined | string[] {
     const kb = this.store // look for the URI (AS A STRING NOT A NODE) for a stored request
-    const requests = kb.each(undefined, this.ns.link('requestedURI'), doc.uri) as Quad_Subject[]
+    const docuri: string = doc.value
+    const requests = kb.each(undefined, this.ns.link('requestedURI'), kb.rdfFactory.literal(docuri)) as Quad_Subject[]
 
     for (let r = 0; r < requests.length; r++) {
       let request = requests[r]
@@ -1643,6 +1644,8 @@ export default class Fetcher implements CallbackifyInterface {
 
     kb.add(req, this.ns.rdfs('label'),
       kb.rdfFactory.literal(timeNow + ' Request for ' + docuri), this.appNode)
+    // We store the docuri as a string, not as a node,
+    // see https://github.com/linkeddata/rdflib.js/pull/427#pullrequestreview-447910061
     kb.add(req, this.ns.link('requestedURI'), kb.rdfFactory.literal(docuri), this.appNode)
     kb.add(req, this.ns.link('status'), kb.collection(), this.appNode)
   }
