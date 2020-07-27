@@ -1596,7 +1596,7 @@ export default class Fetcher implements CallbackifyInterface {
     doc: NamedNode,
     header: string
   ): undefined | string[] {
-    const kb = this.store
+    const kb = this.store // look for the URI (AS A STRING NOT A NODE) for a stored request
     const docuri: string = doc.value
     const requests = kb.each(undefined, this.ns.link('requestedURI'), kb.rdfFactory.literal(docuri)) as Quad_Subject[]
 
