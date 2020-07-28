@@ -33,8 +33,18 @@ for more information.
 
 ## Install
 
+#### Browser (using a bundler like Webpack)
+
 ```bash
-npm install
+npm install rdflib solid-auth-client
+```
+
+#### Browser (generating a <script> file to include)
+
+```bash
+git clone git@github.com:linkeddata/rdflib.js.git;
+cd rdflib.js;
+npm install;
 ```
 
 Generate the dist directory
