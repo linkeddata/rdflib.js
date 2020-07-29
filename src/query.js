@@ -36,17 +36,18 @@ export class Query {
 }
 
 /**
- * This function will match a pattern to the current kb
+ * This function will match a pattern to the current Store
  *
  * The callback function is called whenever a match is found
- * When fetcher is supplied this will be called to satisfy any resource requests
- * currently not in the kb. The fetcher function needs to be defined manualy and
- * should call $rdf.Util.AJAR_handleNewTerm to process the requested resource.
+ * When fetcher is supplied this will be called to load from the web
+ * any new nodes as they are discovered.  This will cause the query to traverse the
+ * graph of linked data, sometimes called "Link Following Query"
  *
  * @param myQuery - a knowledgebase containing a pattern to use as query
  * @param callback - whenever the pattern in myQuery is met this is called with
  *  the new bindings as parameter
- * @param fetcher - IGNORED OBSOLETE  f.fetecher is used as a Fetcher instance to do this.
+ * @param fetcher? - If and only if,  you want link following, give a fetcher
+ *                which has been created for the quadstore being queried.
  * @param onDone -  callback when query finished
  */
 export function indexedFormulaQuery (myQuery, callback, fetcher, onDone) {
@@ -345,7 +346,7 @@ export function indexedFormulaQuery (myQuery, callback, fetcher, onDone) {
   * @param g - pattern formula (may have vars)
   * @param bindingsSoFar  - bindings accumulated in matching to date
   * @param level - spaces to indent stuff also lets you know what level of recursion you're at
-  * @param fetcher - function (term, requestedBy) - myFetcher / AJAR_handleNewTerm / the sort
+  * @param fetcher - function (term, requestedBy) If you want link following
   * @param localCallback - function(bindings, pattern, branch) called on sucess
   * @returns nothing
   *
@@ -353,7 +354,7 @@ export function indexedFormulaQuery (myQuery, callback, fetcher, onDone) {
   ***/
   var match = function (f, g, bindingsSoFar, level, fetcher, localCallback, branch) {
     log.debug('Match begins, Branch count now: ' + branch.count + ' for ' + branch.pattern_debug)
-    var sf = f.fetcher ? f.fetcher : null
+
     // log.debug("match: f has "+f.statements.length+", g has "+g.statements.length)
     var pattern = g.statements
     if (pattern.length === 0) { // when it's satisfied all the pattern triples
@@ -385,11 +386,11 @@ export function indexedFormulaQuery (myQuery, callback, fetcher, onDone) {
     // log.debug(level + "Match "+n+" left, bs so far:"+bindingDebug(bindingsSoFar))
 
     // Follow links from variables in query
-    if (sf) { // Fetcher is used to fetch URIs, function first term is a URI term, second is the requester
+    if (fetcher) { // Fetcher is used to fetch URIs, function first term is a URI term, second is the requester
       var id = 'match' + matchIndex++
       var fetchResource = function (requestedTerm, id) {
         var docuri = requestedTerm.uri.split('#')[0]
-        sf.nowOrWhenFetched(docuri, undefined, function (ok, body, xhr) {
+        fetcher.nowOrWhenFetched(docuri, undefined, function (ok, body, xhr) {
           if (!ok) {
             console.log('Error following link to <' + requestedTerm.uri + '> in query: ' + body)
           }
@@ -400,20 +401,20 @@ export function indexedFormulaQuery (myQuery, callback, fetcher, onDone) {
       for (i = 0; i < n; i++) {
         item = pattern[i] // for each of the triples in the query
         if (bindingsSoFar[item.subject] !== undefined &&
-            bindingsSoFar[item.subject].uri && sf &&
-            sf.getState(docpart(bindingsSoFar[item.subject].uri)) === 'unrequested') {
+            bindingsSoFar[item.subject].uri && fetcher &&
+            fetcher.getState(docpart(bindingsSoFar[item.subject].uri)) === 'unrequested') {
           // fetch the subject info and return to id
           fetchResource(bindingsSoFar[item.subject], id)
           return // only look up one per line this time, but we will come back again though match
         }
         if (bindingsSoFar[item.object] !== undefined &&
-            bindingsSoFar[item.object].uri && sf &&
-            sf.getState(docpart(bindingsSoFar[item.object].uri)) === 'unrequested') {
+            bindingsSoFar[item.object].uri && fetcher &&
+            fetcher.getState(docpart(bindingsSoFar[item.object].uri)) === 'unrequested') {
           fetchResource(bindingsSoFar[item.object], id)
           return
         }
       }
-    } // if sf
+    } // if fetcher
     match2(f, g, bindingsSoFar, level, fetcher, localCallback, branch)
   } // match
 

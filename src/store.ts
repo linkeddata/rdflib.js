@@ -808,16 +808,16 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
    *
    * @param myQuery The query to be run
    * @param callback Function to call when bindings
-   * @param dummy OBSOLETE - do not use this
-   * @param onDone OBSOLETE - do not use this
+   * @param Fetcher | null  If you want the query to do link following
+   * @param onDone OBSOLETE - do not use this // @@ Why not ?? Called when query complete
    */
   query(
     myQuery: Query,
     callback: (bindings: Bindings) => void,
-    dummy?: Fetcher | null,
+    fetcher?: Fetcher | null,
     onDone?: () => void
   ): void {
-    return indexedFormulaQuery.call(this, myQuery, callback, dummy, onDone)
+    return indexedFormulaQuery.call(this, myQuery, callback, fetcher, onDone)
   }
 
   /**
