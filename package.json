@@ -118,7 +118,7 @@
     "test:unit": "mocha --growl --require ./tests/babel-register.js tests/unit/**-test.*",
     "test:unit:egp": "mocha --require ./tests/babel-register.js tests/unit/fetcher-egp-test.js",
     "test:unit:dev": "mocha --watch --growl --require ./tests/babel-register.js tests/unit/**-test.js",
-    "watch": "babel src --extensions \".ts,.js\" --env-name esm -d esm --watch"
+    "watch": "babel src --extensions \".ts,.js\" --env-name esm -d esm --watch & babel src --extensions \".ts,.js\" -d lib --watch"
   },
   "files": [
     ".babelrc",
