@@ -754,8 +754,14 @@ export default class Fetcher implements CallbackifyInterface {
 
   static crossSiteProxy (uri: string): undefined | any {
     if (Fetcher.crossSiteProxyTemplate) {
-      return Fetcher.crossSiteProxyTemplate
+      if (Fetcher.crossSiteProxyTemplate.indexOf('={uri}') !== -1){
+        return Fetcher.crossSiteProxyTemplate
         .replace('{uri}', encodeURIComponent(uri))
+      } else {
+        return Fetcher.crossSiteProxyTemplate
+        .replace('{uri}', encodeURI(uri))
+      }
+      
     } else {
       return undefined
     }
@@ -831,8 +837,13 @@ export default class Fetcher implements CallbackifyInterface {
         typeof document !== 'undefined' && document.location &&
         ('' + document.location).slice(0, 6) === 'https:' && // origin is secure
         uri.slice(0, 5) === 'http:') { // requested data is not
-      return Fetcher.crossSiteProxyTemplate
-        .replace('{uri}', encodeURIComponent(uri))
+          if (Fetcher.crossSiteProxyTemplate.indexOf('={uri}') !== -1){
+            return Fetcher.crossSiteProxyTemplate
+            .replace('{uri}', encodeURIComponent(uri))
+          } else {
+            return Fetcher.crossSiteProxyTemplate
+            .replace('{uri}', encodeURI(uri))
+          }
     }
 
     return uri
