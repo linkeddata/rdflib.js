@@ -114,7 +114,7 @@ export default class UpdateManager {
         return 'LOCALFILE'
       }
 
-      var sts = kb.statementsMatching(kb.sym(uri))
+      // var sts = kb.statementsMatching(kb.sym(uri))
 
       // console.log('UpdateManager.editable: Not MachineEditableDocument file ' +
       //   uri + '\n')
