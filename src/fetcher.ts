@@ -39,9 +39,9 @@ import * as Util from './utils-js'
 import serialize from './serialize'
 
 // @ts-ignore This is injected
-import { fetch as solidAuthCli } from 'solid-auth-cli'
+import solidAuthCli from 'solid-auth-cli'
 // @ts-ignore This is injected
-import { fetch as solidAuthClient } from 'solid-auth-client'
+import solidAuthClient from 'solid-auth-client'
 import {
   ContentType, TurtleContentType, RDFXMLContentType, XHTMLContentType
 } from './types'
@@ -54,9 +54,6 @@ import {
   Quad_Predicate,
   Quad_Subject
 } from './tf-types'
-
-// This is a special fetch which does OIDC auth, catching 401 errors
-const fetch = typeof window === 'undefined' ? solidAuthCli : solidAuthClient
 
 const Parsable = {
   'text/n3': true,
@@ -723,10 +720,10 @@ export default class Fetcher implements CallbackifyInterface {
     this.ns = getNS(this.store.rdfFactory)
     this.timeout = options.timeout || 30000
 
-    this._fetch = options.fetch || fetch
+    this._fetch = options.fetch || this.defaultFetch()
 
     if (!this._fetch) {
-      throw new Error('No _fetch function availble for Fetcher')
+      throw new Error('No _fetch function available for Fetcher')
     }
 
     this.appNode = this.store.rdfFactory.blankNode()
@@ -752,6 +749,16 @@ export default class Fetcher implements CallbackifyInterface {
     Object.keys(options.handlers || defaultHandlers).map(key => this.addHandler(defaultHandlers[key]))
   }
 
+  defaultFetch() {
+    // This is a special fetch which does OIDC auth, catching 401 errors
+    const solidClient = typeof window === 'undefined' ? solidAuthCli : solidAuthClient;
+    if (typeof solidClient !== 'undefined') {
+      return solidClient.fetch
+    }
+
+    // Default to the web standard if none other are available :)
+    return typeof window === 'undefined' ? undefined : window.fetch
+  }
   static crossSiteProxy (uri: string): undefined | any {
     if (Fetcher.crossSiteProxyTemplate) {
       return Fetcher.crossSiteProxyTemplate
@@ -916,13 +923,12 @@ export default class Fetcher implements CallbackifyInterface {
   load <T extends NamedNode | string | Array<string | NamedNode>>(
     uri: T,
     options: Options = {}
-  ): T extends Array<string | NamedNode> ? Promise<Result>[] : Promise<Result> {
+  ): T extends Array<string | NamedNode> ? Promise<Result[]> : Promise<Result> {
     options = Object.assign({}, options) // Take a copy as we add stuff to the options!!
     if (uri instanceof Array) {
-      return Promise.all(
-        // @ts-ignore Returns an array of promises. Without this ignore, the type is recursive
-        uri.map(x => { return this.load(x, Object.assign({}, options)) })
-      )
+      return Promise.all(uri.map((x) => {
+        return this.load(x, Object.assign({}, options)) as unknown as Promise<Result>
+      })) as T extends Array<string | NamedNode> ? Promise<Result[]> : Promise<Result>
     }
 
     const uriIn: NamedNode | string = uri as NamedNode

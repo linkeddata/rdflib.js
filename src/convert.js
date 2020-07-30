@@ -24,7 +24,9 @@ export function convertToJson (n3String, jsonCallback) {
       try {
         jsonld.fromRDF(result, {
           format: 'application/nquads'
-        }, callback)
+        }).then((result) => {
+          callback(null, result)
+        })
       } catch (err) {
         callback(err)
       }
