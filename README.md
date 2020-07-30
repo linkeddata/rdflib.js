@@ -36,7 +36,7 @@ for more information.
 #### Browser (using a bundler like Webpack)
 
 ```bash
-npm install rdflib solid-auth-client
+npm install rdflib solid-auth-client solid-auth-cli
 ```
 
 #### Browser (generating a <script> file to include)
