@@ -48,10 +48,10 @@
     "async": "^3.2.0",
     "jsonld": "^3.1.1",
     "n3": "^1.4.0",
-    "solid-auth-cli": "^1.0.14",
     "xmldom": "^0.3.0"
   },
   "peerDependencies": {
+    "solid-auth-cli": "^1.0.14",
     "solid-auth-client": "^2.3.0"
   },
   "devDependencies": {
@@ -80,6 +80,7 @@
     "rimraf": "^3.0.0",
     "sinon": "^9.0.2",
     "sinon-chai": "^3.3.0",
+    "solid-auth-cli": "^1.0.14",
     "solid-auth-client": "^2.3.0",
     "source-map-loader": "^1.0.1",
     "typedoc": "^0.17.7",
