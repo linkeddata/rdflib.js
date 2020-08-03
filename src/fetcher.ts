@@ -835,7 +835,6 @@ export default class Fetcher implements CallbackifyInterface {
     // prevent it loading insecure http: stuff so we need proxy.
     if (Fetcher.crossSiteProxyTemplate &&
         typeof document !== 'undefined' && document.location &&
-        ('' + document.location).slice(0, 6) === 'https:' && // origin is secure
         uri.slice(0, 5) === 'http:') { // requested data is not
           if (Fetcher.crossSiteProxyTemplate.indexOf('={uri}') !== -1){
             return Fetcher.crossSiteProxyTemplate
