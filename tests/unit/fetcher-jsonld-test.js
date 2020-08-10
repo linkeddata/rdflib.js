@@ -12,7 +12,7 @@ describe('Given a JSON-LD resource', () => {
     beforeEach(() => {
         const docContents = `
         {
-            "@id": ${uri},
+            "@id": "${uri}",
             "https://predicate.example": "value"
         }
         `
