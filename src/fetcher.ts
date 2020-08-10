@@ -1102,7 +1102,7 @@ export default class Fetcher implements CallbackifyInterface {
 
     let { actualProxyURI } = options
 
-    return this._fetch((actualProxyURI as string), options)
+    return this._fetch((actualProxyURI as string), options as any)
       .then(response => this.handleResponse(response, docuri, options),
       error => { // @@ handleError?
         // @ts-ignore Invalid response object
@@ -1541,7 +1541,7 @@ export default class Fetcher implements CallbackifyInterface {
     Fetcher.setCredentials(uri, options)
 
     return new Promise(function (resolve, reject) {
-      fetcher._fetch(uri, options).then(response => {
+      fetcher._fetch(uri, options as any).then(response => {
         if (response.ok) {
           if (method === 'PUT' || method === 'PATCH' || method === 'POST' || method === 'DELETE') {
             fetcher.invalidateCache (uri)
