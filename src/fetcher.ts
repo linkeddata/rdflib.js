@@ -37,11 +37,8 @@ import * as Uri from './uri'
 import { isCollection, isNamedNode} from './utils/terms'
 import * as Util from './utils-js'
 import serialize from './serialize'
+import crossFetch from 'cross-fetch'
 
-// @ts-ignore This is injected
-import solidAuthCli from 'solid-auth-cli'
-// @ts-ignore This is injected
-import solidAuthClient from 'solid-auth-client'
 import {
   ContentType, TurtleContentType, RDFXMLContentType, XHTMLContentType
 } from './types'
@@ -720,8 +717,7 @@ export default class Fetcher implements CallbackifyInterface {
     this.ns = getNS(this.store.rdfFactory)
     this.timeout = options.timeout || 30000
 
-    this._fetch = options.fetch || this.defaultFetch()
-
+    this._fetch = options.fetch || crossFetch
     if (!this._fetch) {
       throw new Error('No _fetch function available for Fetcher')
     }
@@ -749,16 +745,6 @@ export default class Fetcher implements CallbackifyInterface {
     Object.keys(options.handlers || defaultHandlers).map(key => this.addHandler(defaultHandlers[key]))
   }
 
-  defaultFetch() {
-    // This is a special fetch which does OIDC auth, catching 401 errors
-    const solidClient = typeof window === 'undefined' ? solidAuthCli : solidAuthClient;
-    if (typeof solidClient !== 'undefined') {
-      return solidClient.fetch
-    }
-
-    // Default to the web standard if none other are available :)
-    return typeof window === 'undefined' ? undefined : window.fetch
-  }
   static crossSiteProxy (uri: string): undefined | any {
     if (Fetcher.crossSiteProxyTemplate) {
       return Fetcher.crossSiteProxyTemplate
