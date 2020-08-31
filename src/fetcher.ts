@@ -37,7 +37,7 @@ import * as Uri from './uri'
 import { isCollection, isNamedNode} from './utils/terms'
 import * as Util from './utils-js'
 import serialize from './serialize'
-import crossFetch from 'cross-fetch'
+import crossFetch, { Headers } from 'cross-fetch'
 
 import {
   ContentType, TurtleContentType, RDFXMLContentType, XHTMLContentType

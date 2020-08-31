@@ -11,6 +11,7 @@ import * as rdf from '../../src/index'
 import NamedNode from '../../src/named-node'
 import IndexedFormula from '../../src/store'
 import CanonicalDataFactory from '../../src/factories/canonical-data-factory'
+import { Headers, Response } from 'cross-fetch'
 
 chai.use(sinonChai)
 chai.use(dirtyChai)
