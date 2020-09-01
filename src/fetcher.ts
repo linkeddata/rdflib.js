@@ -51,6 +51,7 @@ import {
   Quad_Predicate,
   Quad_Subject
 } from './tf-types'
+import jsonldParser from './jsonldparser'
 
 const Parsable = {
   'text/n3': true,
@@ -476,6 +477,39 @@ class HTMLHandler extends Handler {
 }
 HTMLHandler.pattern = new RegExp('text/html')
 
+class JsonLdHandler extends Handler {
+  static toString () {
+    return 'JsonLdHandler'
+  }
+  static register (fetcher: Fetcher) {
+    fetcher.mediatypes['application/ld+json'] = {
+      'q': 0.4
+    }
+  }
+  parse (
+    fetcher: Fetcher,
+    responseText: string,
+    options: {
+      req: Quad_Subject
+      original: Quad_Subject
+      resource: Quad_Subject
+    } & Options,
+    response: ExtendedResponse
+  ): ExtendedResponse | Promise<FetchError> {
+    const kb = fetcher.store
+    return new Promise((resolve, reject) => {
+      try {
+        jsonldParser (responseText, kb, options.original.value, resolve)
+      } catch (err) {
+        const msg = 'Error trying to parse ' + options.resource +
+          ' as JSON-LD:\n' + err  // not err.stack -- irrelevant
+        resolve(fetcher.failFetch(options, msg, 'parse_error', response))
+      }
+    })
+  }
+}
+JsonLdHandler.pattern = /application\/ld\+json/
+
 class TextHandler extends Handler {
   static toString () {
     return 'TextHandler'
@@ -575,7 +609,7 @@ class N3Handler extends Handler {
 N3Handler.pattern = new RegExp('(application|text)/(x-)?(rdf\\+)?(n3|turtle)')
 
 const defaultHandlers = {
-  RDFXMLHandler, XHTMLHandler, XMLHandler, HTMLHandler, TextHandler, N3Handler
+  RDFXMLHandler, XHTMLHandler, XMLHandler, HTMLHandler, TextHandler, N3Handler, JsonLdHandler
 }
 
 function isXHTML (responseText) {
@@ -1881,7 +1915,6 @@ export default class Fetcher implements CallbackifyInterface {
     const responseNode = this.saveResponseMetadata(response, options)
 
     const contentType = this.normalizedContentType(options, headers) || ''
-
     let contentLocation = headers.get('content-location')
 
     // this.fireCallbacks('recv', xhr.args)
