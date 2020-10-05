@@ -31,8 +31,11 @@ describe('Given a JSON-LD resource', () => {
 
         it('then the triples from the document can be found in the store', async () => {
             await fetcher.load(uri);
-            const match = store.anyStatementMatching(rdf.sym(uri))
-            expect(match.subject.value).to.equal(uri)
+            const match = store.anyStatementMatching(rdf.sym(uri), rdf.sym('https://predicate.example'), rdf.literal('value'));
+            expect(match.subject.value).to.equal(uri);
+            expect(match.predicate.value).to.equal('https://predicate.example');
+            expect(match.object.value).to.equal('value');
+
         });
     });
 

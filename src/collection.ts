@@ -104,7 +104,7 @@ export default class Collection<
   substitute (bindings: Bindings) {
     const elementsCopy = this.elements.map((ea) => ea.substitute(bindings))
 
-    return new Collection(elementsCopy)
+    return new Collection(elementsCopy) as Collection<Node | Collection<any> | Literal | Variable>
   }
 
   toNT () {
