@@ -373,11 +373,7 @@ describe('Fetcher', () => {
     it('should set the Accept header', () => {
       options = fetcher.initFetchOptions(uri, options)
 
-<<<<<<< HEAD
-      let expectedHeader = 'image/*;q=0.9, */*;q=0.1, application/rdf+xml;q=0.9, application/xhtml+xml, text/xml;q=0.5, application/xml;q=0.5, text/html;q=0.9, text/plain;q=0.5, text/n3;q=1.0, text/turtle;q=1, application/ld+json;q=0.4'
-=======
       let expectedHeader = 'image/*;q=0.9, */*;q=0.1, application/rdf+xml;q=0.9, application/xhtml+xml, text/xml;q=0.5, application/xml;q=0.5, text/html;q=0.9, text/plain;q=0.5, text/n3;q=1.0, text/turtle;q=1, application/ld+json;q=0.9'
->>>>>>> master
 
       expect(options.headers['accept']).to.equal(expectedHeader)
     })
