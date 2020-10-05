@@ -486,7 +486,7 @@ class JsonLdHandler extends Handler {
   }
   static register (fetcher: Fetcher) {
     fetcher.mediatypes['application/ld+json'] = {
-      'q': 0.4
+      'q': 0.9
     }
   }
   parse (
