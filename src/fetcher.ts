@@ -1707,9 +1707,13 @@ export default class Fetcher implements CallbackifyInterface {
     kb.add(responseNode, this.ns.http('statusText'),
     kb.rdfFactory.literal(response.statusText), responseNode)
 
-    if (!options.resource.value.startsWith('http')) {
-      return responseNode
-    }
+    // save metadata based on its existence, not on the protocol
+    if (!response.headers) {
+      return responseNode;
+    } 
+    // if (!options.resource.value.startsWith('http')) {
+    //  return responseNode
+    // }
 
     // Save the response headers
     response.headers.forEach((value, header) => {
