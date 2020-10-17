@@ -4,7 +4,7 @@ import BlankNode from './blank-node'
 import Collection from './collection'
 import * as convert from './convert'
 import Empty from './empty'
-import Fetcher from './fetcher'
+import Fetcher, { AutoInitOptions, ExtendedResponse, FetchError } from './fetcher'
 import Formula from './formula'
 import Store from './store'
 import jsonParser from './jsonparser'
@@ -69,6 +69,9 @@ export {
   DataFactory,
   Empty,
   Fetcher,
+  AutoInitOptions,
+  ExtendedResponse,
+  FetchError,
   Formula,
   Store,
   jsonParser,
