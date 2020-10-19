@@ -1,4 +1,4 @@
-/* global $SolidTestEnvironment */
+/* global $SolidTestEnvironment, solidFetcher */
 /**
  *
  * Project: rdflib.js
@@ -751,7 +751,7 @@ export default class Fetcher implements CallbackifyInterface {
     this.ns = getNS(this.store.rdfFactory)
     this.timeout = options.timeout || 30000
 
-    this._fetch = options.fetch || (window ? window.solidFetcher : undefined) || crossFetch
+    this._fetch = options.fetch || solidFetcher || crossFetch
     if (!this._fetch) {
       throw new Error('No _fetch function available for Fetcher')
     }
