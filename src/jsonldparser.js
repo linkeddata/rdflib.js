@@ -70,29 +70,28 @@ export default function jsonldParser (str, kb, base, callback) {
     ? base.value
     : base
 
-  return jsonld
-    .flatten(JSON.parse(str), null, { base: baseString })
-    .then((flattened) => flattened.reduce((store, flatResource) => {
-      const id = flatResource['@id']
-        ? kb.rdfFactory.namedNode(flatResource['@id'])
-        : kb.rdfFactory.blankNode()
-
-      for (const property of Object.keys(flatResource)) {
-        if (property === '@id') {
-          continue
-        }
-        const value = flatResource[property]
-        if (Array.isArray(value)) {
-          for (let i = 0; i < value.length; i++) {
-            kb.addStatement(kb.rdfFactory.quad(id, kb.rdfFactory.namedNode(property), jsonldObjectToTerm(kb, value[i])))
-          }
-        } else {
-          kb.addStatement(kb.rdfFactory.quad(id, kb.rdfFactory.namedNode(property), jsonldObjectToTerm(kb, value)))
-        }
+  // FIXME: https://github.com/digitalbazaar/jsonld.js/issues/417
+  const flatResource = JSON.parse(str);
+  const id = flatResource['@id']
+    ? kb.rdfFactory.namedNode(flatResource['@id'])
+    : kb.rdfFactory.blankNode()
+  for (const property of Object.keys(flatResource)) {
+    if (property === '@id') {
+      continue
+    }
+    const value = flatResource[property]
+    if (property === '@type') {
+      property = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type'
+    } else {
+      property = new URL(property, base).toString()
+    }
+    if (Array.isArray(value)) {
+      for (let i = 0; i < value.length; i++) {
+        kb.addStatement(kb.rdfFactory.quad(id, kb.rdfFactory.namedNode(property), jsonldObjectToTerm(kb, value[i])))
       }
-
-      return kb
-    }, kb))
-    .then(callback)
-    .catch(callback)
+    } else {
+      kb.addStatement(kb.rdfFactory.quad(id, kb.rdfFactory.namedNode(property), jsonldObjectToTerm(kb, value)))
+    }
+  }
+  callback(kb)
 }
