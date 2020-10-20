@@ -9,8 +9,7 @@ const MANIFESTS = [ 'fetched/html4-manifest.ttl',
                     'fetched/xhtml11-manifest.ttl']
 
 const $rdf = require('./../../lib/index.js')
-const auth = require('solid-auth-cli')
-const fetch = auth.fetch
+const fetch = require('node-fetch')
 
 const mv = $rdf.Namespace('http://www.w3.org/2001/sw/DataAccess/tests/test-manifest#')
 const rat = $rdf.Namespace('http://rdfa.info/vocabs/rdfa-test#')
