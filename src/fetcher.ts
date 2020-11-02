@@ -1028,7 +1028,7 @@ export default class Fetcher implements CallbackifyInterface {
     options.baseURI = options.baseURI || uri // Preserve though proxying etc
     options.original = kb.rdfFactory.namedNode(options.baseURI)
     options.req = kb.bnode()
-    options.headers = options.headers || new Headers
+    options.headers = options.headers || new Headers()
 
     if (options.contentType) {
       options.headers['content-type'] = options.contentType
@@ -1118,6 +1118,11 @@ export default class Fetcher implements CallbackifyInterface {
     }
 
     let { actualProxyURI } = options
+
+    // Map might get mistakenly added into headers
+    if (options.headers && options.headers.map) {
+      delete options.headers.map
+    }
 
     return this._fetch((actualProxyURI as string), options)
       .then(response => this.handleResponse(response, docuri, options),
