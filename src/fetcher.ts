@@ -37,11 +37,8 @@ import * as Uri from './uri'
 import { isCollection, isNamedNode} from './utils/terms'
 import * as Util from './utils-js'
 import serialize from './serialize'
+import crossFetch, { Headers } from 'cross-fetch'
 
-// @ts-ignore This is injected
-import solidAuthCli from 'solid-auth-cli'
-// @ts-ignore This is injected
-import solidAuthClient from 'solid-auth-client'
 import {
   ContentType, TurtleContentType, RDFXMLContentType, XHTMLContentType
 } from './types'
@@ -54,6 +51,7 @@ import {
   Quad_Predicate,
   Quad_Subject
 } from './tf-types'
+import jsonldParser from './jsonldparser'
 
 const DEFAULT_TIMEOUT_MS = 120000 // 2 mins
 
@@ -118,6 +116,7 @@ interface ExtendedResponse extends Response {
 declare global {
   interface Window {
     panes?: any
+    solidFetcher?: any
   }
 }
 
@@ -481,6 +480,39 @@ class HTMLHandler extends Handler {
 }
 HTMLHandler.pattern = new RegExp('text/html')
 
+class JsonLdHandler extends Handler {
+  static toString () {
+    return 'JsonLdHandler'
+  }
+  static register (fetcher: Fetcher) {
+    fetcher.mediatypes['application/ld+json'] = {
+      'q': 0.9
+    }
+  }
+  parse (
+    fetcher: Fetcher,
+    responseText: string,
+    options: {
+      req: Quad_Subject
+      original: Quad_Subject
+      resource: Quad_Subject
+    } & Options,
+    response: ExtendedResponse
+  ): ExtendedResponse | Promise<FetchError> {
+    const kb = fetcher.store
+    return new Promise((resolve, reject) => {
+      try {
+        jsonldParser (responseText, kb, options.original.value, resolve)
+      } catch (err) {
+        const msg = 'Error trying to parse ' + options.resource +
+          ' as JSON-LD:\n' + err  // not err.stack -- irrelevant
+        resolve(fetcher.failFetch(options, msg, 'parse_error', response))
+      }
+    })
+  }
+}
+JsonLdHandler.pattern = /application\/ld\+json/
+
 class TextHandler extends Handler {
   static toString () {
     return 'TextHandler'
@@ -580,7 +612,7 @@ class N3Handler extends Handler {
 N3Handler.pattern = new RegExp('(application|text)/(x-)?(rdf\\+)?(n3|turtle)')
 
 const defaultHandlers = {
-  RDFXMLHandler, XHTMLHandler, XMLHandler, HTMLHandler, TextHandler, N3Handler
+  RDFXMLHandler, XHTMLHandler, XMLHandler, HTMLHandler, TextHandler, N3Handler, JsonLdHandler
 }
 
 function isXHTML (responseText) {
@@ -722,8 +754,7 @@ export default class Fetcher implements CallbackifyInterface {
     this.ns = getNS(this.store.rdfFactory)
     this.timeout = options.timeout || DEFAULT_TIMEOUT_MS
 
-    this._fetch = options.fetch || this.defaultFetch()
-
+    this._fetch = options.fetch || (typeof window !== 'undefined' && window.solidFetcher) || crossFetch
     if (!this._fetch) {
       throw new Error('No _fetch function available for Fetcher')
     }
@@ -751,16 +782,6 @@ export default class Fetcher implements CallbackifyInterface {
     Object.keys(options.handlers || defaultHandlers).map(key => this.addHandler(defaultHandlers[key]))
   }
 
-  defaultFetch() {
-    // This is a special fetch which does OIDC auth, catching 401 errors
-    const solidClient = typeof window === 'undefined' ? solidAuthCli : solidAuthClient;
-    if (typeof solidClient !== 'undefined') {
-      return solidClient.fetch
-    }
-
-    // Default to the web standard if none other are available :)
-    return typeof window === 'undefined' ? undefined : window.fetch
-  }
   static crossSiteProxy (uri: string): undefined | any {
     if (Fetcher.crossSiteProxyTemplate) {
       return Fetcher.crossSiteProxyTemplate
@@ -1897,7 +1918,6 @@ export default class Fetcher implements CallbackifyInterface {
     const responseNode = this.saveResponseMetadata(response, options)
 
     const contentType = this.normalizedContentType(options, headers) || ''
-
     let contentLocation = headers.get('content-location')
 
     // this.fireCallbacks('recv', xhr.args)

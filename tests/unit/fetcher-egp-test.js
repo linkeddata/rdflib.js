@@ -65,7 +65,7 @@ describe('Fetcher', () => {
       let fetcher = rdf.fetcher(kb, {a:1})
       fetcher.nowOrWhenFetched(kb.sym(badServer + path), {force: true}, trywrap(done, function (ok, statusOrErrorText, resp) {
         expect(ok).to.be.false()
-        expect(statusOrErrorText).to.match(/ENOTFOUND/);
+        expect(statusOrErrorText).to.match(/(ENOTFOUND|Failed to load .*)/)
         expect(resp.status).to.equal(999)
       }))
     })
