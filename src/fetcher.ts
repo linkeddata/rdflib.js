@@ -55,6 +55,8 @@ import {
   Quad_Subject
 } from './tf-types'
 
+const DEFAULT_TIMEOUT_MS = 120000 // 2 mins
+
 const Parsable = {
   'text/n3': true,
   'text/turtle': true,
@@ -718,7 +720,7 @@ export default class Fetcher implements CallbackifyInterface {
   constructor (store: IndexedFormula, options: Options = {}) {
     this.store = store || new IndexedFormula()
     this.ns = getNS(this.store.rdfFactory)
-    this.timeout = options.timeout || 30000
+    this.timeout = options.timeout || DEFAULT_TIMEOUT_MS
 
     this._fetch = options.fetch || this.defaultFetch()
 
