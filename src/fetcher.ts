@@ -1711,9 +1711,6 @@ export default class Fetcher implements CallbackifyInterface {
     if (!response.headers) {
       return responseNode;
     } 
-    // if (!options.resource.value.startsWith('http')) {
-    //  return responseNode
-    // }
 
     // Save the response headers
     response.headers.forEach((value, header) => {
