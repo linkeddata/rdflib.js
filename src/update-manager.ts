@@ -97,7 +97,7 @@ export default class UpdateManager {
    * @returns The method string SPARQL or DAV or
    *   LOCALFILE or false if known, undefined if not known.
    */
-  editable (uri: string | NamedNode, kb?: IndexedFormula): string | boolean | undefined {
+  editable (uri: string | NamedNode, kb?: IndexedFormula, force?: boolean): string | boolean | undefined {
     if (!uri) {
       return false // Eg subject is bnode, no known doc to write to
     }
@@ -138,7 +138,7 @@ export default class UpdateManager {
           if (wacAllow) {
             for (var bit of wacAllow.split(',')) {
               var lr = bit.split('=')
-              if (lr[0].includes('user') && !lr[1].includes('write') && !lr[1].includes('append') ) {
+              if (lr[0].includes('user') && !lr[1].includes('write') && !lr[1].includes('append') && !force) {
                 // console.log('    editable? excluded by WAC-Allow: ', wacAllow)
                 return false
               }
@@ -710,8 +710,10 @@ export default class UpdateManager {
         errorBody?: string,
         response?: Response | Error
       ) => void,
-      secondTry?: boolean
+      options?: {secondTry?: boolean, force?: boolean}
   ): void | Promise<void> {
+    const { secondTry, force } = options ?? {}
+
     if (!callback) {
       var thisUpdater = this
       return new Promise(function (resolve, reject) { // Promise version
@@ -721,7 +723,7 @@ export default class UpdateManager {
           } else {
             resolve()
           }
-        }) // callbackFunction
+        }, options) // callbackFunction
       }) // promise
     } // if
 
@@ -768,7 +770,7 @@ export default class UpdateManager {
         })
       })
 
-      var protocol = this.editable(doc.value, kb)
+      var protocol = this.editable(doc.value, kb, force)
       if (protocol === false) {
         throw new Error('Update: Can\'t make changes in uneditable ' + doc)
       }
@@ -778,10 +780,10 @@ export default class UpdateManager {
         }
         // console.log(`Update: have not loaded ${doc} before: loading now...`);
         (this.store.fetcher.load(doc) as Promise<Response>).then(response => {
-          this.update(deletions, insertions, callback, true)
+          this.update(deletions, insertions, callback, { ...options, secondTry: true })
         }, err => {
             if (err.response.status === 404) { // nonexistent files are fine
-              this.update(deletions, insertions, callback, true)
+              this.update(deletions, insertions, callback, { ...options, secondTry: true })
             } else  {
               throw new Error(`Update: Can't get updatability status ${doc} before patching: ${err}`)
             }
