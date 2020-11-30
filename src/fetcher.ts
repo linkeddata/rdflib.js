@@ -116,8 +116,8 @@ declare global {
     panes?: any
     solidFetcher?: any
   }
+  var solidFetcher:Function
 }
-
 declare var $SolidTestEnvironment: {
   localSiteMap?: any
 }
@@ -752,7 +752,10 @@ export default class Fetcher implements CallbackifyInterface {
     this.ns = getNS(this.store.rdfFactory)
     this.timeout = options.timeout || 30000
 
-    this._fetch = options.fetch || (typeof window !== 'undefined' && window.solidFetcher) || crossFetch
+    this._fetch = options.fetch
+               || (typeof global !== 'undefined' && global.solidFetcher)
+               || (typeof window !== 'undefined' && window.solidFetcher)
+               || crossFetch
     if (!this._fetch) {
       throw new Error('No _fetch function available for Fetcher')
     }
@@ -1694,7 +1697,7 @@ export default class Fetcher implements CallbackifyInterface {
     kb.add(responseNode, this.ns.http('statusText'),
     kb.rdfFactory.literal(response.statusText), responseNode)
 
-    if (!options.resource.value.startsWith('http')) {
+    if (!response.headers) {
       return responseNode
     }
 
