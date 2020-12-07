@@ -1697,10 +1697,6 @@ export default class Fetcher implements CallbackifyInterface {
     kb.add(responseNode, this.ns.http('statusText'),
     kb.rdfFactory.literal(response.statusText), responseNode)
 
-    if (!response.headers) {
-      return responseNode
-    }
-
     // Save the response headers
     response.headers.forEach((value, header) => {
       kb.add(responseNode, this.ns.httph(header), this.store.rdfFactory.literal(value), responseNode)

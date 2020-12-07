@@ -87,11 +87,17 @@ export default class UpdateManager {
     return this.patchControl[doc.value]
   }
 
+  isHttpUri(uri:string){
+    return( uri.slice(0,4) === 'http' )
+  }
+
+
   /**
    * Tests whether a file is editable.
-   * Files have to have a specific annotation that they are machine written,
-   *   for safety.
-   * We don't actually check for write access on files.
+   * If the file has a specific annotation that it is machine written, 
+   * for safety, it is editable (this doesn't actually check for write access)
+   * If the file has wac-allow and accept patch headers, those are respected.
+   * and local write access is determined by those headers.
    * This version only looks at past HTTP requests, does not make new ones.
    *
    * @returns The method string SPARQL or DAV or
@@ -106,30 +112,13 @@ export default class UpdateManager {
     }
     uri = termValue(uri)
 
-    // new logic for requests fron non-http resources
-    //   if not http(s) request
-    //     if has MachineEditableDocument triple -> EDIT AS LOCALFILE
-    //     else if !wac-allow write/append in header -> NOT EDITABLE
-    //     else
-    //       if accept-patch or ms-authorVia -> EDIT AS SPARQL
-    //       else -> EDIT AS LOCALFILE
-    if ((uri as string).slice(0, 4) != 'http') {
+    if ( this.isHttpUri(uri as string) ) {
       if (kb.holds(
           this.store.rdfFactory.namedNode(uri),
           this.store.rdfFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
           this.store.rdfFactory.namedNode('http://www.w3.org/2007/ont/link#MachineEditableDocument'))) {
         return 'LOCALFILE'
       }
-
-      // var sts = kb.statementsMatching(kb.sym(uri))
-
-      // console.log('UpdateManager.editable: Not MachineEditableDocument file ' +
-      //   uri + '\n')
-      // console.log(sts.map((x) => { return (x as Statement).toNT() }).join('\n'))
-
-      // only return false later if no wac-allow write/append perms in header
-      // return false
-      // @@ Would be nifty of course to see whether we actually have write access first.
     }
 
     var request
@@ -172,8 +161,7 @@ export default class UpdateManager {
             }
           }
 
-          // honor wac-allow headers if present in non-http request
-          if ((uri as string).slice(0, 4) != 'http') {
+          if ( this.isHttpUri(uri as string) ) {
             if( !wacAllow ) return false;
             else return 'LOCALFILE';
           }		  
@@ -972,7 +960,6 @@ export default class UpdateManager {
   updateLocalFile (doc: NamedNode, ds, is, callbackFunction): void {
     const kb = this.store
     // console.log('Writing back to local file\n')
-    // previously used http://simon-jung.blogspot.com/2007/10/firefox-extension-file-io.html ... now uses PUT
 
     // prepare contents of revised document
     let newSts = kb.statementsMatching(undefined, undefined, undefined, doc).slice() // copy!
@@ -1002,11 +989,11 @@ export default class UpdateManager {
       contentType : contentType,
     }).then( (response)=>{
       if(!response.ok) return callbackFunction(doc.value,false,response.error)
-      for (var _i13 = 0; _i13 < ds.length; _i13++) {
-        kb.remove(ds[_i13]);
+      for (let i = 0; i < ds.length; i++) {
+        kb.remove(ds[i]);
       }
-      for (var _i14 = 0; _i14 < is.length; _i14++) {
-        kb.add(is[_i14].subject, is[_i14].predicate, is[_i14].object, doc);
+      for (let i = 0; i < is.length; i++) {
+        kb.add(is[i].subject, is[i].predicate, is[i].object, doc);
       }
       callbackFunction(doc.value, true, '')  // success!
     })
