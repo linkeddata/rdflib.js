@@ -112,7 +112,7 @@ export default class UpdateManager {
     }
     uri = termValue(uri)
 
-    if ( this.isHttpUri(uri as string) ) {
+    if ( !this.isHttpUri(uri as string) ) {
       if (kb.holds(
           this.store.rdfFactory.namedNode(uri),
           this.store.rdfFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
@@ -161,7 +161,7 @@ export default class UpdateManager {
             }
           }
 
-          if ( this.isHttpUri(uri as string) ) {
+          if ( !this.isHttpUri(uri as string) ) {
             if( !wacAllow ) return false;
             else return 'LOCALFILE';
           }		  
