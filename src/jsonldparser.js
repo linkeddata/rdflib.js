@@ -82,12 +82,13 @@ export default function jsonldParser (str, kb, base, callback) {
           continue
         }
         const value = flatResource[property]
+        const predicate = property === "@type" ? kb.rdfFactory.namedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type") : kb.rdfFactory.namedNode(property);
         if (Array.isArray(value)) {
           for (let i = 0; i < value.length; i++) {
-            kb.addStatement(kb.rdfFactory.quad(id, kb.rdfFactory.namedNode(property), jsonldObjectToTerm(kb, value[i])))
+            kb.addStatement(kb.rdfFactory.quad(id, predicate, jsonldObjectToTerm(kb, value[i])))
           }
         } else {
-          kb.addStatement(kb.rdfFactory.quad(id, kb.rdfFactory.namedNode(property), jsonldObjectToTerm(kb, value)))
+          kb.addStatement(kb.rdfFactory.quad(id, predicate, jsonldObjectToTerm(kb, value)))
         }
       }
 
