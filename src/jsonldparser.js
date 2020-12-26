@@ -30,7 +30,6 @@ export function jsonldObjectToTerm (kb, obj) {
   }
 
   if (Object.prototype.hasOwnProperty.call(obj, '@type')) {
-    console.log('@type1 ' + Object.keys(obj))
     return kb.rdfFactory.literal(obj['@value'], kb.rdfFactory.namedNode(obj['@type']))
   }
 
@@ -70,7 +69,6 @@ export default function jsonldParser (str, kb, base, callback) {
   const baseString = base && Object.prototype.hasOwnProperty.call(base, 'termType')
     ? base.value
     : base
-    console.log(str)
 
   return jsonld
     .flatten(JSON.parse(str), null, { base: baseString })
@@ -84,7 +82,6 @@ export default function jsonldParser (str, kb, base, callback) {
           continue
         }
         const value = flatResource[property]
-        console.log(property + value)
         if (Array.isArray(value)) {
           for (let i = 0; i < value.length; i++) {
             kb.addStatement(statementFromType(kb, id, property, value[i]))
