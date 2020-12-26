@@ -122,6 +122,7 @@ describe('Parse', () => {
         expect(height.subject.value).to.equal('https://www.example.org/#me')
         expect(height.predicate.value).to.equal('http://schema.org/height')
         expect(height.object.datatype.value).to.equal('http://www.w3.org/2001/XMLSchema#float')
+        expect(height.object.termType).to.equal('Literal')
         expect(height.object.value).to.equal('173.9')
 
         const homepage = store.statements[1]
@@ -230,7 +231,7 @@ describe('Parse', () => {
       })
     })
 
-    describe('with a @type', () => {
+    describe('with a @type node', () => {
       const content = `
         {
           "@id": "jane",
@@ -253,6 +254,7 @@ describe('Parse', () => {
         expect(nameDe2.subject.value).to.equal('https://base.example/jane')
         expect(nameDe2.predicate.value).to.equal('http://www.w3.org/1999/02/22-rdf-syntax-ns#type')
         expect(nameDe2.object.value).to.equal('http://schema.org/Person')
+        expect(nameDe2.object.termType).to.equal('NamedNode')
       });
 
       it('store contains name', async () => {
