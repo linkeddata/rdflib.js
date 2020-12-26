@@ -30,6 +30,7 @@ export function jsonldObjectToTerm (kb, obj) {
   }
 
   if (Object.prototype.hasOwnProperty.call(obj, '@type')) {
+    console.log('@type1 ' + Object.keys(obj))
     return kb.rdfFactory.literal(obj['@value'], kb.rdfFactory.namedNode(obj['@type']))
   }
 
@@ -69,6 +70,7 @@ export default function jsonldParser (str, kb, base, callback) {
   const baseString = base && Object.prototype.hasOwnProperty.call(base, 'termType')
     ? base.value
     : base
+    console.log(str)
 
   return jsonld
     .flatten(JSON.parse(str), null, { base: baseString })
@@ -82,13 +84,13 @@ export default function jsonldParser (str, kb, base, callback) {
           continue
         }
         const value = flatResource[property]
-        const predicate = property === "@type" ? kb.rdfFactory.namedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type") : kb.rdfFactory.namedNode(property);
+        console.log(property + value)
         if (Array.isArray(value)) {
           for (let i = 0; i < value.length; i++) {
-            kb.addStatement(kb.rdfFactory.quad(id, predicate, jsonldObjectToTerm(kb, value[i])))
+            kb.addStatement(statementFromType(kb, id, property, value[i]))
           }
         } else {
-          kb.addStatement(kb.rdfFactory.quad(id, predicate, jsonldObjectToTerm(kb, value)))
+          kb.addStatement(statementFromType(kb, id, property, value))
         }
       }
 
@@ -96,4 +98,18 @@ export default function jsonldParser (str, kb, base, callback) {
     }, kb))
     .then(callback)
     .catch(callback)
+}
+
+/**
+ * statement quad depending on @type being a type node or a type value
+ * @param kb
+ * @param subject id
+ * @param property
+ * @param value
+ * @return quad statement
+ */
+function statementFromType(kb, id, property, value) {
+  const predicateFromType = property === "@type" ? kb.rdfFactory.namedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type") : kb.rdfFactory.namedNode(property)
+  const objectFromType = property === "@type" ? kb.rdfFactory.namedNode(value) : jsonldObjectToTerm(kb, value)
+  return kb.rdfFactory.quad(id, predicateFromType, objectFromType)
 }
