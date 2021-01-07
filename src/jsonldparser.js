@@ -84,10 +84,10 @@ export default function jsonldParser (str, kb, base, callback) {
         const value = flatResource[property]
         if (Array.isArray(value)) {
           for (let i = 0; i < value.length; i++) {
-            kb.addStatement(statementFromType(kb, id, property, value[i]))
+            kb.addStatement(createStatement(kb, id, property, value[i]))
           }
         } else {
-          kb.addStatement(statementFromType(kb, id, property, value))
+          kb.addStatement(createStatement(kb, id, property, value))
         }
       }
 
@@ -98,15 +98,21 @@ export default function jsonldParser (str, kb, base, callback) {
 }
 
 /**
- * statement quad depending on @type being a type node or a type value
+ * Create statement quad depending on @type being a type node
  * @param kb
  * @param subject id
  * @param property
  * @param value
  * @return quad statement
  */
-function statementFromType(kb, id, property, value) {
-  const predicateFromType = property === "@type" ? kb.rdfFactory.namedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type") : kb.rdfFactory.namedNode(property)
-  const objectFromType = property === "@type" ? kb.rdfFactory.namedNode(value) : jsonldObjectToTerm(kb, value)
-  return kb.rdfFactory.quad(id, predicateFromType, objectFromType)
+function createStatement(kb, id, property, value) {
+  let predicate, object
+  if (property === "@type") {
+    predicate = kb.rdfFactory.namedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
+    object = kb.rdfFactory.namedNode(value)
+  } else {
+    predicate = kb.rdfFactory.namedNode(property)
+    object = jsonldObjectToTerm(kb, value)
+  }
+  return kb.rdfFactory.quad(id, predicate, object)
 }
