@@ -87,11 +87,17 @@ export default class UpdateManager {
     return this.patchControl[doc.value]
   }
 
+  isHttpUri(uri:string){
+    return( uri.slice(0,4) === 'http' )
+  }
+
+
   /**
    * Tests whether a file is editable.
-   * Files have to have a specific annotation that they are machine written,
-   *   for safety.
-   * We don't actually check for write access on files.
+   * If the file has a specific annotation that it is machine written, 
+   * for safety, it is editable (this doesn't actually check for write access)
+   * If the file has wac-allow and accept patch headers, those are respected.
+   * and local write access is determined by those headers.
    * This version only looks at past HTTP requests, does not make new ones.
    *
    * @returns The method string SPARQL or DAV or
@@ -106,22 +112,13 @@ export default class UpdateManager {
     }
     uri = termValue(uri)
 
-    if ((uri as string).slice(0, 8) === 'file:///') {
+    if ( !this.isHttpUri(uri as string) ) {
       if (kb.holds(
           this.store.rdfFactory.namedNode(uri),
           this.store.rdfFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
           this.store.rdfFactory.namedNode('http://www.w3.org/2007/ont/link#MachineEditableDocument'))) {
         return 'LOCALFILE'
       }
-
-      // var sts = kb.statementsMatching(kb.sym(uri))
-
-      // console.log('UpdateManager.editable: Not MachineEditableDocument file ' +
-      //   uri + '\n')
-      // console.log(sts.map((x) => { return (x as Statement).toNT() }).join('\n'))
-
-      return false
-      // @@ Would be nifty of course to see whether we actually have write access first.
     }
 
     var request
@@ -163,6 +160,12 @@ export default class UpdateManager {
               }
             }
           }
+
+          if ( !this.isHttpUri(uri as string) ) {
+            if( !wacAllow ) return false;
+            else return 'LOCALFILE';
+          }		  
+
           var status = kb.each(response, this.ns.http('status'))
           if (status.length) {
             for (let i = 0; i < status.length; i++) {
@@ -957,7 +960,7 @@ export default class UpdateManager {
   updateLocalFile (doc: NamedNode, ds, is, callbackFunction): void {
     const kb = this.store
     // console.log('Writing back to local file\n')
-    // See http://simon-jung.blogspot.com/2007/10/firefox-extension-file-io.html
+
     // prepare contents of revised document
     let newSts = kb.statementsMatching(undefined, undefined, undefined, doc).slice() // copy!
 
@@ -981,44 +984,19 @@ export default class UpdateManager {
 
     const documentString = this.serialize(doc.value, newSts, contentType)
 
-    // Write the new version back
-    // create component for file writing
-    // console.log('Writing back: <<<' + documentString + '>>>')
-    var filename = doc.value.slice(7) // chop off   file://  leaving /path
-    // console.log("Writeback: Filename: "+filename+"\n")
-    // @ts-ignore Where does Component come from? Perhaps deprecated?
-    var file = Components.classes[ '@mozilla.org/file/local;1' ]
-    // @ts-ignore Where does Component come from? Perhaps deprecated?
-      .createInstance(Components.interfaces.nsILocalFile)
-    file.initWithPath(filename)
-    if (!file.exists()) {
-      throw new Error('Rewriting file <' + doc.value +
-        '> but it does not exist!')
-    }
-    // {
-    // file.create( Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 420)
-    // }
-    // create file output stream and use write/create/truncate mode
-    // 0x02 writing, 0x08 create file, 0x20 truncate length if exist
-    // @ts-ignore Where does Component come from? Perhaps deprecated?
-    var stream = Components.classes[ '@mozilla.org/network/file-output-stream;1' ]
-    // @ts-ignore Where does Component come from? Perhaps deprecated?
-      .createInstance(Components.interfaces.nsIFileOutputStream)
-
-    // Various JS systems object to 0666 in struct mode as dangerous
-    stream.init(file, 0x02 | 0x08 | 0x20, parseInt('0666', 8), 0)
-
-    // write data to file then close output stream
-    stream.write(documentString, documentString.length)
-    stream.close()
-
-    for (let i = 0; i < ds.length; i++) {
-      kb.remove(ds[ i ])
-    }
-    for (let i = 0; i < is.length; i++) {
-      kb.add(is[ i ].subject, is[ i ].predicate, is[ i ].object, doc)
-    }
-    callbackFunction(doc.value, true, '') // success!
+    kb.fetcher.webOperation('PUT',doc.value,{
+      "body"      : documentString,
+      contentType : contentType,
+    }).then( (response)=>{
+      if(!response.ok) return callbackFunction(doc.value,false,response.error)
+      for (let i = 0; i < ds.length; i++) {
+        kb.remove(ds[i]);
+      }
+      for (let i = 0; i < is.length; i++) {
+        kb.add(is[i].subject, is[i].predicate, is[i].object, doc);
+      }
+      callbackFunction(doc.value, true, '')  // success!
+    })
   }
 
   /**
