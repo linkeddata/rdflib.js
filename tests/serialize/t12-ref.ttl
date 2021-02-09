@@ -1,11 +1,11 @@
 @prefix : </structures.n3#>.
-@prefix XML: <http://www.w3.org/2001/XMLSchema#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
 
 :DSK :name "Dexter Scott King".
 
 :MLK
-    :born "1929-01-17"^^XML:date;
-    :died "1968-01-15"^^XML:date;
+    :born "1929-01-17"^^xsd:date;
+    :died "1968-01-15"^^xsd:date;
     :friend [];
     :name "Martin Luther King, Jr";
     :spouse _:_g_L4C88;
@@ -17,7 +17,7 @@
 :ZooReading1
     :boolDisabled false;
     :boolEnabled true;
-    :date "2015-02-28"^^XML:date;
+    :date "2015-02-28"^^xsd:date;
     :decBig 1234567890.99;
     :decBigNegative -1234567890.99;
     :decWithPoint 10.0;
@@ -29,10 +29,10 @@
     :intBig 1234567890;
     :intCount 16;
     :intNegative -123;
-    :time "2015-03-16T17:53Z"^^XML:dateTime.
+    :time "2015-03-16T17:53Z"^^xsd:dateTime.
 _:_g_L4C88 :name "Coretta Scott King".
 
-[ a :Speech; :author :MLK; :date "1963-08-23"^^XML:date; :title "I have a dream" ].
+[ a :Speech; :author :MLK; :date "1963-08-23"^^xsd:date; :title "I have a dream" ].
 
 [ :friend :MLK ].
 
