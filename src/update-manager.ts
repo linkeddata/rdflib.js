@@ -376,7 +376,7 @@ export default class UpdateManager {
 
         let options = {
           noMeta: true,
-          contentType: 'application/sparql-update-single-match',
+          contentType: 'application/sparql-update',
           body: query
         }
 
