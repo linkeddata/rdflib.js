@@ -40,6 +40,7 @@ export const NQuadsContentType = "application/n-quads" as const
 export const NTriplesContentType = "application/n-triples" as const
 export const RDFXMLContentType = "application/rdf+xml" as const
 export const SPARQLUpdateContentType = "application/sparql-update" as const
+export const SPARQLUpdateSingleMatchContentType = "application/sparql-update-single-match" as const
 export const TurtleContentType = "text/turtle" as const
 export const TurtleLegacyContentType = "application/x-turtle" as const
 export const XHTMLContentType = "application/xhtml+xml" as const
@@ -55,6 +56,7 @@ export type ContentType = typeof RDFXMLContentType
   | typeof NQuadsAltContentType
   | typeof NQuadsContentType
   | typeof SPARQLUpdateContentType
+  | typeof SPARQLUpdateSingleMatchContentType
   | typeof TurtleContentType
   | typeof TurtleLegacyContentType
   | typeof XHTMLContentType

@@ -146,6 +146,7 @@ export default class UpdateManager {
             for (let i = 0; i < acceptPatch.length; i++) {
               method = acceptPatch[i].value.trim()
               if (method.indexOf('application/sparql-update') >= 0) return 'SPARQL'
+              if (method.indexOf('application/sparql-update-single-match') >= 0) return 'SPARQL'
             }
           }
           var authorVia = kb.each(response, this.ns.httph('ms-author-via'))
@@ -375,7 +376,7 @@ export default class UpdateManager {
 
         let options = {
           noMeta: true,
-          contentType: 'application/sparql-update',
+          contentType: 'application/sparql-update-single-match',
           body: query
         }
 
