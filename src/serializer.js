@@ -11,6 +11,7 @@ import * as Uri from './uri'
 import * as Util from './utils-js'
 import CanonicalDataFactory from './factories/canonical-data-factory'
 import { createXSD } from './xsd'
+import solidNs from 'solid-namespace'
 
 export default (function () {
   var __Serializer = function (store) {
@@ -18,7 +19,14 @@ export default (function () {
     this.base = null
 
     this.prefixes = [] // suggested prefixes
-    this.namespaces = [] // complementary indexes
+    this.namespaces = [] // complementary
+    const nsKeys = Object.keys(solidNs())
+    for (const i in nsKeys) {
+      const uri = solidNs()[nsKeys[i]]('')
+      const prefix = nsKeys[i]
+      this.prefixes[uri] = prefix
+      this.namespaces[prefix] = uri
+    }
 
     this.suggestPrefix('rdf', 'http://www.w3.org/1999/02/22-rdf-syntax-ns#') // XML code assumes this!
     this.suggestPrefix('xml', 'reserved:reservedForFutureUse') // XML reserves xml: in the spec.
