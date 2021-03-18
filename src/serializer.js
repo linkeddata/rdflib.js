@@ -480,10 +480,13 @@ export default (function () {
               if (val.indexOf('.') < 0) val += '.0'
               return val
 
-            case 'http://www.w3.org/2001/XMLSchema#double': // Must force use of 'e'
-              if (val.indexOf('.') < 0) val += '.0'
-              if (val.indexOf('e') < 0) val += 'e0'
+            case 'http://www.w3.org/2001/XMLSchema#double': {
+              // Must force use of 'e'
+              const eNotation = val.toLowerCase().indexOf('e') > 0;
+              if (val.indexOf('.') < 0 && !eNotation) val += '.0'
+              if (!eNotation) val += 'e0'
               return val
+            }
 
             case 'http://www.w3.org/2001/XMLSchema#boolean':
               return expr.value === '1' ? 'true' : 'false'
