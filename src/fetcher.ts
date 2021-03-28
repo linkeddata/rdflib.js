@@ -94,14 +94,14 @@ const getNS = (factory?: RdfJsDataFactory) => {
 }
 const ns = getNS()
 
-interface FetchError extends Error {
+export interface FetchError extends Error {
   statusText?: string
   status?: StatusValues
   response?: ExtendedResponse
 }
 
 /** An extended interface of Response, since RDFlib.js adds some properties. */
-interface ExtendedResponse extends Response {
+export interface ExtendedResponse extends Response {
   /** String representation of the Body */
   responseText?: string
   /** Identifier of the reqest */
@@ -118,8 +118,8 @@ declare global {
     panes?: any
     solidFetcher?: any
   }
+  var solidFetcher:Function
 }
-
 declare var $SolidTestEnvironment: {
   localSiteMap?: any
 }
@@ -136,7 +136,7 @@ type HTTPMethods = 'GET' | 'PUT' | 'POST' | 'PATCH' | 'HEAD' | 'DELETE' | 'CONNE
 type Options = Partial<AutoInitOptions>
 
 /** Initiated by initFetchOptions, which runs on load */
-interface AutoInitOptions extends RequestInit{
+export interface AutoInitOptions extends RequestInit{
   /** The used Fetch function */
   fetch?: Fetch
   /**
@@ -754,7 +754,10 @@ export default class Fetcher implements CallbackifyInterface {
     this.ns = getNS(this.store.rdfFactory)
     this.timeout = options.timeout || DEFAULT_TIMEOUT_MS
 
-    this._fetch = options.fetch || (typeof window !== 'undefined' && window.solidFetcher) || crossFetch
+    this._fetch = options.fetch
+               || (typeof global !== 'undefined' && global.solidFetcher)
+               || (typeof window !== 'undefined' && window.solidFetcher)
+               || crossFetch
     if (!this._fetch) {
       throw new Error('No _fetch function available for Fetcher')
     }
@@ -1695,10 +1698,6 @@ export default class Fetcher implements CallbackifyInterface {
     kb.rdfFactory.literal(response.status as any), responseNode)
     kb.add(responseNode, this.ns.http('statusText'),
     kb.rdfFactory.literal(response.statusText), responseNode)
-
-    if (!options.resource.value.startsWith('http')) {
-      return responseNode
-    }
 
     // Save the response headers
     response.headers.forEach((value, header) => {

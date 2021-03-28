@@ -8,7 +8,7 @@ import RDFParser from './rdfxmlparser'
 import sparqlUpdateParser from './patch-parser'
 import * as Util from './utils-js'
 import Formula from './formula'
-import { ContentType, TurtleContentType, N3ContentType, RDFXMLContentType, XHTMLContentType, HTMLContentType, SPARQLUpdateContentType, JSONLDContentType, NQuadsContentType, NQuadsAltContentType } from './types'
+import { ContentType, TurtleContentType, N3ContentType, RDFXMLContentType, XHTMLContentType, HTMLContentType, SPARQLUpdateContentType, SPARQLUpdateSingleMatchContentType, JSONLDContentType, NQuadsContentType, NQuadsAltContentType } from './types'
 import { Quad } from './tf-types'
 
 type CallbackFunc = (error: any, kb: Formula | null) => void
@@ -48,7 +48,7 @@ export default function parse (
     } else if (contentType === HTMLContentType) {
       parseRDFaDOM(Util.parseXML(str, {contentType: HTMLContentType}), kb, base)
       executeCallback()
-    } else if (contentType === SPARQLUpdateContentType) { // @@ we handle a subset
+    } else if ((contentType === SPARQLUpdateContentType) || (contentType === SPARQLUpdateSingleMatchContentType)) { // @@ we handle a subset
       sparqlUpdateParser(str, kb, base)
       executeCallback()
     } else if (contentType === JSONLDContentType) {
@@ -73,6 +73,7 @@ export default function parse (
     'application/xhtml+xml': true,
     'text/html': true,
     'application/sparql-update': true,
+    'application/sparql-update-single-match': true,
     'application/ld+json': true,
     'application/nquads' : true,
     'application/n-quads' : true

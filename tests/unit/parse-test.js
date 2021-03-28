@@ -1,5 +1,5 @@
 /* eslint-env mocha */
-import { expect } from 'chai'
+import {expect} from 'chai'
 
 import parse from '../../src/parse'
 import CanonicalDataFactory from '../../src/factories/canonical-data-factory'
@@ -122,6 +122,7 @@ describe('Parse', () => {
         expect(height.subject.value).to.equal('https://www.example.org/#me')
         expect(height.predicate.value).to.equal('http://schema.org/height')
         expect(height.object.datatype.value).to.equal('http://www.w3.org/2001/XMLSchema#float')
+        expect(height.object.termType).to.equal('Literal')
         expect(height.object.value).to.equal('173.9')
 
         const homepage = store.statements[1]
@@ -228,6 +229,40 @@ describe('Parse', () => {
         expect(collection.object.elements[2].value).to.equal(`http://example.com/2`)
 
       })
+    })
+
+    describe('with a @type node', () => {
+      const content = `
+        {
+          "@id": "jane",
+          "@type": "http://schema.org/Person",
+          "http://schema.org/name": "Jane Doe"
+        }`
+      const mimeType = 'application/ld+json'
+      let store;
+      before(async () => {
+        store = DataFactory.graph()
+        await parse(content, store, 'https://base.example/', mimeType, () => null)
+      });
+
+      it('store contains 2 statements', () => {
+        expect(store.statements).to.have.length(2)
+      });
+
+      it('store contains type', async () => {
+        const nameDe2 = store.statements[0]
+        expect(nameDe2.subject.value).to.equal('https://base.example/jane')
+        expect(nameDe2.predicate.value).to.equal('http://www.w3.org/1999/02/22-rdf-syntax-ns#type')
+        expect(nameDe2.object.value).to.equal('http://schema.org/Person')
+        expect(nameDe2.object.termType).to.equal('NamedNode')
+      });
+
+      it('store contains name', async () => {
+        const nameDe2 = store.statements[1]
+        expect(nameDe2.subject.value).to.equal('https://base.example/jane')
+        expect(nameDe2.predicate.value).to.equal('http://schema.org/name')
+        expect(nameDe2.object.value).to.equal('Jane Doe')
+      });
     })
   })
 
