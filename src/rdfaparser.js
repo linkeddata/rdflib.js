@@ -895,7 +895,7 @@ export default class RDFaProcessor {
       case RDFaProcessor.XMLLiteralURI:
       case RDFaProcessor.HTMLLiteralURI:
         var string = ''
-        Object.keys(x.value).forEach(function (i) {
+        Object.keys(x.value).forEach(i => {
           string += Util.domToString(x.value[i], this.htmlOptions)
         })
         return new Literal(string, '', new NamedNode(x.type))

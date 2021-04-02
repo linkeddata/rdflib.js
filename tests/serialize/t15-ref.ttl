@@ -1,0 +1,91 @@
+@prefix : </t15.html#>.
+@prefix as: <https://www.w3.org/ns/activitystreams#>.
+@prefix dc: <http://purl.org/dc/elements/1.1/>.
+@prefix dct: <http://purl.org/dc/terms/>.
+@prefix ldp: <http://www.w3.org/ns/ldp#>.
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+@prefix prov: <http://www.w3.org/ns/prov#>.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix schema: <http://schema.org/>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix n: <http://mementoweb.org/ns#>.
+@prefix lin: <https://csarven.ca/archives/linked-research-decentralised-web/>.
+@prefix bibo: <http://purl.org/ontology/bibo/>.
+@prefix n0: <https://csarven.ca/#>.
+@prefix cito: <http://purl.org/spar/cito/>.
+@prefix isbn: <http://worldcat.org/isbn/>.
+@prefix pso: <http://purl.org/spar/pso/>.
+@prefix n1: <https://creativecommons.org/licenses/by/4.0/>.
+@prefix li: <http://www.iana.org/assignments/link-relations/>.
+@prefix cs: <https://csarven.ca/>.
+@prefix inbox: <https://csarven.ca/archives/linked-research-decentralised-web/inbox/>.
+@prefix n2: <http://www.w3.org/ns/odrl/2/>.
+@prefix dok: <https://dokie.li/>.
+@prefix tests: <https://linkedresearch.org/ldn/tests/>.
+@prefix TR: <https://www.w3.org/TR/>.
+@prefix l: <https://linkedresearch.org/>.
+@prefix rel: <https://www.w3.org/ns/iana/link-relations/relation#>.
+@prefix ns0: <http://creativecommons.org/ns#>.
+@prefix linke: <https://csarven.ca/linked-research-decentralised-web#>.
+
+<>
+    a schema:CreativeWork, schema:ScholarlyArticle, prov:Entity;
+    n:memento lin:ce36de40-64a7-4d57-a189-f47c364daa74;
+    n:timemap <https://csarven.ca/linked-research-decentralised-web.timemap>;
+    dc:title "Linked Research on the Decentralised Web";
+    dct:language "en";
+    bibo:authorList [ rdf:first n0:i; rdf:rest rdf:nil ];
+    cito:includesQuotationFrom isbn:9781584230700;
+    pso:holdsStatusInTime :31943b7f-b646-4ebd-8787-ec2341e862c1;
+    schema:abstract
+        "\n              <p>This thesis is about research communication in the context of the Web. I analyse literature which reveals how researchers are making use of Web technologies for knowledge dissemination, as well as how individuals are disempowered by the centralisation of certain systems, such as academic publishing platforms and social media. I share my findings on the feasibility of a decentralised and interoperable information space where researchers can control their identifiers whilst fulfilling the core functions of scientific communication: registration, awareness, certification, and archiving.</p>\n\n              <p>The contemporary research communication paradigm operates under a diverse set of sociotechnical constraints, which influence how units of research information and personal data are created and exchanged. Economic forces and non-interoperable system designs mean that researcher identifiers and research contributions are largely shaped and controlled by third-party entities; participation requires the use of proprietary systems.</p>\n\n              <p>From a technical standpoint, this thesis takes a deep look at semantic structure of research artifacts, and how they can be stored, linked and shared in a way that is controlled by individual researchers, or delegated to trusted parties. Further, I find that the ecosystem was lacking a technical Web standard able to fulfill the awareness function of research communication. Thus, I contribute a new communication protocol, <cite><a href='#linked-data-notifications'>Linked Data Notifications</a></cite> (published as a W3C Recommendation) which enables decentralised notifications on the Web, and provide implementations pertinent to the academic publishing use case. So far we have seen decentralised notifications applied in research dissemination or collaboration scenarios, as well as for archival activities and scientific experiments.</p>\n\n              <p>Another core contribution of this work is a Web standards-based implementation of a clientside tool, <cite><a href='#decentralised-linked-research-application'>dokieli</a></cite>, for decentralised article publishing, annotations and social interactions. dokieli can be used to fulfill the scholarly functions of registration, awareness, certification, and archiving, all in a decentralised manner, returning control of research contributions and discourse to individual researchers.</p>\n\n              <p>The overarching conclusion of the thesis is that Web technologies can be used to create a fully functioning ecosystem for research communication. Using the framework of Web architecture, and loosely coupling the four functions, an accessible and inclusive ecosystem can be realised whereby users are able to use and switch between interoperable applications without interfering with existing data.</p>\n\n              <p>Technical solutions alone do not suffice of course, so this thesis also takes into account the need for a change in the traditional mode of thinking amongst scholars, and presents the <cite><a href='#linked-research'>Linked Research</a></cite> initiative as an ongoing effort toward researcher autonomy in a social system, and universal access to human- and machine-readable information. Outcomes of this outreach work so far include an increase in the number of individuals self-hosting their research artifacts, workshops publishing accessible proceedings on the Web, in-the-wild experiments with open and public peer-review, and semantic graphs of contributions to conference proceedings and journals (the Linked Open Research Cloud).</p>\n\n              <p>Some of the future challenges include: addressing the social implications of decentralised Web publishing, as well as the design of ethically grounded interoperable mechanisms; cultivating privacy aware information spaces; personal or community-controlled on-demand archiving services; and further design of decentralised applications that are aware of the core functions of scientific communication.</p>\n            "^^rdf:HTML;
+    schema:author n0:i;
+    schema:creator n0:i;
+    schema:dateCreated "2016-04-13T18:31:21Z"^^xsd:dateTime;
+    schema:dateModified "2019-07-29T00:00:00Z"^^xsd:dateTime;
+    schema:datePublished "2019-07-29T00:00:00Z"^^xsd:dateTime;
+    schema:description
+        "\n          <blockquote id='the-past-went-that-a-way' cite='http://worldcat.org/isbn/9781584230700'>\n            <p>The past went that-a-way. When faced with a totally new situation we tend always to attach ourselves to the objects, to the flavor of the most recent past. We look at the present through a rear-view mirror. We march backward into the future. Suburbia lives imaginatively in Bonanza-land.</p>\n\n            <footer><cite><a rel='cito:includesQuotationFrom' href='http://worldcat.org/isbn/9781584230700' data-versionurl='https://web.archive.org/web/20190709103114/https://www.worldcat.org/title/medium-is-the-massage-an-inventory-of-effects/oclc/634760105' data-versiondate='2019-07-09T10:31:14Z'>The Medium is the Massage: An Inventory of Effects</a></cite>, p. 74-75, <a href='https://dbpedia.org/resource/Marshall_McLuhan'>Marshall McLuhan</a>, 1967</footer>\n          </blockquote>\n\n        <section id='abstract'>\n            <h2>Abstract</h2>\n            <div property='schema:abstract' datatype='rdf:HTML'>\n              <p>This thesis is about research communication in the context of the Web. I analyse literature which reveals how researchers are making use of Web technologies for knowledge dissemination, as well as how individuals are disempowered by the centralisation of certain systems, such as academic publishing platforms and social media. I share my findings on the feasibility of a decentralised and interoperable information space where researchers can control their identifiers whilst fulfilling the core functions of scientific communication: registration, awareness, certification, and archiving.</p>\n\n              <p>The contemporary research communication paradigm operates under a diverse set of sociotechnical constraints, which influence how units of research information and personal data are created and exchanged. Economic forces and non-interoperable system designs mean that researcher identifiers and research contributions are largely shaped and controlled by third-party entities; participation requires the use of proprietary systems.</p>\n\n              <p>From a technical standpoint, this thesis takes a deep look at semantic structure of research artifacts, and how they can be stored, linked and shared in a way that is controlled by individual researchers, or delegated to trusted parties. Further, I find that the ecosystem was lacking a technical Web standard able to fulfill the awareness function of research communication. Thus, I contribute a new communication protocol, <cite><a href='#linked-data-notifications'>Linked Data Notifications</a></cite> (published as a W3C Recommendation) which enables decentralised notifications on the Web, and provide implementations pertinent to the academic publishing use case. So far we have seen decentralised notifications applied in research dissemination or collaboration scenarios, as well as for archival activities and scientific experiments.</p>\n\n              <p>Another core contribution of this work is a Web standards-based implementation of a clientside tool, <cite><a href='#decentralised-linked-research-application'>dokieli</a></cite>, for decentralised article publishing, annotations and social interactions. dokieli can be used to fulfill the scholarly functions of registration, awareness, certification, and archiving, all in a decentralised manner, returning control of research contributions and discourse to individual researchers.</p>\n\n              <p>The overarching conclusion of the thesis is that Web technologies can be used to create a fully functioning ecosystem for research communication. Using the framework of Web architecture, and loosely coupling the four functions, an accessible and inclusive ecosystem can be realised whereby users are able to use and switch between interoperable applications without interfering with existing data.</p>\n\n              <p>Technical solutions alone do not suffice of course, so this thesis also takes into account the need for a change in the traditional mode of thinking amongst scholars, and presents the <cite><a href='#linked-research'>Linked Research</a></cite> initiative as an ongoing effort toward researcher autonomy in a social system, and universal access to human- and machine-readable information. Outcomes of this outreach work so far include an increase in the number of individuals self-hosting their research artifacts, workshops publishing accessible proceedings on the Web, in-the-wild experiments with open and public peer-review, and semantic graphs of contributions to conference proceedings and journals (the Linked Open Research Cloud).</p>\n\n              <p>Some of the future challenges include: addressing the social implications of decentralised Web publishing, as well as the design of ethically grounded interoperable mechanisms; cultivating privacy aware information spaces; personal or community-controlled on-demand archiving services; and further design of decentralised applications that are aware of the core functions of scientific communication.</p>\n            </div>\n          </section>"^^rdf:HTML;
+    schema:license n1:;
+    schema:name "Linked Research on the Decentralised Web"@en;
+    schema:publisher n0:i;
+    li:stylesheet
+        <https://dokie.li/media/css/basic.css>,
+        <https://dokie.li/media/css/dokieli.css>;
+    owl:sameAs cs:linked-research-decentralised-web;
+    ldp:inbox inbox:;
+    n2:hasPolicy :document-policy-offer;
+    prov:wasDerivedFrom
+        cs:call-for-linked-research, cs:cooling-down-web-science,
+        cs:dokieli-rww, cs:enabling-accessible-knowledge, cs:faipdaaf,
+        cs:linked-research, cs:linked-research-scholarly-communication,
+        cs:linked-sdmx-data, cs:linked-specifications-reports,
+        cs:linked-statistical-data-analysis, cs:sense-of-lsd-analysis,
+        cs:sparqlines-sparql-to-sparkline, cs:this-paper-is-a-demo,
+        cs:web-science-from-404-to-200, dok:, tests:summary, TR:annotation-html;
+    as:inReplyTo l:calls;
+    rel:latest-version lin:ce36de40-64a7-4d57-a189-f47c364daa74.
+:31943b7f-b646-4ebd-8787-ec2341e862c1 pso:withStatus pso:published.
+
+:document-permission
+    a n2:Permission;
+    n2:action
+        ns0:Attribution, ns0:DerivativeWorks, ns0:Distribution, ns0:Notice,
+        ns0:Reproduction, n2:aggregate, n2:archive, n2:concurrentUse, n2:derive,
+        n2:digitize, n2:display, n2:index, n2:inform, n2:install, n2:present,
+        n2:print, n2:read, n2:reproduce, n2:stream, n2:synchronize,
+        n2:textToSpeech, n2:transform, n2:translate;
+    n2:assigner n0:i.
+:document-policy-offer
+    a n2:Offer, n2:Policy;
+    n2:permission :document-permission;
+    n2:target cs:linked-research-decentralised-web;
+    n2:uid linke:document-policy-offer.
+pso:published a pso:PublicationStatus.
+
+n0:i
+    a schema:Person;
+    schema:familyName "Capadisli"@en;
+    schema:givenName "Sarven"@en;
+    schema:name "Sarven Capadisli"@en;
+    schema:url cs:.
