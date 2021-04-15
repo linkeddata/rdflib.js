@@ -187,7 +187,7 @@ export interface AutoInitOptions extends RequestInit{
   original: NamedNode
   // Like requeststatus? Can contain text with error.
   data?: string
-  // Probably an identifier for request?s
+  // The request in the RDF metadata in the store
   req: BlankNode
   // Might be the same as Options.data
   body?: string
@@ -820,7 +820,7 @@ export default class Fetcher implements CallbackifyInterface {
     return requestedURI
   }
 
-  static proxyIfNecessary (uri: string) {
+  static mapForLocalTesting:string (uri: string) {
     var UI
     if (
       typeof window !== 'undefined' &&
@@ -855,6 +855,7 @@ export default class Fetcher implements CallbackifyInterface {
       if (y) {
         return y
       }
+      return uri
     }
 
     // browser does 2014 on as https browser script not trusted
@@ -1051,7 +1052,7 @@ export default class Fetcher implements CallbackifyInterface {
 
     Fetcher.setCredentials(requestedURI, options)
 
-    let actualProxyURI = Fetcher.proxyIfNecessary(requestedURI)
+    let actualProxyURI = Fetcher.mapForLocalTesting(requestedURI)
     if (requestedURI !== actualProxyURI) {
       options.proxyUsed = true
     }
@@ -1562,8 +1563,9 @@ export default class Fetcher implements CallbackifyInterface {
     }
     Fetcher.setCredentials(uri, options)
 
+    const mappedURI = mapForLocalTesting(uri)
     return new Promise(function (resolve, reject) {
-      fetcher._fetch(uri, options).then(response => {
+      fetcher._fetch(mappedURI, options).then(response => {
         if (response.ok) {
           if (method === 'PUT' || method === 'PATCH' || method === 'POST' || method === 'DELETE') {
             fetcher.invalidateCache (uri)
