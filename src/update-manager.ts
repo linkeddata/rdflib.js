@@ -684,11 +684,14 @@ export default class UpdateManager {
    */
   updateMany(
     deletions: ReadonlyArray<Statement>,
-    insertions: ReadonlyArray<Statement>
+    insertions: ReadonlyArray<Statement> = []
   ): Promise<void[]> {
     const docs = deletions.concat(insertions).map(st => st.why)
-    const uniqueDocs = Array.from(new Set(docs))
     const thisUpdater = this
+    const uniqueDocs: Array<NamedNode> = []
+    docs.map(doc => {
+        if (!uniqueDocs.find(uniqueDoc => uniqueDoc.equals(doc))) uniqueDocs.push(doc as NamedNode)
+     })
     const updates = uniqueDocs.map(doc =>
       thisUpdater.update(deletions.filter(st => st.why.equals(doc)),
         insertions.filter(st => st.why.equals(doc))))

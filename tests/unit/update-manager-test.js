@@ -8,6 +8,7 @@ import dirtyChai from 'dirty-chai'
 import nock from 'nock'
 import * as rdf from '../../src/index'
 
+const self = {err: ''}
 const $rdf = rdf
 
 chai.use(sinonChai)
@@ -23,17 +24,18 @@ const p = $rdf.sym('https://example.com/test/foo#pred')
 const baz = $rdf.sym('https://example.org/org/baz#baz')
 
 const doc = bar.doc()
+const doc1 = bar.doc()
 const doc2 = baz.doc()
 
 const meta = $rdf.sym(doc.uri + '#meta') // random graph name for meta data
 const st1 = $rdf.st(bar, p, 111, doc)
-const st2 = $rdf.st(bar, p, 222, doc)
+const st2 = $rdf.st(bar, p, 222, doc1)
 const st3 = $rdf.st(baz, p, 333, doc2)
 
 const httpResultsText = `
 @prefix httph: <http://www.w3.org/2007/ont/httph#> .
 @prefix link: <http://www.w3.org/2007/ont/link#>.
- [] link:requestedURI "${doc.uri}"; link:response [ httph:ms-author-via "SPARQL" ].
+ [] link:requestedURI "${doc.uri}", "${doc2.uri}"; link:response [ httph:ms-author-via "SPARQL" ].
  `
 
 function loadMeta (store) {
@@ -133,6 +135,7 @@ describe('UpdateManager', () => {
   })
 
   describe('updateMany', () => {
+    const self = {err: ''}
     let updater, docuri, rterm, options, userCallback, loadStub
     var loadStatus = 200
 
@@ -152,12 +155,24 @@ describe('UpdateManager', () => {
 
     })
 
+    // on console should display @@@@@@@     updateMany to: 2
     it('Should insert triples in more than one document', done => {
       loadMeta(updater.store)
-      updater.updateMany([], [st1]).then(array => {
+      updater.updateMany([], [st1, st2, st3]).then(array => {
         expect(updater.store.fetcher.webOperation).to.have.been.called() // @@ twice
-        done()
-      })
+      }, err => console.log(err))
+      done()
+    })
+
+    // on console should display @@@@@@@     updateMany to: 2
+    // and no console error
+    it('Should remove triples in more than one document', async done => {
+      loadMeta(updater.store)
+      updater.updateMany([], [st1, st2, st3])
+      updater.updateMany([st1, st2, st3]).then(array => {
+        expect(updater.store.fetcher.webOperation).to.have.been.called() // @@ twice
+      }, err => { console.log(err) })
+     done()
     })
 /*
     it('Should patch an insert triple with no proior load', done => {
