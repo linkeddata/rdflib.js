@@ -156,23 +156,22 @@ describe('UpdateManager', () => {
     })
 
     // on console should display @@@@@@@     updateMany to: 2
-    it('Should insert triples in more than one document', done => {
+    it('Should insert triples in more than one document', () => {
       loadMeta(updater.store)
       updater.updateMany([], [st1, st2, st3]).then(array => {
-        expect(updater.store.fetcher.webOperation).to.have.been.called() // @@ twice
-      }, err => console.log(err))
-      done()
+        expect(updater.store.fetcher.webOperation).to.have.been.called()
+      })
     })
 
     // on console should display @@@@@@@     updateMany to: 2
-    // and no console error
-    it('Should remove triples in more than one document', async done => {
+    it('Should remove triples in more than one document', done => {
       loadMeta(updater.store)
       updater.updateMany([], [st1, st2, st3])
-      updater.updateMany([st1, st2, st3]).then(array => {
-        expect(updater.store.fetcher.webOperation).to.have.been.called() // @@ twice
-      }, err => { console.log(err) })
-     done()
+      updater.updateMany([st1, st2, st3])
+        .then(array => {
+          expect(updater.store.fetcher.webOperation).to.have.been.called()
+        })
+        .then(() => done(), done)
     })
 /*
     it('Should patch an insert triple with no proior load', done => {

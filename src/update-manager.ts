@@ -689,7 +689,7 @@ export default class UpdateManager {
     const docs = deletions.concat(insertions).map(st => st.why)
     const thisUpdater = this
     const uniqueDocs: Array<NamedNode> = []
-    docs.map(doc => {
+    docs.forEach(doc => {
         if (!uniqueDocs.find(uniqueDoc => uniqueDoc.equals(doc))) uniqueDocs.push(doc as NamedNode)
      })
     const updates = uniqueDocs.map(doc =>
