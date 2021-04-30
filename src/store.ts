@@ -195,10 +195,11 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
       this.whyIndex
     ]
     this.namespaces = {} // Dictionary of namespace prefixes
-    this.features = features || [
-      'sameAs',
-      'InverseFunctionalProperty',
-      'FunctionalProperty',
+    this.features = features || [ // By deafult devs do not expect these feaures.
+// See https://github.com/linkeddata/rdflib.js/issues/458
+//      'sameAs',
+//      'InverseFunctionalProperty',
+//      'FunctionalProperty',
     ]
     this.rdfArrayRemove = opts.rdfArrayRemove || RDFArrayRemove
     if (opts.dataCallback) {
