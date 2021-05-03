@@ -169,7 +169,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
 
   /**
    * Creates a new formula
-   * @param features - What sort of autmatic processing to do? Array of string
+   * @param features - What sort of automatic processing to do? Array of string
    * @param features.sameAs - Smush together A and B nodes whenever { A sameAs B }
    * @param opts
    * @param [opts.rdfFactory] - The data factory that should be used by the store
@@ -195,7 +195,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
       this.whyIndex
     ]
     this.namespaces = {} // Dictionary of namespace prefixes
-    this.features = features || [ // By deafult devs do not expect these feaures.
+    this.features = features || [ // By default, devs do not expect these features.
 // See https://github.com/linkeddata/rdflib.js/issues/458
 //      'sameAs',
 //      'InverseFunctionalProperty',
@@ -269,7 +269,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
         // console.log('applyPatch: delete: ' + ds)
         ds = ds.statements as Statement[]
         var bad: Quad[] = []
-        var ds2 = ds.map(function (st: Quad) { // Find the actual statemnts in the store
+        var ds2 = ds.map(function (st: Quad) { // Find the actual statements in the store
           var sts = targetKB.statementsMatching(st.subject, st.predicate, st.object, target)
           if (sts.length === 0) {
             // log.info("NOT FOUND deletable " + st)
@@ -393,7 +393,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
    * @param subj - The thing about which the fact a relationship is asserted.
    *        Also accepts a statement or an array of Statements.
    * @param pred - The relationship which is asserted
-   * @param obj - The object of the relationship, e.g. another thing or avalue. If passed a string, this will become a literal.
+   * @param obj - The object of the relationship, e.g. another thing or a value. If passed a string, this will become a literal.
    * @param why - The document in which the triple (S,P,O) was or will be stored on the web
    * @returns The statement added to the store, or the store
    */
@@ -868,7 +868,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
   }
 
   /**
-   * Removes all statemnts in a doc
+   * Removes all statements in a doc
    * @param doc - The document / graph
    */
   removeDocument(doc: Quad_Graph): IndexedFormula {
@@ -896,7 +896,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
   ): void {
     // log.debug("entering removeMany w/ subj,pred,obj,why,limit = " + subj +", "+ pred+", " + obj+", " + why+", " + limit)
     var sts = this.statementsMatching(subj, pred, obj, why, false)
-    // This is a subtle bug that occcured in updateCenter.js too.
+    // This is a subtle bug that occurred in updateCenter.js too.
     // The fact is, this.statementsMatching returns this.whyIndex instead of a copy of it
     // but for perfromance consideration, it's better to just do that
     // so make a copy here.
