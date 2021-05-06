@@ -785,8 +785,14 @@ export default class Fetcher implements CallbackifyInterface {
 
   static crossSiteProxy (uri: string): undefined | any {
     if (Fetcher.crossSiteProxyTemplate) {
-      return Fetcher.crossSiteProxyTemplate
+      if (Fetcher.crossSiteProxyTemplate.indexOf('={uri}') !== -1){
+        return Fetcher.crossSiteProxyTemplate
         .replace('{uri}', encodeURIComponent(uri))
+      } else {
+        return Fetcher.crossSiteProxyTemplate
+        .replace('{uri}', encodeURI(uri))
+      }
+      
     } else {
       return undefined
     }
@@ -860,10 +866,14 @@ export default class Fetcher implements CallbackifyInterface {
     // prevent it loading insecure http: stuff so we need proxy.
     if (Fetcher.crossSiteProxyTemplate &&
         typeof document !== 'undefined' && document.location &&
-        ('' + document.location).slice(0, 6) === 'https:' && // origin is secure
         uri.slice(0, 5) === 'http:') { // requested data is not
-      return Fetcher.crossSiteProxyTemplate
-        .replace('{uri}', encodeURIComponent(uri))
+          if (Fetcher.crossSiteProxyTemplate.indexOf('={uri}') !== -1){
+            return Fetcher.crossSiteProxyTemplate
+            .replace('{uri}', encodeURIComponent(uri))
+          } else {
+            return Fetcher.crossSiteProxyTemplate
+            .replace('{uri}', encodeURI(uri))
+          }
     }
 
     return uri
@@ -1121,8 +1131,9 @@ export default class Fetcher implements CallbackifyInterface {
     }
 
     let { actualProxyURI } = options
-
-    return this._fetch((actualProxyURI as string), options)
+    let requestOptions = Object.assign({}, options);
+    requestOptions.headers = Object.assign({}, options.headers);
+    return this._fetch((actualProxyURI as string), requestOptions)
       .then(response => this.handleResponse(response, docuri, options),
       error => { // @@ handleError?
         // @ts-ignore Invalid response object
@@ -1559,9 +1570,10 @@ export default class Fetcher implements CallbackifyInterface {
       (options as any).headers['content-type'] = options.contentType
     }
     Fetcher.setCredentials(uri, options)
-
+    let requestOptions = Object.assign({}, options);
+    requestOptions.headers = Object.assign({}, options.headers);
     return new Promise(function (resolve, reject) {
-      fetcher._fetch(uri, options).then(response => {
+      fetcher._fetch(uri, Object.assign({}, requestOptions)).then(response => {
         if (response.ok) {
           if (method === 'PUT' || method === 'PATCH' || method === 'POST' || method === 'DELETE') {
             fetcher.invalidateCache (uri)
