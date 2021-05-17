@@ -189,7 +189,7 @@ export interface AutoInitOptions extends RequestInit{
   req: BlankNode
   // Might be the same as Options.data
   body?: string
-  headers: Headers
+  headers: HeadersInit
   credentials?: 'include' | 'omit'
 }
 
