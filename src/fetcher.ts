@@ -1124,8 +1124,7 @@ export default class Fetcher implements CallbackifyInterface {
 
     // Map might get mistakenly added into headers
     // error TS2339: Property 'map' does not exist on type 'Headers'.
-    /*
-    let map
+    /* let map
     if (options.headers && map in options.headers) {
       delete options.headers.map
     } */
