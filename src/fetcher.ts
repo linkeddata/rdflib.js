@@ -92,14 +92,14 @@ const getNS = (factory?: RdfJsDataFactory) => {
 }
 const ns = getNS()
 
-interface FetchError extends Error {
+export interface FetchError extends Error {
   statusText?: string
   status?: StatusValues
   response?: ExtendedResponse
 }
 
 /** An extended interface of Response, since RDFlib.js adds some properties. */
-interface ExtendedResponse extends Response {
+export interface ExtendedResponse extends Response {
   /** String representation of the Body */
   responseText?: string
   /** Identifier of the reqest */
@@ -134,7 +134,7 @@ type HTTPMethods = 'GET' | 'PUT' | 'POST' | 'PATCH' | 'HEAD' | 'DELETE' | 'CONNE
 type Options = Partial<AutoInitOptions>
 
 /** Initiated by initFetchOptions, which runs on load */
-interface AutoInitOptions extends RequestInit{
+export interface AutoInitOptions extends RequestInit{
   /** The used Fetch function */
   fetch?: Fetch
   /**
