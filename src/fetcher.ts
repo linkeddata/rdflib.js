@@ -1123,9 +1123,12 @@ export default class Fetcher implements CallbackifyInterface {
     let { actualProxyURI } = options
 
     // Map might get mistakenly added into headers
-    if (options.headers && options.headers.map) {
+    // error TS2339: Property 'map' does not exist on type 'Headers'.
+    /*
+    let map
+    if (options.headers && map in options.headers) {
       delete options.headers.map
-    }
+    } */
 
     return this._fetch((actualProxyURI as string), options)
       .then(response => this.handleResponse(response, docuri, options),
