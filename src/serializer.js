@@ -11,6 +11,7 @@ import * as Uri from './uri'
 import * as Util from './utils-js'
 import CanonicalDataFactory from './factories/canonical-data-factory'
 import { createXSD } from './xsd'
+import solidNs from 'solid-namespace'
 
 export default (function () {
   var __Serializer = function (store) {
@@ -18,7 +19,14 @@ export default (function () {
     this.base = null
 
     this.prefixes = [] // suggested prefixes
-    this.namespaces = [] // complementary indexes
+    this.namespaces = [] // complementary
+    const nsKeys = Object.keys(solidNs())
+    for (const i in nsKeys) {
+      const uri = solidNs()[nsKeys[i]]('')
+      const prefix = nsKeys[i]
+      this.prefixes[uri] = prefix
+      this.namespaces[prefix] = uri
+    }
 
     this.suggestPrefix('rdf', 'http://www.w3.org/1999/02/22-rdf-syntax-ns#') // XML code assumes this!
     this.suggestPrefix('xml', 'reserved:reservedForFutureUse') // XML reserves xml: in the spec.
@@ -472,10 +480,13 @@ export default (function () {
               if (val.indexOf('.') < 0) val += '.0'
               return val
 
-            case 'http://www.w3.org/2001/XMLSchema#double': // Must force use of 'e'
-              if (val.indexOf('.') < 0) val += '.0'
-              if (val.indexOf('e') < 0) val += 'e0'
+            case 'http://www.w3.org/2001/XMLSchema#double': {
+              // Must force use of 'e'
+              const eNotation = val.toLowerCase().indexOf('e') > 0;
+              if (val.indexOf('.') < 0 && !eNotation) val += '.0'
+              if (!eNotation) val += 'e0'
               return val
+            }
 
             case 'http://www.w3.org/2001/XMLSchema#boolean':
               return expr.value === '1' ? 'true' : 'false'
@@ -794,7 +805,7 @@ export default (function () {
       for (var i = 0; i < sts.length; i++) {
         st = sts[i]
         // look for a type
-        if (st.predicate.uri === 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type' && !type && st.object.termType === 'symbol') {
+        if (st.predicate.uri === 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type' && !type && st.object.termType === 'NamedNode') {
           type = st.object
           continue // don't include it as a child element
         }

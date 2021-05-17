@@ -146,6 +146,7 @@ export default class UpdateManager {
             for (let i = 0; i < acceptPatch.length; i++) {
               method = acceptPatch[i].value.trim()
               if (method.indexOf('application/sparql-update') >= 0) return 'SPARQL'
+              if (method.indexOf('application/sparql-update-single-match') >= 0) return 'SPARQL'
             }
           }
           var authorVia = kb.each(response, this.ns.httph('ms-author-via'))
@@ -683,11 +684,14 @@ export default class UpdateManager {
    */
   updateMany(
     deletions: ReadonlyArray<Statement>,
-    insertions: ReadonlyArray<Statement>
+    insertions: ReadonlyArray<Statement> = []
   ): Promise<void[]> {
     const docs = deletions.concat(insertions).map(st => st.why)
-    const uniqueDocs = Array.from(new Set(docs))
     const thisUpdater = this
+    const uniqueDocs: Array<NamedNode> = []
+    docs.forEach(doc => {
+        if (!uniqueDocs.find(uniqueDoc => uniqueDoc.equals(doc))) uniqueDocs.push(doc as NamedNode)
+     })
     const updates = uniqueDocs.map(doc =>
       thisUpdater.update(deletions.filter(st => st.why.equals(doc)),
         insertions.filter(st => st.why.equals(doc))))
