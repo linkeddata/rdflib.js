@@ -2,7 +2,7 @@
 **
 ** Tim Berners-Lee 2006
 ** This is was http://dig.csail.mit.edu/2005/ajar/ajaw/js/rdf/serialize.js
-** This is or was https://github.com/linkeddata/rdflib.js/blob/master/src/serializer.js
+** This is or was https://github.com/linkeddata/rdflib.js/blob/main/src/serializer.js
 ** Licence: MIT
 */
 import NamedNode from './named-node'
