@@ -20,7 +20,7 @@ $ git remote add upstream git://github.com/linkeddata/rdflib.js.git
 Create a feature branch and start hacking:
 
 ```sh
-$ git checkout -b my-feature-branch -t origin/master
+$ git checkout -b my-feature-branch -t origin/main
 ```
 
 
@@ -70,7 +70,7 @@ Use `git rebase` (not `git merge`) to sync your work from time to time.
 
 ```sh
 $ git fetch upstream
-$ git rebase upstream/master
+$ git rebase upstream/main
 ```
 
 
