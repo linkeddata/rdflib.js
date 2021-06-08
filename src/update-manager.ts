@@ -94,7 +94,7 @@ export default class UpdateManager {
 
   /**
    * Tests whether a file is editable.
-   * If the file has a specific annotation that it is machine written, 
+   * If the file has a specific annotation that it is machine written,
    * for safety, it is editable (this doesn't actually check for write access)
    * If the file has wac-allow and accept patch headers, those are respected.
    * and local write access is determined by those headers.
@@ -165,7 +165,7 @@ export default class UpdateManager {
           if ( !this.isHttpUri(uri as string) ) {
             if( !wacAllow ) return false;
             else return 'LOCALFILE';
-          }		  
+          }
 
           var status = kb.each(response, this.ns.http('status'))
           if (status.length) {
@@ -695,7 +695,9 @@ export default class UpdateManager {
     const updates = uniqueDocs.map(doc =>
       thisUpdater.update(deletions.filter(st => st.why.equals(doc)),
         insertions.filter(st => st.why.equals(doc))))
-    console.log(` @@@@@@@     updateMany to: ${updates.length} `)
+    if (updates.length > 1) {
+      console.log(`@@ updateMany to ${updates.length}: ${uniqueDocs}`)
+    }
     return Promise.all(updates)
   }
 
