@@ -1572,8 +1572,8 @@ export default class Fetcher implements CallbackifyInterface {
         if (response.ok) {
           if (method === 'PUT' || method === 'PATCH' || method === 'POST' || method === 'DELETE') {
             fetcher.invalidateCache (uri)
-          }
-          if (response.body) {
+          } // response.body with Chrome can't be relied on
+          if (response.text) { // Was: response.body https://github.com/linkeddata/rdflib.js/issues/506
             response.text().then(data => {
               response.responseText = data
               resolve(response)
