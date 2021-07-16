@@ -500,7 +500,9 @@ class JsonLdHandler extends Handler {
     const kb = fetcher.store
     return new Promise((resolve, reject) => {
       try {
-        jsonldParser (responseText, kb, options.original.value, resolve)
+        jsonldParser (responseText, kb, options.original.value, () => {
+          resolve(fetcher.doneFetch(options, response))
+        })
       } catch (err) {
         const msg = 'Error trying to parse ' + options.resource +
           ' as JSON-LD:\n' + err  // not err.stack -- irrelevant
