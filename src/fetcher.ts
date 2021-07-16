@@ -1210,7 +1210,7 @@ export default class Fetcher implements CallbackifyInterface {
       .then((fetchResponse: ExtendedResponse) => {
         if (userCallback) {
           if (fetchResponse) {
-            if ((fetchResponse as Response).ok) {
+            if (fetchResponse instanceof IndexedFormula || (fetchResponse as Response).ok) {
               userCallback(true, 'OK', fetchResponse)
             } else {
               // console.log('@@@ fetcher.js Should not take this path !!!!!!!!!!!!')
