@@ -84,10 +84,10 @@ export default function jsonldParser (str, kb, base, callback) {
         const value = flatResource[property]
         if (Array.isArray(value)) {
           for (let i = 0; i < value.length; i++) {
-            kb.addStatement(createStatement(kb, id, property, value[i]))
+            kb.addStatement(createStatement(kb, id, property, value[i], base))
           }
         } else {
-          kb.addStatement(createStatement(kb, id, property, value))
+          kb.addStatement(createStatement(kb, id, property, value, base))
         }
       }
 
@@ -105,7 +105,7 @@ export default function jsonldParser (str, kb, base, callback) {
  * @param value
  * @return quad statement
  */
-function createStatement(kb, id, property, value) {
+function createStatement(kb, id, property, value, base) {
   let predicate, object
   if (property === "@type") {
     predicate = kb.rdfFactory.namedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
@@ -114,5 +114,5 @@ function createStatement(kb, id, property, value) {
     predicate = kb.rdfFactory.namedNode(property)
     object = jsonldObjectToTerm(kb, value)
   }
-  return kb.rdfFactory.quad(id, predicate, object)
+  return kb.rdfFactory.quad(id, predicate, object, kb.rdfFactory.namedNode(base))
 }
