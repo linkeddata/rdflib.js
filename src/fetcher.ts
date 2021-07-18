@@ -496,7 +496,7 @@ class JsonLdHandler extends Handler {
       resource: Quad_Subject
     } & Options,
     response: ExtendedResponse
-  ): ExtendedResponse | Promise<FetchError> {
+  ): Promise<ExtendedResponse | FetchError> {
     const kb = fetcher.store
     return new Promise((resolve, reject) => {
       try {
