@@ -1068,7 +1068,7 @@ class Fetcher {
   putBack (uri, options = {}) {
     uri = uri.uri || uri // Accept object or string
     let doc = new NamedNode(uri).doc() // strip off #
-    options.contentType = options["content-type"] || options.contentType || 'text/turtle'
+    options.contentType = options["content-type"] || options["Content-Type"] || options.contentType || 'text/turtle'
     if (options.contentType === 'application/ld+json') {
       return new Promise((resolve, reject) => {
         serialize(doc, this.store, doc.uri, options.contentType, (err, jsonString) => {
