@@ -704,7 +704,7 @@ interface CallbackifyInterface {
  * which turns it from an offline store to an online store.
  * The fetcher deals with loading data files rom the web,
   * figuring how to parse them.  It will also refresh, remove, the data
-  * and put back the fata to the web.
+  * and put back the data to the web.
  */
 export default class Fetcher implements CallbackifyInterface {
   store: IndexedFormula
@@ -1429,7 +1429,21 @@ export default class Fetcher implements CallbackifyInterface {
   ): Promise<Response> {
     const uriSting = termValue(uri)
     let doc = new RDFlibNamedNode(uriSting).doc() // strip off #
-    options.contentType = options.contentType || TurtleContentType
+    options.contentType = options["content-type"] || options["Content-Type"] || options.contentType || TurtleContentType
+    if (options.contentType === 'application/ld+json') {
+      return new Promise((resolve, reject) => {
+        serialize(doc, this.store, doc.uri, options.contentType, (err, jsonString) => {
+          if (err) {
+            reject(err)
+          } else {
+            options.data = jsonString
+            this.webOperation('PUT', uri, options)
+              .then((res) => resolve(res))
+              .catch((error) => reject(error))
+          }
+        })
+      })
+    }
     options.data = serialize(doc, this.store, doc.value, options.contentType) as string
     return this.webOperation('PUT', uriSting, options)
   }
