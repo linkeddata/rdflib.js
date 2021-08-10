@@ -1436,7 +1436,7 @@ export default class Fetcher implements CallbackifyInterface {
           if (err) {
             reject(err)
           } else {
-            options.data = jsonString
+            options.data = jsonString || undefined
             this.webOperation('PUT', uri, options)
               .then((res) => resolve(res))
               .catch((error) => reject(error))
