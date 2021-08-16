@@ -91,14 +91,51 @@ export default class UpdateManager {
     return( uri.slice(0,4) === 'http' )
   }
 
+/** Remove from the store HTTP authorization metadata
+* The editble function below relies on copies we have in the store
+* of the results of previous HTTP transactions. Howver, when
+* the user logs in, then that data misrepresents what would happen
+* if the user tried again.
+*/
+async flagAuthorizationMetadata () {
+  const meta = this.fetcher.appNode
+  const requests = kb.statementsMatching(undefined, this.ns.link('requestedURI'), undefined, meta).map(st => st.subject)
+  for (const request of requests) {
+    const response = kb.any(request, this.ns.link('response'), null, meta) as Quad_Subject
+    if (response !== undefined) { // ts
+      kb.add(response, this.ns.link('outOfDate'), true, meta)
+    }
+  }
+}
 
+/**
+ * Tests whether a file is editable.
+ * If the file has a specific annotation that it is machine written,
+ * for safety, it is editable (this doesn't actually check for write access)
+ * If the file has wac-allow and accept patch headers, those are respected.
+ * and local write access is determined by those headers.
+ * This async version not only looks at past HTTP requests, it also makes new ones if necessary.
+ *
+ * @returns The method string SPARQL or DAV or
+ *   LOCALFILE or false if known, undefined if not known.
+ */
+ async checkEditable (uri: string | NamedNode, kb?: IndexedFormula): string | boolean | undefined {
+   const initial = editable(uri, kb)
+   if (initial !==  undefined) {
+     return initial
+   }
+   await this.store.fetcher.load(uri)
+   const final = editable(uri, kb)
+   console.log(`Loaded ${uri} just to check editable, result: ${final}.`)
+   return final
+ }
   /**
    * Tests whether a file is editable.
    * If the file has a specific annotation that it is machine written,
    * for safety, it is editable (this doesn't actually check for write access)
    * If the file has wac-allow and accept patch headers, those are respected.
    * and local write access is determined by those headers.
-   * This version only looks at past HTTP requests, does not make new ones.
+   * This synchronous version only looks at past HTTP requests, does not make new ones.
    *
    * @returns The method string SPARQL or DAV or
    *   LOCALFILE or false if known, undefined if not known.
@@ -123,15 +160,21 @@ export default class UpdateManager {
 
     var request
     var definitive = false
+    const meta = this.fetcher.appNode
+
      // @ts-ignore passes a string to kb.each, which expects a term. Should this work?
-    var requests = kb.each(undefined, this.ns.link('requestedURI'), docpart(uri))
+    var requests = kb.each(undefined, this.ns.link('requestedURI'), docpart(uri), meta)
     var method: string
     for (var r = 0; r < requests.length; r++) {
       request = requests[r]
       if (request !== undefined) {
-        var response = kb.any(request, this.ns.link('response')) as Quad_Subject
-        if (request !== undefined) {
-          var wacAllow = kb.anyValue(response, this.ns.httph('wac-allow'))
+        const response = kb.any(request, this.ns.link('response'), null, meta) as Quad_Subject
+        if (response !== undefined) { // ts
+
+          const outOfDate = kb.anyJS(response, this.ns.link('outOfDate'), null, meta)
+          if (outOfDate) continue
+
+          var wacAllow = kb.anyValue(response, this.ns.httph('wac-allow'), null, meta)
           if (wacAllow) {
             for (var bit of wacAllow.split(',')) {
               var lr = bit.split('=')
@@ -141,7 +184,7 @@ export default class UpdateManager {
               }
             }
           }
-          var acceptPatch = kb.each(response, this.ns.httph('accept-patch'))
+          var acceptPatch = kb.each(response, this.ns.httph('accept-patch'), null, meta)
           if (acceptPatch.length) {
             for (let i = 0; i < acceptPatch.length; i++) {
               method = acceptPatch[i].value.trim()
@@ -149,7 +192,7 @@ export default class UpdateManager {
               if (method.indexOf('application/sparql-update-single-match') >= 0) return 'SPARQL'
             }
           }
-          var authorVia = kb.each(response, this.ns.httph('ms-author-via'))
+          var authorVia = kb.each(response, this.ns.httph('ms-author-via'), null, meta)
           if (authorVia.length) {
             for (let i = 0; i < authorVia.length; i++) {
               method = authorVia[i].value.trim()
