@@ -156,7 +156,6 @@ describe('UpdateManager', () => {
 
     })
 
-    // on console should display @@@@@@@     updateMany to: 2
     it('Should insert triples in more than one document', () => {
       loadMeta(updater.store)
       updater.updateMany([], [st1, st2, st3]).then(array => {
@@ -164,7 +163,6 @@ describe('UpdateManager', () => {
       })
     })
 
-    // on console should display @@@@@@@     updateMany to: 2
     it('Should remove triples in more than one document', done => {
       loadMeta(updater.store)
       updater.updateMany([], [st1, st2, st3])
@@ -198,5 +196,54 @@ describe('UpdateManager', () => {
 */
 
   })
+
+  describe('editable', () => {
+    const self = {err: ''}
+    let updater, docuri, rterm, options, userCallback, loadStub
+    var loadStatus = 200
+
+    beforeEach(() => {
+      options = {}
+      userCallback = () => {}
+
+      updater = new UpdateManager()
+      // updater.store.fetcher.webOperation = sinon.stub().resolves({ ok: true, status: 200, statusText: "Dummy stub 1"})
+      // updater.store.fetcher.load = sinon.stub().resolves({ ok: true, status: 200, statusText: "Dummy stub 2"})
+
+    })
+
+    it('Should detect a document is editable from metadata', () => {
+      loadMeta(updater.store)
+      expect(updater.editable(doc1)).to.equal('SPARQL')
+    })
+
+    it('Should not detect a document is editable from metadata after flush', () => {
+      loadMeta(updater.store)
+      updater.flagAuthorizationMetadata()
+      expect(updater.editable(doc1)).to.equal(undefined)
+    })
+
+
+    it('Async version should detect a document is editable from metadata', () => {
+      loadMeta(updater.store)
+      updater.checkEditable(doc1).then(
+        res => expect(result).to.equal('SPARQL')
+      )
+      expect(updater.editable(doc1)).to.equal('SPARQL')
+    })
+
+    it('Async version should not detect a document is editable from metadata after flush', () => {
+      loadMeta(updater.store)
+      updater.flagAuthorizationMetadata()
+      updater.checkEditable(doc1).then(
+        res => expect(result).to.equal('SPARQL')
+      )
+      expect(updater.editable(doc1)).to.equal(undefined)
+    })
+
+
+  })
+
+
 
 })
