@@ -98,12 +98,13 @@ export default class UpdateManager {
 * if the user tried again.
 */
 async flagAuthorizationMetadata () {
-  const meta = this.fetcher.appNode
+  const kb = this.store
+  const meta = kb.fetcher.appNode
   const requests = kb.statementsMatching(undefined, this.ns.link('requestedURI'), undefined, meta).map(st => st.subject)
   for (const request of requests) {
     const response = kb.any(request, this.ns.link('response'), null, meta) as Quad_Subject
     if (response !== undefined) { // ts
-      kb.add(response, this.ns.link('outOfDate'), true, meta)
+      this.store.add(response, this.ns.link('outOfDate'), true as any, meta) // @@ Boolean is fine - fix types
     }
   }
 }
@@ -119,13 +120,13 @@ async flagAuthorizationMetadata () {
  * @returns The method string SPARQL or DAV or
  *   LOCALFILE or false if known, undefined if not known.
  */
- async checkEditable (uri: string | NamedNode, kb?: IndexedFormula): string | boolean | undefined {
-   const initial = editable(uri, kb)
+ async checkEditable (uri: string | NamedNode, kb?: IndexedFormula): Promise<string | boolean | undefined> {
+   const initial = this.editable(uri, kb)
    if (initial !==  undefined) {
      return initial
    }
    await this.store.fetcher.load(uri)
-   const final = editable(uri, kb)
+   const final = this.editable(uri, kb)
    console.log(`Loaded ${uri} just to check editable, result: ${final}.`)
    return final
  }
@@ -150,7 +151,7 @@ async flagAuthorizationMetadata () {
     uri = termValue(uri)
 
     if ( !this.isHttpUri(uri as string) ) {
-      if (kb.holds(
+      if (this.store.holds(
           this.store.rdfFactory.namedNode(uri),
           this.store.rdfFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
           this.store.rdfFactory.namedNode('http://www.w3.org/2007/ont/link#MachineEditableDocument'))) {
@@ -160,7 +161,8 @@ async flagAuthorizationMetadata () {
 
     var request
     var definitive = false
-    const meta = this.fetcher.appNode
+    const meta = this.store.fetcher.appNode
+    // const kb = s
 
      // @ts-ignore passes a string to kb.each, which expects a term. Should this work?
     var requests = kb.each(undefined, this.ns.link('requestedURI'), docpart(uri), meta)

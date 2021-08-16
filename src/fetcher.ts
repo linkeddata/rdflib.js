@@ -712,7 +712,7 @@ export default class Fetcher implements CallbackifyInterface {
   _fetch: Fetch
   mediatypes: MediatypesMap
   /** Denoting this session */
-  appNode: BlankNode
+  appNode: NamedNode
   /**
    * this.requested[uri] states:
    * undefined     no record of web access or records reset
@@ -761,8 +761,9 @@ export default class Fetcher implements CallbackifyInterface {
     if (!this._fetch) {
       throw new Error('No _fetch function available for Fetcher')
     }
-
-    this.appNode = this.store.rdfFactory.blankNode()
+    // This is the name of the graphh we store all the HTTP metadata in
+    this.appNode = this.store.sym('chrome://TheCurrentSession')
+    // this.appNode = this.store.rdfFactory.blankNode() // Needs to have a URI in tests
     this.store.fetcher = this // Bi-linked
     this.requested = {}
     this.timeouts = {}
