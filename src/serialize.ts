@@ -30,7 +30,7 @@ export default function serialize (
    * Defaults to Turtle.
    */
   contentType?: string | ContentType,
-  callback?: (err: Error | undefined | null, result?: string | null) => any,
+  callback?: (err: Error | undefined | null, result?: string) => any,
   options?: {
     /**
      * A string of letters, each of which set an options
@@ -42,7 +42,7 @@ export default function serialize (
   base = base || target.value
   const opts = options || {}
   contentType = contentType || TurtleContentType // text/n3 if complex?
-  var documentString: string | null = null
+  var documentString: string | undefined = undefined
   try {
     var sz = Serializer(kb)
     if ((opts as any).flags) sz.setFlags((opts as any).flags)
@@ -91,7 +91,7 @@ export default function serialize (
     throw err // Don't hide problems from caller in sync mode
   }
 
-  function executeCallback (err: Error | null | undefined, result: string | null | undefined): string | undefined {
+  function executeCallback (err: Error | null | undefined, result: string | undefined): string | undefined {
     if (callback) {
       callback(err, result)
       return
