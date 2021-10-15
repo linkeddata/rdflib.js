@@ -5,6 +5,7 @@ import * as sinon from 'sinon'
 import * as sinonChai from 'sinon-chai'
 import {Fetcher, graph, lit, st, sym, UpdateManager} from '../../src/index'
 
+
 const {expect} = chai
 
 chai.use((sinonChai as any).default)
@@ -38,6 +39,22 @@ describe('sparql updates via update manager', () => {
         const st1 = st(subject, predicate, lit("literal value"), subject.doc())
         await updater.update([], [st1])
         expect(getPatchCall().lastArg.body).to.equal(`INSERT DATA { <https://pod.example/test/foo#subject> <https://pod.example/test/foo#predicate> "literal value" .
+ }
+`)
+    })
+
+    it('calls PATCH to insert a triple including line feed', async () => {
+        const st1 = st(subject, predicate, lit("literal\nvalue"), subject.doc())
+        await updater.update([], [st1])
+        expect(getPatchCall().lastArg.body).to.equal(`INSERT DATA { <https://pod.example/test/foo#subject> <https://pod.example/test/foo#predicate> "literal\\nvalue" .
+ }
+`)
+    })
+
+    it('calls PATCH to insert a triple including carriage return line feed', async () => {
+        const st1 = st(subject, predicate, lit("literal\r\nvalue"), subject.doc())
+        await updater.update([], [st1])
+        expect(getPatchCall().lastArg.body).to.equal(`INSERT DATA { <https://pod.example/test/foo#subject> <https://pod.example/test/foo#predicate> "literal\\r\\nvalue" .
  }
 `)
     })
