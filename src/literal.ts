@@ -98,9 +98,12 @@ export default class Literal extends Node implements TFLiteral {
         literal.value)
     }
     var str = literal.value
+    // #x22 ("), #x5C (\), #x0A (\n) and #xD (\r) are disallowed and need to be replaced
+    // see https://www.w3.org/TR/n-triples/#grammar-production-STRING_LITERAL_QUOTE
     str = str.replace(/\\/g, '\\\\')
     str = str.replace(/\"/g, '\\"')
     str = str.replace(/\n/g, '\\n')
+    str = str.replace(/\r/g, '\\r')
     str = '"' + str + '"'
 
     if (literal.language) {
