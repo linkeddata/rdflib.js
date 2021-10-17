@@ -14,7 +14,6 @@ jobs:
     strategy:
       matrix:
         node-version:
-          - 10.x
           - 12.x
           - 14.x
           - 15.x
@@ -25,8 +24,8 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - run: npm ci
-      - run: npm run build
-      - run: npm run bundlesize
+      - run: npm test
+      - run: npm run doc
       - name: Save build
         if: matrix.node-version == '14.x'
         uses: actions/upload-artifact@v2
@@ -51,7 +50,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: .
 
-  npm:
+  npm-publish-build:
     needs: test
     runs-on: ubuntu-latest
     steps:
@@ -70,3 +69,20 @@ jobs:
         with:
           token: ${{ secrets.NPM_TOKEN }}
           tag: ${{ env.GITHUB_REF_SLUG }}
+  npm-publish-latest:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: build
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 14.x
+      - name: Disable pre- and post-publish actions
+        run: 'sed -i -E "s/\"((pre|post)publish)/\"ignore:\1/" package.json'
+      - uses: JS-DevTools/npm-publish@v1
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          tag: latest
