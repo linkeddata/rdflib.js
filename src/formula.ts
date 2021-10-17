@@ -258,7 +258,7 @@ export default class Formula extends Node {
       (!s || s.equals(st.subject)) &&
       (!p || p.equals(st.predicate)) &&
       (!o || o.equals(st.object)) &&
-      (!g || g.equals(st.subject))
+      (!g || g.equals(st.graph))
     )
 
     if (justOne) {
