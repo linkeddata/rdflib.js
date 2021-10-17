@@ -1036,6 +1036,7 @@ export default class Fetcher implements CallbackifyInterface {
     options.headers = options.headers || new Headers()
 
     if (options.contentType) {
+      // @ts-ignore
       options.headers['content-type'] = options.contentType
     }
 
@@ -1044,6 +1045,7 @@ export default class Fetcher implements CallbackifyInterface {
     }
 
     let acceptString = this.acceptString()
+    // @ts-ignore
     options.headers['accept'] = acceptString
 
     let requestedURI = Fetcher.offlineOverride(uri)
@@ -1436,6 +1438,7 @@ export default class Fetcher implements CallbackifyInterface {
           if (err) {
             reject(err)
           } else {
+            // @ts-ignore
             options.data = jsonString
             this.webOperation('PUT', uri, options)
               .then((res) => resolve(res))
