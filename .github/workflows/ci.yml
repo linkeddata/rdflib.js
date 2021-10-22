@@ -26,6 +26,10 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run doc
+      - run: npm run build
+      - run: npm run build:types
+      - run: npm run build:browser
+      - run: npm run build:esm
       - name: Save build
         if: matrix.node-version == '14.x'
         uses: actions/upload-artifact@v2
