@@ -33,24 +33,24 @@ td: { background-color: #eee; }
 <body>
 <h2>What is rdflib?</h2>
 
-<p>The easiest and best way to work with linked data in Solid is to use a library called <code>rdflib</code>. <code>rdflib</code> is a general toolbox for doing most things with linked data. It can store data, parse and serialize data into various formats, and keep track of changes to the data coming from the app or from the server.</p>
+<p>The easiest and best way to work with linked data in Solid is to use a library called rdflib. Rdflib is a general toolbox for doing most things for linked data. It can store data, parse and serialize data into various formats, and keep track of changes to the data coming from the app or from the server.</p>
 
 <h3>Glossary of Terms</h3>
 
 <p>Here are some basic vocabulary terms we'll be using throughout this document.</p>
 
-<ul><li><b>Store</b> - data structure to store graph data and perform queries against. This is the simplest way to work with linked data in <code>rdflib</code>. You can store data from Javascript, dump data out from it, or perform raw queries.</li>
+<ul><li><b>Store</b> - data structure to store graph data and perform queries against. This is the simplest way to work with linked data in rdflib. You can store data from Javascript, dump data out from it, or perform raw queries.</li>
 	<li><b>Fetcher</b> - A helper object that connects to the web, loads data, and saves it back. More powerful than using a simple store object. When you have a fetcher, then you also can ask the query engine to go fetch new linked data automatically as your query makes its way across the web.</li>
 	<li><b>UpdateManager</b> - An even more helper object. The UpdateManager allows you to send small changes to the server to “patch” the data as your user changes data in real time. It also allows you to subscribe to changes other people make to the same file, keeping track of upstream and downstream changes, and signaling any conflict between them.</li>
 	<li><b>Graph</b> - A database for the semantic web. This database is seemingly arbitrary in terms of what is related to what. There are no parent or root nodes, and the connections between nodes is key.</li>
-	<li><b>Triples </b>- An RDF concept that is comprised of three properties -- a <code>subject</code>, a <code>predicate</code>, and an <code>object</code>. For example, storing the data “I have the name John” would be represented as a triple. Similarly,</li>
-	<li><b>Quad</b> is like a triple, but has an additional property (a <code>context</code>) to explain where the data came from.</li>
-	<li><b>Statement</b> - Another word for triple or quad.</li>
-</ul><h3>Setting up <code>rdflib.js</code></h3>
+	<li><b>Triples </b>- An RDF concept that comprise of subject, predicate, and object. For example, storing the data “I have the name John” would be represented as a triple. Similarly,</li>
+	<li><b>Quad</b> is like a triple, but also has a property to explain where the data came from.</li>
+	<li><b>Statement</b> - Another word for quad.</li>
+</ul><h3>Setting up rdflib.js</h3>
 
-<p>Typically people define <code>rdflib</code> in your module as <code>$rdf</code>, so that you an easily cut and paste code between projects and examples here, without confusion.</p>
+<p>Typically people define rdflib in your module as $rdf, so that you an easily cut and paste code between projects and examples here, without confusion.</p>
 
-<p>Installation steps (using <code>npm</code>):</p>
+<p>Installation steps (using npm):</p>
 
 <pre>
 <code class="language-javascript">npm install rdflib --save
@@ -64,9 +64,9 @@ td: { background-color: #eee; }
 
 <h3>Setting up a Store</h3>
 
-<p>Suppose we have a store, and we set up a person and their profile. Their WebID is the URI '<a href="https://example.com/alice/card#me">https://example.com/alice/card#me</a>', which is, if you like, a local variable ‘me’ within the the file '<a href="https://example.com/alice/card">https://example.com/alice/card</a>'. </p>
+<p>Suppose we have a store, and we set up a person and their profile. Their webid is the URI '<a href="https://example.com/alice/card#me">https://example.com/alice/card#me</a>', which is, if you like, a local variable ‘me’ within the the file '<a href="https://example.com/alice/card">https://example.com/alice/card</a>'. </p>
 
-<p>There are two ways of creating a store:</p>
+<p>There are two ways of creating a store:  </p>
 
 <pre>
 <code class="language-javascript">const store = new $rdf.IndexedFormula
@@ -75,12 +75,12 @@ td: { background-color: #eee; }
 <p>and the shortcut:</p>
 
 <pre>
-<code>const store = $rdf.graph();
+<code>const store  = $rdf.graph();
 </code></pre>
 
 <h3>Using the Store</h3>
 
-<p>Let's set up a variable for the person of interest, and one for their profile document. Note that the URIs for abstract things in RDF have a # and a local id, just like anchors in HTML. The NamedNode method doc() generates a Named Node for the document.</p>
+<p>Let's set up a variable for the person of interest, and one for their profile document.  Note that the URIs for abstract things in RDF have a # and a local id, just like anchors in HTML.   The NamedNode method doc() generates a Named Node for the document.</p>
 
 <pre>
 <code>const me = store.sym('https://example.com/alice/card#me');
@@ -92,7 +92,7 @@ const profile = me.doc();       //i.e. store.sym(''https://example.com/alice/car
 <code class="language-javascript">const VCARD = new $rdf.Namespace(‘http://www.w3.org/2006/vcard/ns#‘);
 </code></pre>
 
-<p>If we don’t know which vocabulary to use, various groups have their favorite lists. One is the <a href="https://github.com/solid/solid-ui/blob/master/src/ns.js">solid-ui list of namespaces</a>.</p>
+<p>If we don’t know which vocabulary to use, various groups have their favorite lists. One is the <a href="https://github.com/solid/solid-namespace">collection of RDF namespaces in Solid projects</a>.</p>
 
 <p>We add a name to the store as though it was stored in the profile</p>
 
@@ -100,9 +100,9 @@ const profile = me.doc();       //i.e. store.sym(''https://example.com/alice/car
 <code class="language-javascript">store.add(me, VCARD(‘fn’), “John Bloggs”, profile);
 </code></pre>
 
-<p>The third parameter, the object, is formally an RDF Term, here it would be a <strong>Literal</strong>. But you can give a string like “John Bloggs”, and rdflib will generate the right internal object. It will do that with strings, numbers, Javascript Date objects. </p>
+<p>The third parameter, the object, is formally an RDF Term, here it would be a <strong>Literal</strong>. But you can give a string like “John Bloggs”, and rdflib will generate the right internal object.  It will do that with strings, numbers, Javascript Date objects. </p>
 
-<p>We have some data - one quad - in our store! Let's read it out.</p>
+<p>We have some data - one quad - in our store!  Let's read it out.</p>
 
 <p>Now to check what name is given to this person <i>specifically</i> in their profile, we do:</p>
 
@@ -122,7 +122,7 @@ const profile = me.doc();       //i.e. store.sym(''https://example.com/alice/car
 
 <h4>Using the Store with Turtle</h4>
 
-<p>Let’s look at two more local operations. If you have turtle text for some data, you can load it into the store using $rdf.parse:</p>
+<p>Let’s look at two more local operations.  If you have turtle text for some data, you can load it into the store using $rdf.parse:</p>
 
 <pre>
 <code class="language-javascript">let text = '&lt;#this&gt;  a  &lt;#Example&gt; .';
@@ -132,24 +132,24 @@ let store = $rdf.graph();
 $rdf.parse(text, store, doc.uri, ‘text/turtle’);  // pass base URI
 </code></pre>
 
-<p>Note that we must specify a document URI, as the store works by keeping track of where each triple belongs.</p>
+<p>Note that we must specify a document URI, as the store works by keeping track of where each triple belongs.  </p>
 
 <pre>
 <code>&gt; store.toNT()
 '{&lt;https://example.com/alice/card.ttl#this&gt; &lt;http://www.w3.org/1999/02/22-rdf-syntax-ns#type&gt; &lt;https://example.com/alice/card.ttl#Example&gt; .}'
 </code></pre>
 
-<p>We can similarly generate a turtle text from the store. Serialize is the function. You pass it the document (as a NamedNode) we are talking about, and it will just select the triples from that document to be output.</p>
+<p>We can similarly generate a turtle text from the store. Serialize is the function.  You pass it the document (as a NamedNode) we are talking about, and it will just select the triples from that document to be output.</p>
 
 <pre>
 <code class="language-javascript">console.log($rdf.serialize(doc, store, aclDoc.uri, 'text/turtle'));
 </code></pre>
 
-<p>If you omit the document parameter to serialize, or pass null, then you will get all the triples in the store. This may, if you have used a Fetcher, possibly metadata which the fetcher has stored about the HTTP requests it made in fetching your documents. Which might be interesting... but not what you were expecting.</p>
+<p>If you omit the document parameter to serialize, or pass null, then you will get all the triples in the store.  This may, if you have used a Fetcher,  possibly metadata which the fetcher has stored about the HTTP requests it made in fetching your documents.  Which might be interesting... but not what you were expecting.</p>
 
 <h4>Using match() to Search the store</h4>
 
-<p>The store’s <code>match(s, p, o, d)</code> method allows you to pull out any combination of quads:</p>
+<p>The store’s match(s, p, o, d) method allows you to pull out any combination of quads:</p>
 
 <pre>
 <code class="language-javascript">let quads = store.match(subject, predicate, object, document);
@@ -215,7 +215,7 @@ $rdf.parse(text, store, doc.uri, ‘text/turtle’);  // pass base URI
 			<td>
 			<p dir="ltr">The NamedNode of the document</p>
 			</td>
-		</tr></tbody></table><p>The last property is called <i>why</i> because it tells us why we should believe it. In a simple linked data system this is a document we have read. In a more complex system this could point to an inference step. It can also be a special object put in by the Fetcher to store the results of its HTTP operations on the web.</p>
+		</tr></tbody></table><p>The last property is called <i>why</i> because it tells us why we should believe it.  In a simple linked data system this is a document we have read. In a more complex system this could point to an inference step. It can also be a special object put in by the Fetcher to store the results of its HTTP operations on the web.</p>
 
 <p>So to find out all the document which mention an old email address as the object of any statement</p>
 
@@ -242,7 +242,7 @@ $rdf.parse(text, store, doc.uri, ‘text/turtle’);  // pass base URI
 </code></pre>
 
 <p>which pulls in the statements which mention Alice, plus those which mention connected blank nodes,
-which could include things like the structure of Alice's address, for example.</p>
+  which could include things like the structure of Alice's address, for example.</p>
 
 <p>Suppose we have loaded a bunch of LDP folders and we want to pull out all the pairs of files where one is inside the other.</p>
 
@@ -274,12 +274,12 @@ which could include things like the structure of Alice's address, for example.</
 
 <h2>Using the Fetcher</h2>
 <p>The Fetcher is a "helper object" which you can attach to a store
-to allow it to connect to the read-write web of data.
-The Fetcher handles the HTTP requests, understands MIME types and different
-formats. It uses the 4th column of the quadstore to track where each triple came from.
-It can parse data from the net (or elsewhere) and put it in the store.
-It can generate pretty-printed formatted data from the store, the whole store,
-or the data corresponding to one data document out there.
+  to allow it to connect to the read-write web of data.
+  The Fetcher handles the HTTP requests, understands MIME types and different
+  formats.  It uses the 4th column of the quadstore to track where each triple came from.
+  It can parse data from the net (or elsewhere) and put it in the store.
+  It can generate pretty-printed formatted data from the store, the whole store,
+  or the data corresponding to one data document out there.
 </p>
 
 <img src="https://raw.githubusercontent.com/linkeddata/rdflib.js/Documentation/diagrams/rdflib_block_diagram.png" />
@@ -289,7 +289,7 @@ or the data corresponding to one data document out there.
 <pre>
 <code class="language-javascript">const store = $rdf.graph();
 const me = store.sym('https://example.com/alice/card#me');
-const profile = me.doc() //    i.e., store.sym(''https://example.com/alice/card#me');
+const profile = me.doc() //    i.e. store.sym(''https://example.com/alice/card#me');
 const VCARD = new $rdf.Namespace(‘http://www.w3.org/2006/vcard/ns#‘);
 </code></pre>
 
@@ -378,7 +378,7 @@ fetcher.load(me.doc).then(resp -&gt; {
 });
 </code></pre>
 
-<p>This will pull in the user’s profile to make the picture and name for my own card. Then we explicitly pull it in again to find the list of friends. This is reasonable as the fetcher’s `load` method really means “load if you haven’t already” so continues immediately if it has already been fetched. It’s wise to explicitly load the things you need and let the system track what has already been loaded.</p>
+<p>This will pull in the user’s profile to make the picture and name for my own card.  Then we explicitly pull it in again to find the list of friends.  This is reasonable as the fetcher’s `load` method really means “load if you haven’t already” so continues immediately if it has already been fetched.  It’s wise to explicitly load the things you need and let the system track what has already been loaded.</p>
 
 <p>Then for each of the friends it will load their profile to fill in the name and picture of the friend.</p>
 
@@ -386,7 +386,7 @@ fetcher.load(me.doc).then(resp -&gt; {
 
 <h3>Listing Data</h3>
 
-<p>Everything in RDF is a thing. We store data about all things in the same sort of way, just using different vocabulary. Suppose you want to list the content of the folder in someone’s solid space. It is very like listing their friends. The namespace for the contents of folders is LDP. So..</p>
+<p>Everything in RDF is a thing.  We store data about all things in the same sort of way, just using different vocabulary.  Suppose you want to list the content of the folder in someone’s solid space.  It is very like listing their friends.  The namespace for the contents of folders is LDP. So..</p>
 
 <pre>
 <code class="language-javascript">const LDP = $rdf.Namespace(‘http://www.w3.org/ns/ldp#&gt;’);
@@ -426,11 +426,11 @@ list(rdf.sym(‘https://alice.example.com/Public/’));</code></pre>
 
 <h2>Update: Using UpdateManager to update the web</h2>
 
-<p>The UpdateManager is another helper object for the store. Just as the Fetcher
-allows the store to read and write resources from the web, generally a resource (file) at a time,
-the UpdateManager object allows the store to send small changes to the data web.
-It also allows the web app to subscribe to a stream of changes that other people have made,
-and so keep all places where the data is displayed in sync.
+<p>The UpdateManager is another helper object for the store.  Just as the Fetcher
+  allows the store to read and write resources from the web, generally a resource (file) at a time,
+  the UpdateManager object allows the store to send small changes to the data web.
+  It also allows the web app to subscribe to a stream of changes that other people have made,
+  and so keep all places where the data is displayed in sync.
 </p>
 <pre>
     const store = $rdf.graph()
@@ -448,7 +448,8 @@ and so keep all places where the data is displayed in sync.
     }
 
 </pre>
-<p>The first parameter to update() is the array of statements to be deleted.
+<p>
+  The first parameter to update() is the array of statements to be deleted.
 If it is empty then update() just adds data to the store.
 (Note for this the user only needs Append privileges, not full Write).
 The second parameter to update() is the array of statements to be deleted.
@@ -465,29 +466,29 @@ The second parameter to update() is the array of statements to be deleted.
 
 </pre>
 
-<p>So in this second case, the function will first find any statements which
-give the name of the person. It then asked update to in one operation
-remove the old statements (quads) from the store, and add the new one.
-</p>
-<h4>409 Conflict</h4>
+  <p>So in this second case, the function will first find any statements which
+    give the name of the person. It then asked update to in one operation
+    remove the old statements (quads) from the store, and add the new one.
+  </p>
+  <h4>409 Conflict</h4>
 <p>Note that update operation (which does a PATCH operation) is specified by solid
-to be atomic, in that it will either complete both deletion and insertion, or
-it will fail and do nothing. If the server is not able to delete the statements,
-for example because someone else has just deleted them first, then the update
-must fail with a <b>409 conflict</b>. In that case, the web app will typically
-beep or turn pink and back out the user's attempted change in the UI.
+  to be atomic, in that it will either complete both deletion and insertion, or
+  it will fail and do nothing. If the server is not able to delete the statements,
+  for example because someone else has just deleted them first, then the update
+  must fail with a <b>409 conflict</b>.   In that case, the web app will typically
+  beep or turn pink and back out the user's attempted change in the UI.
 </p>
 
 <h2>Deleting resources</h2>
-<p>To delete triples, or any combination of them, from a resource, use the UpdateManager above. If you
+<p>To delete triples, or any combination of them, from a resource, use the UpdateManager above.  If you
 want to delete whole resources, then you use the HTTP <tt>DELETE</tt> method.</p>
 <pre>
   store.fetcher.webOperation('DELETE', doc.uri).then(...)
 </pre>
 <h4>Example: recursive delete of Solid folders</h4>
-<p>Like in Unix, you can't (currently, 2018) delete a folder unless it is empty.
-So if you want to, you have to delete everything in it first.
-Here is your <tt>rm -r</tt> function to complete this little guide. </p>
+  <p>Like in Unix, you can't (currently, 2018) delete a folder unless it is empty.
+    So if you want to, you have to delete everything in it first.
+    Here is your <tt>rm -r</tt> function to complete this little guide. </p>
 <pre>
   function deleteRecursive (store, folder) {
     return new Promise(function (resolve, reject) {
@@ -516,12 +517,12 @@ Here is your <tt>rm -r</tt> function to complete this little guide. </p>
 <p>Use with care.. </p>
 <h2>Tracking Changes</h2>
 <p>Using the UpdateManager above we made an app which sends changes to the data web whenever the UI changes.
-Let's also make it so the UI changes whenever the data web changes. The function we use is:
+  Let's also make it so the UI changes whenever the data web changes.  The function we use is:
 </p>
-<pre>
+  <pre>
     updater.addDownstreamChangeListener(doc, refreshFunction)
-</pre>
-<p>
+  </pre>
+  <p>
 It will sign up for changes by opening a websocket with the server.
 When a message comes from the server that the document has changed, it will reload the document into the store.
 It will deal with you calling it for the same document from different places.
@@ -529,7 +530,7 @@ It will ignore changes which you have made yourself with updater.update().
 So all you have to do is provide a function which will sync changes in the store into the UI.
 </p>
 <p>
-If the user isn't editing the UI, just looking at it, you can more or less get away with
+  If the user isn't editing the UI, just looking at it, you can more or less get away with
 </p>
 <pre>
   const div = dom.createElement(div')
@@ -543,9 +544,9 @@ If the user isn't editing the UI, just looking at it, you can more or less get a
   updater.addDownstreamChangeListener(doc, refresh)
 </pre>
 <p> or words to that effect. This will cause the div to be repainted.
-That isn't as slick as writing a refresh function which adjusts the UI
-just deleting old things and inserting new ones. That means the user can happily be
-looking at or editing one part while other parts change.
+  That isn't as slick as writing a refresh function which adjusts the UI
+  just deleting old things and inserting new ones.  That means the user can happily be
+  looking at or editing one part while other parts change.
 </p>
 <pre>
   mugshotDiv = div.appendChild(dom.createElement('div'))
@@ -568,11 +569,11 @@ looking at or editing one part while other parts change.
   updater.addDownstreamChangeListener(doc, syncMugshots)
 </pre>
 <p>This uses a handy function syncTableToArray, which comes with solid-ui, but is include here to
-be complete. Also, to encourage you to make UI which syncs in both directions, even if it isn't
-built into the framework you are using. So find a way that rdflib fits naturally
-with your favorite UI framework, if you have one. See
-<a href="https://solid.inrupt.com/docs">the Inrupt Solid documentation</a> for some hints about using
-specific frameworks.
+  be complete.  Also, to encourage you to make UI which syncs in both directions, even if it isn't
+  built into the framework you are using.  So find a way that rdflib fits naturally
+  with your favorite UI framework, if you have one. See
+  <a href="https://solid.inrupt.com/docs">the Inrupt Solid documentation</a> for some hints about using
+  specific frameworks.
 </p>
 <pre>
   function syncTableToArray (table, things, createNewRow) {
@@ -618,12 +619,12 @@ specific frameworks.
 </pre>
 <h2>Conclusion</h2>
 <p>
-We've looked at how to interact directly with the store as a local in-memory triple store, and we
-have looked at how to load it and save it, web resource at a time.
-We see how it ina away acts as a local in-memory cache of the big wide web of linked data,
-allowing a user-interface to keep in sync with the state of the data web.
-As developers we can now write code which will allow users to explore, create, modify and link together
-a web of linked data which can grow to encompass more and more domains, different applications.
+  We've looked at how to interact directly with the store as a local in-memory triple store, and we
+  have looked at how to load it and save it, web resource at a time.
+  We see how it ina away acts as a local in-memory cache of the big wide web of linked data,
+  allowing a user-interface to keep in sync with the state of the data web.
+  As developers we can now write code which will allow users to explore, create, modify and link together
+  a web of linked data which can grow to encompass more and more domains, different applications.
 </p>
 </body>
 </html>

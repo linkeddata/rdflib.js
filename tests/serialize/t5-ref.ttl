@@ -1,0 +1,5 @@
+@prefix : </t5.n3#>.
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+
+:subj a :TestCase; owl:sameAs :other.
+

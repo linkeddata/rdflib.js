@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "checkJs": false,
+    "allowJs": true,
+    "target": "es2019",
+    "module": "esnext",
+    "strict": true,
+    "noImplicitAny": false,
+    "noUnusedLocals": true,
+    "lib": [
+      "es2019",
+      "dom"
+    ],
+    "outDir": "./temp_ts_output"
+  },
+  "include": [
+    "src/**/*"
+  ]
+}

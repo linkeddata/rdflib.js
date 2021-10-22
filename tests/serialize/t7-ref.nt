@@ -1,0 +1,5 @@
+<http://example.com/foo/vocab#building0> <http://example.com/foo/vocab#bar> "123"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<http://example.com/foo/vocab#building0> <http://example.com/foo/vocab#bar> "78768"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<http://example.com/foo/vocab#building0> <http://example.com/foo/vocab#connectsTo> <http://example.com/foo/vocab#building4> .
+<http://example.com/foo/vocab#building1> <http://example.com/foo/vocab#created> "2012-03-12"^^<http://www.w3.org/2001/XMLSchema#date> .
+<http://example.com/foo/vocab#building1> <http://example.com/foo/vocab#length> "145000"^^<http://www.w3.org/2001/XMLSchema#double> .

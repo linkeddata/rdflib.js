@@ -1,0 +1,171 @@
+body {
+  font-family: Trebuchet MS, Palatino, sans-serif;
+  color: black;
+  background: white;
+}
+
+p , ul, ol { text-indent : 1em ;
+     margin-left: 3em  ; /* a bit of white space */ }
+
+pre { margin-left: 5em; }
+
+li { text-indent: 0; }
+
+h1 { text-align: center }
+h3 { font-style: italic; 
+     margin-left: 1em; }   /* distinguish from h2 */
+
+address { text-align: right }
+
+a:link, a:active {
+  color: #00e;
+  background: transparent;
+  text-decoration: none;
+}
+
+a:visited {
+  color: #529;
+  background: transparent;
+}
+
+div.intro {
+  margin-left: 5%;
+  margin-right: 5%;
+  font-style: italic
+}
+
+.navside { float:left }
+.navside td { background-color: #eee; font-size: 70%; }
+
+pre {
+  font-family: monospace;
+}
+
+.key {font-size: 50%}
+
+a:link img, a:visited img {
+   border-style: none;
+}
+
+a img {
+  color: white;	
+  border: 0px solid white;
+}
+
+ul.toc {
+  list-style: disc;
+  list-style: none;
+}
+
+div.issue {
+  padding: 0.5em;
+  border: none;
+  margin-right: 5%;
+}
+
+.hideme { display: none; }
+
+.testcase {
+	-moz-box-shadow:0 0 6px rgba(0, 0, 0, 0.5);
+	-moz-border-radius: 2px;
+	padding: 0.1em;
+	margin: 1em 0 2em 0;
+}
+
+
+.testcase h2 {
+	cursor: pointer;
+	padding-left: 0.6em;
+}
+
+.testdetails {
+	display: none;
+	margin-left: 0em;
+}
+
+.testdetails p {
+	margin-left: 0.6em;
+	/* line-height: 0.6em; */
+
+}
+
+.overallTestResult {
+	font-size: 80%;
+}
+
+.detailstoc {
+	position: fixed;
+	top: 0.48em;
+	right: 0.48em;
+	border: 1px solid #dfdfdf;
+	background: #fafafa;
+	padding: 0.2em;
+	-moz-border-radius: 2px;
+}
+
+.offlinemodeswitch:before {
+	font-size: 80%;
+	content: "OFF-LINE mode: ";
+	margin-bottom: 1em;
+}
+
+.offlinemodeswitch {
+	margin-bottom: 1em;
+}
+
+
+#header {
+	margin-bottom: 2em;
+}
+
+#main {
+}
+
+#tcDetailMenu {
+	position: fixed;
+	top: 0.48em;
+	left: 0.48em;
+	border: 1px solid #dfdfdf;
+	background: #fafafa;
+	width: 25em;
+	padding: 0.2em;
+	-moz-border-radius: 2px;
+}
+
+#toc {
+	position: fixed;
+	top: 0.48em;
+	right: 0.48em;
+	border: 1px solid #dfdfdf;
+	background: #fafafa;
+	width: 4em;
+	padding: 0.2em;
+	-moz-border-radius: 2px;
+}
+
+#cmd {
+	margin: 1em 0 1.5em 0;
+}
+
+#tests {
+	
+}
+
+#allTestDetails {
+	cursor: pointer;	
+}
+
+#about {
+	margin: 3em 0 0.2em 0;
+	color: #303030;
+	font-style: italic;
+	font-size: 70%;
+	text-align: right;
+}
+
+#status {
+	margin-top: 0;
+	border-top: 1px solid #dfdfdf;
+	color: #dfdfdf;
+	font-size: 80%;
+}

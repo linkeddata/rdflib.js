@@ -1,0 +1,44 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>Simple Address Book Demo</title>
+    <link rel="stylesheet" href="card.css" >
+    <script src="../../dist/rdflib.js" type="text/javascript">
+    </script>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js">
+    </script>
+    <script src="card.js" type="text/javascript" >
+    </script>
+</head>
+<body>
+<h1 id="heading">Simple Foaf Card Demo</h1>
+
+<p>Enter a <a href="http://www.w3.org/2005/Incubator/webid/spec/#dfn-webid">WebID</a> into the following box, then 
+    click to display its content. </p>
+<form onsubmit="redraw($('#url').attr('value')); return false" action="GET">
+    <input id="url" type="text" size="100" value="http://bblfish.net/people/henry/card#me">
+    <input type="submit" value="display">
+</form>
+<p>The contents should be in a machine readable format (RDF/XML, Turtle, N3, RDFa) which this page will parse and
+    then display a very small subsection of information with the
+help of the <a href="https://github.com/linkeddata/rdflib.js">rdflib javascript library</a>.</p>
+<p> Also since this
+request is NOT passing though a proxy located on the same host as this page is served from, and
+    since the embedded javascript will be fetching that file directly on the internet, the file will need to
+    be <a href="http://www.w3.org/wiki/CORS_Enabled">CORS enabled</a> if it is not coming from the same server as this
+    file is. <i>CORS enabled</i> means it has to emmit the HTTP
+header <code>Access-Control-Allow-Origin: *</code> when it is served. I am not sure what the point of this 'security
+restriction' is, if it is one at all. </p>
+
+<p id="description">If you see this then fetching the remote profile did not succeed,
+ or is not yet finished.</p>
+<p>Below are the friends as linked to from that profile. Here we limit ourselves to
+    simply name information and links. More information should be found
+at the remote profile, which could be merged here and shown as a card too. But well, one
+step at a time. </p>
+<ul id="foaf">
+  <li>friends to be</li>
+</ul>
+</body>
+</html>

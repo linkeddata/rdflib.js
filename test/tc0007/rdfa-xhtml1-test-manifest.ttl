@@ -1,0 +1,1169 @@
+     @prefix : <http://www.w3.org/2006/03/test-description#> .
+    @prefix dc: <http://purl.org/dc/elements/1.1/> .
+    @prefix xhtml: <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/> .
+    
+    xhtml:Test0001     a :TestCase;
+         dc:contributor "Elias Torres";
+         dc:title "Predicate establishment with @property";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0001.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0001.sparql>;
+         :purpose "Tests @property to establish the predicate; literal object is in the content of the element.";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0002     a :TestCase;
+         dc:contributor "Elias Torres";
+         dc:title "meta/@property";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0002.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0002.sparql>;
+         :purpose "Tests meta/@property to establish the predicate; subject comes from the parent's @about.";
+         :reviewStatus :rejected;
+         :specificationReference "" .
+    
+    xhtml:Test0003     a :TestCase;
+         dc:contributor "Elias Torres";
+         dc:title "meta/@property, no @about in parent";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0003.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0003.sparql>;
+         :purpose "Tests meta/@property to establish the predicate; subject will be a blank node.";
+         :reviewStatus :rejected;
+         :specificationReference "" .
+    
+    xhtml:Test0004     a :TestCase;
+         dc:contributor "Elias Torres";
+         dc:title "@xml:base";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0004.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0004.sparql>;
+         :purpose "Tests explicitly setting @xml:base.";
+         :reviewStatus :rejected;
+         :specificationReference "" .
+    
+    xhtml:Test0005     a :TestCase;
+         dc:contributor "Elias Torres";
+         dc:title "CURIEs";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0005.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0005.sparql>;
+         :purpose "Tests CURIE parsing.";
+         :reviewStatus :rejected;
+         :specificationReference "" .
+    
+    xhtml:Test0006     a :TestCase;
+         dc:contributor "Elias Torres";
+         dc:title "@rel and @rev";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0006.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0006.sparql>;
+         :purpose "Tests @rev and @rel together, with the object being specified by @href, ignoring content";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0007     a :TestCase;
+         dc:contributor "Elias Torres";
+         dc:title "@rel, @rev, @property, @content";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0007.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0007.sparql>;
+         :purpose "Tests @rel, @rev, @property, and @content together to generate several RDF triples.";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0008     a :TestCase;
+         dc:contributor "Elias Torres";
+         dc:title "empty string @about";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0008.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0008.sparql>;
+         :purpose "Tests empty @about.";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0009     a :TestCase;
+         dc:contributor "Elias Torres";
+         dc:title "@rev";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0009.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0009.sparql>;
+         :purpose "Tests @rev.";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0010     a :TestCase;
+         dc:contributor "Elias Torres";
+         dc:title "@rel, @rev, @href";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0010.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0010.sparql>;
+         :purpose "Tests @rel, @rev, and @href to generate two RDF triples.";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0011     a :TestCase;
+         dc:contributor "Elias Torres";
+         dc:title "XMLLiteral";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0011.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0011.sparql>;
+         :purpose "Tests XMLLiteral content";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0012     a :TestCase;
+         dc:contributor "Elias Torres";
+         dc:title "@xml:lang";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0012.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0012.sparql>;
+         :purpose "Tests @xml:lang";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0013     a :TestCase;
+         dc:contributor "Elias Torres";
+         dc:title "@xml:lang inheritance";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0013.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0013.sparql>;
+         :purpose "Tests @xml:lang inheritance";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0014     a :TestCase;
+         dc:contributor "Elias Torres";
+         dc:title "@datatype, xsd:integer";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0014.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0014.sparql>;
+         :purpose "Tests setting the @datatype to xsd:integer";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0015     a :TestCase;
+         dc:contributor "Elias Torres";
+         dc:title "meta and link";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0015.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0015.sparql>;
+         :purpose "Tests meta and link with no parent @about";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0016     a :TestCase;
+         dc:contributor "Elias Torres";
+         dc:title "Blank node, explicit";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0016.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0016.sparql>;
+         :purpose "Tests setting @about to an explicit blanknode _:a.";
+         :reviewStatus :rejected;
+         :specificationReference "" .
+    
+    xhtml:Test0017     a :TestCase;
+         dc:contributor "Elias Torres";
+         dc:title "Related blanknodes";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0017.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0017.sparql>;
+         :purpose "Tests creation of statements involving explicitly created blank nodes.";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0018     a :TestCase;
+         dc:contributor "Wing Yung";
+         dc:title "@rel for predicate";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0018.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0018.sparql>;
+         :purpose "Tests @rel to establish predicate.";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0019     a :TestCase;
+         dc:contributor "Wing Yung";
+         dc:title "@about for subject";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0019.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0019.sparql>;
+         :purpose "Tests @about to establish subject.";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0020     a :TestCase;
+         dc:contributor "Wing Yung";
+         dc:title "Inheriting @about for subject";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0020.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0020.sparql>;
+         :purpose "Tests @about inheritance to establish subject.";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0021     a :TestCase;
+         dc:contributor "Wing Yung";
+         dc:title "Subject inheritance with no @about";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0021.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0021.sparql>;
+         :purpose "Tests inheritance of subject when no @about can be found";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0022     a :TestCase;
+         dc:contributor "Wing Yung";
+         dc:title "meta with parent @id";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0022.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0022.sparql>;
+         :purpose "Tests getting subject from parent @id";
+         :reviewStatus :rejected;
+         :specificationReference "" .
+    
+    xhtml:Test0023     a :TestCase;
+         dc:contributor "Wing Yung";
+         dc:title "@id does not generate subjects";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0023.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0023.sparql>;
+         :purpose "Tests that @id does not generate subjects";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0024     a :TestCase;
+         dc:contributor "Wing Yung";
+         dc:title "Ignore @id for non-meta and non-link";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0024.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0024.sparql>;
+         :purpose "Tests igoring @id for non-meta and non-link tag";
+         :reviewStatus :rejected;
+         :specificationReference "" .
+    
+    xhtml:Test0025     a :TestCase;
+         dc:contributor "Ben Adida";
+         dc:title "simple chaining test";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0025.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0025.sparql>;
+         :purpose "Tests simple chaining with cascade of @resource and @property";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0026     a :TestCase;
+         dc:contributor "Wing Yung";
+         dc:title "@content";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0026.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0026.sparql>;
+         :purpose "Tests @content for literal object";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0027     a :TestCase;
+         dc:contributor "Wing Yung";
+         dc:title "@content, ignore element content";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0027.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0027.sparql>;
+         :purpose "Tests @content for literal object, overriding element content.";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0028     a :TestCase;
+         dc:contributor "Wing Yung";
+         dc:title "@xml:lang and @datatype";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0028.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0028.sparql>;
+         :purpose "Tests @xml:lang and @datatype.";
+         :reviewStatus :rejected;
+         :specificationReference "" .
+    
+    xhtml:Test0029     a :TestCase;
+         dc:contributor "Michael Hausenblas";
+         dc:title "markup stripping with @datatype";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0029.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0029.sparql>;
+         :purpose "Tests markup stripping from a span element with @datatype=xsd:string";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0030     a :TestCase;
+         dc:contributor "Michael Hausenblas";
+         dc:title "omitted @about";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0030.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0030.sparql>;
+         :purpose "Tests omitted @about.";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0031     a :TestCase;
+         dc:contributor "Ralph Swick";
+         dc:title "simple @resource";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0031.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0031.sparql>;
+         :purpose "Tests if @resource sets URIref object correct.";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0032     a :TestCase;
+         dc:contributor "Ralph Swick";
+         dc:title "@resource overrides @href";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0032.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0032.sparql>;
+         :purpose "Tests if @resource overrides @href to set the URIref object.";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0033     a :TestCase;
+         dc:contributor "Michael Hausenblas";
+         dc:title "simple chaining test with bNode";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0033.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0033.sparql>;
+         :purpose "Tests simple chaining with cascade of bNode and @property";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0034     a :TestCase;
+         dc:contributor "Michael Hausenblas";
+         dc:title "simple img[@src] test";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0034.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0034.sparql>;
+         :purpose "Tests if a @src (in img element) correctly sets the URIref object";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0035     a :TestCase;
+         dc:contributor "Michael Hausenblas";
+         dc:title "@src/@href test";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0035.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0035.sparql>;
+         :purpose "Tests if @href overwrites @src";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0036     a :TestCase;
+         dc:contributor "Michael Hausenblas";
+         dc:title "@src/@resource test";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0036.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0036.sparql>;
+         :purpose "Tests if @resource overwrites @src";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0037     a :TestCase;
+         dc:contributor "Steven Pemberton";
+         dc:title "@src/@href/@resource test";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0037.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0037.sparql>;
+         :purpose "Tests if @resource overwrites both @href and @src";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0038     a :TestCase;
+         dc:contributor "Mark Birbeck";
+         dc:title "@rev - img[@src] test";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0038.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0038.sparql>;
+         :purpose "Tests if a @src (in img element) correctly sets the URIref subject (due to @rev)";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0039     a :TestCase;
+         dc:contributor "Mark Birbeck";
+         dc:title "@rev - @src/@href test";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0039.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0039.sparql>;
+         :purpose "Tests if @href overwrites @src correctly to set the URIref subject (due to @rev)";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0040     a :TestCase;
+         dc:contributor "Mark Birbeck";
+         dc:title "@rev - @src/@resource test";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0040.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0040.sparql>;
+         :purpose "Tests if @resource overwrites @src correctly to set the URIref subject (due to @rev)";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0041     a :TestCase;
+         dc:contributor "Mark Birbeck";
+         dc:title "@rev - @src/@href/@resource test";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0041.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0041.sparql>;
+         :purpose "Tests if @resource overwrites both @href and @src correctly to set the URIref subject (due to @rev)";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0042     a :TestCase;
+         dc:contributor "Ben Adida";
+         dc:title "img[@src] test with omitted @about";
+         :expectedResults "false"^^<xsd:boolean>;
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0042.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0042.sparql>;
+         :purpose "Tests if a @src (in img element) correctly sets the URIref object (with omitted @about)";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0043     a :TestCase;
+         dc:contributor "Ben Adida";
+         dc:title "@src/@href test with omitted @about";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0043.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0043.sparql>;
+         :purpose "Tests if @href overwrites @src (with omitted @about)";
+         :reviewStatus :rejected;
+         :specificationReference "" .
+    
+    xhtml:Test0044     a :TestCase;
+         dc:contributor "Ben Adida";
+         dc:title "@src/@resource test with omitted @about";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0044.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0044.sparql>;
+         :purpose "Tests if @resource overwrites @src (with omitted @about)";
+         :reviewStatus :rejected;
+         :specificationReference "" .
+    
+    xhtml:Test0045     a :TestCase;
+         dc:contributor "Ben Adida";
+         dc:title "@src/@href/@resource test with omitted @about";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0045.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0045.sparql>;
+         :purpose "Tests if @resource overwrites both @href and @src (with omitted @about)";
+         :reviewStatus :rejected;
+         :specificationReference "" .
+    
+    xhtml:Test0046     a :TestCase;
+         dc:contributor "Ivan Herman";
+         dc:title "@typeof with @rel present, no @href, @resource, or @about";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0046.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0046.sparql>;
+         :purpose "Tests @typeof with @rel present, no @href, @resource, or @about";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0047     a :TestCase;
+         dc:contributor "Ivan Herman";
+         dc:title "@typeof with @rel and @resource present, no @about";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0047.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0047.sparql>;
+         :purpose "Tests @typeof with @rel and @resource present, no @about";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0048     a :TestCase;
+         dc:contributor "Ivan Herman";
+         dc:title "@typeof with @about and @rel present, no @resource";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0048.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0048.sparql>;
+         :purpose "Tests @typeof with @about and @rel present, no @resource";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0049     a :TestCase;
+         dc:contributor "Ivan Herman";
+         dc:title "@typeof with @about, no @rel or @resource";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0049.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0049.sparql>;
+         :purpose "Tests @typeof with @about, no @rel or @resource";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0050     a :TestCase;
+         dc:contributor "Ivan Herman";
+         dc:title "@typeof without anything else";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0050.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0050.sparql>;
+         :purpose "Tests @typeof without anything else";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0051     a :TestCase;
+         dc:contributor "Ivan Herman";
+         dc:title "@typeof with a single @property";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0051.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0051.sparql>;
+         :purpose "Tests @typeof with a single @property";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0052     a :TestCase;
+         dc:contributor "Ivan Herman";
+         dc:title "@typeof with @resource and nothing else";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0052.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0052.sparql>;
+         :purpose "Tests to ensure that @typeof does not apply to @resource";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0053     a :TestCase;
+         dc:contributor "Ivan Herman";
+         dc:title "@typeof with @resource and nothing else, with a subelement";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0053.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0053.sparql>;
+         :purpose "Tests to make sure that @typeof does not apply to @resource, but @resource sets the subject for the next triple to be generated";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0054     a :TestCase;
+         dc:contributor "Fabien Gandon";
+         dc:title "multiple @property";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0054.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0054.sparql>;
+         :purpose "Tests multiple @property separated by white spaces";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0055     a :TestCase;
+         dc:contributor "Fabien Gandon";
+         dc:title "multiple @rel";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0055.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0055.sparql>;
+         :purpose "Tests multiple @rel separated by white spaces";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0056     a :TestCase;
+         dc:contributor "Manu Sporny";
+         dc:title "@typeof applies to @about on same element with hanging rel";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0056.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0056.sparql>;
+         :purpose "Tests if @typeof applies to @about on same element with hanging @rel";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0057     a :TestCase;
+         dc:contributor "Manu Sporny";
+         dc:title "hanging @rel creates multiple triples";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0057.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0057.sparql>;
+         :purpose "Tests if hanging @rel creates multiple triples";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0058     a :TestCase;
+         dc:contributor "Manu Sporny";
+         dc:title "hanging @rel creates multiple triples, @typeof permutation";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0058.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0058.sparql>;
+         :purpose "Tests if hanging @rel creates multiple triples with @typeof permutation";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0059     a :TestCase;
+         dc:contributor "Manu Sporny";
+         dc:title "multiple hanging @rels with multiple children";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0059.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0059.sparql>;
+         :purpose "Tests multiple hanging @rels with multiple children";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0060     a :TestCase;
+         dc:contributor "Manu Sporny";
+         dc:title "UTF-8 conformance";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0060.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0060.sparql>;
+         :purpose "Tests conformance with UTF-8 encoding";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0061     a :TestCase;
+         dc:contributor "Manu Sporny";
+         dc:title "@rel in head using reserved, non-prefixed XHTML value";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0061.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0061.sparql>;
+         :purpose "Tests @rel in head using reserved, non-prefixed XHTML value";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0062     a :TestCase;
+         dc:contributor "Manu Sporny";
+         dc:title "@rev in head using reserved, non-prefixed XHTML value";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0062.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0062.sparql>;
+         :purpose "Tests @rev in head using reserved, non-prefixed XHTML value";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0063     a :TestCase;
+         dc:contributor "Manu Sporny";
+         dc:title "@rel in head using reserved XHTML value and empty-prefix CURIE syntax";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0063.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0063.sparql>;
+         :purpose "Tests @rel in head using reserved XHTML value and empty-prefix CURIE syntax";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0064     a :TestCase;
+         dc:contributor "Manu Sporny";
+         dc:title "@about with safe CURIE";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0064.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0064.sparql>;
+         :purpose "Tests if @about generates a proper triple when a safe CURIE is used";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0065     a :TestCase;
+         dc:contributor "Manu Sporny";
+         dc:title "@rel with safe CURIE";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0065.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0065.sparql>;
+         :purpose "Tests if @rel properly connects triples generated when safe CURIEs are used";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0066     a :TestCase;
+         dc:contributor "Manu Sporny";
+         dc:title "@about with @typeof in the head";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0066.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0066.sparql>;
+         :purpose "Test to make sure that @about (with current document) is implied in the head, and the proper triples are generated using @typeof";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0067     a :TestCase;
+         dc:contributor "Manu Sporny";
+         dc:title "@property in the head";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0067.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0067.sparql>;
+         :purpose "Test to make sure that @property in head uses the implied current document as the subject if no other subject is specified";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0068     a :TestCase;
+         dc:contributor "Manu Sporny";
+         dc:title "Relative URI in @about";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0068.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0068.sparql>;
+         :purpose "Tests to ensure that relative URI is resolved correctly when used in @about";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0069     a :TestCase;
+         dc:contributor "Manu Sporny";
+         dc:title "Relative URI in @href";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0069.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0069.sparql>;
+         :purpose "Tests to ensure that relative URI is resolved correctly when used in @href";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0070     a :TestCase;
+         dc:contributor "Manu Sporny";
+         dc:title "Relative URI in @resource";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0070.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0070.sparql>;
+         :purpose "Tests to ensure that relative URI is resolved correctly when used in @resource";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0071     a :TestCase;
+         dc:contributor "Manu Sporny";
+         dc:title "No explicit @about";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0071.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0071.sparql>;
+         :purpose "Tests to ensure that a triple is generated even if @typeof and @about is not specified anywhere in the document";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0072     a :TestCase;
+         dc:contributor "Manu Sporny";
+         dc:title "Relative URI in @about (with XHTML base in head)";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0072.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0072.sparql>;
+         :purpose "Tests to ensure that relative URIs are resolved correctly when used in @about with XHTML base set in head";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0073     a :TestCase;
+         dc:contributor "Manu Sporny";
+         dc:title "Relative URI in @resource (with XHTML base in head)";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0073.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0073.sparql>;
+         :purpose "Tests to ensure that relative URIs are resolved correctly when used in @resource with XHTML base set in head";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0074     a :TestCase;
+         dc:contributor "Manu Sporny";
+         dc:title "Relative URI in @href (with XHTML base in head)";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0074.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0074.sparql>;
+         :purpose "Tests to ensure that relative URIs are resolved correctly when used in @href with XHTML base set in head";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0075     a :TestCase;
+         dc:contributor "Manu Sporny";
+         dc:title "Reserved word 'license' in @rel with no explizit @about";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0075.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0075.sparql>;
+         :purpose "Tests to ensure that the XHTML+RDFa reserved word 'license' when used in @rel (with no @about) generates the proper triple";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0076     a :TestCase;
+         dc:contributor "Manu Sporny";
+         dc:title "All reserved XHTML @rel values";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0076.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0076.sparql>;
+         :purpose "Tests to ensure that all reserved XHTML words are supported in @rel";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0077     a :TestCase;
+         dc:contributor "Manu Sporny";
+         dc:title "All reserved XHTML @rev values";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0077.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0077.sparql>;
+         :purpose "Tests to ensure that all reserved XHTML words are supported in @rev";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0078     a :TestCase;
+         dc:contributor "Ivan Herman";
+         dc:title "Multiple incomplete triples";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0078.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0078.sparql>;
+         :purpose "Tests multiple ways of handling incomplete triples; the first two triples should use the same bnode as subject ('merged'). The third should have a separate bNode.";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0079     a :TestCase;
+         dc:contributor "Ivan Herman";
+         dc:title "@resource and @href in completing incomplete triples";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0079.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0079.sparql>;
+         :purpose "Tests role of @resource and @href in completing incomplete triples (including their mutual priorities)";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0080     a :TestCase;
+         dc:contributor "Ivan Herman";
+         dc:title "@about overrides @resource in incomplete triples";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0080.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0080.sparql>;
+         :purpose "Tests if @about has a higher priority than @resource in handling incomplete triples";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0081     a :TestCase;
+         dc:contributor "Ivan Herman";
+         dc:title "multiple ways of handling incomplete triples (with @rev)";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0081.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0081.sparql>;
+         :purpose "Tests multiple ways of handling incomplete triples, this time with @rev";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0082     a :TestCase;
+         dc:contributor "Ivan Herman";
+         dc:title "multiple ways of handling incomplete triples (with @rel and @rev)";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0082.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0082.sparql>;
+         :purpose "Tests multiple ways of handling incomplete triples, this time with both @rel and @rev";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0083     a :TestCase;
+         dc:contributor "Ivan Herman";
+         dc:title "multiple ways of handling incomplete triples (merged)";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0083.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0083.sparql>;
+         :purpose "Tests multiple ways of handling incomplete triples; the first two triples should use the same bNode as subject ('merged'); the third case should use @about";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0084     a :TestCase;
+         dc:contributor "Ivan Herman";
+         dc:title "multiple ways of handling incomplete triples, this time with both @rel and @rev";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0084.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0084.sparql>;
+         :purpose "Tests multiple ways of handling incomplete triples, this time with both @rel and @rev. There is an intermediate div that should be ignored by the process";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0085     a :TestCase;
+         dc:contributor "Ivan Herman";
+         dc:title "@resource and @href in completing incomplete triples";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0085.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0085.sparql>;
+         :purpose "Tests the role of @resource and @href in completing incomplete triples (including their mutual priorities), but with an intermediate layer (ie, bNode) added";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0086     a :TestCase;
+         dc:contributor "Ivan Herman";
+         dc:title "NO triple for a non-reserved @rel value";
+         :expectedResults "false"^^<xsd:boolean>;
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0086.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0086.sparql>;
+         :purpose "Test that NO triple should be generated for a non-reserved @rel value";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0087     a :TestCase;
+         dc:contributor "Ivan Herman";
+         dc:title "All reserved XHTML @rel values (with :xxx)";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0087.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0087.sparql>;
+         :purpose "Tests to ensure that all reserved XHTML words are supported in @rel (with :xxx)";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0088     a :TestCase;
+         dc:contributor "Ivan Herman";
+         dc:title "Interpretation of the CURIE \"_:\"";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0088.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0088.sparql>;
+         :purpose "Test the interpretation of the CURIE \"_:\"";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0089     a :TestCase;
+         dc:contributor "Manu Sporny";
+         dc:title "@src sets a new subject (@typeof)";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0089.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0089.sparql>;
+         :purpose "Tests to ensure that @src sets a new subject (focuses on @typeof).";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0090     a :TestCase;
+         dc:contributor "Manu Sporny";
+         dc:title "@src sets a new subject (@rel/@href)";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0090.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0090.sparql>;
+         :purpose "Tests to ensure that @src sets a new subject (focuses on @rel/@href).";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0091     a :TestCase;
+         dc:contributor "Manu Sporny";
+         dc:title "Non-reserved, un-prefixed CURIE in @property";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0091.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0091.sparql>;
+         :purpose "Tests to ensure that non-reserved, un-prefixed CURIEs, when used in @property, generate triples.";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0092     a :TestCase;
+         dc:contributor "Ivan Herman";
+         dc:title "Tests XMLLiteral content with explicit @datatype";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0092.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0092.sparql>;
+         :purpose "Tests the explicit specification of an RDF XMLLiteral with @datatype.";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0093     a :TestCase;
+         dc:contributor "Ivan Herman";
+         dc:title "Tests XMLLiteral content with explicit @datatype (user-data-typed literal)";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0093.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0093.sparql>;
+         :purpose "Tests the explicit specification of an RDF XMLLiteral with @datatype using a non-RDF namespace, yielding a user-data-typed literal";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0094     a :TestCase;
+         dc:contributor "Ivan Herman";
+         dc:title "Tests XMLLiteral content with explicit @datatype (unusual prefix - bla:)";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0094.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0094.sparql>;
+         :purpose "Tests the explicit specification of an RDF XMLLiteral with @datatype using the proper RDF namespace, but with an unusual prefix - bla:";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0095     a :TestCase;
+         dc:contributor "Ivan Herman";
+         dc:title "No triples with two nested @rel";
+         :expectedResults "false"^^<xsd:boolean>;
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0095.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0095.sparql>;
+         :purpose "Tests the filtering out of unnecessary triples (checking the return value mechanism)";
+         :reviewStatus :rejected;
+         :specificationReference "" .
+    
+    xhtml:Test0096     a :TestCase;
+         dc:contributor "Ivan Herman";
+         dc:title "No triples with three nested @rel";
+         :expectedResults "false"^^<xsd:boolean>;
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0096.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0096.sparql>;
+         :purpose "Tests the filtering out of unnecessary triples (checking the return value mechanism); from the RDFa Syntax document.";
+         :reviewStatus :rejected;
+         :specificationReference "" .
+    
+    xhtml:Test0097     a :TestCase;
+         dc:contributor "Ivan Herman";
+         dc:title "No triples with four nested @rel";
+         :expectedResults "false"^^<xsd:boolean>;
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0097.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0097.sparql>;
+         :purpose "Tests the filtering out of unnecessary triples (checking the return value mechanism); from the RDFa Syntax document.";
+         :reviewStatus :rejected;
+         :specificationReference "" .
+    
+    xhtml:Test0098     a :TestCase;
+         dc:contributor "Ivan Herman";
+         dc:title "Single literal in nested pending triples";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0098.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0098.sparql>;
+         :purpose "Tests the generation of a single literal that should be returned as valid value in the recursion to generate pending triples.";
+         :reviewStatus :rejected;
+         :specificationReference "" .
+    
+    xhtml:Test0099     a :TestCase;
+         dc:contributor "Ivan Herman";
+         dc:title "Preservation of white space in literals";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0099.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0099.sparql>;
+         :purpose "Tests the preservation of white space in literals.";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0100     a :TestCase;
+         dc:contributor "Ivan Herman";
+         dc:title "XMLLiteral with explicit namespace";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0100.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0100.sparql>;
+         :purpose "Tests XML elements with explicit namespace. Each of the XML elements in the literal should have at least those namespaces declared that are used in that literal (more is acceptable)";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0101     a :TestCase;
+         dc:contributor "Ivan Herman";
+         dc:title "XMLLiteral with explicit namespace and xml:lang";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0101.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0101.sparql>;
+         :purpose "Tests XML elements with explicit namespace. Each of the XML elements in the literal should have at least those namespaces declared that are used in that literal (more is acceptable). Furthermore, the xml:lang should also be set for each of those elements.";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0102     a :TestCase;
+         dc:contributor "Ivan Herman";
+         dc:title "XMLLiteral with explicit namespace and xml:lang; not overwriting existing langs";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0102.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0102.sparql>;
+         :purpose """Tests XML elements with explicit namespace. Each of the XML elements in the literal should have at least those namespaces declared that are used in that literal (more is acceptable). Furthermore, the xml:lang should also be set on the first element but existing language 
+	declaration should not be changed.""";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0103     a :TestCase;
+         dc:contributor "Ivan Herman";
+         dc:title "XMLLiteral with explicit namespace; not overwriting local namespaces";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0103.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0103.sparql>;
+         :purpose "Tests XML elements with explicit namespace. Each of the XML elements in the literal should have at least those namespaces declared that are used in that literal (more is acceptable), but locally set namespaces should not be changed; i.e., the default namespace for the svg element should remain unchanged in the output";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0104     a :TestCase;
+         dc:contributor "Fabien Gandon";
+         dc:title "rdf:value";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0104.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0104.sparql>;
+         :purpose "Tests rdf:value with blank nodes to give a value with a unit";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0105     a :TestCase;
+         dc:contributor "Manu Sporny";
+         dc:title "inner @rel neither CURIE nor LinkType";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0105.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0105.sparql>;
+         :purpose """Test the behavior of triple generation in a corner case where the inner @rel is neither a CURIE or a LinkType. This test effectively causes a rel="" to be inserted between the outer div subject and the inner @href, which halts chaining.""";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0106     a :TestCase;
+         dc:contributor "Manu Sporny";
+         dc:title "chaining with empty value in inner @rel";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0106.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0106.sparql>;
+         :purpose "Tests the behavior of triple generation in the case where the inner @rel is defined, but is blank, which halts chaining.";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0107     a :TestCase;
+         dc:contributor "Manu Sporny";
+         dc:title "no garbage collecting bnodes";
+         :expectedResults "false"^^<xsd:boolean>;
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0107.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0107.sparql>;
+         :purpose "Checks to make sure that that while we shouldn't garbage collect bnodes no triples are generated.";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0108     a :TestCase;
+         dc:contributor "Manu Sporny";
+         dc:title """plain literal with datatype="" and xml:lang preservation""";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0108.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0108.sparql>;
+         :purpose """Checks to make sure that the RDFa parser emits a plain literal when the datatype is specified as "" and preserves the xml:lang value. The text, with control characters and whitespace preserved, reads "Greek\\nwhite   space\\n".""";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0109     a :TestCase;
+         dc:contributor "Manu Sporny";
+         dc:title "Tests to ensure @xml:base is ignored";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0109.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0109.sparql>;
+         :purpose "Tests to make sure that @xml:base is ignored in XHTML+RDFa 1.0. The input test document is invalid XHTML.";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0110     a :TestCase;
+         dc:contributor "Manu Sporny";
+         dc:title "bNode generated even though no nested @about exists";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0110.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0110.sparql>;
+         :purpose "Tests to make sure that a bNode is generated even though no nested @about exists.";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0111     a :TestCase;
+         dc:contributor "Manu Sporny";
+         dc:title "two bNodes generated after three levels of nesting";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0111.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0111.sparql>;
+         :purpose "Tests to make sure that two bNodes are generated after three levels of nesting and that the last div does not generate a triple.";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0112     a :TestCase;
+         dc:contributor "Manu Sporny";
+         dc:title "plain literal with datatype=\"\"";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0112.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0112.sparql>;
+         :purpose """Checks to make sure that the RDFa parser emits a plain literal when the datatype is specified as "".""";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0113     a :TestCase;
+         dc:contributor "Manu Sporny";
+         dc:title "element with @property and no child nodes generates  empty plain literal";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0113.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0113.sparql>;
+         :purpose "Checks to make sure that an element with @property and no child nodes generates empty plain literal.";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0114     a :TestCase;
+         dc:contributor "Manu Sporny";
+         dc:title "Relative URI";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0114.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0114.sparql>;
+         :purpose "Checks to make sure that a relative URI is resolved correctly according to RFC3986, section 5 (even when the relative URI is invalid, in this case).";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0115     a :TestCase;
+         dc:contributor "Ivan Herman",
+                "Toby Inkster";
+         dc:title "XML Entities must be supported by RDFa parser";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0115.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0115.sparql>;
+         :purpose "Checks to make sure that XML Entities are treated properly by the RDFa parser.";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0116     a :TestCase;
+         dc:contributor "Toby Inkster";
+         dc:title "Reserved word used in @property should not generate triple";
+         :expectedResults "false"^^<xsd:boolean>;
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0116.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0116.sparql>;
+         :purpose "Checks to make sure that reserved words that are used in @property do not generate triples. This is a NEGATIVE test case.";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0117     a :TestCase;
+         dc:contributor "Manu Sporny";
+         dc:title "Fragment identifiers stripped from BASE";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0117.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0117.sparql>;
+         :purpose "Checks to make sure that fragment identifiers are stripped from [base] when used to generate triples.";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0118     a :TestCase;
+         dc:contributor "Ben Adida";
+         dc:title """empty string "" is not equivalent to NULL - @about""";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0118.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0118.sparql>;
+         :purpose """Checks to make sure that the empty
+		string "" isn't considered as NULL in languages such as Javascript when
+		generating triples. This test sets the subject in a chain using @href
+		and then immediately changes the subject using @about and generates a
+		triple. A buggy parser may use the @href subject
+		(http://example.org/javascript.html) instead of the one defined by @about.""";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0119     a :TestCase;
+         dc:contributor "Manu Sporny";
+         dc:title """"[prefix:]" CURIE format is valid""";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0119.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0119.sparql>;
+         :purpose """Checks to make sure that an RDFa processor expands CURIEs having only a prefix and a
+		colon if a prefix is properly defined using xmlns.
+		""";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0120     a :TestCase;
+         dc:contributor "Manu Sporny";
+         dc:title """"[:]" CURIE format is valid""";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0120.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0120.sparql>;
+         :purpose """Checks to make sure that an RDFa processor expands CURIEs having only a colon to the
+		default prefix "http://www.w3.org/1999/xhtml/vocab#".
+		""";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0121     a :TestCase;
+         dc:contributor "Manu Sporny";
+         dc:title """"[]" is a valid safe CURIE""";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0121.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0121.sparql>;
+         :purpose """Checks to make sure RDFa processors resolve the empty CURIE correctly.
+		""";
+         :reviewStatus :approved;
+         :specificationReference "" .
+    
+    xhtml:Test0122     a :TestCase;
+         dc:contributor "Manu Sporny";
+         dc:title """resource="[]" does not set the object since RDFa does not allow non-prefixed CURIEs""";
+         :expectedResults "false"^^<xsd:boolean>;
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0122.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0122.sparql>;
+         :purpose """Checks to make sure that resource="[]" does not set the object since RDFa does not allow non-prefixed CURIEs.
+		""";
+         :reviewStatus :unreviewed;
+         :specificationReference "" .
+    
+    xhtml:Test0123     a :TestCase;
+         dc:contributor "Shane P. McCarron";
+         dc:title "case sensitivity in prefix names";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0123.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0123.sparql>;
+         :purpose "Checks to make sure that prefix names are treated case sensitive.";
+         :reviewStatus :unreviewed;
+         :specificationReference "" .
+    
+    xhtml:Test0124     a :TestCase;
+         dc:contributor "Shane P. McCarron";
+         dc:title "XMLLiteral with explicit @datatype=''";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0124.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0124.sparql>;
+         :purpose "Checks to make sure that XMLLiteral gets processed properly if surrounding element is tagged with @datatype=''.";
+         :reviewStatus :unreviewed;
+         :specificationReference "" .
+    
+    xhtml:Test0125     a :TestCase;
+         dc:contributor "Shane P. McCarron";
+         dc:title "datatype XMLLiteral with other embedded RDFa";
+         :expectedResults "false"^^<xsd:boolean>;
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0125.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0125.sparql>;
+         :purpose "Checks to ensure that when datatype is the default the parser does not generate triples for embedded content.";
+         :reviewStatus :unreviewed;
+         :specificationReference "" .
+    
+    xhtml:Test0126     a :TestCase;
+         dc:contributor "Shane P. McCarron";
+         dc:title "Multiple @typeof values";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0126.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/0126.sparql>;
+         :purpose "Checks to ensure that multiple (white space separated) values in @typeof trigger multiple rdf:type triples.";
+         :reviewStatus :unreviewed;
+         :specificationReference "" .
+    
+    xhtml:Test1001     a :TestCase;
+         dc:contributor "Fabien Gandon";
+         dc:title "Vevent using @typeof";
+         :informationResourceInput <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/1001.xhtml>;
+         :informationResourceResults <http://www.w3.org/2006/07/SWD/RDFa/testsuite/xhtml1-testcases/1001.sparql>;
+         :purpose "Tests Vevent using @typeof (inlc. dtstart, dtend, etc.)";
+         :reviewStatus :approved;
+         :specificationReference "N.A." .
+    

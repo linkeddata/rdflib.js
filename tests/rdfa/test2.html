@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset='UTF-8'>
+<link type="text/css" rel="stylesheet" href="../Library/Mashup/tabbedtab.css" />
+<script type="text/javascript" src="../Library/Mashup/mashlib-alpha.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var uri = window.location.href;
+    var data_uri = window.document.title = uri.slice(0, uri.lastIndexOf('/')+1) + 'book.ttl#this';
+    
+    var path = uri.indexOf('/', uri.indexOf('//') +2) + 1;
+    var origin = uri.slice(0, path);
+//    var proxy_uri = origin + 'xss?uri={uri}'
+//    var proxy_uri = 'https://data.fm/proxy?uri={uri}' // Temp hack @@
+    var proxy_uri = 'https://databox.me/,proxy?uri={uri}' // Temp hack @@
+
+    $rdf.Fetcher.crossSiteProxyTemplate = proxy_uri;
+
+
+    data_uri = 'http://melvincarvalho.com/';
+    
+    var subject = $rdf.sym(data_uri);
+    tabulator.outline.GotoSubject(subject, true, undefined, true, undefined);
+});
+</script>
+</head>
+<body>
+<div class="TabulatorOutline" id="DummyUUID">
+    <table id="outline"></table>
+</div>
+</body>
+</html>

@@ -1,0 +1,118 @@
+@charset "UTF-8";
+/* CSS Document */
+
+*{ outline:none; font-size:14px; color:#333333; margin:0px; padding:0px;font-family:Arial, Helvetica, sans-serif; }
+body{  }
+a{ display:inline-block; text-decoration:none; }
+.clear{ clear:both; }
+.hide{ display:none; }
+
+ul{ padding-left:20px; margin:5px 0px; }
+ul li{ padding:4px 0px; }
+
+h1, h2, h3 {  }
+h3{ color:#666; font-weight:lighter; }
+
+
+
+/* GENERAL FORM */
+
+input, textarea { border:1px solid #333; width:300px; padding:4px; margin-bottom:10px; }
+button{ padding:5px 10px; border:none; background:#F2F2F2; color:#0083E2; cursor:pointer; margin-right:10px;-moz-border-radius: 5px; -webkit-border-radius: 5px; -khtml-border-radius: 5px;border-radius: 5px; }
+button:hover{ border:none; background:#CCC; color:#00396B; }
+select{  }
+
+a{ color:#0083E2; text-decoration:none; font-size:12px; }   
+a:hover{ text-decoration:none; color:#00396B; } 
+
+
+
+#topbar{ width:100%; height:50px; background:#333; color:#CCC; }
+#topbar img{ position:relative; top:-2px; }
+.wrapper, .wrapper h1{ color:#CCC; }
+.wrapper h1, .wrapper input, .wrapper button{ display:inline-block; }
+
+.wrapper h1{ font-size:24px; padding:10px 0px; margin-right:40px; cursor:pointer; position:relative; top:3px; }
+
+.wrapper form{ display:inline-block; width:280px; }
+.wrapper input{ width:240px; background:#666; border:1ps solid #000; position:relative; z-index:1; color:#CCC; }
+.wrapper button{ display:inline-block; position:relative; z-index:2; left:-30px; width:15px; height:15px; padding:0px; margin:0px; border:none; cursor:pointer; background:url(../a_img/search_btn.png) no-repeat; }
+
+.topbar_links{ text-decoration:none; font-size:16px; padding:4px; margin:0px 3px; color:#CCC; }
+.topbar_links:hover{ color:#999; }
+
+
+.wrapper div{ position:absolute; right:0px; text-align:right; top:18px; color:#CCC; }
+.wrapper div a{ color:#CCC; font-size:14px; text-decoration:none; }
+.wrapper div a:hover{ text-decoration:none; color:#999; }
+.wrapper div span{ margin:0px 4px; color:#ccc; }
+
+#site_wrapper, .wrapper{ width:960px; margin:0 auto; position:relative; }
+
+#site_wrapper{ margin-top:10px; margin-bottom:20px; min-height:500px; }
+
+#site_content{ width:100%; position:relative; }
+
+
+#left_column{ width:520px; float:left; padding-right:17px; border-right:1px solid #666; height:100%; min-height:900px; }
+
+#right_column{ width:400px; float:right; height:100%; }
+
+#footer{ margin-bottom:50px; margin-top:20px; padding-top:10px; border-top:1px solid #CCC; text-align:center; color:#9f9f9f; }
+
+
+#status_box{ padding:15px 0px; }
+#status_box h2{ padding:5px; font-size:16px; font-weight:normal; display:block; }
+#status_box textarea{ width:510px; height:20px; display:block; }
+#status_box  button{  }
+#status_box  button:hover{  }
+#status_box span{ font-size:11px; color:#999; font-style:oblique; }
+
+
+
+#load_more{ width:100%; background:#EEFAFF; padding:10px 0px; }
+
+
+
+/* FOR USER WALL FEED DISPLAY */
+.story_box{ width:100%; border-bottom:1px solid #CCC; padding:15px 0px 5px 0px; }
+.story_box:hover{ background:#F2F2F2; }
+
+.story_left_column{ float:left; width:40px; margin-right:18px; margin-bottom:15px; padding-left:3px; }
+.story_left_column img{ width:100%; }
+
+.story_right_column{float:right; width:875px; }
+.story_right_column input{ display:inline-block; width:15px; height:15px; float:left; margin-top:2px; }
+.text{ font-size:16px; margin-bottom:10px; }
+
+.story_bottom_row{ width:100%; }
+.story_bottom_left{ float:left; margin-left:3px; }
+.story_bottom_left span{  color:#B3B3B3; font-size:10px; margin-right:5px; }
+.story_bottom_left span a{font-size:10px; }
+.story_bottom_right{ float:right; margin-right:3px; }
+
+.strikethrough{ text-decoration:line-through; }
+
+
+
+
+/* FOR COMMENT SLIDE DOWN */
+.story_comments{ width:865px; padding:10px 5px; background:#F2F6FE; border-bottom:1px solid #CCC; margin-left:85px; }
+.story_comments_img{ float:left; width:40px; }
+.story_comments_txt{ float:right; width:800px; }
+.story_comments_txt textarea{ height:20px; width:780px !important; }
+.story_comments_txt strong{ color:#999; font-weight:lighter; }
+.story_comments_txt button{  }
+.story_comments_txt button:hover{  }
+
+/* FOR USER INFO DISPLAY */
+
+
+
+
+
+
+/* FOR PROFILE PAGE */
+#profile_img_holder{ width:80px; height:80px; border:1px solid #333333; background:url(img/ajax-loader.gif) 50% 50%; float:left; margin-right:20px; }
+#profile_img_holder img{ width:100%; height:100%; }
+

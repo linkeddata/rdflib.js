@@ -1,0 +1,5 @@
+
+:t1 :input """<foo,bar;baz>;rel=meta""" .
+
+:t2 :input "<foo,bar;baz>;rel=\"meta\"".
+

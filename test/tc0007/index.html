@@ -1,0 +1,40 @@
+<html>
+<head>
+    <title>TC0007: A TITLE</title>
+	<link type="text/css" href="../tth.css" rel="stylesheet" />
+	<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+        <!--
+        <script type="text/javascript" src="/devel/rdfquery/rdfquery-read-only/jquery.uri.js"></script>
+        <script type="text/javascript" src="/devel/rdfquery/rdfquery-read-only/jquery.xmlns.js"></script>
+        -->
+	<script type="text/javascript" src="../test_utils.js"></script>
+	<script type="text/javascript" src="../tth-manager.js"></script>
+        
+	<script type="text/javascript" src="../../dist/rdflib-rdfa.js"></script>
+
+    <script type="text/javascript" src="test_UUU.js" ></script>
+    <script type="text/javascript">
+    var newResults = function(errors, htmlBody) {
+        if (errors) tc0007Passed = false;
+        $("#detailedresults").append(htmlBody);
+    }
+    $(document).ready(function() {
+            $("#viewSourceCode").click(function () {
+                    viewSource("test_UUU.js");
+            });
+            $('#closeSourceView').live('click', function(){
+                    hideSource();
+            });
+            $("#detailedresults").html(testTC0007(true, newResults));
+            if(tc0007Passed) $("#globalresult").append("<div><strong>Overall result</strong>: <span style='border: solid 2px green; padding: 1px 5px;'>PASSED</span></div>");
+            else $("#globalresult").html("<div><strong>Overall result</strong>: <span style='border: solid 2px red; padding: 1px 5px;'>FAILED</span></div>");
+    });
+    </script>
+</head>
+<body>
+	<a href="../index.html">back to Tabulator Test Harness ...</a> | <button id="viewSourceCode" title="View the source code of the test ...">View Source</button>
+	<h1 id="header">TC0007: RDFA parser tests</h1>
+	<div id="globalresult" style="margin-bottom: 10px"></div>
+	<div id="detailedresults">Loading:</div>
+</body>
+</html>

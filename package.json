@@ -1,0 +1,158 @@
+{
+  "name": "rdflib",
+  "description": "an RDF library for node.js. Suitable for client and server side.",
+  "version": "2.2.8",
+  "engines": {
+    "node": ">=6.0"
+  },
+  "private": false,
+  "author": {
+    "name": "Tim BL",
+    "email": "timbl@w3.org"
+  },
+  "contributors": [
+    {
+      "name": "Ruben Verborgh",
+      "url": "https://github.com/RubenVerborgh"
+    },
+    {
+      "name": "Dmitri Zagidulin",
+      "url": "https://github.com/dmitrizagidulin/"
+    },
+    {
+      "name": "Daniel Friedman",
+      "url": "https://github.com/dan-f/"
+    },
+    {
+      "name": "Cénotélie",
+      "url": "https://github.com/cenotelie/"
+    },
+    {
+      "name": "Joep Meindertsma",
+      "url": "https://github.com/joepio/"
+    },
+    {
+      "name": "Thom van Kalkeren",
+      "url": "https://github.com/fletcher91/"
+    }
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/linkeddata/rdflib.js.git"
+  },
+  "homepage": "http://github.com/linkeddata/rdflib.js",
+  "bugs": "http://github.com/linkeddata/rdflib.js/issues",
+  "dependencies": {
+    "@babel/runtime": "^7.15.4",
+    "async": "^3.2.1",
+    "cross-fetch": "^3.1.4",
+    "jsonld": "^5.2.0",
+    "n3": "^1.11.1",
+    "solid-namespace": "^0.5.1",
+    "xmldom": "^0.6.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.15.7",
+    "@babel/core": "^7.15.8",
+    "@babel/plugin-proposal-class-properties": "^7.14.5",
+    "@babel/plugin-transform-runtime": "^7.15.8",
+    "@babel/preset-env": "^7.15.8",
+    "@babel/preset-typescript": "^7.15.0",
+    "@babel/register": "^7.15.3",
+    "@types/chai": "^4.2.22",
+    "@types/dirty-chai": "^2.0.2",
+    "@types/express": "^4.17.13",
+    "@types/jsonld": "^1.5.6",
+    "@types/mocha": "^9.0.0",
+    "@types/rdf-js": "^4.0.1",
+    "@types/sinon-chai": "^3.2.5",
+    "babel-loader": "^8.2.2",
+    "chai": "^4.3.4",
+    "diff": "^5.0.0",
+    "dirty-chai": "^2.0.1",
+    "eslint": "^7.32.0",
+    "fs-grep": "^0.0.5",
+    "mocha": "^9.1.3",
+    "nock": "^13.1.3",
+    "node-fetch": "^2.6.5",
+    "node-mkdirp": "0.0.1",
+    "rimraf": "^3.0.2",
+    "sinon": "^11.1.2",
+    "sinon-chai": "^3.7.0",
+    "source-map-loader": "^1.1.3",
+    "typedoc": "^0.22.6",
+    "typescript": "^4.4.4",
+    "webpack": "^4.46.0",
+    "webpack-cli": "^4.9.0",
+    "webpack-dev-server": "^4.3.1",
+    "wrapper-webpack-plugin": "^2.1.0"
+  },
+  "scripts": {
+    "build": "babel src --extensions \".ts,.js\" -d lib",
+    "build:esm": "babel src --extensions \".ts,.js\" --env-name esm -d esm",
+    "build:browser": "webpack --progress",
+    "build:types": "tsc --emitDeclarationOnly -d --moduleResolution node --declarationDir lib --allowJs false",
+    "doc": "typedoc --out ./doc ./src/index.ts --excludePrivate --excludeInternal --tsconfig ./tsconfig.json",
+    "prepublishOnly": "npm ci && npm run build && npm run build:types && npm run build:browser && npm run build:esm",
+    "postversion": "git push --follow-tags",
+    "start": "webpack-dev-server --https --port 4800",
+    "test": "npm run test:unit && npm run test:serialize && npm run test:types",
+    "test:clean": "rimraf tests/serialize/,*",
+    "test:serialize": "npm run build && npm run test:serialize:all && npm run test:clean",
+    "test:serialize:all": "npm run test:serialize:1 && npm run test:serialize:2 && npm run test:serialize:3 && npm run test:serialize:4 && npm run test:serialize:5 && npm run test:serialize:6 && npm run test:serialize:7 && npm run test:serialize:10 && npm run test:serialize:11 && npm run test:serialize:12 && npm run test:serialize:13 && npm run test:serialize:14 && npm run test:serialize:15",
+    "test:serialize:1": "cd ./tests/serialize && node ./data.js -in=t1.ttl -format=application/rdf+xml -out=,t1.xml && fs-grep http://www.w3.org/2001/XMLSchema#integer ,t1.xml",
+    "test:serialize:2": "cd ./tests/serialize && node ./data.js -in=t2.ttl -format=application/rdf+xml  -out=,t2.xml && node diff ,t2.xml t2-ref.xml",
+    "test:serialize:3": "cd ./tests/serialize && node ./data.js -in=t3.ttl -format=application/rdf+xml  -out=,t3.xml && node diff ,t3.xml t3-ref.xml",
+    "test:serialize:4": "cd ./tests/serialize && node ./data.js -in=t3.ttl -out=,t4.ttl && node diff ,t4.ttl t4-ref.ttl",
+    "test:serialize:5": "cd ./tests/serialize && node ./data.js -in=t5.n3 -format=text/turtle -out=,t5.ttl && node diff ,t5.ttl t5-ref.ttl",
+    "test:serialize:6": "cd ./tests/serialize && node ./data.js -in=t5.n3 -format=text/n3 -out=,t6.n3 && node diff ,t6.n3 t6-ref.n3",
+    "test:serialize:7": "cd ./tests/serialize && node ./data.js -in=t7.n3 -format=application/n-triples -out=,t7.nt && node diff ,t7.nt t7-ref.nt",
+    "test:serialize:8": "cd ./tests/serialize && node ./data.js -in=t5.n3  -format=application/n-quads -dump=,t8.nq && node diff ,t8.nq t8-ref.nq",
+    "test:serialize:9": "cd ./tests/serialize && node ./data.js -in=t7.n3 -format=application/ld+json -out=,t9.json && node diff ,t9.json t9-ref.json",
+    "test:serialize:10": "cd ./tests/serialize && node ./data.js -in=details.ttl -format=text/turtle -out=,t10.ttl && node diff ,t10.ttl t10-ref.ttl",
+    "test:serialize:11": "cd ./tests/serialize && node ./data.js -in=structures.n3 -format=application/rdf+xml  -out=,structures.xml && node diff ,structures.xml t11-ref.xml",
+    "test:serialize:12": "cd ./tests/serialize && node ./data.js -in=structures.n3 -format=text/turtle -out=,structures.ttl && node diff ,structures.ttl t12-ref.ttl",
+    "test:serialize:13": "cd ./tests/serialize && node ./data.js -in=structures.n3 -format=application/n-triples -out=,structures.nt && node ./data.js -format=application/n-triples -in=,structures.nt -format=text/turtle -out=,structures.nt.ttl && node diff ,structures.nt.ttl t13-ref.ttl",
+    "test:serialize:14": "cd ./tests/serialize && node ./data.js -in=t14.html -format=text/turtle -out=,t14.ttl && node diff ,t14.ttl t14-ref.ttl",
+    "test:serialize:15": "cd ./tests/serialize && node ./data.js -in=t15.html -format=text/turtle -out=,t15.ttl && node diff ,t15.ttl t15-ref.ttl",
+    "test:types": "tsc --noEmit --target es2019 --moduleResolution node tests/types/*.ts",
+    "test:unit": "mocha --growl --require ./tests/babel-register.js tests/unit/**-test.*",
+    "test:unit:egp": "mocha --require ./tests/babel-register.js tests/unit/fetcher-egp-test.js",
+    "test:unit:dev": "mocha --watch --growl --require ./tests/babel-register.js tests/unit/**-test.js",
+    "watch": "babel src --extensions \".ts,.js\" --env-name esm -d esm --watch & babel src --extensions \".ts,.js\" -d lib --watch"
+  },
+  "files": [
+    ".babelrc",
+    "src",
+    "lib",
+    "dist",
+    "esm"
+  ],
+  "main": "lib/index.js",
+  "module": "esm/index.js",
+  "types": "lib/index.d.ts",
+  "sideEffects": false,
+  "keywords": [
+    "linkeddata",
+    "linked data",
+    "rdf",
+    "rdfa",
+    "turtle",
+    "semantic",
+    "web",
+    "read-write web"
+  ],
+  "standard": {
+    "globals": [
+      "ActiveXObject",
+      "Components",
+      "DOMParser",
+      "netscape",
+      "$rdf",
+      "Services",
+      "tabulator",
+      "WebSocket"
+    ]
+  }
+}

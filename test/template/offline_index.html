@@ -1,0 +1,66 @@
+<html>
+<head>
+    <title>TCXXXX: A TITLE</title>
+	<link type="text/css" href="../tth.css" rel="stylesheet" />
+	<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+	<script type="text/javascript" src="../test_utils.js"></script>
+	<script type="text/javascript" src="../tth-manager.js"></script>
+	<script type="text/javascript" src="../ext/jquery.iphone-switch.js"></script>
+	<script type="text/javascript" src="../../util.js"></script>
+	<script type="text/javascript" src="../../uri.js"></script>
+	<script type="text/javascript" src="../../term.js"></script>
+	<script type="text/javascript" src="../../identity.js"></script>
+	<script type="text/javascript" src="../../n3parser.js"></script>
+	<script type="text/javascript" src="../../rdfparser.js"></script>
+	<script type="text/javascript" src="offline_test_UUU.js" ></script>
+	<script type="text/javascript">
+	$(document).ready(function() {
+		$("#globalresult").html("<div style='margin: 0.2em; font-style: italic'>Note: this test can take up several minutes to complete!</div>");
+		$("#viewSourceCode").click(function () {
+			viewSource("test_rdfparser.js");
+		});
+		$('#closeSourceView').live('click', function(){
+			hideSource();
+		});
+		$("#reset").click(function () {
+			location.reload(true);
+		});
+		$('#goOffline').iphoneSwitch("off", 
+			function() {
+				goOffline();
+			},
+			function() {
+				goOnline();
+			},
+			{ 	switch_path: '../img/iphone_switch.png',
+				switch_on_container_path: '../img/iphone_switch_container_on.png',
+				switch_off_container_path: '../img/iphone_switch_container_off.png'
+			}
+		);
+		$('#runTests').click(function () {
+			tcXXXXPassed = true;
+			$('#tocTCXXXX').html("");
+			$("#detailedresults").html(testTCXXXX(true));
+			if(tcXXXXPassed) $("#globalresult").html("<div><strong>Overall result</strong>: <span style='border: solid 2px green; padding: 1px 5px;'>PASSED</span></div>");
+				else $("#globalresult").html("<div><strong>Overall result</strong>: <span style='border: solid 2px red; padding: 1px 5px;'>FAILED</span></div>");
+			});
+		});
+	
+	</script>
+</head>
+<body>
+	<div id="tcDetailMenu">
+		<div id="goOffline" title="OFF-LINE mode" class="offlinemodeswitch"></div>
+		<a href="../index.html">back to Tabulator Test Harness ...</a> |
+		<button id="viewSourceCode" title="View the source code of the test ...">View Source</button> 
+	</div>	
+	<h1 id="header">TCXXXX: A TITLE</h1>
+	<div id="tocTCXXXX" class="detailstoc"></div>
+	<div style="margin-left: 0em;">
+		<button id="reset" title="Reset all tests ...">Reset</button> |
+		<button id="runTests" title="Run the tests!">Run!</button> 
+	</div> 
+	<div id="globalresult" style="margin: 1em 0 1em 0"></div>
+	<div id="detailedresults"></div>
+</body>
+</html>

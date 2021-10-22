@@ -1,0 +1,187 @@
+<!--
+  ~ Copyright (c) 2011 Denis Duvauchelle (denisduvauchelle.com)
+  ~ under the MIT licence defined at
+  ~    http://www.opensource.org/licenses/mit-license.html
+  -->
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+    <title>SocWeb - The new semantic web</title>
+
+    <link rel="shortcut icon" type="image/x-icon" href="a_img/favicon.ico">
+    <link rel="stylesheet" type="text/css" href="a_css/general.css">
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.js"></script>
+    <script src="../../dist/rdflib.js" type="text/javascript"></script>
+    <script src="../../dist/rdflib-rdfa.js" type="text/javascript"></script>
+    <script type="text/javascript" src="social_book.js"></script>
+
+
+    <script type="text/javascript">
+        $(document).ready(function(){
+            initialize()
+            redraw(uri)
+        });
+    </script>
+
+    <!--PLUGGIN FOR AUTO COMPLETE>
+    <link rel="stylesheet" type="text/css" href="a_js/jquery-autocomplete/jquery.autocomplete.css">
+    <script type="text/javascript" src="a_js/jquery-autocomplete/jquery.autocomplete.js"></script> -->
+</head>
+
+<body>
+
+
+<div id="topbar">
+	<div class="wrapper">
+        		<h1 id="logo">SocWeb</h1>
+                <form method="get" action="">
+               	  <input type="text" value="" name="q" id="main_search">
+                	<button type="submit"></button>
+                </form>
+                
+                <a href="index.html" class="topbar_links">The Wall</a>
+                <a href="social_book.html" class="topbar_links">Social book</a>
+                
+                <div>
+                
+
+
+	<a href=""><img src="a_img/avatar.png" height="20" align="absmiddle" /> &nbsp;&nbsp;Username</a>
+	<span>|</span>
+	<a href="">Log out</a>
+
+
+
+                    
+                    
+                </div>
+    </div> 
+</div>
+ 
+ 
+ 
+	<div id="site_wrapper">
+
+
+<h1>Social book</h1>
+
+<script type="text/javascript">
+$(document).ready(function(){
+	
+	$('.listing_user').live('click',function(){
+			$(this).siblings().removeClass('clicked_user');	
+			$(this).addClass('clicked_user');;
+		
+	});
+							   
+});
+</script>
+
+
+<style>
+.panel{ float:left; height:500px; border:1px solid #CCC; overflow-y:scroll; overflo-x:hidden; }
+
+.listing{ margin-right:2px; width:186px; }
+.listing_user{ padding:4px 0px;line-height: 145%; padding-left:4px; width:165px; overflow:hidden; cursor:pointer; white-space: nowrap; }
+.listing_user:hover, .clicked_user{ background:#F2F2F2; }
+
+
+.user{ width:383px; }
+#user_wrapper{ padding:5px; width:355px; }
+#user_wrapper img{ float:left; }
+#user_wrapper h1{ margin:0px; padding:20px; font-size:18px; color:#333333; float:left; }
+#user_wrapper h1 .nickname{ display:block; color:#CCC; font-size:12px; font-weight:normal; }
+#user_wrapper ul{ padding:0px; margin:0px; text-indent:0px; list-style:none; }
+#user_wrapper ul li{ padding:6px 4px; }
+#user_wrapper ul li:hover{ background:#F2F2F2; }
+#user_wrapper ul li label{ color:#333333; font-weight:bold; width:150px; display:inline-block; }
+.user_info_input{ display:inline-block; color:#999; font-weight:normal; width:200px; }
+.user_info_input a{ font:14px !important; }
+</style>
+
+        <div class="panel listing" id="panel1">
+            <span class="listing_user" href="">Antoine Duvauchelle</span>
+            <span class="listing_user" href="">Henry Story</span>
+            <span class="listing_user" href="">Adolph Blaine Charles David Earl Frederick Gerald Hubert Irvin John Kenneth Lloyd Martin Nero Oliver Paul Quincy Randolph Sherman Thomas Uncas Victor William Xerxes Yancy Zeus Wolfeschlegelsteinhausenbergerdorff</span>
+        </div>
+        
+        <div class="panel listing" id="panel2">
+            <span class="listing_user" href="">Denis Duvauchelle</span>
+            <span class="listing_user" href="">Heidi Story</span>
+            <span class="listing_user" href="">Blaine Charles David Earl Frederick Gerald Hubert Irvin John Kenneth Lloyd Martin Nero Oliver Paul Quincy Randolph Sherman Thomas Uncas Victor William Xerxes Yancy Zeus Wolfeschlegelsteinhausenbergerdorff</span>
+        </div>
+        
+        <div class="panel listing" id="panel3">
+        
+        </div>
+        
+        <div class="panel user">
+            <div id="user_wrapper">
+                <img class="depiction" src="a_img/avatar.png" width="80" alt="User avatar">
+                <h1><span class="name">Henry Story</span> <span class="nickname">bblfizh</span></h1>
+                <div class="clear"></div>
+                <br>
+                <ul>
+                    <li class="phone">
+                        <label>Phone</label>
+                        <a class="user_info_input" href="tel:+86-158-007-22-700">+86 158 007 22 700</a>
+                    </li>
+                    <li class="mobile">
+                        <label>Mobile</label>
+                        <a class="user_info_input" href="tel:+86-158-007-22-700">+86 158 007 22 700</a>
+                    </li>
+                    <li class="address">
+                        <label>Address</label>
+                        <div class="user_info_input">20 Place Napoleon Bonaparte<br>77300 Fontainebleau<br>France</div>
+                    </li>
+                    <li class="email">
+                        <label>Email</label>
+                        <a class="user_info_input" href="mailto:youremail@domain.com">youremail@domain.com</a>
+                    </li>
+                    <li class="website">
+                        <label>Website</label>
+                        <div class="user_info_input"><a href="#">http://www.website.com</a></div>
+                    </li>
+                    <li class="birthday">
+                        <label>Birthday</label>
+                        <div class="user_info_input">15th of June 1988</div>
+                    </li>
+        
+                </ul>
+               
+            </div>
+        </div>
+
+	
+    <div class="clear"></div>
+
+    
+
+
+</div>  <!-- END OF SITE_WRAPPER -->
+
+	<div id="footer" class="wrapper">
+    	
+   	
+	</div> <!-- END OF FOOTER -->
+
+
+<script type="text/javascript">
+/*
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-25910668-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+*/
+</script>
+
+</body>
+</html>

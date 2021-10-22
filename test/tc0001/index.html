@@ -1,0 +1,28 @@
+<html>
+<head>
+	<title>TC0001: Basic RDF terms</title>
+	<link type="text/css" href="../tth.css" rel="stylesheet" />
+	<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+	<script type="text/javascript" src="../test_utils.js" ></script>
+	<script type="text/javascript" src="../../dist/rdflib.js" ></script>
+	<script type="text/javascript" src="test_term.js" ></script>
+	<script type="text/javascript">
+	$(document).ready(function() {
+		$("#viewSourceCode").click(function () {
+			viewSource("test_term.js");
+		});
+		$('#closeSourceView').live('click', function(){
+			hideSource();
+		});
+		$("#detailedresults").html(testTC0001(true));
+		if(tc0001Passed) $("#globalresult").html("<div><strong>Overall result</strong>: <span style='border: solid 2px green; padding: 1px 5px;'>PASSED</span></div>");
+		else $("#globalresult").html("<div><strong>Overall result</strong>: <span style='border: solid 2px red; padding: 1px 5px;'>FAILED</span></div>");
+	});
+	</script>
+<body>
+	<a href="../index.html">back to Tabulator Test Harness ...</a> | <button id="viewSourceCode" title="View the source code of the test ...">View Source</button>
+	<h1 id="header">TC0001: Basic RDF terms</h1>
+	<div id="globalresult" style="margin-bottom: 10px"></div>
+	<div id="detailedresults"></div>
+</body>
+</html>

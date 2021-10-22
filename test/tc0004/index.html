@@ -1,0 +1,62 @@
+<html>
+<head>
+    <title>TC0004: RDF/XML parsing</title>
+	<link type="text/css" href="../tth.css" rel="stylesheet" />
+	<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+	<script type="text/javascript" src="../test_utils.js"></script>
+	<script type="text/javascript" src="../tth-manager.js"></script>
+	<script type="text/javascript" src="../ext/jquery.iphone-switch.js"></script>
+	<script type="text/javascript" src="../../dist/rdflib.js" ></script>
+	<script type="text/javascript" src="test_rdfparser.js" ></script>
+	<script type="text/javascript">
+	$(document).ready(function() {
+		$("#globalresult").html("<div style='margin: 0.2em; font-style: italic'>Note: this test can take up to several minutes to complete. Consider using OFF-LINE mode (left upper corner).</div>");
+		$("#viewSourceCode").click(function () {
+			viewSource("test_rdfparser.js", true);
+		});
+		$('#closeSourceView').live('click', function(){
+			hideSource();
+		});
+		$("#reset").click(function () {
+			location.reload(true);
+		});
+		$('#goOffline').iphoneSwitch("off", 
+			function() {
+				goOffline();
+			},
+			function() {
+				goOnline();
+			},
+			{ 	switch_path: '../img/iphone_switch.png',
+				switch_on_container_path: '../img/iphone_switch_container_on.png',
+				switch_off_container_path: '../img/iphone_switch_container_off.png'
+			}
+		);
+		$('#runTests').click(function () {
+			tc0004Passed = true;
+			$('#tocTC0004').html("");
+			$("#detailedresults").html(testTC0004(true));
+			if(tc0004Passed) $("#globalresult").html("<div><strong>Overall result</strong>: <span style='border: solid 2px green; padding: 1px 5px;'>PASSED</span></div>");
+				else $("#globalresult").html("<div><strong>Overall result</strong>: <span style='border: solid 2px red; padding: 1px 5px;'>FAILED</span></div>");
+			});
+		});
+	
+	</script>
+</head>
+<body>
+	<div id="tcDetailMenu">
+		<div id="goOffline" title="OFF-LINE mode" class="offlinemodeswitch"></div>
+		<a href="../index.html">back to Tabulator Test Harness ...</a> |
+		<button id="viewSourceCode" title="View the source code of the test ...">View Source</button> 
+	</div>	
+	<h1 id="header">TC0004: RDF/XML parsing</h1>
+	<div id="tocTC0004" class="detailstoc"></div>
+	<div style="margin-left: 0em;">
+		<button id="reset" title="Reset all tests ...">Reset</button> |
+		<button id="runTests" title="Run the tests!">Run!</button> 
+		(restrict test case range from <input type='text' id="fromTC" value="0" size="1" /> to <input type='text' id="toTC" value="23" size="1" />)
+	</div> 
+	<div id="globalresult" style="margin: 1em 0 1em 0"></div>
+	<div id="detailedresults"></div>
+</body>
+</html>

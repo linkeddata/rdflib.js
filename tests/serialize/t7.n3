@@ -1,0 +1,10 @@
+@prefix : <http://example.com/foo/vocab#>.
+
+:building0 :bar 123, 78768.
+
+:building1  :length 1.45e5 ;
+    :created 2012-03-12 .
+
+:building0 :connectsTo :building4 .
+
+# ends

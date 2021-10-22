@@ -1,0 +1,10 @@
+
+@prefix : <https://example.org/foo#>.
+
+
+:foo  :p  1,2,3;
+#    :q ( 1 2 3);
+    :r "rrrrr";
+    :s 2014-09-21;    #  extension to TTL
+    :t 2.0;
+    :u 3.14159e0 .

@@ -1,0 +1,59 @@
+REMOVED FILES:
+
+plistClosure.js -> no refs to about() or pickOne.
+unify.js        -> contained _no_ code !
+remote.js       -> remoteQuery ref'd in query.js, but commented out.
+parser.js       -> not used anymore.
+
+LOGGING:
+
+Without assuming that there is a global log var, logging can be weird. What do we do?
+(bring in the log js)
+
+ORDERING:
+
+util.js - done (util-nonlib.js) - FIGURE OUT AJAR_HandleNew  (should be in sources probably..) for now in util class.
+uri.js  - done (REMOVED URIjoin, uri_docpart, uri_protocol
+term.js - done..
+rdfparser.js -done..
+n3parser.js  -ew, but done.
+identity.js  21k -RDFArrayRemove now in Util.RDFArrayRemove.
+query.js     21k -NEEDS MORE WORK.
+sources.js   37k -ok??
+serialize.js 24k -OK!
+sparqlUpdate.js 8k -ok, seemingly.
+sparql.js      21k -SPARQLtoQuery needs kb in calls to it now.. isbnode: /^[]$/ -> /^$/ NO! Take it back.
+
+TODO: Add the minor sources bugfix into sources.js!
+
+HANGING GLOBALS:
+
+isExtension
+
+
+
+
+=========================================================================
+extension code!
+
+KILLED GLOBALS:
+string_startswith
+kb
+sf
+qs
+
+
+NAMESPACE GLOBALS DELETED:
+mo
+contact
+xsd
+rss
+dc
+owl
+rdfs
+rdf
+tabont
+foaf
+
+
+WEBDAV.js -- WHERE IS IT NEEDED.

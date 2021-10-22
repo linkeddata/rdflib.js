@@ -1,0 +1,19 @@
+<file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/t5.n3#other> <http://www.w3.org/2007/ont/link#uri> "file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/t5.n3#subj" _:n0 .
+<file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/t5.n3#subj> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/t5.n3#TestCase> <file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/t5.n3> .
+<file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/t5.n3#subj> <http://www.w3.org/2002/07/owl#sameAs> <file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/t5.n3#other> <file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/t5.n3> .
+<file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/t5.n3> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2007/ont/link#Document> _:n0 .
+<file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/t5.n3> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2007/ont/link#RDFDocument> _:n0 .
+_:n1 <http://www.w3.org/2000/01/rdf-schema#label> "[17:29:49]  Request for file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/t5.n3" _:n0 .
+_:n1 <http://www.w3.org/2007/ont/link#requestedURI> "file:///devel/github.com/linkeddata/rdflib.js/tests/serialize/t5.n3" _:n0 .
+_:n1 <http://www.w3.org/2007/ont/link#response> _:n3 _:n0 .
+_:n4 <http://www.w3.org/1999/02/22-rdf-syntax-ns#first> "[17:29:49.920] Done.".
+_:n4 <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest> <http://www.w3.org/1999/02/22-rdf-syntax-ns#nill>.
+_:n5 <http://www.w3.org/1999/02/22-rdf-syntax-ns#first> "[17:29:49.919] N3 parsed: 2 triples in 2 lines.".
+_:n5 <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest> _:n4.
+_:n6 <http://www.w3.org/1999/02/22-rdf-syntax-ns#first> "[17:29:49.908] HTTP Request sent.".
+_:n6 <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest> _:n5.
+_:n7 <http://www.w3.org/1999/02/22-rdf-syntax-ns#first> "[17:29:49.904] Accept: image/*;q=0.9, */*;q=0.1, application/rdf+xml;q=0.9, application/xhtml+xml, text/xml;q=0.5, application/xml;q=0.5, text/html;q=0.9, text/plain;q=0.5, text/n3;q=1.0, text/turtle;q=1".
+_:n7 <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest> _:n6.
+_:n1 <http://www.w3.org/2007/ont/link#status> _:n7 _:n0 .
+_:n3 <http://www.w3.org/2007/ont/http#status> "200" _:n3 .
+_:n3 <http://www.w3.org/2007/ont/http#statusText> "null" _:n3 .

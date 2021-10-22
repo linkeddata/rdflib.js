@@ -1,0 +1,27 @@
+@prefix : </t14.html#>.
+@prefix contact: <http://www.w3.org/2000/10/swap/pim/contact#>.
+@prefix dc: <http://purl.org/dc/elements/1.1/>.
+@prefix dct: <http://purl.org/dc/terms/>.
+@prefix foaf: <http://xmlns.com/foaf/0.1/>.
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix lin: <http://www.iana.org/assignments/link-relations/>.
+@prefix voc: <http://www.w3.org/1999/xhtml/vocab#>.
+@prefix res: <http://dbpedia.org/resource/>.
+
+<>
+    dc:title "XHTML+RDFa example";
+    <http://www.iana.org/assignments/link-relations/foaf%3AprimaryTopic>
+    <http://www.example.com/metadata/foaf.rdf>;
+    <http://www.iana.org/assignments/link-relations/schema.DC> dc:;
+    <http://www.iana.org/assignments/link-relations/schema.DCTERMS> dct:;
+    <http://www.iana.org/assignments/link-relations/shortcut%20icon>
+    </favicon.ico>;
+    lin:stylesheet </main.css>;
+    voc:alternate <http://www.example.com/rss.xml>;
+    voc:icon </favicon.ico>;
+    voc:stylesheet </main.css>;
+    rdfs:seeAlso </about.htm>, <http://www.example.com/rss.xml>;
+    contact:address [ rdfs:seeAlso res:Adelaide; contact:city "Adelaide"@en ];
+    foaf:name "Jerry Smith"@en;
+    foaf:phone <tel:+6112345678>;
+    foaf:primaryTopic <http://www.example.com/metadata/foaf.rdf>.

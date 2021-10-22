@@ -1,0 +1,209 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html	xmlns="http://www.w3.org/1999/xhtml"
+		xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+		xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+		xmlns:owl="http://www.w3.org/2002/07/owl#"
+		xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+		xmlns:dcterms="http://purl.org/dc/terms/"
+		xmlns:foaf="http://xmlns.com/foaf/0.1/"  
+		xmlns:vcard="http://www.w3.org/2006/vcard/ns#"
+		xmlns:ov="http://open.vocab.org/terms/"
+		xmlns:doap="http://usefulinc.com/ns/doap#"
+		xmlns:test="http://www.w3.org/2006/03/test-description#">
+<head>
+	<meta content="text/html;charset=UTF-8" http-equiv="Content-Type" />
+	<meta http-equiv="content-type" content="" />
+	<title>Tabulator Test Harness</title>
+	<link type="text/css" href="tth.css" rel="stylesheet" />
+	<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+	<script type="text/javascript" src="http://linkeddata.github.com/tabulator/js/jquery/jquery.uri.js"></script>
+	<script type="text/javascript" src="http://linkeddata.github.com/tabulator/js/jquery/jquery.datatype.js"></script>
+	<script type="text/javascript" src="http://linkeddata.github.com/tabulator/js/jquery/jquery.xmlns.js"></script>
+	<script type="text/javascript" src="http://linkeddata.github.com/tabulator/js/jquery/jquery.curie.js"></script>
+	<script type="text/javascript" src="http://linkeddata.github.com/tabulator/js/jquery/jquery.rdf.js"></script>
+	<script type="text/javascript" src="http://linkeddata.github.com/tabulator/js/jquery/jquery.rdfa.js"></script>
+	<script type="text/javascript" src="test_utils.js" ></script>
+	<script type="text/javascript" src="tth-manager.js"></script>
+	<script type="text/javascript" src="ext/jquery.iphone-switch.js"></script>
+	<script type="text/javascript" src="../dist/rdflib-rdfa.js"></script>
+	<script type="text/javascript" src="tth.js"></script>
+	<script type="text/javascript">
+	$(document).ready(function() {
+		fillTOC();
+
+		$("#runAllTests").click(function () {
+			runAllTests();
+			$("#runAllTests").attr("disabled","disabled");
+		});
+		
+		$("#reset").click(function () {
+			location.reload(true); // need to this so that the dynamically loaded test scripts don't screw up the rendering
+		});
+		
+		$('#goOffline').iphoneSwitch("off", 
+			function() {
+				goOffline();
+			},
+			function() {
+				goOnline();
+			},
+			{ 	switch_path: 'img/iphone_switch.png',
+				switch_on_container_path: 'img/iphone_switch_container_on.png',
+				switch_off_container_path: 'img/iphone_switch_container_off.png'
+			}
+		);
+		
+		
+		$("#showAllTestDetails").click(function () {
+			$(".testdetails").show("slow");
+		});
+		
+		$("#hideAllTestDetails").click(function () {
+			$(".testdetails").hide("slow");
+		});
+		
+		$(".testcase h2:contains('...')").click(function () {
+			$(this).parent().find(".testdetails").toggle("slow");
+		});
+
+		$(".runTest").click(function () {
+			runTest($(this).attr('resource'), // the URI of the test script to call
+					$(this).parent().parent().parent().find("span[property='dcterms:identifier']").attr('content'), // the test ID to construct the test method
+				 	$(this).parent().parent().parent().find("h2") // the HTML element for the results
+			);
+		});
+		
+	});
+	</script>
+</head>
+<body>
+	<div id="status">Idle</div>
+	<div id="goOffline" title="OFF-LINE mode" class="offlinemodeswitch"></div>
+	<div id="main">
+		<h1>Tabulator Test Harness</h1>
+                https://linkeddata.github.io/rdflib.js/test/index.html
+                <p>Note: Run this in Firefox+tabulator as <a href="chrome://tabulator/content/js/rdf/test/index.html">chrome://tabulator/content/js/rdf/test/index.html</a><br/>
+                Run this from GITHUB as <a href="https://linkeddata.github.io/rdflib.js/test/index.html">https://linkeddata.github.io/rdflib.js/test/index.html</a></p>
+		<div id="toc"></div>
+		<div id="cmd">
+			<button id="reset" title="Reset all tests ...">Reset</button> |
+			<button id="runAllTests" title="Run all tests ...">Run all</button> |
+			<button id="showAllTestDetails">Show all tests</button> |
+			<button id="hideAllTestDetails">Hide all tests</button>
+		</div>
+		<div id="tests">
+			<div class="testcase" id="secTC0000" about="#TC0000" typeof="test:TestCase">
+				<span property="dcterms:identifier" content="TC0000"></span> 
+				<h2 property="dcterms:title" title="click to expand ..." content="TC0000: URI reference resolution">TC0000: URI reference resolution (...)</h2>
+				<span class="overallTestResult"></span>
+				<div class="testdetails">
+					<p><em>Purpose</em>: <span property="dcterms:description test:purpose">Tests URI reference resolution with base/relative/absolute form of URIs.</span>
+					</p>
+					<p><em>See also</em>: <a rel="rdfs:seeAlso" href="http://tools.ietf.org/html/rfc3986#section-5">Reference Resolution</a> 
+						in <span title="Uniform Resource Identifier (URI): Generic Syntax">RFC3986</span>
+					</p>
+					<p><em>Test</em>: 
+						<a href="tc0000/index.html">View</a> | 
+						<button class="runTest" rel="ov:resultFrom" resource="tc0000/test_uri.js">Run</button> 
+					</p>
+				</div>
+			</div>
+			<div class="testcase" id="secTC0001" about="#TC0001" typeof="test:TestCase">
+				<span property="dcterms:identifier" content="TC0001"></span> 
+				<h2 property="dcterms:title" title="click to expand ..." content="TC0001: Basic RDF terms">TC0001: Basic RDF terms (...)</h2>
+				<span class="overallTestResult"></span>
+				<div class="testdetails">
+					<p><em>Purpose</em>: <span property="dcterms:description test:purpose">Tests basic RDF terms such as nodes, literals, and statements.</span>
+					</p>
+					<p><em>See also</em>: <a href="http://www.w3.org/TR/rdf-concepts/#section-Concepts">RDF concepts</a></p>
+					<p><em>Test</em>: 
+						<a href="tc0001/index.html">View</a> | 
+						<button class="runTest" rel="ov:resultFrom" resource="tc0001/test_term.js">Run</button>
+					</p>
+				</div>
+			</div>
+			<div class="testcase" id="secTC0002" about="#TC0002" typeof="test:TestCase">
+				<span property="dcterms:identifier" content="TC0002"></span> 
+				<h2 property="dcterms:title" title="click to expand ..." content="TC0002: Term Matching">TC0002: Term Matching (...)</h2>
+				<span class="overallTestResult"></span>
+				<div class="testdetails">
+					<p><em>Purpose</em>: <span property="dcterms:description test:purpose">Tests matching of RDF terms (holds, any, etc. )</span>
+					</p>
+					<p><em>See also</em>: N.A.</p>
+					<p><em>Test</em>: 
+						<a href="tc0002/index.html">View</a> | 
+						<button class="runTest" rel="ov:resultFrom" resource="tc0002/test_match.js">Run</button>
+					</p>
+				</div>
+			</div>
+			<div class="testcase" id="secTC0003" about="#TC0003" typeof="test:TestCase">
+				<span property="dcterms:identifier" content="TC0003"></span> 
+				<h2 property="dcterms:title" title="click to expand ..." content="TC0003: Identity">TC0003: Identity (...)</h2>
+				<span class="overallTestResult"></span>
+				<div class="testdetails">
+					<p><em>Purpose</em>: <span property="dcterms:description test:purpose">Tests identity of entities (equals, IFPs, functional properties)</span>
+					</p>
+					<p><em>See also</em>: <a href="http://www.w3.org/TR/owl-ref/#sameAs-def">owl:sameAs</a> and <a href="http://esw.w3.org/InverseFunctionalProperty">IFP</a></p>
+					<p><em>Test</em>: 
+						<a href="tc0003/index.html">View</a> | 
+						<button class="runTest" rel="ov:resultFrom" resource="tc0003/test_identity.js">Run</button>
+					</p>
+				</div>
+			</div>
+			<div class="testcase" id="secTC0004" about="#TC0004" typeof="test:TestCase">
+				<span property="dcterms:identifier" content="TC0004"></span> 
+				<h2 property="dcterms:title" title="click to expand ..." content="TC0004: RDF/XML parsing">TC0004: RDF/XML parsing (...)</h2>
+				<span class="overallTestResult"></span>
+				<div class="testdetails">
+					<p><em>Purpose</em>: <span property="dcterms:description test:purpose">Tests parsing of RDF/XML documents</span>
+					</p>
+					<p><em>See also</em>: <a href="http://www.w3.org/TR/rdf-syntax-grammar/">RDF/XML Syntax Specification (Revised)</a></p>
+					<p><em>Test</em>: 
+						<a href="tc0004/index.html">View</a> | 
+						<button class="runTest" rel="ov:resultFrom" resource="tc0004/test_rdfparser.js">Run</button>
+					</p>
+				</div>
+			</div>
+
+            <div class="testcase" id="secTC0005" about="#TC0005" typeof="test:TestCase">
+                <span property="dcterms:identifier" content="TC0005"></span>
+                <h2 property="dcterms:title" title="click to expand ..." content="TC0005: A TITLE">TC0005: Testing x.toNT() and $rdf.fromNT() functions - Basic (...)</h2>
+                <span class="overallTestResult"></span>
+                <div class="testdetails">
+                    <p><em>Purpose</em>: <span property="dcterms:description test:purpose">This tests the
+                        internal serialization used to make hashez and now used in the SPARQL code to actually serialize SPARQL.
+                        If you take a valid term serialization s then $rdf.fromNT().toNT() should be s.</span>
+                    </p>
+                    <p><em>See also</em>:
+                    </p>
+                    <p><em>Test</em>:
+                    <a href="tc0005/index.html">View</a> |
+                    <button class="runTest" rel="ov:resultFrom" resource="tc0005/test_UUU.js">Run</button>
+                    </p>
+                </div>
+            </div>
+            
+            <div class="testcase" id="secTC0006" about="#TC0006" typeof="test:TestCase">
+                <span property="dcterms:identifier" content="TC0006"></span>
+                <h2 property="dcterms:title" title="click to expand ..." content="TC0006: A TITLE">TC0006: Testing the substitute method on terms</h2>
+                <span class="overallTestResult"></span>
+                <div class="testdetails">
+                    <p><em>Purpose</em>: <span property="dcterms:description test:purpose">Substitution of variables into a term is recurive into the parts
+                    of a statement, the elements of a list, and the statements in a formula. We need to test that the recursion works as well as
+                    that the basic subsitution of a variable works at the top level.</span>
+                    </p>
+                    <p><em>See also</em>:
+                    </p>
+                    <p><em>Test</em>:
+                    <a href="tc0006/index.html">View</a> |
+                    <button class="runTest" rel="ov:resultFrom" resource="tc0006/test_UUU.js">Run</button>
+                    </p>
+                </div>
+            </div>
+            
+
+		</div>
+		<div id="about">Tabulator Test Harness maintained by <a rel="doap:maintainer" href="http://sw-app.org/mic.xhtml#i">Michael Hausenblas</a>; last update: <span property="dcterms:date" datatype="xsd:date">2010-07-14</span>.</div>
+	</div>
+</body>
+</html>
