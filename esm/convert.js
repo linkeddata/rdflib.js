@@ -1,0 +1,61 @@
+import asyncLib from 'async'; // @@ Goal: remove this dependency
+
+import jsonld from 'jsonld';
+import { Parser, Writer } from 'n3'; // @@ Goal: remove this dependency
+
+export function convertToJson(n3String, jsonCallback) {
+  var jsonString;
+  var n3Parser = new Parser();
+  var n3Writer = new Writer({
+    format: 'N-Quads'
+  });
+  asyncLib.waterfall([function (callback) {
+    n3Parser.parse(n3String, function (error, quad, prefixes) {
+      if (error) {
+        callback(error);
+      } else if (quad !== null) {
+        n3Writer.addQuad(quad);
+      } else {
+        n3Writer.end(callback);
+      }
+    });
+  }, function (result, callback) {
+    try {
+      jsonld.fromRDF(result, {
+        format: 'application/nquads'
+      }).then(function (result) {
+        callback(null, result);
+      });
+    } catch (err) {
+      callback(err);
+    }
+  }, function (json, callback) {
+    jsonString = JSON.stringify(json);
+    jsonCallback(null, jsonString);
+  }], function (err, result) {
+    jsonCallback(err, jsonString);
+  });
+}
+export function convertToNQuads(n3String, nquadCallback) {
+  var nquadString;
+  var n3Parser = new Parser();
+  var n3Writer = new Writer({
+    format: 'N-Quads'
+  });
+  asyncLib.waterfall([function (callback) {
+    n3Parser.parse(n3String, function (error, triple, prefixes) {
+      if (error) {
+        callback(error);
+      } else if (quad !== null) {
+        n3Writer.addQuad(quad);
+      } else {
+        n3Writer.end(callback);
+      }
+    });
+  }, function (result, callback) {
+    nquadString = result;
+    nquadCallback(null, nquadString);
+  }], function (err, result) {
+    nquadCallback(err, nquadString);
+  });
+}
