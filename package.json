@@ -93,7 +93,7 @@
     "build:esm": "babel src --extensions \".ts,.js\" --env-name esm -d esm",
     "build:browser": "webpack --progress",
     "build:types": "tsc --emitDeclarationOnly -d --moduleResolution node --declarationDir lib --allowJs false",
-    "doc": "rm -r doc ; typedoc",
+    "doc": "typedoc --out ./doc ./src/index.ts --excludePrivate --excludeInternal --tsconfig ./tsconfig.json",
     "prepublishOnly": "npm ci && npm run build && npm run build:types && npm run build:browser && npm run build:esm",
     "postversion": "git push --follow-tags",
     "start": "webpack-dev-server --https --port 4800",
