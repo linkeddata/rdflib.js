@@ -39,7 +39,7 @@ for more information.
 npm install rdflib
 ```
 
-#### Browser (generating a <script> file to include)
+#### Browser (generating a `<script>` file to include)
 
 ```bash
 git clone git@github.com:linkeddata/rdflib.js.git;
