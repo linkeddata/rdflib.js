@@ -320,8 +320,8 @@ class XHTMLHandler extends Handler {
       try {
         parseRDFaDOM(this.dom, kb, options.original.value)
       } catch (err) {
-        let msg = 'Error trying to parse ' + options.resource + ' as RDFa:\n' +
-          err + ':\n' + err.stack
+        // @ts-ignore
+        let msg = 'Error trying to parse ' + options.resource + ' as RDFa:\n' + err + ':\n' + err.stack
         return fetcher.failFetch(options as AutoInitOptions, msg, 'parse_error')
       }
     }
@@ -1485,6 +1485,7 @@ export default class Fetcher implements CallbackifyInterface {
     try {
       var response = await fetcher.load(doc as NamedNode)
     } catch (err) {
+      // @ts-ignore
       if (err.response.status === 404) {
         console.log('createIfNotExists: doc does NOT exist, will create... ' + doc)
         try {
@@ -1538,6 +1539,7 @@ export default class Fetcher implements CallbackifyInterface {
   invalidateCache (iri: string | NamedNode): void {
     const uri = termValue(iri)
     const fetcher = this
+    // @ts-ignore
     if (fetcher.fetchQueue && fetcher.fetchQueue[uri]) {
       console.log('Internal error - fetchQueue exists ' + uri)
       var promise = fetcher.fetchQueue[uri]

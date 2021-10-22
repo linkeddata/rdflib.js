@@ -63,6 +63,7 @@ export default function parse (
       throw new Error("Don't know how to parse " + contentType + ' yet')
     }
   } catch (e) {
+    // @ts-ignore
     executeErrorCallback(e)
   }
 
