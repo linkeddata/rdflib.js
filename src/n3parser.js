@@ -168,7 +168,7 @@ $Id: n3parser.js 14561 2008-02-23 06:37:26Z kennyluck $
 
 HAND EDITED FOR CONVERSION TO JAVASCRIPT
 
-This module implements a Nptation3 parser, and the final
+This module implements a Notation3 parser, and the final
 part of a notation3 serializer.
 
 See also:
@@ -201,9 +201,12 @@ var DATE_DATATYPE = "http://www.w3.org/2001/XMLSchema#date";
 var DATETIME_DATATYPE = "http://www.w3.org/2001/XMLSchema#dateTime";
 var BOOLEAN_DATATYPE = "http://www.w3.org/2001/XMLSchema#boolean";
 var option_noregen = 0;
-var _notQNameChars = "\t\r\n !\"#$%&'()*.,+/;<=>?@[\\]^`{|}~";
-var _notNameChars =  ( _notQNameChars + ":" ) ;
+var _notQNameChars = "\t\r\n !\"#$&'()*,+/;<=>?@[\\]^`{|}~"; // else valid qname :-/
+var _notKeywordsChars = ( _notQNameChars + "." ) ;
+var _notNameChars =  ( _notQNameChars + ":" ) ; // Assume anything else valid name :-/
 var _rdfns = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+var hexChars = "ABCDEFabcdef0123456789";
+var escapeChars = "(_~.-!$&'()*+,;=/?#@%)"; // valid for \ escapes in localnames
 var N3CommentCharacter = "#";
 var eol = new RegExp("^[ \\t]*(#[^\\n]*)?\\r?\\n", 'g');
 var eof = new RegExp("^[ \\t]*(#[^\\n]*)?$", 'g');
@@ -360,7 +363,7 @@ __SinkParser.prototype.tok = function(tok, str, i) {
         }
     }
     var k =  ( i + pyjslib_len(tok) ) ;
-    if ((str.slice( i, k) == tok) && (_notQNameChars.indexOf(str.charAt(k)) >= 0)) {
+    if ((str.slice( i, k) == tok) && (_notKeywordsChars.indexOf(str.charAt(k)) >= 0)) {
         return k;
     }
     else {
@@ -626,7 +629,7 @@ __SinkParser.prototype.path = function(str, i, res) {
         var ch = str.slice( j,  ( j + 1 ) );
         if ((ch == ".")) {
             var ahead = str.slice(  ( j + 1 ) ,  ( j + 2 ) );
-            if (!(ahead) || (_notNameChars.indexOf(ahead) >= 0) && (":?<[{(".indexOf(ahead) < 0)) {
+            if (!(ahead) || (_notKeywordsChars.indexOf(ahead) >= 0) && (":?<[{(".indexOf(ahead) < 0) || (ahead == "%") ) {
                 break;
             }
         }
@@ -1168,7 +1171,7 @@ __SinkParser.prototype.variable = function(str, i, res) {
         throw BadSyntax(this._thisDoc, this.lines, str, j,  (  ( "Varible name can't start with '" + str.charAt(j) )  + "s'" ) );
         return -1;
     }
-    while ((i < pyjslib_len(str)) && (_notNameChars.indexOf(str.charAt(i)) < 0)) {
+    while ((i < pyjslib_len(str)) && (_notKeywordsChars.indexOf(str.charAt(i)) < 0)) {
         var i =  ( i + 1 ) ;
     }
     if ((this._parentContext == null)) {
@@ -1190,11 +1193,11 @@ __SinkParser.prototype.bareWord = function(str, i, res) {
     if (("0123456789-".indexOf(ch) >= 0)) {
         return -1;
     }
-    if ((_notNameChars.indexOf(ch) >= 0)) {
+    if ((_notKeywordsChars.indexOf(ch) >= 0)) {
         return -1;
     }
     var i = j;
-    while ((i < pyjslib_len(str)) && (_notNameChars.indexOf(str.charAt(i)) < 0)) {
+    while ((i < pyjslib_len(str)) && (_notKeywordsChars.indexOf(str.charAt(i)) < 0)) {
         var i =  ( i + 1 ) ;
     }
     res.push(str.slice( j, i));
@@ -1202,7 +1205,6 @@ __SinkParser.prototype.bareWord = function(str, i, res) {
 };
 __SinkParser.prototype.qname = function(str, i, res) {
     /*
-
     xyz:def -> ('xyz', 'def')
     If not in keywords and keywordsSet: def -> ('', 'def')
     :def -> ('', 'def')
@@ -1218,10 +1220,10 @@ __SinkParser.prototype.qname = function(str, i, res) {
     }
     if ((_notNameChars.indexOf(c) < 0)) {
         var ln = c;
-        var i =  ( i + 1 ) ;
-        while ((i < pyjslib_len(str))) {
+        var i = ( i + 1 ) ;
+        while (i < pyjslib_len(str)) {
             var c = str.charAt(i);
-            if ((_notNameChars.indexOf(c) < 0)) {
+            if ((_notNameChars.indexOf(c) < 0)) {            	
                 var ln =  ( ln + c ) ;
                 var i =  ( i + 1 ) ;
             }
@@ -1229,24 +1231,72 @@ __SinkParser.prototype.qname = function(str, i, res) {
                 break;
             }
         }
+        
+        if(str.charAt(i - 1) == ".") {   // qname cannot end with "."
+        	var i = ( i - 1 ) ; 
+        	if (ln.length == 0) {
+        		return -1;
+        	}
+        	ln = ln.slice(0, -1);
+        }        
     }
     else {
         var ln = "";
     }
     if ((i < pyjslib_len(str)) && (str.charAt(i) == ":")) {
         var pfx = ln;
-        var i =  ( i + 1 ) ;
+        // bnodes names have different rules
+        if (pfx == "_") {
+        	var allowedChars = _notNameChars
+        }
+        else {
+        	var allowedChars = _notQNameChars
+        }
+        var i =  ( i + 1 ) ;    
+        var lastslash = false;
         var ln = "";
-        while ((i < pyjslib_len(str))) {
+        while (i < pyjslib_len(str)) {
             var c = str.charAt(i);
-            if ((_notNameChars.indexOf(c) < 0)) {
-                var ln =  ( ln + c ) ;
-                var i =  ( i + 1 ) ;
+            if (c == "\\" && !(lastslash)) {
+            	var lastslash = true;
+            }
+            else if ((allowedChars.indexOf(c) < 0) || lastslash) {
+            	if (lastslash) {
+            		if (escapeChars.indexOf(c) < 0) {     
+            			throw BadSyntax(this._thisDoc, this.lines, str, i, "illegal escape " + c);	
+            		}
+            	}
+            	else if (c == "%") {
+					if (i == pyjslib_len(str) - 2) {
+						throw BadSyntax(this._thisDoc, this.lines, str, i, "illegal hex escape % (EOF)");
+					}
+					var ec1 = str.charAt(i + 1);
+					var ec2 = str.charAt(i + 2);
+					if (hexChars.indexOf(ec1) < 0 || hexChars.indexOf(ec2) < 0 ) {     
+						throw BadSyntax(this._thisDoc, this.lines, str, i, "illegal hex escape %" + ec1 + ec2);
+					}					
+				}
+				var lastslash = false;
+                var ln = ( ln + c ) ;
             }
             else {
                 break;
             }
+            var i =  ( i + 1 ) ;
         }
+        
+        if (lastslash) {
+            throw BadSyntax(this._thisDoc, this.lines, str, i, "qname cannot end with \\");
+        }
+        
+        if(str.charAt(i - 1) == ".") {   // localname cannot end in .
+        	if (ln.length == 0) {
+        		return -1;
+        	}
+        	var i = ( i - 1 ) ; 
+        	ln = ln.slice(0, -1);
+        }
+        
         res.push(new pyjslib_Tuple([pfx, ln]));
         return i;
     }
