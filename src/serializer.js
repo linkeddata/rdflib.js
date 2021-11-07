@@ -513,7 +513,7 @@ export default (function () {
   __Serializer.prototype.forbidden1 = new RegExp(/[\\"\b\f\r\v\t\n\u0080-\uffff]/gm)
   __Serializer.prototype.forbidden3 = new RegExp(/[\\"\b\f\r\v\u0080-\uffff]/gm)
   __Serializer.prototype.stringToN3 = function stringToN3 (str, flags) {
-    if (!flags) flags = 'e'
+    if (!flags) flags = this.flags || 'e'
     var res = ''
     var i, j, k
     var delim
