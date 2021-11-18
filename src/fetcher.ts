@@ -320,8 +320,8 @@ class XHTMLHandler extends Handler {
       try {
         parseRDFaDOM(this.dom, kb, options.original.value)
       } catch (err) {
-        let msg = 'Error trying to parse ' + options.resource + ' as RDFa:\n' +
-          err + ':\n' + err.stack
+        // @ts-ignore
+        let msg = 'Error trying to parse ' + options.resource + ' as RDFa:\n' + err + ':\n' + err.stack
         return fetcher.failFetch(options as AutoInitOptions, msg, 'parse_error')
       }
     }
@@ -1036,6 +1036,7 @@ export default class Fetcher implements CallbackifyInterface {
     options.headers = options.headers || new Headers()
 
     if (options.contentType) {
+      // @ts-ignore
       options.headers['content-type'] = options.contentType
     }
 
@@ -1044,6 +1045,7 @@ export default class Fetcher implements CallbackifyInterface {
     }
 
     let acceptString = this.acceptString()
+    // @ts-ignore
     options.headers['accept'] = acceptString
 
     let requestedURI = Fetcher.offlineOverride(uri)
@@ -1436,6 +1438,7 @@ export default class Fetcher implements CallbackifyInterface {
           if (err) {
             reject(err)
           } else {
+            // @ts-ignore
             options.data = jsonString
             this.webOperation('PUT', uri, options)
               .then((res) => resolve(res))
@@ -1482,6 +1485,7 @@ export default class Fetcher implements CallbackifyInterface {
     try {
       var response = await fetcher.load(doc as NamedNode)
     } catch (err) {
+      // @ts-ignore
       if (err.response.status === 404) {
         console.log('createIfNotExists: doc does NOT exist, will create... ' + doc)
         try {
@@ -1535,6 +1539,7 @@ export default class Fetcher implements CallbackifyInterface {
   invalidateCache (iri: string | NamedNode): void {
     const uri = termValue(iri)
     const fetcher = this
+    // @ts-ignore
     if (fetcher.fetchQueue && fetcher.fetchQueue[uri]) {
       console.log('Internal error - fetchQueue exists ' + uri)
       var promise = fetcher.fetchQueue[uri]

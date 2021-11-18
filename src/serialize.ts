@@ -86,6 +86,7 @@ export default function serialize (
     }
   } catch (err) {
     if (callback) {
+      // @ts-ignore
       return callback(err, undefined)
     }
     throw err // Don't hide problems from caller in sync mode
