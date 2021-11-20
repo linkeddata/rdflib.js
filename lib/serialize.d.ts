@@ -14,7 +14,7 @@ kb?: IndexedFormula, base?: unknown,
  * The mime type.
  * Defaults to Turtle.
  */
-contentType?: string | ContentType, callback?: (err: Error | undefined | null, result?: string | null) => any, options?: {
+contentType?: string | ContentType, callback?: (err: Error | undefined | null, result?: string) => any, options?: {
     /**
      * A string of letters, each of which set an options
      * e.g. `deinprstux`

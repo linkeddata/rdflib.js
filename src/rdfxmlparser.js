@@ -57,23 +57,31 @@
 */
 import * as uriUtil from './uri'
 
-/*
- * @constructor
- * @param {RDFStore} store An RDFStore object
- */
 
-export default function RDFParser(store) {
-  var RDFParser = {}
+export default class RDFParser {
+
+  /*
+   * @constructor
+   * @param {RDFStore} store An RDFStore object
+   */
+  constructor(store) {
+    /** Our triple store reference @private */
+
+    this.store = store /** Our identified blank nodes @private */
+    this.bnodes = {} /** A context for context-aware stores @private */
+    this.why = null /** Reification flag */
+    this.reify = false
+  }
 
   /** Standard namespaces that we know how to handle @final
    *  @member RDFParser
    */
-  RDFParser.ns = {'RDF': 'http://www.w3.org/1999/02/22-rdf-syntax-ns#', 'RDFS': 'http://www.w3.org/2000/01/rdf-schema#'}
+  static ns = {'RDF': 'http://www.w3.org/1999/02/22-rdf-syntax-ns#', 'RDFS': 'http://www.w3.org/2000/01/rdf-schema#'}
 
   /** DOM Level 2 node type magic numbers @final
    *  @member RDFParser
    */
-  RDFParser.nodeType = {'ELEMENT': 1, 'ATTRIBUTE': 2, 'TEXT': 3,
+  static nodeType = {'ELEMENT': 1, 'ATTRIBUTE': 2, 'TEXT': 3,
     'CDATA_SECTION': 4, 'ENTITY_REFERENCE': 5,
     'ENTITY': 6, 'PROCESSING_INSTRUCTION': 7,
     'COMMENT': 8, 'DOCUMENT': 9, 'DOCUMENT_TYPE': 10,
@@ -87,7 +95,7 @@ export default function RDFParser(store) {
    * @private
    */
 
-  this.frameFactory = function (parser, parent, element) {
+  frameFactory(parser, parent, element) {
     return {'NODE': 1, 'ARC': 2, 'parent': parent, 'parser': parser, 'store': parser.store, 'element': element,
       'lastChild': 0, 'base': null, 'lang': null, 'node': null, 'nodeType': null, 'listIndex': 1, 'rdfid': null, 'datatype': null, 'collection': false, /** Terminate the frame and notify the store that we're done */
       'terminateFrame': function () {
@@ -167,7 +175,7 @@ export default function RDFParser(store) {
   }
 
   // from the OpenLayers source .. needed to get around IE problems.
-  this.getAttributeNodeNS = function (node, uri, name) {
+  getAttributeNodeNS(node, uri, name) {
     var attributeNode = null
     if (node.getAttributeNodeNS) {
       attributeNode = node.getAttributeNodeNS(uri, name)
@@ -188,13 +196,6 @@ export default function RDFParser(store) {
     return attributeNode
   }
 
-  /** Our triple store reference @private */
-
-  this.store = store /** Our identified blank nodes @private */
-  this.bnodes = {} /** A context for context-aware stores @private */
-  this.why = null /** Reification flag */
-  this.reify = false
-
   /**
    * Build our initial scope frame and parse the DOM into triples
    * @param {DOMTree} document The DOM to parse
@@ -202,7 +203,7 @@ export default function RDFParser(store) {
    * @param {Object} why The context to which this resource belongs
    */
 
-  this.parse = function (document, base, why) {
+  parse(document, base, why) {
     var children = document.childNodes // clean up for the next run
     this.cleanParser() // figure out the root element
     var root
@@ -228,7 +229,7 @@ export default function RDFParser(store) {
     return true
   }
 
-  this.parseDOM = function (frame) {
+  parseDOM(frame) {
     // a DOM utility function used in parsing
     var rdfid
     var elementURI = function (el) {
@@ -408,7 +409,7 @@ export default function RDFParser(store) {
    * Cleans out state from a previous parse run
    * @private
    */
-  this.cleanParser = function () {
+  cleanParser() {
     this.bnodes = {}
     this.why = null
   }
@@ -417,7 +418,7 @@ export default function RDFParser(store) {
    * Builds scope frame
    * @private
    */
-  this.buildFrame = function (parent, element) {
+  buildFrame(parent, element) {
     var frame = this.frameFactory(this, parent, element)
     if (parent) {
       frame.base = parent.base

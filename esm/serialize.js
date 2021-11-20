@@ -19,7 +19,7 @@ contentType, callback, options) {
   var opts = options || {};
   contentType = contentType || TurtleContentType; // text/n3 if complex?
 
-  var documentString = null;
+  var documentString = undefined;
 
   try {
     var sz = Serializer(kb);
