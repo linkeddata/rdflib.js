@@ -692,8 +692,9 @@ var Fetcher = /*#__PURE__*/function () {
 
     this.store = store || new IndexedFormula();
     this.ns = getNS(this.store.rdfFactory);
-    this.timeout = options.timeout || 30000;
-    this._fetch = options.fetch || typeof global !== 'undefined' && global.solidFetcher || typeof window !== 'undefined' && window.solidFetcher || crossFetch;
+    this.timeout = options.timeout || 30000; // solidFetcher is deprecated
+
+    this._fetch = options.fetch || typeof global !== 'undefined' && (global.solidFetcher || global.solidFetch) || typeof window !== 'undefined' && (window.solidFetcher || window.solidFetch) || crossFetch;
 
     if (!this._fetch) {
       throw new Error('No _fetch function available for Fetcher');

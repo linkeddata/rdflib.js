@@ -48,8 +48,10 @@ declare global {
     interface Window {
         panes?: any;
         solidFetcher?: any;
+        solidFetch?: any;
     }
     var solidFetcher: Function;
+    var solidFetch: Function;
 }
 declare type UserCallback = (ok: boolean, message: string, response?: any) => void;
 declare type HTTPMethods = 'GET' | 'PUT' | 'POST' | 'PATCH' | 'HEAD' | 'DELETE' | 'CONNECT' | 'TRACE' | 'OPTIONS';
