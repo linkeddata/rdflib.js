@@ -7,9 +7,9 @@ By default, `rdflib`'s fetcher uses `cross-fetch.fetch()` to preform reads and w
 To to use an authenticated or alternate fetch with rdflib
 
 1. load the authentication library
-2. use it to login to your identity provider
-3. set the global.solidFetch (or window.solidFetch in a browser) equal to the auth library's fetch method
-4. load and use rdflib, all fetches will be authenticated
+2. Use it to log in to your identity provider.
+3. Set the `global.solidFetch` (or `window.solidFetch` in a browser) equal to the auth library's fetch method.
+4. Load and use `rdflib`.  All fetches will be authenticated.
 
 **Important Note :** prior to rdflib version 2.2.9 this variable was named solidFetcher so use that with older rdflibs.  Going forward, please use solidFetch.
 
