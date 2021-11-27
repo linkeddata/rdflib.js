@@ -11,7 +11,7 @@ To to use an authenticated or alternate fetch with rdflib
 3. Set the `global.solidFetch` (or `window.solidFetch` in a browser) equal to the auth library's fetch method.
 4. Load and use `rdflib`.  All fetches will be authenticated.
 
-**Important Note :** prior to rdflib version 2.2.9 this variable was named solidFetcher so use that with older rdflibs.  Going forward, please use solidFetch.
+_**Important Note:** Prior to `rdflib` version `2.2.9`, this variable was named `solidFetcher`, so use that with older `rdflib`s.  Going forward, please use `solidFetch`._
 
 ### A CLI (out-of-browser) Example
 
