@@ -73,7 +73,7 @@ r@1.11.2/dist/solid-client-authn.bundle.js"></script>
 
 ##  Custom fetchers
 
-Another way to specify an authenticated or alternate fetch is to do it when you create the fetcher.  This method follows the same steps as the first method with two exceptions : omit the line *global.solidFetch = auth.fetch* and instead of the line *const fetcher = $rdf.fetcher(kb)* use :
+Another way to specify an authenticated or alternate fetch is to do it when you create the fetcher.  This method follows the same steps as the first method, with two exceptions: omit the line *`global.solidFetch = auth.fetch`*; and instead of the line *`const fetcher = $rdf.fetcher(kb)`* use :
 ```javascript
 const fetcher = $rdf.fetcher(kb,{fetch:auth.fetch.bind(auth)});
 ```
