@@ -1,6 +1,6 @@
 # Using authenticated and alternate fetches in rdflib
 
-By default, rdflib's fetcher uses cross-fetch.fetch() to preform reads and writes.  This is a plain fetch similar to wget or curl that does not carry any authentication information.  In order to use rdflib with private Solid data that requires authentication, the user or app needs to pass a different fetch method to rdflib.  This approach is also useful if you have created your own fetch, for example against Dropbox or a database.                                                                       
+By default, `rdflib`'s fetcher uses `cross-fetch.fetch()` to preform reads and writes.  This is a plain `fetch`, similar to `wget` or `curl`, that does not carry any authentication information.  To use `rdflib` with private Solid data that requires authentication, the user or app needs to pass a different fetch method to `rdflib`.  This approach is also useful if you have created your own fetch, such as against Dropbox or a database.                                                                       
 
 ## The solidFetch variable                                                
 
