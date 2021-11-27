@@ -81,5 +81,5 @@ const fetcher = $rdf.fetcher(kb,{fetch:auth.fetch.bind(auth)});
 ## Currently available libraries with authenticated fetch methods
 
 * [Inrupt's Solid-Client-Authn-Browser](https://github.com/inrupt/solid-client-js) for use in browsers
-* [Inrupt's Solid-Client-Authn-Node](https://github.com/inrupt/solid-client-js) for use in node when you don't need full access to the local file system
-* [Solid-Node-Client](https://github.com/solid/solid-node-client) for use in node when you need full access to the local file system
+* [Inrupt's Solid-Client-Authn-Node](https://github.com/inrupt/solid-client-js) for use in `node`, when you don't need full access to the local file system
+* [Solid-Node-Client](https://github.com/solid/solid-node-client) for use in `node`, when you need full access to the local file system
