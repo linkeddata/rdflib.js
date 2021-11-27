@@ -29,7 +29,7 @@ async function test() {
 
 ### A Browser Example
 
-This is a fully functinal script, just change the IDP and privateResource addresses.
+This is a fully functional script; just change the `IdP` and `privateResource` addresses.
 
 ```html
 <!DOCTYPE html><html><head><meta charset="UTF-8" />                             
