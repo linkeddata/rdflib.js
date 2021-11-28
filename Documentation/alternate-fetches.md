@@ -8,7 +8,8 @@ To use an authenticated or alternate fetch with `rdflib`
 
 1. Load the authentication library.
 2. Use it to log in to your identity provider.
-3. Set the `global.solidFetch` (or `window.solidFetch` in a browser) equal to the auth library's fetch method.
+3a. Set the `global.solidFetch` (or `window.solidFetch` in a browser) equal to the auth library's fetch method.
+3b. OR see below to create a custom fetcher
 4. Load and use `rdflib`.  All fetches will be authenticated.
 
 _**Important Note:** Prior to `rdflib` version `2.2.9`, this variable was named `solidFetcher`, so use that with older `rdflib`s.  Going forward, please use `solidFetch`._
@@ -73,10 +74,11 @@ r@1.11.2/dist/solid-client-authn.bundle.js"></script>
 
 ##  Custom fetchers
 
-Another way to specify an authenticated or alternate fetch is to do it when you create the fetcher.  This method follows the same steps as the first method, with two exceptions: omit the line *`global.solidFetch = auth.fetch`*; and instead of the line *`const fetcher = $rdf.fetcher(kb)`* use :
+Another way to specify an authenticated or alternate fetch is to do it when you create the fetcher object.  This method follows the same steps as the first method, with two exceptions: omit the line *`global.solidFetch = auth.fetch`*; and instead of the line *`const fetcher = $rdf.fetcher(kb)`* use :
 ```javascript
 const fetcher = $rdf.fetcher(kb,{fetch:auth.fetch.bind(auth)});
 ```
+Doing things this way avoids using global variables, but also means that the changes to fetch need to be added every time you create a new fetcher object.
 
 ## Currently available libraries with authenticated fetch methods
 
