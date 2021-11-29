@@ -21,6 +21,7 @@ See:
 * [Tutorial: Using rdflib in a Solid web app](https://linkeddata.github.io/rdflib.js/Documentation/webapp-intro.html)
 * [Tutorial: Using rdflib.js](https://github.com/solid/solid-tutorial-rdflib.js)
 * [Tutorial: Using Turtle](https://linkeddata.github.io/rdflib.js/Documentation/turtle-intro.html)
+* [Using authenticated & alternate fetch methods](https://linkeddata.github.io/rdflib.js/Documentation/alternate-fetches.md)
 * [Block diagram: rdflib modules](https://linkeddata.github.io/rdflib.js/Documentation/diagrams/rdflib-block-diagram.svg)
 * [Block diagram: The Fetcher](https://linkeddata.github.io/rdflib.js/Documentation/diagrams/fetcher-block-diagram.svg)
 * [Block diagram: The Fetcher - handling retries](https://linkeddata.github.io/rdflib.js/Documentation/diagrams/fetcher-block-diagram-2.svg)
