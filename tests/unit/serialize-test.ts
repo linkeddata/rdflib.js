@@ -165,5 +165,78 @@ describe('serialize', () => {
 
 `)
         });
+
+
+
+      it('use setPrefix to define a namespace prefix', () => {
+        const doc = sym("https://doc.example");
+        const statement = st(
+          sym('https://example.com/subject'),
+          sym('http://schema.org/predicate'),
+          lit("123e-2", undefined, sym("http://www.w3.org/2001/XMLSchema#double")),
+          doc
+        )
+        const kb = graph()
+        kb.setPrefixForURI("example", "https://example.com/")
+        kb.add(statement)
+        const result = serialize(doc, kb, null, 'text/turtle')
+        expect(result).to.equal(`@prefix : <#>.
+@prefix schema: <http://schema.org/>.
+@prefix example: <https://example.com/>.
+
+example:subject schema:predicate 123e-2 .
+
+`)
+      });
+
+
+      it('use setPrefix to override a graph prefix', () => {
+        const doc = sym("https://doc.example");
+        const statement = st(
+          sym('https://example.com/subject'),
+          sym('http://schema.org/predicate'),
+          lit("123e-2", undefined, sym("http://www.w3.org/2001/XMLSchema#double")),
+          doc
+        )
+        const kb = graph()
+        kb.setPrefixForURI("example", "https://example.com/")
+
+        kb.setPrefixForURI("example2", "https://example.com/")
+        kb.add(statement)
+        const result = serialize(doc, kb, null, 'text/turtle')
+        expect(result).to.equal(`@prefix : <#>.
+@prefix schema: <http://schema.org/>.
+@prefix example2: <https://example.com/>.
+
+example2:subject schema:predicate 123e-2 .
+
+`)
+      });
+
+      it('use setPrefix to override a default prefix', () => {
+        const doc = sym("https://doc.example");
+        const statement = st(
+          sym('https://example.com/subject'),
+          sym('http://schema.org/predicate'),
+          lit("123e-2", undefined, sym("http://www.w3.org/2001/XMLSchema#double")),
+          doc
+        )
+        const kb = graph();
+        kb.setPrefixForURI("example", "https://example.com/")
+        kb.setPrefixForURI("schema2", "http://schema.org/")
+        kb.add(statement)
+
+        const result = kb.serialize(null, 'text/turtle', null);
+
+        //const result = serialize(doc, kb, null, 'text/turtle')
+        expect(result).to.equal(`@prefix schema2: <http://schema.org/>.
+@prefix example: <https://example.com/>.
+
+example:subject schema2:predicate 123e-2 .
+
+`)
+      });
+
+
     });
 });
