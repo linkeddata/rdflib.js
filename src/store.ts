@@ -1046,6 +1046,13 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     if (prefix.slice(0, 2) === 'ns' || prefix.slice(0, 7) === 'default') {
       return
     }
+
+    // remove any prefix that currently targets nsuri
+    for (let existingPrefix in this.namespaces) {
+      if (this.namespaces[existingPrefix] == nsuri)
+        delete this.namespaces[existingPrefix];
+    }
+
     this.namespaces[prefix] = nsuri
   }
 
