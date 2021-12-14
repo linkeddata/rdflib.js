@@ -48,8 +48,8 @@
     "async": "^3.2.2",
     "cross-fetch": "^3.1.4",
     "jsonld": "^5.2.0",
-    "n3": "^1.11.1",
-    "solid-namespace": "^0.5.1",
+    "n3": "^1.12.2",
+    "solid-namespace": "^0.5.2",
     "xmldom": "^0.6.0"
   },
   "devDependencies": {
