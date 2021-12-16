@@ -1,0 +1,37 @@
+<body>
+<script src="../dist/rdflib.min.js"></script>
+
+<script>
+const kb = $rdf.graph();
+const fetcher = $rdf.fetcher(kb,{inBrowserStorage:true});
+const updater = new $rdf.UpdateManager(kb)
+const uri = "ls://test.ttl";
+
+async function test(){
+  const why = $rdf.sym(uri);
+  const doc = $rdf.Namespace(uri+"#");
+  let ins1 = $rdf.st(doc('It'), doc('isA'), doc('TurtleDoc'), why)
+  let ins2 = $rdf.st(doc('This'), doc('isA'), doc('LocalStorageDoc'), why)
+  let del = []
+  kb.add(ins1);
+  await fetcher.putBack(why);
+  try { 
+    await kb.updater.update(del, ins2);
+  }
+  catch(e){ console.log(e) }
+  await fetcher.load(uri);
+  let results = kb.any( doc('This'),doc('isA'),null,why);
+  let msg = (results && results.value===doc("LocalStorageDoc").value) ?"ok" :"fail";
+  document.body.innerHTML = `
+    <h3>
+      Testing rdflib load, putBack, and update on browser local storage ...
+    </h3>
+    <p>Test : ${msg}</p>
+    You should be able to see the results in your browser's localStorage
+    in the key "ls://test.ttl".
+  `
+}
+test();
+</script>
+
+

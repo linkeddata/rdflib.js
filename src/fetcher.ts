@@ -38,6 +38,7 @@ import { isCollection, isNamedNode} from './utils/terms'
 import * as Util from './utils-js'
 import serialize from './serialize'
 import crossFetch, { Headers } from 'cross-fetch'
+import { contentType as contentTypeLookup } from 'mime-types';
 
 import {
   ContentType, TurtleContentType, RDFXMLContentType, XHTMLContentType
@@ -756,11 +757,41 @@ export default class Fetcher implements CallbackifyInterface {
     this.ns = getNS(this.store.rdfFactory)
     this.timeout = options.timeout || 30000
 
-    // solidFetcher is deprecated
-    this._fetch = options.fetch
+    // solidFetcher is deprecated, instead use solidFetch
+    const originalFetch = options.fetch
                || (typeof global !== 'undefined' && (global.solidFetcher || global.solidFetch))
                || (typeof window !== 'undefined' && (window.solidFetcher || window.solidFetch))
                || crossFetch
+    const inBrowserFetch = async (uri,options) => {
+      if(!uri.startsWith('ls://')) return originalFetch(uri,options);
+      const success =  {
+           ok:true,
+           status:200,
+           statusText:"Success",
+           headers : {
+             "content-type":contentTypeLookup(uri),
+             "wac-allow":`user="read write append control",public="read"`,
+           },
+      }
+      const failure =  { ok:false, status:500 }
+      options.method ||= 'GET';
+      if(options.method==='PUT'){
+        window.localStorage.setItem(uri,options.body);
+        return new Response('',success);
+      }
+      else if(options.method==='GET'){
+        let content = window.localStorage.getItem(uri);
+        if(content) return new Response(content,success);
+        else {
+          failure.status = 404;
+          failure.statusText = 'Not found';
+          return failure;
+        }
+      }
+      else return('',failure);
+    }
+    this._fetch = options.inBrowserStorage ?inBrowserFetch  :originalFetch ;
+
     if (!this._fetch) {
       throw new Error('No _fetch function available for Fetcher')
     }
