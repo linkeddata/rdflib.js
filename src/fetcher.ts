@@ -194,6 +194,8 @@ export interface AutoInitOptions extends RequestInit{
   body?: string
   headers: HeadersInit
   credentials?: 'include' | 'omit'
+  // for local storage support
+  inBrowserStorage?: boolean
 }
 
 class Handler {
@@ -767,7 +769,6 @@ export default class Fetcher implements CallbackifyInterface {
       const success =  {
            ok:true,
            status:200,
-           statusText:"Success",
            headers : {
              "content-type":contentTypeLookup(uri),
              "wac-allow":`user="read write append control",public="read"`,
@@ -777,18 +778,17 @@ export default class Fetcher implements CallbackifyInterface {
       options.method ||= 'GET';
       if(options.method==='PUT'){
         window.localStorage.setItem(uri,options.body);
-        return new Response('',success);
+        return new Response(null,success);
       }
       else if(options.method==='GET'){
         let content = window.localStorage.getItem(uri);
         if(content) return new Response(content,success);
         else {
           failure.status = 404;
-          failure.statusText = 'Not found';
-          return failure;
+          return(failure);
         }
       }
-      else return('',failure);
+      else return(failure);
     }
     this._fetch = options.inBrowserStorage ?inBrowserFetch  :originalFetch ;
 
