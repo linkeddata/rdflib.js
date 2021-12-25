@@ -29,13 +29,13 @@ module.exports = (env, args) => {
     resolve: { extensions: ['.js', '.ts'] },
     externals: {
       '@trust/webcrypto': 'crypto',
+      '@xmldom/xmldom': 'window',
       'child_process': 'null',
       'node-fetch': 'fetch',
       'text-encoding': 'TextEncoder',
       'whatwg-url': 'window',
       'isomorphic-fetch': 'fetch',
       'fs': 'null',
-      'xmldom': 'window'
     },
     devtool: 'source-map'
   }
