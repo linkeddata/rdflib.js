@@ -253,9 +253,9 @@ export function output(o) {
   k.textContent = o;
   document.body.appendChild(k);
 }
-import { DOMParser } from 'xmldom';
+import { DOMParser } from '@xmldom/xmldom';
 /**
- * Returns a DOM from parsex XML.
+ * Returns a DOM from parsed XML.
  */
 
 export function parseXML(str, options) {

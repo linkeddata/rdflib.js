@@ -343,6 +343,11 @@ class XMLHandler extends Handler {
     fetcher.mediatypes['application/xml'] = { 'q': 0.5 }
   }
 
+  static isElement(node: Node): node is Element {
+    return node.nodeType === Node.ELEMENT_NODE;
+  }
+
+
   parse (
     fetcher: Fetcher,
     responseText: string,
@@ -357,10 +362,12 @@ class XMLHandler extends Handler {
     // XML Semantics defined by root element namespace
     // figure out the root element
     for (let c = 0; c < dom.childNodes.length; c++) {
+      const node = dom.childNodes[c]
       // is this node an element?
-      if (dom.childNodes[c].nodeType === 1) {
+      if (XMLHandler.isElement(node)) {
+
         // We've found the first element, it's the root
-        let ns = dom.childNodes[c].namespaceURI
+        let ns = node.namespaceURI
 
         // Is it RDF/XML?
         if (ns && ns === ns['rdf']) {
