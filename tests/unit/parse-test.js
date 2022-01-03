@@ -146,45 +146,39 @@ describe('Parse', () => {
         expect(nameEn.object.value).to.equal('The Queen')
 
         const list0First = store.statements[5]
-        console.log(list0First)
-        // expect(list0First.subject.value).to.equal('n1')
+        expect(list0First.subject.value).to.equal('n0')
         expect(list0First.predicate.value).to.equal('http://www.w3.org/1999/02/22-rdf-syntax-ns#first')
         expect(list0First.object.value).to.equal('list item 0')
 
         const list0Rest = store.statements[6]
-        // expect(list0Rest.subject.value).to.equal('n1')
-        expect(list0Rest.subject.value).to.equal(list0First.subject.value) // alain
+        expect(list0Rest.subject.value).to.equal('n0')
         expect(list0Rest.predicate.value).to.equal('http://www.w3.org/1999/02/22-rdf-syntax-ns#rest')
         expect(list0Rest.object.value).to.equal(store.statements[7].subject.value)
 
         const list1First = store.statements[7]
-        // expect(list1First.subject.value).to.equal('n2')
+        expect(list1First.subject.value).to.equal('n1')
         expect(list1First.predicate.value).to.equal('http://www.w3.org/1999/02/22-rdf-syntax-ns#first')
         expect(list1First.object.value).to.equal('list item 1')
 
         const list1Rest = store.statements[8]
-        // expect(list1Rest.subject.value).to.equal('n2')
-        expect(list1Rest.subject.value).to.equal(list1First.subject.value)
+        expect(list1Rest.subject.value).to.equal('n1')
         expect(list1Rest.predicate.value).to.equal('http://www.w3.org/1999/02/22-rdf-syntax-ns#rest')
         expect(list1Rest.object.value).to.equal(store.statements[9].subject.value)
 
         const list2First = store.statements[9]
-        // expect(list2First.subject.value).to.equal('n3')
+        expect(list2First.subject.value).to.equal('n2')
         expect(list2First.predicate.value).to.equal('http://www.w3.org/1999/02/22-rdf-syntax-ns#first')
         expect(list2First.object.value).to.equal('list item 2')
 
         const list2Rest = store.statements[10]
-        // expect(list2Rest.subject.value).to.equal('n3')
-        expect(list2Rest.subject.value).to.equal(list2First.subject.value)
+        expect(list2Rest.subject.value).to.equal('n2')
         expect(list2Rest.predicate.value).to.equal('http://www.w3.org/1999/02/22-rdf-syntax-ns#rest')
         expect(list2Rest.object.value).to.equal('http://www.w3.org/1999/02/22-rdf-syntax-ns#nil')
 
         const listProp = store.statements[11]
         expect(listProp.subject.value).to.equal('https://www.example.org/#me')
         expect(listProp.predicate.value).to.equal('https://example.org/ns#listProp')
-        // expect(listProp.object.value).to.equal('n1')
-        expect(listProp.object.value).to.equal(list0First.subject.value)
-
+        expect(listProp.object.value).to.equal('n0')
       })
     })
 
