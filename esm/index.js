@@ -1,3 +1,13 @@
+import _classCallCheck from "@babel/runtime/helpers/classCallCheck";
+import _assertThisInitialized from "@babel/runtime/helpers/assertThisInitialized";
+import _inherits from "@babel/runtime/helpers/inherits";
+import _possibleConstructorReturn from "@babel/runtime/helpers/possibleConstructorReturn";
+import _getPrototypeOf from "@babel/runtime/helpers/getPrototypeOf";
+
+function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+
+function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+
 import BlankNode from './blank-node';
 import Collection from './collection';
 import * as convert from './convert';
@@ -62,3 +72,37 @@ export { BlankNode, Collection, convert, DataFactory, Empty, Fetcher, Formula, S
 NextId, fromNT, fetcher, graph, lit, st, namedNode as sym, // RDFJS DataFactory interface
 blankNode, defaultGraph, literal, namedNode, quad, triple, variable };
 export { termValue } from './utils/termValue';
+export var ConnectedStore = /*#__PURE__*/function (_Store) {
+  _inherits(ConnectedStore, _Store);
+
+  var _super = _createSuper(ConnectedStore);
+
+  function ConnectedStore(features) {
+    var _this;
+
+    _classCallCheck(this, ConnectedStore);
+
+    _this = _super.call(this, features);
+    _this.fetcher = new Fetcher(_assertThisInitialized(_this), {});
+    return _this;
+  }
+
+  return ConnectedStore;
+}(Store);
+export var LiveStore = /*#__PURE__*/function (_ConnectedStore) {
+  _inherits(LiveStore, _ConnectedStore);
+
+  var _super2 = _createSuper(LiveStore);
+
+  function LiveStore(features) {
+    var _this2;
+
+    _classCallCheck(this, LiveStore);
+
+    _this2 = _super2.call(this, features);
+    _this2.updater = new UpdateManager(_assertThisInitialized(_this2));
+    return _this2;
+  }
+
+  return LiveStore;
+}(ConnectedStore);

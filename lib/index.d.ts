@@ -38,3 +38,9 @@ export type { AutoInitOptions, ExtendedResponse, FetchError } from './fetcher';
 export { BlankNode, Collection, convert, DataFactory, Empty, Fetcher, Formula, Store, jsonParser, Literal, log, N3Parser, NamedNode, Namespace, Node, parse, Query, queryToSPARQL, RDFaProcessor, RDFParser, serialize, Serializer, SPARQLToQuery, sparqlUpdateParser, Statement, term, UpdateManager, UpdatesSocket, UpdatesVia, uri, Util, Variable, Store as IndexedFormula, // Alias
 NextId, fromNT, fetcher, graph, lit, st, namedNode as sym, blankNode, defaultGraph, literal, namedNode, quad, triple, variable, };
 export { termValue } from './utils/termValue';
+export declare class ConnectedStore extends Store {
+    constructor(features: any);
+}
+export declare class LiveStore extends ConnectedStore {
+    constructor(features: any);
+}
