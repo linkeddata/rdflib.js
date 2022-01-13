@@ -1163,12 +1163,19 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     return res
   }
 
-  serialize (base, contentType, provenance) {
+  serialize (base, contentType, provenance, options?) {
 
     // override Formula.serialize to force the serializer namespace prefixes
     // to those of this IndexedFormula
-    const namespaces = this.namespaces;
-    return serialize(provenance, this, base, contentType, undefined, { namespaces });
+
+    // if namespaces are explicitly passed in options, let them override the existing namespaces in this formula
+    const namespaces = options?.namespaces ? {...this.namespaces, ...options.namespaces} : {...this.namespaces};
+
+    options = {
+      ...(options || {}),
+      namespaces
+    }
+    return serialize(provenance, this, base, contentType, undefined, options);
   }
 }
 IndexedFormula.handleRDFType = handleRDFType

@@ -721,10 +721,11 @@ export default class Formula extends Node {
    * @param base - The base string
    * @param contentType - The content type of the syntax to use
    * @param provenance - The provenance URI
+   * @param options  - options to pass to the serializer, as defined in serialize method
    */
-  serialize (base, contentType, provenance) {
+  serialize (base, contentType, provenance, options?) {
     // delegate the graph serialization to the implementation in ./serialize
-    return serialize(provenance, this, base, contentType);
+    return serialize(provenance, this, base, contentType, undefined, options);
   }
 
   /**
