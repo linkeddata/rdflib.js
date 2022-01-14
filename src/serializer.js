@@ -340,7 +340,13 @@ export class Serializer {
         if (typeof branch === 'string') {
           if (branch.length === 1 && str.slice(-1) === '\n') {
             if (',.;'.indexOf(branch) >= 0) {
-              str = str.slice(0, -1) + branch + '\n' //  slip punct'n on end
+              str = str.slice(0, -1)
+              // be conservative and ensure a whitespace between some chars and a final dot, as in treeToLine above
+              if (branch == '.' && '0123456789.:'.includes(str.charAt(str.length-1))) {
+                str += ' '
+                lastLength += 1
+              }
+              str += branch + '\n' //  slip punct'n on end
               lastLength += 1
               continue
             }
