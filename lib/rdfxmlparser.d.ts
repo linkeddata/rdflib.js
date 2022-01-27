@@ -44,7 +44,7 @@ export default class RDFParser {
      * @param {String} base The base URL to use
      * @param {Object} why The context to which this resource belongs
      */
-    parse(document: DOMTree, base: string, why: any): boolean;
+    parse(document: any, base: string, why: any): boolean;
     base: string | undefined;
     parseDOM(frame: any): void;
     /**

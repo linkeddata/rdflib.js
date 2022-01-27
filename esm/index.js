@@ -1,4 +1,3 @@
-import _createClass from "@babel/runtime/helpers/createClass";
 import _classCallCheck from "@babel/runtime/helpers/classCallCheck";
 import _assertThisInitialized from "@babel/runtime/helpers/assertThisInitialized";
 import _inherits from "@babel/runtime/helpers/inherits";
@@ -88,7 +87,7 @@ export var ConnectedStore = /*#__PURE__*/function (_Store) {
     return _this;
   }
 
-  return _createClass(ConnectedStore);
+  return ConnectedStore;
 }(Store);
 export var LiveStore = /*#__PURE__*/function (_ConnectedStore) {
   _inherits(LiveStore, _ConnectedStore);
@@ -105,5 +104,5 @@ export var LiveStore = /*#__PURE__*/function (_ConnectedStore) {
     return _this2;
   }
 
-  return _createClass(LiveStore);
+  return LiveStore;
 }(ConnectedStore);

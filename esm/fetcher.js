@@ -1,8 +1,8 @@
 import _asyncToGenerator from "@babel/runtime/helpers/asyncToGenerator";
+import _createClass from "@babel/runtime/helpers/createClass";
 import _inherits from "@babel/runtime/helpers/inherits";
 import _possibleConstructorReturn from "@babel/runtime/helpers/possibleConstructorReturn";
 import _getPrototypeOf from "@babel/runtime/helpers/getPrototypeOf";
-import _createClass from "@babel/runtime/helpers/createClass";
 import _classCallCheck from "@babel/runtime/helpers/classCallCheck";
 import _defineProperty from "@babel/runtime/helpers/defineProperty";
 import _regeneratorRuntime from "@babel/runtime/regenerator";
@@ -94,7 +94,7 @@ var getNS = function getNS(factory) {
 
 var ns = getNS();
 
-var Handler = /*#__PURE__*/_createClass( // TODO: Document, type
+var Handler = // TODO: Document, type
 // TODO: Document, type
 function Handler(response, dom) {
   _classCallCheck(this, Handler);
@@ -106,7 +106,7 @@ function Handler(response, dom) {
   this.response = response; // The type assertion operator here might need to be removed.
 
   this.dom = dom;
-});
+};
 
 _defineProperty(Handler, "pattern", void 0);
 
