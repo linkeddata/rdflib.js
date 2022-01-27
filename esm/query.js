@@ -1,3 +1,4 @@
+import _createClass from "@babel/runtime/helpers/createClass";
 import _classCallCheck from "@babel/runtime/helpers/classCallCheck";
 // Matching a formula against another formula
 // Assync as well as Synchronously
@@ -26,7 +27,7 @@ import { docpart } from './uri';
  * Query class, for tracking queries the user has in the UI.
  */
 
-export var Query = function Query(name, id) {
+export var Query = /*#__PURE__*/_createClass(function Query(name, id) {
   _classCallCheck(this, Query);
 
   this.pat = new IndexedFormula(); // The pattern to search for
@@ -36,7 +37,7 @@ export var Query = function Query(name, id) {
 
   this.name = name;
   this.id = id;
-};
+});
 /**
  * This function will match a pattern to the current Store
  *

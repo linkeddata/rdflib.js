@@ -4,7 +4,7 @@
  * @param obj - The json-ld object to process.
  * @return {Literal|NamedNode|BlankNode|Collection}
  */
-export function jsonldObjectToTerm(kb: any, obj: any): any | any | any | any;
+export function jsonldObjectToTerm(kb: any, obj: any): Literal | NamedNode | BlankNode | Collection;
 /**
  * Takes a json-ld formatted string {str} and adds its statements to {kb}.
  *
