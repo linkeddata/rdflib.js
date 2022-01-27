@@ -1,7 +1,7 @@
 {
   "name": "rdflib",
   "description": "an RDF library for node.js. Suitable for client and server side.",
-  "version": "2.2.16",
+  "version": "2.2.17",
   "engines": {
     "node": ">=6.0"
   },
