@@ -73,6 +73,46 @@ export class Serializer {
     return this.store.fromNT(s)
   }
 
+  /**
+   * Defines a set of [prefix, namespace] pairs to be uised by this Serializer instance.
+   * Overrides previous prefixes if any
+   * @param namespaces
+   * @return {Serializer}
+   */
+  setNamespaces(namespaces) {
+    for (var px in namespaces) {
+      this.setPrefix(px, namespaces[px])
+    }
+    return this
+  }
+
+  /**
+   * Defines a namespace prefix, overriding any existing prefix for that URI
+   * @param prefix
+   * @param uri
+   */
+  setPrefix(prefix, uri) {
+    if (prefix.slice(0, 7) === 'default') return // Try to weed these out
+    if (prefix.slice(0, 2) === 'ns') return //  From others inferior algos
+    if (!prefix || !uri) return // empty strings not suitable
+
+    // remove any existing prefix targeting this uri
+    // for (let existingPrefix in this.namespaces) {
+    //   if (this.namespaces[existingPrefix] == uri)
+    //     delete this.namespaces[existingPrefix];
+    // }
+
+    // remove any existing mapping for this prefix
+    for (let existingNs in this.prefixes) {
+      if (this.prefixes[existingNs] == prefix)
+        delete this.prefixes[existingNs];
+    }
+
+    this.prefixes[uri] = prefix
+    this.namespaces[prefix] = uri
+  }
+
+
   /* Accumulate Namespaces
   **
   ** These are only hints.  If two overlap, only one gets used

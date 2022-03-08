@@ -15,7 +15,7 @@ kb, base,
  * Defaults to Turtle.
  */
 contentType, callback, options) {
-  base = base || target.value;
+  base = base || (target === null || target === void 0 ? void 0 : target.value);
   var opts = options || {};
   contentType = contentType || TurtleContentType; // text/n3 if complex?
 
@@ -25,8 +25,17 @@ contentType, callback, options) {
     var sz = Serializer(kb);
     if (opts.flags) sz.setFlags(opts.flags);
     var newSts = kb.statementsMatching(undefined, undefined, undefined, target);
-    var n3String;
-    sz.suggestNamespaces(kb.namespaces);
+    var n3String; // If an IndexedFormula, use the namespaces from the given graph as suggestions
+
+    if ('namespaces' in kb) {
+      sz.suggestNamespaces(kb.namespaces);
+    } // use the provided options.namespaces are mandatory prefixes
+
+
+    if (opts.namespaces) {
+      sz.setNamespaces(opts.namespaces);
+    }
+
     sz.setBase(base);
 
     switch (contentType) {

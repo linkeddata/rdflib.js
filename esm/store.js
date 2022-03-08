@@ -6,6 +6,10 @@ import _possibleConstructorReturn from "@babel/runtime/helpers/possibleConstruct
 import _getPrototypeOf from "@babel/runtime/helpers/getPrototypeOf";
 import _defineProperty from "@babel/runtime/helpers/defineProperty";
 
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) { symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); } keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+
 function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
 
 function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
@@ -46,6 +50,7 @@ import { Query, indexedFormulaQuery } from './query';
 import { BlankNodeTermType, CollectionTermType, DefaultGraphTermType, EmptyTermType, GraphTermType, LiteralTermType, NamedNodeTermType, VariableTermType } from './types';
 import NamedNode from './named-node';
 import { namedNode } from './index';
+import _serialize from "./serialize";
 import BlankNode from './blank-node';
 import DefaultGraph from './default-graph';
 import Literal from './literal';
@@ -1158,6 +1163,11 @@ var IndexedFormula = /*#__PURE__*/function (_Formula) {
 
       if (prefix.slice(0, 2) === 'ns' || prefix.slice(0, 7) === 'default') {
         return;
+      } // remove any prefix that currently targets nsuri
+
+
+      for (var existingPrefix in this.namespaces) {
+        if (this.namespaces[existingPrefix] == nsuri) delete this.namespaces[existingPrefix];
       }
 
       this.namespaces[prefix] = nsuri;
@@ -1289,6 +1299,20 @@ var IndexedFormula = /*#__PURE__*/function (_Formula) {
       }
 
       return res;
+    }
+  }, {
+    key: "serialize",
+    value: function serialize(base, contentType, provenance, options) {
+      var _options;
+
+      // override Formula.serialize to force the serializer namespace prefixes
+      // to those of this IndexedFormula
+      // if namespaces are explicitly passed in options, let them override the existing namespaces in this formula
+      var namespaces = (_options = options) !== null && _options !== void 0 && _options.namespaces ? _objectSpread(_objectSpread({}, this.namespaces), options.namespaces) : _objectSpread({}, this.namespaces);
+      options = _objectSpread(_objectSpread({}, options || {}), {}, {
+        namespaces: namespaces
+      });
+      return _serialize(provenance, this, base, contentType, undefined, options);
     }
   }], [{
     key: "defaultGraphURI",

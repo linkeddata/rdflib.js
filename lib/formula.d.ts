@@ -268,8 +268,9 @@ export default class Formula extends Node {
      * @param base - The base string
      * @param contentType - The content type of the syntax to use
      * @param provenance - The provenance URI
+     * @param options  - options to pass to the serializer, as defined in serialize method
      */
-    serialize(base: any, contentType: any, provenance: any): any;
+    serialize(base: any, contentType: any, provenance: any, options?: any): string | undefined;
     /**
      * Creates a new formula with the substituting bindings applied
      * @param bindings - The bindings to substitute
