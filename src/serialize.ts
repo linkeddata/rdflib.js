@@ -21,9 +21,9 @@ import { BlankNode, NamedNode } from './tf-types'
  */
 export default function serialize (
   /** The graph or nodes that should be serialized */
-  target: Formula | NamedNode | BlankNode,
+  target: Formula | NamedNode | BlankNode | null,
   /** The store */
-  kb?: IndexedFormula,
+  kb: Formula,
   base?: unknown,
   /**
    * The mime type.
@@ -36,10 +36,14 @@ export default function serialize (
      * A string of letters, each of which set an options
      * e.g. `deinprstux`
      */
-    flags: string
+    flags?: string,
+    /**
+     * A set of [prefix, uri] pairs that define namespace prefixes
+     */
+    namespaces?: Record<string, string>
   }
 ): string | undefined {
-  base = base || target.value
+  base = base || target?.value
   const opts = options || {}
   contentType = contentType || TurtleContentType // text/n3 if complex?
   var documentString: string | undefined = undefined
@@ -48,7 +52,17 @@ export default function serialize (
     if ((opts as any).flags) sz.setFlags((opts as any).flags)
     var newSts = kb!.statementsMatching(undefined, undefined, undefined, target as NamedNode)
     var n3String: string
-    sz.suggestNamespaces(kb!.namespaces)
+
+    // If an IndexedFormula, use the namespaces from the given graph as suggestions
+    if ('namespaces' in kb) {
+      sz.suggestNamespaces( (kb as IndexedFormula).namespaces);
+    }
+
+    // use the provided options.namespaces are mandatory prefixes
+    if (opts.namespaces) {
+      sz.setNamespaces( opts.namespaces);
+    }
+
     sz.setBase(base)
     switch (contentType) {
       case RDFXMLContentType:
