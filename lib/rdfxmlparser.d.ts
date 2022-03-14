@@ -40,11 +40,11 @@ export default class RDFParser {
     getAttributeNodeNS(node: any, uri: any, name: any): any;
     /**
      * Build our initial scope frame and parse the DOM into triples
-     * @param {DOMTree} document The DOM to parse
+     * @param {HTMLDocument} document The DOM to parse
      * @param {String} base The base URL to use
      * @param {Object} why The context to which this resource belongs
      */
-    parse(document: any, base: string, why: any): boolean;
+    parse(document: HTMLDocument, base: string, why: any): boolean;
     base: string | undefined;
     parseDOM(frame: any): void;
     /**

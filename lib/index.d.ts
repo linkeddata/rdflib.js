@@ -39,8 +39,10 @@ export { BlankNode, Collection, convert, DataFactory, Empty, Fetcher, Formula, S
 NextId, fromNT, fetcher, graph, lit, st, namedNode as sym, blankNode, defaultGraph, literal, namedNode, quad, triple, variable, };
 export { termValue } from './utils/termValue';
 export declare class ConnectedStore extends Store {
+    fetcher: Fetcher;
     constructor(features: any);
 }
 export declare class LiveStore extends ConnectedStore {
+    updater: UpdateManager;
     constructor(features: any);
 }

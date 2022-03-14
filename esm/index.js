@@ -3,6 +3,7 @@ import _assertThisInitialized from "@babel/runtime/helpers/assertThisInitialized
 import _inherits from "@babel/runtime/helpers/inherits";
 import _possibleConstructorReturn from "@babel/runtime/helpers/possibleConstructorReturn";
 import _getPrototypeOf from "@babel/runtime/helpers/getPrototypeOf";
+import _defineProperty from "@babel/runtime/helpers/defineProperty";
 
 function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
@@ -83,6 +84,9 @@ export var ConnectedStore = /*#__PURE__*/function (_Store) {
     _classCallCheck(this, ConnectedStore);
 
     _this = _super.call(this, features);
+
+    _defineProperty(_assertThisInitialized(_this), "fetcher", void 0);
+
     _this.fetcher = new Fetcher(_assertThisInitialized(_this), {});
     return _this;
   }
@@ -100,6 +104,9 @@ export var LiveStore = /*#__PURE__*/function (_ConnectedStore) {
     _classCallCheck(this, LiveStore);
 
     _this2 = _super2.call(this, features);
+
+    _defineProperty(_assertThisInitialized(_this2), "updater", void 0);
+
     _this2.updater = new UpdateManager(_assertThisInitialized(_this2));
     return _this2;
   }
