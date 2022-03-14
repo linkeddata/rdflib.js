@@ -120,6 +120,9 @@ export {
 export { termValue } from './utils/termValue'
 
 export class ConnectedStore extends Store {
+
+  fetcher: Fetcher;
+
   constructor (features) {
     super(features)
     this.fetcher = new Fetcher(this, {})
@@ -127,6 +130,9 @@ export class ConnectedStore extends Store {
 }
 
 export class  LiveStore extends ConnectedStore {
+
+  updater: UpdateManager;
+  
   constructor (features) {
     super(features)
     this.updater = new UpdateManager(this)
