@@ -239,4 +239,35 @@ example:subject schema2:predicate 123e-2 .
 
 
     });
+
+  describe('namespaces', () => {
+    it('producing [prefix][colon] [dot]', () => {
+      // when a symbol has a trailing slash, the automatic prefix production results in a prefixed symbol with no local name
+      // if that symbol is the statement's object, it results in a colon immediately followed by a dot
+      // some platforms choke if there's no whitespace between the colon and the dot - make sure there is.
+      const doc = sym("https://doc.example");
+      const statement = st(
+        sym('https://example.com/subject'),
+        sym('http://schema.org/predicate'),
+        sym('https://example.com/object/'),
+        doc
+      )
+      const kb = graph();
+      kb.setPrefixForURI("example", "https://example.com/")
+      kb.setPrefixForURI("schema2", "http://schema.org/")
+      kb.add(statement)
+
+      const result = serialize(doc, kb, null, 'text/turtle');
+
+      //const result = serialize(doc, kb, null, 'text/turtle')
+      expect(result).to.equal(`@prefix : <#>.
+@prefix schema: <http://schema.org/>.
+@prefix example: <https://example.com/>.
+@prefix obj: <https://example.com/object/>.
+
+example:subject schema:predicate obj: .
+
+`)
+    });
+  });
 });

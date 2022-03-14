@@ -13,7 +13,7 @@
     a sched:SchedulableEvent;
     dc:author c:i;
     dc:created "2015-09-15T11:20:05Z"^^xsd:dateTime;
-    space:inspiration det:event1.
+    space:inspiration det:event1 .
 :event1
     dc:author :id1442316021316;
     dc:title "TAG 2016 Q1 Meeting ";
