@@ -74,29 +74,44 @@ export default function jsonldParser(str, kb, base, callback) {
     base: baseString
   }).then(function (flattened) {
     return flattened.reduce(function (store, flatResource) {
-      var id = flatResource['@id'] ? kb.rdfFactory.namedNode(flatResource['@id']) : kb.rdfFactory.blankNode();
-
-      for (var _i = 0, _Object$keys = Object.keys(flatResource); _i < _Object$keys.length; _i++) {
-        var property = _Object$keys[_i];
-
-        if (property === '@id') {
-          continue;
-        }
-
-        var value = flatResource[property];
-
-        if (Array.isArray(value)) {
-          for (var i = 0; i < value.length; i++) {
-            kb.addStatement(createStatement(kb, id, property, value[i], base));
-          }
-        } else {
-          kb.addStatement(createStatement(kb, id, property, value, base));
-        }
-      }
-
+      kb = processResource(kb, base, flatResource);
       return kb;
     }, kb);
   }).then(callback).catch(callback);
+}
+
+function processResource(kb, base, flatResource) {
+  var id = flatResource['@id'] ? kb.rdfFactory.namedNode(flatResource['@id']) : kb.rdfFactory.blankNode();
+
+  for (var _i = 0, _Object$keys = Object.keys(flatResource); _i < _Object$keys.length; _i++) {
+    var property = _Object$keys[_i];
+
+    if (property === '@id') {
+      continue;
+    } else if (property == '@graph') {
+      // the JSON-LD flattened structure may contain nested graphs
+      // the id value for this object is the new base (named graph id) for all nested flat resources
+      var graphId = id; // this is an array of resources
+
+      var nestedFlatResources = flatResource[property]; // recursively process all flat resources in the array, but with the graphId as base.
+
+      for (var i = 0; i < nestedFlatResources.length; i++) {
+        kb = processResource(kb, graphId, nestedFlatResources[i]);
+      }
+    }
+
+    var value = flatResource[property];
+
+    if (Array.isArray(value)) {
+      for (var _i2 = 0; _i2 < value.length; _i2++) {
+        kb.addStatement(createStatement(kb, id, property, value[_i2], base));
+      }
+    } else {
+      kb.addStatement(createStatement(kb, id, property, value, base));
+    }
+  }
+
+  return kb;
 }
 /**
  * Create statement quad depending on @type being a type node
@@ -106,6 +121,7 @@ export default function jsonldParser(str, kb, base, callback) {
  * @param value
  * @return quad statement
  */
+
 
 function createStatement(kb, id, property, value, base) {
   var predicate, object;

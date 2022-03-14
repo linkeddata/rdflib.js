@@ -73,28 +73,48 @@ export default function jsonldParser (str, kb, base, callback) {
   return jsonld
     .flatten(JSON.parse(str), null, { base: baseString })
     .then((flattened) => flattened.reduce((store, flatResource) => {
-      const id = flatResource['@id']
-        ? kb.rdfFactory.namedNode(flatResource['@id'])
-        : kb.rdfFactory.blankNode()
 
-      for (const property of Object.keys(flatResource)) {
-        if (property === '@id') {
-          continue
-        }
-        const value = flatResource[property]
-        if (Array.isArray(value)) {
-          for (let i = 0; i < value.length; i++) {
-            kb.addStatement(createStatement(kb, id, property, value[i], base))
-          }
-        } else {
-          kb.addStatement(createStatement(kb, id, property, value, base))
-        }
-      }
+      kb = processResource(kb, base, flatResource)
 
       return kb
     }, kb))
     .then(callback)
     .catch(callback)
+}
+
+
+function processResource(kb, base, flatResource) {
+  const id = flatResource['@id']
+    ? kb.rdfFactory.namedNode(flatResource['@id'])
+    : kb.rdfFactory.blankNode()
+
+  for (const property of Object.keys(flatResource)) {
+    if (property === '@id') {
+      continue
+    } else if (property == '@graph') {
+      // the JSON-LD flattened structure may contain nested graphs
+      // the id value for this object is the new base (named graph id) for all nested flat resources
+      const graphId = id
+      // this is an array of resources
+      const nestedFlatResources = flatResource[property]
+
+      // recursively process all flat resources in the array, but with the graphId as base.
+      for (let i = 0; i < nestedFlatResources.length; i++ ) {
+        kb = processResource(kb, graphId, nestedFlatResources[i])
+      }
+    }
+
+    const value = flatResource[property]
+    if (Array.isArray(value)) {
+      for (let i = 0; i < value.length; i++) {
+        kb.addStatement(createStatement(kb, id, property, value[i], base))
+      }
+    } else {
+      kb.addStatement(createStatement(kb, id, property, value, base))
+    }
+  }
+
+  return kb
 }
 
 /**
@@ -107,6 +127,7 @@ export default function jsonldParser (str, kb, base, callback) {
  */
 function createStatement(kb, id, property, value, base) {
   let predicate, object
+
   if (property === "@type") {
     predicate = kb.rdfFactory.namedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
     object = kb.rdfFactory.namedNode(value)
