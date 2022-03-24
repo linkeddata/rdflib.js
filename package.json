@@ -2,10 +2,10 @@
   "name": "rdflib",
   "description": "an RDF library for node.js. Suitable for client and server side.",
   "version": "2.2.18",
-  "engines": {
-    "node": ">=6.0"
-  },
   "private": false,
+  "browserslist": [
+    "> 0.5%"
+  ],
   "author": {
     "name": "Tim BL",
     "email": "timbl@w3.org"
