@@ -45,12 +45,11 @@
   "bugs": "http://github.com/linkeddata/rdflib.js/issues",
   "dependencies": {
     "@babel/runtime": "^7.17.8",
-    "@xmldom/xmldom": "^0.8.0",
-    "async": "^3.2.2",
-    "cross-fetch": "^3.1.4",
-    "fs-grep": "0.0.5",
+    "@xmldom/xmldom": "^0.8.1",
+    "async": "^3.2.3",
+    "cross-fetch": "^3.1.5",
     "jsonld": "^5.2.0",
-    "n3": "^1.12.2",
+    "n3": "^1.15.0",
     "solid-namespace": "^0.5.2"
   },
   "devDependencies": {
@@ -73,6 +72,7 @@
     "diff": "^5.0.0",
     "dirty-chai": "^2.0.1",
     "eslint": "^7.32.0",
+    "fs-grep": "0.0.5",
     "mocha": "^9.2.2",
     "nock": "^13.2.4",
     "node-fetch": "^2.6.7",
@@ -94,7 +94,7 @@
     "doc": "typedoc --out ./doc ./src/index.ts --excludePrivate --excludeInternal --tsconfig ./tsconfig.json",
     "prepublishOnly": "npm ci && npm run build && npm run build:types && npm run build:browser && npm run build:esm",
     "postversion": "git push --follow-tags",
-    "start": "webpack-dev-server --https --port 4800",
+    "start": "webpack serve --port 4800",
     "test": "npm run test:unit && npm run test:serialize && npm run test:types",
     "test:clean": "rimraf tests/serialize/,*",
     "test:serialize": "npm run build && npm run test:serialize:all && npm run test:clean",
