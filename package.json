@@ -81,6 +81,7 @@
     "sinon": "^12.0.1",
     "sinon-chai": "^3.7.0",
     "source-map-loader": "^3.0.1",
+    "ts-node": "^10.7.0",
     "typedoc": "^0.22.13",
     "typescript": "^4.6.2",
     "webpack": "^5.70.0",
@@ -116,9 +117,9 @@
     "test:serialize:14": "cd ./tests/serialize && node ./data.js -in=t14.html -format=text/turtle -out=,t14.ttl && node diff ,t14.ttl t14-ref.ttl",
     "test:serialize:15": "cd ./tests/serialize && node ./data.js -in=t15.html -format=text/turtle -out=,t15.ttl && node diff ,t15.ttl t15-ref.ttl",
     "test:types": "tsc --noEmit --target es2019 --moduleResolution node tests/types/*.ts",
-    "test:unit": "mocha --growl --require ./tests/babel-register.js tests/unit/**-test.*",
-    "test:unit:egp": "mocha --require ./tests/babel-register.js tests/unit/fetcher-egp-test.js",
-    "test:unit:dev": "mocha --watch --growl --require ./tests/babel-register.js tests/unit/**-test.js",
+    "test:unit": "mocha --growl --loader=ts-node/esm --require  ./tests/babel-register.js tests/unit/**-test.*",
+    "test:unit:egp": "mocha --loader=ts-node/esm --require ./tests/babel-register.js tests/unit/fetcher-egp-test.js",
+    "test:unit:dev": "mocha --watch --growl --loader=ts-node/esm --require ./tests/babel-register.js tests/unit/**-test.js",
     "watch": "babel src --extensions \".ts,.js\" --env-name esm -d esm --watch & babel src --extensions \".ts,.js\" -d lib --watch"
   },
   "files": [
