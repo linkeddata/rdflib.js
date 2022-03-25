@@ -73,6 +73,7 @@
     "dirty-chai": "^2.0.1",
     "eslint": "^7.32.0",
     "fs-grep": "0.0.5",
+    "locate-path": "^7.1.0",
     "mocha": "^9.2.2",
     "nock": "^13.2.4",
     "node-fetch": "^2.6.7",
