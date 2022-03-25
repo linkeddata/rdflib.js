@@ -1,5 +1,5 @@
-const path = require('path')
-const WrapperPlugin = require('wrapper-webpack-plugin');
+const path = require('path');
+const NodePolyfillPlugin = require("node-polyfill-webpack-plugin");
 
 module.exports = (env, args) => {
   return {
@@ -7,6 +7,7 @@ module.exports = (env, args) => {
     entry: [
       './src/index.ts'
     ],
+    target: "web",
     output: {
       path: path.join(__dirname, '/dist/'),
       filename: 'rdflib.min.js',
@@ -37,6 +38,9 @@ module.exports = (env, args) => {
       'isomorphic-fetch': 'fetch',
       'fs': 'null',
     },
+    plugins: [
+      new NodePolyfillPlugin()
+    ],
     devtool: 'source-map'
   }
 }
