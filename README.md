@@ -19,7 +19,7 @@ See:
 
 * The [API documentation](https://linkeddata.github.io/rdflib.js/doc/) is partial but useful
 * [Tutorial: Using rdflib in a Solid web app](https://linkeddata.github.io/rdflib.js/Documentation/webapp-intro.html)
-* [Tutorial: Using rdflib.js](https://github.com/solid/solid-tutorial-rdflib.js)
+* [Tutorial: Using rdflib.js](https://github.com/solidos/solid-tutorial-rdflib.js)
 * [Tutorial: Using Turtle](https://linkeddata.github.io/rdflib.js/Documentation/turtle-intro.html)
 * [Using authenticated & alternate fetch methods](https://linkeddata.github.io/rdflib.js/Documentation/alternate-fetches.md)
 * [Block diagram: rdflib modules](https://linkeddata.github.io/rdflib.js/Documentation/diagrams/rdflib-block-diagram.svg)
