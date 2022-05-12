@@ -65,7 +65,7 @@ r@1.11.2/dist/solid-client-authn.bundle.js"></script>
         });                                                                     
     }                                                                           
     async function handleRedirectAfterLogin() {                                 
-        await solidClientAuthentication.handleIncomingRedirect();                                    
+        const session = await solidClientAuthentication.handleIncomingRedirect();                                    
         if (session.info.isLoggedIn)  main();                            
     }                                                                           
     handleRedirectAfterLogin();                                                 
