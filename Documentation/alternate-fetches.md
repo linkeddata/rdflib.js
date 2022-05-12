@@ -44,10 +44,12 @@ r@1.11.2/dist/solid-client-authn.bundle.js"></script>
 <script>                                                                        
     const idp = "https://solidcommunity.net";                                   
     const privateResource = "https://jeff-zucker.solidcommunity.net/private/";  
-    const auth = solidClientAuthentication;                                     
-    async function main(session){                                               
-        const kb = $rdf.graph();                                                
-        window.solidFetcher = session.fetch;                                    
+    
+    // Set the fetcher:
+    window.solidFetcher = solidClientAuthentication.fetch;
+    
+    async function main(){                                               
+        const kb = $rdf.graph();                                                                                    
         const fetcher = $rdf.fetcher(kb)                                        
         try {                                                                   
           await fetcher.load(privateResource);                                  
@@ -56,16 +58,15 @@ r@1.11.2/dist/solid-client-authn.bundle.js"></script>
         catch(e) { alert(e) }                                                   
     }                                                                           
     document.getElementById('login').onclick = ()=> {                           
-        auth.login({                                                            
+        solidClientAuthentication.login({                                                            
             oidcIssuer: idp,                                                    
             redirectUrl: window.location.href,                                  
             clientName: "rdflib test"                                           
         });                                                                     
     }                                                                           
     async function handleRedirectAfterLogin() {                                 
-        await auth.handleIncomingRedirect();                                    
-        session = auth.getDefaultSession();                                     
-        if (session.info.isLoggedIn)  main(session);                            
+        const session = await solidClientAuthentication.handleIncomingRedirect();                                    
+        if (session.info.isLoggedIn)  main();                            
     }                                                                           
     handleRedirectAfterLogin();                                                 
 </script></html>                                                                
