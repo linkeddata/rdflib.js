@@ -23,8 +23,8 @@ export function jsonldObjectToTerm (kb, obj) {
 
   if (Object.prototype.hasOwnProperty.call(obj, '@id')) {
     if (obj['@id'].startsWith('_:')) {
-      // This object is a Blank Node
-      return kb.rdfFactory.blankNode(obj['@id']);
+      // This object is a Blank Node.. pass the id without the preceding _:
+      return kb.rdfFactory.blankNode(obj['@id'].substring(2));
     } else {
       // This object is a Named Node
       return kb.rdfFactory.namedNode(obj['@id']);
@@ -43,14 +43,17 @@ export function jsonldObjectToTerm (kb, obj) {
     return kb.rdfFactory.literal(obj['@value'])
   }
 
-  return kb.rdfFactory.literal(obj)
+  // I'm not sure we should return a literal if we don't have any of the above.
+  // I think this should be a blank node by default
+  return kb.rdfFactory.BlankNode();
+  // return kb.rdfFactory.literal(obj)
 }
 
 /**
  * Adds the statements in a json-ld list object to {kb}.
  */
 function listToStatements (kb, obj) {
-  const listId = obj['@id'] ? kb.rdfFactory.namedNode(obj['@id']) : kb.rdfFactory.blankNode()
+  const listId = jsonldObjectToTerm(kb, obj);
 
   const items = obj['@list'].map((listItem => jsonldObjectToTerm(kb, listItem)))
   const statements = arrayToStatements(kb.rdfFactory, listId, items)
@@ -90,9 +93,7 @@ export default function jsonldParser (str, kb, base, callback) {
 
 
 function processResource(kb, base, flatResource) {
-  const id = flatResource['@id']
-    ? kb.rdfFactory.namedNode(flatResource['@id'])
-    : kb.rdfFactory.blankNode()
+  const id = jsonldObjectToTerm(kb, flatResource);
 
   for (const property of Object.keys(flatResource)) {
     if (property === '@id') {
