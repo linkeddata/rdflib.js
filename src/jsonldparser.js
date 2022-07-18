@@ -22,7 +22,13 @@ export function jsonldObjectToTerm (kb, obj) {
   }
 
   if (Object.prototype.hasOwnProperty.call(obj, '@id')) {
-    return kb.rdfFactory.namedNode(obj['@id'])
+    if (obj['@id'].startsWith('_:')) {
+      // This object is a Blank Node
+      return kb.rdfFactory.blankNode(obj['@id']);
+    } else {
+      // This object is a Named Node
+      return kb.rdfFactory.namedNode(obj['@id']);
+    }    
   }
 
   if (Object.prototype.hasOwnProperty.call(obj, '@language')) {
