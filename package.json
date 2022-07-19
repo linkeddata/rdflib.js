@@ -94,6 +94,7 @@
     "build:browser": "webpack --progress",
     "build:types": "tsc --emitDeclarationOnly -d --moduleResolution node --declarationDir lib",
     "doc": "typedoc --out ./doc ./src/index.ts --excludePrivate --excludeInternal --tsconfig ./tsconfig.json",
+    "prepare": "npm run build && npm run build:types && npm run build:browser && npm run build:esm",
     "prepublishOnly": "npm ci && npm run build && npm run build:types && npm run build:browser && npm run build:esm",
     "postversion": "git push --follow-tags",
     "start": "webpack serve --port 4800",
