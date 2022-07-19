@@ -43,10 +43,7 @@ export function jsonldObjectToTerm (kb, obj) {
     return kb.rdfFactory.literal(obj['@value'])
   }
 
-  // I'm not sure we should return a literal if we don't have any of the above.
-  // I think this should be a blank node by default
-  return kb.rdfFactory.BlankNode();
-  // return kb.rdfFactory.literal(obj)
+  return kb.rdfFactory.literal();
 }
 
 /**
