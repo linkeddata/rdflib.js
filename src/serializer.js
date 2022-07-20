@@ -561,6 +561,8 @@ export class Serializer {
         return str
       case 'NamedNode':
         return this.symbolToN3(expr)
+      case 'DefaultGraph':
+        return '';
       default:
         throw new Error('Internal: atomicTermToN3 cannot handle ' + expr + ' of termType: ' + expr.termType)
     }
