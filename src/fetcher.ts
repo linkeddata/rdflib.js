@@ -1054,7 +1054,7 @@ export default class Fetcher implements CallbackifyInterface {
       options.cache = 'no-cache'
     }
 
-    if(!options.headers["accept"]){
+    if(!options.headers["accept"] || (!(options.headers as Headers).get("accept"))){
       let acceptString = this.acceptString()
       // @ts-ignore
       options.headers['accept'] = acceptString
