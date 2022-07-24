@@ -1054,9 +1054,11 @@ export default class Fetcher implements CallbackifyInterface {
       options.cache = 'no-cache'
     }
 
-    let acceptString = this.acceptString()
-    // @ts-ignore
-    options.headers['accept'] = acceptString
+    if(!options.headers["accept"]){
+      let acceptString = this.acceptString()
+      // @ts-ignore
+      options.headers['accept'] = acceptString
+    }
 
     let requestedURI = Fetcher.offlineOverride(uri)
     options.requestedURI = requestedURI
