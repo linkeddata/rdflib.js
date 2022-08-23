@@ -40,7 +40,7 @@ export class Serializer {
     this.keywords = ['a'] // The only one we generate at the moment
     this.prefixchars = 'abcdefghijklmnopqustuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
     this.incoming = null // Array not calculated yet
-    this.formulas = [] // remebering original formulae from hashes
+    this.formulas = [] // remembering original formulae from hashes
     this.store = store
     this.rdfFactory = store.rdfFactory || CanonicalDataFactory
     this.xsd = createXSD(this.rdfFactory)
@@ -74,7 +74,7 @@ export class Serializer {
   }
 
   /**
-   * Defines a set of [prefix, namespace] pairs to be uised by this Serializer instance.
+   * Defines a set of [prefix, namespace] pairs to be used by this Serializer instance.
    * Overrides previous prefixes if any
    * @param namespaces
    * @return {Serializer}
@@ -536,7 +536,7 @@ export class Serializer {
             case 'http://www.w3.org/2001/XMLSchema#integer':
               return val
 
-            case 'http://www.w3.org/2001/XMLSchema#decimal': // In urtle must have dot
+            case 'http://www.w3.org/2001/XMLSchema#decimal': // In Turtle, must have dot
               if (val.indexOf('.') < 0) val += '.0'
               return val
 
