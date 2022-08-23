@@ -26,7 +26,7 @@ export class Serializer {
     toStr(x: any): any;
     fromStr(s: any): any;
     /**
-     * Defines a set of [prefix, namespace] pairs to be uised by this Serializer instance.
+     * Defines a set of [prefix, namespace] pairs to be used by this Serializer instance.
      * Overrides previous prefixes if any
      * @param namespaces
      * @return {Serializer}

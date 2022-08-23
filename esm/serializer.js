@@ -60,7 +60,7 @@ export var Serializer = /*#__PURE__*/function () {
     this.prefixchars = 'abcdefghijklmnopqustuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
     this.incoming = null; // Array not calculated yet
 
-    this.formulas = []; // remebering original formulae from hashes
+    this.formulas = []; // remembering original formulae from hashes
 
     this.store = store;
     this.rdfFactory = store.rdfFactory || CanonicalDataFactory;
@@ -102,7 +102,7 @@ export var Serializer = /*#__PURE__*/function () {
       return this.store.fromNT(s);
     }
     /**
-     * Defines a set of [prefix, namespace] pairs to be uised by this Serializer instance.
+     * Defines a set of [prefix, namespace] pairs to be used by this Serializer instance.
      * Overrides previous prefixes if any
      * @param namespaces
      * @return {Serializer}
@@ -665,7 +665,7 @@ export var Serializer = /*#__PURE__*/function () {
                 return val;
 
               case 'http://www.w3.org/2001/XMLSchema#decimal':
-                // In urtle must have dot
+                // In Turtle, must have dot
                 if (val.indexOf('.') < 0) val += '.0';
                 return val;
 
