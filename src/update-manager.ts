@@ -205,6 +205,10 @@ export default class UpdateManager {
       this.anonymize(stmt.object) + ' .'
   }
 
+  nTriples(stmt) {
+    return `${stmt.subject.toNT()} ${stmt.predicate.toNT()} ${stmt.object.toNT()} .`
+  }
+
   /**
    * Returns a list of all bnodes occurring in a statement
    * @private
@@ -831,7 +835,7 @@ export default class UpdateManager {
             if (ds.length) query += ' ; '
             query += 'INSERT DATA { '
             for (let i = 0; i < is.length; i++) {
-              query += this.anonymizeNT(is[i]) + '\n'
+              query += this.nTriples(is[i]) + '\n'
             }
             query += ' }\n'
           }
