@@ -41,6 +41,7 @@ export default class UpdateManager {
     editable(uri: string | NamedNode, kb?: IndexedFormula): string | boolean | undefined;
     anonymize(obj: any): any;
     anonymizeNT(stmt: Quad): string;
+    nTriples(stmt: any): string;
     /**
      * Returns a list of all bnodes occurring in a statement
      * @private
