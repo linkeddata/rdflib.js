@@ -5,26 +5,16 @@
 ** 2010-12-07 TimBL addred local file write code
 */
 import IndexedFormula from './store'
-import { docpart } from './uri'
-import Fetcher from './fetcher'
+import {docpart, join as uriJoin} from './uri'
+import Fetcher, {Options} from './fetcher'
 import Namespace from './namespace'
 import Serializer from './serializer'
-import { join as uriJoin } from './uri'
-import { isStore, isBlankNode } from './utils/terms'
+import {isBlankNode, isStore} from './utils/terms'
 import * as Util from './utils-js'
 import Statement from './statement'
 import RDFlibNamedNode from './named-node'
-import { termValue } from './utils/termValue'
-import {
-  BlankNode,
-  NamedNode,
-  Quad_Graph,
-  Quad_Object,
-  Quad_Predicate,
-  Quad_Subject,
-  Quad,
-  Term,
-} from './tf-types'
+import {termValue} from './utils/termValue'
+import {BlankNode, NamedNode, Quad, Quad_Graph, Quad_Object, Quad_Predicate, Quad_Subject, Term,} from './tf-types'
 
 interface UpdateManagerFormula extends IndexedFormula {
   fetcher: Fetcher
@@ -369,7 +359,8 @@ export default class UpdateManager {
   fire (
     uri: string,
     query: string,
-    callbackFunction: CallBackFunction
+    callbackFunction: CallBackFunction,
+    options: Options = {}
   ): Promise<void> {
     return Promise.resolve()
       .then(() => {
@@ -378,11 +369,9 @@ export default class UpdateManager {
         }
         // console.log('UpdateManager: sending update to <' + uri + '>')
 
-        let options = {
-          noMeta: true,
-          contentType: 'application/sparql-update',
-          body: query
-        }
+        options.noMeta = true;
+        options.contentType = 'application/sparql-update';
+        options.body = query;
 
         return this.store.fetcher.webOperation('PATCH', uri, options)
       })
@@ -713,6 +702,7 @@ export default class UpdateManager {
    * @param insertions - Statement or statements to be inserted.
    * @param callback - called as callbackFunction(uri, success, errorbody)
    *           OR returns a promise
+   * @param options - Options for the fetch call
    */
   update(
       deletions: ReadonlyArray<Statement>,
@@ -723,7 +713,8 @@ export default class UpdateManager {
         errorBody?: string,
         response?: Response | Error
       ) => void,
-      secondTry?: boolean
+      secondTry?: boolean,
+      options: Options = {}
   ): void | Promise<void> {
     if (!callback) {
       var thisUpdater = this
@@ -734,7 +725,7 @@ export default class UpdateManager {
           } else {
             resolve()
           }
-        }) // callbackFunction
+        }, secondTry, options) // callbackFunction
       }) // promise
     } // if
 
@@ -791,10 +782,10 @@ export default class UpdateManager {
         }
         // console.log(`Update: have not loaded ${doc} before: loading now...`);
         (this.store.fetcher.load(doc) as Promise<Response>).then(response => {
-          this.update(deletions, insertions, callback, true)
+          this.update(deletions, insertions, callback, true, options)
         }, err => {
             if (err.response.status === 404) { // nonexistent files are fine
-              this.update(deletions, insertions, callback, true)
+              this.update(deletions, insertions, callback, true, options)
             } else  {
               throw new Error(`Update: Can't get updatability status ${doc} before patching: ${err}`)
             }
@@ -873,13 +864,13 @@ export default class UpdateManager {
             // console.log('delayed downstream action:')
             downstreamAction(doc)
           }
-        })
+        }, options)
       } else if ((protocol as string).indexOf('DAV') >= 0) {
-        this.updateDav(doc, ds, is, callback)
+        this.updateDav(doc, ds, is, callback, options)
       } else {
         if ((protocol as string).indexOf('LOCALFILE') >= 0) {
           try {
-            this.updateLocalFile(doc, ds, is, callback)
+            this.updateLocalFile(doc, ds, is, callback, options)
           } catch (e) {
             callback(doc.value, false,
               'Exception trying to write back file <' + doc.value + '>\n'
@@ -900,7 +891,8 @@ export default class UpdateManager {
     doc: Quad_Subject,
     ds,
     is,
-    callbackFunction
+    callbackFunction,
+    options: Options = {}
   ): null | Promise<void> {
     let kb = this.store
     // The code below is derived from Kenny's UpdateCenter.js
@@ -933,11 +925,9 @@ export default class UpdateManager {
       targetURI = uriJoin(candidateTarget.value, targetURI)
     }
 
-    let options = {
-      contentType,
-      noMeta: true,
-      body: documentString
-    }
+    options.contentType = contentType
+    options.noMeta = true
+    options.body = documentString
 
     return kb.fetcher.webOperation('PUT', targetURI, options)
       .then(response => {
@@ -966,8 +956,9 @@ export default class UpdateManager {
    * @param ds
    * @param is
    * @param callbackFunction
+   * @param options
    */
-  updateLocalFile (doc: NamedNode, ds, is, callbackFunction): void {
+  updateLocalFile (doc: NamedNode, ds, is, callbackFunction, options: Options = {}): void {
     const kb = this.store
     // console.log('Writing back to local file\n')
 
@@ -992,12 +983,10 @@ export default class UpdateManager {
       throw new Error('File extension .' + ext + ' not supported for data write')
     }
 
-    const documentString = this.serialize(doc.value, newSts, contentType)
+    options.body = this.serialize(doc.value, newSts, contentType);
+    options.contentType = contentType;
 
-    kb.fetcher.webOperation('PUT',doc.value,{
-      "body"      : documentString,
-      contentType : contentType,
-    }).then( (response)=>{
+    kb.fetcher.webOperation('PUT', doc.value, options).then( (response)=>{
       if(!response.ok) return callbackFunction(doc.value,false,response.error)
       for (let i = 0; i < ds.length; i++) {
         kb.remove(ds[i]);
