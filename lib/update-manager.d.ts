@@ -1,8 +1,8 @@
 import IndexedFormula from './store';
-import Fetcher from './fetcher';
+import Fetcher, { Options } from './fetcher';
 import Statement from './statement';
 import RDFlibNamedNode from './named-node';
-import { BlankNode, NamedNode, Quad_Subject, Quad, Term } from './tf-types';
+import { BlankNode, NamedNode, Quad, Quad_Subject, Term } from './tf-types';
 interface UpdateManagerFormula extends IndexedFormula {
     fetcher: Fetcher;
 }
@@ -87,7 +87,7 @@ export default class UpdateManager {
     /**
      * @private
      */
-    fire(uri: string, query: string, callbackFunction: CallBackFunction): Promise<void>;
+    fire(uri: string, query: string, callbackFunction: CallBackFunction, options?: Options): Promise<void>;
     /** return a statemnet updating function
      *
      * This does NOT update the statement.
@@ -156,9 +156,10 @@ export default class UpdateManager {
      * @param insertions - Statement or statements to be inserted.
      * @param callback - called as callbackFunction(uri, success, errorbody)
      *           OR returns a promise
+     * @param options - Options for the fetch call
      */
-    update(deletions: ReadonlyArray<Statement>, insertions: ReadonlyArray<Statement>, callback?: (uri: string | undefined | null, success: boolean, errorBody?: string, response?: Response | Error) => void, secondTry?: boolean): void | Promise<void>;
-    updateDav(doc: Quad_Subject, ds: any, is: any, callbackFunction: any): null | Promise<void>;
+    update(deletions: ReadonlyArray<Statement>, insertions: ReadonlyArray<Statement>, callback?: (uri: string | undefined | null, success: boolean, errorBody?: string, response?: Response | Error) => void, secondTry?: boolean, options?: Options): void | Promise<void>;
+    updateDav(doc: Quad_Subject, ds: any, is: any, callbackFunction: any, options?: Options): null | Promise<void>;
     /**
      * Likely deprecated, since this lib no longer deals with browser extension
      *
@@ -166,8 +167,9 @@ export default class UpdateManager {
      * @param ds
      * @param is
      * @param callbackFunction
+     * @param options
      */
-    updateLocalFile(doc: NamedNode, ds: any, is: any, callbackFunction: any): void;
+    updateLocalFile(doc: NamedNode, ds: any, is: any, callbackFunction: any, options?: Options): void;
     /**
      * @throws {Error} On unsupported content type
      *

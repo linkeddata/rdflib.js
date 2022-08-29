@@ -56,7 +56,7 @@ declare global {
 declare type UserCallback = (ok: boolean, message: string, response?: any) => void;
 declare type HTTPMethods = 'GET' | 'PUT' | 'POST' | 'PATCH' | 'HEAD' | 'DELETE' | 'CONNECT' | 'TRACE' | 'OPTIONS';
 /** All valid inputs for initFetchOptions */
-declare type Options = Partial<AutoInitOptions>;
+export declare type Options = Partial<AutoInitOptions>;
 /** Initiated by initFetchOptions, which runs on load */
 export interface AutoInitOptions extends RequestInit {
     /** The used Fetch function */
@@ -370,8 +370,8 @@ export default class Fetcher implements CallbackifyInterface {
     createContainer(parentURI: string, folderName: string, data: string): Promise<Response>;
     invalidateCache(iri: string | NamedNode): void;
     /**
-     * A generic web opeation, at the fetch() level.
-     * does not invole the quadstore.
+     * A generic web operation, at the fetch() level.
+     * does not involve the quad store.
      *
      *  Returns promise of Response
      *  If data is returned, copies it to response.responseText before returning

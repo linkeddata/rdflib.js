@@ -16,12 +16,11 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
 ** 2010-12-07 TimBL addred local file write code
 */
 import IndexedFormula from './store';
-import { docpart } from './uri';
+import { docpart, join as uriJoin } from './uri';
 import Fetcher from './fetcher';
 import Namespace from './namespace';
 import Serializer from './serializer';
-import { join as uriJoin } from './uri';
-import { isStore, isBlankNode } from './utils/terms';
+import { isBlankNode, isStore } from './utils/terms';
 import * as Util from './utils-js';
 import { termValue } from './utils/termValue';
 
@@ -430,17 +429,16 @@ var UpdateManager = /*#__PURE__*/function () {
     value: function fire(uri, query, callbackFunction) {
       var _this = this;
 
+      var options = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
       return Promise.resolve().then(function () {
         if (!uri) {
           throw new Error('No URI given for remote editing operation: ' + query);
         } // console.log('UpdateManager: sending update to <' + uri + '>')
 
 
-        var options = {
-          noMeta: true,
-          contentType: 'application/sparql-update',
-          body: query
-        };
+        options.noMeta = true;
+        options.contentType = 'application/sparql-update';
+        options.body = query;
         return _this.store.fetcher.webOperation('PATCH', uri, options);
       }).then(function (response) {
         if (!response.ok) {
@@ -805,12 +803,15 @@ var UpdateManager = /*#__PURE__*/function () {
      * @param insertions - Statement or statements to be inserted.
      * @param callback - called as callbackFunction(uri, success, errorbody)
      *           OR returns a promise
+     * @param options - Options for the fetch call
      */
 
   }, {
     key: "update",
     value: function update(deletions, insertions, callback, secondTry) {
       var _this3 = this;
+
+      var options = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : {};
 
       if (!callback) {
         var thisUpdater = this;
@@ -822,7 +823,7 @@ var UpdateManager = /*#__PURE__*/function () {
             } else {
               resolve();
             }
-          }); // callbackFunction
+          }, secondTry, options); // callbackFunction
         }); // promise
       } // if
 
@@ -888,11 +889,11 @@ var UpdateManager = /*#__PURE__*/function () {
 
 
           this.store.fetcher.load(doc).then(function (response) {
-            _this3.update(deletions, insertions, callback, true);
+            _this3.update(deletions, insertions, callback, true, options);
           }, function (err) {
             if (err.response.status === 404) {
               // nonexistent files are fine
-              _this3.update(deletions, insertions, callback, true);
+              _this3.update(deletions, insertions, callback, true, options);
             } else {
               throw new Error("Update: Can't get updatability status ".concat(doc, " before patching: ").concat(err));
             }
@@ -988,13 +989,13 @@ var UpdateManager = /*#__PURE__*/function () {
 
               downstreamAction(doc);
             }
-          });
+          }, options);
         } else if (protocol.indexOf('DAV') >= 0) {
-          this.updateDav(doc, ds, is, callback);
+          this.updateDav(doc, ds, is, callback, options);
         } else {
           if (protocol.indexOf('LOCALFILE') >= 0) {
             try {
-              this.updateLocalFile(doc, ds, is, callback);
+              this.updateLocalFile(doc, ds, is, callback, options);
             } catch (e) {
               callback(doc.value, false, 'Exception trying to write back file <' + doc.value + '>\n' // + tabulator.Util.stackString(e))
               );
@@ -1010,6 +1011,7 @@ var UpdateManager = /*#__PURE__*/function () {
   }, {
     key: "updateDav",
     value: function updateDav(doc, ds, is, callbackFunction) {
+      var options = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : {};
       var kb = this.store; // The code below is derived from Kenny's UpdateCenter.js
 
       var request = kb.any(doc, this.ns.link('request'));
@@ -1046,11 +1048,9 @@ var UpdateManager = /*#__PURE__*/function () {
         targetURI = uriJoin(candidateTarget.value, targetURI);
       }
 
-      var options = {
-        contentType: contentType,
-        noMeta: true,
-        body: documentString
-      };
+      options.contentType = contentType;
+      options.noMeta = true;
+      options.body = documentString;
       return kb.fetcher.webOperation('PUT', targetURI, options).then(function (response) {
         if (!response.ok) {
           throw new Error(response.error);
@@ -1076,11 +1076,13 @@ var UpdateManager = /*#__PURE__*/function () {
      * @param ds
      * @param is
      * @param callbackFunction
+     * @param options
      */
 
   }, {
     key: "updateLocalFile",
     value: function updateLocalFile(doc, ds, is, callbackFunction) {
+      var options = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : {};
       var kb = this.store; // console.log('Writing back to local file\n')
       // prepare contents of revised document
 
@@ -1108,11 +1110,9 @@ var UpdateManager = /*#__PURE__*/function () {
         throw new Error('File extension .' + ext + ' not supported for data write');
       }
 
-      var documentString = this.serialize(doc.value, newSts, contentType);
-      kb.fetcher.webOperation('PUT', doc.value, {
-        "body": documentString,
-        contentType: contentType
-      }).then(function (response) {
+      options.body = this.serialize(doc.value, newSts, contentType);
+      options.contentType = contentType;
+      kb.fetcher.webOperation('PUT', doc.value, options).then(function (response) {
         if (!response.ok) return callbackFunction(doc.value, false, response.error);
 
         for (var _i13 = 0; _i13 < ds.length; _i13++) {
