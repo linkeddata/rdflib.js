@@ -269,23 +269,17 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
         if (binding) ds = ds.substitute(binding)
         // console.log('applyPatch: delete: ' + ds)
         ds = ds.statements as Statement[]
-        var bad: Quad[] = []
         var ds2 = ds.map(function (st: Quad) { // Find the actual statements in the store
           var sts = targetKB.statementsMatching(st.subject, st.predicate, st.object, target)
           if (sts.length === 0) {
-            // log.info("NOT FOUND deletable " + st)
-            bad.push(st)
+            // Ignore statements that cannot be deleted.
             return null
           } else {
             // log.info("Found deletable " + st)
             return sts[0]
           }
-        })
-        if (bad.length) {
-          // console.log('Could not find to delete ' + bad.length + 'statements')
-          // console.log('despite ' + targetKB.statementsMatching(bad[0].subject, bad[0].predicate)[0])
-          return patchCallback('Could not find to delete: ' + bad.join('\n or '))
-        }
+        });
+        ds2 = ds2.filter(function (st: Quad) { return st !== null }) as Statement[];
         ds2.map(function (st: Quad) {
           targetKB.remove(st)
         })
