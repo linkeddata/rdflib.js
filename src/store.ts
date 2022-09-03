@@ -920,9 +920,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     object?: Quad_Object | null,
     graph?: Quad_Graph | null
   ): IndexedFormula {
-    this.removeStatements(
-      this.statementsMatching(subject, predicate, object, graph)
-    )
+    this.removeMany(subject, predicate, object, graph)
     return this
   }
 
