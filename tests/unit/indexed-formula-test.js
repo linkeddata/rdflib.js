@@ -296,4 +296,48 @@ describe('IndexedFormula', () => {
       }
     })
   })
+
+  describe('removeMany', () => {
+    it ('removes matching statements', () => {
+      const store = new IndexedFormula()
+      store.add([triple1, triple2, triple4])
+      expect(store.statements.length).to.eq(3)
+      store.removeMany(triple1.subject, null, null, null)
+
+      expect(store.statements.length).to.eq(1)
+      expect(store.holds(s2, p2, o2)).to.be.true()
+    })
+
+    it ('removes a limited number of matching statements', () => {
+        const store = new IndexedFormula()
+        store.add([triple1, triple2, triple4])
+        expect(store.statements.length).to.eq(3)
+        store.removeMany(triple1.subject, null, null, null, 1)
+
+        expect(store.statements.length).to.eq(2)
+    })
+  });
+
+  describe('removeMatches', () => {
+      it ('removes matching statements', () => {
+          const store = new IndexedFormula()
+          store.add([triple2, triple3, triple4])
+          expect(store.statements.length).to.eq(3)
+          store.removeMatches(null, null, triple3.object, null)
+
+          expect(store.statements.length).to.eq(1)
+          expect(store.holds(s2, p2, o2)).to.be.true()
+      })
+      it ('does the same as remove of matches', () => {
+          const store0 = new IndexedFormula()
+          store0.add([triple2, triple3, triple4])
+          const store1 = new IndexedFormula()
+          store1.add([triple2, triple3, triple4])
+          store0.remove(store0.match(null, null, triple3.object, null))
+          store1.removeMatches(null, null, triple3.object, null)
+
+          expect(store0.holdsStatement(store1)).to.be.true()
+          expect(store1.holdsStatement(store0)).to.be.true()
+      })
+  });
 })

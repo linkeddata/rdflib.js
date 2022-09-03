@@ -1010,7 +1010,7 @@ var IndexedFormula = /*#__PURE__*/function (_Formula) {
   }, {
     key: "removeMatches",
     value: function removeMatches(subject, predicate, object, graph) {
-      this.removeStatements(this.statementsMatching(subject, predicate, object, graph));
+      this.removeMany(subject, predicate, object, graph);
       return this;
     }
     /**
