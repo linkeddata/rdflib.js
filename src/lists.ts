@@ -27,33 +27,27 @@ import Namespace from './namespace'
 
 const RDF  = Namespace('http://www.w3.org/1999/02/22-rdf-syntax-ns#')
 
-/**
- * Convert lists reified as rdf:first, rest
- * Normal method is sync.
- * Unfortunately jsdonld is currently written to need to be called async.
- * Hence the mess below with executeCallback.
- * @param store - The quadstore
- * @param doc - The document in which the conversion is done
- */
- // @@@@@@@ also fidn remaining rdf:nil empty list to ()
-
 /* Replace a given node for another node throughout a given document
 *
 * we do the predicate as well for complenesss though we don't expect Collections to use it
 */
 export function substituteInDoc (store:Store, x:Term, y:Term, doc: NamedNode) {
+  console.log(`substituteInDoc put ${x} for ${y} in ${doc}}`)
 
-  for (const quad of store.statementsMatching(x as any, null, null, doc as any)) {
+  for (const quad of store.statementsMatching(y as any, null, null, doc as any)) {
     store.remove(quad)
-    store.add(new Statement(y as any, quad.predicate, quad.object, doc as any))
+    console.log(`  substituteInDoc subject ${x} in ${quad}}`)
+    store.add(new Statement(x as any, quad.predicate, quad.object, doc as any))
   }
-  for (const quad of store.statementsMatching(null, x as any, null, doc) as any) {
+  for (const quad of store.statementsMatching(null, y as any, null, doc) as any) {
     store.remove(quad)
-    store.add(new Statement(quad.subject, y as any, quad.object, doc as any))
+    console.log(`  substituteInDoc predicate ${x} in ${quad}}`)
+    store.add(new Statement(quad.subject, x as any, quad.object, doc as any))
   }
-  for (const quad of store.statementsMatching(null, null, x as any, doc) as any) {
+  for (const quad of store.statementsMatching(null, null, y as any, doc) as any) {
     store.remove(quad)
-    store.add(new Statement(quad.subject, quad.predicate, y as any, doc as any))
+    console.log(`  substituteInDoc object ${x} in ${quad}}`)
+    store.add(new Statement(quad.subject, quad.predicate, x as any, doc as any))
   }
 }
 
@@ -77,31 +71,52 @@ export function substituteNillsInDoc (store:Store, doc: NamedNode) {
     store.add(new Statement(quad.subject, quad.predicate, y as any, doc as any))
   }
 }
+/**
+ * Convert lists reified as rdf:first, rest
+ * Normal method is sync.
+ * Unfortunately jsdonld is currently written to need to be called async.
+ * Hence the mess below with executeCallback.
+ * @param store - The quadstore
+ * @param doc - The document in which the conversion is done
+ */
+
 
 export function convertFirstRestNil (
   store: Store,
-  doc: NamedNode | undefined,  // Do whole store
+  doc: NamedNode | undefined,  // Do whole store?
 ) {
 
   function preceding (ele:BlankNode, listSoFar: Node[], trash: Quad[]): undefined {
+
+    const rests = store.statementsMatching(ele, RDF('rest'), null, doc)
+    if (rests.length !== 1) throw new Error(`Bad list structure: no rest at ${ele}`)
+
+
+    const firsts = store.statementsMatching(ele, RDF('first'), null, doc)
+    if (firsts.length !== 1) throw new Error(`Bad list structure: rest but ${firsts.length} firsts at ${ele}`)
+    const value = firsts[0].object
+    const total = [value].concat(listSoFar as any)
+    // console.log('  List now is: ', total)
+    const totalTrash =  trash.concat(rests).concat(firsts)
+
     const pres = store.statementsMatching(null, RDF('rest'), ele, doc)
     if (pres.length === 0) { // Head of the list
-      console.log(`Found a whole first/rest list: ${ele}, content: ${listSoFar}`)
-      const newList  = new Collection(listSoFar)
+      console.log(`convertFirstRestNil: 4 Found a whole first/rest list: ${ele}, content: ${total}`)
+      const newList  = new Collection(total)
+
+      store.remove(totalTrash)
 
       // Replace old list with new list:
       substituteInDoc(store, newList, ele, doc)
       // Remove the old form
-      store.remove(trash)
+      console.log(`convertFirstRestNil:   ${totalTrash.length} trash to remove`)
+      return
     }
     if (pres.length !== 1) throw new Error(`Bad list structure: ${pres.length} pres at ${ele}`)
     const pre = pres[0].subject
     if (pre.termType !== 'BlankNode')  throw new Error(`Bad list element node ${pre} type: ${pre.termType} `)
 
-    const firsts = store.statementsMatching(pre, RDF('first'), null, doc)
-    if (firsts.length !== 1) throw new Error(`Bad list structure: rest but ${firsts.length} firsts at ${pre}`)
-    const value = firsts[0].object
-    preceding(pre, [value].concat(listSoFar as any), trash.concat(pres).concat(firsts))
+    preceding(pre, total, totalTrash)
     return
   }
 
