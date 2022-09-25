@@ -689,7 +689,7 @@ export default class UpdateManager {
       thisUpdater.update(deletions.filter(st => st.why.equals(doc)),
         insertions.filter(st => st.why.equals(doc))))
     if (updates.length > 1) {
-      console.log(`@@ updateMany to ${updates.length}: ${uniqueDocs}`)
+      // console.log(`@@ updateMany to ${updates.length}: ${uniqueDocs}`)
     }
     return Promise.all(updates)
   }
@@ -840,9 +840,10 @@ export default class UpdateManager {
 
         this.fire(doc.value, query, (uri, success, body, response) => {
           (response as any).elapsedTimeMs = Date.now() - startTime
-          console.log('    UpdateManager: Return ' +
+          /* console.log('    UpdateManager: Return ' +
             (success ? 'success ' : 'FAILURE ') + (response as Response).status +
             ' elapsed ' + (response as any).elapsedTimeMs + 'ms')
+            */
           if (success) {
             try {
               kb.remove(ds)
