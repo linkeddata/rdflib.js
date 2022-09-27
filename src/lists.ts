@@ -2,15 +2,15 @@
 */
 
 
-import DataFactory from './factories/extended-term-factory'
-import jsonldParser from './jsonldparser'
+// import DataFactory from './factories/extended-term-factory'
+// import jsonldParser from './jsonldparser'
 // @ts-ignore is this injected?
 import { Parser as N3jsParser } from 'n3'  // @@ Goal: remove this dependency
-import N3Parser from './n3parser'
-import { parseRDFaDOM } from './rdfaparser'
-import RDFParser from './rdfxmlparser'
-import sparqlUpdateParser from './patch-parser'
-import * as Util from './utils-js'
+// import N3Parser from './n3parser'
+// import { parseRDFaDOM } from './rdfaparser'
+// import RDFParser from './rdfxmlparser'
+// import sparqlUpdateParser from './patch-parser'
+// import * as Util from './utils-js'
 import Node from './node-internal'
 // import BlankNode from './blank-node'
 // import NamedNode from './named-node'
@@ -18,11 +18,11 @@ import Collection from './collection'
 import Statement from './statement'
 // import Formula from './formula'
 import Store from './store'
-import { ContentType, TurtleContentType, N3ContentType, RDFXMLContentType, XHTMLContentType, HTMLContentType, SPARQLUpdateContentType, SPARQLUpdateSingleMatchContentType, JSONLDContentType, NQuadsContentType, NQuadsAltContentType } from './types'
+// import { ContentType, TurtleContentType, N3ContentType, RDFXMLContentType, XHTMLContentType, HTMLContentType, SPARQLUpdateContentType, SPARQLUpdateSingleMatchContentType, JSONLDContentType, NQuadsContentType, NQuadsAltContentType } from './types'
 
 // import { Quad } from './tf-types'
 
-import {BlankNode, NamedNode, Quad, Quad_Graph, Quad_Object, Quad_Predicate, Quad_Subject, Term,} from './tf-types'
+import {BlankNode, NamedNode, Quad, Term,} from './tf-types'
 import Namespace from './namespace'
 
 const RDF  = Namespace('http://www.w3.org/1999/02/22-rdf-syntax-ns#')
@@ -31,7 +31,7 @@ const RDF  = Namespace('http://www.w3.org/1999/02/22-rdf-syntax-ns#')
 *
 * we do the predicate as well for complenesss though we don't expect Collections to use it
 */
-export function substituteInDoc (store:Store, x:Term, y:Term, doc: NamedNode) {
+export function substituteInDoc (store:Store, x:Term, y:Term, doc?: NamedNode ) {
   // console.log(`substituteInDoc put ${x} for ${y} in ${doc}}`)
   for (const quad of store.statementsMatching(y as any, null, null, doc as any)) {
     const newStatement = new Statement(x as any, quad.predicate, quad.object, doc as any)
@@ -51,7 +51,7 @@ export function substituteInDoc (store:Store, x:Term, y:Term, doc: NamedNode) {
 
 /* Change all lone rdf:nil nodes into empty Collections
 */
-export function substituteNillsInDoc (store:Store, doc: NamedNode) {
+export function substituteNillsInDoc (store:Store, doc?: NamedNode) {
   const x = RDF('nil')
   for (const quad of store.statementsMatching(x as any, null, null, doc as any)) {
     store.remove(quad)

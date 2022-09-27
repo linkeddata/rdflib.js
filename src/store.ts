@@ -28,9 +28,9 @@ import {
   isRDFlibObject,
   isStore,
   isGraph,
-  isPredicate,
+  // isPredicate,
   isQuad,
-  isSubject
+  // isSubject
 } from './utils/terms'
 import Node from './node'
 import Variable from './variable'
