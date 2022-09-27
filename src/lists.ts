@@ -27,7 +27,7 @@ import Namespace from './namespace'
 
 const RDF  = Namespace('http://www.w3.org/1999/02/22-rdf-syntax-ns#')
 
-/* Replace a given node for another node throughout a given document
+/* Replace a given node with another node throughout a given document
 *
 * we do the predicate as well for complenesss though we don't expect Collections to use it
 */
