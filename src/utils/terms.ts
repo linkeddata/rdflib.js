@@ -33,7 +33,7 @@ export function isCollection(obj: any): obj is Collection<any> {
     && (obj as Term).termType === CollectionTermType
 }
 
-/** TypeGuard for valid RDFlib Object types, also allows Collections */
+/** TypeGuard for valid RDFlib Object types, also allows Collections, Graphs */
 export function isRDFlibObject(obj: any): obj is ObjectType {
   return obj && Object.prototype.hasOwnProperty.call(obj, 'termType') && (
     obj.termType === NamedNodeTermType ||
@@ -42,6 +42,28 @@ export function isRDFlibObject(obj: any): obj is ObjectType {
     obj.termType === CollectionTermType ||
     obj.termType === LiteralTermType ||
     obj.termType === GraphTermType
+  )
+}
+
+/** TypeGuard for valid RDFlib Subject types, same as Object as RDFLib symmetrical.
+*/
+export function isRDFlibSubject(obj: any): obj is ObjectType {
+  return obj && Object.prototype.hasOwnProperty.call(obj, 'termType') && (
+    obj.termType === NamedNodeTermType ||
+    obj.termType === VariableTermType ||
+    obj.termType === BlankNodeTermType ||
+    obj.termType === CollectionTermType ||
+    obj.termType === LiteralTermType ||
+    obj.termType === GraphTermType
+  )
+}
+
+/** TypeGuard for valid RDF/JS spec Predicate types */
+export function isRDFlibPredicate(obj: any): obj is Quad_Predicate {
+  return isTerm(obj) && (
+    obj.termType === NamedNodeTermType ||
+    obj.termType === BlankNodeTermType ||
+    obj.termType === VariableTermType
   )
 }
 
