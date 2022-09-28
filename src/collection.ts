@@ -112,6 +112,8 @@ export default class Collection<
   }
 
   static toNT (collection) {
+    // return '(' + collection.elements.map(x => x.toNT()).join(' ') + ')'
+    // As lists are not in NT and toNT() must be a reversible function, we kludge it for a list
     return RdflibBlankNode.NTAnonymousNodePrefix + collection.id
   }
 

@@ -15,10 +15,21 @@ export function isStore(obj) {
 export function isCollection(obj) {
   return isTerm(obj) && obj.termType === CollectionTermType;
 }
-/** TypeGuard for valid RDFlib Object types, also allows Collections */
+/** TypeGuard for valid RDFlib Object types, also allows Collections, Graphs */
 
 export function isRDFlibObject(obj) {
   return obj && Object.prototype.hasOwnProperty.call(obj, 'termType') && (obj.termType === NamedNodeTermType || obj.termType === VariableTermType || obj.termType === BlankNodeTermType || obj.termType === CollectionTermType || obj.termType === LiteralTermType || obj.termType === GraphTermType);
+}
+/** TypeGuard for valid RDFlib Subject types, same as Object as RDFLib symmetrical.
+*/
+
+export function isRDFlibSubject(obj) {
+  return obj && Object.prototype.hasOwnProperty.call(obj, 'termType') && (obj.termType === NamedNodeTermType || obj.termType === VariableTermType || obj.termType === BlankNodeTermType || obj.termType === CollectionTermType || obj.termType === LiteralTermType || obj.termType === GraphTermType);
+}
+/** TypeGuard for valid RDF/JS spec Predicate types */
+
+export function isRDFlibPredicate(obj) {
+  return isTerm(obj) && (obj.termType === NamedNodeTermType || obj.termType === BlankNodeTermType || obj.termType === VariableTermType);
 }
 /** TypeGuard for RDFLib Variables */
 

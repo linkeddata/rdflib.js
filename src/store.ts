@@ -23,12 +23,14 @@ import Formula, { FormulaOpts } from './formula'
 import { ArrayIndexOf } from './utils'
 import { RDFArrayRemove } from './utils-js'
 import {
+  isRDFlibSubject,
+  isRDFlibPredicate,
   isRDFlibObject,
   isStore,
   isGraph,
-  isPredicate,
+  // isPredicate,
   isQuad,
-  isSubject
+  // isSubject
 } from './utils/terms'
 import Node from './node'
 import Variable from './variable'
@@ -429,10 +431,10 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     pred = Node.fromValue(pred)
     const objNode = Node.fromValue(obj) as Term
     why = Node.fromValue(why)
-    if (!isSubject(subj)) {
+    if (!isRDFlibSubject(subj)) {
       throw new Error('Subject is not a subject type')
     }
-    if (!isPredicate(pred)) {
+    if (!isRDFlibPredicate(pred)) {
       throw new Error(`Predicate ${pred} is not a predicate type`)
     }
     if (!isRDFlibObject(objNode)) {

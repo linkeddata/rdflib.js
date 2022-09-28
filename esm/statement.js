@@ -118,6 +118,13 @@ var Statement = /*#__PURE__*/function () {
   }, {
     key: "toString",
     value: function toString() {
+      /*
+      return [
+        this.subject.toString(),
+        this.predicate.toString(),
+        this.object.toString(),
+      ].join(' ') + ' .'
+      */
       return this.toNT();
     }
   }]);

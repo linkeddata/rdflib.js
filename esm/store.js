@@ -43,7 +43,9 @@ import { defaultGraphURI } from './factories/canonical-data-factory';
 import Formula from './formula';
 import { ArrayIndexOf } from './utils';
 import { RDFArrayRemove } from './utils-js';
-import { isRDFlibObject, isStore, isGraph, isPredicate, isQuad, isSubject } from './utils/terms';
+import { isRDFlibSubject, isRDFlibPredicate, isRDFlibObject, isStore, isGraph, // isPredicate,
+isQuad // isSubject
+} from './utils/terms';
 import Node from './node';
 import Variable from './variable';
 import { Query, indexedFormulaQuery } from './query';
@@ -449,11 +451,11 @@ var IndexedFormula = /*#__PURE__*/function (_Formula) {
       var objNode = Node.fromValue(obj);
       why = Node.fromValue(why);
 
-      if (!isSubject(subj)) {
+      if (!isRDFlibSubject(subj)) {
         throw new Error('Subject is not a subject type');
       }
 
-      if (!isPredicate(pred)) {
+      if (!isRDFlibPredicate(pred)) {
         throw new Error("Predicate ".concat(pred, " is not a predicate type"));
       }
 

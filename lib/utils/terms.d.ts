@@ -9,8 +9,13 @@ export declare function isStatement(obj: any): obj is Statement;
 export declare function isStore(obj: any): obj is IndexedFormula;
 /** TypeGuard for RDFLib Collections */
 export declare function isCollection(obj: any): obj is Collection<any>;
-/** TypeGuard for valid RDFlib Object types, also allows Collections */
+/** TypeGuard for valid RDFlib Object types, also allows Collections, Graphs */
 export declare function isRDFlibObject(obj: any): obj is ObjectType;
+/** TypeGuard for valid RDFlib Subject types, same as Object as RDFLib symmetrical.
+*/
+export declare function isRDFlibSubject(obj: any): obj is ObjectType;
+/** TypeGuard for valid RDF/JS spec Predicate types */
+export declare function isRDFlibPredicate(obj: any): obj is Quad_Predicate;
 /** TypeGuard for RDFLib Variables */
 export declare function isVariable(obj: any): obj is Variable;
 /** TypeGuard for RDF/JS spec Terms */

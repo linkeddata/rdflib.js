@@ -161,6 +161,8 @@ var Collection = /*#__PURE__*/function (_Node) {
   }], [{
     key: "toNT",
     value: function toNT(collection) {
+      // return '(' + collection.elements.map(x => x.toNT()).join(' ') + ')'
+      // As lists are not in NT and toNT() must be a reversible function, we kludge it for a list
       return RdflibBlankNode.NTAnonymousNodePrefix + collection.id;
     }
   }]);
