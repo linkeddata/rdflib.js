@@ -56,6 +56,6 @@ Connection: keep-alive
 Keep-Alive: timeout=5
 ```
 
-Note : currently rdflib does not support N3-PATCH although it is, AFAIK, the only method of update mentioned in the specs.  To fix this would require changes to the editable function to accept an N3-PATCH header and changes to the fire function to be able to submit an N3-PATCH.  See https://github.com/SolidOS/solidos/issues/185.
+Note: Currently, `rdflib` does not support `N3-PATCH` although it is, AFAIK, the only method of update mentioned in the specs.  To fix this would require changes to the `editable` function to accept an `N3-PATCH` header and changes to the `fire` function to be able to submit an `N3-PATCH`.  See <https://github.com/SolidOS/solidos/issues/185>.
 
 Also Note : When submitting a form, PATCH is used *except* when re-ordering elements in an ordered list, in which case PUT is used.
