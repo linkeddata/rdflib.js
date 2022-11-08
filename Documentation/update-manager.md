@@ -31,7 +31,7 @@
 
 ### Web Sockets
 
-A different mechanism for updates using web sockets uses the "updates-via" header to send and receive using sockets. See src/updates-via
+A different mechanism for updates using web sockets uses the `updates-via` header to send and receive using sockets. See <src/updates-via>
 
 ### About Headers
 
