@@ -35,7 +35,7 @@ A different mechanism for updates using web sockets uses the `updates-via` heade
 
 ### About Headers
 
-Headers include information from the server about how to interact with it.  You can see the headers for any response with e.g. `curl --head URI` which, on the Solid Community server produces something like this (note the wac-allow,ms-author-via,and updates-via headers):
+Headers include information from the server about how to interact with it.  You can see the headers for any response with a command like `curl --head URI` which, on the Solid Community server produces something like this (note the `wac-allow,ms-author-via`, and `updates-via` headers):
 
 ```
 HTTP/1.1 200 OK
