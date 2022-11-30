@@ -142,10 +142,10 @@ export interface RdfJsDataFactory {
     supports: SupportTable;
 }
 /** A RDF/JS spec Subject */
-export declare type Quad_Subject = NamedNode | BlankNode | Variable;
+export type Quad_Subject = NamedNode | BlankNode | Variable;
 /** A RDF/JS spec Predicate */
-export declare type Quad_Predicate = NamedNode | Variable;
+export type Quad_Predicate = NamedNode | Variable;
 /** A RDF/JS spec Object */
-export declare type Quad_Object = NamedNode | BlankNode | Literal | Variable | Term;
+export type Quad_Object = NamedNode | BlankNode | Literal | Variable | Term;
 /** A RDF/JS spec Graph */
-export declare type Quad_Graph = NamedNode | DefaultGraph | BlankNode | Variable;
+export type Quad_Graph = NamedNode | DefaultGraph | BlankNode | Variable;

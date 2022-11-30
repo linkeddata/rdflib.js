@@ -19,7 +19,7 @@ export declare const DefaultGraphTermType: "DefaultGraph";
 export declare const CollectionTermType: "Collection";
 export declare const EmptyTermType: "Empty";
 export declare const GraphTermType: "Graph";
-export declare type TermType = typeof NamedNodeTermType | typeof BlankNodeTermType | typeof LiteralTermType | typeof VariableTermType | typeof DefaultGraphTermType | typeof CollectionTermType | typeof EmptyTermType | typeof GraphTermType;
+export type TermType = typeof NamedNodeTermType | typeof BlankNodeTermType | typeof LiteralTermType | typeof VariableTermType | typeof DefaultGraphTermType | typeof CollectionTermType | typeof EmptyTermType | typeof GraphTermType;
 export declare const HTMLContentType: "text/html";
 export declare const JSONLDContentType: "application/ld+json";
 export declare const N3ContentType: "text/n3";
@@ -36,9 +36,9 @@ export declare const XHTMLContentType: "application/xhtml+xml";
 /**
  * A valid mime type header
  */
-export declare type ContentType = typeof RDFXMLContentType | typeof HTMLContentType | typeof JSONLDContentType | typeof N3ContentType | typeof N3LegacyContentType | typeof NQuadsAltContentType | typeof NQuadsContentType | typeof SPARQLUpdateContentType | typeof SPARQLUpdateSingleMatchContentType | typeof TurtleContentType | typeof TurtleLegacyContentType | typeof XHTMLContentType;
+export type ContentType = typeof RDFXMLContentType | typeof HTMLContentType | typeof JSONLDContentType | typeof N3ContentType | typeof N3LegacyContentType | typeof NQuadsAltContentType | typeof NQuadsContentType | typeof SPARQLUpdateContentType | typeof SPARQLUpdateSingleMatchContentType | typeof TurtleContentType | typeof TurtleLegacyContentType | typeof XHTMLContentType;
 /** A type for values that serves as inputs */
-export declare type ValueType = Term | Node | Date | string | number | boolean | undefined | null | Collection;
+export type ValueType = Term | Node | Date | string | number | boolean | undefined | null | Collection;
 /**
  * In this project, there exist two types for the same kind of RDF concept.
  * We have RDF/JS spec types (standardized, generic), and RDFlib types (internal, specific).
@@ -48,18 +48,18 @@ export declare type ValueType = Term | Node | Date | string | number | boolean |
  * Variables are missing, and the statement requires specific types of terms (e.g. NamedNode instead of Term).
  */
 /** An RDF/JS Subject */
-export declare type SubjectType = RDFlibBlankNode | RDFlibNamedNode | RDFlibVariable;
+export type SubjectType = RDFlibBlankNode | RDFlibNamedNode | RDFlibVariable;
 /** An RDF/JS Predicate */
-export declare type PredicateType = RDFlibNamedNode | RDFlibVariable;
+export type PredicateType = RDFlibNamedNode | RDFlibVariable;
 /** An RDF/JS Object */
-export declare type ObjectType = RDFlibNamedNode | RDFlibLiteral | Collection | RDFlibBlankNode | RDFlibVariable | Empty;
+export type ObjectType = RDFlibNamedNode | RDFlibLiteral | Collection | RDFlibBlankNode | RDFlibVariable | Empty;
 /** An RDF/JS Graph */
-export declare type GraphType = RDFlibDefaultGraph | RDFlibNamedNode | RDFlibVariable;
+export type GraphType = RDFlibDefaultGraph | RDFlibNamedNode | RDFlibVariable;
 export interface Bindings {
     [id: string]: Term;
 }
 /** All the types that a .fromValue() method might return */
-export declare type FromValueReturns<C extends Node = any> = Term | undefined | null | Collection<C>;
+export type FromValueReturns<C extends Node = any> = Term | undefined | null | Collection<C>;
 export interface IRDFlibDataFactory extends DataFactory<RDFlibNamedNode | RDFlibBlankNode | RDFlibLiteral | Collection | Statement> {
     fetcher: (store: IndexedFormula, options: any) => Fetcher;
     lit: (val: string, lang?: string, dt?: NamedNode) => RDFlibLiteral;

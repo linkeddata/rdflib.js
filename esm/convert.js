@@ -1,5 +1,4 @@
 import asyncLib from 'async'; // @@ Goal: remove this dependency
-
 import jsonld from 'jsonld';
 import { Parser, Writer } from 'n3'; // @@ Goal: remove this dependency
 
@@ -23,7 +22,7 @@ export function convertToJson(n3String, jsonCallback) {
     try {
       jsonld.fromRDF(result, {
         format: 'application/nquads'
-      }).then(function (result) {
+      }).then(result => {
         callback(null, result);
       });
     } catch (err) {

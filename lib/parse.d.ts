@@ -1,6 +1,6 @@
 import Formula from './formula';
 import { ContentType } from './types';
-declare type CallbackFunc = (error: any, kb: Formula | null) => void;
+type CallbackFunc = (error: any, kb: Formula | null) => void;
 /**
  * Parse a string and put the result into the graph kb.
  * Normal method is sync.

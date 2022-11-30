@@ -5,13 +5,13 @@ import BlankNode from '../blank-node';
 import Variable from '../variable';
 import DefaultGraph from '../default-graph';
 import { BlankNode as TFBlankNode, RdfJsDataFactory, Literal as TFLiteral, NamedNode as TFNamedNode, Quad, Term, Variable as TFVariable } from '../tf-types';
-export declare type Comparable = Term | TFNamedNode | TFBlankNode | TFLiteral | Quad | undefined | null;
-export declare type DefaultFactoryTypes = NamedNode | BlankNode | Literal | Variable | Statement;
-export declare type Indexable = number | string;
-export declare type Namespace = (term: string) => TFNamedNode;
+export type Comparable = Term | TFNamedNode | TFBlankNode | TFLiteral | Quad | undefined | null;
+export type DefaultFactoryTypes = NamedNode | BlankNode | Literal | Variable | Statement;
+export type Indexable = number | string;
+export type Namespace = (term: string) => TFNamedNode;
 /** A set of features that may be supported by a Data Factory */
-export declare type SupportTable = Record<Feature, boolean>;
-export declare type TFIDFactoryTypes = TFNamedNode | TFBlankNode | TFLiteral | Quad | TFVariable | Term;
+export type SupportTable = Record<Feature, boolean>;
+export type TFIDFactoryTypes = TFNamedNode | TFBlankNode | TFLiteral | Quad | TFVariable | Term;
 export declare enum Feature {
     /** Whether the factory supports termType:Collection terms */
     collections = "COLLECTIONS",

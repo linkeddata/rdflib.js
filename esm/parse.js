@@ -1,15 +1,13 @@
 import DataFactory from './factories/extended-term-factory';
-import jsonldParser from './jsonldparser'; // @ts-ignore is this injected?
-
+import jsonldParser from './jsonldparser';
+// @ts-ignore is this injected?
 import { Parser as N3jsParser } from 'n3'; // @@ Goal: remove this dependency
-
 import N3Parser from './n3parser';
 import { parseRDFaDOM } from './rdfaparser';
 import RDFParser from './rdfxmlparser';
 import sparqlUpdateParser from './patch-parser';
 import * as Util from './utils-js';
 import { TurtleContentType, N3ContentType, RDFXMLContentType, XHTMLContentType, HTMLContentType, SPARQLUpdateContentType, SPARQLUpdateSingleMatchContentType, JSONLDContentType, NQuadsContentType, NQuadsAltContentType } from './types';
-
 /**
  * Parse a string and put the result into the graph kb.
  * Normal method is sync.
@@ -22,11 +20,10 @@ import { TurtleContentType, N3ContentType, RDFXMLContentType, XHTMLContentType, 
  * @param [callback] - The callback to call when the data has been loaded
  */
 export default function parse(str, kb, base) {
-  var contentType = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 'text/turtle';
-  var callback = arguments.length > 4 ? arguments[4] : undefined;
+  let contentType = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 'text/turtle';
+  let callback = arguments.length > 4 ? arguments[4] : undefined;
   contentType = contentType || TurtleContentType;
   contentType = contentType.split(';')[0];
-
   try {
     if (contentType === N3ContentType || contentType === TurtleContentType) {
       var p = N3Parser(kb, kb, base, base, null, null, '', null);
@@ -66,7 +63,6 @@ export default function parse(str, kb, base) {
     // @ts-ignore
     executeErrorCallback(e);
   }
-
   parse.handled = {
     'text/n3': true,
     'text/turtle': true,
@@ -79,7 +75,6 @@ export default function parse(str, kb, base) {
     'application/nquads': true,
     'application/n-quads': true
   };
-
   function executeCallback() {
     if (callback) {
       callback(null, kb);
@@ -87,17 +82,19 @@ export default function parse(str, kb, base) {
       return;
     }
   }
-
   function executeErrorCallback(e) {
-    if ( // TODO: Always true, what is the right behavior
-    contentType !== JSONLDContentType || // @ts-ignore always true?
-    contentType !== NQuadsContentType || // @ts-ignore always true?
+    if (
+    // TODO: Always true, what is the right behavior
+    contentType !== JSONLDContentType ||
+    // @ts-ignore always true?
+    contentType !== NQuadsContentType ||
+    // @ts-ignore always true?
     contentType !== NQuadsAltContentType) {
       if (callback) {
         callback(e, kb);
       } else {
-        var e2 = new Error('' + e + ' while trying to parse <' + base + '> as ' + contentType); //@ts-ignore .cause is not a default error property
-
+        let e2 = new Error('' + e + ' while trying to parse <' + base + '> as ' + contentType);
+        //@ts-ignore .cause is not a default error property
         e2.cause = e;
         throw e2;
       }
@@ -114,20 +111,16 @@ export default function parse(str, kb, base) {
       doc['@context']['@base'] = base
     }
   */
-
-
   function nquadCallback(err, nquads) {
     if (err) {
       callback(err, kb);
     }
-
     try {
       n3Parser.parse(nquads, tripleCallback);
     } catch (err) {
       callback(err, kb);
     }
   }
-
   function tripleCallback(err, triple) {
     if (triple) {
       kb.add(triple.subject, triple.predicate, triple.object, triple.graph);

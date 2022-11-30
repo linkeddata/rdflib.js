@@ -10,7 +10,7 @@ import NamedNode from './named-node';
 import Fetcher from './fetcher';
 import { Quad_Graph, NamedNode as TFNamedNode, Quad_Object, Quad_Predicate, Quad, Quad_Subject, Term } from './tf-types';
 import BlankNode from './blank-node';
-declare type FeaturesType = Array<('sameAs' | 'InverseFunctionalProperty' | 'FunctionalProperty')> | undefined;
+type FeaturesType = Array<('sameAs' | 'InverseFunctionalProperty' | 'FunctionalProperty')> | undefined;
 export { defaultGraphURI };
 /**
  * Indexed Formula aka Store

@@ -53,10 +53,10 @@ declare global {
     var solidFetcher: Function;
     var solidFetch: Function;
 }
-declare type UserCallback = (ok: boolean, message: string, response?: any) => void;
-declare type HTTPMethods = 'GET' | 'PUT' | 'POST' | 'PATCH' | 'HEAD' | 'DELETE' | 'CONNECT' | 'TRACE' | 'OPTIONS';
+type UserCallback = (ok: boolean, message: string, response?: any) => void;
+type HTTPMethods = 'GET' | 'PUT' | 'POST' | 'PATCH' | 'HEAD' | 'DELETE' | 'CONNECT' | 'TRACE' | 'OPTIONS';
 /** All valid inputs for initFetchOptions */
-export declare type Options = Partial<AutoInitOptions>;
+export type Options = Partial<AutoInitOptions>;
 /** Initiated by initFetchOptions, which runs on load */
 export interface AutoInitOptions extends RequestInit {
     /** The used Fetch function */
@@ -117,7 +117,7 @@ declare class Handler {
     static pattern: RegExp;
     constructor(response: ExtendedResponse, dom?: Document);
 }
-declare type StatusValues = 
+type StatusValues = 
 /** No record of web access or record reset */
 undefined | 
 /** Has been requested, fetch in progress */
@@ -161,9 +161,9 @@ interface FetchCallbacks {
 interface BooleanMap {
     [uri: string]: boolean;
 }
-declare type Result = Response;
+type Result = Response;
 /** Differs from normal Fetch, has an extended Response type */
-declare type Fetch = (input: RequestInfo, init?: RequestInit) => Promise<ExtendedResponse>;
+type Fetch = (input: RequestInfo, init?: RequestInit) => Promise<ExtendedResponse>;
 interface CallbackifyInterface {
     fireCallbacks: Function;
 }

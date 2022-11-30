@@ -3,6 +3,5 @@ export function termValue(node) {
   if (typeof node === 'string') {
     return node;
   }
-
   return node.value;
 }

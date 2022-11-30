@@ -6,7 +6,7 @@ import { BlankNode, NamedNode, Quad, Quad_Subject, Term } from './tf-types';
 interface UpdateManagerFormula extends IndexedFormula {
     fetcher: Fetcher;
 }
-declare type CallBackFunction = (uri: string, ok: boolean, message: string, response: Error | Response) => {} | void;
+type CallBackFunction = (uri: string, ok: boolean, message: string, response: Error | Response) => {} | void;
 /**
 * The UpdateManager is a helper object for a store.
 * Just as a Fetcher provides the store with the ability to read and write,

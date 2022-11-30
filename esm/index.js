@@ -1,15 +1,4 @@
-import _createClass from "@babel/runtime/helpers/createClass";
-import _classCallCheck from "@babel/runtime/helpers/classCallCheck";
-import _assertThisInitialized from "@babel/runtime/helpers/assertThisInitialized";
-import _inherits from "@babel/runtime/helpers/inherits";
-import _possibleConstructorReturn from "@babel/runtime/helpers/possibleConstructorReturn";
-import _getPrototypeOf from "@babel/runtime/helpers/getPrototypeOf";
 import _defineProperty from "@babel/runtime/helpers/defineProperty";
-
-function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-
 import BlankNode from './blank-node';
 import Collection from './collection';
 import * as convert from './convert';
@@ -40,77 +29,52 @@ import { UpdatesVia } from './updates-via';
 import * as uri from './uri';
 import * as Util from './utils-js';
 import Variable from './variable';
-import DataFactory from './factories/rdflib-data-factory'; // Prepare bound versions of data factory methods for export
+import DataFactory from './factories/rdflib-data-factory';
 
-var boundDataFactory = {};
-
-for (var name in DataFactory) {
+// Prepare bound versions of data factory methods for export
+const boundDataFactory = {};
+for (const name in DataFactory) {
   if (typeof DataFactory[name] === 'function') boundDataFactory[name] = DataFactory[name].bind(DataFactory);
 }
+const {
+  fetcher,
+  graph,
+  lit,
+  st,
+  namedNode,
+  variable,
+  blankNode,
+  defaultGraph,
+  literal,
+  quad,
+  triple
+} = boundDataFactory;
+const formula = new Formula();
+const fromNT = str => formula.fromNT(str);
+const term = Node.fromValue;
 
-var fetcher = boundDataFactory.fetcher,
-    graph = boundDataFactory.graph,
-    lit = boundDataFactory.lit,
-    st = boundDataFactory.st,
-    namedNode = boundDataFactory.namedNode,
-    variable = boundDataFactory.variable,
-    blankNode = boundDataFactory.blankNode,
-    defaultGraph = boundDataFactory.defaultGraph,
-    literal = boundDataFactory.literal,
-    quad = boundDataFactory.quad,
-    triple = boundDataFactory.triple;
-var formula = new Formula();
-
-var fromNT = function fromNT(str) {
-  return formula.fromNT(str);
-};
-
-var term = Node.fromValue; // TODO: this export is broken;
+// TODO: this export is broken;
 // it exports the _current_ value of nextId, which is always 0
-
-var NextId = BlankNode.nextId;
+const NextId = BlankNode.nextId;
 export * from './utils/terms';
-export { BlankNode, Collection, convert, DataFactory, Empty, Fetcher, Formula, Store, jsonParser, Literal, log, N3Parser, NamedNode, Namespace, Node, parse, Query, queryToSPARQL, RDFaProcessor, RDFParser, serialize, Serializer, SPARQLToQuery, sparqlUpdateParser, Statement, term, UpdateManager, UpdatesSocket, UpdatesVia, uri, Util, Variable, Store as IndexedFormula, // Alias
-NextId, fromNT, fetcher, graph, lit, st, namedNode as sym, // RDFJS DataFactory interface
+export { BlankNode, Collection, convert, DataFactory, Empty, Fetcher, Formula, Store, jsonParser, Literal, log, N3Parser, NamedNode, Namespace, Node, parse, Query, queryToSPARQL, RDFaProcessor, RDFParser, serialize, Serializer, SPARQLToQuery, sparqlUpdateParser, Statement, term, UpdateManager, UpdatesSocket, UpdatesVia, uri, Util, Variable, Store as IndexedFormula,
+// Alias
+
+NextId, fromNT, fetcher, graph, lit, st, namedNode as sym,
+// RDFJS DataFactory interface
 blankNode, defaultGraph, literal, namedNode, quad, triple, variable };
 export { termValue } from './utils/termValue';
-export var ConnectedStore = /*#__PURE__*/function (_Store) {
-  _inherits(ConnectedStore, _Store);
-
-  var _super = _createSuper(ConnectedStore);
-
-  function ConnectedStore(features) {
-    var _this;
-
-    _classCallCheck(this, ConnectedStore);
-
-    _this = _super.call(this, features);
-
-    _defineProperty(_assertThisInitialized(_this), "fetcher", void 0);
-
-    _this.fetcher = new Fetcher(_assertThisInitialized(_this), {});
-    return _this;
+export class ConnectedStore extends Store {
+  constructor(features) {
+    super(features);
+    _defineProperty(this, "fetcher", void 0);
+    this.fetcher = new Fetcher(this, {});
   }
-
-  return _createClass(ConnectedStore);
-}(Store);
-export var LiveStore = /*#__PURE__*/function (_ConnectedStore) {
-  _inherits(LiveStore, _ConnectedStore);
-
-  var _super2 = _createSuper(LiveStore);
-
-  function LiveStore(features) {
-    var _this2;
-
-    _classCallCheck(this, LiveStore);
-
-    _this2 = _super2.call(this, features);
-
-    _defineProperty(_assertThisInitialized(_this2), "updater", void 0);
-
-    _this2.updater = new UpdateManager(_assertThisInitialized(_this2));
-    return _this2;
+}
+export class LiveStore extends ConnectedStore {
+  constructor(features) {
+    super(features);
+    _defineProperty(this, "updater", void 0);
+    this.updater = new UpdateManager(this);
   }
-
-  return _createClass(LiveStore);
-}(ConnectedStore);
+}

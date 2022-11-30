@@ -4,7 +4,6 @@ import { fromValue } from './collection';
 import Node from './node-internal';
 import Namespace from './namespace';
 import { isCollection, isLiteral } from './utils/terms';
-
 /**
  * Creates an RDF Node from a native javascript value.
  * RDF Nodes are returned unchanged, undefined returned as itself.
@@ -15,32 +14,28 @@ import { isCollection, isLiteral } from './utils/terms';
  */
 Node.fromValue = fromValue;
 export default Node;
-var ns = {
+const ns = {
   xsd: Namespace('http://www.w3.org/2001/XMLSchema#')
 };
+
 /**
  * Gets the javascript object equivalent to a node
  * @param term The RDF node
  */
-
 Node.toJS = function (term) {
   if (isCollection(term)) {
     return term.elements.map(Node.toJS); // Array node (not standard RDFJS)
   }
 
   if (!isLiteral(term)) return term;
-
   if (term.datatype.equals(ns.xsd('boolean'))) {
     return term.value === '1' || term.value === 'true';
   }
-
   if (term.datatype.equals(ns.xsd('dateTime')) || term.datatype.equals(ns.xsd('date'))) {
     return new Date(term.value);
   }
-
   if (term.datatype.equals(ns.xsd('integer')) || term.datatype.equals(ns.xsd('float')) || term.datatype.equals(ns.xsd('decimal'))) {
     return Number(term.value);
   }
-
   return term.value;
 };
