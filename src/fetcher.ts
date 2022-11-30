@@ -979,7 +979,7 @@ export default class Fetcher implements CallbackifyInterface {
     return this.pendingFetchPromise(docuri, initialisedOptions.baseURI, initialisedOptions) as any
   }
 
-  pendingFetchPromise (
+  async pendingFetchPromise (
     uri: string,
     originalUri: string,
     options: AutoInitOptions
@@ -987,7 +987,7 @@ export default class Fetcher implements CallbackifyInterface {
     let pendingPromise
 
     // Check to see if some request is already dealing with this uri
-    if (!options.force && this.fetchQueue[originalUri]) {
+    if (!options.force && await this.fetchQueue[originalUri]) {
       pendingPromise = this.fetchQueue[originalUri]
     } else {
       pendingPromise = Promise
