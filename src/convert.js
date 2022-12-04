@@ -68,3 +68,10 @@ export function convertToNQuads (n3String, nquadCallback) {
   }
   )
 }
+
+export function toJsonld (item ) {
+  try {
+    return jsonld.fromRDF(item, {format: 'application/n-quads'}).then( docJsonld => { return JSON.stringify(docJsonld) })
+    // return JSON.stringify(await jsonld.fromRDF(item, {format: 'application/n-quads'}))
+  } catch (e) { throw e }
+}
