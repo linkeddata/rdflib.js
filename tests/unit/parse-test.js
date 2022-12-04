@@ -259,7 +259,7 @@ describe('Parse', () => {
       it('store contains 3 statements', async () => {
         console.log(await serialize(null, store, null, 'application/ld+json'))
         expect(store.statements).to.have.length(3)
-        expect(await serialize(null, store, null, 'text/turtle')).to.eql(`@prefix ex: <http://example.com#>.
+        expect(serialize(null, store, null, 'text/turtle')).to.eql(`@prefix ex: <http://example.com#>.
 
 ex:myid ex:prop1 [ ex:prop2 [ ex:prop3 "value" ] ].
 
