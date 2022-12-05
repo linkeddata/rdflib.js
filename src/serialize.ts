@@ -15,6 +15,7 @@ import {
 } from './types'
 import IndexedFormula from './store'
 import { BlankNode, NamedNode } from './tf-types'
+// import * as jsonld from 'jsonld'
 
 /**
  * Serialize to the appropriate format
@@ -85,7 +86,7 @@ export default function serialize (
         sz.setFlags('deinprstux') // Use adapters to connect to incmpatible parser
         n3String = sz.statementsToNTriples(newSts)
         // n3String = sz.statementsToN3(newSts)
-        return convert.toJsonld(n3String)
+        return convert.toJsonld(n3String) as any
       case NQuadsContentType:
       case NQuadsAltContentType: // @@@ just outpout the quads? Does not work for collections
         sz.setFlags('deinprstux q') // Suppress nice parts of N3 to make ntriples
@@ -113,4 +114,10 @@ export default function serialize (
       return result as string
     }
   }
+  /* async function toJsonld (item ) {
+    try {
+      // return jsonld.fromRDF(item, {format: 'application/n-quads'}).then( docJsonld => { return JSON.stringify(docJsonld) })
+      return JSON.stringify(await jsonld.fromRDF(item, {format: 'application/n-quads'}))
+    } catch (e) { throw e }
+  } */
 }
