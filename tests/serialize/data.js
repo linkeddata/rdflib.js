@@ -59,7 +59,7 @@ var exitMessage = function (message) {
   process.exit(4)
 }
 
-var doNext = function (remaining) {
+var doNext = async function (remaining) {
   while (remaining.length) {
     // console.log("... remaining " + remaining.join(' '))
 
@@ -97,8 +97,7 @@ var doNext = function (remaining) {
         case '-out':
           try {
             var options = {flags: 'z'} // Only applies to RDF/XML
-
-            var out = $rdf.serialize(inDocument, kb, inDocument.uri, contentType, undefined, options)
+            var out = await $rdf.serialize(inDocument, kb, inDocument.uri, contentType, undefined, options)
           } catch(e) {
             exitMessage('Error in serializer: ' + e + stackString(e))
           }

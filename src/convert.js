@@ -23,18 +23,18 @@ export function convertToJson (n3String, jsonCallback) {
     function (result, callback) {
       try {
         jsonld.fromRDF(result, {
-          format: 'application/nquads'
+          format: 'application/n-quads'
         }).then((result) => {
-          callback(null, result)
+          callback(null, JSON.stringify(result))
         })
       } catch (err) {
         callback(err)
       }
     },
-    function (json, callback) {
-      jsonString = JSON.stringify(json)
+    /* function (result, callback) {
+      jsonString = JSON.stringify(result)
       jsonCallback(null, jsonString)
-    }
+    } */
   ], function (err, result) {
     jsonCallback(err, jsonString)
   }
@@ -69,9 +69,9 @@ export function convertToNQuads (n3String, nquadCallback) {
   )
 }
 
-export async function toJsonld (item ) {
+/* export async function toJsonld (item ) {
   try {
     // return jsonld.fromRDF(item, {format: 'application/n-quads'}).then( docJsonld => { return JSON.stringify(docJsonld) })
     return JSON.stringify(await jsonld.fromRDF(item, {format: 'application/n-quads'}))
   } catch (e) { throw e }
-}
+} */

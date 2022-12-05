@@ -210,7 +210,7 @@ describe('Parse', () => {
       })
 
       it('uses the specified base IRI', async () => {
-        console.log(await serialize(null, store, null, 'application/ld+json'))
+        console.log(serialize(null, store, null, 'application/ld+json'))
         console.log(serialize(null, store, null, 'text/turtle'))
         expect(store.rdfFactory.supports["COLLECTIONS"]).to.be.true()
         expect(store.statements).to.have.length(1)
