@@ -121,7 +121,7 @@ var doNext = async function (remaining) {
           })
           return
 
-          case '-dump':
+          /* case '-dump':
             doc = $rdf.sym($rdf.uri.join(right, base))
             try {
               var out = $rdf.serialize(null, kb, targetDocument.uri, 'application/n-quads') // whole store
@@ -140,7 +140,7 @@ var doNext = async function (remaining) {
               console.log('Written ' + fileName)
               doNext(remaining)
             })
-            return
+            return */
 
       case '-size':
         console.log(kb.statements.length + ' triples')
