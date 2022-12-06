@@ -46,7 +46,6 @@
   "dependencies": {
     "@babel/runtime": "^7.20.1",
     "@xmldom/xmldom": "^0.8.6",
-    "async": "^3.2.4",
     "cross-fetch": "^3.1.5",
     "jsonld": "^8.1.0",
     "n3": "^1.16.3",
@@ -92,8 +91,9 @@
     "build:esm": "babel src --extensions \".ts,.js\" --env-name esm -d esm",
     "build:browser": "webpack --progress",
     "build:types": "tsc --emitDeclarationOnly -d --moduleResolution node --declarationDir lib",
+    "build:all": "npm run build && npm run build:types && npm run build:browser && npm run build:esm ",
     "doc": "typedoc --out ./doc ./src/index.ts --excludePrivate --excludeInternal --tsconfig ./tsconfig.json",
-    "prepublishOnly": "npm ci && npm run build && npm run build:types && npm run build:browser && npm run build:esm",
+    "prepublishOnly": "npm ci && npm run build:all && npm run doc && npm run test",
     "postversion": "git push --follow-tags",
     "start": "webpack serve --port 4800",
     "test": "npm run test:unit && npm run test:serialize && npm run test:types",
