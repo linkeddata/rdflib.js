@@ -12,6 +12,7 @@ import * as Util from './utils-js'
 import CanonicalDataFactory from './factories/canonical-data-factory'
 import { createXSD } from './xsd'
 import solidNs from 'solid-namespace'
+import * as jsonld from 'jsonld'
 
 
 export default function createSerializer(store) {
@@ -1011,6 +1012,14 @@ export class Serializer {
     var tree2 = [str, tree, '</rdf:RDF>'] // @@ namespace declrations
     return XMLtreeToString(tree2, -1)
   } // End @@ body
+
+  statementsToJsonld (sts) {
+    try {
+      const n3String = this.statementsToNTriples(sts)
+      return jsonld.fromRDF(n3String, {format: 'application/n-quads'}).then( docJsonld => { return JSON.stringify(docJsonld, null, 2) })
+      // return JSON.stringify(await jsonld.fromRDF(item, {format: 'application/n-quads'}))
+    } catch (e) { throw e }
+  }
 }
 
 // String escaping utilities
