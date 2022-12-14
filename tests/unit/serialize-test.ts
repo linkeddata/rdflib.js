@@ -1,8 +1,8 @@
 import {expect} from 'chai'
 import {graph, Literal, serialize, st, sym, lit} from '../../src/index';
+import parse from '../../src/parse'
 
-
-describe('serialize', () => {
+describe('serialize text/turtle', () => {
     describe('doubles', () => {
         it('literal from double value is taken as-is', () => {
             const doc = sym("https://doc.example");
@@ -270,4 +270,8 @@ example:subject schema:predicate obj: .
 `)
     });
   });
-});
+})
+
+/* describe('serialize application/ld+JSON', () => {
+
+}) */

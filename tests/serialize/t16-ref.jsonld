@@ -1,1 +1,32 @@
-[{"@id":"http://localhost/t1.ttl#id1443100844982","http://rdfs.org/sioc/ns#content":[{"@value":"kasdfjsahdkfhkjhdkjsfhjkasdfkhjkajkdsajkhadsfkhjhjkdfajsdsafhjkdfhjksa"}],"http://www.w3.org/ns/pim/pad#date":[{"@value":"2012-12-10","@type":"http://www.w3.org/2001/XMLSchema#date"}],"http://www.w3.org/ns/pim/pad#dateTime":[{"@value":"2012-12-25T23:59","@type":"http://www.w3.org/2001/XMLSchema#dateTime"}],"http://www.w3.org/ns/pim/pad#decimal":[{"@value":"12","@type":"http://www.w3.org/2001/XMLSchema#decimal"}],"http://www.w3.org/ns/pim/pad#float":[{"@value":"3.141","@type":"http://www.w3.org/2001/XMLSchema#double"}],"http://www.w3.org/ns/pim/pad#integer":[{"@value":"0","@type":"http://www.w3.org/2001/XMLSchema#integer"}],"http://www.w3.org/ns/pim/pad#next":[{"@id":"http://localhost/t1.ttl#id1443100912627"}]}]
+{
+  "@context": {
+    "sioc": "http://rdfs.org/sioc/ns#",
+    "pad": "http://www.w3.org/ns/pim/pad#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "/t1.ttl#id1443100844982",
+  "sioc:content": "kasdfjsahdkfhkjhdkjsfhjkasdfkhjkajkdsajkhadsfkhjhjkdfajsdsafhjkdfhjksa",
+  "pad:date": {
+    "@type": "xsd:date",
+    "@value": "2012-12-10"
+  },
+  "pad:dateTime": {
+    "@type": "xsd:dateTime",
+    "@value": "2012-12-25T23:59"
+  },
+  "pad:decimal": {
+    "@type": "xsd:decimal",
+    "@value": "12"
+  },
+  "pad:float": {
+    "@type": "xsd:double",
+    "@value": "3.141"
+  },
+  "pad:integer": {
+    "@type": "xsd:integer",
+    "@value": "0"
+  },
+  "pad:next": {
+    "@id": "/t1.ttl#id1443100912627"
+  }
+}

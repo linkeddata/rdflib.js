@@ -99,7 +99,7 @@
     "test": "npm run test:unit && npm run test:serialize && npm run test:types",
     "test:clean": "rimraf tests/serialize/,*",
     "test:serialize": "npm run build && npm run test:serialize:all && npm run test:clean",
-    "test:serialize:all": "npm run test:serialize:8 && npm run test:serialize:1 && npm run test:serialize:2 && npm run test:serialize:3 && npm run test:serialize:4 && npm run test:serialize:5 && npm run test:serialize:6 && npm run test:serialize:7 && npm run test:serialize:8 && npm run test:serialize:9 ; npm run test:serialize:10 && npm run test:serialize:11 && npm run test:serialize:12 && npm run test:serialize:13 && npm run test:serialize:14 && npm run test:serialize:15 && npm run test:serialize:16",
+    "test:serialize:all": "npm run test:serialize:1 && npm run test:serialize:2 && npm run test:serialize:3 && npm run test:serialize:4 && npm run test:serialize:5 && npm run test:serialize:6 && npm run test:serialize:7 && npm run test:serialize:8 && npm run test:serialize:9 ; npm run test:serialize:10 && npm run test:serialize:11 && npm run test:serialize:12 && npm run test:serialize:13 && npm run test:serialize:14 && npm run test:serialize:15 && npm run test:serialize:16",
     "test:serialize:1": "cd ./tests/serialize && node ./data.js -in=t1.ttl -format=application/rdf+xml -out=,t1.xml && fs-grep http://www.w3.org/2001/XMLSchema#integer ,t1.xml",
     "test:serialize:2": "cd ./tests/serialize && node ./data.js -in=t2.ttl -format=application/rdf+xml  -out=,t2.xml && node diff ,t2.xml t2-ref.xml",
     "test:serialize:3": "cd ./tests/serialize && node ./data.js -in=t3.ttl -format=application/rdf+xml  -out=,t3.xml && node diff ,t3.xml t3-ref.xml",

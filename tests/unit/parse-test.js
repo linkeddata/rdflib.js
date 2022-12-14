@@ -68,6 +68,33 @@ describe('Parse', () => {
         expect(store.statements[0].object.lang).to.eql('be-x-old')
       })
     })
+
+    describe('ttl with blanknodes', () => {
+      let store
+      before(done => {
+        const base = 'https://www.example.org/abc/def'
+        const mimeType = 'text/turtle'
+        const content = `
+        @prefix : <#>.
+        @prefix ex: <http://example.com#>.
+
+        ex:myid ex:prop1 _:b0.
+        _:b0 ex:prop2 _:b1.
+        _:b1 ex:prop3 "value".
+        `
+        store = DataFactory.graph()
+        parse(content, store, base, mimeType, done)
+      })
+
+      it('store contains 3 statements', () => {
+        expect(store.statements).to.have.length(3)
+        expect(serialize(null, store, null, 'text/turtle')).to.eql(`@prefix ex: <http://example.com#>.
+
+ex:myid ex:prop1 [ ex:prop2 [ ex:prop3 "value" ] ].
+
+`)
+      });
+    })
   })
 
   describe('a JSON-LD document', () => {
@@ -210,8 +237,8 @@ describe('Parse', () => {
       })
 
       it('uses the specified base IRI', async () => {
-        console.log(await serialize(null, store, null, 'application/ld+json'))
-        console.log(serialize(null, store, null, 'text/turtle'))
+        console.log(await serialize(null, store, 'https://www.example.org/', 'application/ld+json')) // null
+        console.log(serialize(null, store, 'https://www.example.org/', 'text/turtle'))
         expect(store.rdfFactory.supports["COLLECTIONS"]).to.be.true()
         expect(store.statements).to.have.length(1)
 
@@ -257,7 +284,7 @@ describe('Parse', () => {
       })
 
       it('store contains 3 statements', async () => {
-        console.log(await serialize(null, store, null, 'application/ld+json'))
+        console.log(await serialize(null, store, 'https://www.example.org/abc/def', 'application/ld+json')) // null
         expect(store.statements).to.have.length(3)
         expect(serialize(null, store, null, 'text/turtle')).to.eql(`@prefix ex: <http://example.com#>.
 
@@ -268,33 +295,6 @@ ex:myid ex:prop1 [ ex:prop2 [ ex:prop3 "value" ] ].
         expect(nt).to.include('<http://example.com#myid> <http://example.com#prop1> _:b0 .')
         expect(nt).to.include('_:b0 <http://example.com#prop2> _:b1 .')
         expect(nt).to.include('_:b1 <http://example.com#prop3> "value" .')
-      });
-    })
-
-    describe('ttl with blanknodes', () => {
-      let store
-      before(done => {
-        const base = 'https://www.example.org/abc/def'
-        const mimeType = 'text/turtle'
-        const content = `
-        @prefix : <#>.
-        @prefix ex: <http://example.com#>.
-
-        ex:myid ex:prop1 _:b0.
-        _:b0 ex:prop2 _:b1.
-        _:b1 ex:prop3 "value".
-        `
-        store = DataFactory.graph()
-        parse(content, store, base, mimeType, done)
-      })
-
-      it('store contains 3 statements', () => {
-        expect(store.statements).to.have.length(3)
-        expect(serialize(null, store, null, 'text/turtle')).to.eql(`@prefix ex: <http://example.com#>.
-
-ex:myid ex:prop1 [ ex:prop2 [ ex:prop3 "value" ] ].
-
-`)
       });
     })
 

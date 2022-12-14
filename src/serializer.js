@@ -1014,11 +1014,128 @@ export class Serializer {
   } // End @@ body
 
   statementsToJsonld (sts) {
-    try {
-      const n3String = this.statementsToNTriples(sts)
-      return jsonld.fromRDF(n3String, {format: 'application/n-quads'}).then( docJsonld => { return JSON.stringify(docJsonld, null, 2) })
-      // return JSON.stringify(await jsonld.fromRDF(item, {format: 'application/n-quads'}))
-    } catch (e) { throw e }
+    // TODO 
+    // - make relative with @id: '' in replacing fist @id
+    // - shall I use @type ?
+    /* for (var ns in this.prefixes) {
+      if (!this.prefixes.hasOwnProperty(ns)) continue
+      if (!this.namespacesUsed[ns]) continue
+      // str += '@prefix ' + this.prefixes[ns] + ': ' + this.explicitURI(ns) +
+      //  '.\n'
+      context += `"${this.prefixes[ns]}": "${this.explicitURI(ns)}",`
+    } */
+
+    async function toJsonld (item, context, base ) {
+      function makeRelative(jsonldString) {
+        /* let j = base.indexOf("#") // cut before #
+        if (j < 0 ) {
+          j = base.length // base.lastIndexOf('/') + 1 // cut after /
+        } */
+        // console.log('Alain base ' + base + ' ' + base.slice(0, j))
+        if (base.includes('#')) throw new Error(`${base} must be an URL, it is an URI`)
+        const id = '"@id": "' // find URI
+        const regex = new RegExp(id + base, 'g') // .slice(0, j), 'g')
+        let result, indices = [];
+        // store indices at begin and end of URI
+        while ( (result = regex.exec(jsonldString)) ) {
+            indices.push(result.index + id.length);
+            indices.push(jsonldString.indexOf('"', result.index + id.length ))
+        }
+        for (let i = indices.length - 2; i >= 0; i = i - 2) {
+          const idUri = jsonldString.substring(indices[i], indices[i + 1])
+          jsonldString = jsonldString.replace(idUri, Uri.refTo(base, idUri))
+        }
+
+        return jsonldString // .replace(regex, id)
+      }
+      // console.log(context)
+      let jsonldContext = JSON.parse(context)
+      /* console.log('alain ' + base)
+      let j = base.indexOf("#")
+      if (j < 0 ) {
+        j = base.lastIndexOf('/')
+      }
+      console.log(base.slice(0, j))
+      const regex = new RegExp(base.slice(0, j), 'g') // alain
+      // const regex = new RegExp('http://localhost/t1.ttl', 'g') */   
+      return jsonld.fromRDF(item, {format: 'application/n-quads'})
+        .then( n3String => { return jsonld.compact(n3String, jsonldContext) })
+        // TODO add collections, compact do not do it ??
+        .then( jsonldObj => { return JSON.stringify(jsonldObj, null, 2) }) // format jsonld
+        .then( jsonldString => { return makeRelative(jsonldString)})
+        .catch( e => { throw e })
+    }
+    function contextMethod (n3String) {
+      let prefixes = new Set()
+      const regex = /<(.*?)>/g
+      n3String.match(regex).map(string => {
+        const uri = string.slice(1).slice(0, -1)
+        console.log(this.base + ' ' + this.base)
+        if (uri.includes('//') && (!this.base || !uri.includes(this.base))) prefixes.add(addPrefix(uri))
+      })
+      let context = `{ `
+      const test = [...prefixes].map(term => {
+        context += `${term},`
+      })
+      /* console.log(this.prefixes)
+      let str = ''
+      console.log(this.namespacesUsed)
+      for (var ns in this.prefixes) {
+        if (!this.prefixes.hasOwnProperty(ns)) continue
+        if (!this.namespacesUsed[ns]) continue
+        str += '@prefix ' + this.prefixes[ns] + ': ' + this.explicitURI(ns) + '.\n'
+        // context += `"${this.prefixes[ns]}": "${this.explicitURI(ns)}",`
+      }
+      console.log('alain string ' +str)
+      */
+      return context.slice(0, -1) + `}`
+    }
+    function addPrefixMethod (uri) {
+      var j = uri.indexOf('#')
+      if (j < 0 ) {
+        j = uri.lastIndexOf('/')
+      }
+      if (j >= 0 &&
+        // Can split at namespace but only if http[s]: URI or file: or ws[s] (why not others?)
+        (uri.indexOf('http') === 0 || uri.indexOf('ws') === 0 || uri.indexOf('file') === 0)) {
+        var canSplit = true
+        for (var k = j + 1; k < uri.length; k++) {
+          if (this._notNameChars.indexOf(uri[k]) >= 0) {
+            canSplit = false
+            break
+          }
+        }
+        if (canSplit) {
+          var localid = uri.slice(j + 1)
+          var namesp = uri.slice(0, j + 1)
+          /*if (this.defaultNamespace && this.defaultNamespace === namesp &&
+              this.flags.indexOf('d') < 0) { // d -> suppress default
+            if (this.flags.indexOf('k') >= 0 &&
+              this.keyords.indexOf(localid) < 0) {
+              return localid
+            }
+            return ':' + localid
+          } */
+          // this.checkIntegrity() //  @@@ Remove when not testing
+          var prefix = this.prefixes[namesp]
+          if (!prefix) prefix = this.makeUpPrefix(namesp)
+          if (prefix) {
+            console.log(`Alain "${prefix}": "${namesp}"`)
+            return `"${prefix}": "${namesp}"`
+          }
+        }
+      }
+    }
+      // return this.explicitURI(uri)  
+    // }
+    var addPrefix = addPrefixMethod.bind(this)
+    var context = contextMethod.bind(this)
+
+    const n3String = this.statementsToNTriples(sts)
+    // console.log(n3String)
+    let contextString = context(n3String)
+    // console.log(this.namespacesUsed)
+    return toJsonld(n3String, contextString, this.base)
   }
 }
 
