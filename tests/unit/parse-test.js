@@ -28,7 +28,7 @@ describe('Parse', () => {
         let content = '<http://www.wikidata.org/entity/Q328> <http://www.w3.org/2000/01/rdf-schema#label> ( "0" "1"^^<http://www.w3.org/2001/XMLSchema#number> <http://example.org/> ) .'
         parse(content, store, base, mimeType)
         expect(store.statements[0].object.termType).to.eql('Collection')
-        console.log(serialize(null, store, null, 'application/n-quads'))
+        // console.log(serialize(null, store, null, 'application/n-quads'))
       })
 
       describe('without collection term support', () => {
@@ -284,7 +284,7 @@ ex:myid ex:prop1 [ ex:prop2 [ ex:prop3 "value" ] ].
       })
 
       it('store contains 3 statements', async () => {
-        console.log(await serialize(null, store, 'https://www.example.org/abc/def', 'application/ld+json')) // null
+        // console.log(await serialize(null, store, 'https://www.example.org/abc/def', 'application/ld+json')) // null
         expect(store.statements).to.have.length(3)
         expect(serialize(null, store, null, 'text/turtle')).to.eql(`@prefix ex: <http://example.com#>.
 
