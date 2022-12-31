@@ -283,23 +283,18 @@ voc:building0 voc:bar 123, 78768; voc:connectsTo voc:building4 .
 voc:building1 voc:created "2012-03-12"^^xsd:date; voc:length 145000.0e0 .
 
 `
+
     const jsonld0 = `{
   "@context": {
-    "voc": "http://example.com/foo/vocab#",
-    "xsd": "http://www.w3.org/2001/XMLSchema#"
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "voc": "http://example.com/foo/vocab#"
   },
   "@graph": [
     {
       "@id": "voc:building0",
       "voc:bar": [
-        {
-          "@type": "xsd:integer",
-          "@value": "123"
-        },
-        {
-          "@type": "xsd:integer",
-          "@value": "78768"
-        }
+        123,
+        78768
       ],
       "voc:connectsTo": {
         "@id": "voc:building4"
@@ -308,12 +303,12 @@ voc:building1 voc:created "2012-03-12"^^xsd:date; voc:length 145000.0e0 .
     {
       "@id": "voc:building1",
       "voc:created": {
-        "@type": "xsd:date",
-        "@value": "2012-03-12"
+        "@value": "2012-03-12",
+        "@type": "xsd:date"
       },
       "voc:length": {
-        "@type": "xsd:double",
-        "@value": "145000"
+        "@value": "145000.0e0",
+        "@type": "http://www.w3.org/2001/XMLSchema#double"
       }
     }
   ]
@@ -330,13 +325,16 @@ voc:building1 voc:created "2012-03-12"^^xsd:date; voc:length 145000.0e0 .
       })
 
       it('store contains 5 statements', () => {
+        // console.log(store.statements)
         expect(store.statements).to.have.length(5)
       })
 
       it('serialize to ttl', () => {
+        // console.log(serialize(null, store, base, 'text/turtle'))
         expect(serialize(null, store, base, 'text/turtle')).to.eql(ttl0)
       });
       it('serialize to jsonld', async () => {
+        console.log(serialize(null, store, base, 'application/ld+json'))
         expect(await serialize(null, store, base, 'application/ld+json')).to.eql(jsonld0)
       })
     })
@@ -352,13 +350,16 @@ voc:building1 voc:created "2012-03-12"^^xsd:date; voc:length 145000.0e0 .
       })
 
       it('store contains 5 statements', () => {
+        console.log(store.statements)
         expect(store.statements).to.have.length(5)
       })
 
       it('serialize to ttl', () => {
+        console.log(serialize(null, store, base, 'text/turtle'))
         expect(serialize(null, store, base, 'text/turtle')).to.eql(ttl0)
       });
       it('serialize to jsonld', async () => {
+        console.log(serialize(null, store, base, 'application/ld+json'))
         expect(await serialize(null, store, base, 'application/ld+json')).to.eql(jsonld0)
       })
     })
@@ -380,34 +381,32 @@ voc:building1 voc:created "2012-03-12"^^xsd:date; voc:length 145000.0e0 .
     pad:integer 0;
     pad:next :id1443100912627 .
 `
+
     const jsonld1 = `{
   "@context": {
-    "sioc": "http://rdfs.org/sioc/ns#",
     "pad": "http://www.w3.org/ns/pim/pad#",
+    "sioc": "http://rdfs.org/sioc/ns#",
     "xsd": "http://www.w3.org/2001/XMLSchema#"
   },
   "@id": "#id1443100844982",
   "sioc:content": "kasdfjsahdkfhkjhdkjsfhjkasdfkhjkajkdsajkhadsfkhjhjkdfajsdsafhjkdfhjksa",
   "pad:date": {
-    "@type": "xsd:date",
-    "@value": "2012-12-10"
+    "@value": "2012-12-10",
+    "@type": "xsd:date"
   },
   "pad:dateTime": {
-    "@type": "xsd:dateTime",
-    "@value": "2012-12-25T23:59"
+    "@value": "2012-12-25T23:59",
+    "@type": "xsd:dateTime"
   },
   "pad:decimal": {
-    "@type": "xsd:decimal",
-    "@value": "12"
+    "@value": "12.0",
+    "@type": "http://www.w3.org/2001/XMLSchema#decimal"
   },
   "pad:float": {
-    "@type": "xsd:double",
-    "@value": "3.141"
+    "@value": "3.141e0",
+    "@type": "http://www.w3.org/2001/XMLSchema#double"
   },
-  "pad:integer": {
-    "@type": "xsd:integer",
-    "@value": "0"
-  },
+  "pad:integer": 0,
   "pad:next": {
     "@id": "#id1443100912627"
   }
@@ -467,50 +466,23 @@ voc:building1 voc:created "2012-03-12"^^xsd:date; voc:length 145000.0e0 .
 
 :me n:listProp ( "list item 0" 1 ex:2 ).
 
-`
-
+`    
     const jsonldCollection = `{
   "@context": {
-    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-    "ex": "http://example.com/",
-    "xsd": "http://www.w3.org/2001/XMLSchema#",
-    "n": "https://example.org/ns#"
+    "n": "https://example.org/ns#",
+    "ex": "http://example.com/"
   },
-  "@graph": [
-    {
-      "@id": "_:n1",
-      "rdf:first": {
+  "@id": "/#me",
+  "n:listProp": {
+    "@list": [
+      "list item 0",
+      1,
+      {
         "@id": "ex:2"
-      },
-      "rdf:rest": {
-        "@id": "rdf:nill"
       }
-    },
-    {
-      "@id": "_:n2",
-      "rdf:first": {
-        "@type": "xsd:integer",
-        "@value": "1"
-      },
-      "rdf:rest": {
-        "@id": "_:n1"
-      }
-    },
-    {
-      "@id": "_:n3",
-      "rdf:first": "list item 0",
-      "rdf:rest": {
-        "@id": "_:n2"
-      }
-    },
-    {
-      "@id": "/#me",
-      "n:listProp": {
-        "@id": "_:n3"
-      }
-    }
-  ]
-    }`
+    ]
+  }
+}`
 
     describe('collections - source ttl', () => {
       let store, base
@@ -527,19 +499,17 @@ voc:building1 voc:created "2012-03-12"^^xsd:date; voc:length 145000.0e0 .
       })
 
       it('serialize to ttl', () => {
+        console.log(serialize(null, store, base, 'text/turtle'))
         expect(serialize(null, store, base, 'text/turtle')).to.eql(ttlCollection)
       });
       it('serialize to jsonld', async () => {
         console.log(await serialize(null, store, base, 'application/ld+json'))
         let result = await serialize(null, store, base, 'application/ld+json')
-        expect(result).to.include('"list item 0"')
-        expect(result).to.include('"@value": "1"')
-        expect(result).to.include('"@id": "ex:2"')
-        // expect(await serialize(null, store, base, 'application/ld+json')).to.eql(jsonldCollection)
+        expect(await serialize(null, store, base, 'application/ld+json')).to.eql(jsonldCollection)
       })
     })
 
-    describe.skip('collections - source jsonld', () => {
+    describe('collections - source jsonld', () => {
       let store, base
       before(done => {
         base = 'https://www.example.org/'
@@ -549,8 +519,8 @@ voc:building1 voc:created "2012-03-12"^^xsd:date; voc:length 145000.0e0 .
         parse(content, store, base, mimeType, done)
       })
 
-      it('store contains 7 statements', () => {
-        expect(store.statements).to.have.length(7)
+      it('store contains 1 statement with object collection', () => {
+        expect(store.statements).to.have.length(1)
       })
 
       it('serialize to ttl', () => {

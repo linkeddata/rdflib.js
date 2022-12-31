@@ -80,8 +80,9 @@ export default function serialize (
         documentString = sz.statementsToNTriples(newSts)
         return executeCallback(null, documentString)
       case JSONLDContentType:
-        sz.setFlags('deinprstux') // Use adapters to connect to incmpatible parser
-        return sz.statementsToJsonld(newSts)
+        sz.setFlags('si') // use turtle parameters
+        documentString = sz.statementsToJsonld(newSts) // convert via turtle
+        return executeCallback(null, documentString)
       case NQuadsContentType:
       case NQuadsAltContentType: // @@@ just outpout the quads? Does not work for collections
         sz.setFlags('deinprstux q') // Suppress nice parts of N3 to make ntriples

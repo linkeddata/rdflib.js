@@ -12,7 +12,8 @@ import * as Util from './utils-js'
 import CanonicalDataFactory from './factories/canonical-data-factory'
 import { createXSD } from './xsd'
 import solidNs from 'solid-namespace'
-import * as jsonld from 'jsonld'
+// import * as jsonld from 'jsonld'
+import * as ttl2jsonld from '@frogcat/ttl2jsonld'
 
 
 export default function createSerializer(store) {
@@ -1014,81 +1015,33 @@ export class Serializer {
   } // End @@ body
 
   statementsToJsonld (sts) {
-    // find all @context prefix except base
-    function contextMethod (n3String) {
-      let prefixes = new Set()
-      const regex = /<(.*?)>/g
-      n3String.match(regex).map(string => {
-        const uri = string.slice(1).slice(0, -1)
-        if (uri.includes('//') && (!this.base || !uri.includes(this.base))) prefixes.add(addPrefix(uri))
-      })
-      let context = `{ `
-      const test = [...prefixes].map(term => {
-        context += `${term},`
-      })
-      return context.slice(0, -1) + `}`
-    }
-
-    function addPrefixMethod (uri) {
-      var j = uri.indexOf('#')
-      if (j < 0 ) {
-        j = uri.lastIndexOf('/')
+    // ttl2jsonld creates context keys for all ttl prefix
+    // context keys must be full IRI
+    function findId (itemObj) {
+      if (itemObj['@id']) {
+        const item = itemObj['@id'].split(':')
+        if (keys[item[0]]) itemObj['@id'] = jsonldObj['@context'][item[0]] + item[1]
       }
-      if (j >= 0 &&
-        // Can split at namespace but only if http[s]: URI or file: or ws[s] (why not others?)
-        (uri.indexOf('http') === 0 || uri.indexOf('ws') === 0 || uri.indexOf('file') === 0)) {
-        var canSplit = true
-        for (var k = j + 1; k < uri.length; k++) {
-          if (this._notNameChars.indexOf(uri[k]) >= 0) {
-            canSplit = false
-            break
-          }
-        }
-        if (canSplit) {
-          var localid = uri.slice(j + 1)
-          var namesp = uri.slice(0, j + 1)
-          var prefix = this.prefixes[namesp]
-          if (!prefix) prefix = this.makeUpPrefix(namesp)
-          if (prefix) {
-            return `"${prefix}": "${namesp}"`
-          }
+      const itemValues = Object.values(itemObj)
+      for (const i in itemValues) {
+        if (typeof itemValues[i] !== 'string') { // @list contains array
+          findId(itemValues[i])
         }
       }
     }
+    const turtleDoc = this.statementsToN3(sts)
+    const jsonldObj = ttl2jsonld.parse(turtleDoc)
+    const context = jsonldObj['@context']
+    const iri = /^[a-z](.*?):(.+?)/g // begin with a letter, contain : followed by at least one character
+    const keys = Object.keys(context).filter(key => !context[key].match(iri)) // .includes('http'))
 
-    function makeRelativeMethod(jsonldString) {
-      if (this.base.includes('#')) throw new Error(`${this.base} must be an URL, it is an URI`)
-      const id = '"@id": "' // find URI
-      const regex = new RegExp(id + this.base, 'g')
-      let result, indices = [];
-      // store indices at begin and end of URI
-      while ( (result = regex.exec(jsonldString)) ) {
-          indices.push(result.index + id.length);
-          indices.push(jsonldString.indexOf('"', result.index + id.length ))
-      }
-      for (let i = indices.length - 2; i >= 0; i = i - 2) {
-        const idUri = jsonldString.substring(indices[i], indices[i + 1])
-        jsonldString = jsonldString.replace(idUri, Uri.refTo(this.base, idUri))
-      }
+    findId(jsonldObj)
+    keys.map(key => { delete jsonldObj['@context'][key] })
+    console.log(JSON.stringify(jsonldObj, null, 2))
 
-      return jsonldString
-    }
-    
-    const addPrefix = addPrefixMethod.bind(this)
-    const context = contextMethod.bind(this)
-    const makeRelative = makeRelativeMethod.bind(this)
-
-    const n3String = this.statementsToNTriples(sts)
-    let contextObj = JSON.parse(context(n3String))
-
-    return jsonld.fromRDF(n3String, {format: 'application/n-quads'})
-      .then( jsonldObj => { return jsonld.compact(jsonldObj, contextObj) })
-      // TODO collections, compact do not do it on rdf:first rdf:rest
-      .then( jsonldCompactObj => { return JSON.stringify(jsonldCompactObj, null, 2) })
-      .then( jsonldString => { return makeRelative(jsonldString)})
-      .catch( e => { throw e })
-
+    return JSON.stringify(jsonldObj, null, 2)
   }
+
 }
 
 // String escaping utilities
