@@ -1037,7 +1037,6 @@ export class Serializer {
 
     findId(jsonldObj)
     keys.map(key => { delete jsonldObj['@context'][key] })
-    console.log(JSON.stringify(jsonldObj, null, 2))
 
     return JSON.stringify(jsonldObj, null, 2)
   }
