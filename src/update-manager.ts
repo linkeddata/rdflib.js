@@ -757,8 +757,8 @@ export default class UpdateManager {
         // console.log(message)
         throw new Error(message)
       }
-
       var control = this.patchControlFor(doc)
+
       var startTime = Date.now()
 
       var props = ['subject', 'predicate', 'object', 'why']
@@ -787,7 +787,7 @@ export default class UpdateManager {
           throw new Error('Update: Loaded ' + doc + "but stil can't figure out what editing protcol it supports.")
         }
         // console.log(`Update: have not loaded ${doc} before: loading now...`);
-        (this.store.fetcher.load(doc) as Promise<Response>).then(response => {
+        (this.store.fetcher.load(doc as NamedNode) as Promise<Response>).then(response => {
           this.update(deletions, insertions, callback, true, options)
         }, err => {
             if (err.response.status === 404) { // nonexistent files are fine
@@ -799,8 +799,13 @@ export default class UpdateManager {
         return
       } else if ((protocol as string).indexOf('SPARQL') >= 0) {
         var bnodes: BlankNode[] = []
-        if (ds.length) bnodes = this.statementArrayBnodes(ds)
-        if (is.length) bnodes = bnodes.concat(this.statementArrayBnodes(is))
+        // change ReadOnly type to Mutable type
+        type Mutable<Type> = {
+          -readonly [Key in keyof Type]: Type[Key];
+        }
+        
+        if (ds.length) bnodes = this.statementArrayBnodes(ds as Mutable<typeof ds>)
+        if (is.length) bnodes = bnodes.concat(this.statementArrayBnodes(is as Mutable<typeof is>))
         var context = this.bnodeContext(bnodes, doc)
         var whereClause = this.contextWhere(context)
         var query = ''
@@ -852,7 +857,7 @@ export default class UpdateManager {
             */
           if (success) {
             try {
-              kb.remove(ds as any) // @@ ReadOnly not yet propagated
+              kb.remove(ds as Mutable<typeof ds>)
             } catch (e) {
               success = false
               body = 'Remote Ok BUT error deleting ' + ds.length + ' from store!!! ' + e
@@ -873,11 +878,11 @@ export default class UpdateManager {
           }
         }, options)
       } else if ((protocol as string).indexOf('DAV') >= 0) {
-        this.updateDav(doc, ds, is, callback, options)
+        this.updateDav(doc as NamedNode, ds, is, callback, options)
       } else {
         if ((protocol as string).indexOf('LOCALFILE') >= 0) {
           try {
-            this.updateLocalFile(doc, ds, is, callback, options)
+            this.updateLocalFile(doc as NamedNode, ds, is, callback, options)
           } catch (e) {
             callback(doc.value, false,
               'Exception trying to write back file <' + doc.value + '>\n'
