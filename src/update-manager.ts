@@ -213,7 +213,7 @@ export default class UpdateManager {
    * Returns a list of all bnodes occurring in a list of statements
    * @private
    */
-  statementArrayBnodes (sts: Quad[]) {
+  statementArrayBnodes (sts: ReadonlyArray<Quad>) {
     var bnodes: BlankNode[] = []
     for (let i = 0; i < sts.length; i++) {
       bnodes = bnodes.concat(this.statementBnodes(sts[i]))
@@ -752,6 +752,12 @@ export default class UpdateManager {
         // console.log(message)
         throw new Error(message)
       }
+      if (doc.termType !== 'NamedNode') {
+        let message = 'Error patching: document not a NamedNode:' + ds[0] + ', ' + is[0]
+        // console.log(message)
+        throw new Error(message)
+      }
+
       var control = this.patchControlFor(doc)
       var startTime = Date.now()
 
@@ -846,7 +852,7 @@ export default class UpdateManager {
             */
           if (success) {
             try {
-              kb.remove(ds)
+              kb.remove(ds as any) // @@ ReadOnly not yet propagated
             } catch (e) {
               success = false
               body = 'Remote Ok BUT error deleting ' + ds.length + ' from store!!! ' + e
