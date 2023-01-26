@@ -15,6 +15,10 @@ function showDoc(store, doc) {
    const text = serialize(doc, store, doc.uri)
    return text
 }
+function gist(store, doc) {
+   const text = showDoc(store, doc)
+   return text.replace(/@prefix [^>]*> *\./g, '')
+}
 function dumpStore(store) {
    const text = store.statements.map(st => st.toNT()).join('\n')
    return text

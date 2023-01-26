@@ -6,6 +6,7 @@
 **/
 import * as Uri from './uri'
 import { ArrayIndexOf } from './utils'
+import { convertFirstRestNil } from './lists'
 
 function hexify (str) { // also used in parser
   return encodeURI(str);
@@ -148,6 +149,7 @@ var diag_progress = function(str) { /*$rdf.log.debug(str);*/ }
 
 
 var RDF_type_URI = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
+var RDF_nil_URI = "http://www.w3.org/1999/02/22-rdf-syntax-ns#nil";
 var DAML_sameAs_URI = "http://www.w3.org/2002/07/owl#sameAs";
 
 /*
@@ -247,6 +249,7 @@ export class SinkParser {
         this.source = store.sym(thisDoc);
         this.lines = 0;
         this.statementCount = 0;
+        this.hasNil = false;
         this.startOfLine = 0;
         this.previousLine = 0;
         this._genPrefix = genPrefix;
@@ -509,14 +512,20 @@ export class SinkParser {
     };
     startDoc() {
     };
-    endDoc() {
-        /*
-        Signal end of document and stop parsing. returns formula*/
 
+    /* Signal end of document and stop parsing. returns formula */
+    endDoc() {
+        if (this.hasNil && this._store.rdfFactory.supports["COLLECTIONS"]) {
+          convertFirstRestNil(this._store, this.source)
+        }
         return this._formula;
     };
     makeStatement(quad) {
         quad[0].add(quad[2], quad[1], quad[3], this.source);
+        if ((quad[2].uri && quad[2].uri === RDF_nil_URI)
+        || (quad[3].uri && quad[3].uri === RDF_nil_URI)) {
+          this.hasNil = true
+        }
         this.statementCount += 1;
     };
     statement(str, i) {
@@ -1571,4 +1580,3 @@ function stripCR(str) {
 
 function dummyWrite(x) {
 }
-
