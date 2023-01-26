@@ -1,1 +1,35 @@
-[{"@id":"http://example.com/foo/vocab#building0","http://example.com/foo/vocab#bar":[{"@value":"123","@type":"http://www.w3.org/2001/XMLSchema#integer"},{"@value":"78768","@type":"http://www.w3.org/2001/XMLSchema#integer"}],"http://example.com/foo/vocab#connectsTo":[{"@id":"http://example.com/foo/vocab#building4"}]},{"@id":"http://example.com/foo/vocab#building1","http://example.com/foo/vocab#created":[{"@value":"2012-03-12","@type":"http://www.w3.org/2001/XMLSchema#date"}],"http://example.com/foo/vocab#length":[{"@value":"145000","@type":"http://www.w3.org/2001/XMLSchema#double"}]}]
+{
+    "@context": {
+      "voc": "http://example.com/foo/vocab#",
+      "xsd": "http://www.w3.org/2001/XMLSchema#"
+    },
+    "@graph": [
+      {
+        "@id": "voc:building0",
+        "voc:bar": [
+          {
+            "@type": "xsd:integer",
+            "@value": "123"
+          },
+          {
+            "@type": "xsd:integer",
+            "@value": "78768"
+          }
+        ],
+        "voc:connectsTo": {
+          "@id": "voc:building4"
+        }
+      },
+      {
+        "@id": "voc:building1",
+        "voc:created": {
+          "@type": "xsd:date",
+          "@value": "2012-03-12"
+        },
+        "voc:length": {
+          "@type": "xsd:double",
+          "@value": "145000"
+        }
+      }
+    ]
+  }

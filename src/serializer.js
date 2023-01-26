@@ -12,6 +12,8 @@ import * as Util from './utils-js'
 import CanonicalDataFactory from './factories/canonical-data-factory'
 import { createXSD } from './xsd'
 import solidNs from 'solid-namespace'
+// import * as jsonld from 'jsonld'
+import * as ttl2jsonld from '@frogcat/ttl2jsonld'
 
 
 export default function createSerializer(store) {
@@ -1011,6 +1013,28 @@ export class Serializer {
     var tree2 = [str, tree, '</rdf:RDF>'] // @@ namespace declrations
     return XMLtreeToString(tree2, -1)
   } // End @@ body
+
+  statementsToJsonld (sts) {
+    // ttl2jsonld creates context keys for all ttl prefix
+    // context keys must be full IRI
+    function findId (itemObj) {
+      if (itemObj['@id']) {
+        const item = itemObj['@id'].split(':')
+        if (keys[item[0]]) itemObj['@id'] = jsonldObj['@context'][item[0]] + item[1]
+      }
+      const itemValues = Object.values(itemObj)
+      for (const i in itemValues) {
+        if (typeof itemValues[i] !== 'string') { // @list contains array
+          findId(itemValues[i])
+        }
+      }
+    }
+    const turtleDoc = this.statementsToN3(sts)
+    const jsonldObj = ttl2jsonld.parse(turtleDoc)
+
+    return JSON.stringify(jsonldObj, null, 2)
+  }
+
 }
 
 // String escaping utilities

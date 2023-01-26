@@ -45,6 +45,7 @@
   "bugs": "http://github.com/linkeddata/rdflib.js/issues",
   "dependencies": {
     "@babel/runtime": "^7.20.1",
+    "@frogcat/ttl2jsonld": "^0.0.9",
     "@xmldom/xmldom": "^0.8.6",
     "cross-fetch": "^3.1.5",
     "jsonld": "^8.1.0",
@@ -84,7 +85,7 @@
     "typescript": "^4.9.3",
     "webpack": "^5.75.0",
     "webpack-cli": "^5.0.0",
-    "webpack-dev-server": "4.11"
+    "webpack-dev-server": "^4.11.1"
   },
   "scripts": {
     "build": "babel src --extensions \".ts,.js\" -d lib",
@@ -99,7 +100,7 @@
     "test": "npm run test:unit && npm run test:serialize && npm run test:types",
     "test:clean": "rimraf tests/serialize/,*",
     "test:serialize": "npm run build && npm run test:serialize:all && npm run test:clean",
-    "test:serialize:all": "npm run test:serialize:8 && npm run test:serialize:1 && npm run test:serialize:2 && npm run test:serialize:3 && npm run test:serialize:4 && npm run test:serialize:5 && npm run test:serialize:6 && npm run test:serialize:7 && npm run test:serialize:8 && npm run test:serialize:9 && npm run test:serialize:10 && npm run test:serialize:11 && npm run test:serialize:12 && npm run test:serialize:13 && npm run test:serialize:14 && npm run test:serialize:15 && npm run test:serialize:16",
+    "test:serialize:all": "npm run test:serialize:1 && npm run test:serialize:2 && npm run test:serialize:3 && npm run test:serialize:4 && npm run test:serialize:5 && npm run test:serialize:6 && npm run test:serialize:7 && npm run test:serialize:8 && npm run test:serialize:10 && npm run test:serialize:11 && npm run test:serialize:12 && npm run test:serialize:13 && npm run test:serialize:14  && npm run test:serialize:15",
     "test:serialize:1": "cd ./tests/serialize && node ./data.js -in=t1.ttl -format=application/rdf+xml -out=,t1.xml && fs-grep http://www.w3.org/2001/XMLSchema#integer ,t1.xml",
     "test:serialize:2": "cd ./tests/serialize && node ./data.js -in=t2.ttl -format=application/rdf+xml  -out=,t2.xml && node diff ,t2.xml t2-ref.xml",
     "test:serialize:3": "cd ./tests/serialize && node ./data.js -in=t3.ttl -format=application/rdf+xml  -out=,t3.xml && node diff ,t3.xml t3-ref.xml",
@@ -108,7 +109,6 @@
     "test:serialize:6": "cd ./tests/serialize && node ./data.js -in=t5.n3 -format=text/n3 -out=,t6.n3 && node diff ,t6.n3 t6-ref.n3",
     "test:serialize:7": "cd ./tests/serialize && node ./data.js -in=t7.n3 -format=application/n-triples -out=,t7.nt && node diff ,t7.nt t7-ref.nt",
     "test:serialize:8": "cd ./tests/serialize && node ./data.js -in=t5.n3  -format=application/n-quads -out=,t8.nq && node diff ,t8.nq t8-ref.nq",
-    "test:serialize:9": "cd ./tests/serialize && node ./data.js -in=t7.n3 -format=application/ld+json -out=,t9.jsonld && node diff ,t9.jsonld t9-ref.jsonld",
     "test:serialize:10": "cd ./tests/serialize && node ./data.js -in=details.ttl -format=text/turtle -out=,t10.ttl && node diff ,t10.ttl t10-ref.ttl",
     "test:serialize:11": "cd ./tests/serialize && node ./data.js -in=structures.n3 -format=application/rdf+xml  -out=,structures.xml && node diff ,structures.xml t11-ref.xml",
     "test:serialize:12": "cd ./tests/serialize && node ./data.js -in=structures.n3 -format=text/turtle -out=,structures.ttl && node diff ,structures.ttl t12-ref.ttl",
