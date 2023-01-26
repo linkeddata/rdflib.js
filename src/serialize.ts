@@ -14,7 +14,6 @@ import {
 } from './types'
 import IndexedFormula from './store'
 import { BlankNode, NamedNode } from './tf-types'
-import * as jsonld from 'jsonld'
 
 /**
  * Serialize to the appropriate format
@@ -107,12 +106,5 @@ export default function serialize (
     } else {
       return result as string
     }
-  }
-
-  function toJsonld (item ) {
-    try {
-      return jsonld.fromRDF(item, {format: 'application/n-quads'}).then( docJsonld => { return JSON.stringify(docJsonld) })
-      // return JSON.stringify(await jsonld.fromRDF(item, {format: 'application/n-quads'}))
-    } catch (e) { throw e }
   }
 }
