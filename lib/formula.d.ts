@@ -270,7 +270,7 @@ export default class Formula extends Node {
      * @param provenance - The provenance URI
      * @param options  - options to pass to the serializer, as defined in serialize method
      */
-    serialize(base: any, contentType: any, provenance: any, options?: any): string | Promise<string> | undefined;
+    serialize(base: any, contentType: any, provenance: any, options?: any): string | undefined;
     /**
      * Creates a new formula with the substituting bindings applied
      * @param bindings - The bindings to substitute

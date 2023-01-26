@@ -23,4 +23,4 @@ contentType?: string | ContentType, callback?: (err: Error | undefined | null, r
      * A set of [prefix, uri] pairs that define namespace prefixes
      */
     namespaces?: Record<string, string>;
-}): string | undefined | Promise<string>;
+}): string | undefined;
