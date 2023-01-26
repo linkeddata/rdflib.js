@@ -1,6 +1,5 @@
 import BlankNode from './blank-node';
 import Collection from './collection';
-import * as convert from './convert';
 import Empty from './empty';
 import Fetcher from './fetcher';
 import Formula from './formula';
@@ -35,7 +34,7 @@ declare const term: <T extends import("./types").FromValueReturns<any>>(value: i
 declare const NextId: number;
 export * from './utils/terms';
 export type { AutoInitOptions, ExtendedResponse, FetchError } from './fetcher';
-export { BlankNode, Collection, convert, DataFactory, Empty, Fetcher, Formula, Store, jsonParser, Literal, log, N3Parser, NamedNode, Namespace, Node, parse, Query, queryToSPARQL, RDFaProcessor, RDFParser, serialize, Serializer, SPARQLToQuery, sparqlUpdateParser, Statement, term, UpdateManager, UpdatesSocket, UpdatesVia, uri, Util, Variable, Store as IndexedFormula, // Alias
+export { BlankNode, Collection, DataFactory, Empty, Fetcher, Formula, Store, jsonParser, Literal, log, N3Parser, NamedNode, Namespace, Node, parse, Query, queryToSPARQL, RDFaProcessor, RDFParser, serialize, Serializer, SPARQLToQuery, sparqlUpdateParser, Statement, term, UpdateManager, UpdatesSocket, UpdatesVia, uri, Util, Variable, Store as IndexedFormula, // Alias
 NextId, fromNT, fetcher, graph, lit, st, namedNode as sym, blankNode, defaultGraph, literal, namedNode, quad, triple, variable, };
 export { termValue } from './utils/termValue';
 export declare class ConnectedStore extends Store {

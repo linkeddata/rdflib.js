@@ -1,7 +1,6 @@
 import _defineProperty from "@babel/runtime/helpers/defineProperty";
 import BlankNode from './blank-node';
 import Collection from './collection';
-import * as convert from './convert';
 import Empty from './empty';
 import Fetcher from './fetcher';
 import Formula from './formula';
@@ -57,7 +56,7 @@ const term = Node.fromValue;
 // it exports the _current_ value of nextId, which is always 0
 const NextId = BlankNode.nextId;
 export * from './utils/terms';
-export { BlankNode, Collection, convert, DataFactory, Empty, Fetcher, Formula, Store, jsonParser, Literal, log, N3Parser, NamedNode, Namespace, Node, parse, Query, queryToSPARQL, RDFaProcessor, RDFParser, serialize, Serializer, SPARQLToQuery, sparqlUpdateParser, Statement, term, UpdateManager, UpdatesSocket, UpdatesVia, uri, Util, Variable, Store as IndexedFormula,
+export { BlankNode, Collection, DataFactory, Empty, Fetcher, Formula, Store, jsonParser, Literal, log, N3Parser, NamedNode, Namespace, Node, parse, Query, queryToSPARQL, RDFaProcessor, RDFParser, serialize, Serializer, SPARQLToQuery, sparqlUpdateParser, Statement, term, UpdateManager, UpdatesSocket, UpdatesVia, uri, Util, Variable, Store as IndexedFormula,
 // Alias
 
 NextId, fromNT, fetcher, graph, lit, st, namedNode as sym,

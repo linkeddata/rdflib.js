@@ -1,6 +1,7 @@
-import * as convert from './convert';
 import Serializer from './serializer';
 import { JSONLDContentType, N3ContentType, N3LegacyContentType, NQuadsAltContentType, NQuadsContentType, NTriplesContentType, RDFXMLContentType, TurtleContentType, TurtleLegacyContentType } from './types';
+import * as jsonld from 'jsonld';
+
 /**
  * Serialize to the appropriate format
  */
@@ -53,17 +54,13 @@ contentType, callback, options) {
         sz.setFlags('deinprstux'); // Use adapters to connect to incmpatible parser
         n3String = sz.statementsToNTriples(newSts);
         // n3String = sz.statementsToN3(newSts)
-        convert.convertToJson(n3String, callback);
-        break;
+        return toJsonld(n3String);
       case NQuadsContentType:
       case NQuadsAltContentType:
         // @@@ just outpout the quads? Does not work for collections
         sz.setFlags('deinprstux q'); // Suppress nice parts of N3 to make ntriples
         documentString = sz.statementsToNTriples(newSts); // q in flag means actually quads
         return executeCallback(null, documentString);
-      // n3String = sz.statementsToN3(newSts)
-      // documentString = convert.convertToNQuads(n3String, callback)
-      // break
       default:
         throw new Error('Serialize: Content-type ' + contentType + ' not supported for data write.');
     }
@@ -81,6 +78,18 @@ contentType, callback, options) {
       return;
     } else {
       return result;
+    }
+  }
+  function toJsonld(item) {
+    try {
+      return jsonld.fromRDF(item, {
+        format: 'application/n-quads'
+      }).then(docJsonld => {
+        return JSON.stringify(docJsonld);
+      });
+      // return JSON.stringify(await jsonld.fromRDF(item, {format: 'application/n-quads'}))
+    } catch (e) {
+      throw e;
     }
   }
 }
