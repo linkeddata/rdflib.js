@@ -125,7 +125,7 @@ describe('Parse', () => {
               ].
 
 `))
-/*
+/*      // replaced by above expect due to inpredictable order in store.statements 
         expect(store.statements[0].predicate.value).to.eql('http://www.w3.org/1999/02/22-rdf-syntax-ns#first')
         expect(store.statements[0].object.value).to.eql('1')
 
