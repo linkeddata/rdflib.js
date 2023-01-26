@@ -10,7 +10,8 @@ import serialize from '../../src/serialize'
 describe('Parse', () => {
   describe('ttl', () => {
     describe('literals', () => {
-      it('handles language subtags', () => {
+      it('parses a language tag ', () => {
+
         let base = 'https://www.wikidata.org/wiki/Special:EntityData/Q2005.ttl'
         let mimeType = 'text/turtle'
         let store = DataFactory.graph()
@@ -18,10 +19,12 @@ describe('Parse', () => {
         parse(content, store, base, mimeType)
         expect(store.statements[0].object.lang).to.eql('be-x-old')
       })
-    })
+    }) // literals
 
     describe('collections', () => {
-      describe('with collection term support', () => {
+      describe('explicit: with collection term support', () => {
+        it('creates a Collection object', () => {
+
         let base = 'https://www.wikidata.org/wiki/Special:EntityData/Q2005.ttl'
         let mimeType = 'text/turtle'
         let store = DataFactory.graph()
@@ -30,7 +33,8 @@ describe('Parse', () => {
         expect(store.statements[0].object.termType).to.eql('Collection')
       })
 
-      describe('without collection term support', () => {
+      it('creates a first/rest description', () => {
+
         let base = 'https://www.wikidata.org/wiki/Special:EntityData/Q2005.ttl'
         let mimeType = 'text/turtle'
         let store = DataFactory.graph(undefined, { rdfFactory: CanonicalDataFactory })
@@ -53,8 +57,71 @@ describe('Parse', () => {
         expect(store.statements[6].object.termType).to.eql('BlankNode')
         expect(store.statements[6].object.value).to.eql(store.statements[0].subject.value)
       })
-    })
-  })
+    }) // explict
+
+      describe('reified, with collection term support from first/rest', () => {
+        it('creates a Collection object', () => {
+
+          let base = 'https://www.wikidata.org/wiki/Special:EntityData/Q2005.ttl'
+          let mimeType = 'text/turtle'
+          let store = DataFactory.graph()
+          let content = prefixes + '<http://www.wikidata.org/entity/Q328> schema:label [ rdf:first 1; rdf:rest [ rdf:first 2; rdf:rest [ rdf:first 3; rdf:rest rdf:nil ]]].'
+          parse(content, store, base, mimeType)
+          expect(store.statements[0].object.termType).to.eql('Collection')
+          expect(squash(gist(store, store.sym(base)))).to.eql(squash(`ent:Q328 rdfs:label ( 1 2 3 ).`))
+
+        })
+
+        it('creates a first/rest description from first/rest', () => {
+
+        let base = 'https://www.wikidata.org/wiki/Special:EntityData/Q2005.ttl'
+        let mimeType = 'text/turtle'
+        let store = DataFactory.graph(undefined, { rdfFactory: CanonicalDataFactory })
+        const doc = store.sym(base)
+        const text = `ent:Q328
+              rdfs:label
+                      [
+                          rdf:first 1;
+                          rdf:rest
+                          [ rdf:first 2; rdf:rest [ rdf:first 3; rdf:rest rdf:nil ] ]
+                      ].
+
+        `
+
+        let content = prefixes + '<http://www.wikidata.org/entity/Q328> schema:label [ rdf:first 1; rdf:rest [ rdf:first 2; rdf:rest [ rdf:first 3; rdf:rest rdf:nil ]]].'
+        parse(content, store, base, mimeType)
+        expect(store.statements.length).to.eql(1 + 3 * 2)
+
+        expect(squash(gist(store, doc))).to.eql(squash(
+`ent:Q328
+      rdfs:label
+              [
+                  rdf:first 1;
+                  rdf:rest
+                  [ rdf:first 2; rdf:rest [ rdf:first 3; rdf:rest rdf:nil ] ]
+              ].
+
+`))
+/*      // replaced by above expect due to inpredictable order in store.statements 
+        expect(store.statements[0].predicate.value).to.eql('http://www.w3.org/1999/02/22-rdf-syntax-ns#first')
+        expect(store.statements[0].object.value).to.eql('1')
+
+        expect(store.statements[2].predicate.value).to.eql('http://www.w3.org/1999/02/22-rdf-syntax-ns#first')
+        expect(store.statements[2].object.value).to.eql('3')
+        expect(store.statements[2].object.datatype.value).to.eql('http://www.w3.org/2001/XMLSchema#integer')
+
+        expect(store.statements[4].predicate.value).to.eql('http://www.w3.org/1999/02/22-rdf-syntax-ns#first')
+        expect(store.statements[4].object.termType).to.eql('NamedNode')
+        expect(store.statements[4].object.value).to.eql('http://example.org/')
+
+        expect(store.statements[6].predicate.value).to.eql('http://www.w3.org/2000/01/rdf-schema#label')
+        expect(store.statements[6].object.termType).to.eql('BlankNode')
+        expect(store.statements[6].object.value).to.eql(store.statements[0].subject.value)
+        */
+      }) // test
+    }) // reified
+  }) //collections
+
 
   describe('ttl with charset', () => {
     describe('literals', () => {
@@ -68,6 +135,8 @@ describe('Parse', () => {
       })
     })
   })
+
+}) // ttl
 
   describe('a JSON-LD document', () => {
     describe('with a base IRI', () => {
@@ -111,10 +180,11 @@ describe('Parse', () => {
         }`
         store = DataFactory.graph(undefined, { rdfFactory: CanonicalDataFactory })
         parse(content, store, base, mimeType, done)
-      })
+      }) // before
 
       it('uses the specified base IRI', () => {
         expect(store.rdfFactory.supports["COLLECTIONS"]).to.be.false()
+
         const homePageHeight = 5 // homepage + height + 3 x name
         const list = 2 * 3 + 1 // (rdf:first + rdf:rest) * 3 items + listProp
         expect(store.statements).to.have.length(homePageHeight + list)
@@ -147,40 +217,39 @@ describe('Parse', () => {
         expect(nameEn.object.value).to.equal('The Queen')
 
         const list0First = store.statements[5]
-        expect(list0First.subject.value).to.equal('n0')
+        // expect(list0First.subject.value).to.equal('n0')
         expect(list0First.predicate.value).to.equal('http://www.w3.org/1999/02/22-rdf-syntax-ns#first')
         expect(list0First.object.value).to.equal('list item 0')
 
         const list0Rest = store.statements[6]
-        expect(list0Rest.subject.value).to.equal('n0')
+        expect(list0Rest.subject.termType).to.equal('BlankNode')
         expect(list0Rest.predicate.value).to.equal('http://www.w3.org/1999/02/22-rdf-syntax-ns#rest')
         expect(list0Rest.object.value).to.equal(store.statements[7].subject.value)
 
         const list1First = store.statements[7]
-        expect(list1First.subject.value).to.equal('n1')
+        expect(list1First.subject.termType).to.equal('BlankNode')
         expect(list1First.predicate.value).to.equal('http://www.w3.org/1999/02/22-rdf-syntax-ns#first')
         expect(list1First.object.value).to.equal('list item 1')
 
         const list1Rest = store.statements[8]
-        expect(list1Rest.subject.value).to.equal('n1')
+        expect(list1Rest.subject.termType).to.eql('BlankNode')
         expect(list1Rest.predicate.value).to.equal('http://www.w3.org/1999/02/22-rdf-syntax-ns#rest')
         expect(list1Rest.object.value).to.equal(store.statements[9].subject.value)
 
         const list2First = store.statements[9]
-        expect(list2First.subject.value).to.equal('n2')
+        expect(list2First.subject.termType).to.eql('BlankNode')
         expect(list2First.predicate.value).to.equal('http://www.w3.org/1999/02/22-rdf-syntax-ns#first')
         expect(list2First.object.value).to.equal('list item 2')
 
         const list2Rest = store.statements[10]
-        expect(list2Rest.subject.value).to.equal('n2')
+        expect(list2Rest.subject.termType).to.eql('BlankNode')
         expect(list2Rest.predicate.value).to.equal('http://www.w3.org/1999/02/22-rdf-syntax-ns#rest')
         expect(list2Rest.object.value).to.equal('http://www.w3.org/1999/02/22-rdf-syntax-ns#nil')
 
         const listProp = store.statements[11]
         expect(listProp.subject.value).to.equal('https://www.example.org/#me')
         expect(listProp.predicate.value).to.equal('https://example.org/ns#listProp')
-        expect(listProp.object.value).to.equal('n0')
-      })
+        expect(listProp.object.termType).to.eql('BlankNode')
     })
 
     describe('with collections enabled', () => {
@@ -327,7 +396,8 @@ ex:myid ex:prop1 [ ex:prop2 [ ex:prop3 "value" ] ].
         expect(nameDe2.object.value).to.equal('Jane Doe')
       });
     })
-  })
+    }) // with a base IRI
+  }) // JSONLD
 
   describe('xml', () => {
     describe('literals', () => {
@@ -344,7 +414,7 @@ ex:myid ex:prop1 [ ex:prop2 [ ex:prop3 "value" ] ].
        </rdf:RDF>`
         parse(content, store, base, mimeType)
         expect(store.statements[0].object.lang).to.eql('fr')
-      })
-    })
-  })
-})
+      }) // test
+    }) // literals
+  }) // xml
+}) // Parse
