@@ -92,7 +92,7 @@
     "build:esm": "babel src --extensions \".ts,.js\" --env-name esm -d esm",
     "build:browser": "webpack --progress",
     "build:types": "tsc --emitDeclarationOnly -d --moduleResolution node --declarationDir lib",
-    "build:all": "npm run build && npm run build:types && npm run build:browser && npm run build:esm ",
+    "build:all": "npm run build && npm run build:types && npm run build:browser && npm run build:esm",
     "doc": "typedoc --out ./doc ./src/index.ts --excludePrivate --excludeInternal --tsconfig ./tsconfig.json",
     "prepublishOnly": "npm ci && npm run build:all && npm run doc && npm run test",
     "postversion": "git push --follow-tags",
