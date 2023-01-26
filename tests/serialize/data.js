@@ -59,7 +59,7 @@ var exitMessage = function (message) {
   process.exit(4)
 }
 
-var doNext = function (remaining) {
+var doNext = async function (remaining) {
   while (remaining.length) {
     // console.log("... remaining " + remaining.join(' '))
 
@@ -97,8 +97,7 @@ var doNext = function (remaining) {
         case '-out':
           try {
             var options = {flags: 'z'} // Only applies to RDF/XML
-
-            var out = $rdf.serialize(inDocument, kb, inDocument.uri, contentType, undefined, options)
+            var out = await $rdf.serialize(inDocument, kb, inDocument.uri, contentType, undefined, options)
           } catch(e) {
             exitMessage('Error in serializer: ' + e + stackString(e))
           }
@@ -122,7 +121,7 @@ var doNext = function (remaining) {
           })
           return
 
-          case '-dump':
+          /* case '-dump':
             doc = $rdf.sym($rdf.uri.join(right, base))
             try {
               var out = $rdf.serialize(null, kb, targetDocument.uri, 'application/n-quads') // whole store
@@ -141,7 +140,7 @@ var doNext = function (remaining) {
               console.log('Written ' + fileName)
               doNext(remaining)
             })
-            return
+            return */
 
       case '-size':
         console.log(kb.statements.length + ' triples')
