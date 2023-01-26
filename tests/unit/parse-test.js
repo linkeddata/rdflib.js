@@ -7,6 +7,30 @@ import defaultXSD from '../../src/xsd'
 import DataFactory from '../../src/factories/rdflib-data-factory'
 import serialize from '../../src/serialize'
 
+const prefixes = `@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix schema: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix : <https://example.com/ont#>.
+`
+
+function gist(store, doc) {
+  const text = showDoc(store, doc)
+  const short = text.replace(/@prefix [^>]*> *\./g, '')
+  const sweet = short.replace(/\n+/g, '\n')
+  return sweet
+}
+function showDoc(store, doc) {
+  const text = serialize(doc, store, doc.uri)
+  return text
+}
+function squash(s) {
+  const white = s.replace(/[ \t]+/g, ' ')
+  return white.trim()
+}
+function dumpStore(store) {
+  const text = store.statements.map(st => st.toNT()).join('\n')
+  return text
+}
+
 describe('Parse', () => {
   describe('ttl', () => {
     describe('literals', () => {
