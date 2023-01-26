@@ -51,7 +51,7 @@ export default class UpdateManager {
      * Returns a list of all bnodes occurring in a list of statements
      * @private
      */
-    statementArrayBnodes(sts: Quad[]): BlankNode[];
+    statementArrayBnodes(sts: ReadonlyArray<Quad>): BlankNode[];
     /**
      * Makes a cached list of [Inverse-]Functional properties
      * @private

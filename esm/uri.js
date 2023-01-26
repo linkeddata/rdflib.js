@@ -124,7 +124,7 @@ export function join(given, base) {
  * @param uri The URI
  */
 export function protocol(uri) {
-  const i = uri.indexOf(':');
+  var i = uri.indexOf(':');
   if (i < 0) {
     return null;
   } else {
@@ -147,8 +147,8 @@ export function refTo(base, uri) {
     return '';
   }
   for (i = o = 0, len = uri.length; o < len; i = ++o) {
-    const c = uri[i];
-    if (c !== base[i]) {
+    var _c = uri[i];
+    if (_c !== base[i]) {
       break;
     }
   }

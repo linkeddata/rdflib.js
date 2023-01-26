@@ -36,9 +36,11 @@ export function jsonldObjectToTerm(kb, obj) {
  * Adds the statements in a json-ld list object to {kb}.
  */
 function listToStatements(kb, obj) {
-  const listId = obj['@id'] ? nodeType(kb, obj) : kb.rdfFactory.blankNode();
-  const items = obj['@list'].map(listItem => jsonldObjectToTerm(kb, listItem));
-  const statements = arrayToStatements(kb.rdfFactory, listId, items);
+  var listId = obj['@id'] ? nodeType(kb, obj) : kb.rdfFactory.blankNode();
+  var items = obj['@list'].map(function (listItem) {
+    return jsonldObjectToTerm(kb, listItem);
+  });
+  var statements = arrayToStatements(kb.rdfFactory, listId, items);
   kb.addAll(statements);
   return listId;
 }
@@ -46,7 +48,9 @@ function listToCollection(kb, obj) {
   if (!Array.isArray(obj)) {
     throw new TypeError("Object must be an array");
   }
-  return kb.rdfFactory.collection(obj.map(o => jsonldObjectToTerm(kb, o)));
+  return kb.rdfFactory.collection(obj.map(function (o) {
+    return jsonldObjectToTerm(kb, o);
+  }));
 }
 
 /**
@@ -55,13 +59,15 @@ function listToCollection(kb, obj) {
  * Ensure that {kb.rdfFactory} is a DataFactory.
  */
 export default function jsonldParser(str, kb, base, callback) {
-  const baseString = base && Object.prototype.hasOwnProperty.call(base, 'termType') ? base.value : base;
+  var baseString = base && Object.prototype.hasOwnProperty.call(base, 'termType') ? base.value : base;
   return jsonld.flatten(JSON.parse(str), null, {
     base: baseString
-  }).then(flattened => flattened.reduce((store, flatResource) => {
-    kb = processResource(kb, base, flatResource);
-    return kb;
-  }, kb)).then(callback).catch(callback);
+  }).then(function (flattened) {
+    return flattened.reduce(function (store, flatResource) {
+      kb = processResource(kb, base, flatResource);
+      return kb;
+    }, kb);
+  }).then(callback).catch(callback);
 }
 function nodeType(kb, obj) {
   if (obj['@id'].startsWith('_:')) {
@@ -73,26 +79,27 @@ function nodeType(kb, obj) {
   }
 }
 function processResource(kb, base, flatResource) {
-  const id = flatResource['@id'] ? nodeType(kb, flatResource) : kb.rdfFactory.blankNode();
-  for (const property of Object.keys(flatResource)) {
+  var id = flatResource['@id'] ? nodeType(kb, flatResource) : kb.rdfFactory.blankNode();
+  for (var _i = 0, _Object$keys = Object.keys(flatResource); _i < _Object$keys.length; _i++) {
+    var property = _Object$keys[_i];
     if (property === '@id') {
       continue;
     } else if (property == '@graph') {
       // the JSON-LD flattened structure may contain nested graphs
       // the id value for this object is the new base (named graph id) for all nested flat resources
-      const graphId = id;
+      var graphId = id;
       // this is an array of resources
-      const nestedFlatResources = flatResource[property];
+      var nestedFlatResources = flatResource[property];
 
       // recursively process all flat resources in the array, but with the graphId as base.
-      for (let i = 0; i < nestedFlatResources.length; i++) {
+      for (var i = 0; i < nestedFlatResources.length; i++) {
         kb = processResource(kb, graphId, nestedFlatResources[i]);
       }
     }
-    const value = flatResource[property];
+    var value = flatResource[property];
     if (Array.isArray(value)) {
-      for (let i = 0; i < value.length; i++) {
-        kb.addStatement(createStatement(kb, id, property, value[i], base));
+      for (var _i2 = 0; _i2 < value.length; _i2++) {
+        kb.addStatement(createStatement(kb, id, property, value[_i2], base));
       }
     } else {
       kb.addStatement(createStatement(kb, id, property, value, base));
@@ -110,7 +117,7 @@ function processResource(kb, base, flatResource) {
  * @return quad statement
  */
 function createStatement(kb, id, property, value, base) {
-  let predicate, object;
+  var predicate, object;
   if (property === "@type") {
     predicate = kb.rdfFactory.namedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type");
     object = kb.rdfFactory.namedNode(value);

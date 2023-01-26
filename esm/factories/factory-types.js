@@ -1,6 +1,6 @@
 /** A set of features that may be supported by a Data Factory */
 
-export let Feature;
+export var Feature;
 
 /**
  * Defines a DataFactory as used in rdflib, based on the RDF/JS: Data model specification,

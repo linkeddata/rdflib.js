@@ -1,11 +1,13 @@
+import _classCallCheck from "@babel/runtime/helpers/classCallCheck";
+import _createClass from "@babel/runtime/helpers/createClass";
 import _defineProperty from "@babel/runtime/helpers/defineProperty";
 import Node from './node-internal';
 import { DefaultGraphTermType } from './types';
 import DefaultGraphNode, { isDefaultGraph } from './default-graph';
-const defaultGraph = new DefaultGraphNode();
+var defaultGraph = new DefaultGraphNode();
 
 /** A Statement represents an RDF Triple or Quad. */
-export default class Statement {
+var Statement = /*#__PURE__*/function () {
   /** The subject of the triple.  What the Statement is about. */
 
   /** The relationship which is asserted between the subject and object */
@@ -34,7 +36,8 @@ export default class Statement {
    *  and give the document you are patching. In future, we may have a more
    *  powerful update() which can update more than one document.
    */
-  constructor(subject, predicate, object, graph) {
+  function Statement(subject, predicate, object, graph) {
+    _classCallCheck(this, Statement);
     _defineProperty(this, "subject", void 0);
     _defineProperty(this, "predicate", void 0);
     _defineProperty(this, "object", void 0);
@@ -46,59 +49,76 @@ export default class Statement {
   }
 
   /** Alias for graph, favored by Tim */
-  get why() {
-    return this.graph;
-  }
-  set why(g) {
-    this.graph = g;
-  }
-
-  /**
-   * Checks whether two statements are the same
-   * @param other - The other statement
-   */
-  equals(other) {
-    return other.subject.equals(this.subject) && other.predicate.equals(this.predicate) && other.object.equals(this.object) && other.graph.equals(this.graph);
-  }
-
-  /**
-   * Creates a statement with the bindings substituted
-   * @param bindings The bindings
-   */
-  substitute(bindings) {
-    const y = new Statement(this.subject.substitute(bindings), this.predicate.substitute(bindings), this.object.substitute(bindings), isDefaultGraph(this.graph) ? this.graph : this.graph.substitute(bindings)); // 2016
-    console.log('@@@ statement substitute:' + y);
-    return y;
-  }
-
-  /** Creates a canonical string representation of this statement. */
-  toCanonical() {
-    let terms = [this.subject.toCanonical(), this.predicate.toCanonical(), this.object.toCanonical()];
-    if (this.graph && this.graph.termType !== DefaultGraphTermType) {
-      terms.push(this.graph.toCanonical());
+  _createClass(Statement, [{
+    key: "why",
+    get: function get() {
+      return this.graph;
+    },
+    set: function set(g) {
+      this.graph = g;
     }
-    return terms.join(' ') + ' .';
-  }
 
-  /** Creates a n-triples string representation of this statement */
-  toNT() {
-    return [this.subject.toNT(), this.predicate.toNT(), this.object.toNT()].join(' ') + ' .';
-  }
+    /**
+     * Checks whether two statements are the same
+     * @param other - The other statement
+     */
+  }, {
+    key: "equals",
+    value: function equals(other) {
+      return other.subject.equals(this.subject) && other.predicate.equals(this.predicate) && other.object.equals(this.object) && other.graph.equals(this.graph);
+    }
 
-  /** Creates a n-quads string representation of this statement */
-  toNQ() {
-    return [this.subject.toNT(), this.predicate.toNT(), this.object.toNT(), isDefaultGraph(this.graph) ? '' : this.graph.toNT()].join(' ') + ' .';
-  }
+    /**
+     * Creates a statement with the bindings substituted
+     * @param bindings The bindings
+     */
+  }, {
+    key: "substitute",
+    value: function substitute(bindings) {
+      var y = new Statement(this.subject.substitute(bindings), this.predicate.substitute(bindings), this.object.substitute(bindings), isDefaultGraph(this.graph) ? this.graph : this.graph.substitute(bindings)); // 2016
+      console.log('@@@ statement substitute:' + y);
+      return y;
+    }
 
-  /** Creates a string representation of this statement */
-  toString() {
-    /*
-    return [
-      this.subject.toString(),
-      this.predicate.toString(),
-      this.object.toString(),
-    ].join(' ') + ' .'
-    */
-    return this.toNT();
-  }
-}
+    /** Creates a canonical string representation of this statement. */
+  }, {
+    key: "toCanonical",
+    value: function toCanonical() {
+      var terms = [this.subject.toCanonical(), this.predicate.toCanonical(), this.object.toCanonical()];
+      if (this.graph && this.graph.termType !== DefaultGraphTermType) {
+        terms.push(this.graph.toCanonical());
+      }
+      return terms.join(' ') + ' .';
+    }
+
+    /** Creates a n-triples string representation of this statement */
+  }, {
+    key: "toNT",
+    value: function toNT() {
+      return [this.subject.toNT(), this.predicate.toNT(), this.object.toNT()].join(' ') + ' .';
+    }
+
+    /** Creates a n-quads string representation of this statement */
+  }, {
+    key: "toNQ",
+    value: function toNQ() {
+      return [this.subject.toNT(), this.predicate.toNT(), this.object.toNT(), isDefaultGraph(this.graph) ? '' : this.graph.toNT()].join(' ') + ' .';
+    }
+
+    /** Creates a string representation of this statement */
+  }, {
+    key: "toString",
+    value: function toString() {
+      /*
+      return [
+        this.subject.toString(),
+        this.predicate.toString(),
+        this.object.toString(),
+      ].join(' ') + ' .'
+      */
+      return this.toNT();
+    }
+  }]);
+  return Statement;
+}();
+export { Statement as default };

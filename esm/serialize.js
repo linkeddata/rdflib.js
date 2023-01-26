@@ -12,7 +12,7 @@ kb, base,
  */
 contentType, callback, options) {
   base = base || (target === null || target === void 0 ? void 0 : target.value);
-  const opts = options || {};
+  var opts = options || {};
   contentType = contentType || TurtleContentType; // text/n3 if complex?
   var documentString = undefined;
   try {
