@@ -299,5 +299,5 @@ export default class IndexedFormula extends Formula {
      * @param term
      */
     uris(term: Quad_Subject): string[];
-    serialize(base: any, contentType: any, provenance: any, options?: any): string | undefined;
+    serialize(base: any, contentType: any, provenance: any, options?: any): string | Promise<string> | undefined;
 }

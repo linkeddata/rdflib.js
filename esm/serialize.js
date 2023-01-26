@@ -1,7 +1,5 @@
 import Serializer from './serializer';
 import { JSONLDContentType, N3ContentType, N3LegacyContentType, NQuadsAltContentType, NQuadsContentType, NTriplesContentType, RDFXMLContentType, TurtleContentType, TurtleLegacyContentType } from './types';
-import * as jsonld from 'jsonld';
-
 /**
  * Serialize to the appropriate format
  */
@@ -21,7 +19,6 @@ contentType, callback, options) {
     var sz = Serializer(kb);
     if (opts.flags) sz.setFlags(opts.flags);
     var newSts = kb.statementsMatching(undefined, undefined, undefined, target);
-    var n3String;
 
     // If an IndexedFormula, use the namespaces from the given graph as suggestions
     if ('namespaces' in kb) {
@@ -51,10 +48,9 @@ contentType, callback, options) {
         documentString = sz.statementsToNTriples(newSts);
         return executeCallback(null, documentString);
       case JSONLDContentType:
-        sz.setFlags('deinprstux'); // Use adapters to connect to incmpatible parser
-        n3String = sz.statementsToNTriples(newSts);
-        // n3String = sz.statementsToN3(newSts)
-        return toJsonld(n3String);
+        sz.setFlags('si'); // use turtle parameters
+        documentString = sz.statementsToJsonld(newSts); // convert via turtle
+        return executeCallback(null, documentString);
       case NQuadsContentType:
       case NQuadsAltContentType:
         // @@@ just outpout the quads? Does not work for collections
@@ -78,18 +74,6 @@ contentType, callback, options) {
       return;
     } else {
       return result;
-    }
-  }
-  function toJsonld(item) {
-    try {
-      return jsonld.fromRDF(item, {
-        format: 'application/n-quads'
-      }).then(docJsonld => {
-        return JSON.stringify(docJsonld);
-      });
-      // return JSON.stringify(await jsonld.fromRDF(item, {format: 'application/n-quads'}))
-    } catch (e) {
-      throw e;
     }
   }
 }

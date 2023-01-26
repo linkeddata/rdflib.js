@@ -63,5 +63,6 @@ export class Serializer {
     symbolToN3(x: any): any;
     writeStore(write: any): void;
     statementsToXML(sts: any): string;
+    statementsToJsonld(sts: any): string;
 }
 import NamedNode from "./named-node";

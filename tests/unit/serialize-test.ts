@@ -1,8 +1,8 @@
 import {expect} from 'chai'
 import {graph, Literal, serialize, st, sym, lit} from '../../src/index';
+import parse from '../../src/parse'
 
-
-describe('serialize', () => {
+describe('serialize text/turtle', () => {
     describe('doubles', () => {
         it('literal from double value is taken as-is', () => {
             const doc = sym("https://example.net/doc");
@@ -270,4 +270,267 @@ example:subject schema:predicate obj: .
 `)
     });
   });
-});
+})
+
+describe('parse --> serialize', () => {
+  describe('example 0', () => {
+    const ttl0 = `@prefix : <#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix voc: <http://example.com/foo/vocab#>.
+
+voc:building0 voc:bar 123, 78768; voc:connectsTo voc:building4 .
+
+voc:building1 voc:created "2012-03-12"^^xsd:date; voc:length 145000.0e0 .
+
+`
+
+    const jsonld0 = `{
+  "@context": {
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "voc": "http://example.com/foo/vocab#"
+  },
+  "@graph": [
+    {
+      "@id": "voc:building0",
+      "voc:bar": [
+        123,
+        78768
+      ],
+      "voc:connectsTo": {
+        "@id": "voc:building4"
+      }
+    },
+    {
+      "@id": "voc:building1",
+      "voc:created": {
+        "@value": "2012-03-12",
+        "@type": "xsd:date"
+      },
+      "voc:length": {
+        "@value": "145000.0e0",
+        "@type": "http://www.w3.org/2001/XMLSchema#double"
+      }
+    }
+  ]
+}`
+
+    describe('source ttl', () => {
+      let store, base
+      before(done => {
+        base = 'https://www.example.org/abc/def'
+        const mimeType = 'text/turtle'
+        const content = ttl0
+        store = graph()
+        parse(content, store, base, mimeType, done)
+      })
+
+      it('store contains 5 statements', () => {
+        // console.log(store.statements)
+        expect(store.statements).to.have.length(5)
+      })
+
+      it('serialize to ttl', () => {
+        // console.log(serialize(null, store, base, 'text/turtle'))
+        expect(serialize(null, store, base, 'text/turtle')).to.eql(ttl0)
+      });
+      it('serialize to jsonld', async () => {
+        console.log(serialize(null, store, base, 'application/ld+json'))
+        expect(await serialize(null, store, base, 'application/ld+json')).to.eql(jsonld0)
+      })
+    })
+
+    describe('source jsonld', () => {
+      let store, base
+      before(done => {
+        base = 'https://www.example.org/abc/def'
+        const mimeType = 'application/ld+json'
+        const content = jsonld0
+        store = graph()
+        parse(content, store, base, mimeType, done)
+      })
+
+      it('store contains 5 statements', () => {
+        console.log(store.statements)
+        expect(store.statements).to.have.length(5)
+      })
+
+      it('serialize to ttl', () => {
+        console.log(serialize(null, store, base, 'text/turtle'))
+        expect(serialize(null, store, base, 'text/turtle')).to.eql(ttl0)
+      });
+      it('serialize to jsonld', async () => {
+        console.log(serialize(null, store, base, 'application/ld+json'))
+        expect(await serialize(null, store, base, 'application/ld+json')).to.eql(jsonld0)
+      })
+    })
+  })
+
+  describe('example 1', () => {
+    const ttl1 = `@prefix : <#>.
+@prefix pad: <http://www.w3.org/ns/pim/pad#>.
+@prefix sioc: <http://rdfs.org/sioc/ns#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+
+:id1443100844982
+    sioc:content
+    "kasdfjsahdkfhkjhdkjsfhjkasdfkhjkajkdsajkhadsfkhjhjkdfajsdsafhjkdfhjksa";
+    pad:date "2012-12-10"^^xsd:date;
+    pad:dateTime "2012-12-25T23:59"^^xsd:dateTime;
+    pad:decimal 12.0;
+    pad:float 3.141e0;
+    pad:integer 0;
+    pad:next :id1443100912627 .
+`
+
+    const jsonld1 = `{
+  "@context": {
+    "pad": "http://www.w3.org/ns/pim/pad#",
+    "sioc": "http://rdfs.org/sioc/ns#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "#id1443100844982",
+  "sioc:content": "kasdfjsahdkfhkjhdkjsfhjkasdfkhjkajkdsajkhadsfkhjhjkdfajsdsafhjkdfhjksa",
+  "pad:date": {
+    "@value": "2012-12-10",
+    "@type": "xsd:date"
+  },
+  "pad:dateTime": {
+    "@value": "2012-12-25T23:59",
+    "@type": "xsd:dateTime"
+  },
+  "pad:decimal": {
+    "@value": "12.0",
+    "@type": "http://www.w3.org/2001/XMLSchema#decimal"
+  },
+  "pad:float": {
+    "@value": "3.141e0",
+    "@type": "http://www.w3.org/2001/XMLSchema#double"
+  },
+  "pad:integer": 0,
+  "pad:next": {
+    "@id": "#id1443100912627"
+  }
+}`
+
+    describe('source ttl', () => {
+      let store, base
+      before(done => {
+        base = 'https://www.example.org/abc/def'
+        const mimeType = 'text/turtle'
+        const content = ttl1
+        store = graph()
+        parse(content, store, base, mimeType, done)
+      })
+
+      it('store contains 7 statements', () => {
+        expect(store.statements).to.have.length(7)
+      })
+
+      it('serialize to ttl', () => {
+        expect(serialize(null, store, base, 'text/turtle')).to.eql(ttl1)
+      });
+
+      it('serialize to jsonld', async () => {
+          expect(await serialize(null, store, base, 'application/ld+json')).to.eql(jsonld1)
+      })
+    })
+
+    describe('source jsonld', () => {
+      let store, base
+      before(done => {
+        base = 'https://www.example.org/abc/def'
+        const mimeType = 'application/ld+json'
+        const content = jsonld1
+        store = graph()
+        parse(content, store, base, mimeType, done)
+      })
+
+      it('store contains 7 statements', () => {
+        expect(store.statements).to.have.length(7)
+      })
+
+      it('serialize to ttl', () => {
+        expect(serialize(null, store, base, 'text/turtle')).to.eql(ttl1)
+      });
+
+      it('serialize to jsonld', async () => {
+          expect(await serialize(null, store, base, 'application/ld+json')).to.eql(jsonld1)
+      })
+    })
+  })
+
+  describe('collections', () => {
+    const ttlCollection = `@prefix : </#>.
+@prefix n: <https://example.org/ns#>.
+@prefix ex: <http://example.com/>.
+
+:me n:listProp ( "list item 0" 1 ex:2 ).
+
+`    
+    const jsonldCollection = `{
+  "@context": {
+    "n": "https://example.org/ns#",
+    "ex": "http://example.com/"
+  },
+  "@id": "/#me",
+  "n:listProp": {
+    "@list": [
+      "list item 0",
+      1,
+      {
+        "@id": "ex:2"
+      }
+    ]
+  }
+}`
+
+    describe('collections - source ttl', () => {
+      let store, base
+      before(done => {
+        base = 'https://www.example.org/'
+        const mimeType = 'text/turtle'
+        const content = ttlCollection
+        store = graph()
+        parse(content, store, base, mimeType, done)
+      })
+
+      it('store contains 1 statement', () => {
+        expect(store.statements).to.have.length(1)
+      })
+
+      it('serialize to ttl', () => {
+        console.log(serialize(null, store, base, 'text/turtle'))
+        expect(serialize(null, store, base, 'text/turtle')).to.eql(ttlCollection)
+      });
+      it('serialize to jsonld', async () => {
+        console.log(await serialize(null, store, base, 'application/ld+json'))
+        let result = await serialize(null, store, base, 'application/ld+json')
+        expect(await serialize(null, store, base, 'application/ld+json')).to.eql(jsonldCollection)
+      })
+    })
+
+    describe('collections - source jsonld', () => {
+      let store, base
+      before(done => {
+        base = 'https://www.example.org/'
+        const mimeType = 'application/ld+json'
+        const content = jsonldCollection
+        store = graph()
+        parse(content, store, base, mimeType, done)
+      })
+
+      it('store contains 1 statement with object collection', () => {
+        expect(store.statements).to.have.length(1)
+      })
+
+      it('serialize to ttl', () => {
+        console.log(serialize(null, store, base, 'text/turtle'))
+        expect(serialize(null, store, base, 'text/turtle')).to.eql(ttlCollection)
+      });
+      it('serialize to jsonld', async () => {
+        console.log(await serialize(null, store, base, 'application/ld+json'))
+        expect(await serialize(null, store, base, 'application/ld+json')).to.eql(jsonldCollection)
+      })
+    })
+  })
+})

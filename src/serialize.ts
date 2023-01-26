@@ -14,7 +14,6 @@ import {
 } from './types'
 import IndexedFormula from './store'
 import { BlankNode, NamedNode } from './tf-types'
-import * as jsonld from 'jsonld'
 
 /**
  * Serialize to the appropriate format
@@ -42,7 +41,7 @@ export default function serialize (
      */
     namespaces?: Record<string, string>
   }
-): string | undefined {
+): string | undefined | Promise<string> {
   base = base || target?.value
   const opts = options || {}
   contentType = contentType || TurtleContentType // text/n3 if complex?
@@ -51,7 +50,6 @@ export default function serialize (
     var sz = Serializer(kb)
     if ((opts as any).flags) sz.setFlags((opts as any).flags)
     var newSts = kb!.statementsMatching(undefined, undefined, undefined, target as NamedNode)
-    var n3String: string
 
     // If an IndexedFormula, use the namespaces from the given graph as suggestions
     if ('namespaces' in kb) {
@@ -82,10 +80,9 @@ export default function serialize (
         documentString = sz.statementsToNTriples(newSts)
         return executeCallback(null, documentString)
       case JSONLDContentType:
-        sz.setFlags('deinprstux') // Use adapters to connect to incmpatible parser
-        n3String = sz.statementsToNTriples(newSts)
-        // n3String = sz.statementsToN3(newSts)
-        return toJsonld(n3String) as any
+        sz.setFlags('si') // use turtle parameters
+        documentString = sz.statementsToJsonld(newSts) // convert via turtle
+        return executeCallback(null, documentString)
       case NQuadsContentType:
       case NQuadsAltContentType: // @@@ just outpout the quads? Does not work for collections
         sz.setFlags('deinprstux q') // Suppress nice parts of N3 to make ntriples
@@ -109,12 +106,5 @@ export default function serialize (
     } else {
       return result as string
     }
-  }
-
-  function toJsonld (item ) {
-    try {
-      return jsonld.fromRDF(item, {format: 'application/n-quads'}).then( docJsonld => { return JSON.stringify(docJsonld) })
-      // return JSON.stringify(await jsonld.fromRDF(item, {format: 'application/n-quads'}))
-    } catch (e) { throw e }
   }
 }
