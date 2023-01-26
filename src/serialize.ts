@@ -41,7 +41,7 @@ export default function serialize (
      */
     namespaces?: Record<string, string>
   }
-): string | undefined | Promise<string> {
+): string | undefined {
   base = base || target?.value
   const opts = options || {}
   contentType = contentType || TurtleContentType // text/n3 if complex?
