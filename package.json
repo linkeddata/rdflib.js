@@ -115,6 +115,7 @@
     "test:serialize:13": "cd ./tests/serialize && node ./data.js -in=structures.n3 -format=application/n-triples -out=,structures.nt && node ./data.js -format=application/n-triples -in=,structures.nt -format=text/turtle -out=,structures.nt.ttl && node diff ,structures.nt.ttl t13-ref.ttl",
     "test:serialize:14": "cd ./tests/serialize && node ./data.js -in=t14.html -format=text/turtle -out=,t14.ttl && node diff ,t14.ttl t14-ref.ttl",
     "test:serialize:15": "cd ./tests/serialize && node ./data.js -in=t15.html -format=text/turtle -out=,t15.ttl && node diff ,t15.ttl t15-ref.ttl",
+    "test:serialize:16": "cd ./tests/serialize && node ./data.js -in=t1.ttl -format=application/ld+json -out=,t1.jsonld && node diff ,t1.jsonld t16-ref.jsonld",
     "test:types": "tsc --noEmit --target es2019 --moduleResolution node tests/types/*.ts",
     "test:unit": "mocha --growl --require  ./tests/babel-register.js tests/unit/**-test.*",
     "test:unit:egp": "mocha --require ./tests/babel-register.js tests/unit/fetcher-egp-test.js",
