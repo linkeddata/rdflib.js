@@ -18,7 +18,7 @@ export function jsonldObjectToTerm(kb, obj) {
     return listToStatements(kb, obj);
   }
   if (Object.prototype.hasOwnProperty.call(obj, '@id')) {
-    return kb.rdfFactory.namedNode(obj['@id']);
+    return nodeType(kb, obj);
   }
   if (Object.prototype.hasOwnProperty.call(obj, '@language')) {
     return kb.rdfFactory.literal(obj['@value'], obj['@language']);
@@ -36,7 +36,7 @@ export function jsonldObjectToTerm(kb, obj) {
  * Adds the statements in a json-ld list object to {kb}.
  */
 function listToStatements(kb, obj) {
-  const listId = obj['@id'] ? kb.rdfFactory.namedNode(obj['@id']) : kb.rdfFactory.blankNode();
+  const listId = obj['@id'] ? nodeType(kb, obj) : kb.rdfFactory.blankNode();
   const items = obj['@list'].map(listItem => jsonldObjectToTerm(kb, listItem));
   const statements = arrayToStatements(kb.rdfFactory, listId, items);
   kb.addAll(statements);
@@ -63,8 +63,17 @@ export default function jsonldParser(str, kb, base, callback) {
     return kb;
   }, kb)).then(callback).catch(callback);
 }
+function nodeType(kb, obj) {
+  if (obj['@id'].startsWith('_:')) {
+    // This object is a Blank Node.. pass the id without the preceding _:
+    return kb.rdfFactory.blankNode(obj['@id'].substring(2));
+  } else {
+    // This object is a Named Node
+    return kb.rdfFactory.namedNode(obj['@id']);
+  }
+}
 function processResource(kb, base, flatResource) {
-  const id = flatResource['@id'] ? kb.rdfFactory.namedNode(flatResource['@id']) : kb.rdfFactory.blankNode();
+  const id = flatResource['@id'] ? nodeType(kb, flatResource) : kb.rdfFactory.blankNode();
   for (const property of Object.keys(flatResource)) {
     if (property === '@id') {
       continue;
