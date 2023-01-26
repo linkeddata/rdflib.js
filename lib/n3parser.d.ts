@@ -8,6 +8,7 @@ export class SinkParser {
     source: any;
     lines: number;
     statementCount: number;
+    hasNil: boolean;
     startOfLine: number;
     previousLine: number;
     _genPrefix: any;
