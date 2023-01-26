@@ -1031,12 +1031,6 @@ export class Serializer {
     }
     const turtleDoc = this.statementsToN3(sts)
     const jsonldObj = ttl2jsonld.parse(turtleDoc)
-    const context = jsonldObj['@context']
-    const iri = /^[a-z](.*?):(.+?)/g // begin with a letter, contain : followed by at least one character
-    const keys = Object.keys(context).filter(key => !context[key].match(iri)) // .includes('http'))
-
-    findId(jsonldObj)
-    keys.map(key => { delete jsonldObj['@context'][key] })
 
     return JSON.stringify(jsonldObj, null, 2)
   }
