@@ -1,7 +1,7 @@
 {
   "name": "rdflib",
   "description": "an RDF library for node.js. Suitable for client and server side.",
-  "version": "2.2.24",
+  "version": "2.2.25",
   "private": false,
   "browserslist": [
     "> 0.5%"
@@ -48,7 +48,7 @@
     "@frogcat/ttl2jsonld": "^0.0.9",
     "@xmldom/xmldom": "^0.8.6",
     "cross-fetch": "^3.1.5",
-    "jsonld": "^8.1.0",
+    "jsonld": "^5.2.0",
     "n3": "^1.16.3",
     "solid-namespace": "^0.5.2"
   },
@@ -69,7 +69,7 @@
     "chai": "^4.3.7",
     "diff": "^5.1.0",
     "dirty-chai": "^2.0.1",
-    "eslint": "^8.32.0",
+    "eslint": "^8.33.0",
     "fs-grep": "0.0.5",
     "locate-path": "^7.1.1",
     "mocha": "^10.2.0",
@@ -82,7 +82,7 @@
     "source-map-loader": "^4.0.1",
     "ts-node": "^10.9.1",
     "typedoc": "^0.23.24",
-    "typescript": "^4.9.4",
+    "typescript": "^4.9.5",
     "webpack": "^5.75.0",
     "webpack-cli": "^5.0.1",
     "webpack-dev-server": "^4.11.1"
