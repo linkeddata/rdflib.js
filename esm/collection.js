@@ -109,10 +109,11 @@ var Collection = /*#__PURE__*/function (_Node) {
   }, {
     key: "substitute",
     value: function substitute(bindings) {
-      var elementsCopy = this.elements.map(function (ea) {
-        return ea.substitute(bindings);
+      var collection = new Collection();
+      this.elements.forEach(function (ea) {
+        collection.append(ea.substitute(bindings));
       });
-      return new Collection(elementsCopy);
+      return collection;
     }
   }, {
     key: "toNT",

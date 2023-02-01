@@ -95,7 +95,7 @@ export default class IndexedFormula extends Formula {
      */
     applyPatch(patch: {
         delete?: ReadonlyArray<Statement>;
-        patch?: ReadonlyArray<Statement>;
+        insert?: ReadonlyArray<Statement>;
         where?: any;
     }, target: TFNamedNode, patchCallback: (errorString?: string) => void): void;
     /**

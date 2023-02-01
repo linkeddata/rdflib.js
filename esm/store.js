@@ -237,9 +237,9 @@ var IndexedFormula = /*#__PURE__*/function (_Formula) {
           // console.log('ds before substitute: ' + ds)
           if (binding) ds = ds.substitute(binding);
           // console.log('applyPatch: delete: ' + ds)
-          ds = ds.statements;
+
           var bad = [];
-          var ds2 = ds.map(function (st) {
+          var ds2 = ds.elements.map(function (st) {
             // Find the actual statements in the store
             var sts = targetKB.statementsMatching(st.subject, st.predicate, st.object, target);
             if (sts.length === 0) {
@@ -264,8 +264,7 @@ var IndexedFormula = /*#__PURE__*/function (_Formula) {
           // log.info("doPatch insert "+patch['insert'])
           ds = patch['insert'];
           if (binding) ds = ds.substitute(binding);
-          ds = ds.statements;
-          ds.map(function (st) {
+          ds.elements.map(function (st) {
             st.graph = target;
             targetKB.add(st.subject, st.predicate, st.object, st.graph);
           });
@@ -282,6 +281,7 @@ var IndexedFormula = /*#__PURE__*/function (_Formula) {
         //@ts-ignore TODO: add sync property to Query when converting Query to typescript
         query.sync = true;
         var bindingsFound = [];
+        query.pat.initBindings = [];
         targetKB.query(query, function onBinding(binding) {
           bindingsFound.push(binding);
           // console.log('   got a binding: ' + bindingDebug(binding))
