@@ -12,7 +12,6 @@ import * as Util from './utils-js'
 import CanonicalDataFactory from './factories/canonical-data-factory'
 import { createXSD } from './xsd'
 import solidNs from 'solid-namespace'
-// import * as jsonld from 'jsonld'
 import * as ttl2jsonld from '@frogcat/ttl2jsonld'
 
 
