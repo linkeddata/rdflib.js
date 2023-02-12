@@ -1274,16 +1274,17 @@ var Fetcher = /*#__PURE__*/function () {
       var fetcher = this;
       // @ts-ignore
       if (fetcher.fetchQueue && fetcher.fetchQueue[uri]) {
-        console.log('Internal error - fetchQueue exists ' + uri);
+        // console.log('Internal error - fetchQueue exists ' + uri)
         var promise = fetcher.fetchQueue[uri];
         if (promise['PromiseStatus'] === 'resolved') {
           delete fetcher.fetchQueue[uri];
         } else {
           // pending
           delete fetcher.fetchQueue[uri];
-          console.log('*** Fetcher: pending fetchQueue deleted ' + uri);
+          // console.log('*** Fetcher: pending fetchQueue deleted ' + uri)
         }
       }
+
       if (fetcher.requested[uri] && fetcher.requested[uri] !== 'done' && fetcher.requested[uri] !== 'failed' && fetcher.requested[uri] !== 404) {
         var msg = "Rdflib: fetcher: Destructive operation on <".concat(fetcher.requested[uri], "> file being fetched! ") + uri;
         console.error(msg);

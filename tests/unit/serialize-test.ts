@@ -334,8 +334,8 @@ voc:building1 voc:created "2012-03-12"^^xsd:date; voc:length 145000.0e0 .
         expect(serialize(null, store, base, 'text/turtle')).to.eql(ttl0)
       });
       it('serialize to jsonld', async () => {
-        console.log(serialize(null, store, base, 'application/ld+json'))
-        expect(await serialize(null, store, base, 'application/ld+json')).to.eql(jsonld0)
+        // console.log(serialize(null, store, base, 'application/ld+json'))
+        expect(await serialize(null, store, null, 'application/ld+json')).to.eql(jsonld0)
       })
     })
 
@@ -350,17 +350,17 @@ voc:building1 voc:created "2012-03-12"^^xsd:date; voc:length 145000.0e0 .
       })
 
       it('store contains 5 statements', () => {
-        console.log(store.statements)
+        // console.log(store.statements)
         expect(store.statements).to.have.length(5)
       })
 
       it('serialize to ttl', () => {
-        console.log(serialize(null, store, base, 'text/turtle'))
+        // console.log(serialize(null, store, base, 'text/turtle'))
         expect(serialize(null, store, base, 'text/turtle')).to.eql(ttl0)
       });
       it('serialize to jsonld', async () => {
-        console.log(serialize(null, store, base, 'application/ld+json'))
-        expect(await serialize(null, store, base, 'application/ld+json')).to.eql(jsonld0)
+        // console.log(serialize(null, store, base, 'application/ld+json'))
+        expect(await serialize(null, store, null, 'application/ld+json')).to.eql(jsonld0)
       })
     })
   })
@@ -382,13 +382,14 @@ voc:building1 voc:created "2012-03-12"^^xsd:date; voc:length 145000.0e0 .
     pad:next :id1443100912627 .
 `
 
-    const jsonld1 = `{
+    const jsonld1 = (prefix) => `{
   "@context": {
     "pad": "http://www.w3.org/ns/pim/pad#",
     "sioc": "http://rdfs.org/sioc/ns#",
-    "xsd": "http://www.w3.org/2001/XMLSchema#"
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "${prefix}": "https://www.example.org/abc/def#"
   },
-  "@id": "#id1443100844982",
+  "@id": "${prefix}:id1443100844982",
   "sioc:content": "kasdfjsahdkfhkjhdkjsfhjkasdfkhjkajkdsajkhadsfkhjhjkdfajsdsafhjkdfhjksa",
   "pad:date": {
     "@value": "2012-12-10",
@@ -408,7 +409,7 @@ voc:building1 voc:created "2012-03-12"^^xsd:date; voc:length 145000.0e0 .
   },
   "pad:integer": 0,
   "pad:next": {
-    "@id": "#id1443100912627"
+    "@id": "${prefix}:id1443100912627"
   }
 }`
 
@@ -431,7 +432,10 @@ voc:building1 voc:created "2012-03-12"^^xsd:date; voc:length 145000.0e0 .
       });
 
       it('serialize to jsonld', async () => {
-          expect(await serialize(null, store, base, 'application/ld+json')).to.eql(jsonld1)
+        expect(await serialize(null, store, null, 'application/ld+json')).to.eql(jsonld1('def'))
+        // expect(await serialize(null, store, base, 'application/ld+json')).to.eql(jsonld1('0'))
+        // expect(await serialize(store.sym(base), store, null, 'application/ld+json')).to.eql(jsonld1('0'))
+        // expect(await serialize(store.sym(base), store, base, 'application/ld+json')).to.eql(jsonld1('0'))
       })
     })
 
@@ -440,7 +444,7 @@ voc:building1 voc:created "2012-03-12"^^xsd:date; voc:length 145000.0e0 .
       before(done => {
         base = 'https://www.example.org/abc/def'
         const mimeType = 'application/ld+json'
-        const content = jsonld1
+        const content = jsonld1('0')
         store = graph()
         parse(content, store, base, mimeType, done)
       })
@@ -454,7 +458,7 @@ voc:building1 voc:created "2012-03-12"^^xsd:date; voc:length 145000.0e0 .
       });
 
       it('serialize to jsonld', async () => {
-          expect(await serialize(null, store, base, 'application/ld+json')).to.eql(jsonld1)
+          expect(await serialize(null, store, base, 'application/ld+json')).to.eql(jsonld1('def'))
       })
     })
   })
@@ -467,12 +471,30 @@ voc:building1 voc:created "2012-03-12"^^xsd:date; voc:length 145000.0e0 .
 :me n:listProp ( "list item 0" 1 ex:2 ).
 
 `    
-    const jsonldCollection = `{
+    const jsonldCollection0 = `{
   "@context": {
+    "n": "https://example.org/ns#",
+    "ex": "http://example.com/",
+    "n0": "https://www.example.org/#"
+  },
+  "@id": "n0:me",
+  "n:listProp": {
+    "@list": [
+      "list item 0",
+      1,
+      {
+        "@id": "ex:2"
+      }
+    ]
+  }
+}`
+const jsonldCollection1 = `{
+  "@context": {
+    "n0": "https://www.example.org/#",
     "n": "https://example.org/ns#",
     "ex": "http://example.com/"
   },
-  "@id": "/#me",
+  "@id": "n0:me",
   "n:listProp": {
     "@list": [
       "list item 0",
@@ -499,13 +521,12 @@ voc:building1 voc:created "2012-03-12"^^xsd:date; voc:length 145000.0e0 .
       })
 
       it('serialize to ttl', () => {
-        console.log(serialize(null, store, base, 'text/turtle'))
+        // console.log(serialize(null, store, base, 'text/turtle'))
         expect(serialize(null, store, base, 'text/turtle')).to.eql(ttlCollection)
       });
       it('serialize to jsonld', async () => {
-        console.log(await serialize(null, store, base, 'application/ld+json'))
-        let result = await serialize(null, store, base, 'application/ld+json')
-        expect(await serialize(null, store, base, 'application/ld+json')).to.eql(jsonldCollection)
+        // console.log(await serialize(null, store, base, 'application/ld+json'))
+        expect(await serialize(null, store, base, 'application/ld+json')).to.eql(jsonldCollection0)
       })
     })
 
@@ -514,7 +535,7 @@ voc:building1 voc:created "2012-03-12"^^xsd:date; voc:length 145000.0e0 .
       before(done => {
         base = 'https://www.example.org/'
         const mimeType = 'application/ld+json'
-        const content = jsonldCollection
+        const content = jsonldCollection0
         store = graph()
         parse(content, store, base, mimeType, done)
       })
@@ -524,12 +545,12 @@ voc:building1 voc:created "2012-03-12"^^xsd:date; voc:length 145000.0e0 .
       })
 
       it('serialize to ttl', () => {
-        console.log(serialize(null, store, base, 'text/turtle'))
+        // console.log(serialize(null, store, base, 'text/turtle'))
         expect(serialize(null, store, base, 'text/turtle')).to.eql(ttlCollection)
       });
       it('serialize to jsonld', async () => {
-        console.log(await serialize(null, store, base, 'application/ld+json'))
-        expect(await serialize(null, store, base, 'application/ld+json')).to.eql(jsonldCollection)
+        // console.log(await serialize(null, store, base, 'application/ld+json'))
+        expect(await serialize(null, store, base, 'application/ld+json')).to.eql(jsonldCollection1)
       })
     })
   })

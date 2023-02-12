@@ -15,7 +15,6 @@ import * as Util from './utils-js';
 import CanonicalDataFactory from './factories/canonical-data-factory';
 import { createXSD } from './xsd';
 import solidNs from 'solid-namespace';
-// import * as jsonld from 'jsonld'
 import * as ttl2jsonld from '@frogcat/ttl2jsonld';
 export default function createSerializer(store) {
   return new Serializer(store);
@@ -522,7 +521,7 @@ export var Serializer = /*#__PURE__*/function () {
       var termToN3 = termToN3Method.bind(this);
       function prefixDirectivesMethod() {
         var str = '';
-        if (this.defaultNamespace) {
+        if (this.flags.indexOf('d') < 0 && this.defaultNamespace) {
           str += '@prefix : ' + this.explicitURI(this.defaultNamespace) + '.\n';
         }
         for (var ns in this.prefixes) {
@@ -1007,20 +1006,19 @@ export var Serializer = /*#__PURE__*/function () {
     key: "statementsToJsonld",
     value: function statementsToJsonld(sts) {
       // ttl2jsonld creates context keys for all ttl prefix
-      // context keys must be full IRI
-      function findId(itemObj) {
+      // context keys must be absolute IRI ttl2jsonld@0.0.8
+      /* function findId (itemObj) {
         if (itemObj['@id']) {
-          var item = itemObj['@id'].split(':');
-          if (keys[item[0]]) itemObj['@id'] = jsonldObj['@context'][item[0]] + item[1];
+          const item = itemObj['@id'].split(':')
+          if (keys[item[0]]) itemObj['@id'] = jsonldObj['@context'][item[0]] + item[1]
         }
-        var itemValues = Object.values(itemObj);
-        for (var i in itemValues) {
-          if (typeof itemValues[i] !== 'string') {
-            // @list contains array
-            findId(itemValues[i]);
+        const itemValues = Object.values(itemObj)
+        for (const i in itemValues) {
+          if (typeof itemValues[i] !== 'string') { // @list contains array
+            findId(itemValues[i])
           }
         }
-      }
+      } */
       var turtleDoc = this.statementsToN3(sts);
       var jsonldObj = ttl2jsonld.parse(turtleDoc);
       return JSON.stringify(jsonldObj, null, 2);

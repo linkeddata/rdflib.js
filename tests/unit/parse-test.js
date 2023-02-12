@@ -185,8 +185,36 @@ ex:myid ex:prop1 [ ex:prop2 [ ex:prop3 "value" ] ].
 `)
       });
     })
-  })
+    describe('ttl to jsonld from test-suite', () => {
+      let store
+      let base
+      before(done => {
+        base = 'https://www.example.org/abc/def'
+        const mimeType = 'text/turtle'
+        const content = `<#hello> <#linked> <#world> .`
+        store = DataFactory.graph()
+        parse(content, store, base, mimeType, done)
+      })
 
+      it('test suite example store contains 1 statement', () => {
+        const body = (prefix) => `{
+  "@context": {
+    "${prefix}": "https://www.example.org/abc/def#"
+  },
+  "@id": "${prefix}:hello",
+  "${prefix}:linked": {
+    "@id": "${prefix}:world"
+  }
+}`
+        // console.log(serialize(null, store, null, 'text/turtle'))
+        // console.log(serialize(null, store, null, 'application/ld+json'))
+        expect(store.statements).to.have.length(1)
+        expect(serialize(null, store, null, 'application/ld+json')).to.eql(body('def'))
+        expect(serialize(null, store, base, 'application/ld+json')).to.eql(body('def'))
+        expect(serialize(store.sym(base), store, null, 'application/ld+json')).to.eql(body('def'))
+      });
+    })
+  })
 }) // ttl
 
   describe('a JSON-LD document', () => {
@@ -352,43 +380,7 @@ ex:myid ex:prop1 [ ex:prop2 [ ex:prop3 "value" ] ].
       })
     })
 
-    describe('jsonld with blanknodes', () => {
-      let store
-      before(done => {
-        const base = 'https://www.example.org/abc/def'
-        const mimeType = 'application/ld+json'
-        const content = `
-        {
-          "@context": {
-              "ex": "http://example.com#"
-          },
-          "@id": "ex:myid",
-          "ex:prop1": {
-              "ex:prop2": {
-                  "ex:prop3": "value"
-              }
-          }
-        }`
-        store = DataFactory.graph()
-        parse(content, store, base, mimeType, done)
-      })
-
-      it('store contains 3 statements', async () => {
-        // console.log(await serialize(null, store, 'https://www.example.org/abc/def', 'application/ld+json')) // null
-        expect(store.statements).to.have.length(3)
-        expect(serialize(null, store, null, 'text/turtle')).to.eql(`@prefix ex: <http://example.com#>.
-
-ex:myid ex:prop1 [ ex:prop2 [ ex:prop3 "value" ] ].
-
-`)
-        const nt = store.toNT()
-        expect(nt).to.include('<http://example.com#myid> <http://example.com#prop1> _:b0 .')
-        expect(nt).to.include('_:b0 <http://example.com#prop2> _:b1 .')
-        expect(nt).to.include('_:b1 <http://example.com#prop3> "value" .')
-      });
-    })
-
-     describe('with a @type node', () => {
+    describe('with a @type node', () => {
       const content = `
         {
           "@id": "jane",
@@ -422,6 +414,43 @@ ex:myid ex:prop1 [ ex:prop2 [ ex:prop3 "value" ] ].
       });
     })
     }) // with a base IRI
+
+    describe('jsonld with blanknodes', () => {
+      let store
+      before(done => {
+        const base = 'https://www.example.org/abc/def'
+        const mimeType = 'application/ld+json'
+        const content = `
+        {
+          "@context": {
+              "ex": "http://example.com#"
+          },
+          "@id": "ex:myid",
+          "ex:prop1": {
+              "ex:prop2": {
+                  "ex:prop3": "value"
+              }
+          }
+        }`
+        store = DataFactory.graph()
+        parse(content, store, base, mimeType, done)
+      })
+
+      it('store contains 3 statements', async () => {
+        // console.log(await serialize(null, store, null, 'application/ld+json'))
+        expect(store.statements).to.have.length(3)
+        expect(serialize(null, store, null, 'text/turtle')).to.eql(`@prefix ex: <http://example.com#>.
+
+ex:myid ex:prop1 [ ex:prop2 [ ex:prop3 "value" ] ].
+
+`)
+        const nt = store.toNT()
+        expect(nt).to.include('<http://example.com#myid> <http://example.com#prop1> _:b0 .')
+        expect(nt).to.include('_:b0 <http://example.com#prop2> _:b1 .')
+        expect(nt).to.include('_:b1 <http://example.com#prop3> "value" .')
+      });
+    })
+
   }) // JSONLD
 
   describe('xml', () => {
