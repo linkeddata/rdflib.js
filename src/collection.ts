@@ -102,9 +102,9 @@ export default class Collection<
    * @param bindings - The bindings to substitute
    */
   substitute (bindings: Bindings) {
-    let collection = new Collection();
-    this.elements.forEach((ea) => {collection.append(ea.substitute(bindings))})
-    return collection as Collection<Node | Collection<any> | Literal | Variable>;
+    const elementsCopy = this.elements.map((ea) => ea.substitute(bindings))
+
+    return new Collection(elementsCopy) as Collection<Node | Collection<any> | Literal | Variable>
   }
 
   toNT () {
