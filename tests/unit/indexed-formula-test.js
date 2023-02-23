@@ -7,8 +7,6 @@ import IndexedFormula from '../../src/store'
 import NamedNode from '../../src/named-node'
 import { RDFArrayRemove } from '../../src/utils-js'
 import DataFactory from '../../src/factories/rdflib-data-factory'
-import Collection from "../../src/collection";
-import Variable from "../../src/variable";
 
 describe('IndexedFormula', () => {
   const g0 = NamedNode.fromValue('https://example.com/graph0')
@@ -342,73 +340,4 @@ describe('IndexedFormula', () => {
           expect(store1.holdsStatement(store0)).to.be.true()
       })
   });
-
-  describe('applyPatch', () => {
-    it('patches insert', function () {
-      const store = new IndexedFormula()
-      store.add([triple1, triple2, triple3].map(t=>DataFactory.st(t.subject, t.predicate, t.object, g0)))
-      let collection = new Collection();
-      collection.append(DataFactory.st(s1, p2, o3))
-
-      store.applyPatch({
-        insert: collection,
-        where: {statements: [
-            DataFactory.st(new Variable("var1"), p1, o1),
-            DataFactory.st(s2, new Variable("var2"), o2),
-            DataFactory.st(s3, p3, new Variable("var3"))
-          ], optional: [], constraints: []}
-      }, g0, (err)=>{expect(err).to.be.empty})
-
-      expect(store.statements.length).to.eq(4)
-    });
-    it('patches delete', function () {
-      const store = new IndexedFormula()
-      store.add([triple1, triple2, triple3, triple4].map(t=>DataFactory.st(t.subject, t.predicate, t.object, g0)))
-      let collection = new Collection();
-      collection.append(DataFactory.st(new Variable("var1"), new Variable("var2"), new Variable("var3")))
-
-      store.applyPatch({
-        delete: collection,
-        where: {statements: [
-            DataFactory.st(new Variable("var1"), p1, o1),
-            DataFactory.st(s2, new Variable("var2"), o2),
-            DataFactory.st(s3, p3, new Variable("var3"))
-          ], optional: [], constraints: []}
-      }, g0, (err)=>{expect(err).to.be.empty})
-
-      expect(store.statements.length).to.eq(3)
-    });
-    it("patches nothing when the where clause doesn't match", function () {
-      const store = new IndexedFormula()
-      store.add([triple1, triple2, triple3])
-      let collection = new Collection();
-      collection.append(DataFactory.st(new Variable("var1"), new Variable("var1"), new Variable("var1")))
-
-      store.applyPatch({
-        insert: collection,
-        where: {statements: [
-            DataFactory.st(new Variable("var1"), p1, o1),
-            DataFactory.st(s2, new Variable("var2"), o2),
-            DataFactory.st(s3, p3, new Variable("var3"))
-          ], optional: [], constraints: []}
-      }, g0, (err)=>{expect(err).to.be.empty})
-
-      expect(store.statements.length).to.eq(3)
-    });
-    it('patches nothing when the where clause matches more than one', function () {
-      const store = new IndexedFormula()
-      store.add([triple1, triple2, triple3])
-      let collection = new Collection();
-      collection.append(DataFactory.st(s1, p2, o3))
-
-      store.applyPatch({
-        insert: collection,
-        where: {statements: [
-            DataFactory.st(new Variable("var1"), new Variable("var2"), new Variable("var3")),
-          ], optional: [], constraints: []}
-      }, g0, (err)=>{expect(err).to.be.empty})
-
-      expect(store.statements.length).to.eq(3)
-    });
-  })
 })

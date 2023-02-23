@@ -253,7 +253,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
   applyPatch(
     patch: {
         delete?: ReadonlyArray<Statement>,
-        insert?: ReadonlyArray<Statement>,
+        patch?: ReadonlyArray<Statement>,
         where?: any
     },
     target: TFNamedNode,
@@ -270,9 +270,9 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
         // console.log('ds before substitute: ' + ds)
         if (binding) ds = ds.substitute(binding)
         // console.log('applyPatch: delete: ' + ds)
-
+        ds = ds.statements as Statement[]
         var bad: Quad[] = []
-        var ds2 = ds.elements.map(function (st: Quad) { // Find the actual statements in the store
+        var ds2 = ds.map(function (st: Quad) { // Find the actual statements in the store
           var sts = targetKB.statementsMatching(st.subject, st.predicate, st.object, target)
           if (sts.length === 0) {
             // log.info("NOT FOUND deletable " + st)
@@ -296,8 +296,8 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
         // log.info("doPatch insert "+patch['insert'])
         ds = patch['insert']
         if (binding) ds = ds.substitute(binding)
-
-        ds.elements.map(function (st: Quad) {
+        ds = ds.statements
+        ds.map(function (st: Quad) {
           st.graph = target
           targetKB.add(st.subject, st.predicate, st.object, st.graph)
         })
@@ -315,7 +315,6 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
       query.sync = true
 
       var bindingsFound: Bindings[] = []
-      query.pat.initBindings = [];
 
       targetKB.query(
         query,
