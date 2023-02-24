@@ -68,7 +68,9 @@ export default function jsonldParser (str, kb, base, callback) {
     ? base.value
     : base
 
-  return import('jsonld')
+  /* return jsonld
+    .flatten(JSON.parse(str), null, { base: baseString }) */
+    return import('jsonld') // jsonld // alain
     .then(jsonld => { return jsonld.flatten(JSON.parse(str), null, { base: baseString }) })
     .then((flattened) => flattened.reduce((store, flatResource) => {
 
