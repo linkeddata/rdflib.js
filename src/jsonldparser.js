@@ -1,4 +1,4 @@
-import jsonld from 'jsonld'
+// import jsonld from 'jsonld'
 
 import { arrayToStatements } from './utils'
 
@@ -70,8 +70,10 @@ export default function jsonldParser (str, kb, base, callback) {
     ? base.value
     : base
 
-  return jsonld
-    .flatten(JSON.parse(str), null, { base: baseString })
+  /* return jsonld
+    .flatten(JSON.parse(str), null, { base: baseString }) */
+    return import('jsonld') // jsonld // alain
+    .then(jsonld => { return jsonld.flatten(JSON.parse(str), null, { base: baseString }) })
     .then((flattened) => flattened.reduce((store, flatResource) => {
 
       kb = processResource(kb, base, flatResource)
