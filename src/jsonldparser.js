@@ -1,5 +1,3 @@
-// import jsonld from 'jsonld'
-
 import { arrayToStatements } from './utils'
 
 /**

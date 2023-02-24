@@ -12,7 +12,6 @@ import * as Util from './utils-js'
 import CanonicalDataFactory from './factories/canonical-data-factory'
 import { createXSD } from './xsd'
 import solidNs from 'solid-namespace'
-// import * as jsonld from 'jsonld'
 import * as ttl2jsonld from '@frogcat/ttl2jsonld'
 
 
@@ -502,7 +501,7 @@ export class Serializer {
 
     function prefixDirectivesMethod () {
       var str = ''
-      if (this.defaultNamespace) {
+      if (this.flags.indexOf('d') < 0 && this.defaultNamespace) {
         str += '@prefix : ' + this.explicitURI(this.defaultNamespace) + '.\n'
       }
       for (var ns in this.prefixes) {
@@ -1016,8 +1015,8 @@ export class Serializer {
 
   statementsToJsonld (sts) {
     // ttl2jsonld creates context keys for all ttl prefix
-    // context keys must be full IRI
-    function findId (itemObj) {
+    // context keys must be absolute IRI ttl2jsonld@0.0.8
+    /* function findId (itemObj) {
       if (itemObj['@id']) {
         const item = itemObj['@id'].split(':')
         if (keys[item[0]]) itemObj['@id'] = jsonldObj['@context'][item[0]] + item[1]
@@ -1028,10 +1027,9 @@ export class Serializer {
           findId(itemValues[i])
         }
       }
-    }
+    } */
     const turtleDoc = this.statementsToN3(sts)
     const jsonldObj = ttl2jsonld.parse(turtleDoc)
-
     return JSON.stringify(jsonldObj, null, 2)
   }
 

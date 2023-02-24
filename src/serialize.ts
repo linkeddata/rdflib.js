@@ -80,7 +80,7 @@ export default function serialize (
         documentString = sz.statementsToNTriples(newSts)
         return executeCallback(null, documentString)
       case JSONLDContentType:
-        sz.setFlags('si') // use turtle parameters
+        sz.setFlags('si dr') // turtle + dr (means no default, no relative prefix)
         documentString = sz.statementsToJsonld(newSts) // convert via turtle
         return executeCallback(null, documentString)
       case NQuadsContentType:
