@@ -1160,7 +1160,7 @@ export default class Fetcher implements CallbackifyInterface {
           size: 0,
           timeout: 0
         }
-        console.log('Fetcher: <' + actualProxyURI + '> Non-HTTP fetch exception: ' + error)
+        // console.log('Fetcher: <' + actualProxyURI + '> Non-HTTP fetch exception: ' + error)
         return this.handleError(dummyResponse, docuri, options) // possible credentials retry
         // return this.failFetch(options, 'fetch failed: ' + error, 999, dummyResponse) // Fake status code: fetch exception
 
@@ -1227,24 +1227,20 @@ export default class Fetcher implements CallbackifyInterface {
             if ((fetchResponse as Response).ok) {
               userCallback(true, 'OK', fetchResponse)
             } else {
-              // console.log('@@@ fetcher.js Should not take this path !!!!!!!!!!!!')
               let oops = 'HTTP error: Status ' + fetchResponse.status + ' (' + fetchResponse.statusText + ')'
               if (fetchResponse.responseText) {
                 oops += ' ' + fetchResponse.responseText // not in 404, dns error, nock failure
               }
-              console.log(oops + ' fetching ' + uri)
               userCallback(false, oops, fetchResponse)
             }
           } else {
             let oops = ('@@ nowOrWhenFetched:  no response object!')
-            console.log(oops)
             userCallback(false, oops)
           }
         }
       }, function (err: FetchError) {
         var message = err.message || err.statusText
         message = 'Failed to load  <' + uri + '> ' + message
-        console.log(message)
         if (err.response && err.response.status) {
           message += ' status: ' + err.response.status
         }
@@ -1497,18 +1493,18 @@ export default class Fetcher implements CallbackifyInterface {
     } catch (err) {
       // @ts-ignore
       if (err.response.status === 404) {
-        console.log('createIfNotExists: doc does NOT exist, will create... ' + doc)
+        // console.log('createIfNotExists: doc does NOT exist, will create... ' + doc)
         try {
           response = await fetcher.webOperation('PUT', doc.value, {data, contentType})
         } catch (err) {
-          console.log('createIfNotExists doc FAILED: ' + doc + ': ' + err)
+          // console.log('createIfNotExists doc FAILED: ' + doc + ': ' + err)
           throw err
         }
         delete fetcher.requested[doc.value] // delete cached 404 error
         // console.log('createIfNotExists doc created ok ' + doc)
         return response
       } else {
-        console.log('createIfNotExists doc load error NOT 404:  ' + doc + ': ' + err)
+        // console.log('createIfNotExists doc load error NOT 404:  ' + doc + ': ' + err)
         throw err
       }
     }
@@ -1837,7 +1833,7 @@ export default class Fetcher implements CallbackifyInterface {
     docuri: string,
     options
   ): Promise<Result> {
-    console.log('Fetcher: CORS: RETRYING with NO CREDENTIALS for ' + options.resource)
+    // console.log('Fetcher: CORS: RETRYING with NO CREDENTIALS for ' + options.resource)
 
     options.retriedWithNoCredentials = true // protect against being called twice
 
@@ -1886,8 +1882,7 @@ export default class Fetcher implements CallbackifyInterface {
       let proxyUri = Fetcher.crossSiteProxy(docuri)
 
       if (proxyUri && !options.proxyUsed) {
-        console.log('web: Direct failed so trying proxy ' + proxyUri)
-
+        // console.log('web: Direct failed so trying proxy ' + proxyUri)
         return this.redirectToProxy(proxyUri, options)
       }
     }
@@ -1960,7 +1955,7 @@ export default class Fetcher implements CallbackifyInterface {
 
     // Check for masked errors (CORS, etc)
     if (response.status === 0) {
-      console.log('Masked error - status 0 for ' + docuri)
+      // console.log('Masked error - status 0 for ' + docuri)
       return this.handleError(response, docuri, options)
     }
 
