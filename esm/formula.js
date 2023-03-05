@@ -552,7 +552,6 @@ var Formula = /*#__PURE__*/function (_Node) {
       while (todo.length) {
         follow(todo.shift());
       }
-      // console.log('' + result.length + ' statements about ' + subject)
       return result;
     }
 
@@ -709,10 +708,10 @@ var Formula = /*#__PURE__*/function (_Node) {
       var statementsCopy = this.statements.map(function (ea) {
         return ea.substitute(bindings);
       });
-      console.log('Formula subs statmnts:' + statementsCopy);
+      // console.log('Formula subs statmnts:' + statementsCopy)
       var y = new Formula();
       y.addAll(statementsCopy);
-      console.log('indexed-form subs formula:' + y);
+      // console.log('indexed-form subs formula:' + y)
       return y;
     }
   }, {

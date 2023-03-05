@@ -589,7 +589,6 @@ export default class Formula extends Node {
     while (todo.length) {
       follow(todo.shift())
     }
-    // console.log('' + result.length + ' statements about ' + subject)
     return result
   }
 
@@ -736,10 +735,10 @@ export default class Formula extends Node {
     let statementsCopy = this.statements.map(function (ea) {
       return (ea as Statement).substitute(bindings)
     })
-    console.log('Formula subs statmnts:' + statementsCopy)
+    // console.log('Formula subs statmnts:' + statementsCopy)
     const y = new Formula()
     y.addAll(statementsCopy as Quad[])
-    console.log('indexed-form subs formula:' + y)
+    // console.log('indexed-form subs formula:' + y)
     return y as unknown as T
   }
 

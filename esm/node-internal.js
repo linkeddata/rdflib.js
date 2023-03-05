@@ -35,7 +35,6 @@ var Node = /*#__PURE__*/function () {
   _createClass(Node, [{
     key: "substitute",
     value: function substitute(bindings) {
-      console.log('@@@ node substitute' + this);
       return this;
     }
 

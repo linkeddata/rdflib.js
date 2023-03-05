@@ -93,7 +93,6 @@ var BlankNode = /*#__PURE__*/function (_Node) {
     function getId(id) {
       if (id) {
         if (typeof id !== 'string') {
-          console.log('Bad blank id:', id);
           throw new Error('Bad id argument to new blank node: ' + id);
         }
         if (id.includes('#')) {
