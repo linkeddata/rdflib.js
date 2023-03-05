@@ -99,7 +99,7 @@ export default class Statement<
       isDefaultGraph(this.graph) ? this.graph :
         (this.graph as G).substitute(bindings)
     ) // 2016
-    console.log('@@@ statement substitute:' + y)
+    // console.log('@@@ statement substitute:' + y)
     return y
   }
 

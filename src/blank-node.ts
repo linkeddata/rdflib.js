@@ -19,7 +19,6 @@ export default class BlankNode extends Node implements TFBlankNode {
   private static getId (id: string | unknown): string {
     if (id) {
       if (typeof id !== 'string') {
-        console.log('Bad blank id:', id)
         throw new Error('Bad id argument to new blank node: ' + id)
       }
 

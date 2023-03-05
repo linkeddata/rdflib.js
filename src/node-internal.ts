@@ -33,7 +33,6 @@ export default abstract class Node {
    * @param bindings - Bindings of identifiers to nodes
    */
   substitute <T extends Node = Node>(bindings: Bindings): T {
-    console.log('@@@ node substitute' + this)
     return this as unknown as T
   }
 
