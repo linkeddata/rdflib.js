@@ -5,26 +5,16 @@
 ** 2010-12-07 TimBL addred local file write code
 */
 import IndexedFormula from './store'
-import { docpart } from './uri'
-import Fetcher from './fetcher'
+import {docpart, join as uriJoin} from './uri'
+import Fetcher, {Options} from './fetcher'
 import Namespace from './namespace'
 import Serializer from './serializer'
-import { join as uriJoin } from './uri'
-import { isStore, isBlankNode } from './utils/terms'
+import {isBlankNode, isStore} from './utils/terms'
 import * as Util from './utils-js'
 import Statement from './statement'
 import RDFlibNamedNode from './named-node'
-import { termValue } from './utils/termValue'
-import {
-  BlankNode,
-  NamedNode,
-  Quad_Graph,
-  Quad_Object,
-  Quad_Predicate,
-  Quad_Subject,
-  Quad,
-  Term,
-} from './tf-types'
+import {termValue} from './utils/termValue'
+import {BlankNode, NamedNode, Quad, Quad_Graph, Quad_Object, Quad_Predicate, Quad_Subject, Term,} from './tf-types'
 
 interface UpdateManagerFormula extends IndexedFormula {
   fetcher: Fetcher
@@ -250,6 +240,10 @@ async flagAuthorizationMetadata () {
       this.anonymize(stmt.object) + ' .'
   }
 
+  nTriples(stmt) {
+    return `${stmt.subject.toNT()} ${stmt.predicate.toNT()} ${stmt.object.toNT()} .`
+  }
+
   /**
    * Returns a list of all bnodes occurring in a statement
    * @private
@@ -264,7 +258,7 @@ async flagAuthorizationMetadata () {
    * Returns a list of all bnodes occurring in a list of statements
    * @private
    */
-  statementArrayBnodes (sts: Quad[]) {
+  statementArrayBnodes (sts: ReadonlyArray<Quad>) {
     var bnodes: BlankNode[] = []
     for (let i = 0; i < sts.length; i++) {
       bnodes = bnodes.concat(this.statementBnodes(sts[i]))
@@ -410,7 +404,8 @@ async flagAuthorizationMetadata () {
   fire (
     uri: string,
     query: string,
-    callbackFunction: CallBackFunction
+    callbackFunction: CallBackFunction,
+    options: Options = {}
   ): Promise<void> {
     return Promise.resolve()
       .then(() => {
@@ -419,11 +414,9 @@ async flagAuthorizationMetadata () {
         }
         // console.log('UpdateManager: sending update to <' + uri + '>')
 
-        let options = {
-          noMeta: true,
-          contentType: 'application/sparql-update',
-          body: query
-        }
+        options.noMeta = true;
+        options.contentType = 'application/sparql-update';
+        options.body = query;
 
         return this.store.fetcher.webOperation('PATCH', uri, options)
       })
@@ -741,7 +734,7 @@ async flagAuthorizationMetadata () {
       thisUpdater.update(deletions.filter(st => st.why.equals(doc)),
         insertions.filter(st => st.why.equals(doc))))
     if (updates.length > 1) {
-      console.log(`@@ updateMany to ${updates.length}: ${uniqueDocs}`)
+      // console.log(`@@ updateMany to ${updates.length}: ${uniqueDocs}`)
     }
     return Promise.all(updates)
   }
@@ -754,6 +747,7 @@ async flagAuthorizationMetadata () {
    * @param insertions - Statement or statements to be inserted.
    * @param callback - called as callbackFunction(uri, success, errorbody)
    *           OR returns a promise
+   * @param options - Options for the fetch call
    */
   update(
       deletions: ReadonlyArray<Statement>,
@@ -764,7 +758,8 @@ async flagAuthorizationMetadata () {
         errorBody?: string,
         response?: Response | Error
       ) => void,
-      secondTry?: boolean
+      secondTry?: boolean,
+      options: Options = {}
   ): void | Promise<void> {
     if (!callback) {
       var thisUpdater = this
@@ -775,7 +770,7 @@ async flagAuthorizationMetadata () {
           } else {
             resolve()
           }
-        }) // callbackFunction
+        }, secondTry, options) // callbackFunction
       }) // promise
     } // if
 
@@ -802,7 +797,13 @@ async flagAuthorizationMetadata () {
         // console.log(message)
         throw new Error(message)
       }
+      if (doc.termType !== 'NamedNode') {
+        let message = 'Error patching: document not a NamedNode:' + ds[0] + ', ' + is[0]
+        // console.log(message)
+        throw new Error(message)
+      }
       var control = this.patchControlFor(doc)
+
       var startTime = Date.now()
 
       var props = ['subject', 'predicate', 'object', 'why']
@@ -831,11 +832,11 @@ async flagAuthorizationMetadata () {
           throw new Error('Update: Loaded ' + doc + "but stil can't figure out what editing protcol it supports.")
         }
         // console.log(`Update: have not loaded ${doc} before: loading now...`);
-        (this.store.fetcher.load(doc) as Promise<Response>).then(response => {
-          this.update(deletions, insertions, callback, true)
+        (this.store.fetcher.load(doc as NamedNode) as Promise<Response>).then(response => {
+          this.update(deletions, insertions, callback, true, options)
         }, err => {
             if (err.response.status === 404) { // nonexistent files are fine
-              this.update(deletions, insertions, callback, true)
+              this.update(deletions, insertions, callback, true, options)
             } else  {
               throw new Error(`Update: Can't get updatability status ${doc} before patching: ${err}`)
             }
@@ -843,8 +844,13 @@ async flagAuthorizationMetadata () {
         return
       } else if ((protocol as string).indexOf('SPARQL') >= 0) {
         var bnodes: BlankNode[] = []
-        if (ds.length) bnodes = this.statementArrayBnodes(ds)
-        if (is.length) bnodes = bnodes.concat(this.statementArrayBnodes(is))
+        // change ReadOnly type to Mutable type
+        type Mutable<Type> = {
+          -readonly [Key in keyof Type]: Type[Key];
+        }
+        
+        if (ds.length) bnodes = this.statementArrayBnodes(ds as Mutable<typeof ds>)
+        if (is.length) bnodes = bnodes.concat(this.statementArrayBnodes(is as Mutable<typeof is>))
         var context = this.bnodeContext(bnodes, doc)
         var whereClause = this.contextWhere(context)
         var query = ''
@@ -876,7 +882,7 @@ async flagAuthorizationMetadata () {
             if (ds.length) query += ' ; '
             query += 'INSERT DATA { '
             for (let i = 0; i < is.length; i++) {
-              query += this.anonymizeNT(is[i]) + '\n'
+              query += this.nTriples(is[i]) + '\n'
             }
             query += ' }\n'
           }
@@ -890,12 +896,13 @@ async flagAuthorizationMetadata () {
 
         this.fire(doc.value, query, (uri, success, body, response) => {
           (response as any).elapsedTimeMs = Date.now() - startTime
-          console.log('    UpdateManager: Return ' +
+          /* console.log('    UpdateManager: Return ' +
             (success ? 'success ' : 'FAILURE ') + (response as Response).status +
             ' elapsed ' + (response as any).elapsedTimeMs + 'ms')
+            */
           if (success) {
             try {
-              kb.remove(ds)
+              kb.remove(ds as Mutable<typeof ds>)
             } catch (e) {
               success = false
               body = 'Remote Ok BUT error deleting ' + ds.length + ' from store!!! ' + e
@@ -914,13 +921,13 @@ async flagAuthorizationMetadata () {
             // console.log('delayed downstream action:')
             downstreamAction(doc)
           }
-        })
+        }, options)
       } else if ((protocol as string).indexOf('DAV') >= 0) {
-        this.updateDav(doc, ds, is, callback)
+        this.updateDav(doc as NamedNode, ds, is, callback, options)
       } else {
         if ((protocol as string).indexOf('LOCALFILE') >= 0) {
           try {
-            this.updateLocalFile(doc, ds, is, callback)
+            this.updateLocalFile(doc as NamedNode, ds, is, callback, options)
           } catch (e) {
             callback(doc.value, false,
               'Exception trying to write back file <' + doc.value + '>\n'
@@ -941,7 +948,8 @@ async flagAuthorizationMetadata () {
     doc: Quad_Subject,
     ds,
     is,
-    callbackFunction
+    callbackFunction,
+    options: Options = {}
   ): null | Promise<void> {
     let kb = this.store
     // The code below is derived from Kenny's UpdateCenter.js
@@ -974,11 +982,9 @@ async flagAuthorizationMetadata () {
       targetURI = uriJoin(candidateTarget.value, targetURI)
     }
 
-    let options = {
-      contentType,
-      noMeta: true,
-      body: documentString
-    }
+    options.contentType = contentType
+    options.noMeta = true
+    options.body = documentString
 
     return kb.fetcher.webOperation('PUT', targetURI, options)
       .then(response => {
@@ -1007,8 +1013,9 @@ async flagAuthorizationMetadata () {
    * @param ds
    * @param is
    * @param callbackFunction
+   * @param options
    */
-  updateLocalFile (doc: NamedNode, ds, is, callbackFunction): void {
+  updateLocalFile (doc: NamedNode, ds, is, callbackFunction, options: Options = {}): void {
     const kb = this.store
     // console.log('Writing back to local file\n')
 
@@ -1033,12 +1040,10 @@ async flagAuthorizationMetadata () {
       throw new Error('File extension .' + ext + ' not supported for data write')
     }
 
-    const documentString = this.serialize(doc.value, newSts, contentType)
+    options.body = this.serialize(doc.value, newSts, contentType);
+    options.contentType = contentType;
 
-    kb.fetcher.webOperation('PUT',doc.value,{
-      "body"      : documentString,
-      contentType : contentType,
-    }).then( (response)=>{
+    kb.fetcher.webOperation('PUT', doc.value, options).then( (response)=>{
       if(!response.ok) return callbackFunction(doc.value,false,response.error)
       for (let i = 0; i < ds.length; i++) {
         kb.remove(ds[i]);

@@ -12,9 +12,15 @@ import * as Util from './utils-js'
 import CanonicalDataFactory from './factories/canonical-data-factory'
 import { createXSD } from './xsd'
 import solidNs from 'solid-namespace'
+import * as ttl2jsonld from '@frogcat/ttl2jsonld'
 
-export default (function () {
-  var __Serializer = function (store) {
+
+export default function createSerializer(store) {
+  return new Serializer(store);
+};
+
+export class Serializer {
+  constructor(store) {
     this.flags = ''
     this.base = null
 
@@ -35,17 +41,23 @@ export default (function () {
     this.keywords = ['a'] // The only one we generate at the moment
     this.prefixchars = 'abcdefghijklmnopqustuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
     this.incoming = null // Array not calculated yet
-    this.formulas = [] // remebering original formulae from hashes
+    this.formulas = [] // remembering original formulae from hashes
     this.store = store
     this.rdfFactory = store.rdfFactory || CanonicalDataFactory
     this.xsd = createXSD(this.rdfFactory)
   }
 
-  __Serializer.prototype.setBase = function (base) { this.base = base; return this }
+  setBase(base) {
+    this.base = base;
+    return this
+  }
 
-  __Serializer.prototype.setFlags = function (flags) { this.flags = flags || ''; return this }
+  setFlags(flags) {
+    this.flags = flags || '';
+    return this
+  }
 
-  __Serializer.prototype.toStr = function (x) {
+  toStr(x) {
     var s = x.toNT()
     if (x.termType === 'Graph') {
       this.formulas[s] = x // remember as reverse does not work
@@ -53,7 +65,7 @@ export default (function () {
     return s
   }
 
-  __Serializer.prototype.fromStr = function (s) {
+  fromStr(s) {
     if (s[0] === '{') {
       var x = this.formulas[s]
       if (!x) console.log('No formula object for ' + s)
@@ -61,12 +73,53 @@ export default (function () {
     }
     return this.store.fromNT(s)
   }
+
+  /**
+   * Defines a set of [prefix, namespace] pairs to be used by this Serializer instance.
+   * Overrides previous prefixes if any
+   * @param namespaces
+   * @return {Serializer}
+   */
+  setNamespaces(namespaces) {
+    for (var px in namespaces) {
+      this.setPrefix(px, namespaces[px])
+    }
+    return this
+  }
+
+  /**
+   * Defines a namespace prefix, overriding any existing prefix for that URI
+   * @param prefix
+   * @param uri
+   */
+  setPrefix(prefix, uri) {
+    if (prefix.slice(0, 7) === 'default') return // Try to weed these out
+    if (prefix.slice(0, 2) === 'ns') return //  From others inferior algos
+    if (!prefix || !uri) return // empty strings not suitable
+
+    // remove any existing prefix targeting this uri
+    // for (let existingPrefix in this.namespaces) {
+    //   if (this.namespaces[existingPrefix] == uri)
+    //     delete this.namespaces[existingPrefix];
+    // }
+
+    // remove any existing mapping for this prefix
+    for (let existingNs in this.prefixes) {
+      if (this.prefixes[existingNs] == prefix)
+        delete this.prefixes[existingNs];
+    }
+
+    this.prefixes[uri] = prefix
+    this.namespaces[prefix] = uri
+  }
+
+
   /* Accumulate Namespaces
   **
   ** These are only hints.  If two overlap, only one gets used
   ** There is therefore no guarantee in general.
   */
-  __Serializer.prototype.suggestPrefix = function (prefix, uri) {
+  suggestPrefix(prefix, uri) {
     if (prefix.slice(0, 7) === 'default') return // Try to weed these out
     if (prefix.slice(0, 2) === 'ns') return //  From others inferior algos
     if (!prefix || !uri) return // empty strings not suitable
@@ -76,34 +129,34 @@ export default (function () {
   }
 
   // Takes a namespace -> prefix map
-  __Serializer.prototype.suggestNamespaces = function (namespaces) {
+  suggestNamespaces(namespaces) {
     for (var px in namespaces) {
       this.suggestPrefix(px, namespaces[px])
     }
     return this
   }
 
-  __Serializer.prototype.checkIntegrity = function () {
+  checkIntegrity() {
     var p, ns
     for (p in this.namespaces) {
       if (this.prefixes[this.namespaces[p]] !== p) {
         throw new Error('Serializer integity error 1: ' + p + ', ' +
-        this.namespaces[p] + ', ' + this.prefixes[this.namespaces[p]] + '!')
+          this.namespaces[p] + ', ' + this.prefixes[this.namespaces[p]] + '!')
       }
     }
     for (ns in this.prefixes) {
       if (this.namespaces[this.prefixes[ns]] !== ns) {
         throw new Error('Serializer integity error 2: ' + ns + ', ' +
-        this.prefixs[ns] + ', ' + this.namespaces[this.prefixes[ns]] + '!')
+          this.prefixs[ns] + ', ' + this.namespaces[this.prefixes[ns]] + '!')
       }
     }
   }
 
   // Make up an unused prefix for a random namespace
-  __Serializer.prototype.makeUpPrefix = function (uri) {
+  makeUpPrefix(uri) {
     var p = uri
     function canUseMethod (pp) {
-      if (!__Serializer.prototype.validPrefix.test(pp)) return false // bad format
+      if (!this.validPrefix.test(pp)) return false // bad format
       if (pp === 'ns') return false // boring
       if (pp in this.namespaces) return false // already used
       this.prefixes[uri] = pp
@@ -131,13 +184,13 @@ export default (function () {
     if (canUse(p.slice(0, 4))) return p.slice(0, 4)
     if (canUse(p.slice(0, 1))) return p.slice(0, 1)
     if (canUse(p.slice(0, 5))) return p.slice(0, 5)
-    if (!__Serializer.prototype.validPrefix.test(p)) {
+    if (!this.validPrefix.test(p)) {
       p = 'n' // Otherwise the loop below may never termimnate
     }
     for (var j = 0; ; j++) if (canUse(p.slice(0, 3) + j)) return p.slice(0, 3) + j
   }
 
-  __Serializer.prototype.rootSubjects = function (sts) {
+  rootSubjects(sts) {
     var incoming = {}
     var subjects = {}
     var allBnodes = {}
@@ -194,15 +247,15 @@ export default (function () {
 
   // //////////////////////////////////////////////////////
 
-  __Serializer.prototype.toN3 = function (f) {
+  toN3(f) {
     return this.statementsToN3(f.statements)
   }
 
-  __Serializer.prototype._notQNameChars = '\t\r\n !"#$%&\'()*.,+/;<=>?@[\\]^`{|}~'
-  __Serializer.prototype._notNameChars =
-    (__Serializer.prototype._notQNameChars + ':')
+  _notQNameChars = '\t\r\n !"#$%&\'()*.,+/;<=>?@[\\]^`{|}~'
+  _notNameChars =
+    (this._notQNameChars + ':')
 
-  __Serializer.prototype.explicitURI = function (uri) {
+  explicitURI(uri) {
     if (this.flags.indexOf('r') < 0 && this.base) {
       uri = Uri.refTo(this.base, uri)
     } else if (this.flags.indexOf('u') >= 0) { // Unicode encoding NTriples style
@@ -213,7 +266,7 @@ export default (function () {
     return '<' + uri + '>'
   }
 
-  __Serializer.prototype.statementsToNTriples = function (sts) {
+  statementsToNTriples(sts) {
     var sorted = sts.slice()
     sorted.sort()
     var str = ''
@@ -250,7 +303,7 @@ export default (function () {
     return str
   }
 
-  __Serializer.prototype.statementsToN3 = function (sts) {
+  statementsToN3(sts) {
     var indent = 4
     var width = 80
     var kb = this.store
@@ -288,12 +341,12 @@ export default (function () {
       for (var i = 0; i < tree.length; i++) {
         var branch = tree[i]
         var s2 = (typeof branch === 'string') ? branch : treeToLine(branch)
-        // Note the space before the dot in case statement ends 123. which is in fact allowed but be conservative.
+        // Note the space before the dot in case statement ends with 123 or colon. which is in fact allowed but be conservative.
         if (i !== 0) {
           var ch = str.slice(-1) || ' '
           if (s2 === ',' || s2 === ';') {
             // no gap
-          } else if (s2 === '.' && !('0123456789.'.includes(ch))) { // no gap except after number
+          } else if (s2 === '.' && !('0123456789.:'.includes(ch))) { // no gap except after number and colon
             // no gap
           } else {
             str += ' ' // separate from previous token
@@ -328,7 +381,13 @@ export default (function () {
         if (typeof branch === 'string') {
           if (branch.length === 1 && str.slice(-1) === '\n') {
             if (',.;'.indexOf(branch) >= 0) {
-              str = str.slice(0, -1) + branch + '\n' //  slip punct'n on end
+              str = str.slice(0, -1)
+              // be conservative and ensure a whitespace between some chars and a final dot, as in treeToLine above
+              if (branch == '.' && '0123456789.:'.includes(str.charAt(str.length-1))) {
+                str += ' '
+                lastLength += 1
+              }
+              str += branch + '\n' //  slip punct'n on end
               lastLength += 1
               continue
             }
@@ -400,9 +459,10 @@ export default (function () {
       results = results.concat([objects])
       return results
     }
+
     var propertyTree = propertyTreeMethod.bind(this)
 
-    function objectTreeMethod (obj, stats, force) {
+    function objectTreeMethod(obj, stats, force) {
       if (obj.termType === 'BlankNode' &&
         (force || stats.rootsHash[obj.toNT()] === undefined)) {// if not a root
         if (stats.subjects[this.toStr(obj)]) {
@@ -413,9 +473,10 @@ export default (function () {
       }
       return termToN3(obj, stats)
     }
+
     var objectTree = objectTreeMethod.bind(this)
 
-    function termToN3Method (expr, stats) { //
+    function termToN3Method(expr, stats) { //
       var i, res
       switch (expr.termType) {
         case 'Graph':
@@ -435,12 +496,12 @@ export default (function () {
           return this.atomicTermToN3(expr)
       }
     }
-    __Serializer.prototype.termToN3 = termToN3
+    Serializer.prototype.termToN3 = termToN3
     var termToN3 = termToN3Method.bind(this)
 
     function prefixDirectivesMethod () {
       var str = ''
-      if (this.defaultNamespace) {
+      if (this.flags.indexOf('d') < 0 && this.defaultNamespace) {
         str += '@prefix : ' + this.explicitURI(this.defaultNamespace) + '.\n'
       }
       for (var ns in this.prefixes) {
@@ -459,7 +520,7 @@ export default (function () {
   // //////////////////////////////////////////// Atomic Terms
 
   //  Deal with term level things and nesting with no bnode structure
-  __Serializer.prototype.atomicTermToN3 = function atomicTermToN3 (expr, stats) {
+  atomicTermToN3 (expr, stats) {
     switch (expr.termType) {
       case 'BlankNode':
       case 'Variable':
@@ -476,7 +537,7 @@ export default (function () {
             case 'http://www.w3.org/2001/XMLSchema#integer':
               return val
 
-            case 'http://www.w3.org/2001/XMLSchema#decimal': // In urtle must have dot
+            case 'http://www.w3.org/2001/XMLSchema#decimal': // In Turtle, must have dot
               if (val.indexOf('.') < 0) val += '.0'
               return val
 
@@ -501,6 +562,8 @@ export default (function () {
         return str
       case 'NamedNode':
         return this.symbolToN3(expr)
+      case 'DefaultGraph':
+        return '';
       default:
         throw new Error('Internal: atomicTermToN3 cannot handle ' + expr + ' of termType: ' + expr.termType)
     }
@@ -508,11 +571,11 @@ export default (function () {
 
   //  stringToN3:  String escaping for N3
 
-  __Serializer.prototype.validPrefix = new RegExp(/^[a-zA-Z][a-zA-Z0-9]*$/)
+  validPrefix = new RegExp(/^[a-zA-Z][a-zA-Z0-9]*$/)
 
-  __Serializer.prototype.forbidden1 = new RegExp(/[\\"\b\f\r\v\t\n\u0080-\uffff]/gm)
-  __Serializer.prototype.forbidden3 = new RegExp(/[\\"\b\f\r\v\u0080-\uffff]/gm)
-  __Serializer.prototype.stringToN3 = function stringToN3 (str, flags) {
+  forbidden1 = new RegExp(/[\\"\b\f\r\v\t\n\u0080-\uffff]/gm)
+  forbidden3 = new RegExp(/[\\"\b\f\r\v\u0080-\uffff]/gm)
+  stringToN3(str, flags) {
     if (!flags) flags = 'e'
     var res = ''
     var i, j, k
@@ -523,10 +586,10 @@ export default (function () {
         flags.indexOf('n') < 0 && // Force single line
         (str.indexOf('\n') > 0 || str.indexOf('"') > 0)) {
       delim = '"""'
-      forbidden = __Serializer.prototype.forbidden3
+      forbidden = this.forbidden3
     } else {
       delim = '"'
-      forbidden = __Serializer.prototype.forbidden1
+      forbidden = this.forbidden1
     }
     for (i = 0; i < str.length;) {
       forbidden.lastIndex = 0
@@ -556,7 +619,7 @@ export default (function () {
   }
   //  A single symbol, either in  <> or namespace notation
 
-  __Serializer.prototype.symbolToN3 = function symbolToN3 (x) { // c.f. symbolString() in notation3.py
+  symbolToN3 (x) { // c.f. symbolString() in notation3.py
     var uri = x.uri
     var j = uri.indexOf('#')
     if (j < 0 && this.flags.indexOf('/') < 0) {
@@ -567,7 +630,7 @@ export default (function () {
       (uri.indexOf('http') === 0 || uri.indexOf('ws') === 0 || uri.indexOf('file') === 0)) {
       var canSplit = true
       for (var k = j + 1; k < uri.length; k++) {
-        if (__Serializer.prototype._notNameChars.indexOf(uri[k]) >= 0) {
+        if (this._notNameChars.indexOf(uri[k]) >= 0) {
           canSplit = false
           break
         }
@@ -604,33 +667,12 @@ export default (function () {
     }
     return this.explicitURI(uri)
   }
-  // String escaping utilities
-
-  function hexify (str) { // also used in parser
-    return encodeURI(str)
-  }
-
-  function backslashUify (str) {
-    var res = ''
-    var k
-    for (var i = 0; i < str.length; i++) {
-      k = str.charCodeAt(i)
-      if (k > 65535) {
-        res += '\\U' + ('00000000' + k.toString(16)).slice(-8) // convert to upper?
-      } else if (k > 126) {
-        res += '\\u' + ('0000' + k.toString(16)).slice(-4)
-      } else {
-        res += str[i]
-      }
-    }
-    return res
-  }
 
   // /////////////////////////// Quad store serialization
 
   // @para. write  - a function taking a single string to be output
   //
-  __Serializer.prototype.writeStore = function (write) {
+  writeStore(write) {
     var kb = this.store
     var fetcher = kb.fetcher
     var session = fetcher && fetcher.appNode
@@ -671,7 +713,7 @@ export default (function () {
 
   // ////////////////////////////////////////////// XML serialization
 
-  __Serializer.prototype.statementsToXML = function (sts) {
+  statementsToXML(sts) {
     var indent = 4
     var width = 80
 
@@ -935,7 +977,7 @@ export default (function () {
       if (j < 0) throw new Error('Cannot make qname out of <' + uri + '>')
 
       for (var k = j + 1; k < uri.length; k++) {
-        if (__Serializer.prototype._notNameChars.indexOf(uri[k]) >= 0) {
+        if (this._notNameChars.indexOf(uri[k]) >= 0) {
           throw new Error('Invalid character "' + uri[k] + '" cannot be in XML qname for URI: ' + uri)
         }
       }
@@ -971,6 +1013,46 @@ export default (function () {
     return XMLtreeToString(tree2, -1)
   } // End @@ body
 
-  var Serializer = function (store) { return new __Serializer(store) }
-  return Serializer
-}())
+  statementsToJsonld (sts) {
+    // ttl2jsonld creates context keys for all ttl prefix
+    // context keys must be absolute IRI ttl2jsonld@0.0.8
+    /* function findId (itemObj) {
+      if (itemObj['@id']) {
+        const item = itemObj['@id'].split(':')
+        if (keys[item[0]]) itemObj['@id'] = jsonldObj['@context'][item[0]] + item[1]
+      }
+      const itemValues = Object.values(itemObj)
+      for (const i in itemValues) {
+        if (typeof itemValues[i] !== 'string') { // @list contains array
+          findId(itemValues[i])
+        }
+      }
+    } */
+    const turtleDoc = this.statementsToN3(sts)
+    const jsonldObj = ttl2jsonld.parse(turtleDoc)
+    return JSON.stringify(jsonldObj, null, 2)
+  }
+
+}
+
+// String escaping utilities
+
+function hexify (str) { // also used in parser
+  return encodeURI(str)
+}
+
+function backslashUify (str) {
+  var res = ''
+  var k
+  for (var i = 0; i < str.length; i++) {
+    k = str.charCodeAt(i)
+    if (k > 65535) {
+      res += '\\U' + ('00000000' + k.toString(16)).slice(-8) // convert to upper?
+    } else if (k > 126) {
+      res += '\\u' + ('0000' + k.toString(16)).slice(-4)
+    } else {
+      res += str[i]
+    }
+  }
+  return res
+}

@@ -2,7 +2,6 @@ import { IRDFlibDataFactory } from './types'
 
 import BlankNode from './blank-node'
 import Collection from './collection'
-import * as convert from './convert'
 import Empty from './empty'
 import Fetcher from './fetcher'
 import Formula from './formula'
@@ -66,7 +65,6 @@ export type { AutoInitOptions, ExtendedResponse, FetchError } from './fetcher'
 export {
   BlankNode,
   Collection,
-  convert,
   DataFactory,
   Empty,
   Fetcher,
@@ -118,3 +116,23 @@ export {
   variable,
 }
 export { termValue } from './utils/termValue'
+
+export class ConnectedStore extends Store {
+
+  fetcher: Fetcher;
+
+  constructor (features) {
+    super(features)
+    this.fetcher = new Fetcher(this, {})
+  }
+}
+
+export class  LiveStore extends ConnectedStore {
+
+  updater: UpdateManager;
+  
+  constructor (features) {
+    super(features)
+    this.updater = new UpdateManager(this)
+  }
+}

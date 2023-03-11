@@ -64,7 +64,7 @@
         cs:sparqlines-sparql-to-sparkline, cs:this-paper-is-a-demo,
         cs:web-science-from-404-to-200, dok:, tests:summary, TR:annotation-html;
     as:inReplyTo l:calls;
-    rel:latest-version lin:ce36de40-64a7-4d57-a189-f47c364daa74.
+    rel:latest-version lin:ce36de40-64a7-4d57-a189-f47c364daa74 .
 :31943b7f-b646-4ebd-8787-ec2341e862c1 pso:withStatus pso:published.
 
 :document-permission
@@ -88,4 +88,4 @@ n0:i
     schema:familyName "Capadisli"@en;
     schema:givenName "Sarven"@en;
     schema:name "Sarven Capadisli"@en;
-    schema:url cs:.
+    schema:url cs: .

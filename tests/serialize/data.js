@@ -59,7 +59,7 @@ var exitMessage = function (message) {
   process.exit(4)
 }
 
-var doNext = function (remaining) {
+var doNext = async function (remaining) {
   while (remaining.length) {
     // console.log("... remaining " + remaining.join(' '))
 
@@ -95,10 +95,11 @@ var doNext = function (remaining) {
         return // STOP processing at this level
 
         case '-out':
+          // there is an issue with jsonld. The test returns an error : process exit 1. CI fails
+          // await is only for jsonld serialize.
           try {
             var options = {flags: 'z'} // Only applies to RDF/XML
-
-            var out = $rdf.serialize(inDocument, kb, inDocument.uri, contentType, undefined, options)
+            var out = await $rdf.serialize(inDocument, kb, inDocument.uri, contentType, undefined, options)
           } catch(e) {
             exitMessage('Error in serializer: ' + e + stackString(e))
           }
@@ -121,27 +122,6 @@ var doNext = function (remaining) {
             doNext(remaining)
           })
           return
-
-          case '-dump':
-            doc = $rdf.sym($rdf.uri.join(right, base))
-            try {
-              var out = $rdf.serialize(null, kb, targetDocument.uri, 'application/n-quads') // whole store
-            } catch(e) {
-              exitMessage('Error in serializer: ' + e + stackString(e))
-            }
-            // if (doc.uri.slice(0, 7) !== 'file://') {
-            //   exitMessage('Can only write files just now, sorry: ' + doc.uri)
-            // }
-            // fileName = doc.uri.slice(7) //
-            fileName = doc.uri.split('/')[doc.uri.length - 1]
-            fs.writeFile(fileName, out, function (err) {
-              if (err) {
-                exitMessage('Error writing file <' + right + '> :' + err)
-              }
-              console.log('Written ' + fileName)
-              doNext(remaining)
-            })
-            return
 
       case '-size':
         console.log(kb.statements.length + ' triples')

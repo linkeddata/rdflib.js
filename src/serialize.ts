@@ -1,4 +1,3 @@
-import * as convert from './convert'
 import Formula from './formula'
 import Serializer from './serializer'
 import {
@@ -21,34 +20,47 @@ import { BlankNode, NamedNode } from './tf-types'
  */
 export default function serialize (
   /** The graph or nodes that should be serialized */
-  target: Formula | NamedNode | BlankNode,
+  target: Formula | NamedNode | BlankNode | null,
   /** The store */
-  kb?: IndexedFormula,
+  kb: Formula,
   base?: unknown,
   /**
    * The mime type.
    * Defaults to Turtle.
    */
   contentType?: string | ContentType,
-  callback?: (err: Error | undefined | null, result?: string | null) => any,
+  callback?: (err: Error | undefined | null, result?: string) => any,
   options?: {
     /**
      * A string of letters, each of which set an options
      * e.g. `deinprstux`
      */
-    flags: string
+    flags?: string,
+    /**
+     * A set of [prefix, uri] pairs that define namespace prefixes
+     */
+    namespaces?: Record<string, string>
   }
 ): string | undefined {
-  base = base || target.value
+  base = base || target?.value
   const opts = options || {}
   contentType = contentType || TurtleContentType // text/n3 if complex?
-  var documentString: string | null = null
+  var documentString: string | undefined = undefined
   try {
     var sz = Serializer(kb)
     if ((opts as any).flags) sz.setFlags((opts as any).flags)
     var newSts = kb!.statementsMatching(undefined, undefined, undefined, target as NamedNode)
-    var n3String: string
-    sz.suggestNamespaces(kb!.namespaces)
+
+    // If an IndexedFormula, use the namespaces from the given graph as suggestions
+    if ('namespaces' in kb) {
+      sz.suggestNamespaces( (kb as IndexedFormula).namespaces);
+    }
+
+    // use the provided options.namespaces are mandatory prefixes
+    if (opts.namespaces) {
+      sz.setNamespaces( opts.namespaces);
+    }
+
     sz.setBase(base)
     switch (contentType) {
       case RDFXMLContentType:
@@ -68,30 +80,26 @@ export default function serialize (
         documentString = sz.statementsToNTriples(newSts)
         return executeCallback(null, documentString)
       case JSONLDContentType:
-        sz.setFlags('deinprstux') // Use adapters to connect to incmpatible parser
-        n3String = sz.statementsToNTriples(newSts)
-        // n3String = sz.statementsToN3(newSts)
-        convert.convertToJson(n3String, callback)
-        break
+        sz.setFlags('si dr') // turtle + dr (means no default, no relative prefix)
+        documentString = sz.statementsToJsonld(newSts) // convert via turtle
+        return executeCallback(null, documentString)
       case NQuadsContentType:
       case NQuadsAltContentType: // @@@ just outpout the quads? Does not work for collections
         sz.setFlags('deinprstux q') // Suppress nice parts of N3 to make ntriples
         documentString = sz.statementsToNTriples(newSts) // q in flag means actually quads
         return executeCallback(null, documentString)
-        // n3String = sz.statementsToN3(newSts)
-        // documentString = convert.convertToNQuads(n3String, callback)
-        // break
       default:
         throw new Error('Serialize: Content-type ' + contentType + ' not supported for data write.')
     }
   } catch (err) {
     if (callback) {
+      // @ts-ignore
       return callback(err, undefined)
     }
     throw err // Don't hide problems from caller in sync mode
   }
 
-  function executeCallback (err: Error | null | undefined, result: string | null | undefined): string | undefined {
+  function executeCallback (err: Error | null | undefined, result: string | undefined): string | undefined {
     if (callback) {
       callback(err, result)
       return

@@ -61,6 +61,31 @@ describe('Literal', () => {
         const node = new Literal('foo', 'en')
         expect(node.toNT()).to.equal('"foo"@en')
       })
+
+
+      describe('escapes special characters', () => {
+        it('escapes quotation marks (#x22)', () => {
+          const node = new Literal('foo\x22bar',)
+          expect(node.toNT()).to.equal('"foo\\"bar"')
+        });
+
+        it('escapes backslashes (x5C)', () => {
+          const node = new Literal('foo\x5Cbar',)
+          expect(node.toNT()).to.equal('"foo\\\\bar"')
+        });
+
+        it('escapes line feed (x0A)', () => {
+          const node = new Literal('foo\x0Abar',)
+          expect(node.toNT()).to.equal('"foo\\nbar"')
+        });
+
+        it('escapes carriage return', () => {
+          const node = new Literal('foo\x0Dbar',)
+          expect(node.toNT()).to.equal('"foo\\rbar"')
+        });
+
+      });
+
     })
 
     describe('for numbers', () => {

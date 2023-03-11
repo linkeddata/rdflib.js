@@ -1,0 +1,35 @@
+{
+    "@context": {
+      "voc": "http://example.com/foo/vocab#",
+      "xsd": "http://www.w3.org/2001/XMLSchema#"
+    },
+    "@graph": [
+      {
+        "@id": "voc:building0",
+        "voc:bar": [
+          {
+            "@type": "xsd:integer",
+            "@value": "123"
+          },
+          {
+            "@type": "xsd:integer",
+            "@value": "78768"
+          }
+        ],
+        "voc:connectsTo": {
+          "@id": "voc:building4"
+        }
+      },
+      {
+        "@id": "voc:building1",
+        "voc:created": {
+          "@type": "xsd:date",
+          "@value": "2012-03-12"
+        },
+        "voc:length": {
+          "@type": "xsd:double",
+          "@value": "145000"
+        }
+      }
+    ]
+  }

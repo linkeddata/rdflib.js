@@ -5,7 +5,7 @@ import log from './log'
 import RDFlibNamedNode from './named-node'
 import Namespace from './namespace'
 import Node from './node-internal'
-import Serializer from './serialize'
+import serialize from './serialize'
 import Statement from './statement'
 import {
   Bindings,
@@ -258,7 +258,7 @@ export default class Formula extends Node {
       (!s || s.equals(st.subject)) &&
       (!p || p.equals(st.predicate)) &&
       (!o || o.equals(st.object)) &&
-      (!g || g.equals(st.subject))
+      (!g || g.equals(st.graph))
     )
 
     if (justOne) {
@@ -589,7 +589,6 @@ export default class Formula extends Node {
     while (todo.length) {
       follow(todo.shift())
     }
-    // console.log('' + result.length + ' statements about ' + subject)
     return result
   }
 
@@ -721,33 +720,11 @@ export default class Formula extends Node {
    * @param base - The base string
    * @param contentType - The content type of the syntax to use
    * @param provenance - The provenance URI
+   * @param options  - options to pass to the serializer, as defined in serialize method
    */
-  serialize (base, contentType, provenance) {
-    let documentString
-    let sts
-    let sz
-    sz = Serializer(this)
-    sz.suggestNamespaces(this.ns)
-    sz.setBase(base)
-    if (provenance) {
-      sts = this.statementsMatching(void 0, void 0, void 0, provenance)
-    } else {
-      sts = this.statements
-    }
-    switch (
-    contentType != null ? contentType : 'text/n3') {
-      case 'application/rdf+xml':
-        documentString = sz.statementsToXML(sts)
-        break
-      case 'text/n3':
-      case 'text/turtle':
-        documentString = sz.statementsToN3(sts)
-        break
-      default:
-        throw new Error('serialize: Content-type ' + contentType +
-          ' not supported.')
-    }
-    return documentString
+  serialize (base, contentType, provenance, options?) {
+    // delegate the graph serialization to the implementation in ./serialize
+    return serialize(provenance, this, base, contentType, undefined, options);
   }
 
   /**
@@ -758,10 +735,10 @@ export default class Formula extends Node {
     let statementsCopy = this.statements.map(function (ea) {
       return (ea as Statement).substitute(bindings)
     })
-    console.log('Formula subs statmnts:' + statementsCopy)
+    // console.log('Formula subs statmnts:' + statementsCopy)
     const y = new Formula()
     y.addAll(statementsCopy as Quad[])
-    console.log('indexed-form subs formula:' + y)
+    // console.log('indexed-form subs formula:' + y)
     return y as unknown as T
   }
 

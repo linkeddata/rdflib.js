@@ -99,7 +99,7 @@ export default class Statement<
       isDefaultGraph(this.graph) ? this.graph :
         (this.graph as G).substitute(bindings)
     ) // 2016
-    console.log('@@@ statement substitute:' + y)
+    // console.log('@@@ statement substitute:' + y)
     return y
   }
 
@@ -137,6 +137,13 @@ export default class Statement<
 
   /** Creates a string representation of this statement */
   toString (): string {
+    /*
+    return [
+      this.subject.toString(),
+      this.predicate.toString(),
+      this.object.toString(),
+    ].join(' ') + ' .'
+    */
     return this.toNT()
   }
 }

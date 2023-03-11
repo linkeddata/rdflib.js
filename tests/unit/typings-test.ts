@@ -26,7 +26,7 @@ describe('typings', () => {
   const o = DataFactory.namedNode(URI);
 
   it('allows S P O generation with the datafactory', () => {
-    const t = DataFactory.triple(s, p, o);
+    DataFactory.triple(s, p, o);
   })
 
   it('allows passing DataFactory NamedNodes and Statements as RDF/JS Quads', () => {
