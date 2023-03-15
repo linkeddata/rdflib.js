@@ -207,8 +207,8 @@ describe('UpdateManager', () => {
       userCallback = () => {}
 
       updater = new UpdateManager()
-      // updater.store.fetcher.webOperation = sinon.stub().resolves({ ok: true, status: 200, statusText: "Dummy stub 1"})
-      // updater.store.fetcher.load = sinon.stub().resolves({ ok: true, status: 200, statusText: "Dummy stub 2"})
+      updater.store.fetcher.webOperation = sinon.stub().resolves({ ok: true, status: 200, statusText: "Dummy stub 1"})
+      updater.store.fetcher.load = sinon.stub().resolves({ ok: true, status: 200, statusText: "Dummy stub 2"})
 
     })
 
@@ -224,21 +224,23 @@ describe('UpdateManager', () => {
     })
 
 
-    it('Async version should detect a document is editable from metadata', () => {
+    it('Async version should detect a document is editable from metadata', async () => {
       loadMeta(updater.store)
-      updater.checkEditable(doc1).then(
-        res => expect(result).to.equal('SPARQL')
-      )
+      const result = await updater.checkEditable(doc1)
+      expect(result).to.equal('SPARQL')
       expect(updater.editable(doc1)).to.equal('SPARQL')
     })
 
-    it('Async version should not detect a document is editable from metadata after flush', () => {
+    it('Async version should not detect a document is editable from metadata after flush', async () => {
       loadMeta(updater.store)
+
       updater.flagAuthorizationMetadata()
-      updater.checkEditable(doc1).then(
-        res => expect(result).to.equal('SPARQL')
-      )
+
       expect(updater.editable(doc1)).to.equal(undefined)
+
+      const result = await updater.checkEditable(doc1)
+
+      expect(result).to.equal(undefined)
     })
 
 
