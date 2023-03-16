@@ -1,4 +1,4 @@
-npimport * as chai from 'chai'
+import * as chai from 'chai'
 import {Headers} from 'cross-fetch'
 import * as dirtyChai from 'dirty-chai'
 import * as sinon from 'sinon'
