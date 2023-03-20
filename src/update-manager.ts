@@ -160,13 +160,13 @@ async flagAuthorizationMetadata () {
     for (var r = 0; r < requests.length; r++) {
       request = requests[r]
       if (request !== undefined) {
-        const response = kb.any(request, this.ns.link('response'), null, meta) as Quad_Subject
+        const response = kb.any(request, this.ns.link('response')) as Quad_Subject
         if (response !== undefined) { // ts
 
-          const outOfDate = kb.anyJS(response, this.ns.link('outOfDate'), null, meta)
+          const outOfDate = kb.anyJS(response, this.ns.link('outOfDate')) as Quad_Subject
           if (outOfDate) continue
 
-          var wacAllow = kb.anyValue(response, this.ns.httph('wac-allow'), null, meta)
+          var wacAllow = kb.anyValue(response, this.ns.httph('wac-allow'))
           if (wacAllow) {
             for (var bit of wacAllow.split(',')) {
               var lr = bit.split('=')
@@ -176,7 +176,7 @@ async flagAuthorizationMetadata () {
               }
             }
           }
-          var acceptPatch = kb.each(response, this.ns.httph('accept-patch'), null, meta)
+          var acceptPatch = kb.each(response, this.ns.httph('accept-patch'))
           if (acceptPatch.length) {
             for (let i = 0; i < acceptPatch.length; i++) {
               method = acceptPatch[i].value.trim()
@@ -184,7 +184,7 @@ async flagAuthorizationMetadata () {
               if (method.indexOf('application/sparql-update-single-match') >= 0) return 'SPARQL'
             }
           }
-          var authorVia = kb.each(response, this.ns.httph('ms-author-via'), null, meta)
+          var authorVia = kb.each(response, this.ns.httph('ms-author-via'))
           if (authorVia.length) {
             for (let i = 0; i < authorVia.length; i++) {
               method = authorVia[i].value.trim()
