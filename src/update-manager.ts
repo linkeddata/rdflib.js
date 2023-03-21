@@ -87,7 +87,7 @@ export default class UpdateManager {
 * the user logs in, then that data misrepresents what would happen
 * if the user tried again.
 */
-async flagAuthorizationMetadata () {
+flagAuthorizationMetadata () {
   const kb = this.store
   const meta = kb.fetcher.appNode
   const requests = kb.statementsMatching(undefined, this.ns.link('requestedURI'), undefined, meta).map(st => st.subject)
