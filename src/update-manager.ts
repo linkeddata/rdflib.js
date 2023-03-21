@@ -117,7 +117,7 @@ flagAuthorizationMetadata () {
    }
    await this.store.fetcher.load(uri)
    const final = this.editable(uri, kb)
-   console.log(`Loaded ${uri} just to check editable, result: ${final}.`)
+   // console.log(`Loaded ${uri} just to check editable, result: ${final}.`)
    return final
  }
   /**
@@ -160,10 +160,10 @@ flagAuthorizationMetadata () {
     for (var r = 0; r < requests.length; r++) {
       request = requests[r]
       if (request !== undefined) {
-        const response = kb.any(request, this.ns.link('response')) as Quad_Subject
+        const response = kb.any(request, this.ns.link('response'), null, meta) as Quad_Subject
         if (response !== undefined) { // ts
 
-          const outOfDate = kb.anyJS(response, this.ns.link('outOfDate')) as Quad_Subject
+          const outOfDate = kb.anyJS(response, this.ns.link('outOfDate'), null, meta) as Quad_Subject
           if (outOfDate) continue
 
           var wacAllow = kb.anyValue(response, this.ns.httph('wac-allow'))

@@ -771,7 +771,7 @@ export default class Fetcher implements CallbackifyInterface {
     if (!this._fetch) {
       throw new Error('No _fetch function available for Fetcher')
     }
-    // This is the name of the graphh we store all the HTTP metadata in
+    // This is the name of the graph we store all the HTTP metadata in
     this.appNode = this.store.sym('chrome://TheCurrentSession')
     // this.appNode = this.store.rdfFactory.blankNode() // Needs to have a URI in tests
     this.store.fetcher = this // Bi-linked
@@ -1726,22 +1726,22 @@ export default class Fetcher implements CallbackifyInterface {
 
     let responseNode = kb.bnode()
 
-    kb.add(options.req, this.ns.link('response'), responseNode, responseNode)
+    kb.add(options.req, this.ns.link('response'), responseNode, this.appNode)
     kb.add(responseNode, this.ns.http('status'),
-    kb.rdfFactory.literal(response.status as any), responseNode)
+    kb.rdfFactory.literal(response.status as any), this.appNode)
     kb.add(responseNode, this.ns.http('statusText'),
-    kb.rdfFactory.literal(response.statusText), responseNode)
+    kb.rdfFactory.literal(response.statusText), this.appNode)
 
     // Save the response headers
     response.headers.forEach((value, header) => {
-      kb.add(responseNode, this.ns.httph(header), this.store.rdfFactory.literal(value), responseNode)
+      kb.add(responseNode, this.ns.httph(header), this.store.rdfFactory.literal(value), this.appNode)
 
       if (header === 'content-type') {
         kb.add(
           options.resource,
           this.ns.rdf('type'),
           kb.rdfFactory.namedNode(Util.mediaTypeClass(value).value),
-          responseNode
+          this.appNode // responseNode
         )
       }
     })
