@@ -36,7 +36,7 @@ const st3 = $rdf.st(baz, p, 333, doc2)
 const httpResultsText = `
 @prefix httph: <http://www.w3.org/2007/ont/httph#> .
 @prefix link: <http://www.w3.org/2007/ont/link#>.
- [] link:requestedURI "${doc.uri}", "${doc2.uri}"; link:response [ httph:ms-author-via "SPARQL" ].
+ [] link:requestedURI "${doc.uri}", "${doc2.uri}"; link:response [ httph:accept-patch "application/sparql-update" ].
  `
 
 function loadMeta (store) {
@@ -234,9 +234,9 @@ describe('UpdateManager', () => {
     it('Async version should not detect a document is editable from metadata after flush', async () => {
       loadMeta(updater.store)
 
-      updater.flagAuthorizationMetadata()
+      expect(updater.editable(doc1)).to.equal('SPARQL')
 
-      expect(updater.editable(doc1)).to.equal(undefined)
+      updater.flagAuthorizationMetadata()
 
       const result = await updater.checkEditable(doc1)
 
