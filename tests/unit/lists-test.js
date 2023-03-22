@@ -62,12 +62,13 @@ describe('Lists', () => {
   '[ rdf:first 1; rdf:rest [ rdf:first 2; rdf:rest [ rdf:first 3; rdf:rest rdf:nil ]]] <#value>  <#test>  .'
         parse(content, store, base, mimeType)
         convertFirstRestNil(store, doc)
-        console.log('@@@ CCC ' + dumpStore(store))
+        // console.log('@@@ CCC ' + dumpStore(store))
         expect(store.statements[0].subject.termType).to.eql('Collection')
         expect(store.statements[0].subject.elements.length).to.eql(3)
       })
 
       // Skip for now as serializer does not handle list as subject
+      /*
       it.skip('handles a lone list in Subject position serialized', () => {
         let base = 'https://example.com/tests/test.ttl'
         let mimeType = 'text/turtle'
@@ -79,7 +80,7 @@ describe('Lists', () => {
         // console.log('@@@ AAA ' + showDoc(store, doc))
         // expect(store.statements[0].object.termType).to.eql('BlankNode')
         convertFirstRestNil(store, doc)
-        console.log('@@@ CCC ' + dumpStore(store))
+        // console.log('@@@ CCC ' + dumpStore(store))
         // expect(store.statements[0].object.termType).to.eql('Collection')
         expect(showDoc(store, doc)).to.eql(`@prefix : <#>.
 
@@ -87,6 +88,7 @@ describe('Lists', () => {
 
 `)
       })
+      */
 
       it('handles nested lists', () => {
         let base = 'https://example.com/tests/test.ttl'
