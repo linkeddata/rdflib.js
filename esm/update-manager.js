@@ -1,7 +1,9 @@
 import _typeof from "@babel/runtime/helpers/typeof";
+import _asyncToGenerator from "@babel/runtime/helpers/asyncToGenerator";
 import _classCallCheck from "@babel/runtime/helpers/classCallCheck";
 import _createClass from "@babel/runtime/helpers/createClass";
 import _defineProperty from "@babel/runtime/helpers/defineProperty";
+import _regeneratorRuntime from "@babel/runtime/regenerator";
 function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
 function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
 function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i]; return arr2; }
@@ -76,13 +78,87 @@ var UpdateManager = /*#__PURE__*/function () {
       return uri.slice(0, 4) === 'http';
     }
 
+    /** Remove from the store HTTP authorization metadata
+    * The editble function below relies on copies we have in the store
+    * of the results of previous HTTP transactions. Howver, when
+    * the user logs in, then that data misrepresents what would happen
+    * if the user tried again.
+    */
+  }, {
+    key: "flagAuthorizationMetadata",
+    value: function flagAuthorizationMetadata() {
+      var kb = this.store;
+      var meta = kb.fetcher.appNode;
+      var requests = kb.statementsMatching(undefined, this.ns.link('requestedURI'), undefined, meta).map(function (st) {
+        return st.subject;
+      });
+      var _iterator = _createForOfIteratorHelper(requests),
+        _step;
+      try {
+        for (_iterator.s(); !(_step = _iterator.n()).done;) {
+          var request = _step.value;
+          var _response = kb.any(request, this.ns.link('response'), null, meta);
+          if (_response !== undefined) {
+            // ts
+            this.store.add(_response, this.ns.link('outOfDate'), true, meta); // @@ Boolean is fine - fix types
+          }
+        }
+      } catch (err) {
+        _iterator.e(err);
+      } finally {
+        _iterator.f();
+      }
+    }
+
     /**
      * Tests whether a file is editable.
      * If the file has a specific annotation that it is machine written,
      * for safety, it is editable (this doesn't actually check for write access)
      * If the file has wac-allow and accept patch headers, those are respected.
      * and local write access is determined by those headers.
-     * This version only looks at past HTTP requests, does not make new ones.
+     * This async version not only looks at past HTTP requests, it also makes new ones if necessary.
+     *
+     * @returns The method string SPARQL or DAV or
+     *   LOCALFILE or false if known, undefined if not known.
+     */
+  }, {
+    key: "checkEditable",
+    value: function () {
+      var _checkEditable = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee(uri, kb) {
+        var initial, final;
+        return _regeneratorRuntime.wrap(function _callee$(_context) {
+          while (1) switch (_context.prev = _context.next) {
+            case 0:
+              initial = this.editable(uri, kb);
+              if (!(initial !== undefined)) {
+                _context.next = 3;
+                break;
+              }
+              return _context.abrupt("return", initial);
+            case 3:
+              _context.next = 5;
+              return this.store.fetcher.load(uri);
+            case 5:
+              final = this.editable(uri, kb); // console.log(`Loaded ${uri} just to check editable, result: ${final}.`)
+              return _context.abrupt("return", final);
+            case 7:
+            case "end":
+              return _context.stop();
+          }
+        }, _callee, this);
+      }));
+      function checkEditable(_x, _x2) {
+        return _checkEditable.apply(this, arguments);
+      }
+      return checkEditable;
+    }()
+    /**
+     * Tests whether a file is editable.
+     * If the file has a specific annotation that it is machine written,
+     * for safety, it is editable (this doesn't actually check for write access)
+     * If the file has wac-allow and accept patch headers, those are respected.
+     * and local write access is determined by those headers.
+     * This synchronous version only looks at past HTTP requests, does not make new ones.
      *
      * @returns The method string SPARQL or DAV or
      *   LOCALFILE or false if known, undefined if not known.
@@ -99,27 +175,34 @@ var UpdateManager = /*#__PURE__*/function () {
       }
       uri = termValue(uri);
       if (!this.isHttpUri(uri)) {
-        if (kb.holds(this.store.rdfFactory.namedNode(uri), this.store.rdfFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'), this.store.rdfFactory.namedNode('http://www.w3.org/2007/ont/link#MachineEditableDocument'))) {
+        if (this.store.holds(this.store.rdfFactory.namedNode(uri), this.store.rdfFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'), this.store.rdfFactory.namedNode('http://www.w3.org/2007/ont/link#MachineEditableDocument'))) {
           return 'LOCALFILE';
         }
       }
       var request;
       var definitive = false;
+      var meta = this.store.fetcher.appNode;
+      // const kb = s
+
       // @ts-ignore passes a string to kb.each, which expects a term. Should this work?
-      var requests = kb.each(undefined, this.ns.link('requestedURI'), docpart(uri));
+      var requests = kb.each(undefined, this.ns.link('requestedURI'), docpart(uri), meta);
       var method;
       for (var r = 0; r < requests.length; r++) {
         request = requests[r];
         if (request !== undefined) {
-          var response = kb.any(request, this.ns.link('response'));
-          if (request !== undefined) {
-            var wacAllow = kb.anyValue(response, this.ns.httph('wac-allow'));
+          var _response2 = kb.any(request, this.ns.link('response'), null, meta);
+          if (_response2 !== undefined) {
+            // ts
+
+            var outOfDate = kb.anyJS(_response2, this.ns.link('outOfDate'), null, meta);
+            if (outOfDate) continue;
+            var wacAllow = kb.anyValue(_response2, this.ns.httph('wac-allow'));
             if (wacAllow) {
-              var _iterator = _createForOfIteratorHelper(wacAllow.split(',')),
-                _step;
+              var _iterator2 = _createForOfIteratorHelper(wacAllow.split(',')),
+                _step2;
               try {
-                for (_iterator.s(); !(_step = _iterator.n()).done;) {
-                  var bit = _step.value;
+                for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
+                  var bit = _step2.value;
                   var lr = bit.split('=');
                   if (lr[0].includes('user') && !lr[1].includes('write') && !lr[1].includes('append')) {
                     // console.log('    editable? excluded by WAC-Allow: ', wacAllow)
@@ -127,12 +210,12 @@ var UpdateManager = /*#__PURE__*/function () {
                   }
                 }
               } catch (err) {
-                _iterator.e(err);
+                _iterator2.e(err);
               } finally {
-                _iterator.f();
+                _iterator2.f();
               }
             }
-            var acceptPatch = kb.each(response, this.ns.httph('accept-patch'));
+            var acceptPatch = kb.each(_response2, this.ns.httph('accept-patch'));
             if (acceptPatch.length) {
               for (var i = 0; i < acceptPatch.length; i++) {
                 method = acceptPatch[i].value.trim();
@@ -140,7 +223,7 @@ var UpdateManager = /*#__PURE__*/function () {
                 if (method.indexOf('application/sparql-update-single-match') >= 0) return 'SPARQL';
               }
             }
-            var authorVia = kb.each(response, this.ns.httph('ms-author-via'));
+            var authorVia = kb.each(_response2, this.ns.httph('ms-author-via'));
             if (authorVia.length) {
               for (var _i = 0; _i < authorVia.length; _i++) {
                 method = authorVia[_i].value.trim();
@@ -155,7 +238,7 @@ var UpdateManager = /*#__PURE__*/function () {
             if (!this.isHttpUri(uri)) {
               if (!wacAllow) return false;else return 'LOCALFILE';
             }
-            var status = kb.each(response, this.ns.http('status'));
+            var status = kb.each(_response2, this.ns.http('status'));
             if (status.length) {
               for (var _i2 = 0; _i2 < status.length; _i2++) {
                 // @ts-ignore since statuses should be TFTerms, this should always be false

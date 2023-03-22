@@ -598,7 +598,9 @@ var Fetcher = /*#__PURE__*/function () {
     if (!this._fetch) {
       throw new Error('No _fetch function available for Fetcher');
     }
-    this.appNode = this.store.rdfFactory.blankNode();
+    // This is the name of the graph we store all the HTTP metadata in
+    this.appNode = this.store.sym('chrome://TheCurrentSession');
+    // this.appNode = this.store.rdfFactory.blankNode() // Needs to have a URI in tests
     this.store.fetcher = this; // Bi-linked
     this.requested = {};
     this.timeouts = {};
@@ -1430,17 +1432,19 @@ var Fetcher = /*#__PURE__*/function () {
       var _this10 = this;
       var kb = this.store;
       var responseNode = kb.bnode();
-      kb.add(options.req, this.ns.link('response'), responseNode, responseNode);
-      kb.add(responseNode, this.ns.http('status'), kb.rdfFactory.literal(response.status), responseNode);
-      kb.add(responseNode, this.ns.http('statusText'), kb.rdfFactory.literal(response.statusText), responseNode);
+      kb.add(options.req, this.ns.link('response'), responseNode, this.appNode);
+      kb.add(responseNode, this.ns.http('status'), kb.rdfFactory.literal(response.status), this.appNode);
+      kb.add(responseNode, this.ns.http('statusText'), kb.rdfFactory.literal(response.statusText), this.appNode);
 
       // Save the response headers
       response.headers.forEach(function (value, header) {
-        kb.add(responseNode, _this10.ns.httph(header), _this10.store.rdfFactory.literal(value), responseNode);
+        kb.add(responseNode, _this10.ns.httph(header), _this10.store.rdfFactory.literal(value), _this10.appNode);
         if (header === 'content-type') {
-          kb.add(options.resource, _this10.ns.rdf('type'), kb.rdfFactory.namedNode(Util.mediaTypeClass(value).value), responseNode);
+          kb.add(options.resource, _this10.ns.rdf('type'), kb.rdfFactory.namedNode(Util.mediaTypeClass(value).value), _this10.appNode // responseNode
+          );
         }
       });
+
       return responseNode;
     }
   }, {

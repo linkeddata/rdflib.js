@@ -181,7 +181,7 @@ export default class Fetcher implements CallbackifyInterface {
     _fetch: Fetch;
     mediatypes: MediatypesMap;
     /** Denoting this session */
-    appNode: BlankNode;
+    appNode: NamedNode;
     /**
      * this.requested[uri] states:
      * undefined     no record of web access or records reset

@@ -175,7 +175,7 @@ describe('Fetcher', () => {
   describe('load', () => {
     // let fetcher, uri, options, xhr
 
-    it('should load multiple docs')
+    // it.skip('should load multiple docs', () => {})
   })
 
   describe('load', () => {
@@ -338,7 +338,6 @@ describe('Fetcher', () => {
       delete fetcher.requested[uri]
       return fetcher.webOperation('PATCH', uri, options) // load() is not usable for PATCH
         .then(result => {}, () => {
-          console.log('###### ' + fetcher.requested[uri])
           expect(fetcher.requested[uri]).to.not.exist()
         })
     })
@@ -438,33 +437,33 @@ describe('Fetcher', () => {
   })
 
   describe('guessContentType', () => {
-    it('should return null if uri has no extension')
+    // it.skip('should return null if uri has no extension')
 
-    it('should return null if unknown extension')
+    // it.skip('should return null if unknown extension')
 
-    it('it should return the content type for a known extension')
+    // it.skip('it should return the content type for a known extension')
   })
 
   describe('normalizedContentType', () => {
-    it('should return the forced content type if present')
+    // it.skip('should return the forced content type if present')
 
-    it('should try to guess content type if none returned in header')
+    // it.skip('should try to guess content type if none returned in header')
 
-    it('should try to guess content type for octet-stream generic type')
+    // it.skip('should try to guess content type for octet-stream generic type')
 
-    it('should return the content type in the headers')
+    // it.skip('should return the content type in the headers')
 
-    it('should default to text/xml for file: protocol uris')
+    // it.skip('should default to text/xml for file: protocol uris')
 
-    it('should default to text/xml for chrome: protocol uris')
+    // it.skip('should default to text/xml for chrome: protocol uris')
   })
 
   describe('handlerForContentType', () => {
-    it('should return null when no contentType given')
+    // it.skip('should return null when no contentType given')
 
-    it('should return a handler instance if content type matches')
+    // it.skip('should return a handler instance if content type matches')
 
-    it('should return null when no handler match is found')
+    // it.skip('should return null when no handler match is found')
   })
 
   describe('load nock tests', () => {
@@ -568,6 +567,6 @@ describe('Fetcher', () => {
   })
 
   describe('createContainer', () => {
-    it('should invoke webOperation with the right options')
+    // it.skip('should invoke webOperation with the right options', () => {})
   })
 })

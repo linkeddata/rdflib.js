@@ -27,7 +27,7 @@ const doc = bar.doc()
 const doc1 = bar.doc()
 const doc2 = baz.doc()
 
-const meta = $rdf.sym(doc.uri + '#meta') // random graph name for meta data
+const meta = $rdf.sym('chrome://TheCurrentSession') // graph name for meta data
 const st1 = $rdf.st(bar, p, 111, doc)
 const st2 = $rdf.st(bar, p, 222, doc1)
 const st3 = $rdf.st(baz, p, 333, doc2)

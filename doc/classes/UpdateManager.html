@@ -26,7 +26,7 @@ and also looking out for concurrent updates from other agents</p>
 <ul class="tsd-hierarchy">
 <li><span class="target">UpdateManager</span></li></ul></section><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/8a42dd5/src/update-manager.ts#L31">src/update-manager.ts:31</a></li></ul></aside>
+<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/7d24e24/src/update-manager.ts#L31">src/update-manager.ts:31</a></li></ul></aside>
 <section class="tsd-panel-group tsd-index-group">
 <section class="tsd-panel tsd-index-panel">
 <details class="tsd-index-content tsd-index-accordion" open><summary class="tsd-accordion-summary tsd-index-summary">
@@ -49,9 +49,11 @@ and also looking out for concurrent updates from other agents</p>
 <div class="tsd-index-list"><a href="UpdateManager.html#addDownstreamChangeListener" class="tsd-index-link tsd-kind-method tsd-parent-kind-class"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><rect fill="var(--color-icon-background)" stroke="#FF4DB8" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="12" id="icon-2048-path"></rect><path d="M9.162 16V7.24H10.578L11.514 10.072C11.602 10.328 11.674 10.584 11.73 10.84C11.794 11.088 11.842 11.28 11.874 11.416C11.906 11.28 11.954 11.088 12.018 10.84C12.082 10.584 12.154 10.324 12.234 10.06L13.122 7.24H14.538V16H13.482V12.82C13.482 12.468 13.49 12.068 13.506 11.62C13.53 11.172 13.558 10.716 13.59 10.252C13.622 9.78 13.654 9.332 13.686 8.908C13.726 8.476 13.762 8.1 13.794 7.78L12.366 12.16H11.334L9.894 7.78C9.934 8.092 9.97 8.456 10.002 8.872C10.042 9.28 10.078 9.716 10.11 10.18C10.142 10.636 10.166 11.092 10.182 11.548C10.206 12.004 10.218 12.428 10.218 12.82V16H9.162Z" fill="var(--color-text)" id="icon-2048-text"></path></svg><span>add<wbr/>Downstream<wbr/>Change<wbr/>Listener</span></a>
 <a href="UpdateManager.html#anonymize" class="tsd-index-link tsd-kind-method tsd-parent-kind-class"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg><span>anonymize</span></a>
 <a href="UpdateManager.html#anonymizeNT" class="tsd-index-link tsd-kind-method tsd-parent-kind-class"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg><span>anonymizeNT</span></a>
+<a href="UpdateManager.html#checkEditable" class="tsd-index-link tsd-kind-method tsd-parent-kind-class"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg><span>check<wbr/>Editable</span></a>
 <a href="UpdateManager.html#clearUpstreamCount" class="tsd-index-link tsd-kind-method tsd-parent-kind-class"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg><span>clear<wbr/>Upstream<wbr/>Count</span></a>
 <a href="UpdateManager.html#delete_statement" class="tsd-index-link tsd-kind-method tsd-parent-kind-class"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg><span>delete_<wbr/>statement</span></a>
 <a href="UpdateManager.html#editable" class="tsd-index-link tsd-kind-method tsd-parent-kind-class"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg><span>editable</span></a>
+<a href="UpdateManager.html#flagAuthorizationMetadata" class="tsd-index-link tsd-kind-method tsd-parent-kind-class"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg><span>flag<wbr/>Authorization<wbr/>Metadata</span></a>
 <a href="UpdateManager.html#getUpdatesVia" class="tsd-index-link tsd-kind-method tsd-parent-kind-class"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg><span>get<wbr/>Updates<wbr/>Via</span></a>
 <a href="UpdateManager.html#insert_statement" class="tsd-index-link tsd-kind-method tsd-parent-kind-class"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg><span>insert_<wbr/>statement</span></a>
 <a href="UpdateManager.html#isHttpUri" class="tsd-index-link tsd-kind-method tsd-parent-kind-class"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg><span>is<wbr/>Http<wbr/>Uri</span></a>
@@ -85,7 +87,7 @@ and also looking out for concurrent updates from other agents</p>
 </div></li></ul></div>
 <h4 class="tsd-returns-title">Returns <a href="UpdateManager.html" class="tsd-signature-type" data-tsd-kind="Class">UpdateManager</a></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/8a42dd5/src/update-manager.ts#L48">src/update-manager.ts:48</a></li></ul></aside></li></ul></section></section>
+<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/7d24e24/src/update-manager.ts#L48">src/update-manager.ts:48</a></li></ul></aside></li></ul></section></section>
 <section class="tsd-panel-group tsd-member-group">
 <h2>Properties</h2>
 <section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class"><a id="fps" class="tsd-anchor"></a>
@@ -95,7 +97,7 @@ and also looking out for concurrent updates from other agents</p>
 <h4>Type declaration</h4>
 <ul class="tsd-parameters"></ul></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/8a42dd5/src/update-manager.ts#L37">src/update-manager.ts:37</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/7d24e24/src/update-manager.ts#L37">src/update-manager.ts:37</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class"><a id="ifps" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>ifps</span><a href="#ifps" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <div class="tsd-signature">ifps<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{}</span></div>
@@ -103,26 +105,26 @@ and also looking out for concurrent updates from other agents</p>
 <h4>Type declaration</h4>
 <ul class="tsd-parameters"></ul></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/8a42dd5/src/update-manager.ts#L35">src/update-manager.ts:35</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/7d24e24/src/update-manager.ts#L35">src/update-manager.ts:35</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class"><a id="ns" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>ns</span><a href="#ns" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <div class="tsd-signature">ns<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div>
 <div class="tsd-comment tsd-typography"><p>Object of namespaces</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/8a42dd5/src/update-manager.ts#L43">src/update-manager.ts:43</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/7d24e24/src/update-manager.ts#L43">src/update-manager.ts:43</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class"><a id="patchControl" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>patch<wbr/>Control</span><a href="#patchControl" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <div class="tsd-signature">patch<wbr/>Control<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">[</span><span class="tsd-signature-symbol">]</span></div>
 <div class="tsd-comment tsd-typography"><p>Index of objects for coordinating incoming and outgoing patches</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/8a42dd5/src/update-manager.ts#L40">src/update-manager.ts:40</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/7d24e24/src/update-manager.ts#L40">src/update-manager.ts:40</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class"><a id="store" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>store</span><a href="#store" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <div class="tsd-signature">store<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">UpdateManagerFormula</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/8a42dd5/src/update-manager.ts#L33">src/update-manager.ts:33</a></li></ul></aside></section></section>
+<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/7d24e24/src/update-manager.ts#L33">src/update-manager.ts:33</a></li></ul></aside></section></section>
 <section class="tsd-panel-group tsd-member-group">
 <h2>Methods</h2>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="addDownstreamChangeListener" class="tsd-anchor"></a>
@@ -139,7 +141,7 @@ and also looking out for concurrent updates from other agents</p>
 <h5>listener: <span class="tsd-signature-type">any</span></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/8a42dd5/src/update-manager.ts#L509">src/update-manager.ts:509</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/7d24e24/src/update-manager.ts#L554">src/update-manager.ts:554</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="anonymize" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>anonymize</span><a href="#anonymize" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -152,7 +154,7 @@ and also looking out for concurrent updates from other agents</p>
 <h5>obj: <span class="tsd-signature-type">any</span></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">any</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/8a42dd5/src/update-manager.ts#L186">src/update-manager.ts:186</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/7d24e24/src/update-manager.ts#L231">src/update-manager.ts:231</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="anonymizeNT" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>anonymizeNT</span><a href="#anonymizeNT" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -165,7 +167,32 @@ and also looking out for concurrent updates from other agents</p>
 <h5>stmt: <span class="tsd-signature-type">Quad</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Quad_Subject</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">Quad_Predicate</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">Quad_Object</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">Quad_Graph</span><span class="tsd-signature-symbol">&gt;</span></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/8a42dd5/src/update-manager.ts#L192">src/update-manager.ts:192</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/7d24e24/src/update-manager.ts#L237">src/update-manager.ts:237</a></li></ul></aside></li></ul></section>
+<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="checkEditable" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><span>check<wbr/>Editable</span><a href="#checkEditable" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
+<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+<li class="tsd-signature tsd-anchor-link" id="checkEditable.checkEditable-1">check<wbr/>Editable<span class="tsd-signature-symbol">(</span>uri<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">NamedNode</span>, kb<span class="tsd-signature-symbol">?: </span><a href="Store.html" class="tsd-signature-type" data-tsd-kind="Class">Store</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">&gt;</span><a href="#checkEditable.checkEditable-1" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></li>
+<li class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Tests whether a file is editable.
+If the file has a specific annotation that it is machine written,
+for safety, it is editable (this doesn&#39;t actually check for write access)
+If the file has wac-allow and accept patch headers, those are respected.
+and local write access is determined by those headers.
+This async version not only looks at past HTTP requests, it also makes new ones if necessary.</p>
+
+<h3>Returns</h3><p>The method string SPARQL or DAV or
+  LOCALFILE or false if known, undefined if not known.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li>
+<h5>uri: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">NamedNode</span></h5></li>
+<li>
+<h5><code class="tsd-tag ts-flagOptional">Optional</code> kb: <a href="Store.html" class="tsd-signature-type" data-tsd-kind="Class">Store</a></h5></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/7d24e24/src/update-manager.ts#L113">src/update-manager.ts:113</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="clearUpstreamCount" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>clear<wbr/>Upstream<wbr/>Count</span><a href="#clearUpstreamCount" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -181,7 +208,7 @@ to distinguish the ones from others from our own.</p>
 <h5>doc: <span class="tsd-signature-type">NamedNode</span></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/8a42dd5/src/update-manager.ts#L498">src/update-manager.ts:498</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/7d24e24/src/update-manager.ts#L543">src/update-manager.ts:543</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="delete_statement" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>delete_<wbr/>statement</span><a href="#delete_statement" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -196,7 +223,7 @@ to distinguish the ones from others from our own.</p>
 <h5>callbackFunction: <span class="tsd-signature-type">CallBackFunction</span></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/8a42dd5/src/update-manager.ts#L450">src/update-manager.ts:450</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/7d24e24/src/update-manager.ts#L495">src/update-manager.ts:495</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="editable" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>editable</span><a href="#editable" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -207,7 +234,7 @@ If the file has a specific annotation that it is machine written,
 for safety, it is editable (this doesn&#39;t actually check for write access)
 If the file has wac-allow and accept patch headers, those are respected.
 and local write access is determined by those headers.
-This version only looks at past HTTP requests, does not make new ones.</p>
+This synchronous version only looks at past HTTP requests, does not make new ones.</p>
 
 <h3>Returns</h3><p>The method string SPARQL or DAV or
   LOCALFILE or false if known, undefined if not known.</p>
@@ -221,7 +248,21 @@ This version only looks at past HTTP requests, does not make new ones.</p>
 <h5><code class="tsd-tag ts-flagOptional">Optional</code> kb: <a href="Store.html" class="tsd-signature-type" data-tsd-kind="Class">Store</a></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">boolean</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/8a42dd5/src/update-manager.ts#L96">src/update-manager.ts:96</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/7d24e24/src/update-manager.ts#L134">src/update-manager.ts:134</a></li></ul></aside></li></ul></section>
+<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="flagAuthorizationMetadata" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><span>flag<wbr/>Authorization<wbr/>Metadata</span><a href="#flagAuthorizationMetadata" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
+<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+<li class="tsd-signature tsd-anchor-link" id="flagAuthorizationMetadata.flagAuthorizationMetadata-1">flag<wbr/>Authorization<wbr/>Metadata<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span><a href="#flagAuthorizationMetadata.flagAuthorizationMetadata-1" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></li>
+<li class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Remove from the store HTTP authorization metadata
+The editble function below relies on copies we have in the store
+of the results of previous HTTP transactions. Howver, when
+the user logs in, then that data misrepresents what would happen
+if the user tried again.</p>
+</div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/7d24e24/src/update-manager.ts#L90">src/update-manager.ts:90</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="getUpdatesVia" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>get<wbr/>Updates<wbr/>Via</span><a href="#getUpdatesVia" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -234,7 +275,7 @@ This version only looks at past HTTP requests, does not make new ones.</p>
 <h5>doc: <span class="tsd-signature-type">NamedNode</span></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">null</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/8a42dd5/src/update-manager.ts#L503">src/update-manager.ts:503</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/7d24e24/src/update-manager.ts#L548">src/update-manager.ts:548</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="insert_statement" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>insert_<wbr/>statement</span><a href="#insert_statement" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -249,7 +290,7 @@ This version only looks at past HTTP requests, does not make new ones.</p>
 <h5>callbackFunction: <span class="tsd-signature-type">CallBackFunction</span></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/8a42dd5/src/update-manager.ts#L432">src/update-manager.ts:432</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/7d24e24/src/update-manager.ts#L477">src/update-manager.ts:477</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="isHttpUri" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>is<wbr/>Http<wbr/>Uri</span><a href="#isHttpUri" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -262,7 +303,7 @@ This version only looks at past HTTP requests, does not make new ones.</p>
 <h5>uri: <span class="tsd-signature-type">string</span></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/8a42dd5/src/update-manager.ts#L80">src/update-manager.ts:80</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/7d24e24/src/update-manager.ts#L80">src/update-manager.ts:80</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="nTriples" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>n<wbr/>Triples</span><a href="#nTriples" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -275,7 +316,7 @@ This version only looks at past HTTP requests, does not make new ones.</p>
 <h5>stmt: <span class="tsd-signature-type">any</span></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/8a42dd5/src/update-manager.ts#L198">src/update-manager.ts:198</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/7d24e24/src/update-manager.ts#L243">src/update-manager.ts:243</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="patchControlFor" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>patch<wbr/>Control<wbr/>For</span><a href="#patchControlFor" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -288,7 +329,7 @@ This version only looks at past HTTP requests, does not make new ones.</p>
 <h5>doc: <span class="tsd-signature-type">NamedNode</span></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">any</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/8a42dd5/src/update-manager.ts#L73">src/update-manager.ts:73</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/7d24e24/src/update-manager.ts#L73">src/update-manager.ts:73</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="put" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>put</span><a href="#put" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -326,7 +367,7 @@ This version only looks at past HTTP requests, does not make new ones.</p>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4></li></ul></li></ul></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/8a42dd5/src/update-manager.ts#L1052">src/update-manager.ts:1052</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/7d24e24/src/update-manager.ts#L1097">src/update-manager.ts:1097</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="reload" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>reload</span><a href="#reload" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -366,7 +407,7 @@ document in the meantime.</p>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{}</span></h4></li></ul></li></ul></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/8a42dd5/src/update-manager.ts#L1101">src/update-manager.ts:1101</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/7d24e24/src/update-manager.ts#L1146">src/update-manager.ts:1146</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="reloadAndSync" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>reload<wbr/>And<wbr/>Sync</span><a href="#reloadAndSync" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -379,7 +420,7 @@ document in the meantime.</p>
 <h5>doc: <span class="tsd-signature-type">NamedNode</span></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/8a42dd5/src/update-manager.ts#L518">src/update-manager.ts:518</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/7d24e24/src/update-manager.ts#L563">src/update-manager.ts:563</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="requestDownstreamAction" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>request<wbr/>Downstream<wbr/>Action</span><a href="#requestDownstreamAction" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -399,7 +440,7 @@ If the websocket, by contrast, has sent a patch, then this may not be necessary.
 <h5>action: <span class="tsd-signature-type">any</span></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/8a42dd5/src/update-manager.ts#L479">src/update-manager.ts:479</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/7d24e24/src/update-manager.ts#L524">src/update-manager.ts:524</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="serialize" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>serialize</span><a href="#serialize" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -420,7 +461,7 @@ If the websocket, by contrast, has sent a patch, then this may not be necessary.
 <h5>contentType: <span class="tsd-signature-type">string</span></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/8a42dd5/src/update-manager.ts#L1018">src/update-manager.ts:1018</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/7d24e24/src/update-manager.ts#L1063">src/update-manager.ts:1063</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="setRefreshHandler" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>set<wbr/>Refresh<wbr/>Handler</span><a href="#setRefreshHandler" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -445,7 +486,7 @@ have to do the reload yourself. Do mot mix them.</p>
 <h5>handler: <span class="tsd-signature-type">any</span></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/8a42dd5/src/update-manager.ts#L580">src/update-manager.ts:580</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/7d24e24/src/update-manager.ts#L625">src/update-manager.ts:625</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="update" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>update</span><a href="#update" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -496,7 +537,7 @@ The <code>why</code> property of each statement must be the same and give the we
 </div></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/8a42dd5/src/update-manager.ts#L707">src/update-manager.ts:707</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/7d24e24/src/update-manager.ts#L752">src/update-manager.ts:752</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="updateDav" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>update<wbr/>Dav</span><a href="#updateDav" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -517,7 +558,7 @@ The <code>why</code> property of each statement must be the same and give the we
 <h5>options: <span class="tsd-signature-type">Partial</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/AutoInitOptions.html" class="tsd-signature-type" data-tsd-kind="Interface">AutoInitOptions</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> = {}</span></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">null</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/8a42dd5/src/update-manager.ts#L902">src/update-manager.ts:902</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/7d24e24/src/update-manager.ts#L947">src/update-manager.ts:947</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="updateLocalFile" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>update<wbr/>Local<wbr/>File</span><a href="#updateLocalFile" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -540,7 +581,7 @@ The <code>why</code> property of each statement must be the same and give the we
 <h5>options: <span class="tsd-signature-type">Partial</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/AutoInitOptions.html" class="tsd-signature-type" data-tsd-kind="Interface">AutoInitOptions</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> = {}</span></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/8a42dd5/src/update-manager.ts#L973">src/update-manager.ts:973</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/7d24e24/src/update-manager.ts#L1018">src/update-manager.ts:1018</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="updateMany" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>update<wbr/>Many</span><a href="#updateMany" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -566,7 +607,7 @@ The statements to be deleted and inserted may span more than one web document.</
 </div></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/8a42dd5/src/update-manager.ts#L678">src/update-manager.ts:678</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/7d24e24/src/update-manager.ts#L723">src/update-manager.ts:723</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="update_statement" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>update_<wbr/>statement</span><a href="#update_statement" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -584,7 +625,7 @@ It returns an object which includes
 <h5>statement: <span class="tsd-signature-type">Quad</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">Quad_Subject</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">Quad_Predicate</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">Quad_Object</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">Quad_Graph</span><span class="tsd-signature-symbol">&gt;</span></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span><br/><span>    </span>set_object<span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">(</span>obj<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, callbackFunction<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">; </span><br/><span>    </span>statement<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">Term</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">; </span><br/><span>    </span>statementNT<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span><br/><span>    </span>where<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">; </span><br/><span class="tsd-signature-symbol">}</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/8a42dd5/src/update-manager.ts#L404">src/update-manager.ts:404</a></li></ul></aside></li></ul></section></section></div>
+<li>Defined in <a href="https://github.com/linkeddata/rdflib.js/blob/7d24e24/src/update-manager.ts#L449">src/update-manager.ts:449</a></li></ul></aside></li></ul></section></section></div>
 <div class="col-4 col-menu menu-sticky-wrap menu-highlight">
 <div class="tsd-navigation settings">
 <details class="tsd-index-accordion"><summary class="tsd-accordion-summary">
@@ -620,9 +661,11 @@ It returns an object which includes
 <li class="tsd-kind-method tsd-parent-kind-class"><a href="UpdateManager.html#addDownstreamChangeListener" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg>add<wbr/>Downstream<wbr/>Change<wbr/>Listener</a></li>
 <li class="tsd-kind-method tsd-parent-kind-class"><a href="UpdateManager.html#anonymize" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg>anonymize</a></li>
 <li class="tsd-kind-method tsd-parent-kind-class"><a href="UpdateManager.html#anonymizeNT" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg>anonymizeNT</a></li>
+<li class="tsd-kind-method tsd-parent-kind-class"><a href="UpdateManager.html#checkEditable" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg>check<wbr/>Editable</a></li>
 <li class="tsd-kind-method tsd-parent-kind-class"><a href="UpdateManager.html#clearUpstreamCount" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg>clear<wbr/>Upstream<wbr/>Count</a></li>
 <li class="tsd-kind-method tsd-parent-kind-class"><a href="UpdateManager.html#delete_statement" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg>delete_<wbr/>statement</a></li>
 <li class="tsd-kind-method tsd-parent-kind-class"><a href="UpdateManager.html#editable" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg>editable</a></li>
+<li class="tsd-kind-method tsd-parent-kind-class"><a href="UpdateManager.html#flagAuthorizationMetadata" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg>flag<wbr/>Authorization<wbr/>Metadata</a></li>
 <li class="tsd-kind-method tsd-parent-kind-class"><a href="UpdateManager.html#getUpdatesVia" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg>get<wbr/>Updates<wbr/>Via</a></li>
 <li class="tsd-kind-method tsd-parent-kind-class"><a href="UpdateManager.html#insert_statement" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg>insert_<wbr/>statement</a></li>
 <li class="tsd-kind-method tsd-parent-kind-class"><a href="UpdateManager.html#isHttpUri" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg>is<wbr/>Http<wbr/>Uri</a></li>

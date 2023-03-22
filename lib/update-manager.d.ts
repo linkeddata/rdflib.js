@@ -27,13 +27,32 @@ export default class UpdateManager {
     constructor(store?: IndexedFormula);
     patchControlFor(doc: NamedNode): any;
     isHttpUri(uri: string): boolean;
+    /** Remove from the store HTTP authorization metadata
+    * The editble function below relies on copies we have in the store
+    * of the results of previous HTTP transactions. Howver, when
+    * the user logs in, then that data misrepresents what would happen
+    * if the user tried again.
+    */
+    flagAuthorizationMetadata(): void;
     /**
      * Tests whether a file is editable.
      * If the file has a specific annotation that it is machine written,
      * for safety, it is editable (this doesn't actually check for write access)
      * If the file has wac-allow and accept patch headers, those are respected.
      * and local write access is determined by those headers.
-     * This version only looks at past HTTP requests, does not make new ones.
+     * This async version not only looks at past HTTP requests, it also makes new ones if necessary.
+     *
+     * @returns The method string SPARQL or DAV or
+     *   LOCALFILE or false if known, undefined if not known.
+     */
+    checkEditable(uri: string | NamedNode, kb?: IndexedFormula): Promise<string | boolean | undefined>;
+    /**
+     * Tests whether a file is editable.
+     * If the file has a specific annotation that it is machine written,
+     * for safety, it is editable (this doesn't actually check for write access)
+     * If the file has wac-allow and accept patch headers, those are respected.
+     * and local write access is determined by those headers.
+     * This synchronous version only looks at past HTTP requests, does not make new ones.
      *
      * @returns The method string SPARQL or DAV or
      *   LOCALFILE or false if known, undefined if not known.
