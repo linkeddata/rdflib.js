@@ -871,10 +871,27 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
   }
 
   /**
-   * Removes all statements in a doc
+   * Removes all statements in a doc, the related metadata including request/response
    * @param doc - The document / graph
    */
   removeDocument(doc: Quad_Graph): IndexedFormula {
+    const meta = this.sym('chrome://TheCurrentSession') // or this.rdfFactory.namedNode('chrome://TheCurrentSession')
+    const linkNamespaceURI = 'http://www.w3.org/2007/ont/link#' // alain
+    // remove request/response and metadata
+    const requests = this.statementsMatching(undefined, this.sym(`${linkNamespaceURI}requestedURI`), this.rdfFactory.literal(doc.value), meta).map(st => st.subject)
+    for (var r = 0; r < requests.length; r++) {
+      const request = requests[r]
+      if (request !== undefined) {
+        this.removeMatches(request, null, null, meta)
+        const response = this.any(request, this.sym(`${linkNamespaceURI}response`), null, meta) as Quad_Subject
+        if (response !== undefined) { // ts
+          this.removeMatches(response, null, null, meta)
+        }
+      }
+    }
+    this.removeMatches(this.sym(doc.value), null, null, meta) // content-type
+
+    // remove document
     var sts: Quad[] = this.statementsMatching(undefined, undefined, undefined, doc).slice() // Take a copy as this is the actual index
     for (var i = 0; i < sts.length; i++) {
       this.removeStatement(sts[i])
