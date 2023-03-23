@@ -871,7 +871,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
   }
 
   /**
-   * Removes all statements in a doc, the related metadata including request/response
+   * Removes all statements in a doc, along with the related metadata including request/response
    * @param doc - The document / graph
    */
   removeDocument(doc: Quad_Graph): IndexedFormula {
