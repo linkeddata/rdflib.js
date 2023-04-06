@@ -838,12 +838,32 @@ var IndexedFormula = /*#__PURE__*/function (_Formula) {
     }
 
     /**
-     * Removes all statements in a doc
+     * Removes all statements in a doc, along with the related metadata including request/response
      * @param doc - The document / graph
      */
   }, {
     key: "removeDocument",
     value: function removeDocument(doc) {
+      var meta = this.sym('chrome://TheCurrentSession'); // or this.rdfFactory.namedNode('chrome://TheCurrentSession')
+      var linkNamespaceURI = 'http://www.w3.org/2007/ont/link#'; // alain
+      // remove request/response and metadata
+      var requests = this.statementsMatching(undefined, this.sym("".concat(linkNamespaceURI, "requestedURI")), this.rdfFactory.literal(doc.value), meta).map(function (st) {
+        return st.subject;
+      });
+      for (var r = 0; r < requests.length; r++) {
+        var request = requests[r];
+        if (request !== undefined) {
+          this.removeMatches(request, null, null, meta);
+          var response = this.any(request, this.sym("".concat(linkNamespaceURI, "response")), null, meta);
+          if (response !== undefined) {
+            // ts
+            this.removeMatches(response, null, null, meta);
+          }
+        }
+      }
+      this.removeMatches(this.sym(doc.value), null, null, meta); // content-type
+
+      // remove document
       var sts = this.statementsMatching(undefined, undefined, undefined, doc).slice(); // Take a copy as this is the actual index
       for (var i = 0; i < sts.length; i++) {
         this.removeStatement(sts[i]);
