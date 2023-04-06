@@ -974,6 +974,19 @@ export default class Fetcher implements CallbackifyInterface {
     docuri = docuri.split('#')[0]
 
     options = this.initFetchOptions(docuri, options)
+    // if metadata flaged clear cache and removeDocument
+    const meta = this.appNode
+    const kb = this.store
+    const requests = kb.statementsMatching(undefined, this.ns.link('requestedURI'), kb.sym(docuri), meta).map(st => st.subject)
+    for (const request of requests) {
+      const response = kb.any(request, this.ns.link('response'), null, meta) as Quad_Subject
+      if (response !== undefined) { // ts
+        const quad = kb.statementsMatching(response, this.ns.link('outOfDate'), true as any, meta)
+        kb.remove(quad)
+        options.force = true
+        options.clearPreviousData = true
+      }
+    }
 
     const initialisedOptions = this.initFetchOptions(docuri, options)
 
