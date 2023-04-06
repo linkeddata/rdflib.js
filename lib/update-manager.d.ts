@@ -33,7 +33,7 @@ export default class UpdateManager {
     * the user logs in, then that data misrepresents what would happen
     * if the user tried again.
     */
-    flagAuthorizationMetadata(): void;
+    flagAuthorizationMetadata(kb?: IndexedFormula): void;
     /**
      * Tests whether a file is editable.
      * If the file has a specific annotation that it is machine written,
