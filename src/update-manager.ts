@@ -87,14 +87,16 @@ export default class UpdateManager {
 * the user logs in, then that data misrepresents what would happen
 * if the user tried again.
 */
-flagAuthorizationMetadata () {
-  const kb = this.store
-  const meta = kb.fetcher.appNode
+flagAuthorizationMetadata (kb?: IndexedFormula) {
+  if (!kb) {
+    kb = this.store
+  }
+  const meta = kb.fetcher?.appNode
   const requests = kb.statementsMatching(undefined, this.ns.link('requestedURI'), undefined, meta).map(st => st.subject)
   for (const request of requests) {
     const response = kb.any(request, this.ns.link('response'), null, meta) as Quad_Subject
     if (response !== undefined) { // ts
-      this.store.add(response, this.ns.link('outOfDate'), true as any, meta) // @@ Boolean is fine - fix types
+      kb.add(response, this.ns.link('outOfDate'), true as any, meta) // @@ Boolean is fine - fix types
     }
   }
 }
@@ -111,11 +113,18 @@ flagAuthorizationMetadata () {
  *   LOCALFILE or false if known, undefined if not known.
  */
  async checkEditable (uri: string | NamedNode, kb?: IndexedFormula): Promise<string | boolean | undefined> {
-   const initial = this.editable(uri, kb)
+  if (!uri) {
+    return false // Eg subject is bnode, no known doc to write to
+  }
+  if (!kb) {
+    kb = this.store
+  }
+
+  const initial = this.editable(uri, kb)
    if (initial !==  undefined) {
      return initial
    }
-   await this.store.fetcher.load(uri)
+   await kb.fetcher?.load(uri)
    const final = this.editable(uri, kb)
    // console.log(`Loaded ${uri} just to check editable, result: ${final}.`)
    return final
@@ -141,17 +150,17 @@ flagAuthorizationMetadata () {
     uri = termValue(uri)
 
     if ( !this.isHttpUri(uri as string) ) {
-      if (this.store.holds(
-          this.store.rdfFactory.namedNode(uri),
-          this.store.rdfFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
-          this.store.rdfFactory.namedNode('http://www.w3.org/2007/ont/link#MachineEditableDocument'))) {
+      if (kb.holds(
+          kb.rdfFactory.namedNode(uri),
+          kb.rdfFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
+          kb.rdfFactory.namedNode('http://www.w3.org/2007/ont/link#MachineEditableDocument'))) {
         return 'LOCALFILE'
       }
     }
 
     var request
     var definitive = false
-    const meta = this.store.fetcher.appNode
+    const meta = kb.fetcher?.appNode
     // const kb = s
 
      // @ts-ignore passes a string to kb.each, which expects a term. Should this work?
