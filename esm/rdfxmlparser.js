@@ -474,6 +474,9 @@ _defineProperty(RDFParser, "ns", {
   'RDF': 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
   'RDFS': 'http://www.w3.org/2000/01/rdf-schema#'
 });
+/** DOM Level 2 node type magic numbers @final
+ *  @member RDFParser
+ */
 _defineProperty(RDFParser, "nodeType", {
   'ELEMENT': 1,
   'ATTRIBUTE': 2,

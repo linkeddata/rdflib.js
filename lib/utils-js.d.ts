@@ -37,9 +37,9 @@ export function parseXML(str: any, options: any): Document;
 export function RDFArrayRemove(a: any, x: any): void;
 export function string_startswith(str: any, pref: any): boolean;
 export function stackString(e: any): string;
-import NamedNode from "./named-node";
-import log from "./log";
-import * as uri from "./uri";
+import NamedNode from './named-node';
+import log from './log';
+import * as uri from './uri';
 export namespace string {
     export { stringTemplate as template };
 }

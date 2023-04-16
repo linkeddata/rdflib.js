@@ -65,4 +65,4 @@ export class Serializer {
     statementsToXML(sts: any): string;
     statementsToJsonld(sts: any): string;
 }
-import NamedNode from "./named-node";
+import NamedNode from './named-node';

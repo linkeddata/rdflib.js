@@ -98,37 +98,6 @@ function handleRDFType(formula, subj, pred, obj, why) {
 var IndexedFormula = /*#__PURE__*/function (_Formula) {
   _inherits(IndexedFormula, _Formula);
   var _super = _createSuper(IndexedFormula);
-  // IN future - allow pass array of statements to constructor
-  /**
-   * An UpdateManager initialised to this store
-   */
-
-  /**
-   * Dictionary of namespace prefixes
-   */
-
-  /** Map of iri predicates to functions to call when adding { s type X } */
-
-  /** Map of iri predicates to functions to call when getting statement with {s X o} */
-
-  /** Redirect to lexically smaller equivalent symbol */
-
-  /** Reverse mapping to redirection: aliases for this */
-
-  /** Redirections we got from HTTP */
-
-  /** Array of statements with this X as subject */
-
-  /** Array of statements with this X as predicate */
-
-  /** Array of statements with this X as object */
-
-  /** Array of statements with X as provenance */
-
-  /** Function to remove quads from the store arrays with */
-
-  /** Callbacks which are triggered after a statement has been added to the store */
-
   /**
    * Creates a new formula
    * @param features - What sort of automatic processing to do? Array of string
@@ -143,22 +112,40 @@ var IndexedFormula = /*#__PURE__*/function (_Formula) {
     var opts = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
     _classCallCheck(this, IndexedFormula);
     _this = _super.call(this, undefined, undefined, undefined, undefined, opts);
+    // IN future - allow pass array of statements to constructor
+    /**
+     * An UpdateManager initialised to this store
+     */
     _defineProperty(_assertThisInitialized(_this), "updater", void 0);
+    /**
+     * Dictionary of namespace prefixes
+     */
     _defineProperty(_assertThisInitialized(_this), "namespaces", void 0);
+    /** Map of iri predicates to functions to call when adding { s type X } */
     _defineProperty(_assertThisInitialized(_this), "classActions", void 0);
+    /** Map of iri predicates to functions to call when getting statement with {s X o} */
     _defineProperty(_assertThisInitialized(_this), "propertyActions", void 0);
+    /** Redirect to lexically smaller equivalent symbol */
     _defineProperty(_assertThisInitialized(_this), "redirections", void 0);
+    /** Reverse mapping to redirection: aliases for this */
     _defineProperty(_assertThisInitialized(_this), "aliases", void 0);
+    /** Redirections we got from HTTP */
     _defineProperty(_assertThisInitialized(_this), "HTTPRedirects", void 0);
+    /** Array of statements with this X as subject */
     _defineProperty(_assertThisInitialized(_this), "subjectIndex", void 0);
+    /** Array of statements with this X as predicate */
     _defineProperty(_assertThisInitialized(_this), "predicateIndex", void 0);
+    /** Array of statements with this X as object */
     _defineProperty(_assertThisInitialized(_this), "objectIndex", void 0);
+    /** Array of statements with X as provenance */
     _defineProperty(_assertThisInitialized(_this), "whyIndex", void 0);
     _defineProperty(_assertThisInitialized(_this), "index", void 0);
     _defineProperty(_assertThisInitialized(_this), "features", void 0);
     _defineProperty(_assertThisInitialized(_this), "_universalVariables", void 0);
     _defineProperty(_assertThisInitialized(_this), "_existentialVariables", void 0);
+    /** Function to remove quads from the store arrays with */
     _defineProperty(_assertThisInitialized(_this), "rdfArrayRemove", void 0);
+    /** Callbacks which are triggered after a statement has been added to the store */
     _defineProperty(_assertThisInitialized(_this), "dataCallbacks", void 0);
     _this.propertyActions = {};
     _this.classActions = {};

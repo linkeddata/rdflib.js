@@ -8,17 +8,6 @@ var defaultGraph = new DefaultGraphNode();
 
 /** A Statement represents an RDF Triple or Quad. */
 var Statement = /*#__PURE__*/function () {
-  /** The subject of the triple.  What the Statement is about. */
-
-  /** The relationship which is asserted between the subject and object */
-
-  /** The thing or data value which is asserted to be related to the subject */
-
-  /**
-   * The graph param is a named node of the document in which the triple when
-   *  it is stored on the web.
-   */
-
   /**
    * Construct a new statement
    *
@@ -38,9 +27,16 @@ var Statement = /*#__PURE__*/function () {
    */
   function Statement(subject, predicate, object, graph) {
     _classCallCheck(this, Statement);
+    /** The subject of the triple.  What the Statement is about. */
     _defineProperty(this, "subject", void 0);
+    /** The relationship which is asserted between the subject and object */
     _defineProperty(this, "predicate", void 0);
+    /** The thing or data value which is asserted to be related to the subject */
     _defineProperty(this, "object", void 0);
+    /**
+     * The graph param is a named node of the document in which the triple when
+     *  it is stored on the web.
+     */
     _defineProperty(this, "graph", void 0);
     this.subject = Node.fromValue(subject);
     this.predicate = Node.fromValue(predicate);

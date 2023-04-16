@@ -10,20 +10,13 @@ import _defineProperty from "@babel/runtime/helpers/defineProperty";
  * @class Node
  */
 var Node = /*#__PURE__*/function () {
-  // Specified in './node.ts' to prevent circular dependency
-
-  // Specified in './node.ts' to prevent circular dependency
-
-  /** The type of node */
-
-  /** The class order for this node */
-
-  /** The node's value */
-
   function Node(value) {
     _classCallCheck(this, Node);
+    /** The type of node */
     _defineProperty(this, "termType", void 0);
+    /** The class order for this node */
     _defineProperty(this, "classOrder", void 0);
+    /** The node's value */
     _defineProperty(this, "value", void 0);
     this.value = value;
   }
@@ -132,6 +125,8 @@ var Node = /*#__PURE__*/function () {
   }]);
   return Node;
 }();
+// Specified in './node.ts' to prevent circular dependency
 _defineProperty(Node, "fromValue", void 0);
+// Specified in './node.ts' to prevent circular dependency
 _defineProperty(Node, "toJS", void 0);
 export { Node as default };

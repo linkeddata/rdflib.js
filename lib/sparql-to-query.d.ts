@@ -3,4 +3,4 @@
  * @testMode: testing flag. Prevents loading of sources.
  */
 export default function SPARQLToQuery(SPARQL: any, testMode: any, kb: any): false | Query;
-import { Query } from "./query";
+import { Query } from './query';

@@ -21,10 +21,6 @@ import * as Uri from './uri';
 var Variable = /*#__PURE__*/function (_Node) {
   _inherits(Variable, _Node);
   var _super = _createSuper(Variable);
-  /** The base string for a variable's name */
-
-  /** The unique identifier of this variable */
-
   /**
    * Initializes this variable
    * @param name The variable's name
@@ -35,9 +31,11 @@ var Variable = /*#__PURE__*/function (_Node) {
     _classCallCheck(this, Variable);
     _this = _super.call(this, name);
     _defineProperty(_assertThisInitialized(_this), "termType", VariableTermType);
+    /** The base string for a variable's name */
     _defineProperty(_assertThisInitialized(_this), "base", 'varid:');
     _defineProperty(_assertThisInitialized(_this), "classOrder", ClassOrder.Variable);
     _defineProperty(_assertThisInitialized(_this), "isVar", 1);
+    /** The unique identifier of this variable */
     _defineProperty(_assertThisInitialized(_this), "uri", void 0);
     _this.base = 'varid:';
     _this.uri = Uri.join(name, _this.base);

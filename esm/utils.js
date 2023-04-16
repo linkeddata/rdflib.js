@@ -2,7 +2,6 @@ import log from './log';
 import { docpart } from './uri';
 import { string_startswith } from './utils-js';
 /** RDF/JS spec Typeguards */
-
 /**
  * Loads ontologies of the data we load (this is the callback from the kb to
  * the fetcher).

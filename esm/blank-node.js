@@ -27,7 +27,13 @@ var BlankNode = /*#__PURE__*/function (_Node) {
     _this = _super.call(this, BlankNode.getId(id));
     _defineProperty(_assertThisInitialized(_this), "termType", BlankNodeTermType);
     _defineProperty(_assertThisInitialized(_this), "classOrder", ClassOrder.BlankNode);
+    /** Whether this is a blank node */
     _defineProperty(_assertThisInitialized(_this), "isBlank", 1);
+    /**
+     * This type of node is a variable.
+     *
+     * Note that the existence of this property already indicates that it is a variable.
+     */
     _defineProperty(_assertThisInitialized(_this), "isVar", 1);
     return _this;
   }
@@ -85,12 +91,7 @@ var BlankNode = /*#__PURE__*/function (_Node) {
     }
   }], [{
     key: "getId",
-    value:
-    /**
-     * The next unique identifier for blank nodes
-     */
-
-    function getId(id) {
+    value: function getId(id) {
       if (id) {
         if (typeof id !== 'string') {
           throw new Error('Bad id argument to new blank node: ' + id);
@@ -107,6 +108,9 @@ var BlankNode = /*#__PURE__*/function (_Node) {
   }]);
   return BlankNode;
 }(Node);
+/**
+ * The next unique identifier for blank nodes
+ */
 _defineProperty(BlankNode, "nextId", 0);
 _defineProperty(BlankNode, "NTAnonymousNodePrefix", '_:');
 export { BlankNode as default };

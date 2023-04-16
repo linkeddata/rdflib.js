@@ -1,4 +1,3 @@
-import jsonld from 'jsonld';
 import { arrayToStatements } from './utils';
 
 /**
@@ -60,8 +59,10 @@ function listToCollection(kb, obj) {
  */
 export default function jsonldParser(str, kb, base, callback) {
   var baseString = base && Object.prototype.hasOwnProperty.call(base, 'termType') ? base.value : base;
-  return jsonld.flatten(JSON.parse(str), null, {
-    base: baseString
+  return import('jsonld').then(function (jsonld) {
+    return jsonld.flatten(JSON.parse(str), null, {
+      base: baseString
+    });
   }).then(function (flattened) {
     return flattened.reduce(function (store, flatResource) {
       kb = processResource(kb, base, flatResource);

@@ -43,10 +43,6 @@ export function fromValue(value) {
 var Collection = /*#__PURE__*/function (_Node) {
   _inherits(Collection, _Node);
   var _super = _createSuper(Collection);
-  /**
-   * The nodes in this collection
-   */
-
   function Collection(initial) {
     var _this;
     _classCallCheck(this, Collection);
@@ -55,6 +51,9 @@ var Collection = /*#__PURE__*/function (_Node) {
     _defineProperty(_assertThisInitialized(_this), "classOrder", ClassOrder.Collection);
     _defineProperty(_assertThisInitialized(_this), "closed", false);
     _defineProperty(_assertThisInitialized(_this), "compareTerm", RdflibBlankNode.prototype.compareTerm);
+    /**
+     * The nodes in this collection
+     */
     _defineProperty(_assertThisInitialized(_this), "elements", []);
     _defineProperty(_assertThisInitialized(_this), "isVar", 0);
     if (initial && initial.length > 0) {

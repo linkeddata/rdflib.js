@@ -93,14 +93,19 @@ var getNS = function getNS(factory) {
   };
 };
 var ns = getNS();
-var Handler = /*#__PURE__*/_createClass(
-// TODO: Document, type
 
-// TODO: Document, type
+/** An extended interface of Response, since RDFlib.js adds some properties. */
 
-function Handler(response, dom) {
+/** tell typescript that a 'panes' child may exist on Window */
+
+/** All valid inputs for initFetchOptions */
+
+/** Initiated by initFetchOptions, which runs on load */
+var Handler = /*#__PURE__*/_createClass(function Handler(response, dom) {
   _classCallCheck(this, Handler);
+  // TODO: Document, type
   _defineProperty(this, "response", void 0);
+  // TODO: Document, type
   _defineProperty(this, "dom", void 0);
   this.response = response;
   // The type assertion operator here might need to be removed.
@@ -536,6 +541,10 @@ function isXMLNS(responseText) {
   var match = responseText.match(/[^(<html)]*<html\s+[^<]*xmlns=['"]http:\/\/www.w3.org\/1999\/xhtml["'][^<]*>/);
   return !!match;
 }
+
+// Not sure about the shapes of this. Response? FetchError?
+
+/** Differs from normal Fetch, has an extended Response type */
 /** Fetcher
  *
  * The Fetcher object is a helper object for a quadstore
@@ -545,34 +554,6 @@ function isXMLNS(responseText) {
   * and put back the data to the web.
  */
 var Fetcher = /*#__PURE__*/function () {
-  /** Denoting this session */
-
-  /**
-   * this.requested[uri] states:
-   * undefined     no record of web access or records reset
-   * true          has been requested, fetch in progress
-   * 'done'        received, Ok
-   * 401           Not logged in
-   * 403           HTTP status unauthorized
-   * 404           Resource does not exist. Can be created etc.
-   * 'redirected'  In attempt to counter CORS problems retried.
-   * 'parse_error' Parse error
-   * 'unsupported_protocol'  URI is not a protocol Fetcher can deal with
-   * other strings mean various other errors.
-   */
-
-  /** List of timeouts associated with a requested URL */
-
-  /** Redirected from *key uri* to *value uri* */
-
-  /** fetchCallbacks[uri].push(callback) */
-
-  /** Keep track of explicit 404s -> we can overwrite etc */
-
-  // TODO: Document this
-
-  /** Methods added by calling Util.callbackify in the constructor*/
-
   function Fetcher(store) {
     var _this = this;
     var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
@@ -581,16 +562,35 @@ var Fetcher = /*#__PURE__*/function () {
     _defineProperty(this, "timeout", void 0);
     _defineProperty(this, "_fetch", void 0);
     _defineProperty(this, "mediatypes", void 0);
+    /** Denoting this session */
     _defineProperty(this, "appNode", void 0);
+    /**
+     * this.requested[uri] states:
+     * undefined     no record of web access or records reset
+     * true          has been requested, fetch in progress
+     * 'done'        received, Ok
+     * 401           Not logged in
+     * 403           HTTP status unauthorized
+     * 404           Resource does not exist. Can be created etc.
+     * 'redirected'  In attempt to counter CORS problems retried.
+     * 'parse_error' Parse error
+     * 'unsupported_protocol'  URI is not a protocol Fetcher can deal with
+     * other strings mean various other errors.
+     */
     _defineProperty(this, "requested", void 0);
+    /** List of timeouts associated with a requested URL */
     _defineProperty(this, "timeouts", void 0);
+    /** Redirected from *key uri* to *value uri* */
     _defineProperty(this, "redirectedTo", void 0);
     _defineProperty(this, "fetchQueue", void 0);
+    /** fetchCallbacks[uri].push(callback) */
     _defineProperty(this, "fetchCallbacks", void 0);
+    /** Keep track of explicit 404s -> we can overwrite etc */
     _defineProperty(this, "nonexistent", void 0);
     _defineProperty(this, "lookedUp", void 0);
     _defineProperty(this, "handlers", void 0);
     _defineProperty(this, "ns", void 0);
+    /** Methods added by calling Util.callbackify in the constructor*/
     _defineProperty(this, "fireCallbacks", void 0);
     this.store = store || new IndexedFormula();
     this.ns = getNS(this.store.rdfFactory);
@@ -1983,6 +1983,7 @@ var Fetcher = /*#__PURE__*/function () {
 }();
 _defineProperty(Fetcher, "HANDLERS", void 0);
 _defineProperty(Fetcher, "CONTENT_TYPE_BY_EXT", void 0);
+// TODO: Document this
 _defineProperty(Fetcher, "crossSiteProxyTemplate", void 0);
 export { Fetcher as default };
 Fetcher.HANDLERS = defaultHandlers;

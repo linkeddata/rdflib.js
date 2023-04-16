@@ -8,4 +8,4 @@ declare namespace _default {
     const string: NamedNode;
 }
 export default _default;
-import NamedNode from "./named-node";
+import NamedNode from './named-node';

@@ -24,4 +24,4 @@ export class Query {
     name: any;
     id: any;
 }
-import IndexedFormula from "./store";
+import IndexedFormula from './store';

@@ -29,19 +29,6 @@ var Formula = /*#__PURE__*/function (_Node) {
   _inherits(Formula, _Node);
   var _super = _createSuper(Formula);
   /**
-   * The accompanying fetcher instance.
-   *
-   * Is set by the fetcher when initialized.
-   */
-
-  /**
-   * A namespace for the specified namespace's URI
-   * @param nsuri The URI for the namespace
-   */
-
-  /** The factory used to generate statements and terms */
-
-  /**
    * Initializes this formula
    * @constructor
    * @param statements - Initial array of statements
@@ -66,9 +53,19 @@ var Formula = /*#__PURE__*/function (_Node) {
     _this.optional = optional;
     _defineProperty(_assertThisInitialized(_this), "termType", GraphTermType);
     _defineProperty(_assertThisInitialized(_this), "classOrder", ClassOrder.Graph);
+    /**
+     * The accompanying fetcher instance.
+     *
+     * Is set by the fetcher when initialized.
+     */
     _defineProperty(_assertThisInitialized(_this), "fetcher", void 0);
     _defineProperty(_assertThisInitialized(_this), "isVar", 0);
+    /**
+     * A namespace for the specified namespace's URI
+     * @param nsuri The URI for the namespace
+     */
     _defineProperty(_assertThisInitialized(_this), "ns", Namespace);
+    /** The factory used to generate statements and terms */
     _defineProperty(_assertThisInitialized(_this), "rdfFactory", void 0);
     _this.rdfFactory = opts && opts.rdfFactory || CanonicalDataFactory;
     // Enable default factory methods on this while preserving factory context.

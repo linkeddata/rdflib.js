@@ -28,10 +28,6 @@ import { termValue } from './utils/termValue';
 * and also looking out for concurrent updates from other agents
 */
 var UpdateManager = /*#__PURE__*/function () {
-  /** Index of objects for coordinating incoming and outgoing patches */
-
-  /** Object of namespaces */
-
   /**
    * @param  store - The quadstore to store data and metadata. Created if not passed.
   */
@@ -40,7 +36,9 @@ var UpdateManager = /*#__PURE__*/function () {
     _defineProperty(this, "store", void 0);
     _defineProperty(this, "ifps", void 0);
     _defineProperty(this, "fps", void 0);
+    /** Index of objects for coordinating incoming and outgoing patches */
     _defineProperty(this, "patchControl", void 0);
+    /** Object of namespaces */
     _defineProperty(this, "ns", void 0);
     store = store || new IndexedFormula();
     if (store.updater) {

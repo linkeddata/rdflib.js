@@ -25,6 +25,7 @@ export var Serializer = /*#__PURE__*/function () {
     _classCallCheck(this, Serializer);
     _defineProperty(this, "_notQNameChars", '\t\r\n !"#$%&\'()*.,+/;<=>?@[\\]^`{|}~');
     _defineProperty(this, "_notNameChars", this._notQNameChars + ':');
+    //  stringToN3:  String escaping for N3
     _defineProperty(this, "validPrefix", new RegExp(/^[a-zA-Z][a-zA-Z0-9]*$/));
     _defineProperty(this, "forbidden1", new RegExp(/[\\"\b\f\r\v\t\n\u0080-\uffff]/gm));
     _defineProperty(this, "forbidden3", new RegExp(/[\\"\b\f\r\v\u0080-\uffff]/gm));
@@ -588,8 +589,6 @@ export var Serializer = /*#__PURE__*/function () {
           throw new Error('Internal: atomicTermToN3 cannot handle ' + expr + ' of termType: ' + expr.termType);
       }
     }
-
-    //  stringToN3:  String escaping for N3
   }, {
     key: "stringToN3",
     value: function stringToN3(str, flags) {

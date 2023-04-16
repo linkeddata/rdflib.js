@@ -22,14 +22,6 @@ var Literal = /*#__PURE__*/function (_Node) {
   _inherits(Literal, _Node);
   var _super = _createSuper(Literal);
   /**
-   * The literal's datatype as a named node
-   */
-
-  /**
-   * The language for the literal
-   */
-
-  /**
    * Initializes a literal
    * @param value - The literal's lexical value
    * @param language - The language for the literal. Defaults to ''.
@@ -41,8 +33,14 @@ var Literal = /*#__PURE__*/function (_Node) {
     _this = _super.call(this, value);
     _defineProperty(_assertThisInitialized(_this), "termType", LiteralTermType);
     _defineProperty(_assertThisInitialized(_this), "classOrder", ClassOrder.Literal);
+    /**
+     * The literal's datatype as a named node
+     */
     _defineProperty(_assertThisInitialized(_this), "datatype", XSD.string);
     _defineProperty(_assertThisInitialized(_this), "isVar", 0);
+    /**
+     * The language for the literal
+     */
     _defineProperty(_assertThisInitialized(_this), "language", '');
     if (language) {
       _this.language = language;
