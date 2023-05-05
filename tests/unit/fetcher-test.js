@@ -566,7 +566,27 @@ describe('Fetcher', () => {
     })
   })
 
-  describe('createContainer', () => {
+  describe('301 redirect', () => {
+    let fetcher
+
+    beforeEach(() => {
+      fetcher = new Fetcher(rdf.graph())
+    })
+
+    afterEach(() => {
+      nock.cleanAll()
+    })
+
     // it.skip('should invoke webOperation with the right options', () => {})
+    it("should contain nothing", async () => {
+      const store = rdf.graph();
+      const fetcher = new Fetcher(store);
+      await fetcher.load("https://bourgeoa.solidcommunity.net/chats");
+      const contains = store.statementsMatching(
+        rdf.sym("https://bourgeoa.solidcommunity.net/chats"),
+        rdf.sym("http://www.w3.org/ns/ldp#contains")
+      );
+      expect(contains.length).to.equal(0);
+    });
   })
 })
