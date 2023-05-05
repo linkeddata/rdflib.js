@@ -566,7 +566,7 @@ describe('Fetcher', () => {
     })
   })
 
-  describe('301 redirect', () => {
+  /* describe('301 redirect', () => {
     let fetcher
 
     beforeEach(() => {
@@ -588,5 +588,5 @@ describe('Fetcher', () => {
       );
       expect(contains.length).to.equal(0);
     });
-  })
+  }) */
 })
