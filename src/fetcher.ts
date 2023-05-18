@@ -605,7 +605,7 @@ class N3Handler extends Handler {
     const isContainer = kb.any(options.original, null, ns.ldp('Container'))
     console.log('@@ isContainer ' + isContainer)
     if (isContainer && !baseUrl.endsWith('/')) baseUrl = baseUrl + '/'
-    let p = N3Parser(kb, kb, options.original.value, baseUrl,
+    let p = N3Parser(kb, kb, baseUrl, baseUrl,
       null, null, '', null)
     //                p.loadBuf(xhr.responseText)
     try {
