@@ -1,8 +1,8 @@
 /* @file Update Manager Class
 **
-** 2007-07-15 originall sparl update module by Joe Presbrey <presbrey@mit.edu>
+** 2007-07-15 original sparql update module by Joe Presbrey <presbrey@mit.edu>
 ** 2010-08-08 TimBL folded in Kenny's WEBDAV
-** 2010-12-07 TimBL addred local file write code
+** 2010-12-07 TimBL added local file write code
 */
 import IndexedFormula from './store'
 import { docpart, join as uriJoin } from './uri'
@@ -82,8 +82,8 @@ export default class UpdateManager {
   }
 
   /** Remove from the store HTTP authorization metadata
-  * The editble function below relies on copies we have in the store
-  * of the results of previous HTTP transactions. Howver, when
+  * The editable function below relies on copies we have in the store
+  * of the results of previous HTTP transactions. However, when
   * the user logs in, then that data misrepresents what would happen
   * if the user tried again.
   */
@@ -243,7 +243,6 @@ export default class UpdateManager {
       ? '?' + obj.toNT().substr(2)
       : obj.toNT();
 
-    // console.log({obj, anonymized});
     return anonymized;
   }
 
@@ -846,8 +845,6 @@ _:patch
     }
     query += "   a solid:InsertDeletePatch .\n"
 
-    // console.log({ds, is, bnodes_context, query});
-
     return query;
   }
 
@@ -936,7 +933,6 @@ _:patch
       })
 
       var protocol = this.editable(doc.value, kb);
-    //   console.log({protocol});
 
       if (protocol === false) {
         throw new Error('Update: Can\'t make changes in uneditable ' + doc)

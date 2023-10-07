@@ -14,7 +14,7 @@ chai.use((dirtyChai as any).default)
 
 chai.should()
 
-describe('sparql updates via update manager', () => {
+describe('n3-patch updates via update manager', () => {
 
     const subject = sym('https://pod.example/test/foo#subject')
     const predicate = sym('https://pod.example/test/foo#predicate')
