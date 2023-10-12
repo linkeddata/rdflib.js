@@ -261,7 +261,7 @@ export class Serializer {
     } else if (this.flags.indexOf('u') >= 0) { // Unicode encoding NTriples style
       uri = backslashUify(uri)
     } else {
-      uri = hexify(uri)
+      uri = hexify(decodeURI(uri))
     }
     return '<' + uri + '>'
   }

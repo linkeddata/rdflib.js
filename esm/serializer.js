@@ -283,7 +283,7 @@ export var Serializer = /*#__PURE__*/function () {
         // Unicode encoding NTriples style
         uri = backslashUify(uri);
       } else {
-        uri = hexify(uri);
+        uri = hexify(decodeURI(uri));
       }
       return '<' + uri + '>';
     }

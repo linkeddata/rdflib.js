@@ -554,4 +554,27 @@ const jsonldCollection1 = `{
       })
     })
   })
+
+  describe('encoded URIs', () => {
+    let srcStore
+    const base = 'http://www.example.com/'
+
+    before(() => {
+      const srcTtl = '<http://example.com#myid> <http://example.com#my%20property> "myvalue" .'
+      srcStore = graph()
+      parse(srcTtl, srcStore, base, 'text/turtle')
+    })
+
+    it("convert to ttl without base", async () => {
+      const res = await serialize(null, srcStore, undefined, 'text/turtle')
+      expect(res?.toString()).to.contain("%20")
+      expect(res?.toString()).not.to.contain("%2520")
+    })
+
+    it("convert to ttl with base", async () => {
+      const res = await serialize(null, srcStore, base, 'text/turtle')
+      expect(res?.toString()).to.contain("%20")
+      expect(res?.toString()).not.to.contain("%2520")
+    })
+  })
 })
