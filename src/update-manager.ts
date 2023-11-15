@@ -822,8 +822,7 @@ export default class UpdateManager {
 @prefix ex: <http://www.example.org/terms#>.
 
 _:patch
-
- `;
+`;
     // If bnode context is non trivial, express it as ?conditions formula.
     if (bnodes_context && bnodes_context.length > 0) {
       query += `

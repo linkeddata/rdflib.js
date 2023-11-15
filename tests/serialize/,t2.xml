@@ -1,0 +1,13 @@
+<rdf:RDF
+ xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+ xmlns:foo="https://example.org/foo#">
+    <rdf:Description rdf:about="https://example.org/foo#foo">
+        <foo:p rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</foo:p>
+        <foo:p rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</foo:p>
+        <foo:p rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</foo:p>
+        <foo:r>rrrrr</foo:r>
+        <foo:s rdf:datatype="http://www.w3.org/2001/XMLSchema#date">2014-09-21</foo:s>
+        <foo:t rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">2</foo:t>
+        <foo:u rdf:datatype="http://www.w3.org/2001/XMLSchema#double">3.14159</foo:u>
+    </rdf:Description>
+</rdf:RDF>
