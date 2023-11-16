@@ -82,8 +82,6 @@ _:patch
     })
 
     it('does not anonymize triples in INSERT DATA query', async () => {
-        // updater.anonymize = sinon.spy();
-
         const bNode = new BlankNode('subj');
         const st1 = st(bNode, predicate, subject, subject.doc())
         await updater.update([], [st1])
@@ -102,7 +100,6 @@ _:patch
 
 
     it('Constructs n3patch document correctly', async () => {
-        // updater.anonymize = sinon.spy();
 
         updater.store.add(st(namedNode("ex:s1"), namedNode("ex:p1"), namedNode("ex:o1"), subject.doc()));
 
@@ -110,7 +107,6 @@ _:patch
             [st(namedNode("ex:s1"), namedNode("ex:p1"), namedNode("ex:o1"), subject.doc())],
             [st(namedNode("ex:s2"), namedNode("ex:p2"), namedNode("ex:o2"), subject.doc())]
         )
-        // expect(updater.anonymize).to.not.have.been.called;
         expect(getPatchCall().lastArg.body).to.equal(`
 @prefix solid: <http://www.w3.org/ns/solid/terms#>.
 @prefix ex: <http://www.example.org/terms#>.
@@ -127,7 +123,6 @@ _:patch
     });
 
     it('Sets conditions formula to match blank node context', async () => {
-        // updater.anonymize = sinon.spy();
         [
             [namedNode("ex:s1"), namedNode("ex:p1"), blankNode("bn1"), subject.doc()],
             [namedNode("ex:s1"), namedNode("ex:p1"), blankNode("bn2"), subject.doc()],
@@ -141,7 +136,6 @@ _:patch
             [st(namedNode("ex:s1"), namedNode("ex:p1"), blankNode("bn1"), subject.doc())],
             [st(namedNode("ex:s2"), namedNode("ex:p2"), blankNode("bn3"), subject.doc())]
         )
-        // expect(updater.anonymize).to.not.have.been.called;
         expect(getPatchCall().lastArg.body).to.equal(`
 @prefix solid: <http://www.w3.org/ns/solid/terms#>.
 @prefix ex: <http://www.example.org/terms#>.
