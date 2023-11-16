@@ -1,6 +1,6 @@
 /* @file Update Manager Class
 **
-** 2007-07-15 original sparql update module by Joe Presbrey <presbrey@mit.edu>
+** 2007-07-15 original SPARQL Update module by Joe Presbrey <presbrey@mit.edu>
 ** 2010-08-08 TimBL folded in Kenny's WEBDAV
 ** 2010-12-07 TimBL added local file write code
 */
@@ -450,7 +450,7 @@ export default class UpdateManager {
       })
   }
 
-  // ARE THESE THREE FUNCTIONS USED? DEPRICATE?
+  // ARE THESE THREE FUNCTIONS USED? DEPRECATE?
 
   /** return a statemnet updating function
    *
@@ -754,11 +754,11 @@ export default class UpdateManager {
   /**
    * @private
    * 
-   * This helper function constructs sparql update query from resolved arguments.
+   * This helper function constructs SPARQL Update query from resolved arguments.
    * 
    * @param ds: deletions array.
    * @param is: insertions array.
-   * @param bnodes_context: Additional context to uniquely identify any blanknodes.
+   * @param bnodes_context: Additional context to uniquely identify any blank nodes.
    */
   constructSparqlUpdateQuery(
     ds: ReadonlyArray<Statement>,
