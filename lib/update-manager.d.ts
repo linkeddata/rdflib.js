@@ -28,8 +28,8 @@ export default class UpdateManager {
     patchControlFor(doc: NamedNode): any;
     isHttpUri(uri: string): boolean;
     /** Remove from the store HTTP authorization metadata
-    * The editble function below relies on copies we have in the store
-    * of the results of previous HTTP transactions. Howver, when
+    * The editable function below relies on copies we have in the store
+    * of the results of previous HTTP transactions. However, when
     * the user logs in, then that data misrepresents what would happen
     * if the user tried again.
     */
@@ -42,7 +42,7 @@ export default class UpdateManager {
      * and local write access is determined by those headers.
      * This async version not only looks at past HTTP requests, it also makes new ones if necessary.
      *
-     * @returns The method string SPARQL or DAV or
+     * @returns The method string N3PATCH or SPARQL or DAV or
      *   LOCALFILE or false if known, undefined if not known.
      */
     checkEditable(uri: string | NamedNode, kb?: IndexedFormula): Promise<string | boolean | undefined>;
@@ -168,7 +168,27 @@ export default class UpdateManager {
      */
     updateMany(deletions: ReadonlyArray<Statement>, insertions?: ReadonlyArray<Statement>): Promise<void[]>;
     /**
-     * This high-level function updates the local store iff the web is changed successfully.
+     * @private
+     *
+     * This helper function constructs SPARQL Update query from resolved arguments.
+     *
+     * @param ds: deletions array.
+     * @param is: insertions array.
+     * @param bnodes_context: Additional context to uniquely identify any blank nodes.
+     */
+    constructSparqlUpdateQuery(ds: ReadonlyArray<Statement>, is: ReadonlyArray<Statement>, bnodes_context: any): string;
+    /**
+     * @private
+     *
+     * This helper function constructs n3-patch query from resolved arguments.
+     *
+     * @param ds: deletions array.
+     * @param is: insertions array.
+     * @param bnodes_context: Additional context to uniquely identify any blanknodes.
+     */
+    constructN3PatchQuery(ds: ReadonlyArray<Statement>, is: ReadonlyArray<Statement>, bnodes_context: any): string;
+    /**
+     * This high-level function updates the local store if the web is changed successfully.
      * Deletions, insertions may be undefined or single statements or lists or formulae (may contain bnodes which can be indirectly identified by a where clause).
      * The `why` property of each statement must be the same and give the web document to be updated.
      * @param deletions - Statement or statements to be deleted.

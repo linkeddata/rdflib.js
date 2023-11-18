@@ -9,9 +9,9 @@ function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o =
 function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i]; return arr2; }
 /* @file Update Manager Class
 **
-** 2007-07-15 originall sparl update module by Joe Presbrey <presbrey@mit.edu>
+** 2007-07-15 original SPARQL Update module by Joe Presbrey <presbrey@mit.edu>
 ** 2010-08-08 TimBL folded in Kenny's WEBDAV
-** 2010-12-07 TimBL addred local file write code
+** 2010-12-07 TimBL added local file write code
 */
 import IndexedFormula from './store';
 import { docpart, join as uriJoin } from './uri';
@@ -77,8 +77,8 @@ var UpdateManager = /*#__PURE__*/function () {
     }
 
     /** Remove from the store HTTP authorization metadata
-    * The editble function below relies on copies we have in the store
-    * of the results of previous HTTP transactions. Howver, when
+    * The editable function below relies on copies we have in the store
+    * of the results of previous HTTP transactions. However, when
     * the user logs in, then that data misrepresents what would happen
     * if the user tried again.
     */
@@ -119,7 +119,7 @@ var UpdateManager = /*#__PURE__*/function () {
      * and local write access is determined by those headers.
      * This async version not only looks at past HTTP requests, it also makes new ones if necessary.
      *
-     * @returns The method string SPARQL or DAV or
+     * @returns The method string N3PATCH or SPARQL or DAV or
      *   LOCALFILE or false if known, undefined if not known.
      */
   }, {
@@ -231,6 +231,7 @@ var UpdateManager = /*#__PURE__*/function () {
             if (acceptPatch.length) {
               for (var i = 0; i < acceptPatch.length; i++) {
                 method = acceptPatch[i].value.trim();
+                if (method.indexOf('text/n3') >= 0) return 'N3PATCH';
                 if (method.indexOf('application/sparql-update') >= 0) return 'SPARQL';
                 if (method.indexOf('application/sparql-update-single-match') >= 0) return 'SPARQL';
               }
@@ -278,7 +279,8 @@ var UpdateManager = /*#__PURE__*/function () {
   }, {
     key: "anonymize",
     value: function anonymize(obj) {
-      return obj.toNT().substr(0, 2) === '_:' && this.mentioned(obj) ? '?' + obj.toNT().substr(2) : obj.toNT();
+      var anonymized = obj.toNT().substr(0, 2) === '_:' && this.mentioned(obj) ? '?' + obj.toNT().substr(2) : obj.toNT();
+      return anonymized;
     }
   }, {
     key: "anonymizeNT",
@@ -476,7 +478,7 @@ var UpdateManager = /*#__PURE__*/function () {
         // console.log('UpdateManager: sending update to <' + uri + '>')
 
         options.noMeta = true;
-        options.contentType = 'application/sparql-update';
+        options.contentType = options.contentType || 'application/sparql-update';
         options.body = query;
         return _this.store.fetcher.webOperation('PATCH', uri, options);
       }).then(function (response) {
@@ -494,7 +496,7 @@ var UpdateManager = /*#__PURE__*/function () {
       });
     }
 
-    // ARE THESE THEE FUNCTIONS USED? DEPROCATE?
+    // ARE THESE THREE FUNCTIONS USED? DEPRECATE?
 
     /** return a statemnet updating function
      *
@@ -804,7 +806,93 @@ var UpdateManager = /*#__PURE__*/function () {
     }
 
     /**
-     * This high-level function updates the local store iff the web is changed successfully.
+     * @private
+     * 
+     * This helper function constructs SPARQL Update query from resolved arguments.
+     * 
+     * @param ds: deletions array.
+     * @param is: insertions array.
+     * @param bnodes_context: Additional context to uniquely identify any blank nodes.
+     */
+  }, {
+    key: "constructSparqlUpdateQuery",
+    value: function constructSparqlUpdateQuery(ds, is, bnodes_context) {
+      var whereClause = this.contextWhere(bnodes_context);
+      var query = '';
+      if (whereClause.length) {
+        // Is there a WHERE clause?
+        if (ds.length) {
+          query += 'DELETE { ';
+          for (var i = 0; i < ds.length; i++) {
+            query += this.anonymizeNT(ds[i]) + '\n';
+          }
+          query += ' }\n';
+        }
+        if (is.length) {
+          query += 'INSERT { ';
+          for (var _i5 = 0; _i5 < is.length; _i5++) {
+            query += this.anonymizeNT(is[_i5]) + '\n';
+          }
+          query += ' }\n';
+        }
+        query += whereClause;
+      } else {
+        // no where clause
+        if (ds.length) {
+          query += 'DELETE DATA { ';
+          for (var _i6 = 0; _i6 < ds.length; _i6++) {
+            query += this.anonymizeNT(ds[_i6]) + '\n';
+          }
+          query += ' } \n';
+        }
+        if (is.length) {
+          if (ds.length) query += ' ; ';
+          query += 'INSERT DATA { ';
+          for (var _i7 = 0; _i7 < is.length; _i7++) {
+            query += this.nTriples(is[_i7]) + '\n';
+          }
+          query += ' }\n';
+        }
+      }
+      return query;
+    }
+
+    /**
+     * @private
+     * 
+     * This helper function constructs n3-patch query from resolved arguments.
+     * 
+     * @param ds: deletions array.
+     * @param is: insertions array.
+     * @param bnodes_context: Additional context to uniquely identify any blanknodes.
+     */
+  }, {
+    key: "constructN3PatchQuery",
+    value: function constructN3PatchQuery(ds, is, bnodes_context) {
+      var _this3 = this;
+      var query = "\n@prefix solid: <http://www.w3.org/ns/solid/terms#>.\n@prefix ex: <http://www.example.org/terms#>.\n\n_:patch\n";
+      // If bnode context is non trivial, express it as ?conditions formula.
+      if (bnodes_context && bnodes_context.length > 0) {
+        query += "\n      solid:where {\n        ".concat(bnodes_context.map(function (x) {
+          return _this3.anonymizeNT(x);
+        }).join('\n        '), "\n      };");
+      }
+      if (ds.length > 0) {
+        query += "\n      solid:deletes {\n        ".concat(ds.map(function (x) {
+          return _this3.anonymizeNT(x);
+        }).join('\n        '), "\n      };");
+      }
+      if (is.length > 0) {
+        query += "\n      solid:inserts {\n        ".concat(is.map(function (x) {
+          return _this3.anonymizeNT(x);
+        }).join('\n        '), "\n      };");
+      }
+      query += "   a solid:InsertDeletePatch .\n";
+      return query;
+    }
+
+    /**
+     * This high-level function updates the local store if the web is changed successfully.
      * Deletions, insertions may be undefined or single statements or lists or formulae (may contain bnodes which can be indirectly identified by a where clause).
      * The `why` property of each statement must be the same and give the web document to be updated.
      * @param deletions - Statement or statements to be deleted.
@@ -816,7 +904,7 @@ var UpdateManager = /*#__PURE__*/function () {
   }, {
     key: "update",
     value: function update(deletions, insertions, callback, secondTry) {
-      var _this3 = this;
+      var _this4 = this;
       var options = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : {};
       if (!callback) {
         var thisUpdater = this;
@@ -884,64 +972,31 @@ var UpdateManager = /*#__PURE__*/function () {
         if (protocol === undefined) {
           // Not enough metadata
           if (secondTry) {
-            throw new Error('Update: Loaded ' + doc + "but stil can't figure out what editing protcol it supports.");
+            throw new Error('Update: Loaded ' + doc + "but still can't figure out what editing protocol it supports.");
           }
           // console.log(`Update: have not loaded ${doc} before: loading now...`);
           this.store.fetcher.load(doc).then(function (response) {
-            _this3.update(deletions, insertions, callback, true, options);
+            _this4.update(deletions, insertions, callback, true, options);
           }, function (err) {
             if (err.response.status === 404) {
               // nonexistent files are fine
-              _this3.update(deletions, insertions, callback, true, options);
+              _this4.update(deletions, insertions, callback, true, options);
             } else {
               throw new Error("Update: Can't get updatability status ".concat(doc, " before patching: ").concat(err));
             }
           });
           return;
-        } else if (protocol.indexOf('SPARQL') >= 0) {
+        } else if (protocol.indexOf('SPARQL') >= 0 || protocol.indexOf('N3PATCH') >= 0) {
+          var isSparql = protocol.indexOf('SPARQL') >= 0;
           var bnodes = [];
           // change ReadOnly type to Mutable type
 
           if (ds.length) bnodes = this.statementArrayBnodes(ds);
           if (is.length) bnodes = bnodes.concat(this.statementArrayBnodes(is));
           var context = this.bnodeContext(bnodes, doc);
-          var whereClause = this.contextWhere(context);
-          var query = '';
-          if (whereClause.length) {
-            // Is there a WHERE clause?
-            if (ds.length) {
-              query += 'DELETE { ';
-              for (var i = 0; i < ds.length; i++) {
-                query += this.anonymizeNT(ds[i]) + '\n';
-              }
-              query += ' }\n';
-            }
-            if (is.length) {
-              query += 'INSERT { ';
-              for (var _i5 = 0; _i5 < is.length; _i5++) {
-                query += this.anonymizeNT(is[_i5]) + '\n';
-              }
-              query += ' }\n';
-            }
-            query += whereClause;
-          } else {
-            // no where clause
-            if (ds.length) {
-              query += 'DELETE DATA { ';
-              for (var _i6 = 0; _i6 < ds.length; _i6++) {
-                query += this.anonymizeNT(ds[_i6]) + '\n';
-              }
-              query += ' } \n';
-            }
-            if (is.length) {
-              if (ds.length) query += ' ; ';
-              query += 'INSERT DATA { ';
-              for (var _i7 = 0; _i7 < is.length; _i7++) {
-                query += this.nTriples(is[_i7]) + '\n';
-              }
-              query += ' }\n';
-            }
-          }
+          var query = isSparql ? this.constructSparqlUpdateQuery(ds, is, context) : this.constructN3PatchQuery(ds, is, context);
+          options.contentType = isSparql ? 'application/sparql-update' : 'text/n3';
+
           // Track pending upstream patches until they have finished their callbackFunction
           control.pendingUpstream = control.pendingUpstream ? control.pendingUpstream + 1 : 1;
           if ('upstreamCount' in control) {
@@ -962,8 +1017,8 @@ var UpdateManager = /*#__PURE__*/function () {
                 success = false;
                 body = 'Remote Ok BUT error deleting ' + ds.length + ' from store!!! ' + e;
               } // Add in any case -- help recover from weirdness??
-              for (var _i8 = 0; _i8 < is.length; _i8++) {
-                kb.add(is[_i8].subject, is[_i8].predicate, is[_i8].object, doc);
+              for (var i = 0; i < is.length; i++) {
+                kb.add(is[i].subject, is[i].predicate, is[i].object, doc);
               }
             }
             callback(uri, success, body, response);
@@ -1017,8 +1072,8 @@ var UpdateManager = /*#__PURE__*/function () {
       for (var i = 0; i < ds.length; i++) {
         Util.RDFArrayRemove(newSts, ds[i]);
       }
-      for (var _i9 = 0; _i9 < is.length; _i9++) {
-        newSts.push(is[_i9]);
+      for (var _i8 = 0; _i8 < is.length; _i8++) {
+        newSts.push(is[_i8]);
       }
       var documentString = this.serialize(doc.value, newSts, contentType);
 
@@ -1035,11 +1090,11 @@ var UpdateManager = /*#__PURE__*/function () {
         if (!response.ok) {
           throw new Error(response.error);
         }
-        for (var _i10 = 0; _i10 < ds.length; _i10++) {
-          kb.remove(ds[_i10]);
+        for (var _i9 = 0; _i9 < ds.length; _i9++) {
+          kb.remove(ds[_i9]);
         }
-        for (var _i11 = 0; _i11 < is.length; _i11++) {
-          kb.add(is[_i11].subject, is[_i11].predicate, is[_i11].object, doc);
+        for (var _i10 = 0; _i10 < is.length; _i10++) {
+          kb.add(is[_i10].subject, is[_i10].predicate, is[_i10].object, doc);
         }
         callbackFunction(doc.value, response.ok, response.responseText, response);
       }).catch(function (err) {
@@ -1069,8 +1124,8 @@ var UpdateManager = /*#__PURE__*/function () {
       for (var i = 0; i < ds.length; i++) {
         Util.RDFArrayRemove(newSts, ds[i]);
       }
-      for (var _i12 = 0; _i12 < is.length; _i12++) {
-        newSts.push(is[_i12]);
+      for (var _i11 = 0; _i11 < is.length; _i11++) {
+        newSts.push(is[_i11]);
       }
       // serialize to the appropriate format
       var dot = doc.value.lastIndexOf('.');
@@ -1086,11 +1141,11 @@ var UpdateManager = /*#__PURE__*/function () {
       options.contentType = contentType;
       kb.fetcher.webOperation('PUT', doc.value, options).then(function (response) {
         if (!response.ok) return callbackFunction(doc.value, false, response.error);
-        for (var _i13 = 0; _i13 < ds.length; _i13++) {
-          kb.remove(ds[_i13]);
+        for (var _i12 = 0; _i12 < ds.length; _i12++) {
+          kb.remove(ds[_i12]);
         }
-        for (var _i14 = 0; _i14 < is.length; _i14++) {
-          kb.add(is[_i14].subject, is[_i14].predicate, is[_i14].object, doc);
+        for (var _i13 = 0; _i13 < is.length; _i13++) {
+          kb.add(is[_i13].subject, is[_i13].predicate, is[_i13].object, doc);
         }
         callbackFunction(doc.value, true, ''); // success!
       });
@@ -1138,11 +1193,11 @@ var UpdateManager = /*#__PURE__*/function () {
   }, {
     key: "put",
     value: function put(doc, data, contentType, callback) {
-      var _this4 = this;
+      var _this5 = this;
       var kb = this.store;
       var documentString;
       return Promise.resolve().then(function () {
-        documentString = _this4.serialize(doc.value, data, contentType);
+        documentString = _this5.serialize(doc.value, data, contentType);
         return kb.fetcher.webOperation('PUT', doc.value, {
           contentType: contentType,
           body: documentString
