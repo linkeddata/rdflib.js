@@ -1,20 +1,20 @@
 /* @file Update Manager Class
 **
-** 2007-07-15 originall sparl update module by Joe Presbrey <presbrey@mit.edu>
+** 2007-07-15 original SPARQL Update module by Joe Presbrey <presbrey@mit.edu>
 ** 2010-08-08 TimBL folded in Kenny's WEBDAV
-** 2010-12-07 TimBL addred local file write code
+** 2010-12-07 TimBL added local file write code
 */
 import IndexedFormula from './store'
-import {docpart, join as uriJoin} from './uri'
-import Fetcher, {Options} from './fetcher'
+import { docpart, join as uriJoin } from './uri'
+import Fetcher, { Options } from './fetcher'
 import Namespace from './namespace'
 import Serializer from './serializer'
-import {isBlankNode, isStore} from './utils/terms'
+import { isBlankNode, isStore } from './utils/terms'
 import * as Util from './utils-js'
 import Statement from './statement'
 import RDFlibNamedNode from './named-node'
-import {termValue} from './utils/termValue'
-import {BlankNode, NamedNode, Quad, Quad_Graph, Quad_Object, Quad_Predicate, Quad_Subject, Term,} from './tf-types'
+import { termValue } from './utils/termValue'
+import { BlankNode, NamedNode, Quad, Quad_Graph, Quad_Object, Quad_Predicate, Quad_Subject, Term, } from './tf-types'
 
 interface UpdateManagerFormula extends IndexedFormula {
   fetcher: Fetcher
@@ -45,7 +45,7 @@ export default class UpdateManager {
   /**
    * @param  store - The quadstore to store data and metadata. Created if not passed.
   */
-  constructor (store?: IndexedFormula) {
+  constructor(store?: IndexedFormula) {
     store = store || new IndexedFormula()
     if (store.updater) {
       throw new Error("You can't have two UpdateManagers for the same store")
@@ -70,65 +70,65 @@ export default class UpdateManager {
     this.patchControl = []
   }
 
-  patchControlFor (doc: NamedNode) {
+  patchControlFor(doc: NamedNode) {
     if (!this.patchControl[doc.value]) {
       this.patchControl[doc.value] = []
     }
     return this.patchControl[doc.value]
   }
 
-  isHttpUri(uri:string){
-    return( uri.slice(0,4) === 'http' )
+  isHttpUri(uri: string) {
+    return (uri.slice(0, 4) === 'http')
   }
 
-/** Remove from the store HTTP authorization metadata
-* The editble function below relies on copies we have in the store
-* of the results of previous HTTP transactions. Howver, when
-* the user logs in, then that data misrepresents what would happen
-* if the user tried again.
-*/
-flagAuthorizationMetadata (kb?: IndexedFormula) {
-  if (!kb) {
-    kb = this.store
-  }
-  const meta = kb.fetcher?.appNode
-  const requests = kb.statementsMatching(undefined, this.ns.link('requestedURI'), undefined, meta).map(st => st.subject)
-  for (const request of requests) {
-    const response = kb.any(request, this.ns.link('response'), null, meta) as Quad_Subject
-    if (response !== undefined) { // ts
-      kb.add(response, this.ns.link('outOfDate'), true as any, meta) // @@ Boolean is fine - fix types
+  /** Remove from the store HTTP authorization metadata
+  * The editable function below relies on copies we have in the store
+  * of the results of previous HTTP transactions. However, when
+  * the user logs in, then that data misrepresents what would happen
+  * if the user tried again.
+  */
+  flagAuthorizationMetadata(kb?: IndexedFormula) {
+    if (!kb) {
+      kb = this.store
+    }
+    const meta = kb.fetcher?.appNode
+    const requests = kb.statementsMatching(undefined, this.ns.link('requestedURI'), undefined, meta).map(st => st.subject)
+    for (const request of requests) {
+      const response = kb.any(request, this.ns.link('response'), null, meta) as Quad_Subject
+      if (response !== undefined) { // ts
+        kb.add(response, this.ns.link('outOfDate'), true as any, meta) // @@ Boolean is fine - fix types
+      }
     }
   }
-}
 
-/**
- * Tests whether a file is editable.
- * If the file has a specific annotation that it is machine written,
- * for safety, it is editable (this doesn't actually check for write access)
- * If the file has wac-allow and accept patch headers, those are respected.
- * and local write access is determined by those headers.
- * This async version not only looks at past HTTP requests, it also makes new ones if necessary.
- *
- * @returns The method string SPARQL or DAV or
- *   LOCALFILE or false if known, undefined if not known.
- */
- async checkEditable (uri: string | NamedNode, kb?: IndexedFormula): Promise<string | boolean | undefined> {
-  if (!uri) {
-    return false // Eg subject is bnode, no known doc to write to
-  }
-  if (!kb) {
-    kb = this.store
-  }
+  /**
+   * Tests whether a file is editable.
+   * If the file has a specific annotation that it is machine written,
+   * for safety, it is editable (this doesn't actually check for write access)
+   * If the file has wac-allow and accept patch headers, those are respected.
+   * and local write access is determined by those headers.
+   * This async version not only looks at past HTTP requests, it also makes new ones if necessary.
+   *
+   * @returns The method string N3PATCH or SPARQL or DAV or
+   *   LOCALFILE or false if known, undefined if not known.
+   */
+  async checkEditable(uri: string | NamedNode, kb?: IndexedFormula): Promise<string | boolean | undefined> {
+    if (!uri) {
+      return false // Eg subject is bnode, no known doc to write to
+    }
+    if (!kb) {
+      kb = this.store
+    }
 
-  const initial = this.editable(uri, kb)
-   if (initial !==  undefined) {
-     return initial
-   }
-   await kb.fetcher?.load(uri)
-   const final = this.editable(uri, kb)
-   // console.log(`Loaded ${uri} just to check editable, result: ${final}.`)
-   return final
- }
+    const initial = this.editable(uri, kb)
+    if (initial !== undefined) {
+      return initial
+    }
+    await kb.fetcher?.load(uri)
+    const final = this.editable(uri, kb)
+    // console.log(`Loaded ${uri} just to check editable, result: ${final}.`)
+    return final
+  }
   /**
    * Tests whether a file is editable.
    * If the file has a specific annotation that it is machine written,
@@ -140,7 +140,7 @@ flagAuthorizationMetadata (kb?: IndexedFormula) {
    * @returns The method string SPARQL or DAV or
    *   LOCALFILE or false if known, undefined if not known.
    */
-  editable (uri: string | NamedNode, kb?: IndexedFormula): string | boolean | undefined {
+  editable(uri: string | NamedNode, kb?: IndexedFormula): string | boolean | undefined {
     if (!uri) {
       return false // Eg subject is bnode, no known doc to write to
     }
@@ -149,11 +149,11 @@ flagAuthorizationMetadata (kb?: IndexedFormula) {
     }
     uri = termValue(uri)
 
-    if ( !this.isHttpUri(uri as string) ) {
+    if (!this.isHttpUri(uri as string)) {
       if (kb.holds(
-          kb.rdfFactory.namedNode(uri),
-          kb.rdfFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
-          kb.rdfFactory.namedNode('http://www.w3.org/2007/ont/link#MachineEditableDocument'))) {
+        kb.rdfFactory.namedNode(uri),
+        kb.rdfFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
+        kb.rdfFactory.namedNode('http://www.w3.org/2007/ont/link#MachineEditableDocument'))) {
         return 'LOCALFILE'
       }
     }
@@ -163,7 +163,7 @@ flagAuthorizationMetadata (kb?: IndexedFormula) {
     const meta = kb.fetcher?.appNode
     // const kb = s
 
-     // @ts-ignore passes a string to kb.each, which expects a term. Should this work?
+    // @ts-ignore passes a string to kb.each, which expects a term. Should this work?
     var requests = kb.each(undefined, this.ns.link('requestedURI'), docpart(uri), meta)
     var method: string
     for (var r = 0; r < requests.length; r++) {
@@ -179,7 +179,7 @@ flagAuthorizationMetadata (kb?: IndexedFormula) {
           if (wacAllow) {
             for (var bit of wacAllow.split(',')) {
               var lr = bit.split('=')
-              if (lr[0].includes('user') && !lr[1].includes('write') && !lr[1].includes('append') ) {
+              if (lr[0].includes('user') && !lr[1].includes('write') && !lr[1].includes('append')) {
                 // console.log('    editable? excluded by WAC-Allow: ', wacAllow)
                 return false
               }
@@ -189,6 +189,7 @@ flagAuthorizationMetadata (kb?: IndexedFormula) {
           if (acceptPatch.length) {
             for (let i = 0; i < acceptPatch.length; i++) {
               method = acceptPatch[i].value.trim()
+              if (method.indexOf('text/n3') >= 0) return 'N3PATCH'
               if (method.indexOf('application/sparql-update') >= 0) return 'SPARQL'
               if (method.indexOf('application/sparql-update-single-match') >= 0) return 'SPARQL'
             }
@@ -206,8 +207,8 @@ flagAuthorizationMetadata (kb?: IndexedFormula) {
             }
           }
 
-          if ( !this.isHttpUri(uri as string) ) {
-            if( !wacAllow ) return false;
+          if (!this.isHttpUri(uri as string)) {
+            if (!wacAllow) return false;
             else return 'LOCALFILE';
           }
 
@@ -237,13 +238,15 @@ flagAuthorizationMetadata (kb?: IndexedFormula) {
     return undefined // We don't know (yet) as we haven't had a response (yet)
   }
 
-  anonymize (obj) {
-    return (obj.toNT().substr(0, 2) === '_:' && this.mentioned(obj))
+  anonymize(obj) {
+    let anonymized = (obj.toNT().substr(0, 2) === '_:' && this.mentioned(obj))
       ? '?' + obj.toNT().substr(2)
-      : obj.toNT()
+      : obj.toNT();
+
+    return anonymized;
   }
 
-  anonymizeNT (stmt: Quad) {
+  anonymizeNT(stmt: Quad) {
     return this.anonymize(stmt.subject) + ' ' +
       this.anonymize(stmt.predicate) + ' ' +
       this.anonymize(stmt.object) + ' .'
@@ -257,7 +260,7 @@ flagAuthorizationMetadata (kb?: IndexedFormula) {
    * Returns a list of all bnodes occurring in a statement
    * @private
    */
-  statementBnodes (st: Quad): BlankNode[] {
+  statementBnodes(st: Quad): BlankNode[] {
     return [st.subject, st.predicate, st.object].filter(function (x) {
       return isBlankNode(x)
     }) as BlankNode[]
@@ -267,7 +270,7 @@ flagAuthorizationMetadata (kb?: IndexedFormula) {
    * Returns a list of all bnodes occurring in a list of statements
    * @private
    */
-  statementArrayBnodes (sts: ReadonlyArray<Quad>) {
+  statementArrayBnodes(sts: ReadonlyArray<Quad>) {
     var bnodes: BlankNode[] = []
     for (let i = 0; i < sts.length; i++) {
       bnodes = bnodes.concat(this.statementBnodes(sts[i]))
@@ -286,7 +289,7 @@ flagAuthorizationMetadata (kb?: IndexedFormula) {
    * Makes a cached list of [Inverse-]Functional properties
    * @private
    */
-  cacheIfps () {
+  cacheIfps() {
     this.ifps = {}
     var a = this.store.each(undefined, this.ns.rdf('type'),
       this.ns.owl('InverseFunctionalProperty'))
@@ -304,7 +307,7 @@ flagAuthorizationMetadata (kb?: IndexedFormula) {
    * Returns a context to bind a given node, up to a given depth
    * @private
    */
-  bnodeContext2 (x, source, depth) {
+  bnodeContext2(x, source, depth) {
     // Return a list of statements which indirectly identify a node
     //  Depth > 1 if try further indirection.
     //  Return array of statements (possibly empty), or null if failure
@@ -315,12 +318,12 @@ flagAuthorizationMetadata (kb?: IndexedFormula) {
       if (this.fps[sts[i].predicate.value]) {
         y = sts[i].subject
         if (!y.isBlank) {
-          return [ sts[i] ]
+          return [sts[i]]
         }
         if (depth) {
           res = this.bnodeContext2(y, source, depth - 1)
           if (res) {
-            return res.concat([ sts[i] ])
+            return res.concat([sts[i]])
           }
         }
       }
@@ -331,12 +334,12 @@ flagAuthorizationMetadata (kb?: IndexedFormula) {
       if (this.ifps[sts[i].predicate.value]) {
         y = sts[i].object
         if (!y.isBlank) {
-          return [ sts[i] ]
+          return [sts[i]]
         }
         if (depth) {
           res = this.bnodeContext2(y, source, depth - 1)
           if (res) {
-            return res.concat([ sts[i] ])
+            return res.concat([sts[i]])
           }
         }
       }
@@ -348,7 +351,7 @@ flagAuthorizationMetadata (kb?: IndexedFormula) {
    * Returns the smallest context to bind a given single bnode
    * @private
    */
-  bnodeContext1 (x, source) {
+  bnodeContext1(x, source) {
     // Return a list of statements which indirectly identify a node
     //   Breadth-first
     for (var depth = 0; depth < 3; depth++) { // Try simple first
@@ -363,7 +366,7 @@ flagAuthorizationMetadata (kb?: IndexedFormula) {
   /**
    * @private
    */
-  mentioned (x) {
+  mentioned(x) {
     return this.store.statementsMatching(x, null, null, null).length !== 0 || // Don't pin fresh bnodes
       this.store.statementsMatching(null, x).length !== 0 ||
       this.store.statementsMatching(null, null, x).length !== 0
@@ -372,7 +375,7 @@ flagAuthorizationMetadata (kb?: IndexedFormula) {
   /**
    * @private
    */
-  bnodeContext (bnodes, doc) {
+  bnodeContext(bnodes, doc) {
     var context = []
     if (bnodes.length) {
       this.cacheIfps()
@@ -389,7 +392,7 @@ flagAuthorizationMetadata (kb?: IndexedFormula) {
    * Returns the best context for a single statement
    * @private
    */
-  statementContext (st: Quad) {
+  statementContext(st: Quad) {
     var bnodes = this.statementBnodes(st)
     return this.bnodeContext(bnodes, st.graph)
   }
@@ -397,7 +400,7 @@ flagAuthorizationMetadata (kb?: IndexedFormula) {
   /**
    * @private
    */
-  contextWhere (context) {
+  contextWhere(context) {
     var updater = this
     return (!context || context.length === 0)
       ? ''
@@ -410,7 +413,7 @@ flagAuthorizationMetadata (kb?: IndexedFormula) {
   /**
    * @private
    */
-  fire (
+  fire(
     uri: string,
     query: string,
     callbackFunction: CallBackFunction,
@@ -424,7 +427,7 @@ flagAuthorizationMetadata (kb?: IndexedFormula) {
         // console.log('UpdateManager: sending update to <' + uri + '>')
 
         options.noMeta = true;
-        options.contentType = 'application/sparql-update';
+        options.contentType = options.contentType || 'application/sparql-update';
         options.body = query;
 
         return this.store.fetcher.webOperation('PATCH', uri, options)
@@ -447,7 +450,7 @@ flagAuthorizationMetadata (kb?: IndexedFormula) {
       })
   }
 
-// ARE THESE THEE FUNCTIONS USED? DEPROCATE?
+  // ARE THESE THREE FUNCTIONS USED? DEPRECATE?
 
   /** return a statemnet updating function
    *
@@ -455,7 +458,7 @@ flagAuthorizationMetadata (kb?: IndexedFormula) {
    * It returns an object which includes
    *  function which can be used to change the object of the statement.
    */
-  update_statement (statement: Quad) {
+  update_statement(statement: Quad) {
     if (statement && !statement.graph) {
       return
     }
@@ -483,7 +486,7 @@ flagAuthorizationMetadata (kb?: IndexedFormula) {
     }
   }
 
-  insert_statement (st: Quad, callbackFunction: CallBackFunction): void {
+  insert_statement(st: Quad, callbackFunction: CallBackFunction): void {
     var st0 = st instanceof Array ? st[0] : st
     var query = this.contextWhere(this.statementContext(st0))
 
@@ -501,7 +504,7 @@ flagAuthorizationMetadata (kb?: IndexedFormula) {
     this.fire(st0.graph.value, query, callbackFunction)
   }
 
-  delete_statement (st: Quad | Quad[], callbackFunction: CallBackFunction): void {
+  delete_statement(st: Quad | Quad[], callbackFunction: CallBackFunction): void {
     var st0 = st instanceof Array ? st[0] : st
     var query = this.contextWhere(this.statementContext(st0))
 
@@ -519,7 +522,7 @@ flagAuthorizationMetadata (kb?: IndexedFormula) {
     this.fire(st0.graph.value, query, callbackFunction)
   }
 
-/// //////////////////////
+  /// //////////////////////
 
   /**
    * Requests a now or future action to refresh changes coming downstream
@@ -530,7 +533,7 @@ flagAuthorizationMetadata (kb?: IndexedFormula) {
    * @param doc
    * @param action
    */
-  requestDownstreamAction (doc: NamedNode, action): void {
+  requestDownstreamAction(doc: NamedNode, action): void {
     var control = this.patchControlFor(doc)
     if (!control.pendingUpstream) {
       action(doc)
@@ -549,18 +552,18 @@ flagAuthorizationMetadata (kb?: IndexedFormula) {
    * We want to start counting websocket notifications
    * to distinguish the ones from others from our own.
    */
-  clearUpstreamCount (doc: NamedNode): void {
+  clearUpstreamCount(doc: NamedNode): void {
     var control = this.patchControlFor(doc)
     control.upstreamCount = 0
   }
 
-  getUpdatesVia (doc: NamedNode): string | null {
+  getUpdatesVia(doc: NamedNode): string | null {
     var linkHeaders = this.store.fetcher.getHeader(doc, 'updates-via')
     if (!linkHeaders || !linkHeaders.length) return null
     return linkHeaders[0].trim()
   }
 
-  addDownstreamChangeListener (doc: NamedNode, listener): void {
+  addDownstreamChangeListener(doc: NamedNode, listener): void {
     var control = this.patchControlFor(doc)
     if (!control.downstreamChangeListeners) { control.downstreamChangeListeners = [] }
     control.downstreamChangeListeners.push(listener)
@@ -569,7 +572,7 @@ flagAuthorizationMetadata (kb?: IndexedFormula) {
     })
   }
 
-  reloadAndSync (doc: NamedNode): void {
+  reloadAndSync(doc: NamedNode): void {
     var control = this.patchControlFor(doc)
     var updater = this
 
@@ -591,7 +594,7 @@ flagAuthorizationMetadata (kb?: IndexedFormula) {
             }
           }
           control.reloading = false
-          if (control.outOfDate){
+          if (control.outOfDate) {
             // console.log('   Extra reload because of extra update.')
             control.outOfDate = false
             tryReload()
@@ -631,7 +634,7 @@ flagAuthorizationMetadata (kb?: IndexedFormula) {
    *
    * @returns {boolean}
    */
-  setRefreshHandler (doc: NamedNode, handler): boolean {
+  setRefreshHandler(doc: NamedNode, handler): boolean {
     let wssURI = this.getUpdatesVia(doc) // relative
     // var kb = this.store
     var theHandler = handler
@@ -672,7 +675,7 @@ flagAuthorizationMetadata (kb?: IndexedFormula) {
       var control = self.patchControlFor(doc)
       control.upstreamCount = 0
 
-      socket.onerror = function onerror (err: Error) {
+      socket.onerror = function onerror(err: Error) {
         // console.log('Error on Websocket:', err)
       }
 
@@ -737,8 +740,8 @@ flagAuthorizationMetadata (kb?: IndexedFormula) {
     const thisUpdater = this
     const uniqueDocs: Array<NamedNode> = []
     docs.forEach(doc => {
-        if (!uniqueDocs.find(uniqueDoc => uniqueDoc.equals(doc))) uniqueDocs.push(doc as NamedNode)
-     })
+      if (!uniqueDocs.find(uniqueDoc => uniqueDoc.equals(doc))) uniqueDocs.push(doc as NamedNode)
+    })
     const updates = uniqueDocs.map(doc =>
       thisUpdater.update(deletions.filter(st => st.why.equals(doc)),
         insertions.filter(st => st.why.equals(doc))))
@@ -749,7 +752,103 @@ flagAuthorizationMetadata (kb?: IndexedFormula) {
   }
 
   /**
-   * This high-level function updates the local store iff the web is changed successfully.
+   * @private
+   * 
+   * This helper function constructs SPARQL Update query from resolved arguments.
+   * 
+   * @param ds: deletions array.
+   * @param is: insertions array.
+   * @param bnodes_context: Additional context to uniquely identify any blank nodes.
+   */
+  constructSparqlUpdateQuery(
+    ds: ReadonlyArray<Statement>,
+    is: ReadonlyArray<Statement>,
+    bnodes_context,
+  ): string {
+    var whereClause = this.contextWhere(bnodes_context)
+    var query = ''
+    if (whereClause.length) { // Is there a WHERE clause?
+      if (ds.length) {
+        query += 'DELETE { '
+        for (let i = 0; i < ds.length; i++) {
+          query += this.anonymizeNT(ds[i]) + '\n'
+        }
+        query += ' }\n'
+      }
+      if (is.length) {
+        query += 'INSERT { '
+        for (let i = 0; i < is.length; i++) {
+          query += this.anonymizeNT(is[i]) + '\n'
+        }
+        query += ' }\n'
+      }
+      query += whereClause
+    } else { // no where clause
+      if (ds.length) {
+        query += 'DELETE DATA { '
+        for (let i = 0; i < ds.length; i++) {
+          query += this.anonymizeNT(ds[i]) + '\n'
+        }
+        query += ' } \n'
+      }
+      if (is.length) {
+        if (ds.length) query += ' ; '
+        query += 'INSERT DATA { '
+        for (let i = 0; i < is.length; i++) {
+          query += this.nTriples(is[i]) + '\n'
+        }
+        query += ' }\n'
+      }
+    }
+    return query;
+  }
+
+  /**
+   * @private
+   * 
+   * This helper function constructs n3-patch query from resolved arguments.
+   * 
+   * @param ds: deletions array.
+   * @param is: insertions array.
+   * @param bnodes_context: Additional context to uniquely identify any blanknodes.
+   */
+  constructN3PatchQuery(
+    ds: ReadonlyArray<Statement>,
+    is: ReadonlyArray<Statement>,
+    bnodes_context,
+  ): string {
+    var query = `
+@prefix solid: <http://www.w3.org/ns/solid/terms#>.
+@prefix ex: <http://www.example.org/terms#>.
+
+_:patch
+`;
+    // If bnode context is non trivial, express it as ?conditions formula.
+    if (bnodes_context && bnodes_context.length > 0) {
+      query += `
+      solid:where {
+        ${bnodes_context.map((x) => this.anonymizeNT(x)).join('\n        ')}
+      };`
+    }
+    if (ds.length > 0) {
+      query += `
+      solid:deletes {
+        ${ds.map((x) => this.anonymizeNT(x)).join('\n        ')}
+      };`
+    }
+    if (is.length > 0) {
+      query += `
+      solid:inserts {
+        ${is.map((x) => this.anonymizeNT(x)).join('\n        ')}
+      };`
+    }
+    query += "   a solid:InsertDeletePatch .\n"
+
+    return query;
+  }
+
+  /**
+   * This high-level function updates the local store if the web is changed successfully.
    * Deletions, insertions may be undefined or single statements or lists or formulae (may contain bnodes which can be indirectly identified by a where clause).
    * The `why` property of each statement must be the same and give the web document to be updated.
    * @param deletions - Statement or statements to be deleted.
@@ -759,16 +858,16 @@ flagAuthorizationMetadata (kb?: IndexedFormula) {
    * @param options - Options for the fetch call
    */
   update(
-      deletions: ReadonlyArray<Statement>,
-      insertions: ReadonlyArray<Statement>,
-      callback?: (
-        uri: string | undefined | null,
-        success: boolean,
-        errorBody?: string,
-        response?: Response | Error
-      ) => void,
-      secondTry?: boolean,
-      options: Options = {}
+    deletions: ReadonlyArray<Statement>,
+    insertions: ReadonlyArray<Statement>,
+    callback?: (
+      uri: string | undefined | null,
+      success: boolean,
+      errorBody?: string,
+      response?: Response | Error
+    ) => void,
+    secondTry?: boolean,
+    options: Options = {}
   ): void | Promise<void> {
     if (!callback) {
       var thisUpdater = this
@@ -787,10 +886,10 @@ flagAuthorizationMetadata (kb?: IndexedFormula) {
       var kb = this.store
       var ds = !deletions ? []
         : isStore(deletions) ? deletions.statements
-          : deletions instanceof Array ? deletions : [ deletions ]
+          : deletions instanceof Array ? deletions : [deletions]
       var is = !insertions ? []
         : isStore(insertions) ? insertions.statements
-          : insertions instanceof Array ? insertions : [ insertions ]
+          : insertions instanceof Array ? insertions : [insertions]
       if (!(ds instanceof Array)) {
         throw new Error('Type Error ' + (typeof ds) + ': ' + ds)
       }
@@ -832,70 +931,42 @@ flagAuthorizationMetadata (kb?: IndexedFormula) {
         })
       })
 
-      var protocol = this.editable(doc.value, kb)
+      var protocol = this.editable(doc.value, kb);
+
       if (protocol === false) {
         throw new Error('Update: Can\'t make changes in uneditable ' + doc)
       }
       if (protocol === undefined) { // Not enough metadata
         if (secondTry) {
-          throw new Error('Update: Loaded ' + doc + "but stil can't figure out what editing protcol it supports.")
+          throw new Error('Update: Loaded ' + doc + "but still can't figure out what editing protocol it supports.")
         }
         // console.log(`Update: have not loaded ${doc} before: loading now...`);
         (this.store.fetcher.load(doc as NamedNode) as Promise<Response>).then(response => {
           this.update(deletions, insertions, callback, true, options)
         }, err => {
-            if (err.response.status === 404) { // nonexistent files are fine
-              this.update(deletions, insertions, callback, true, options)
-            } else  {
-              throw new Error(`Update: Can't get updatability status ${doc} before patching: ${err}`)
-            }
+          if (err.response.status === 404) { // nonexistent files are fine
+            this.update(deletions, insertions, callback, true, options)
+          } else {
+            throw new Error(`Update: Can't get updatability status ${doc} before patching: ${err}`)
+          }
         })
         return
-      } else if ((protocol as string).indexOf('SPARQL') >= 0) {
+      } else if ((protocol as string).indexOf('SPARQL') >= 0 || (protocol as string).indexOf('N3PATCH') >= 0) {
+        var isSparql = (protocol as string).indexOf('SPARQL') >= 0
+
         var bnodes: BlankNode[] = []
         // change ReadOnly type to Mutable type
         type Mutable<Type> = {
           -readonly [Key in keyof Type]: Type[Key];
         }
-        
+
         if (ds.length) bnodes = this.statementArrayBnodes(ds as Mutable<typeof ds>)
         if (is.length) bnodes = bnodes.concat(this.statementArrayBnodes(is as Mutable<typeof is>))
         var context = this.bnodeContext(bnodes, doc)
-        var whereClause = this.contextWhere(context)
-        var query = ''
-        if (whereClause.length) { // Is there a WHERE clause?
-          if (ds.length) {
-            query += 'DELETE { '
-            for (let i = 0; i < ds.length; i++) {
-              query += this.anonymizeNT(ds[i]) + '\n'
-            }
-            query += ' }\n'
-          }
-          if (is.length) {
-            query += 'INSERT { '
-            for (let i = 0; i < is.length; i++) {
-              query += this.anonymizeNT(is[i]) + '\n'
-            }
-            query += ' }\n'
-          }
-          query += whereClause
-        } else { // no where clause
-          if (ds.length) {
-            query += 'DELETE DATA { '
-            for (let i = 0; i < ds.length; i++) {
-              query += this.anonymizeNT(ds[i]) + '\n'
-            }
-            query += ' } \n'
-          }
-          if (is.length) {
-            if (ds.length) query += ' ; '
-            query += 'INSERT DATA { '
-            for (let i = 0; i < is.length; i++) {
-              query += this.nTriples(is[i]) + '\n'
-            }
-            query += ' }\n'
-          }
-        }
+
+        var query = isSparql ? this.constructSparqlUpdateQuery(ds, is, context) : this.constructN3PatchQuery(ds, is, context);
+        options.contentType = isSparql ? 'application/sparql-update' : 'text/n3' 
+        
         // Track pending upstream patches until they have finished their callbackFunction
         control.pendingUpstream = control.pendingUpstream ? control.pendingUpstream + 1 : 1
         if ('upstreamCount' in control) {
@@ -953,7 +1024,7 @@ flagAuthorizationMetadata (kb?: IndexedFormula) {
     }
   }
 
-  updateDav (
+  updateDav(
     doc: Quad_Subject,
     ds,
     is,
@@ -971,7 +1042,7 @@ flagAuthorizationMetadata (kb?: IndexedFormula) {
     if (!response) {
       return null // throw "No record HTTP GET response for document: "+doc
     }
-    var contentType = (kb.the(response, this.ns.httph('content-type'))as Term).value
+    var contentType = (kb.the(response, this.ns.httph('content-type')) as Term).value
 
     // prepare contents of revised document
     let newSts = kb.statementsMatching(undefined, undefined, undefined, doc).slice() // copy!
@@ -1024,7 +1095,7 @@ flagAuthorizationMetadata (kb?: IndexedFormula) {
    * @param callbackFunction
    * @param options
    */
-  updateLocalFile (doc: NamedNode, ds, is, callbackFunction, options: Options = {}): void {
+  updateLocalFile(doc: NamedNode, ds, is, callbackFunction, options: Options = {}): void {
     const kb = this.store
     // console.log('Writing back to local file\n')
 
@@ -1032,10 +1103,10 @@ flagAuthorizationMetadata (kb?: IndexedFormula) {
     let newSts = kb.statementsMatching(undefined, undefined, undefined, doc).slice() // copy!
 
     for (let i = 0; i < ds.length; i++) {
-      Util.RDFArrayRemove(newSts, ds[ i ])
+      Util.RDFArrayRemove(newSts, ds[i])
     }
     for (let i = 0; i < is.length; i++) {
-      newSts.push(is[ i ])
+      newSts.push(is[i])
     }
     // serialize to the appropriate format
     var dot = doc.value.lastIndexOf('.')
@@ -1044,7 +1115,7 @@ flagAuthorizationMetadata (kb?: IndexedFormula) {
     }
     var ext = doc.value.slice(dot + 1)
 
-    let contentType = Fetcher.CONTENT_TYPE_BY_EXT[ ext ]
+    let contentType = Fetcher.CONTENT_TYPE_BY_EXT[ext]
     if (!contentType) {
       throw new Error('File extension .' + ext + ' not supported for data write')
     }
@@ -1052,8 +1123,8 @@ flagAuthorizationMetadata (kb?: IndexedFormula) {
     options.body = this.serialize(doc.value, newSts, contentType);
     options.contentType = contentType;
 
-    kb.fetcher.webOperation('PUT', doc.value, options).then( (response)=>{
-      if(!response.ok) return callbackFunction(doc.value,false,response.error)
+    kb.fetcher.webOperation('PUT', doc.value, options).then((response) => {
+      if (!response.ok) return callbackFunction(doc.value, false, response.error)
       for (let i = 0; i < ds.length; i++) {
         kb.remove(ds[i]);
       }
@@ -1069,7 +1140,7 @@ flagAuthorizationMetadata (kb?: IndexedFormula) {
    *
    * @returns {string}
    */
-  serialize (uri: string, data: string | Quad[], contentType: string): string {
+  serialize(uri: string, data: string | Quad[], contentType: string): string {
     const kb = this.store
     let documentString
 
@@ -1152,7 +1223,7 @@ flagAuthorizationMetadata (kb?: IndexedFormula) {
    * @param doc {RDFlibNamedNode}
    * @param callbackFunction
    */
-  reload (
+  reload(
     kb: IndexedFormula,
     doc: docReloadType,
     callbackFunction: (ok: boolean, message?: string, response?: Error | Response) => {} | void
@@ -1172,8 +1243,8 @@ flagAuthorizationMetadata (kb?: IndexedFormula) {
         //@ts-ignore Where does onErrorWasCalled come from?
       } else if (response.onErrorWasCalled || response.status !== 200) {
         // console.log('    Non-HTTP error reloading data! onErrorWasCalled=' +
-          //@ts-ignore Where does onErrorWasCalled come from?
-          // response.onErrorWasCalled + ' status: ' + response.status)
+        //@ts-ignore Where does onErrorWasCalled come from?
+        // response.onErrorWasCalled + ' status: ' + response.status)
         callbackFunction(false, 'Non-HTTP error reloading data: ' + body, response)
       } else {
         var elapsedTimeMs = Date.now() - startTime
@@ -1185,8 +1256,8 @@ flagAuthorizationMetadata (kb?: IndexedFormula) {
         doc.reloadTimeCount += 1
 
         // console.log('    Fetch took ' + elapsedTimeMs + 'ms, av. of ' +
-          // doc.reloadTimeCount + ' = ' +
-          // (doc.reloadTimeTotal / doc.reloadTimeCount) + 'ms.')
+        // doc.reloadTimeCount + ' = ' +
+        // (doc.reloadTimeTotal / doc.reloadTimeCount) + 'ms.')
 
         callbackFunction(true)
       }
