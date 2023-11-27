@@ -7,6 +7,8 @@
     * document has triple declaring itself `a ont:MachineEditableDocument`
     * `wac-allow` header for document supports write for current user
 
+  * is updated using `N3PATCH` if `accept-patch` header's mime-essence is `text/n3`
+
   * is updated using `SPARQL PATCH` if
 
     * the response has one of the `accept-patch` or `ms-author-via` headers listed below
@@ -20,6 +22,8 @@
 
     * `wac-allow` header for document supports write for current user
     * the response has one of the `accept-patch` or `ms-author-via` headers listed below 
+
+  * is updated using `N3PATCH` if `accept-patch` header's mime-essence is `text/n3`
 
   * is updated using `SPARQL PATCH` if any
 
