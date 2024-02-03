@@ -871,25 +871,46 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
   }
 
   /**
+   * Removes all metadata
+   * @param doc - The document / graph
+   */
+  removeMetadata(doc: Quad_Graph): IndexedFormula {
+    const meta = this.fetcher?.appNode // this.sym('chrome://TheCurrentSession')
+    const linkNamespaceURI = 'http://www.w3.org/2007/ont/link#'
+    const kb = this
+    // removeMatches() --> removeMany() --> remove() fails on Collection
+    function removeBySubject (subject) {
+      const sts = kb.statementsMatching(subject, null, null, meta)
+      // console.log(sts)
+      for (var i = 0; i < sts.length; i++) {
+        kb.removeStatement(sts[i])
+      }
+    }
+    const requests = this.statementsMatching(null, this.sym(`${linkNamespaceURI}requestedURI`), this.rdfFactory.literal(doc.value), meta).map(st => st.subject)
+    for (var r = 0; r < requests.length; r++) {
+      const request = requests[r]
+      if (request != null) { // null or undefined
+        const response = this.any(request, this.sym(`${linkNamespaceURI}response`), null, meta) as Quad_Subject
+        // console.log('REQUEST ' + request.value)
+        removeBySubject(request)
+        if (response != null) { // null or undefined
+          // console.log('RESPONSE ' + response.value)
+          removeBySubject(response)
+        }
+      }
+    }
+    // console.log('DOCTYPE ' + doc.value)
+    removeBySubject(doc)
+    return this
+  }
+
+  /**
    * Removes all statements in a doc, along with the related metadata including request/response
    * @param doc - The document / graph
    */
   removeDocument(doc: Quad_Graph): IndexedFormula {
-    const meta = this.sym('chrome://TheCurrentSession') // or this.rdfFactory.namedNode('chrome://TheCurrentSession')
-    const linkNamespaceURI = 'http://www.w3.org/2007/ont/link#' // alain
     // remove request/response and metadata
-    const requests = this.statementsMatching(undefined, this.sym(`${linkNamespaceURI}requestedURI`), this.rdfFactory.literal(doc.value), meta).map(st => st.subject)
-    for (var r = 0; r < requests.length; r++) {
-      const request = requests[r]
-      if (request !== undefined) {
-        this.removeMatches(request, null, null, meta)
-        const response = this.any(request, this.sym(`${linkNamespaceURI}response`), null, meta) as Quad_Subject
-        if (response !== undefined) { // ts
-          this.removeMatches(response, null, null, meta)
-        }
-      }
-    }
-    this.removeMatches(this.sym(doc.value), null, null, meta) // content-type
+    this.removeMetadata(doc)
 
     // remove document
     var sts: Quad[] = this.statementsMatching(undefined, undefined, undefined, doc).slice() // Take a copy as this is the actual index
