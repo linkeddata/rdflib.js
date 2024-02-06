@@ -77,7 +77,6 @@
     "nock": "^13.3.0",
     "node-fetch": "^3.3.1",
     "node-polyfill-webpack-plugin": "^2.0.1",
-    "rdf-js": "^4.0.2",
     "sinon": "^15.0.3",
     "sinon-chai": "^3.7.0",
     "source-map-loader": "^4.0.1",
