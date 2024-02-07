@@ -1,7 +1,7 @@
 import {
   DataFactory,
 } from '../../src/index';
-import * as RdfJs from 'rdf-js';
+import * as RdfJs from '@rdfjs/types';
 
 const factory = DataFactory;
 
