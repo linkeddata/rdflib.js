@@ -61,7 +61,7 @@ export default abstract class Node {
    * Compares whether the two nodes are equal
    * @param other The other node
    */
-  equals (other: Term): boolean {
+  equals (other: Term | null | undefined): boolean {
     if (!other) {
       return false
     }
