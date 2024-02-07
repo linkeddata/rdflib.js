@@ -61,7 +61,7 @@ export default class Literal extends Node implements TFLiteral {
    * Gets whether two literals are the same
    * @param other The other statement
    */
-  equals (other: Term | undefined | null): boolean {
+  equals (other: Term | null | undefined): boolean {
     if (!other) {
       return false
     }
