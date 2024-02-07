@@ -60,6 +60,7 @@
     "@babel/preset-env": "^7.21.4",
     "@babel/preset-typescript": "^7.21.4",
     "@babel/register": "^7.21.0",
+    "@rdfjs/types": "^1.1.0",
     "@types/chai": "^4.3.4",
     "@types/dirty-chai": "^2.0.2",
     "@types/express": "^4.17.17",
