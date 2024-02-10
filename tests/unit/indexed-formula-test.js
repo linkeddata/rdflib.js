@@ -389,8 +389,8 @@ describe('IndexedFormula', () => {
                   httph:x-powered-by "solid-server/5.7.9-beta"
               ];
       tabont:status
-              "[0:16:35.259] N3 parsed: 13 triples in 26 lines.",
-              "[0:16:35.259] Done."
+              ( "[0:16:35.259] N3 parsed: 13 triples in 26 lines."
+              "[0:16:35.259] Done." )
   ].
   `
     const voidDoc = `@prefix : <#>.

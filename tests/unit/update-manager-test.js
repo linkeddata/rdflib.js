@@ -49,8 +49,8 @@ const httpResultsText = `
 [ link:requestedURI "${doc2.uri}";
  link:response [ httph:accept-patch "application/sparql-update" ];
  link:status
- "[0:16:35.259] N3 parsed: 13 triples in 26 lines.",
- "[0:16:35.259] Done."
+ ( "[0:16:35.259] N3 parsed: 13 triples in 26 lines."
+ "[0:16:35.259] Done." )
 ].
 `
 
