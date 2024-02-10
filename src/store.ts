@@ -877,30 +877,22 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
   removeMetadata(doc: Quad_Graph): IndexedFormula {
     const meta = this.fetcher?.appNode // this.sym('chrome://TheCurrentSession')
     const linkNamespaceURI = 'http://www.w3.org/2007/ont/link#'
-    const kb = this
-    // removeMatches() --> removeMany() --> remove() fails on Collection
-    function removeBySubject (subject) {
-      const sts = kb.statementsMatching(subject, null, null, meta)
-      // console.log(sts)
-      for (var i = 0; i < sts.length; i++) {
-        kb.removeStatement(sts[i])
-      }
-    }
     const requests = this.statementsMatching(null, this.sym(`${linkNamespaceURI}requestedURI`), this.rdfFactory.literal(doc.value), meta).map(st => st.subject)
     for (var r = 0; r < requests.length; r++) {
       const request = requests[r]
-      if (request != null) { // null or undefined
+      if (request != null) { // loose equality for null and undefined
         const response = this.any(request, this.sym(`${linkNamespaceURI}response`), null, meta) as Quad_Subject
-        // console.log('REQUEST ' + request.value)
-        removeBySubject(request)
-        if (response != null) { // null or undefined
-          // console.log('RESPONSE ' + response.value)
-          removeBySubject(response)
+        if (response != null) {
+          this.removeMatches(response, null, null, meta)
         }
+        const status = this.any(request, this.sym(`${linkNamespaceURI}status`), null, meta) as Quad_Subject
+        if (status != null) {
+          this.removeMatches(status, null, null, meta)
+        }
+        this.removeMatches(request, null, null, meta)
       }
     }
-    // console.log('DOCTYPE ' + doc.value)
-    removeBySubject(doc)
+    this.removeMatches(doc as Quad_Subject, null, null, meta)
     return this
   }
 
