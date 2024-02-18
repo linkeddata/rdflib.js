@@ -2004,7 +2004,11 @@ export default class Fetcher implements CallbackifyInterface {
 
       // Before we parse new data clear old but only on 200
       if (options.clearPreviousData) {
-        kb.removeDocument(options.resource)
+        // kb.removeDocument(options.resource)
+        const sts = kb.statementsMatching(undefined, undefined, undefined, options.resource).slice() // Take a copy as this is the actual index
+        for (let i = 0; i < sts.length; i++) {
+          kb.removeStatement(sts[i])
+        }
       }
 
       let isImage = contentType.includes('image/') ||
