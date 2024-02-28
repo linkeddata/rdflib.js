@@ -875,6 +875,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
    * @param doc - The document / graph
    */
   removeMetadata(doc: Quad_Graph): IndexedFormula {
+    // temporary until the issue on COLLECTION is resolved see https://github.com/linkeddata/rdflib.js/issues/631
     const meta = this.fetcher?.appNode // this.sym('chrome://TheCurrentSession')
     const linkNamespaceURI = 'http://www.w3.org/2007/ont/link#'
     const kb = this
