@@ -233,11 +233,6 @@ export default class IndexedFormula extends Formula {
      */
     remove(st: Quad | Quad[]): IndexedFormula;
     /**
-     * Removes all metadata
-     * @param doc - The document / graph
-     */
-    removeMetadata(doc: Quad_Graph): IndexedFormula;
-    /**
      * Removes all statements in a doc, along with the related metadata including request/response
      * @param doc - The document / graph
      */
