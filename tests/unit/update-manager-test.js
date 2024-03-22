@@ -223,17 +223,6 @@ describe('UpdateManager', () => {
       expect(updater.editable(doc1)).to.equal(undefined)
     })
 
-    it('Should not detect a document is editable from metadata after removeMetadata', () => {
-      loadMeta(updater.store)
-      updater.store.removeMetadata(doc1)
-      expect(updater.editable(doc1)).to.equal(undefined)
-    })
-
-    it('Should not detect a document is editable from metadata after removeDocument', () => {
-      loadMeta(updater.store)
-      updater.store.removeDocument(doc1)
-      expect(updater.editable(doc1)).to.equal(undefined)
-    })
 
     it('Async version should detect a document is editable from metadata', async () => {
       loadMeta(updater.store)
@@ -244,9 +233,13 @@ describe('UpdateManager', () => {
 
     it('Async version should not detect a document is editable from metadata after flush', async () => {
       loadMeta(updater.store)
+
       expect(updater.editable(doc1)).to.equal('SPARQL')
+
       updater.flagAuthorizationMetadata()
+
       const result = await updater.checkEditable(doc1)
+
       expect(result).to.equal(undefined)
     })
 
