@@ -601,7 +601,11 @@ class N3Handler extends Handler {
   ): ExtendedResponse | Promise<FetchError> {
     // Parse the text of this N3 file
     let kb = fetcher.store
-    let p = N3Parser(kb, kb, options.original.value, options.original.value,
+    let baseUrl = options.original.value
+    const isContainer = kb.any(options.original, null, ns.ldp('Container'))
+    // console.log('@@ isContainer ' + isContainer)
+    if (isContainer && !baseUrl.endsWith('/')) baseUrl = baseUrl + '/'
+    let p = N3Parser(kb, kb, baseUrl, baseUrl,
       null, null, '', null)
     //                p.loadBuf(xhr.responseText)
     try {
