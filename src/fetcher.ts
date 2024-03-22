@@ -34,7 +34,7 @@ import rdfParse from './parse'
 import { parseRDFaDOM } from './rdfaparser'
 import RDFParser from './rdfxmlparser'
 import * as Uri from './uri'
-import { isCollection, isNamedNode} from './utils/terms'
+import { isNamedNode } from './utils/terms'
 import * as Util from './utils-js'
 import serialize from './serialize'
 import crossFetch, { Headers } from 'cross-fetch'
@@ -1274,13 +1274,7 @@ export default class Fetcher implements CallbackifyInterface {
       now.getSeconds() + '.' + now.getMilliseconds() + '] ' + statusMessage
     // </Debug>
     let kb = this.store
-
-    const statusNode = kb.the(req, this.ns.link('status'))
-    if (isCollection(statusNode)) {
-      statusNode.append(kb.rdfFactory.literal(statusMessage))
-    } else {
-      log.warn('web.js: No list to add to: ' + statusNode + ',' + statusMessage)
-    }
+    kb.add(req, this.ns.link('status'), kb.rdfFactory.literal(statusMessage), this.appNode)
   }
 
   /**
@@ -1725,7 +1719,6 @@ export default class Fetcher implements CallbackifyInterface {
     // We store the docuri as a string, not as a node,
     // see https://github.com/linkeddata/rdflib.js/pull/427#pullrequestreview-447910061
     kb.add(req, this.ns.link('requestedURI'), kb.rdfFactory.literal(docuri), this.appNode)
-    kb.add(req, this.ns.link('status'), kb.collection(), this.appNode)
   }
 
   saveResponseMetadata (
@@ -2004,7 +1997,11 @@ export default class Fetcher implements CallbackifyInterface {
 
       // Before we parse new data clear old but only on 200
       if (options.clearPreviousData) {
-        kb.removeDocument(options.resource)
+        // kb.removeDocument(options.resource)
+        const sts = kb.statementsMatching(undefined, undefined, undefined, options.resource).slice() // Take a copy as this is the actual index
+        for (let i = 0; i < sts.length; i++) {
+          kb.removeStatement(sts[i])
+        }
       }
 
       let isImage = contentType.includes('image/') ||

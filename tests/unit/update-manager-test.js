@@ -36,11 +36,26 @@ const st3 = $rdf.st(baz, p, 333, doc2)
 const httpResultsText = `
 @prefix httph: <http://www.w3.org/2007/ont/httph#> .
 @prefix link: <http://www.w3.org/2007/ont/link#>.
- [] link:requestedURI "${doc.uri}", "${doc2.uri}"; link:response [ httph:accept-patch "application/sparql-update" ].
- `
+[ link:requestedURI "${doc.uri}";
+ link:response
+ [ httph:accept-patch "application/sparql-update";
+ httph:accept-post "*/*";
+ httph:accept-put "*/*"
+ ];
+ link:status
+ "[0:16:35.259] N3 parsed: 13 triples in 26 lines.",
+ "[0:16:35.259] Done."
+].
+[ link:requestedURI "${doc2.uri}";
+ link:response [ httph:accept-patch "application/sparql-update" ];
+ link:status
+ ( "[0:16:35.259] N3 parsed: 13 triples in 26 lines."
+ "[0:16:35.259] Done." )
+].
+`
 
 function loadMeta (store) {
-  $rdf.parse(httpResultsText, store, meta.uri)
+  $rdf.parse(httpResultsText, store, meta.uri) // alain , 'text/turtle')
   console.log('Loaded metadata')
 }
 
