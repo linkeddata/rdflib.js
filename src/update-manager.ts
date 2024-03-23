@@ -95,7 +95,7 @@ export default class UpdateManager {
     const requests = kb.statementsMatching(undefined, this.ns.link('requestedURI'), undefined, meta).map(st => st.subject)
     for (const request of requests) {
       const response = kb.any(request, this.ns.link('response'), null, meta) as Quad_Subject
-      if (response !== undefined) { // ts
+      if (response != undefined) { // ts
         kb.add(response, this.ns.link('outOfDate'), true as any, meta) // @@ Boolean is fine - fix types
       }
     }
