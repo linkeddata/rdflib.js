@@ -601,7 +601,7 @@ export default class UpdateManager {
           }
         } else {
           control.reloading = false
-          if ((response as Response).status === 0) {
+          if (response && (response as Response).status === 0) {
             // console.log('Network error refreshing the data. Retrying in ' +
             // retryTimeout / 1000)
             control.reloading = true
