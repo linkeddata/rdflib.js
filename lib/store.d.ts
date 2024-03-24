@@ -237,6 +237,7 @@ export default class IndexedFormula extends Formula {
      * @param doc - The document / graph
      */
     removeDocument(doc: Quad_Graph): IndexedFormula;
+    removeMetadata(doc: Quad_Graph): IndexedFormula;
     /**
      * Remove all statements matching args (within limit) *
      * @param subj The subject
