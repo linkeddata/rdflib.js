@@ -896,11 +896,11 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
         if (response != undefined) { // ts
           this.removeMatches(response, null, null, meta)
         }
-        // not needed
-        /* const status = this.any(request, this.sym(`${linkNamespaceURI}status`), null, meta) as Quad_Subject
+        // may be not needed
+        const status = this.any(request, this.sym(`${linkNamespaceURI}status`), null, meta) as Quad_Subject
         if (status != undefined) { // ts
           this.removeMatches(status, null, null, meta)
-        } */
+        }
         this.removeMatches(request, null, null, meta)
       }
     }
