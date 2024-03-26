@@ -881,6 +881,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     for (var i = 0; i < sts.length; i++) {
       this.removeStatement(sts[i])
     }
+    this.removeMatches(doc as Quad_Subject, null, null)
     return this
   }
 
@@ -892,14 +893,13 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     for (var r = 0; r < requests.length; r++) {
       const request = requests[r]
       if (request != undefined) {
+        const status = this.any(request, this.sym(`${linkNamespaceURI}status`), null, meta) as Quad_Subject
+        if (status != undefined) {
+          this.removeMatches(status, this.sym(`${linkNamespaceURI}status`), null, meta)
+        }
         const response = this.any(request, this.sym(`${linkNamespaceURI}response`), null, meta) as Quad_Subject
         if (response != undefined) { // ts
           this.removeMatches(response, null, null, meta)
-        }
-        // may be not needed
-        const status = this.any(request, this.sym(`${linkNamespaceURI}status`), null, meta) as Quad_Subject
-        if (status != undefined) { // ts
-          this.removeMatches(status, null, null, meta)
         }
         this.removeMatches(request, null, null, meta)
       }
