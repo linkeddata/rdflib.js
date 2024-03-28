@@ -871,7 +871,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
   }
 
   /**
-   * Removes all statements in a doc, along with the related metadata including request/response
+   * Removes all statements in a doc, along with the related metadata including request/response/status
    * @param doc - The document / graph
    */
   removeDocument(doc: Quad_Graph): IndexedFormula {
@@ -888,7 +888,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
   removeMetadata(doc: Quad_Graph): IndexedFormula {
     const meta = this.sym('chrome://TheCurrentSession') // or this.rdfFactory.namedNode('chrome://TheCurrentSession')
     const linkNamespaceURI = 'http://www.w3.org/2007/ont/link#' // alain
-    // remove request/response and metadata
+    // remove status/response/request metadata
     const requests = this.statementsMatching(undefined, this.sym(`${linkNamespaceURI}requestedURI`), this.rdfFactory.literal(doc.value), meta).map(st => st.subject)
     for (var r = 0; r < requests.length; r++) {
       const request = requests[r]

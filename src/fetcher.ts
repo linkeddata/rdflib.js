@@ -980,7 +980,7 @@ export default class Fetcher implements CallbackifyInterface {
     const requests = kb.statementsMatching(undefined, this.ns.link('requestedURI'), kb.sym(docuri), meta).map(st => st.subject)
     for (const request of requests) {
       const response = kb.any(request, this.ns.link('response'), null, meta) as Quad_Subject
-      if (response !== undefined) { // ts
+      if (response != undefined) { // ts
         const quad = kb.statementsMatching(response, this.ns.link('outOfDate'), true as any, meta)
         kb.remove(quad)
         options.force = true
