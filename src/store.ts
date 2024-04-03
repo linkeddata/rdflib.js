@@ -871,7 +871,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
   }
 
   /**
-   * Removes all statements in a doc, along with the related metadata including request/response
+   * Removes all statements in a doc, along with the related metadata including request/response/status
    * @param doc - The document / graph
    */
   removeDocument(doc: Quad_Graph): IndexedFormula {
@@ -881,27 +881,42 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     for (var i = 0; i < sts.length; i++) {
       this.removeStatement(sts[i])
     }
+    this.removeMatches(doc as Quad_Subject, null, null)
     return this
   }
 
   removeMetadata(doc: Quad_Graph): IndexedFormula {
     const meta = this.sym('chrome://TheCurrentSession') // or this.rdfFactory.namedNode('chrome://TheCurrentSession')
-    const linkNamespaceURI = 'http://www.w3.org/2007/ont/link#' // alain
-    // remove request/response and metadata
+    const linkNamespaceURI = 'http://www.w3.org/2007/ont/link#'
+    // remove status/response/request metadata
     const requests = this.statementsMatching(undefined, this.sym(`${linkNamespaceURI}requestedURI`), this.rdfFactory.literal(doc.value), meta).map(st => st.subject)
     for (var r = 0; r < requests.length; r++) {
       const request = requests[r]
       if (request != undefined) {
-        const response = this.any(request, this.sym(`${linkNamespaceURI}response`), null, meta) as Quad_Subject
-        if (response != undefined) { // ts
-          this.removeMatches(response, null, null, meta)
-        }
-        // may be not needed
+        // removeMatches unresolved issue with collection https://github.com/linkeddata/rdflib.js/issues/631
+        let sts: Quad[]
+        // status collection
         const status = this.any(request, this.sym(`${linkNamespaceURI}status`), null, meta) as Quad_Subject
-        if (status != undefined) { // ts
-          this.removeMatches(status, null, null, meta)
+        if (status != undefined) {
+          sts = this.statementsMatching(status, this.sym(`${linkNamespaceURI}status`), null, meta).slice()
+          for (var i = 0; i < sts.length; i++) {
+            this.removeStatement(sts[i])
+          }
         }
-        this.removeMatches(request, null, null, meta)
+        // response items list
+        const response = this.any(request, this.sym(`${linkNamespaceURI}response`), null, meta) as Quad_Subject
+        if (response != undefined) {
+          sts = this.statementsMatching(response, null, null, meta).slice()
+          for (var i = 0; i < sts.length; i++) {
+            this.removeStatement(sts[i])
+          }
+        }
+        // request triples
+        sts = this.statementsMatching(request, null, null, meta).slice()
+        for (var i = 0; i < sts.length; i++) {
+          this.removeStatement(sts[i])
+        }
+
       }
     }
     this.removeMatches(this.sym(doc.value), null, null, meta) // content-type

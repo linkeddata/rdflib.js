@@ -825,7 +825,7 @@ var IndexedFormula = /*#__PURE__*/function (_Formula) {
     }
 
     /**
-     * Removes all statements in a doc, along with the related metadata including request/response
+     * Removes all statements in a doc, along with the related metadata including request/response/status
      * @param doc - The document / graph
      */
   }, {
@@ -837,32 +837,44 @@ var IndexedFormula = /*#__PURE__*/function (_Formula) {
       for (var i = 0; i < sts.length; i++) {
         this.removeStatement(sts[i]);
       }
+      this.removeMatches(doc, null, null);
       return this;
     }
   }, {
     key: "removeMetadata",
     value: function removeMetadata(doc) {
       var meta = this.sym('chrome://TheCurrentSession'); // or this.rdfFactory.namedNode('chrome://TheCurrentSession')
-      var linkNamespaceURI = 'http://www.w3.org/2007/ont/link#'; // alain
-      // remove request/response and metadata
+      var linkNamespaceURI = 'http://www.w3.org/2007/ont/link#';
+      // remove status/response/request metadata
       var requests = this.statementsMatching(undefined, this.sym("".concat(linkNamespaceURI, "requestedURI")), this.rdfFactory.literal(doc.value), meta).map(function (st) {
         return st.subject;
       });
       for (var r = 0; r < requests.length; r++) {
         var request = requests[r];
         if (request != undefined) {
-          var response = this.any(request, this.sym("".concat(linkNamespaceURI, "response")), null, meta);
-          if (response != undefined) {
-            // ts
-            this.removeMatches(response, null, null, meta);
-          }
-          // may be not needed
+          // removeMatches unresolved issue with collection https://github.com/linkeddata/rdflib.js/issues/631
+          var sts = void 0;
+          // status collection
           var status = this.any(request, this.sym("".concat(linkNamespaceURI, "status")), null, meta);
           if (status != undefined) {
-            // ts
-            this.removeMatches(status, null, null, meta);
+            sts = this.statementsMatching(status, this.sym("".concat(linkNamespaceURI, "status")), null, meta).slice();
+            for (var i = 0; i < sts.length; i++) {
+              this.removeStatement(sts[i]);
+            }
           }
-          this.removeMatches(request, null, null, meta);
+          // response items list
+          var response = this.any(request, this.sym("".concat(linkNamespaceURI, "response")), null, meta);
+          if (response != undefined) {
+            sts = this.statementsMatching(response, null, null, meta).slice();
+            for (var i = 0; i < sts.length; i++) {
+              this.removeStatement(sts[i]);
+            }
+          }
+          // request triples
+          sts = this.statementsMatching(request, null, null, meta).slice();
+          for (var i = 0; i < sts.length; i++) {
+            this.removeStatement(sts[i]);
+          }
         }
       }
       this.removeMatches(this.sym(doc.value), null, null, meta); // content-type
