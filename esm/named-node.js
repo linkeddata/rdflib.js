@@ -1,12 +1,11 @@
 import _classCallCheck from "@babel/runtime/helpers/classCallCheck";
 import _createClass from "@babel/runtime/helpers/createClass";
-import _assertThisInitialized from "@babel/runtime/helpers/assertThisInitialized";
-import _inherits from "@babel/runtime/helpers/inherits";
 import _possibleConstructorReturn from "@babel/runtime/helpers/possibleConstructorReturn";
 import _getPrototypeOf from "@babel/runtime/helpers/getPrototypeOf";
+import _inherits from "@babel/runtime/helpers/inherits";
 import _defineProperty from "@babel/runtime/helpers/defineProperty";
-function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+function _callSuper(t, o, e) { return o = _getPrototypeOf(o), _possibleConstructorReturn(t, _isNativeReflectConstruct() ? Reflect.construct(o, e || [], _getPrototypeOf(t).constructor) : o.apply(t, e)); }
+function _isNativeReflectConstruct() { try { var t = !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); } catch (t) {} return (_isNativeReflectConstruct = function _isNativeReflectConstruct() { return !!t; })(); }
 import ClassOrder from './class-order';
 import Node from './node-internal';
 import { NamedNodeTermType } from './types';
@@ -17,8 +16,6 @@ import { isTerm } from './utils/terms';
  * A named (IRI) RDF node
  */
 var NamedNode = /*#__PURE__*/function (_Node) {
-  _inherits(NamedNode, _Node);
-  var _super = _createSuper(NamedNode);
   /**
    * Create a named (IRI) RDF Node
    * @constructor
@@ -27,9 +24,9 @@ var NamedNode = /*#__PURE__*/function (_Node) {
   function NamedNode(iri) {
     var _this;
     _classCallCheck(this, NamedNode);
-    _this = _super.call(this, termValue(iri));
-    _defineProperty(_assertThisInitialized(_this), "termType", NamedNodeTermType);
-    _defineProperty(_assertThisInitialized(_this), "classOrder", ClassOrder.NamedNode);
+    _this = _callSuper(this, NamedNode, [termValue(iri)]);
+    _defineProperty(_this, "termType", NamedNodeTermType);
+    _defineProperty(_this, "classOrder", ClassOrder.NamedNode);
     if (!_this.value) {
       throw new Error('Missing IRI for NamedNode');
     }
@@ -46,7 +43,8 @@ var NamedNode = /*#__PURE__*/function (_Node) {
   /**
    * Returns an $rdf node for the containing directory, ending in slash.
    */
-  _createClass(NamedNode, [{
+  _inherits(NamedNode, _Node);
+  return _createClass(NamedNode, [{
     key: "dir",
     value: function dir() {
       var str = this.value.split('#')[0];
@@ -130,6 +128,5 @@ var NamedNode = /*#__PURE__*/function (_Node) {
       return new NamedNode(value);
     }
   }]);
-  return NamedNode;
 }(Node);
 export { NamedNode as default };

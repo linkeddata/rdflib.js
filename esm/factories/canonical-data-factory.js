@@ -1,5 +1,4 @@
 import _defineProperty from "@babel/runtime/helpers/defineProperty";
-var _supports;
 import BlankNode from '../blank-node';
 import Literal from '../literal';
 import NamedNode from '../named-node';
@@ -18,7 +17,7 @@ var _defaultGraph = new DefaultGraph();
 
 /** A basic internal RDFlib datafactory, which does not support Collections  */
 var CanonicalDataFactory = {
-  supports: (_supports = {}, _defineProperty(_supports, Feature.collections, false), _defineProperty(_supports, Feature.defaultGraphType, false), _defineProperty(_supports, Feature.equalsMethod, true), _defineProperty(_supports, Feature.identity, false), _defineProperty(_supports, Feature.id, true), _defineProperty(_supports, Feature.reversibleId, false), _defineProperty(_supports, Feature.variableType, true), _supports),
+  supports: _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty({}, Feature.collections, false), Feature.defaultGraphType, false), Feature.equalsMethod, true), Feature.identity, false), Feature.id, true), Feature.reversibleId, false), Feature.variableType, true),
   /**
    * Creates a new blank node
    * @param value - The blank node's identifier

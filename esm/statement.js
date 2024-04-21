@@ -45,7 +45,7 @@ var Statement = /*#__PURE__*/function () {
   }
 
   /** Alias for graph, favored by Tim */
-  _createClass(Statement, [{
+  return _createClass(Statement, [{
     key: "why",
     get: function get() {
       return this.graph;
@@ -115,6 +115,5 @@ var Statement = /*#__PURE__*/function () {
       return this.toNT();
     }
   }]);
-  return Statement;
 }();
 export { Statement as default };

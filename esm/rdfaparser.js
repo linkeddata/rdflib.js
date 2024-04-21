@@ -68,7 +68,7 @@ var RDFaProcessor = /*#__PURE__*/function () {
     this.finishedHandlers = [];
     this.init();
   }
-  _createClass(RDFaProcessor, [{
+  return _createClass(RDFaProcessor, [{
     key: "addTriple",
     value: function addTriple(origin, subject, predicate, object) {
       var su, ob, pr, or;
@@ -277,7 +277,6 @@ var RDFaProcessor = /*#__PURE__*/function () {
         if (node.baseURI && !options.baseURI) {
           options.baseURI = node.baseURI; // be defensive as DOM implementations vary
         }
-
         base = node.baseURI;
         node = node.documentElement;
         if (!node.baseURI) {
@@ -330,7 +329,6 @@ var RDFaProcessor = /*#__PURE__*/function () {
               bnodes.push(this.newBlankNode());
               // this.newSubject(item.parent,bnodes[i])
             }
-
             for (var _i2 = 0; _i2 < bnodes.length; _i2++) {
               this.addTriple(item.parent, bnodes[_i2], 'http://www.w3.org/1999/02/22-rdf-syntax-ns#first', list[_i2]);
               this.addTriple(item.parent, bnodes[_i2], 'http://www.w3.org/1999/02/22-rdf-syntax-ns#rest', {
@@ -630,7 +628,6 @@ var RDFaProcessor = /*#__PURE__*/function () {
             currentObjectResource = this.newBlankNode();
             // alert(current.tagName+": generated blank node, newSubject="+newSubject+" currentObjectResource="+currentObjectResource)
           }
-
           if (relAtt && inlistAtt) {
             for (var _i10 = 0; _i10 < relAttPredicates.length; _i10++) {
               var _list2 = listMapping[relAttPredicates[_i10]];
@@ -999,7 +996,6 @@ var RDFaProcessor = /*#__PURE__*/function () {
         // Note this became a read-only attribute some time before 2018
         dom.baseURI = base; // oinly set if not already set
       }
-
       p.process(dom, {
         baseURI: base
       });
@@ -1015,7 +1011,6 @@ var RDFaProcessor = /*#__PURE__*/function () {
       return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
     }
   }]);
-  return RDFaProcessor;
 }();
 export { RDFaProcessor as default };
 RDFaProcessor.XMLLiteralURI = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#XMLLiteral';

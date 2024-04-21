@@ -1,15 +1,14 @@
 import _classCallCheck from "@babel/runtime/helpers/classCallCheck";
 import _createClass from "@babel/runtime/helpers/createClass";
-import _assertThisInitialized from "@babel/runtime/helpers/assertThisInitialized";
-import _inherits from "@babel/runtime/helpers/inherits";
 import _possibleConstructorReturn from "@babel/runtime/helpers/possibleConstructorReturn";
 import _getPrototypeOf from "@babel/runtime/helpers/getPrototypeOf";
+import _inherits from "@babel/runtime/helpers/inherits";
 import _defineProperty from "@babel/runtime/helpers/defineProperty";
 function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
 function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
 function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i]; return arr2; }
-function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+function _callSuper(t, o, e) { return o = _getPrototypeOf(o), _possibleConstructorReturn(t, _isNativeReflectConstruct() ? Reflect.construct(o, e || [], _getPrototypeOf(t).constructor) : o.apply(t, e)); }
+function _isNativeReflectConstruct() { try { var t = !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); } catch (t) {} return (_isNativeReflectConstruct = function _isNativeReflectConstruct() { return !!t; })(); }
 import ClassOrder from './class-order';
 import Collection from './collection';
 import CanonicalDataFactory from './factories/canonical-data-factory';
@@ -26,8 +25,6 @@ import NamedNode from './named-node';
  * A formula, or store of RDF statements
  */
 var Formula = /*#__PURE__*/function (_Node) {
-  _inherits(Formula, _Node);
-  var _super = _createSuper(Formula);
   /**
    * Initializes this formula
    * @constructor
@@ -46,27 +43,27 @@ var Formula = /*#__PURE__*/function (_Node) {
     var optional = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : [];
     var opts = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : {};
     _classCallCheck(this, Formula);
-    _this = _super.call(this, '');
+    _this = _callSuper(this, Formula, ['']);
     _this.statements = statements;
     _this.constraints = constraints;
     _this.initBindings = initBindings;
     _this.optional = optional;
-    _defineProperty(_assertThisInitialized(_this), "termType", GraphTermType);
-    _defineProperty(_assertThisInitialized(_this), "classOrder", ClassOrder.Graph);
+    _defineProperty(_this, "termType", GraphTermType);
+    _defineProperty(_this, "classOrder", ClassOrder.Graph);
     /**
      * The accompanying fetcher instance.
      *
      * Is set by the fetcher when initialized.
      */
-    _defineProperty(_assertThisInitialized(_this), "fetcher", void 0);
-    _defineProperty(_assertThisInitialized(_this), "isVar", 0);
+    _defineProperty(_this, "fetcher", void 0);
+    _defineProperty(_this, "isVar", 0);
     /**
      * A namespace for the specified namespace's URI
      * @param nsuri The URI for the namespace
      */
-    _defineProperty(_assertThisInitialized(_this), "ns", Namespace);
+    _defineProperty(_this, "ns", Namespace);
     /** The factory used to generate statements and terms */
-    _defineProperty(_assertThisInitialized(_this), "rdfFactory", void 0);
+    _defineProperty(_this, "rdfFactory", void 0);
     _this.rdfFactory = opts && opts.rdfFactory || CanonicalDataFactory;
     // Enable default factory methods on this while preserving factory context.
     var _iterator = _createForOfIteratorHelper(appliedFactoryMethods),
@@ -96,7 +93,8 @@ var Formula = /*#__PURE__*/function (_Node) {
    * @param object - the third part of the statement
    * @param graph - the last part of the statement
    */
-  _createClass(Formula, [{
+  _inherits(Formula, _Node);
+  return _createClass(Formula, [{
     key: "add",
     value: function add(subject, predicate, object, graph) {
       var _this2 = this;
@@ -854,6 +852,5 @@ var Formula = /*#__PURE__*/function (_Node) {
       return this.statementsMatching(s, p, o, g, false).length;
     }
   }]);
-  return Formula;
 }(Node);
 export { Formula as default };

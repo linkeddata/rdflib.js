@@ -241,7 +241,6 @@ export function parseXML(str, options) {
       dparser = new DOMParser(); // Doc says this works
     }
   }
-
   return dparser.parseFromString(str, 'application/xml');
 }
 

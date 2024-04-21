@@ -1,12 +1,11 @@
 import _classCallCheck from "@babel/runtime/helpers/classCallCheck";
 import _createClass from "@babel/runtime/helpers/createClass";
-import _assertThisInitialized from "@babel/runtime/helpers/assertThisInitialized";
-import _inherits from "@babel/runtime/helpers/inherits";
 import _possibleConstructorReturn from "@babel/runtime/helpers/possibleConstructorReturn";
 import _getPrototypeOf from "@babel/runtime/helpers/getPrototypeOf";
+import _inherits from "@babel/runtime/helpers/inherits";
 import _defineProperty from "@babel/runtime/helpers/defineProperty";
-function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+function _callSuper(t, o, e) { return o = _getPrototypeOf(o), _possibleConstructorReturn(t, _isNativeReflectConstruct() ? Reflect.construct(o, e || [], _getPrototypeOf(t).constructor) : o.apply(t, e)); }
+function _isNativeReflectConstruct() { try { var t = !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); } catch (t) {} return (_isNativeReflectConstruct = function _isNativeReflectConstruct() { return !!t; })(); }
 import RdflibBlankNode from './blank-node';
 import ClassOrder from './class-order';
 import Literal from './literal';
@@ -41,21 +40,19 @@ export function fromValue(value) {
  * Use generic T to control the contents of the array.
  */
 var Collection = /*#__PURE__*/function (_Node) {
-  _inherits(Collection, _Node);
-  var _super = _createSuper(Collection);
   function Collection(initial) {
     var _this;
     _classCallCheck(this, Collection);
-    _this = _super.call(this, (RdflibBlankNode.nextId++).toString());
-    _defineProperty(_assertThisInitialized(_this), "termType", CollectionTermType);
-    _defineProperty(_assertThisInitialized(_this), "classOrder", ClassOrder.Collection);
-    _defineProperty(_assertThisInitialized(_this), "closed", false);
-    _defineProperty(_assertThisInitialized(_this), "compareTerm", RdflibBlankNode.prototype.compareTerm);
+    _this = _callSuper(this, Collection, [(RdflibBlankNode.nextId++).toString()]);
+    _defineProperty(_this, "termType", CollectionTermType);
+    _defineProperty(_this, "classOrder", ClassOrder.Collection);
+    _defineProperty(_this, "closed", false);
+    _defineProperty(_this, "compareTerm", RdflibBlankNode.prototype.compareTerm);
     /**
      * The nodes in this collection
      */
-    _defineProperty(_assertThisInitialized(_this), "elements", []);
-    _defineProperty(_assertThisInitialized(_this), "isVar", 0);
+    _defineProperty(_this, "elements", []);
+    _defineProperty(_this, "isVar", 0);
     if (initial && initial.length > 0) {
       initial.forEach(function (element) {
         _this.elements.push(fromValue(element));
@@ -63,7 +60,8 @@ var Collection = /*#__PURE__*/function (_Node) {
     }
     return _this;
   }
-  _createClass(Collection, [{
+  _inherits(Collection, _Node);
+  return _createClass(Collection, [{
     key: "id",
     get: function get() {
       return this.value;
@@ -146,7 +144,6 @@ var Collection = /*#__PURE__*/function (_Node) {
       return RdflibBlankNode.NTAnonymousNodePrefix + collection.id;
     }
   }]);
-  return Collection;
 }(Node);
 _defineProperty(Collection, "termType", CollectionTermType);
 export { Collection as default };

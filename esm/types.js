@@ -35,9 +35,14 @@ export var XHTMLContentType = "application/xhtml+xml";
  * In some ways, the TF types in here are a bit more strict.
  * Variables are missing, and the statement requires specific types of terms (e.g. NamedNode instead of Term).
  */
+
 /** An RDF/JS Subject */
+
 /** An RDF/JS Predicate */
+
 /** An RDF/JS Object */
+
 /** An RDF/JS Graph */
 // | Formula
+
 /** All the types that a .fromValue() method might return */

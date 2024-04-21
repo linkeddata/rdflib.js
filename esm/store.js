@@ -1,17 +1,16 @@
 import _classCallCheck from "@babel/runtime/helpers/classCallCheck";
 import _createClass from "@babel/runtime/helpers/createClass";
-import _assertThisInitialized from "@babel/runtime/helpers/assertThisInitialized";
-import _inherits from "@babel/runtime/helpers/inherits";
 import _possibleConstructorReturn from "@babel/runtime/helpers/possibleConstructorReturn";
 import _getPrototypeOf from "@babel/runtime/helpers/getPrototypeOf";
+import _inherits from "@babel/runtime/helpers/inherits";
 import _defineProperty from "@babel/runtime/helpers/defineProperty";
-function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
+function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
 function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
 function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
 function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i]; return arr2; }
-function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+function _callSuper(t, o, e) { return o = _getPrototypeOf(o), _possibleConstructorReturn(t, _isNativeReflectConstruct() ? Reflect.construct(o, e || [], _getPrototypeOf(t).constructor) : o.apply(t, e)); }
+function _isNativeReflectConstruct() { try { var t = !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); } catch (t) {} return (_isNativeReflectConstruct = function _isNativeReflectConstruct() { return !!t; })(); }
 /*  Identity management and indexing for RDF
  *
  * This file provides  IndexedFormula a formula (set of triples) which
@@ -96,8 +95,6 @@ function handleRDFType(formula, subj, pred, obj, why) {
  * Indexed Formula aka Store
  */
 var IndexedFormula = /*#__PURE__*/function (_Formula) {
-  _inherits(IndexedFormula, _Formula);
-  var _super = _createSuper(IndexedFormula);
   /**
    * Creates a new formula
    * @param features - What sort of automatic processing to do? Array of string
@@ -111,42 +108,42 @@ var IndexedFormula = /*#__PURE__*/function (_Formula) {
     var _this;
     var opts = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
     _classCallCheck(this, IndexedFormula);
-    _this = _super.call(this, undefined, undefined, undefined, undefined, opts);
+    _this = _callSuper(this, IndexedFormula, [undefined, undefined, undefined, undefined, opts]);
     // IN future - allow pass array of statements to constructor
     /**
      * An UpdateManager initialised to this store
      */
-    _defineProperty(_assertThisInitialized(_this), "updater", void 0);
+    _defineProperty(_this, "updater", void 0);
     /**
      * Dictionary of namespace prefixes
      */
-    _defineProperty(_assertThisInitialized(_this), "namespaces", void 0);
+    _defineProperty(_this, "namespaces", void 0);
     /** Map of iri predicates to functions to call when adding { s type X } */
-    _defineProperty(_assertThisInitialized(_this), "classActions", void 0);
+    _defineProperty(_this, "classActions", void 0);
     /** Map of iri predicates to functions to call when getting statement with {s X o} */
-    _defineProperty(_assertThisInitialized(_this), "propertyActions", void 0);
+    _defineProperty(_this, "propertyActions", void 0);
     /** Redirect to lexically smaller equivalent symbol */
-    _defineProperty(_assertThisInitialized(_this), "redirections", void 0);
+    _defineProperty(_this, "redirections", void 0);
     /** Reverse mapping to redirection: aliases for this */
-    _defineProperty(_assertThisInitialized(_this), "aliases", void 0);
+    _defineProperty(_this, "aliases", void 0);
     /** Redirections we got from HTTP */
-    _defineProperty(_assertThisInitialized(_this), "HTTPRedirects", void 0);
+    _defineProperty(_this, "HTTPRedirects", void 0);
     /** Array of statements with this X as subject */
-    _defineProperty(_assertThisInitialized(_this), "subjectIndex", void 0);
+    _defineProperty(_this, "subjectIndex", void 0);
     /** Array of statements with this X as predicate */
-    _defineProperty(_assertThisInitialized(_this), "predicateIndex", void 0);
+    _defineProperty(_this, "predicateIndex", void 0);
     /** Array of statements with this X as object */
-    _defineProperty(_assertThisInitialized(_this), "objectIndex", void 0);
+    _defineProperty(_this, "objectIndex", void 0);
     /** Array of statements with X as provenance */
-    _defineProperty(_assertThisInitialized(_this), "whyIndex", void 0);
-    _defineProperty(_assertThisInitialized(_this), "index", void 0);
-    _defineProperty(_assertThisInitialized(_this), "features", void 0);
-    _defineProperty(_assertThisInitialized(_this), "_universalVariables", void 0);
-    _defineProperty(_assertThisInitialized(_this), "_existentialVariables", void 0);
+    _defineProperty(_this, "whyIndex", void 0);
+    _defineProperty(_this, "index", void 0);
+    _defineProperty(_this, "features", void 0);
+    _defineProperty(_this, "_universalVariables", void 0);
+    _defineProperty(_this, "_existentialVariables", void 0);
     /** Function to remove quads from the store arrays with */
-    _defineProperty(_assertThisInitialized(_this), "rdfArrayRemove", void 0);
+    _defineProperty(_this, "rdfArrayRemove", void 0);
     /** Callbacks which are triggered after a statement has been added to the store */
-    _defineProperty(_assertThisInitialized(_this), "dataCallbacks", void 0);
+    _defineProperty(_this, "dataCallbacks", void 0);
     _this.propertyActions = {};
     _this.classActions = {};
     _this.redirections = [];
@@ -175,7 +172,8 @@ var IndexedFormula = /*#__PURE__*/function (_Formula) {
   /**
    * Gets the URI of the default graph
    */
-  _createClass(IndexedFormula, [{
+  _inherits(IndexedFormula, _Formula);
+  return _createClass(IndexedFormula, [{
     key: "substitute",
     value:
     /**
@@ -317,14 +315,12 @@ var IndexedFormula = /*#__PURE__*/function (_Formula) {
           return true; // true if statement given is NOT needed in the store
         }]; // sameAs -> equate & don't add to index
       }
-
       if (ArrayIndexOf(features, 'InverseFunctionalProperty') >= 0) {
         this.classActions[this.rdfFactory.id(this.rdfFactory.namedNode("".concat(owlNamespaceURI, "InverseFunctionalProperty")))] = [function (formula, subj, pred, obj, addFn) {
           // yes subj not pred!
           return formula.newPropertyAction(subj, handleIFP);
         }]; // IFP -> handleIFP, do add to index
       }
-
       if (ArrayIndexOf(features, 'FunctionalProperty') >= 0) {
         this.classActions[this.rdfFactory.id(this.rdfFactory.namedNode("".concat(owlNamespaceURI, "FunctionalProperty")))] = [function (formula, subj, proj, obj, addFn) {
           return formula.newPropertyAction(subj, handleFP);
@@ -970,7 +966,6 @@ var IndexedFormula = /*#__PURE__*/function (_Formula) {
         if (!oldlist) {
           return; // none to move
         }
-
         var newlist = ix[newhash];
         if (!newlist) {
           ix[newhash] = oldlist;
@@ -1116,7 +1111,6 @@ var IndexedFormula = /*#__PURE__*/function (_Formula) {
         if (!list) {
           return []; // No occurrences
         }
-
         if (list.length < best) {
           best = list.length;
           iBest = i; // (not p!)
@@ -1184,7 +1178,6 @@ var IndexedFormula = /*#__PURE__*/function (_Formula) {
       return defaultGraphURI;
     }
   }]);
-  return IndexedFormula;
 }(Formula);
 _defineProperty(IndexedFormula, "handleRDFType", void 0);
 export { IndexedFormula as default };

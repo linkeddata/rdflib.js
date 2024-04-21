@@ -25,7 +25,7 @@ var Node = /*#__PURE__*/function () {
    * Creates the substituted node for this one, according to the specified bindings
    * @param bindings - Bindings of identifiers to nodes
    */
-  _createClass(Node, [{
+  return _createClass(Node, [{
     key: "substitute",
     value: function substitute(bindings) {
       return this;
@@ -123,7 +123,6 @@ var Node = /*#__PURE__*/function () {
       throw new Error('Node.toString() is abstract - see the subclasses instead');
     }
   }]);
-  return Node;
 }();
 // Specified in './node.ts' to prevent circular dependency
 _defineProperty(Node, "fromValue", void 0);

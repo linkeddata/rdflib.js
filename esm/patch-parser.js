@@ -39,7 +39,6 @@ export default function sparqlUpdateParser(str, kb, base) {
       if (i < 0) {
         return clauses; // Allow end in a
       }
-
       j = i;
     }
     var found = false;

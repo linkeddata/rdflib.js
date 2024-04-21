@@ -80,7 +80,6 @@ var pyjslib_slice = function pyjslib_slice(str, i, j) {
   if (typeof j == 'undefined' || j == null) return str.slice(i);
   return str.slice(i, j); // @ exactly the same spec?
 };
-
 var StopIteration = Error('dummy error stop iteration');
 var pyjslib_Iterator = function pyjslib_Iterator(theList) {
   this.last = 0;
@@ -117,7 +116,6 @@ String.prototype.decode = function (encoding) {
 var uripath_join = function uripath_join(base, given) {
   return Uri.join(given, base); // sad but true
 };
-
 var becauseSubexpression = null; // No reason needed
 var diag_tracking = 0;
 var diag_chatty_flag = 0;
@@ -266,7 +264,7 @@ export var SinkParser = /*#__PURE__*/function () {
     this._context = this._formula;
     this._parentContext = null;
   }
-  _createClass(SinkParser, [{
+  return _createClass(SinkParser, [{
     key: "here",
     value: function here(i) {
       return this._genPrefix + "_L" + this.lines + "C" + (i - this.startOfLine + 1);
@@ -1119,7 +1117,6 @@ export var SinkParser = /*#__PURE__*/function () {
               if (j === str.length) {
                 return -1; // EOF
               }
-
               if (str.charAt(j) === '\n') {
                 this.lines = this.lines + 1;
                 break;
@@ -1328,7 +1325,6 @@ export var SinkParser = /*#__PURE__*/function () {
           ;
           return j; // Where we have got up to
         }
-
         if (str.charAt(i) == "\"") {
           if (str.slice(i, i + 3) == "\"\"\"") {
             var delim = "\"\"\"";
@@ -1482,7 +1478,6 @@ export var SinkParser = /*#__PURE__*/function () {
       return new pyjslib_Tuple([j, uch]);
     }
   }]);
-  return SinkParser;
 }();
 function OLD_BadSyntax(uri, lines, str, i, why) {
   return new __OLD_BadSyntax(uri, lines, str, i, why);

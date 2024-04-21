@@ -1,13 +1,12 @@
 import _typeof from "@babel/runtime/helpers/typeof";
 import _classCallCheck from "@babel/runtime/helpers/classCallCheck";
 import _createClass from "@babel/runtime/helpers/createClass";
-import _assertThisInitialized from "@babel/runtime/helpers/assertThisInitialized";
-import _inherits from "@babel/runtime/helpers/inherits";
 import _possibleConstructorReturn from "@babel/runtime/helpers/possibleConstructorReturn";
 import _getPrototypeOf from "@babel/runtime/helpers/getPrototypeOf";
+import _inherits from "@babel/runtime/helpers/inherits";
 import _defineProperty from "@babel/runtime/helpers/defineProperty";
-function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+function _callSuper(t, o, e) { return o = _getPrototypeOf(o), _possibleConstructorReturn(t, _isNativeReflectConstruct() ? Reflect.construct(o, e || [], _getPrototypeOf(t).constructor) : o.apply(t, e)); }
+function _isNativeReflectConstruct() { try { var t = !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); } catch (t) {} return (_isNativeReflectConstruct = function _isNativeReflectConstruct() { return !!t; })(); }
 import ClassOrder from './class-order';
 import RDFlibNamedNode from './named-node';
 import Node from './node-internal';
@@ -19,8 +18,6 @@ import XSD from './xsd-internal';
  * @link https://rdf.js.org/data-model-spec/#literal-interface
  */
 var Literal = /*#__PURE__*/function (_Node) {
-  _inherits(Literal, _Node);
-  var _super = _createSuper(Literal);
   /**
    * Initializes a literal
    * @param value - The literal's lexical value
@@ -30,18 +27,18 @@ var Literal = /*#__PURE__*/function (_Node) {
   function Literal(value, language, datatype) {
     var _this;
     _classCallCheck(this, Literal);
-    _this = _super.call(this, value);
-    _defineProperty(_assertThisInitialized(_this), "termType", LiteralTermType);
-    _defineProperty(_assertThisInitialized(_this), "classOrder", ClassOrder.Literal);
+    _this = _callSuper(this, Literal, [value]);
+    _defineProperty(_this, "termType", LiteralTermType);
+    _defineProperty(_this, "classOrder", ClassOrder.Literal);
     /**
      * The literal's datatype as a named node
      */
-    _defineProperty(_assertThisInitialized(_this), "datatype", XSD.string);
-    _defineProperty(_assertThisInitialized(_this), "isVar", 0);
+    _defineProperty(_this, "datatype", XSD.string);
+    _defineProperty(_this, "isVar", 0);
     /**
      * The language for the literal
      */
-    _defineProperty(_assertThisInitialized(_this), "language", '');
+    _defineProperty(_this, "language", '');
     if (language) {
       _this.language = language;
       _this.datatype = XSD.langString;
@@ -56,7 +53,8 @@ var Literal = /*#__PURE__*/function (_Node) {
   /**
    * Gets a copy of this literal
    */
-  _createClass(Literal, [{
+  _inherits(Literal, _Node);
+  return _createClass(Literal, [{
     key: "copy",
     value: function copy() {
       return new Literal(this.value, this.lang, this.datatype);
@@ -197,6 +195,5 @@ var Literal = /*#__PURE__*/function (_Node) {
       throw new Error("Can't make literal from " + value + ' of type ' + _typeof(value));
     }
   }]);
-  return Literal;
 }(Node);
 export { Literal as default };

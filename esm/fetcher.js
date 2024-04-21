@@ -1,7 +1,7 @@
 import _asyncToGenerator from "@babel/runtime/helpers/asyncToGenerator";
-import _inherits from "@babel/runtime/helpers/inherits";
 import _possibleConstructorReturn from "@babel/runtime/helpers/possibleConstructorReturn";
 import _getPrototypeOf from "@babel/runtime/helpers/getPrototypeOf";
+import _inherits from "@babel/runtime/helpers/inherits";
 import _createClass from "@babel/runtime/helpers/createClass";
 import _classCallCheck from "@babel/runtime/helpers/classCallCheck";
 import _defineProperty from "@babel/runtime/helpers/defineProperty";
@@ -9,8 +9,8 @@ import _regeneratorRuntime from "@babel/runtime/regenerator";
 function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
 function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
 function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i]; return arr2; }
-function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+function _callSuper(t, o, e) { return o = _getPrototypeOf(o), _possibleConstructorReturn(t, _isNativeReflectConstruct() ? Reflect.construct(o, e || [], _getPrototypeOf(t).constructor) : o.apply(t, e)); }
+function _isNativeReflectConstruct() { try { var t = !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); } catch (t) {} return (_isNativeReflectConstruct = function _isNativeReflectConstruct() { return !!t; })(); }
 /* global $SolidTestEnvironment */
 /**
  *
@@ -112,14 +112,13 @@ var Handler = /*#__PURE__*/_createClass(function Handler(response, dom) {
   this.dom = dom;
 });
 _defineProperty(Handler, "pattern", void 0);
-var RDFXMLHandler = /*#__PURE__*/function (_Handler) {
-  _inherits(RDFXMLHandler, _Handler);
-  var _super = _createSuper(RDFXMLHandler);
+var RDFXMLHandler = /*#__PURE__*/function (_Handler2) {
   function RDFXMLHandler() {
     _classCallCheck(this, RDFXMLHandler);
-    return _super.apply(this, arguments);
+    return _callSuper(this, RDFXMLHandler, arguments);
   }
-  _createClass(RDFXMLHandler, [{
+  _inherits(RDFXMLHandler, _Handler2);
+  return _createClass(RDFXMLHandler, [{
     key: "parse",
     value: function parse(fetcher, /** An XML String */
     responseText, /** Requires .original */
@@ -158,17 +157,15 @@ var RDFXMLHandler = /*#__PURE__*/function (_Handler) {
       };
     }
   }]);
-  return RDFXMLHandler;
 }(Handler);
 RDFXMLHandler.pattern = new RegExp('application/rdf\\+xml');
-var XHTMLHandler = /*#__PURE__*/function (_Handler2) {
-  _inherits(XHTMLHandler, _Handler2);
-  var _super2 = _createSuper(XHTMLHandler);
+var XHTMLHandler = /*#__PURE__*/function (_Handler3) {
   function XHTMLHandler() {
     _classCallCheck(this, XHTMLHandler);
-    return _super2.apply(this, arguments);
+    return _callSuper(this, XHTMLHandler, arguments);
   }
-  _createClass(XHTMLHandler, [{
+  _inherits(XHTMLHandler, _Handler3);
+  return _createClass(XHTMLHandler, [{
     key: "parse",
     value: function parse(fetcher, responseText, options) {
       var relation, reverse;
@@ -236,17 +233,15 @@ var XHTMLHandler = /*#__PURE__*/function (_Handler2) {
       fetcher.mediatypes[XHTMLContentType] = {};
     }
   }]);
-  return XHTMLHandler;
 }(Handler);
 XHTMLHandler.pattern = new RegExp('application/xhtml');
-var XMLHandler = /*#__PURE__*/function (_Handler3) {
-  _inherits(XMLHandler, _Handler3);
-  var _super3 = _createSuper(XMLHandler);
+var XMLHandler = /*#__PURE__*/function (_Handler4) {
   function XMLHandler() {
     _classCallCheck(this, XMLHandler);
-    return _super3.apply(this, arguments);
+    return _callSuper(this, XMLHandler, arguments);
   }
-  _createClass(XMLHandler, [{
+  _inherits(XMLHandler, _Handler4);
+  return _createClass(XMLHandler, [{
     key: "parse",
     value: function parse(fetcher, responseText, options) {
       var dom = Util.parseXML(responseText);
@@ -320,17 +315,15 @@ var XMLHandler = /*#__PURE__*/function (_Handler3) {
       return node.nodeType === Node.ELEMENT_NODE;
     }
   }]);
-  return XMLHandler;
 }(Handler);
 XMLHandler.pattern = new RegExp('(text|application)/(.*)xml');
-var HTMLHandler = /*#__PURE__*/function (_Handler4) {
-  _inherits(HTMLHandler, _Handler4);
-  var _super4 = _createSuper(HTMLHandler);
+var HTMLHandler = /*#__PURE__*/function (_Handler5) {
   function HTMLHandler() {
     _classCallCheck(this, HTMLHandler);
-    return _super4.apply(this, arguments);
+    return _callSuper(this, HTMLHandler, arguments);
   }
-  _createClass(HTMLHandler, [{
+  _inherits(HTMLHandler, _Handler5);
+  return _createClass(HTMLHandler, [{
     key: "parse",
     value: function parse(fetcher, responseText, options) {
       var kb = fetcher.store;
@@ -363,7 +356,6 @@ var HTMLHandler = /*#__PURE__*/function (_Handler4) {
       if (titleMatch) {
         kb.add(options.resource, ns.dc('title'), kb.rdfFactory.literal(titleMatch[1]), options.resource); // think about xml:lang later
       }
-
       kb.add(options.resource, ns.rdf('type'), ns.link('WebPage'), fetcher.appNode);
       fetcher.addStatus(options.req, 'non-XML HTML document, not parsed for data.');
       return fetcher.doneFetch(options, this.response);
@@ -381,17 +373,15 @@ var HTMLHandler = /*#__PURE__*/function (_Handler4) {
       };
     }
   }]);
-  return HTMLHandler;
 }(Handler);
 HTMLHandler.pattern = new RegExp('text/html');
-var JsonLdHandler = /*#__PURE__*/function (_Handler5) {
-  _inherits(JsonLdHandler, _Handler5);
-  var _super5 = _createSuper(JsonLdHandler);
+var JsonLdHandler = /*#__PURE__*/function (_Handler6) {
   function JsonLdHandler() {
     _classCallCheck(this, JsonLdHandler);
-    return _super5.apply(this, arguments);
+    return _callSuper(this, JsonLdHandler, arguments);
   }
-  _createClass(JsonLdHandler, [{
+  _inherits(JsonLdHandler, _Handler6);
+  return _createClass(JsonLdHandler, [{
     key: "parse",
     value: function parse(fetcher, responseText, options, response) {
       var kb = fetcher.store;
@@ -419,17 +409,15 @@ var JsonLdHandler = /*#__PURE__*/function (_Handler5) {
       };
     }
   }]);
-  return JsonLdHandler;
 }(Handler);
 JsonLdHandler.pattern = /application\/ld\+json/;
-var TextHandler = /*#__PURE__*/function (_Handler6) {
-  _inherits(TextHandler, _Handler6);
-  var _super6 = _createSuper(TextHandler);
+var TextHandler = /*#__PURE__*/function (_Handler7) {
   function TextHandler() {
     _classCallCheck(this, TextHandler);
-    return _super6.apply(this, arguments);
+    return _callSuper(this, TextHandler, arguments);
   }
-  _createClass(TextHandler, [{
+  _inherits(TextHandler, _Handler7);
+  return _createClass(TextHandler, [{
     key: "parse",
     value: function parse(fetcher, responseText, options) {
       // We only speak dialects of XML right now. Is this XML?
@@ -465,17 +453,15 @@ var TextHandler = /*#__PURE__*/function (_Handler6) {
       };
     }
   }]);
-  return TextHandler;
 }(Handler);
 TextHandler.pattern = new RegExp('text/plain');
-var N3Handler = /*#__PURE__*/function (_Handler7) {
-  _inherits(N3Handler, _Handler7);
-  var _super7 = _createSuper(N3Handler);
+var N3Handler = /*#__PURE__*/function (_Handler8) {
   function N3Handler() {
     _classCallCheck(this, N3Handler);
-    return _super7.apply(this, arguments);
+    return _callSuper(this, N3Handler, arguments);
   }
-  _createClass(N3Handler, [{
+  _inherits(N3Handler, _Handler8);
+  return _createClass(N3Handler, [{
     key: "parse",
     value: function parse(fetcher, responseText, options, response) {
       // Parse the text of this N3 file
@@ -513,7 +499,6 @@ var N3Handler = /*#__PURE__*/function (_Handler7) {
       }; // post 2008
     }
   }]);
-  return N3Handler;
 }(Handler);
 N3Handler.pattern = new RegExp('(application|text)/(x-)?(rdf\\+)?(n3|turtle)');
 var defaultHandlers = {
@@ -630,7 +615,7 @@ var Fetcher = /*#__PURE__*/function () {
       return _this.addHandler(defaultHandlers[key]);
     });
   }
-  _createClass(Fetcher, [{
+  return _createClass(Fetcher, [{
     key: "load",
     value:
     /**
@@ -973,7 +958,6 @@ var Fetcher = /*#__PURE__*/function () {
               if (fetchResponse.responseText) {
                 oops += ' ' + fetchResponse.responseText; // not in 404, dns error, nock failure
               }
-
               userCallback(false, oops, fetchResponse);
             }
           } else {
@@ -1204,7 +1188,7 @@ var Fetcher = /*#__PURE__*/function () {
     */
   }, {
     key: "createIfNotExists",
-    value: function () {
+    value: (function () {
       var _createIfNotExists = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee2(doc) {
         var contentType,
           data,
@@ -1269,6 +1253,7 @@ var Fetcher = /*#__PURE__*/function () {
      * @param folderName - Optional folder name (slug)
      * @param data - Optional folder metadata
      */
+    )
   }, {
     key: "createContainer",
     value: function createContainer(parentURI, folderName, data) {
@@ -1307,7 +1292,6 @@ var Fetcher = /*#__PURE__*/function () {
           // console.log('*** Fetcher: pending fetchQueue deleted ' + uri)
         }
       }
-
       if (fetcher.requested[uri] && fetcher.requested[uri] !== 'done' && fetcher.requested[uri] !== 'failed' && fetcher.requested[uri] !== 404) {
         var msg = "Rdflib: fetcher: Destructive operation on <".concat(fetcher.requested[uri], "> file being fetched! ") + uri;
         console.error(msg);
@@ -1472,7 +1456,6 @@ var Fetcher = /*#__PURE__*/function () {
           );
         }
       });
-
       return responseNode;
     }
   }, {
@@ -1822,7 +1805,6 @@ var Fetcher = /*#__PURE__*/function () {
         kb.add(oldReq, this.ns.link('redirectedTo'), kb.rdfFactory.namedNode(newURI), oldReq);
         this.addStatus(oldReq, 'redirected to new request'); // why
       }
-
       this.requested[options.resource.value] = 'redirected';
       this.redirectedTo[options.resource.value] = newURI;
       var newOptions = Object.assign({}, options);
@@ -1984,7 +1966,6 @@ var Fetcher = /*#__PURE__*/function () {
       }
     }
   }]);
-  return Fetcher;
 }();
 _defineProperty(Fetcher, "HANDLERS", void 0);
 _defineProperty(Fetcher, "CONTENT_TYPE_BY_EXT", void 0);

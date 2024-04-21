@@ -52,7 +52,7 @@ export var Serializer = /*#__PURE__*/function () {
     this.rdfFactory = store.rdfFactory || CanonicalDataFactory;
     this.xsd = createXSD(this.rdfFactory);
   }
-  _createClass(Serializer, [{
+  return _createClass(Serializer, [{
     key: "setBase",
     value: function setBase(base) {
       this.base = base;
@@ -71,7 +71,6 @@ export var Serializer = /*#__PURE__*/function () {
       if (x.termType === 'Graph') {
         this.formulas[s] = x; // remember as reverse does not work
       }
-
       return s;
     }
   }, {
@@ -202,7 +201,6 @@ export var Serializer = /*#__PURE__*/function () {
       if (!this.validPrefix.test(p)) {
         p = 'n'; // Otherwise the loop below may never termimnate
       }
-
       for (var j = 0;; j++) if (canUse(p.slice(0, 3) + j)) return p.slice(0, 3) + j;
     }
   }, {
@@ -225,7 +223,6 @@ export var Serializer = /*#__PURE__*/function () {
           if (!incoming.hasOwnProperty(x)) incoming[x] = [];
           incoming[x].push(st.subject); // List of things which will cause this to be printed
         };
-
         var st2 = [st.subject, st.predicate, st.object];
         st2.map(function (y) {
           if (y.termType === 'BlankNode') {
@@ -236,14 +233,12 @@ export var Serializer = /*#__PURE__*/function () {
             });
           }
         });
-
         checkMentions(sts[i].object);
         var ss = subjects[this.toStr(st.subject)]; // Statements with this as subject
         if (!ss) ss = [];
         ss.push(st);
         subjects[this.toStr(st.subject)] = ss; // Make hash. @@ too slow for formula?
       }
-
       var roots = [];
       for (var xNT in subjects) {
         if (!subjects.hasOwnProperty(xNT)) continue;
@@ -377,7 +372,6 @@ export var Serializer = /*#__PURE__*/function () {
               str += ' '; // separate from previous token
             }
           }
-
           str += s2;
         }
         return str;
@@ -434,7 +428,6 @@ export var Serializer = /*#__PURE__*/function () {
             }
           }
         }
-
         return str;
       };
 
@@ -457,7 +450,6 @@ export var Serializer = /*#__PURE__*/function () {
         if (subject.termType === 'BlankNode' && !stats.incoming[subject]) {
           return objectTree(subject, stats, true).concat(['.']); // Anonymous bnode subject
         }
-
         return [termToN3(subject, stats)].concat([propertyTree(subject, stats)]).concat(['.']);
       }
       // The property tree for a single subject or anonymous node
@@ -686,7 +678,6 @@ export var Serializer = /*#__PURE__*/function () {
           // Fall though if can't do qname
         }
       }
-
       return this.explicitURI(uri);
     }
 
@@ -820,7 +811,6 @@ export var Serializer = /*#__PURE__*/function () {
           }
         });
       }
-
       function relURIMethod(term) {
         return escapeForXML(this.base ? Util.uri.refTo(this.base, term.uri) : term.uri);
       }
@@ -903,7 +893,6 @@ export var Serializer = /*#__PURE__*/function () {
               throw new Error("Can't serialize object of type " + st.object.termType + ' into XML');
           } // switch
         }
-
         var tag = type ? qname(type) : 'rdf:Description';
         var attrs = '';
         if (subject.termType === 'BlankNode') {
@@ -955,7 +944,6 @@ export var Serializer = /*#__PURE__*/function () {
               throw new Error("Can't serialize object of type " + st.object.termType + ' into XML');
           } // switch
         }
-
         return results;
       }
       var propertyXMLTree = propertyXMLTreeMethod.bind(this);
@@ -1023,7 +1011,6 @@ export var Serializer = /*#__PURE__*/function () {
       return JSON.stringify(jsonldObj, null, 2);
     }
   }]);
-  return Serializer;
 }();
 
 // String escaping utilities

@@ -6,10 +6,12 @@
     --light-color-background-warning: #e6e600;
     --light-color-icon-background: var(--light-color-background);
     --light-color-accent: #c5c7c9;
+    --light-color-active-menu-item: var(--light-color-accent);
     --light-color-text: #222;
-    --light-color-text-aside: #707070;
+    --light-color-text-aside: #6e6e6e;
     --light-color-link: #1f70c2;
 
+    --light-color-ts-keyword: #056bd6;
     --light-color-ts-project: #b111c9;
     --light-color-ts-module: var(--light-color-ts-project);
     --light-color-ts-namespace: var(--light-color-ts-project);
@@ -27,11 +29,10 @@
     --light-color-ts-constructor-signature: var(--light-color-ts-constructor);
     --light-color-ts-parameter: var(--light-color-ts-variable);
     /* type literal not included as links will never be generated to it */
-    --light-color-ts-type-parameter: var(--light-color-ts-type-alias);
+    --light-color-ts-type-parameter: #a55c0e;
     --light-color-ts-accessor: var(--light-color-ts-property);
     --light-color-ts-get-signature: var(--light-color-ts-accessor);
     --light-color-ts-set-signature: var(--light-color-ts-accessor);
-    /* object literal not included as it is not used and will be removed in 0.25 */
     --light-color-ts-type-alias: #d51270;
     /* reference not included as links will be colored with the kind that it points to */
 
@@ -45,18 +46,20 @@
     --dark-color-warning-text: #222;
     --dark-color-icon-background: var(--dark-color-background-secondary);
     --dark-color-accent: #9096a2;
+    --dark-color-active-menu-item: #5d5d6a;
     --dark-color-text: #f5f5f5;
     --dark-color-text-aside: #dddddd;
     --dark-color-link: #00aff4;
 
-    --dark-color-ts-project: #e14dff;
+    --dark-color-ts-keyword: #3399ff;
+    --dark-color-ts-project: #e358ff;
     --dark-color-ts-module: var(--dark-color-ts-project);
     --dark-color-ts-namespace: var(--dark-color-ts-project);
     --dark-color-ts-enum: #f4d93e;
     --dark-color-ts-enum-member: var(--dark-color-ts-enum);
-    --dark-color-ts-variable: #4d68ff;
-    --dark-color-ts-function: #9772ff;
-    --dark-color-ts-class: #61b0ff;
+    --dark-color-ts-variable: #798dff;
+    --dark-color-ts-function: #a280ff;
+    --dark-color-ts-class: #8ac4ff;
     --dark-color-ts-interface: #6cff87;
     --dark-color-ts-constructor: var(--dark-color-ts-class);
     --dark-color-ts-property: var(--dark-color-ts-variable);
@@ -66,11 +69,10 @@
     --dark-color-ts-constructor-signature: var(--dark-color-ts-constructor);
     --dark-color-ts-parameter: var(--dark-color-ts-variable);
     /* type literal not included as links will never be generated to it */
-    --dark-color-ts-type-parameter: var(--dark-color-ts-type-alias);
+    --dark-color-ts-type-parameter: #e07d13;
     --dark-color-ts-accessor: var(--dark-color-ts-property);
     --dark-color-ts-get-signature: var(--dark-color-ts-accessor);
     --dark-color-ts-set-signature: var(--dark-color-ts-accessor);
-    /* object literal not included as it is not used and will be removed in 0.25 */
     --dark-color-ts-type-alias: #ff6492;
     /* reference not included as links will be colored with the kind that it points to */
 
@@ -86,10 +88,12 @@
         --color-warning-text: var(--light-color-warning-text);
         --color-icon-background: var(--light-color-icon-background);
         --color-accent: var(--light-color-accent);
+        --color-active-menu-item: var(--light-color-active-menu-item);
         --color-text: var(--light-color-text);
         --color-text-aside: var(--light-color-text-aside);
         --color-link: var(--light-color-link);
 
+        --color-ts-keyword: var(--light-color-ts-keyword);
         --color-ts-module: var(--light-color-ts-module);
         --color-ts-namespace: var(--light-color-ts-namespace);
         --color-ts-enum: var(--light-color-ts-enum);
@@ -126,10 +130,12 @@
         --color-warning-text: var(--dark-color-warning-text);
         --color-icon-background: var(--dark-color-icon-background);
         --color-accent: var(--dark-color-accent);
+        --color-active-menu-item: var(--dark-color-active-menu-item);
         --color-text: var(--dark-color-text);
         --color-text-aside: var(--dark-color-text-aside);
         --color-link: var(--dark-color-link);
 
+        --color-ts-keyword: var(--dark-color-ts-keyword);
         --color-ts-module: var(--dark-color-ts-module);
         --color-ts-namespace: var(--dark-color-ts-namespace);
         --color-ts-enum: var(--dark-color-ts-enum);
@@ -173,10 +179,12 @@ body {
     --color-warning-text: var(--light-color-warning-text);
     --color-icon-background: var(--light-color-icon-background);
     --color-accent: var(--light-color-accent);
+    --color-active-menu-item: var(--light-color-active-menu-item);
     --color-text: var(--light-color-text);
     --color-text-aside: var(--light-color-text-aside);
     --color-link: var(--light-color-link);
 
+    --color-ts-keyword: var(--light-color-ts-keyword);
     --color-ts-module: var(--light-color-ts-module);
     --color-ts-namespace: var(--light-color-ts-namespace);
     --color-ts-enum: var(--light-color-ts-enum);
@@ -211,10 +219,12 @@ body {
     --color-warning-text: var(--dark-color-warning-text);
     --color-icon-background: var(--dark-color-icon-background);
     --color-accent: var(--dark-color-accent);
+    --color-active-menu-item: var(--dark-color-active-menu-item);
     --color-text: var(--dark-color-text);
     --color-text-aside: var(--dark-color-text-aside);
     --color-link: var(--dark-color-link);
 
+    --color-ts-keyword: var(--dark-color-ts-keyword);
     --color-ts-module: var(--dark-color-ts-module);
     --color-ts-namespace: var(--dark-color-ts-namespace);
     --color-ts-enum: var(--dark-color-ts-enum);
@@ -256,6 +266,16 @@ h6 {
     line-height: 1.2;
 }
 
+h1 > a:not(.link),
+h2 > a:not(.link),
+h3 > a:not(.link),
+h4 > a:not(.link),
+h5 > a:not(.link),
+h6 > a:not(.link) {
+    text-decoration: none;
+    color: var(--color-text);
+}
+
 h1 {
     font-size: 1.875rem;
     margin: 0.67rem 0;
@@ -290,12 +310,6 @@ h6 {
     text-transform: uppercase;
 }
 
-pre {
-    white-space: pre;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-}
-
 dl,
 menu,
 ol,
@@ -313,17 +327,14 @@ dd {
 }
 
 /* Footer */
-.tsd-generator {
+footer {
     border-top: 1px solid var(--color-accent);
     padding-top: 1rem;
     padding-bottom: 1rem;
     max-height: 3.5rem;
 }
-
-.tsd-generator > p {
-    margin-top: 0;
-    margin-bottom: 0;
-    padding: 0 1rem;
+.tsd-generator {
+    margin: 0 1em;
 }
 
 .container-main {
@@ -391,7 +402,8 @@ dd {
 }
 body {
     background: var(--color-background);
-    font-family: "Segoe UI", sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans",
+        Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
     font-size: 16px;
     color: var(--color-text);
 }
@@ -420,12 +432,28 @@ pre {
 }
 
 pre {
+    position: relative;
+    white-space: pre;
+    white-space: pre-wrap;
+    word-wrap: break-word;
     padding: 10px;
-    border: 0.1em solid var(--color-accent);
+    border: 1px solid var(--color-accent);
 }
 pre code {
     padding: 0;
     font-size: 100%;
+}
+pre > button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    opacity: 0;
+    transition: opacity 0.1s;
+    box-sizing: border-box;
+}
+pre:hover > button,
+pre > button.visible {
+    opacity: 1;
 }
 
 blockquote {
@@ -442,13 +470,12 @@ blockquote {
     padding: 0 0 0 20px;
     margin: 0;
 }
-.tsd-typography h4,
 .tsd-typography .tsd-index-panel h3,
 .tsd-index-panel .tsd-typography h3,
+.tsd-typography h4,
 .tsd-typography h5,
 .tsd-typography h6 {
     font-size: 1em;
-    margin: 0;
 }
 .tsd-typography h5,
 .tsd-typography h6 {
@@ -458,6 +485,19 @@ blockquote {
 .tsd-typography ul,
 .tsd-typography ol {
     margin: 1em 0;
+}
+.tsd-typography table {
+    border-collapse: collapse;
+    border: none;
+}
+.tsd-typography td,
+.tsd-typography th {
+    padding: 6px 13px;
+    border: 1px solid var(--color-accent);
+}
+.tsd-typography thead,
+.tsd-typography tr:nth-child(even) {
+    background-color: var(--color-background-secondary);
 }
 
 .tsd-breadcrumb {
@@ -607,6 +647,28 @@ input[type="checkbox"]:checked ~ svg .tsd-checkbox-checkmark {
     font-weight: bold;
 }
 
+.tsd-full-hierarchy:not(:last-child) {
+    margin-bottom: 1em;
+    padding-bottom: 1em;
+    border-bottom: 1px solid var(--color-accent);
+}
+.tsd-full-hierarchy,
+.tsd-full-hierarchy ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.tsd-full-hierarchy ul {
+    padding-left: 1.5rem;
+}
+.tsd-full-hierarchy a {
+    padding: 0.25rem 0 !important;
+    font-size: 1rem;
+    display: inline-flex;
+    align-items: center;
+    color: var(--color-text);
+}
+
 .tsd-panel-group.tsd-index-group {
     margin-bottom: 0;
 }
@@ -670,26 +732,26 @@ input[type="checkbox"]:checked ~ svg .tsd-checkbox-checkmark {
 .tsd-navigation.settings {
     margin: 1rem 0;
 }
+.tsd-navigation > a,
+.tsd-navigation .tsd-accordion-summary {
+    width: calc(100% - 0.25rem);
+    display: flex;
+    align-items: center;
+}
 .tsd-navigation a,
+.tsd-navigation summary > span,
 .tsd-page-navigation a {
-    display: inline-flex;
+    display: flex;
+    width: calc(100% - 0.25rem);
     align-items: center;
     padding: 0.25rem;
     color: var(--color-text);
     text-decoration: none;
     box-sizing: border-box;
 }
-.tsd-navigation a {
-    /* why 3rem? No idea, but it seems to work. */
-    width: calc(100% - 3rem);
-}
-.tsd-page-navigation a {
-    /* why is this different? */
-    width: 100%;
-}
 .tsd-navigation a.current,
 .tsd-page-navigation a.current {
-    background: var(--color-accent);
+    background: var(--color-active-menu-item);
 }
 .tsd-navigation a:hover,
 .tsd-page-navigation a:hover {
@@ -697,7 +759,8 @@ input[type="checkbox"]:checked ~ svg .tsd-checkbox-checkmark {
 }
 .tsd-navigation ul,
 .tsd-page-navigation ul {
-    margin: 0;
+    margin-top: 0;
+    margin-bottom: 0;
     padding: 0;
     list-style: none;
 }
@@ -706,18 +769,19 @@ input[type="checkbox"]:checked ~ svg .tsd-checkbox-checkmark {
     padding: 0;
     max-width: 100%;
 }
-.tsd-nested-navigation > li > a {
+.tsd-nested-navigation {
     margin-left: 3rem;
 }
 .tsd-nested-navigation > li > details {
-    margin-left: 1.5rem;
+    margin-left: -1.5rem;
 }
-.tsd-small-nested-navigation > li > a {
+.tsd-small-nested-navigation {
     margin-left: 1.5rem;
 }
 .tsd-small-nested-navigation > li > details {
-    margin-left: 0;
+    margin-left: -1.5rem;
 }
+
 .tsd-page-navigation ul {
     padding-left: 1.75rem;
 }
@@ -737,6 +801,14 @@ a.tsd-index-link {
     line-height: 1.25rem;
     display: inline-flex;
     align-items: center;
+    color: var(--color-text);
+}
+.tsd-accordion-summary {
+    list-style-type: none; /* hide marker on non-safari */
+    outline: none; /* broken on safari, so just hide it */
+}
+.tsd-accordion-summary::-webkit-details-marker {
+    display: none; /* hide marker on safari */
 }
 .tsd-accordion-summary,
 .tsd-accordion-summary a {
@@ -745,9 +817,10 @@ a.tsd-index-link {
     -webkit-user-select: none;
     -ms-user-select: none;
 
-    display: flex;
-    align-items: center;
     cursor: pointer;
+}
+.tsd-accordion-summary a {
+    width: calc(100% - 1.5rem);
 }
 .tsd-accordion-summary > * {
     margin-top: 0;
@@ -755,11 +828,8 @@ a.tsd-index-link {
     padding-top: 0;
     padding-bottom: 0;
 }
-.tsd-accordion-summary::-webkit-details-marker {
-    display: none;
-}
-.tsd-index-accordion .tsd-accordion-summary svg {
-    margin-right: 0.25rem;
+.tsd-index-accordion .tsd-accordion-summary > svg {
+    margin-left: 0.25rem;
 }
 .tsd-index-content > :not(:first-child) {
     margin-top: 0.75rem;
@@ -864,8 +934,9 @@ a.tsd-index-link {
     box-shadow: 0 0 4px rgba(0, 0, 0, 0.25);
 }
 #tsd-search .results li {
-    padding: 0 10px;
     background-color: var(--color-background);
+    line-height: initial;
+    padding: 4px;
 }
 #tsd-search .results li:nth-child(even) {
     background-color: var(--color-background-secondary);
@@ -873,12 +944,15 @@ a.tsd-index-link {
 #tsd-search .results li.state {
     display: none;
 }
-#tsd-search .results li.current,
-#tsd-search .results li:hover {
+#tsd-search .results li.current:not(.no-results),
+#tsd-search .results li:hover:not(.no-results) {
     background-color: var(--color-accent);
 }
 #tsd-search .results a {
-    display: block;
+    display: flex;
+    align-items: center;
+    padding: 0.25rem;
+    box-sizing: border-box;
 }
 #tsd-search .results a:before {
     top: 10px;
@@ -932,6 +1006,11 @@ a.tsd-index-link {
     font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
     font-size: 14px;
     overflow-x: auto;
+}
+
+.tsd-signature-keyword {
+    color: var(--color-ts-keyword);
+    font-weight: normal;
 }
 
 .tsd-signature-symbol {
@@ -1034,7 +1113,9 @@ ul.tsd-type-parameter-list h5 {
     overflow: hidden;
     opacity: 0.8;
     height: 40px;
-    transition: opacity 0.1s, background-color 0.2s;
+    transition:
+        opacity 0.1s,
+        background-color 0.2s;
     vertical-align: bottom;
     cursor: pointer;
 }
@@ -1086,7 +1167,7 @@ img {
 }
 
 .deprecated {
-    text-decoration: line-through;
+    text-decoration: line-through !important;
 }
 
 .warning {

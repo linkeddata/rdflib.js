@@ -90,7 +90,6 @@ export function indexedFormulaQuery(myQuery, callback, fetcher, onDone) {
         b[self] = other;
         return [[b, null]]; // Match
       }
-
       actual = self;
     }
     if (!actual.complexType) {
@@ -122,11 +121,9 @@ export function indexedFormulaQuery(myQuery, callback, fetcher, onDone) {
     if (self.length !== other.length) {
       return []; // no way
     }
-
     if (!self.length) {
       return [[[], null]]; // Success
     }
-
     var nbs = unifyTerm(self[0], other[0], bindings, formula);
     if (nbs.length === 0) {
       return nbs;
@@ -149,13 +146,11 @@ export function indexedFormulaQuery(myQuery, callback, fetcher, onDone) {
           bindings2[v] = nb[v]; // copy
         }
       }
-
       for (v in bindings) {
         if (bindings.hasOwnProperty(v)) {
           bindings2[v] = bindings[v]; // copy
         }
       }
-
       nbs2 = unifyContents(self.slice(1), other.slice(1), bindings2, formula);
       m = nbs2.length;
       for (j = 0; j < m; j++) {
@@ -314,13 +309,11 @@ export function indexedFormulaQuery(myQuery, callback, fetcher, onDone) {
         if (f.redirections[f.id(t)]) {
           t = f.redirections[f.id(t)]; // redirect
         }
-
         termIndex = ind[i][f.id(t)];
         if (!termIndex) {
           item.index = [];
           return false; // Query line cannot match
         }
-
         if (item.index === null || item.index.length > termIndex.length) {
           // Find smallest index
           item.index = termIndex;
@@ -375,7 +368,6 @@ export function indexedFormulaQuery(myQuery, callback, fetcher, onDone) {
           br[b] = new OptionalBranch(junction); // Allocate branches to prevent premature ending
           br[b].pattern_debug = g.optional[b]; // for diagnotics only
         }
-
         for (b = 0; b < g.optional.length; b++) {
           br[b].count = br[b].count + 1; // Count how many matches we have yet to complete
           match(f, g.optional[b], bindingsSoFar, '', fetcher, callback, br[b]);
@@ -385,7 +377,6 @@ export function indexedFormulaQuery(myQuery, callback, fetcher, onDone) {
       log.debug('Match ends -- success , Branch count now: ' + branch.count + ' for ' + branch.pattern_debug);
       return; // Success
     }
-
     var item;
     var i;
     var n = pattern.length;
@@ -413,7 +404,6 @@ export function indexedFormulaQuery(myQuery, callback, fetcher, onDone) {
           fetchResource(bindingsSoFar[item.subject], id);
           return; // only look up one per line this time, but we will come back again though match
         }
-
         if (bindingsSoFar[item.object] !== undefined && bindingsSoFar[item.object].uri && fetcher && fetcher.getState(docpart(bindingsSoFar[item.object].uri)) === 'unrequested') {
           fetchResource(bindingsSoFar[item.object], id);
           return;
@@ -459,7 +449,6 @@ export function indexedFormulaQuery(myQuery, callback, fetcher, onDone) {
       prepare(f, item, bindingsSoFar);
       // if (item.index) console.log('     item.index.length ' + item.index.length)
     }
-
     pattern.sort(easiestQuery);
     item = pattern[0];
     // log.debug("Sorted pattern:\n"+pattern)
@@ -496,20 +485,17 @@ export function indexedFormulaQuery(myQuery, callback, fetcher, onDone) {
               bindings2[v] = newBindings1[v]; // copy
             }
           }
-
           for (v in bindingsSoFar) {
             if (bindingsSoFar.hasOwnProperty(v)) {
               bindings2[v] = bindingsSoFar[v]; // copy
             }
           }
-
           branch.count++; // Count how many matches we have yet to complete
           onward++;
           match(f, rest, bindings2, level + '  ', fetcher, callback, branch); // call match
         }
       }
     }
-
     branch.count--;
     if (onward === 0) {
       log.debug('Match2 fails completely on ' + item);

@@ -77,7 +77,7 @@ var RDFParser = /*#__PURE__*/function () {
   /** Standard namespaces that we know how to handle @final
    *  @member RDFParser
    */
-  _createClass(RDFParser, [{
+  return _createClass(RDFParser, [{
     key: "frameFactory",
     value:
     /**
@@ -236,7 +236,6 @@ var RDFParser = /*#__PURE__*/function () {
         throw new Error("RDFParser: can't find root in " + base + '. Halting. ');
         // return false
       }
-
       this.why = why; // our topmost frame
       var f = this.frameFactory(this);
       this.base = base;
@@ -468,7 +467,6 @@ var RDFParser = /*#__PURE__*/function () {
       return frame;
     }
   }]);
-  return RDFParser;
 }();
 _defineProperty(RDFParser, "ns", {
   'RDF': 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',

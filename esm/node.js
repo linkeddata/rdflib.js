@@ -26,7 +26,6 @@ Node.toJS = function (term) {
   if (isCollection(term)) {
     return term.elements.map(Node.toJS); // Array node (not standard RDFJS)
   }
-
   if (!isLiteral(term)) return term;
   if (term.datatype.equals(ns.xsd('boolean'))) {
     return term.value === '1' || term.value === 'true';

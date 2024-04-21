@@ -67,7 +67,6 @@ contentType, callback, options) {
     }
     throw err; // Don't hide problems from caller in sync mode
   }
-
   function executeCallback(err, result) {
     if (callback) {
       callback(err, result);

@@ -118,7 +118,6 @@ export default function SPARQLToQuery(SPARQL, testMode, kb) {
       log.info('Literal found: ' + res[1]);
       res = res.concat(parseLiterals(str.slice(end + ind + 2))); // finds any other literals
     }
-
     return res;
   }
   function spaceDelimit(str) {
@@ -346,7 +345,6 @@ export default function SPARQLToQuery(SPARQL, testMode, kb) {
     // log.warn("I don't know how to handle the constraint: "+input)
     // alert("length: "+input.length+" input 0 type: "+input[0].termType+" input 1: "+input[1]+" input[2] type: "+input[2].termType)
   }
-
   function setOptional(terms, pat) {
     log.debug('Optional query: ' + terms + ' not yet implemented.');
     var opt = kb.formula();

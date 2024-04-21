@@ -23,7 +23,7 @@ export var UpdatesSocket = /*#__PURE__*/function () {
       this.onError(error);
     }
   }
-  _createClass(UpdatesSocket, [{
+  return _createClass(UpdatesSocket, [{
     key: "_decode",
     value: function _decode(q) {
       var elt;
@@ -120,7 +120,6 @@ export var UpdatesSocket = /*#__PURE__*/function () {
       }
     }
   }]);
-  return UpdatesSocket;
 }();
 export var UpdatesVia = /*#__PURE__*/function () {
   function UpdatesVia(fetcher) {
@@ -130,7 +129,7 @@ export var UpdatesVia = /*#__PURE__*/function () {
     this.via = {};
     this.fetcher.addCallback('headers', this.onHeaders);
   }
-  _createClass(UpdatesVia, [{
+  return _createClass(UpdatesVia, [{
     key: "onHeaders",
     value: function onHeaders(d) {
       var etag, uri, via;
@@ -166,5 +165,4 @@ export var UpdatesVia = /*#__PURE__*/function () {
       return this.via[via].subscribe(uri);
     }
   }]);
-  return UpdatesVia;
 }();

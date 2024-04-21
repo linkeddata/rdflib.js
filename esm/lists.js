@@ -13,6 +13,7 @@ function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len 
 // import RDFParser from './rdfxmlparser'
 // import sparqlUpdateParser from './patch-parser'
 // import * as Util from './utils-js'
+
 // import BlankNode from './blank-node'
 // import NamedNode from './named-node'
 import Collection from './collection';
@@ -20,7 +21,9 @@ import Statement from './statement';
 // import Formula from './formula'
 
 // import { ContentType, TurtleContentType, N3ContentType, RDFXMLContentType, XHTMLContentType, HTMLContentType, SPARQLUpdateContentType, SPARQLUpdateSingleMatchContentType, JSONLDContentType, NQuadsContentType, NQuadsAltContentType } from './types'
+
 // import { Quad } from './tf-types'
+
 import Namespace from './namespace';
 var RDF = Namespace('http://www.w3.org/1999/02/22-rdf-syntax-ns#');
 

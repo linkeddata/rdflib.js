@@ -1,12 +1,11 @@
 import _createClass from "@babel/runtime/helpers/createClass";
 import _classCallCheck from "@babel/runtime/helpers/classCallCheck";
-import _assertThisInitialized from "@babel/runtime/helpers/assertThisInitialized";
-import _inherits from "@babel/runtime/helpers/inherits";
 import _possibleConstructorReturn from "@babel/runtime/helpers/possibleConstructorReturn";
 import _getPrototypeOf from "@babel/runtime/helpers/getPrototypeOf";
+import _inherits from "@babel/runtime/helpers/inherits";
 import _defineProperty from "@babel/runtime/helpers/defineProperty";
-function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+function _callSuper(t, o, e) { return o = _getPrototypeOf(o), _possibleConstructorReturn(t, _isNativeReflectConstruct() ? Reflect.construct(o, e || [], _getPrototypeOf(t).constructor) : o.apply(t, e)); }
+function _isNativeReflectConstruct() { try { var t = !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); } catch (t) {} return (_isNativeReflectConstruct = function _isNativeReflectConstruct() { return !!t; })(); }
 import BlankNode from './blank-node';
 import Collection from './collection';
 import Empty from './empty';
@@ -72,28 +71,26 @@ NextId, fromNT, fetcher, graph, lit, st, namedNode as sym,
 blankNode, defaultGraph, literal, namedNode, quad, triple, variable };
 export { termValue } from './utils/termValue';
 export var ConnectedStore = /*#__PURE__*/function (_Store) {
-  _inherits(ConnectedStore, _Store);
-  var _super = _createSuper(ConnectedStore);
   function ConnectedStore(features) {
     var _this;
     _classCallCheck(this, ConnectedStore);
-    _this = _super.call(this, features);
-    _defineProperty(_assertThisInitialized(_this), "fetcher", void 0);
-    _this.fetcher = new Fetcher(_assertThisInitialized(_this), {});
+    _this = _callSuper(this, ConnectedStore, [features]);
+    _defineProperty(_this, "fetcher", void 0);
+    _this.fetcher = new Fetcher(_this, {});
     return _this;
   }
+  _inherits(ConnectedStore, _Store);
   return _createClass(ConnectedStore);
 }(Store);
-export var LiveStore = /*#__PURE__*/function (_ConnectedStore) {
-  _inherits(LiveStore, _ConnectedStore);
-  var _super2 = _createSuper(LiveStore);
+export var LiveStore = /*#__PURE__*/function (_ConnectedStore2) {
   function LiveStore(features) {
     var _this2;
     _classCallCheck(this, LiveStore);
-    _this2 = _super2.call(this, features);
-    _defineProperty(_assertThisInitialized(_this2), "updater", void 0);
-    _this2.updater = new UpdateManager(_assertThisInitialized(_this2));
+    _this2 = _callSuper(this, LiveStore, [features]);
+    _defineProperty(_this2, "updater", void 0);
+    _this2.updater = new UpdateManager(_this2);
     return _this2;
   }
+  _inherits(LiveStore, _ConnectedStore2);
   return _createClass(LiveStore);
 }(ConnectedStore);

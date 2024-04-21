@@ -62,7 +62,7 @@ var UpdateManager = /*#__PURE__*/function () {
     this.ns.owl = Namespace('http://www.w3.org/2002/07/owl#');
     this.patchControl = [];
   }
-  _createClass(UpdateManager, [{
+  return _createClass(UpdateManager, [{
     key: "patchControlFor",
     value: function patchControlFor(doc) {
       if (!this.patchControl[doc.value]) {
@@ -124,7 +124,7 @@ var UpdateManager = /*#__PURE__*/function () {
      */
   }, {
     key: "checkEditable",
-    value: function () {
+    value: (function () {
       var _checkEditable = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee(uri, kb) {
         var _kb$fetcher2;
         var initial, final;
@@ -174,6 +174,7 @@ var UpdateManager = /*#__PURE__*/function () {
      * @returns The method string SPARQL or DAV or
      *   LOCALFILE or false if known, undefined if not known.
      */
+    )
   }, {
     key: "editable",
     value: function editable(uri, kb) {
@@ -181,7 +182,6 @@ var UpdateManager = /*#__PURE__*/function () {
       if (!uri) {
         return false; // Eg subject is bnode, no known doc to write to
       }
-
       if (!kb) {
         kb = this.store;
       }
@@ -628,7 +628,6 @@ var UpdateManager = /*#__PURE__*/function () {
         control.outOfDate = true;
         return; // once only needed @@ Not true, has changed again
       }
-
       control.reloading = true;
       var retryTimeout = 1000; // ms
       var tryReload = function tryReload() {
@@ -933,7 +932,6 @@ var UpdateManager = /*#__PURE__*/function () {
         if (ds.length === 0 && is.length === 0) {
           return callback(null, true); // success -- nothing needed to be done.
         }
-
         var doc = ds.length ? ds[0].graph : is[0].graph;
         if (!doc) {
           var _message2 = 'Error patching: statement does not specify which document to patch:' + ds[0] + ', ' + is[0];
@@ -1003,7 +1001,6 @@ var UpdateManager = /*#__PURE__*/function () {
             control.upstreamCount += 1; // count changes we originated ourselves
             // console.log('upstream count up to : ' + control.upstreamCount)
           }
-
           this.fire(doc.value, query, function (uri, success, body, response) {
             response.elapsedTimeMs = Date.now() - startTime;
             /* console.log('    UpdateManager: Return ' +
@@ -1064,7 +1061,6 @@ var UpdateManager = /*#__PURE__*/function () {
       if (!response) {
         return null; // throw "No record HTTP GET response for document: "+doc
       }
-
       var contentType = kb.the(response, this.ns.httph('content-type')).value;
 
       // prepare contents of revised document
@@ -1268,6 +1264,5 @@ var UpdateManager = /*#__PURE__*/function () {
       });
     }
   }]);
-  return UpdateManager;
 }();
 export { UpdateManager as default };
