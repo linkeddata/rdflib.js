@@ -345,7 +345,8 @@ var RDFParser = /*#__PURE__*/function () {
                 frame.datatype = RDFParser.ns.RDF + 'XMLLiteral';
                 frame = this.buildFrame(frame);
                 // Don't include the literal node, only its children
-                frame.addLiteral(dom.childNodes);
+                // see https://github.com/linkeddata/rdflib.js/issues/75
+                frame.addLiteral(dom.innerHTML || dom.childNodes);
                 dig = false;
               } else if (nv === 'Resource') {
                 frame = this.buildFrame(frame, frame.element);
