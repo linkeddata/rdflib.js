@@ -14,7 +14,6 @@ jobs:
     strategy:
       matrix:
         node-version:
-          - 14.x
           - 16.x
           - 18.x
     steps:
@@ -31,7 +30,7 @@ jobs:
       - run: npm run build:browser
       - run: npm run build:esm
       - name: Save build
-        if: matrix.node-version == '16.x'
+        if: matrix.node-version == '18.x'
         uses: actions/upload-artifact@v2
         with:
           name: build
@@ -63,7 +62,7 @@ jobs:
           name: build
       - uses: actions/setup-node@v1
         with:
-          node-version: 16.x
+          node-version: 18.x
       - uses: rlespinasse/github-slug-action@v3.x
       - name: Append commit hash to package version
         run: 'sed -i -E "s/(\"version\": *\"[^\"]+)/\1-${GITHUB_SHA_SHORT}/" package.json'
@@ -83,7 +82,7 @@ jobs:
           name: build
       - uses: actions/setup-node@v1
         with:
-          node-version: 16.x
+          node-version: 18.x
       - name: Disable pre- and post-publish actions
         run: 'sed -i -E "s/\"((pre|post)publish)/\"ignore:\1/" package.json'
       - uses: JS-DevTools/npm-publish@v1
