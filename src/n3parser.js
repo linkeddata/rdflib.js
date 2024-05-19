@@ -209,7 +209,7 @@ var eol = new RegExp("^[ \\t]*(#[^\\n]*)?\\r?\\n", 'g');
 var eof = new RegExp("^[ \\t]*(#[^\\n]*)?$", 'g');
 var ws = new RegExp("^[ \\t]*", 'g');
 var signed_integer = new RegExp("^[-+]?[0-9]+", 'g');
-var number_syntax = new RegExp("^([-+]?[0-9]+)(\\.[0-9]+)?(e[-+]?[0-9]+)?", 'g');
+var number_syntax = new RegExp("^([-+]?[0-9]+)(\\.[0-9]+)?([eE][-+]?[0-9]+)?", 'g');
 var datetime_syntax = new RegExp('^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9](T[0-9][0-9]:[0-9][0-9](:[0-9][0-9](\\.[0-9]*)?)?)?Z?');
 
 var digitstring = new RegExp("^[0-9]+", 'g');
