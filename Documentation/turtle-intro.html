@@ -36,12 +36,12 @@ tt { font-size: 120%; background-color: #eee; padding: 0.1em }
 <h1>Using Turtle</h1>
 
 <p>Turtle is a language.
-  It is desiged for expressing data, partuicularly linked data on the web.
+  It is desiged for expressing data, particularly linked data on the web.
 Just as HTML is used for linked text, Turtle is used for linked data.
 Turtle expresses stuff about things.  Abstract things, real things, people,
 documents,  So where HTML uses the hash sign like in <tt>foo.html#intro</tt>
 to refer to an anchor, which is a part of the document, Turtle uses
-the same hash sign to refer to something defined by the dococument, like <tt>students.ttl#bob</tt>
+the same hash sign to refer to something defined by the document, like <tt>students.ttl#bob</tt>
 or <tt>profile.ttl#me</tt>.
 </p>
 <p>
@@ -75,7 +75,7 @@ Note it ends with a dot.
 </p>
 <h3>Prefixes</h3>
 <p>Turtle uses URIs to identify people all the time, so it has a
-  way of abbrevating them.
+  way of abbreviating them.
   You declare a prefix say at the top of the file, and then use <tt>foo:</tt> prefix with a colon:
   <pre>
 @prefix foaf: &lt;http://xmlns.com/foaf/0.1/> .
@@ -86,7 +86,7 @@ Note it ends with a dot.
 Tip: There are a ste of common prefixes for vocabularies we use a lot in @@@.
 </p>
 
-<p>When you use URIs in angle brackets, then they relative URIs, relative
+<p>When you use URIs in angle brackets, then they are relative URIs, relative
 to the URI of the current document.  So if the document is, say,
 <tt>https://alice.example.com/public/profile.ttl</tt> then</p>
 
@@ -111,7 +111,7 @@ to the URI of the current document.  So if the document is, say,
   Things like <tt>&lt;#me></tt> and <tt>&lt;myhome></tt> are local identifiers
   within the file you are creating. They are like <tt>const</tt> in a JS file
   in a way, local identifiers. The business of the data document you are writing
-  is done in terms of those local identifiers.  Becasue local identifiers
+  is done in terms of those local identifiers.  Because local identifiers
   are used quite a lot, it is useful to declare a prefix, the empty string
   prefix <tt>:</tt>, so that they can be just written with a leading colon:
 </p>
@@ -165,7 +165,7 @@ to the URI of the current document.  So if the document is, say,
 </p>
 <h3>Data Values</h3>
 
-<p>Above we have shown the triples each expressing the ralationship between things: people
+<p>Above we have shown the triples each expressing the relationship between things: people
   and classes. You can also put data values in the object position, like the strng "Alice" above.
   In Turtle (and the RDF data model underneath) values are typed.
 </p>
@@ -194,7 +194,7 @@ to the URI of the current document.  So if the document is, say,
 </table>
 <p>These data types cover a lot of values.
   You can also explictly write something
-  with and explicit data type from the XML data types @@link standard, XSD.
+  with an explicit data type from the XML data types @@link standard, XSD.
   To do that you write the data value as a string, then two carets
   <tt>^^</tt> and then the XSD datatype itself.
 </p>
@@ -208,8 +208,8 @@ to the URI of the current document.  So if the document is, say,
                         foaf:bithDate @@@ "1990-03-31"^^xsd:date .
 </pre>
 
-<p>Its also worth mentioning that URIs are yor freind if you wat to
-  given email addresses or telephone numbers, as there are RI schemes for those.
+<p>Its also worth mentioning that URIs are your friends if you want to
+  give email addresses or telephone numbers, as there are URI schemes for those.
 </p>
 
 <table>
@@ -235,7 +235,7 @@ to the URI of the current document.  So if the document is, say,
 You can add structure to your data in Turtle using the square brackets <tt>[ ... ]</tt>,
 which can be read as "Something which has ...".   So instead of a flat set of properties like
 <pre>
-  :Alice :homeAddressStreet "Accaia Ave";
+  :Alice :homeAddressStreet "Acacia Ave";
          :homeAddressNumber 123;
          :homeAddressCity "Anytown";
          :homePhone &lt;tel:+1-781-555-1212> .
@@ -246,7 +246,7 @@ which can be read as "Something which has ...".   So instead of a flat set of pr
 <pre>
   :Alice :home [
             :address [
-                :street "Accaia Ave";
+                :street "Acacia Ave";
                 :number 123;
                 :city "Anytown"
             ]
@@ -254,7 +254,7 @@ which can be read as "Something which has ...".   So instead of a flat set of pr
          ] .
 </pre>
 <p>This reads in English like "Alice has a home which has an address with
-street "Aaccia Avenue", number 123 and city ANytown, and has a phone number of +1785551212."
+street "Acacia Avenue", number 123 and city Anytown, and has a phone number of +1785551212."
 <p>
 <p>This sort of tree structure is very common: in JSON the nested things
   are objects; in XML they are elements. In Turtle they are called blank nodes,
@@ -266,7 +266,7 @@ street "Aaccia Avenue", number 123 and city ANytown, and has a phone number of +
 <pre>
 :Alice :home _:a .
           _:a address _:b .
-          _:b   street "Accaia Ave";
+          _:b   street "Acacia Ave";
                 number 123;
                 city "Anytown" .
           _a :phone &lt;tel:+1-781-555-1212> .
@@ -280,7 +280,7 @@ In turtle, ordered arrays of things are given with <b>round</b> brackets.
 They are called collections or lists, and are like LISP lists, or
 JS or Python arrays.
 <pre>
-<#alice>  foaf:children  ( &lt;#bob> &lt;#charlie>  &lt;#dave>  )  .
+<#alice>  foaf:children  ( &lt;#bob> &lt;#charlie>  &lt;#dave> )  .
 </pre>
 <p>Imagine we store user input as a string, but separately generate the list of words.
 </p>
@@ -292,15 +292,15 @@ JS or Python arrays.
 </h3>
 <p>That's it.  That's all there is to turtle.  You now know it.
   It is good to get used to reading bits of turtle
-  as though it was English.  Yu can now use it in code snippits in chats
+  as though it was English.  You can now use it in code snippets in chats
   and in code for things like forms, configuration parameters, and so on.
   <p>
 <hr>
 <div style="background-color: #ffe">
   <h3>Extensions in rdflib</h3>
 <p>There a few things which you should not use in data shared
-  generally, but are shortcts for test data and quick scripts.
-  rdflib.js will understand these sytatax but never generate them
+  generally, but which are shortcuts for test data and quick scripts.
+  rdflib.js will understand these syntaxes but will never generate them.
 </p>
 <h4>Naked Dates</h4>
 <table>
@@ -331,7 +331,7 @@ JS or Python arrays.
   :alice  fam:child  :charlie, :davie, :ellie .
 </pre>
 <p>This makes the graph of relationships easier to query.
-  In this example, you can infact express all the information about Alice at once:
+  In this example, you can in fact express all the information about Alice at once:
 </p>
 <pre>
   :alice  is fam:child of :grampa, :gramma;
