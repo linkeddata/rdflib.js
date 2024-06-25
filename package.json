@@ -101,6 +101,7 @@
     "test": "npm run test:unit && npm run test:serialize && npm run test:types",
     "test:clean": "rimraf tests/serialize/,*",
     "test:serialize": "npm run build && npm run test:serialize:all && npm run test:clean",
+    "test:nestedgraphs": "npm run build && cd ./tests/serialize && node data.js -in=Graph_Of_Articles.jsonld -format=application/ld+json -out=out_Graph_Of_Articles.jsonld",
     "test:serialize:all": "npm run test:serialize:1 && npm run test:serialize:2 && npm run test:serialize:3 && npm run test:serialize:4 && npm run test:serialize:5 && npm run test:serialize:6 && npm run test:serialize:7 && npm run test:serialize:10 && npm run test:serialize:11 && npm run test:serialize:12 && npm run test:serialize:13 && npm run test:serialize:14 && npm run test:serialize:15",
     "test:serialize:1": "cd ./tests/serialize && node ./data.js -in=t1.ttl -format=application/rdf+xml -out=,t1.xml && fs-grep http://www.w3.org/2001/XMLSchema#integer ,t1.xml",
     "test:serialize:2": "cd ./tests/serialize && node ./data.js -in=t2.ttl -format=application/rdf+xml  -out=,t2.xml && node diff ,t2.xml t2-ref.xml",
