@@ -89,7 +89,7 @@ var doNext = function (remaining) {
 
         fetcher.nowOrWhenFetched(inDocument, {}, function (ok, body, xhr) {
           check(ok, body, xhr ? xhr.status : undefined)
-          // console.log(kb.statementsMatching().map(ea => ea.toString() + ' why:' + ea.why))
+          console.log(kb.statementsMatching().map(ea => ea.toString() + ' why:' + ea.why))
           doNext(remaining)
         }); // target, kb, base, contentType, callback
         return // STOP processing at this level

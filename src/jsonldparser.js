@@ -97,7 +97,7 @@ function processResource(kb, base, flatResource) {
       const graphId = id
       // this is an array of resources
       const nestedFlatResources = flatResource[property]
-
+      console.log(nestedFlatResources);
       // recursively process all flat resources in the array, but with the graphId as base.
       for (let i = 0; i < nestedFlatResources.length; i++ ) {
         kb = processResource(kb, graphId, nestedFlatResources[i])
