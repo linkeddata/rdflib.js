@@ -553,7 +553,7 @@ export class Serializer {
               return expr.value === '1' ? 'true' : 'false'
           }
         }
-        var str = this.stringToN3(expr.value)
+        var str = this.stringToN3(expr.value, this.flags)
         if (expr.language) {
           str += '@' + expr.language
         } else if (!expr.datatype.equals(this.xsd.string)) {
