@@ -27,7 +27,8 @@ const doc = bar.doc()
 const doc1 = bar.doc()
 const doc2 = baz.doc()
 
-const meta = $rdf.sym(doc.uri + '#meta') // random graph name for meta data
+const meta = $rdf.sym('chrome://TheCurrentSession') // specific graph name for meta data
+// const meta = store.fetcher.appNode // random graph name for meta data
 const st1 = $rdf.st(bar, p, 111, doc)
 const st2 = $rdf.st(bar, p, 222, doc1)
 const st3 = $rdf.st(baz, p, 333, doc2)
@@ -35,7 +36,7 @@ const st3 = $rdf.st(baz, p, 333, doc2)
 const httpResultsText = `
 @prefix httph: <http://www.w3.org/2007/ont/httph#> .
 @prefix link: <http://www.w3.org/2007/ont/link#>.
- [] link:requestedURI "${doc.uri}", "${doc2.uri}"; link:response [ httph:ms-author-via "SPARQL" ].
+ [] link:requestedURI "${doc.uri}", "${doc2.uri}"; link:response [ httph:accept-patch "application/sparql-update" ].
  `
 
 function loadMeta (store) {
@@ -155,7 +156,6 @@ describe('UpdateManager', () => {
 
     })
 
-    // on console should display @@@@@@@     updateMany to: 2
     it('Should insert triples in more than one document', () => {
       loadMeta(updater.store)
       updater.updateMany([], [st1, st2, st3]).then(array => {
@@ -163,7 +163,6 @@ describe('UpdateManager', () => {
       })
     })
 
-    // on console should display @@@@@@@     updateMany to: 2
     it('Should remove triples in more than one document', done => {
       loadMeta(updater.store)
       updater.updateMany([], [st1, st2, st3])
@@ -198,4 +197,57 @@ describe('UpdateManager', () => {
 
   })
 
+  describe('editable', () => {
+    const self = {err: ''}
+    let updater, docuri, rterm, options, userCallback, loadStub
+    var loadStatus = 200
+
+    beforeEach(() => {
+      options = {}
+      userCallback = () => {}
+
+      updater = new UpdateManager()
+      updater.store.fetcher.webOperation = sinon.stub().resolves({ ok: true, status: 200, statusText: "Dummy stub 1"})
+      updater.store.fetcher.load = sinon.stub().resolves({ ok: true, status: 200, statusText: "Dummy stub 2"})
+
+    })
+
+    it('Should detect a document is editable from metadata', () => {
+      loadMeta(updater.store)
+      expect(updater.editable(doc1)).to.equal('SPARQL')
+    })
+
+    it('Should not detect a document is editable from metadata after flush', () => {
+      loadMeta(updater.store)
+      updater.flagAuthorizationMetadata()
+      expect(updater.editable(doc1)).to.equal(undefined)
+    })
+
+    it('Should not detect a document is editable from metadata after removeMetadata', () => {
+      loadMeta(updater.store)
+      updater.store.removeMetadata(doc1)
+      expect(updater.editable(doc1)).to.equal(undefined)
+    })
+
+    it('Should not detect a document is editable from metadata after removeDocument', () => {
+      loadMeta(updater.store)
+      updater.store.removeDocument(doc1)
+      expect(updater.editable(doc1)).to.equal(undefined)
+    })
+
+    it('Async version should detect a document is editable from metadata', async () => {
+      loadMeta(updater.store)
+      const result = await updater.checkEditable(doc1)
+      expect(result).to.equal('SPARQL')
+      expect(updater.editable(doc1)).to.equal('SPARQL')
+    })
+
+    it('Async version should not detect a document is editable from metadata after flush', async () => {
+      loadMeta(updater.store)
+      expect(updater.editable(doc1)).to.equal('SPARQL')
+      updater.flagAuthorizationMetadata()
+      const result = await updater.checkEditable(doc1)
+      expect(result).to.equal(undefined)
+    })
+  })
 })

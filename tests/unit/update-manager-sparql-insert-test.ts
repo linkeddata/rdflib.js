@@ -4,6 +4,7 @@ import * as dirtyChai from 'dirty-chai'
 import * as sinon from 'sinon'
 import * as sinonChai from 'sinon-chai'
 import {Fetcher, graph, lit, st, sym, UpdateManager} from '../../src/index'
+import BlankNode from '../../src/blank-node';
 
 
 const {expect} = chai
@@ -58,6 +59,18 @@ describe('sparql updates via update manager', () => {
  }
 `)
     })
+
+    it('does not anonymize triples in INSERT DATA query', async () => {
+        updater.anonymize = sinon.spy();
+
+        const bNode = new BlankNode('subj');
+        const st1 = st(bNode, predicate, subject, subject.doc())
+        await updater.update([], [st1])
+        expect(updater.anonymize).to.not.have.been.called;
+        expect(getPatchCall().lastArg.body).to.equal(`INSERT DATA { _:subj <https://pod.example/test/foo#predicate> <https://pod.example/test/foo#subject> .
+ }
+`)
+    });
 
     function getPatchCall() {
         return fetchMock.getCalls().find(it => it.lastArg.method === 'PATCH');

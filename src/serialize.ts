@@ -1,4 +1,3 @@
-import * as convert from './convert'
 import Formula from './formula'
 import Serializer from './serializer'
 import {
@@ -51,7 +50,6 @@ export default function serialize (
     var sz = Serializer(kb)
     if ((opts as any).flags) sz.setFlags((opts as any).flags)
     var newSts = kb!.statementsMatching(undefined, undefined, undefined, target as NamedNode)
-    var n3String: string
 
     // If an IndexedFormula, use the namespaces from the given graph as suggestions
     if ('namespaces' in kb) {
@@ -82,19 +80,14 @@ export default function serialize (
         documentString = sz.statementsToNTriples(newSts)
         return executeCallback(null, documentString)
       case JSONLDContentType:
-        sz.setFlags('deinprstux') // Use adapters to connect to incmpatible parser
-        n3String = sz.statementsToNTriples(newSts)
-        // n3String = sz.statementsToN3(newSts)
-        convert.convertToJson(n3String, callback)
-        break
+        sz.setFlags('si dr') // turtle + dr (means no default, no relative prefix)
+        documentString = sz.statementsToJsonld(newSts) // convert via turtle
+        return executeCallback(null, documentString)
       case NQuadsContentType:
       case NQuadsAltContentType: // @@@ just outpout the quads? Does not work for collections
         sz.setFlags('deinprstux q') // Suppress nice parts of N3 to make ntriples
         documentString = sz.statementsToNTriples(newSts) // q in flag means actually quads
         return executeCallback(null, documentString)
-        // n3String = sz.statementsToN3(newSts)
-        // documentString = convert.convertToNQuads(n3String, callback)
-        // break
       default:
         throw new Error('Serialize: Content-type ' + contentType + ' not supported for data write.')
     }

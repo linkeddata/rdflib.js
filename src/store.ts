@@ -23,12 +23,14 @@ import Formula, { FormulaOpts } from './formula'
 import { ArrayIndexOf } from './utils'
 import { RDFArrayRemove } from './utils-js'
 import {
+  isRDFlibSubject,
+  isRDFlibPredicate,
   isRDFlibObject,
   isStore,
   isGraph,
-  isPredicate,
+  // isPredicate,
   isQuad,
-  isSubject
+  // isSubject
 } from './utils/terms'
 import Node from './node'
 import Variable from './variable'
@@ -429,10 +431,10 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     pred = Node.fromValue(pred)
     const objNode = Node.fromValue(obj) as Term
     why = Node.fromValue(why)
-    if (!isSubject(subj)) {
+    if (!isRDFlibSubject(subj)) {
       throw new Error('Subject is not a subject type')
     }
-    if (!isPredicate(pred)) {
+    if (!isRDFlibPredicate(pred)) {
       throw new Error(`Predicate ${pred} is not a predicate type`)
     }
     if (!isRDFlibObject(objNode)) {
@@ -869,14 +871,55 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
   }
 
   /**
-   * Removes all statements in a doc
+   * Removes all statements in a doc, along with the related metadata including request/response/status
    * @param doc - The document / graph
    */
   removeDocument(doc: Quad_Graph): IndexedFormula {
+    this.removeMetadata(doc)
+    // remove document
     var sts: Quad[] = this.statementsMatching(undefined, undefined, undefined, doc).slice() // Take a copy as this is the actual index
     for (var i = 0; i < sts.length; i++) {
       this.removeStatement(sts[i])
     }
+    this.removeMatches(doc as Quad_Subject, null, null)
+    return this
+  }
+
+  removeMetadata(doc: Quad_Graph): IndexedFormula {
+    const meta = this.sym('chrome://TheCurrentSession') // or this.rdfFactory.namedNode('chrome://TheCurrentSession')
+    const linkNamespaceURI = 'http://www.w3.org/2007/ont/link#'
+    // remove status/response/request metadata
+    const requests = this.statementsMatching(undefined, this.sym(`${linkNamespaceURI}requestedURI`), this.rdfFactory.literal(doc.value), meta).map(st => st.subject)
+    for (var r = 0; r < requests.length; r++) {
+      const request = requests[r]
+      if (request != undefined) {
+        // removeMatches unresolved issue with collection https://github.com/linkeddata/rdflib.js/issues/631
+        let sts: Quad[]
+        // status collection
+        const status = this.any(request, this.sym(`${linkNamespaceURI}status`), null, meta) as Quad_Subject
+        if (status != undefined) {
+          sts = this.statementsMatching(status, this.sym(`${linkNamespaceURI}status`), null, meta).slice()
+          for (var i = 0; i < sts.length; i++) {
+            this.removeStatement(sts[i])
+          }
+        }
+        // response items list
+        const response = this.any(request, this.sym(`${linkNamespaceURI}response`), null, meta) as Quad_Subject
+        if (response != undefined) {
+          sts = this.statementsMatching(response, null, null, meta).slice()
+          for (var i = 0; i < sts.length; i++) {
+            this.removeStatement(sts[i])
+          }
+        }
+        // request triples
+        sts = this.statementsMatching(request, null, null, meta).slice()
+        for (var i = 0; i < sts.length; i++) {
+          this.removeStatement(sts[i])
+        }
+
+      }
+    }
+    this.removeMatches(this.sym(doc.value), null, null, meta) // content-type
     return this
   }
 
@@ -920,9 +963,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     object?: Quad_Object | null,
     graph?: Quad_Graph | null
   ): IndexedFormula {
-    this.removeStatements(
-      this.statementsMatching(subject, predicate, object, graph)
-    )
+    this.removeMany(subject, predicate, object, graph)
     return this
   }
 

@@ -1,5 +1,3 @@
-import jsonld from 'jsonld'
-
 import { arrayToStatements } from './utils'
 
 /**
@@ -22,13 +20,7 @@ export function jsonldObjectToTerm (kb, obj) {
   }
 
   if (Object.prototype.hasOwnProperty.call(obj, '@id')) {
-    if (obj['@id'].startsWith('_:')) {
-      // This object is a Blank Node.. pass the id without the preceding _:
-      return kb.rdfFactory.blankNode(obj['@id'].substring(2));
-    } else {
-      // This object is a Named Node
-      return kb.rdfFactory.namedNode(obj['@id']);
-    }    
+    return nodeType(kb, obj)
   }
 
   if (Object.prototype.hasOwnProperty.call(obj, '@language')) {
@@ -50,7 +42,7 @@ export function jsonldObjectToTerm (kb, obj) {
  * Adds the statements in a json-ld list object to {kb}.
  */
 function listToStatements (kb, obj) {
-  const listId = jsonldObjectToTerm(kb, obj);
+  const listId = obj['@id'] ? nodeType(kb, obj) : kb.rdfFactory.blankNode()
 
   const items = obj['@list'].map((listItem => jsonldObjectToTerm(kb, listItem)))
   const statements = arrayToStatements(kb.rdfFactory, listId, items)
@@ -76,8 +68,8 @@ export default function jsonldParser (str, kb, base, callback) {
     ? base.value
     : base
 
-  return jsonld
-    .flatten(JSON.parse(str), null, { base: baseString })
+  return import('jsonld')
+    .then(jsonld => { return jsonld.flatten(JSON.parse(str), null, { base: baseString }) })
     .then((flattened) => flattened.reduce((store, flatResource) => {
 
       kb = processResource(kb, base, flatResource)
@@ -88,9 +80,20 @@ export default function jsonldParser (str, kb, base, callback) {
     .catch(callback)
 }
 
+function nodeType (kb, obj) {
+  if (obj['@id'].startsWith('_:')) {
+    // This object is a Blank Node. Pass the id without the `_:` prefix
+    return kb.rdfFactory.blankNode(obj['@id'].substring(2));
+  } else {
+    // This object is a Named Node
+    return kb.rdfFactory.namedNode(obj['@id']);
+  }
+}
 
 function processResource(kb, base, flatResource) {
-  const id = jsonldObjectToTerm(kb, flatResource);
+  const id = flatResource['@id']
+    ? nodeType(kb, flatResource)
+    : kb.rdfFactory.blankNode()
 
   for (const property of Object.keys(flatResource)) {
     if (property === '@id') {

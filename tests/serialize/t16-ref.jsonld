@@ -1,0 +1,32 @@
+{
+  "@context": {
+    "sioc": "http://rdfs.org/sioc/ns#",
+    "pad": "http://www.w3.org/ns/pim/pad#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "/t1.ttl#id1443100844982",
+  "sioc:content": "kasdfjsahdkfhkjhdkjsfhjkasdfkhjkajkdsajkhadsfkhjhjkdfajsdsafhjkdfhjksa",
+  "pad:date": {
+    "@type": "xsd:date",
+    "@value": "2012-12-10"
+  },
+  "pad:dateTime": {
+    "@type": "xsd:dateTime",
+    "@value": "2012-12-25T23:59"
+  },
+  "pad:decimal": {
+    "@type": "xsd:decimal",
+    "@value": "12"
+  },
+  "pad:float": {
+    "@type": "xsd:double",
+    "@value": "3.141"
+  },
+  "pad:integer": {
+    "@type": "xsd:integer",
+    "@value": "0"
+  },
+  "pad:next": {
+    "@id": "/t1.ttl#id1443100912627"
+  }
+}

@@ -133,7 +133,7 @@ type UserCallback = (
 type HTTPMethods = 'GET' | 'PUT' | 'POST' | 'PATCH' | 'HEAD' | 'DELETE' | 'CONNECT' | 'TRACE' | 'OPTIONS'
 
 /** All valid inputs for initFetchOptions */
-type Options = Partial<AutoInitOptions>
+export type Options = Partial<AutoInitOptions>
 
 /** Initiated by initFetchOptions, which runs on load */
 export interface AutoInitOptions extends RequestInit{
@@ -721,7 +721,7 @@ export default class Fetcher implements CallbackifyInterface {
   _fetch: Fetch
   mediatypes: MediatypesMap
   /** Denoting this session */
-  appNode: BlankNode
+  appNode: NamedNode
   /**
    * this.requested[uri] states:
    * undefined     no record of web access or records reset
@@ -771,8 +771,9 @@ export default class Fetcher implements CallbackifyInterface {
     if (!this._fetch) {
       throw new Error('No _fetch function available for Fetcher')
     }
-
-    this.appNode = this.store.rdfFactory.blankNode()
+    // This is the name of the graph we store all the HTTP metadata in
+    this.appNode = this.store.sym('chrome://TheCurrentSession')
+    // this.appNode = this.store.rdfFactory.blankNode() // Needs to have a URI in tests
     this.store.fetcher = this // Bi-linked
     this.requested = {}
     this.timeouts = {}
@@ -973,13 +974,26 @@ export default class Fetcher implements CallbackifyInterface {
     docuri = docuri.split('#')[0]
 
     options = this.initFetchOptions(docuri, options)
+    // if metadata flaged clear cache and removeDocument
+    const meta = this.appNode
+    const kb = this.store
+    const requests = kb.statementsMatching(undefined, this.ns.link('requestedURI'), kb.sym(docuri), meta).map(st => st.subject)
+    for (const request of requests) {
+      const response = kb.any(request, this.ns.link('response'), null, meta) as Quad_Subject
+      if (response != undefined) { // ts
+        const quad = kb.statementsMatching(response, this.ns.link('outOfDate'), true as any, meta)
+        kb.remove(quad)
+        options.force = true
+        options.clearPreviousData = true
+      }
+    }
 
     const initialisedOptions = this.initFetchOptions(docuri, options)
 
     return this.pendingFetchPromise(docuri, initialisedOptions.baseURI, initialisedOptions) as any
   }
 
-  pendingFetchPromise (
+  async pendingFetchPromise (
     uri: string,
     originalUri: string,
     options: AutoInitOptions
@@ -987,7 +1001,7 @@ export default class Fetcher implements CallbackifyInterface {
     let pendingPromise
 
     // Check to see if some request is already dealing with this uri
-    if (!options.force && this.fetchQueue[originalUri]) {
+    if (!options.force && await this.fetchQueue[originalUri]) {
       pendingPromise = this.fetchQueue[originalUri]
     } else {
       pendingPromise = Promise
@@ -1160,7 +1174,7 @@ export default class Fetcher implements CallbackifyInterface {
           size: 0,
           timeout: 0
         }
-        console.log('Fetcher: <' + actualProxyURI + '> Non-HTTP fetch exception: ' + error)
+        // console.log('Fetcher: <' + actualProxyURI + '> Non-HTTP fetch exception: ' + error)
         return this.handleError(dummyResponse, docuri, options) // possible credentials retry
         // return this.failFetch(options, 'fetch failed: ' + error, 999, dummyResponse) // Fake status code: fetch exception
 
@@ -1227,24 +1241,20 @@ export default class Fetcher implements CallbackifyInterface {
             if ((fetchResponse as Response).ok) {
               userCallback(true, 'OK', fetchResponse)
             } else {
-              // console.log('@@@ fetcher.js Should not take this path !!!!!!!!!!!!')
               let oops = 'HTTP error: Status ' + fetchResponse.status + ' (' + fetchResponse.statusText + ')'
               if (fetchResponse.responseText) {
                 oops += ' ' + fetchResponse.responseText // not in 404, dns error, nock failure
               }
-              console.log(oops + ' fetching ' + uri)
               userCallback(false, oops, fetchResponse)
             }
           } else {
             let oops = ('@@ nowOrWhenFetched:  no response object!')
-            console.log(oops)
             userCallback(false, oops)
           }
         }
       }, function (err: FetchError) {
         var message = err.message || err.statusText
         message = 'Failed to load  <' + uri + '> ' + message
-        console.log(message)
         if (err.response && err.response.status) {
           message += ' status: ' + err.response.status
         }
@@ -1497,18 +1507,18 @@ export default class Fetcher implements CallbackifyInterface {
     } catch (err) {
       // @ts-ignore
       if (err.response.status === 404) {
-        console.log('createIfNotExists: doc does NOT exist, will create... ' + doc)
+        // console.log('createIfNotExists: doc does NOT exist, will create... ' + doc)
         try {
           response = await fetcher.webOperation('PUT', doc.value, {data, contentType})
         } catch (err) {
-          console.log('createIfNotExists doc FAILED: ' + doc + ': ' + err)
+          // console.log('createIfNotExists doc FAILED: ' + doc + ': ' + err)
           throw err
         }
         delete fetcher.requested[doc.value] // delete cached 404 error
         // console.log('createIfNotExists doc created ok ' + doc)
         return response
       } else {
-        console.log('createIfNotExists doc load error NOT 404:  ' + doc + ': ' + err)
+        // console.log('createIfNotExists doc load error NOT 404:  ' + doc + ': ' + err)
         throw err
       }
     }
@@ -1551,13 +1561,13 @@ export default class Fetcher implements CallbackifyInterface {
     const fetcher = this
     // @ts-ignore
     if (fetcher.fetchQueue && fetcher.fetchQueue[uri]) {
-      console.log('Internal error - fetchQueue exists ' + uri)
+      // console.log('Internal error - fetchQueue exists ' + uri)
       var promise = fetcher.fetchQueue[uri]
       if (promise['PromiseStatus'] === 'resolved') {
         delete fetcher.fetchQueue[uri]
       } else { // pending
         delete fetcher.fetchQueue[uri]
-        console.log('*** Fetcher: pending fetchQueue deleted ' + uri)
+        // console.log('*** Fetcher: pending fetchQueue deleted ' + uri)
       }
     } if (fetcher.requested[uri] && fetcher.requested[uri] !== 'done' &&
      fetcher.requested[uri] !== 'failed' && fetcher.requested[uri] !== 404) {
@@ -1571,8 +1581,8 @@ export default class Fetcher implements CallbackifyInterface {
   }
 
   /**
-   * A generic web opeation, at the fetch() level.
-   * does not invole the quadstore.
+   * A generic web operation, at the fetch() level.
+   * does not involve the quad store.
    *
    *  Returns promise of Response
    *  If data is returned, copies it to response.responseText before returning
@@ -1729,22 +1739,22 @@ export default class Fetcher implements CallbackifyInterface {
 
     let responseNode = kb.bnode()
 
-    kb.add(options.req, this.ns.link('response'), responseNode, responseNode)
+    kb.add(options.req, this.ns.link('response'), responseNode, this.appNode)
     kb.add(responseNode, this.ns.http('status'),
-    kb.rdfFactory.literal(response.status as any), responseNode)
+    kb.rdfFactory.literal(response.status as any), this.appNode)
     kb.add(responseNode, this.ns.http('statusText'),
-    kb.rdfFactory.literal(response.statusText), responseNode)
+    kb.rdfFactory.literal(response.statusText), this.appNode)
 
     // Save the response headers
     response.headers.forEach((value, header) => {
-      kb.add(responseNode, this.ns.httph(header), this.store.rdfFactory.literal(value), responseNode)
+      kb.add(responseNode, this.ns.httph(header), this.store.rdfFactory.literal(value), this.appNode)
 
       if (header === 'content-type') {
         kb.add(
           options.resource,
           this.ns.rdf('type'),
           kb.rdfFactory.namedNode(Util.mediaTypeClass(value).value),
-          responseNode
+          this.appNode // responseNode
         )
       }
     })
@@ -1837,7 +1847,7 @@ export default class Fetcher implements CallbackifyInterface {
     docuri: string,
     options
   ): Promise<Result> {
-    console.log('Fetcher: CORS: RETRYING with NO CREDENTIALS for ' + options.resource)
+    // console.log('Fetcher: CORS: RETRYING with NO CREDENTIALS for ' + options.resource)
 
     options.retriedWithNoCredentials = true // protect against being called twice
 
@@ -1886,8 +1896,7 @@ export default class Fetcher implements CallbackifyInterface {
       let proxyUri = Fetcher.crossSiteProxy(docuri)
 
       if (proxyUri && !options.proxyUsed) {
-        console.log('web: Direct failed so trying proxy ' + proxyUri)
-
+        // console.log('web: Direct failed so trying proxy ' + proxyUri)
         return this.redirectToProxy(proxyUri, options)
       }
     }
@@ -1960,7 +1969,7 @@ export default class Fetcher implements CallbackifyInterface {
 
     // Check for masked errors (CORS, etc)
     if (response.status === 0) {
-      console.log('Masked error - status 0 for ' + docuri)
+      // console.log('Masked error - status 0 for ' + docuri)
       return this.handleError(response, docuri, options)
     }
 
@@ -1995,7 +2004,12 @@ export default class Fetcher implements CallbackifyInterface {
 
       // Before we parse new data clear old but only on 200
       if (options.clearPreviousData) {
-        kb.removeDocument(options.resource)
+        // kb.removeDocument(options.resource)
+        // only remove content, keep metatdata
+        const sts = kb.statementsMatching(undefined, undefined, undefined, options.resource).slice() // Take a copy as this is the actual index
+        for (let i = 0; i < sts.length; i++) {
+          kb.removeStatement(sts[i])
+        }
       }
 
       let isImage = contentType.includes('image/') ||

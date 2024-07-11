@@ -12,6 +12,7 @@ import * as Util from './utils-js'
 import CanonicalDataFactory from './factories/canonical-data-factory'
 import { createXSD } from './xsd'
 import solidNs from 'solid-namespace'
+import * as ttl2jsonld from '@frogcat/ttl2jsonld'
 
 
 export default function createSerializer(store) {
@@ -40,7 +41,7 @@ export class Serializer {
     this.keywords = ['a'] // The only one we generate at the moment
     this.prefixchars = 'abcdefghijklmnopqustuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
     this.incoming = null // Array not calculated yet
-    this.formulas = [] // remebering original formulae from hashes
+    this.formulas = [] // remembering original formulae from hashes
     this.store = store
     this.rdfFactory = store.rdfFactory || CanonicalDataFactory
     this.xsd = createXSD(this.rdfFactory)
@@ -74,7 +75,7 @@ export class Serializer {
   }
 
   /**
-   * Defines a set of [prefix, namespace] pairs to be uised by this Serializer instance.
+   * Defines a set of [prefix, namespace] pairs to be used by this Serializer instance.
    * Overrides previous prefixes if any
    * @param namespaces
    * @return {Serializer}
@@ -260,7 +261,7 @@ export class Serializer {
     } else if (this.flags.indexOf('u') >= 0) { // Unicode encoding NTriples style
       uri = backslashUify(uri)
     } else {
-      uri = hexify(uri)
+      uri = hexify(decodeURI(uri))
     }
     return '<' + uri + '>'
   }
@@ -500,7 +501,7 @@ export class Serializer {
 
     function prefixDirectivesMethod () {
       var str = ''
-      if (this.defaultNamespace) {
+      if (this.flags.indexOf('d') < 0 && this.defaultNamespace) {
         str += '@prefix : ' + this.explicitURI(this.defaultNamespace) + '.\n'
       }
       for (var ns in this.prefixes) {
@@ -536,7 +537,7 @@ export class Serializer {
             case 'http://www.w3.org/2001/XMLSchema#integer':
               return val
 
-            case 'http://www.w3.org/2001/XMLSchema#decimal': // In urtle must have dot
+            case 'http://www.w3.org/2001/XMLSchema#decimal': // In Turtle, must have dot
               if (val.indexOf('.') < 0) val += '.0'
               return val
 
@@ -1011,6 +1012,27 @@ export class Serializer {
     var tree2 = [str, tree, '</rdf:RDF>'] // @@ namespace declrations
     return XMLtreeToString(tree2, -1)
   } // End @@ body
+
+  statementsToJsonld (sts) {
+    // ttl2jsonld creates context keys for all ttl prefix
+    // context keys must be absolute IRI ttl2jsonld@0.0.8
+    /* function findId (itemObj) {
+      if (itemObj['@id']) {
+        const item = itemObj['@id'].split(':')
+        if (keys[item[0]]) itemObj['@id'] = jsonldObj['@context'][item[0]] + item[1]
+      }
+      const itemValues = Object.values(itemObj)
+      for (const i in itemValues) {
+        if (typeof itemValues[i] !== 'string') { // @list contains array
+          findId(itemValues[i])
+        }
+      }
+    } */
+    const turtleDoc = this.statementsToN3(sts)
+    const jsonldObj = ttl2jsonld.parse(turtleDoc)
+    return JSON.stringify(jsonldObj, null, 2)
+  }
+
 }
 
 // String escaping utilities
