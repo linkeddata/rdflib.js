@@ -59,7 +59,7 @@ td: { background-color: #eee; }
 <p>and then in your code, you will need the following line as well:</p>
 
 <pre>
-<code class="language-javascript">const $rdf = require(‘rdflib’)
+<code class="language-javascript">const $rdf = require('rdflib')
 </code></pre>
 
 <h3>Setting up a Store</h3>
@@ -89,7 +89,7 @@ const profile = me.doc();       //i.e. store.sym(''https://example.com/alice/car
 <p>We are going to be using the VCARD terms, and so we set up a <b>Namespace</b> object to which generates the right predicate URIs for each term.</p>
 
 <pre>
-<code class="language-javascript">const VCARD = new $rdf.Namespace(‘http://www.w3.org/2006/vcard/ns#‘);
+<code class="language-javascript">const VCARD = new $rdf.Namespace('http://www.w3.org/2006/vcard/ns#');
 </code></pre>
 
 <p>If we don’t know which vocabulary to use, various groups have their favorite lists. One is the <a href="https://github.com/solid/solid-namespace">collection of RDF namespaces in Solid projects</a>.</p>
@@ -97,7 +97,7 @@ const profile = me.doc();       //i.e. store.sym(''https://example.com/alice/car
 <p>We add a name to the store as though it was stored in the profile</p>
 
 <pre>
-<code class="language-javascript">store.add(me, VCARD(‘fn’), “John Bloggs”, profile);
+<code class="language-javascript">store.add(me, VCARD('fn'), "John Bloggs", profile);
 </code></pre>
 
 <p>The third parameter, the object, is formally an RDF Term, here it would be a <strong>Literal</strong>. But you can give a string like “John Bloggs”, and rdflib will generate the right internal object.  It will do that with strings, numbers, Javascript Date objects. </p>
@@ -127,9 +127,9 @@ const profile = me.doc();       //i.e. store.sym(''https://example.com/alice/car
 <pre>
 <code class="language-javascript">let text = '&lt;#this&gt;  a  &lt;#Example&gt; .';
 
-let doc = $rdf.sym(‘’https://example.com/alice/card”);
+let doc = $rdf.sym("https://example.com/alice/card");
 let store = $rdf.graph();
-$rdf.parse(text, store, doc.uri, ‘text/turtle’);  // pass base URI
+$rdf.parse(text, store, doc.uri, 'text/turtle');  // pass base URI
 </code></pre>
 
 <p>Note that we must specify a document URI, as the store works by keeping track of where each triple belongs.  </p>
@@ -142,7 +142,7 @@ $rdf.parse(text, store, doc.uri, ‘text/turtle’);  // pass base URI
 <p>We can similarly generate a turtle text from the store. Serialize is the function.  You pass it the document (as a NamedNode) we are talking about, and it will just select the triples from that document to be output.</p>
 
 <pre>
-<code class="language-javascript">console.log($rdf.serialize(doc, store, aclDoc.uri, 'text/turtle'));
+<code class="language-javascript">console.log($rdf.serialize(doc, store, doc.uri, 'text/turtle'));
 </code></pre>
 
 <p>If you omit the document parameter to serialize, or pass null, then you will get all the triples in the store.  This may, if you have used a Fetcher,  possibly metadata which the fetcher has stored about the HTTP requests it made in fetching your documents.  Which might be interesting... but not what you were expecting.</p>
@@ -184,7 +184,7 @@ $rdf.parse(text, store, doc.uri, ‘text/turtle’);  // pass base URI
 			<p dir="ltr">gives all the statements in my profile where I am the object</p>
 			</td>
 		</tr><tr><td>
-			<p dir="ltr">match(null, LDP(‘contains’))</p>
+			<p dir="ltr">match(null, LDP('contains'))</p>
 			</td>
 			<td>
 			<p dir="ltr">gives all the statements whose predicate is ldp:contains</p>
@@ -247,8 +247,8 @@ $rdf.parse(text, store, doc.uri, ‘text/turtle’);  // pass base URI
 <p>Suppose we have loaded a bunch of LDP folders and we want to pull out all the pairs of files where one is inside the other.</p>
 
 <pre>
-<code class="language-javascript">store.match(null, LDP(‘contains’)).forEach(st =&gt; {
-	console.log(st.subject + ‘ contains + st.object)
+<code class="language-javascript">store.match(null, LDP('contains')).forEach(st =&gt; {
+	console.log(st.subject + ' contains ' + st.object)
 });
 </code></pre>
 
@@ -259,13 +259,13 @@ $rdf.parse(text, store, doc.uri, ‘text/turtle’);  // pass base URI
 <p>You can make a new statement using:</p>
 
 <pre>
-<code class="language-javascript">let st = new $rdf.Statement(me, FOAF(‘name’), “Joe Bloggs”, me.doc());
+<code class="language-javascript">let st = new $rdf.Statement(me, FOAF('name'), "Joe Bloggs", me.doc());
 </code></pre>
 
 <p>or if that's too verbose, you can use a shortcut provided:</p>
 
 <pre>
-<code class="language-javascript">let st = $rdf.st(me, FOAF(‘name’), “Joe Bloggs”, me.doc());
+<code class="language-javascript">let st = $rdf.st(me, FOAF('name'), "Joe Bloggs", me.doc());
 </code></pre>
 
 <p>The "st" shortcut exists because you can pass arrays of statements to be deleted or inserted to the UpdateManager's "update()" function as a convenient way of making small changes to the web of data.</p>
@@ -290,7 +290,7 @@ $rdf.parse(text, store, doc.uri, ‘text/turtle’);  // pass base URI
 <code class="language-javascript">const store = $rdf.graph();
 const me = store.sym('https://example.com/alice/card#me');
 const profile = me.doc() //    i.e. store.sym(''https://example.com/alice/card#me');
-const VCARD = new $rdf.Namespace(‘http://www.w3.org/2006/vcard/ns#‘);
+const VCARD = new $rdf.Namespace('http://www.w3.org/2006/vcard/ns#');
 </code></pre>
 
 <p>This time, we'll also make a Fetcher for the store. The Fetcher is a helper object which allows you to transfer data to and from the web of data. </p>
@@ -303,10 +303,10 @@ const VCARD = new $rdf.Namespace(‘http://www.w3.org/2006/vcard/ns#‘);
 
 <pre>
 <code class="language-javascript">fetcher.load(profile).then(response =&gt; {
-   let name = store.any(me, VCARD(‘fn’));
-  console.log(`Loaded {$name || ‘wot no name?’}`);
+   let name = store.any(me, VCARD('fn'));
+  console.log(`Loaded {$name || 'got no name?'}`);
 }, err =&gt; {
-   console.log(“Load failed “ +  err);
+   console.log("Load failed " +  err);
 });
 </code></pre>
 
@@ -319,14 +319,14 @@ const VCARD = new $rdf.Namespace(‘http://www.w3.org/2006/vcard/ns#‘);
 <p>This way, we can try using this namespace if there is no VCARD name.</p>
 
 <pre>
-<code class="language-javascript">let name = store.any(me, VCARD(‘fn’)) || store.any(me, FOAF(‘name’));
-let picture = store.any(me, VCARD(‘hasPhoto’)) || store.any(me, FOAF(image));
+<code class="language-javascript">let name = store.any(me, VCARD('fn')) || store.any(me, FOAF('name'));
+let picture = store.any(me, VCARD('hasPhoto')) || store.any(me, FOAF(image));
 </code></pre>
 
 <p>Or we can track all the names we find instead. The function "each()" returns an array of any field it finds a value for.</p>
 
 <pre>
-<code class="language-javascript">let names = store.each(me, VCARD(‘fn’)).concat(store.each(me, FOAF(‘name’)));
+<code class="language-javascript">let names = store.each(me, VCARD('fn')).concat(store.each(me, FOAF('name')));
 </code></pre>
 
 <h4>Fetch Full Code Example</h4>
@@ -338,29 +338,29 @@ let picture = store.any(me, VCARD(‘hasPhoto’)) || store.any(me, FOAF(image))
 const fetcher = new $rdf.Fetcher(store);
 const me = store.sym('https://example.com/alice/card#me')
 
-const VCARD = new $rdf.Namespace(‘http://www.w3.org/2006/vcard/ns#‘);
+const VCARD = new $rdf.Namespace('http://www.w3.org/2006/vcard/ns#');
 const FOAF = $rdf.Namespace('http://xmlns.com/foaf/0.1/');
 
 function cardFor (person) {
 	let div = document.createElement(div);
-	div.outerHTML = `&lt;div style = ‘padding: 0.5em;’&gt;
-	       &lt;img style = ‘max-width: 3em; min-width: 3em; border-radius: 0.6em;’
-		      src = ‘@@default person image from github.io’&gt;
-     	   &lt;span style=’text-align: center;’&gt;???&lt;/span&gt;
+	div.outerHTML = `&lt;div style = 'padding: 0.5em;'&gt;
+	       &lt;img style = 'max-width: 3em; min-width: 3em; border-radius: 0.6em;'
+		      src = '@@default person image from github.io'&gt;
+     	   &lt;span style='text-align: center;'&gt;???&lt;/span&gt;
         &lt;/div&gt;
 	`;
 	let image = div.children[0];
 	let span = div.children[1];
 
     store.load(person).then( response =&gt; {
-	    let name = store.any(person, VCARD(‘fn’));
+	    let name = store.any(person, VCARD('fn'));
 	    if (name) {
 	    	label.textContent =  name.value; // name is a Literal object
         }
 
-        let pic = store.any(person, VCARD(‘hasPhoto’));
+        let pic = store.any(person, VCARD('hasPhoto'));
 	    if (pic) {
-		    image.setAttribute(‘src’, pic.uri); // pic is a NamedNode
+		    image.setAttribute('src', pic.uri); // pic is a NamedNode
         }
 
     });
@@ -374,7 +374,7 @@ function cardFor (person) {
 <code class="language-javascript">div.appendChild(card(me)); // My card
 
 fetcher.load(me.doc).then(resp -&gt; {
-	store.each(me, FOAF(‘friend’)).forEach(friend =&gt; div.appendChild(card(friend)));
+	store.each(me, FOAF('friend')).forEach(friend =&gt; div.appendChild(card(friend)));
 });
 </code></pre>
 
@@ -389,14 +389,14 @@ fetcher.load(me.doc).then(resp -&gt; {
 <p>Everything in RDF is a thing.  We store data about all things in the same sort of way, just using different vocabulary.  Suppose you want to list the content of the folder in someone’s solid space.  It is very like listing their friends.  The namespace for the contents of folders is LDP. So..</p>
 
 <pre>
-<code class="language-javascript">const LDP = $rdf.Namespace(‘http://www.w3.org/ns/ldp#&gt;’);
+<code class="language-javascript">const LDP = $rdf.Namespace('http://www.w3.org/ns/ldp#&gt;');
 
-let folder = $rdf.sym(‘https://alice.example.com/Public/’);  // NOTE: Ends in a slash
+let folder = $rdf.sym('https://alice.example.com/Public/');  // NOTE: Ends in a slash
 
 fetcher.load(folder).then(() =&gt; {
-	let files = store.any(folder, LDP(‘contains’));
+	let files = store.any(folder, LDP('contains'));
 	files.forEach(file) {
-        console.log(‘ contains ‘ + file);
+        console.log(' contains ' + file);
     }
 });
 </code></pre>
@@ -405,20 +405,20 @@ fetcher.load(folder).then(() =&gt; {
 
 <pre>
 <code class="language-javascript">function list(folder, indent) {
-    indent = indent || ‘’;
+    indent = indent || '';
     fetcher.load(folder).then(() =&gt; {
-		let files = store.any(folder,  LDP(‘contains’));
+		let files = store.any(folder,  LDP('contains'));
 		files.forEach(file) {
-            console.log(indent + folder + ‘ contains ‘ + file);
-            if (store.holds(file,  RDF(‘type’), LDP(‘Container’)) {
-	            list(file, indent + ‘   ‘);
+            console.log(indent + folder + ' contains ' + file);
+            if (store.holds(file,  RDF('type'), LDP('Container')) {
+	            list(file, indent + '   ');
             }
         }
     });
 }
 
 
-list(rdf.sym(‘https://alice.example.com/Public/’));</code></pre>
+list(rdf.sym('https://alice.example.com/Public/'));</code></pre>
 
 <p>The results will come asynchronously. If we were building a UI, each would get slotted into the right place.</p>
 
