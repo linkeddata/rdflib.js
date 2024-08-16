@@ -142,7 +142,7 @@ $rdf.parse(text, store, doc.uri, 'text/turtle');  // pass base URI
 <p>We can similarly generate a turtle text from the store. Serialize is the function.  You pass it the document (as a NamedNode) we are talking about, and it will just select the triples from that document to be output.</p>
 
 <pre>
-<code class="language-javascript">console.log($rdf.serialize(doc, store, aclDoc.uri, 'text/turtle'));
+<code class="language-javascript">console.log($rdf.serialize(doc, store, doc.uri, 'text/turtle'));
 </code></pre>
 
 <p>If you omit the document parameter to serialize, or pass null, then you will get all the triples in the store.  This may, if you have used a Fetcher,  possibly metadata which the fetcher has stored about the HTTP requests it made in fetching your documents.  Which might be interesting... but not what you were expecting.</p>
