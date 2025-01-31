@@ -1,5 +1,5 @@
 // Prevents circular dependencies between data-factory-internal and statement
 
 import NamedNode from '../named-node';
-export var defaultGraphURI = 'chrome:theSession';
-export var defaultGraphNode = new NamedNode(defaultGraphURI);
+export const defaultGraphURI = 'chrome:theSession';
+export const defaultGraphNode = new NamedNode(defaultGraphURI);

@@ -6,7 +6,7 @@ import { docpart } from './uri';
 import log from './log';
 import * as uri from './uri';
 import NamedNode from './named-node';
-var string = {
+const string = {
   template: stringTemplate
 };
 export { log, uri, string };
@@ -56,7 +56,7 @@ export function callbackify(obj, callbacks) {
     var replaceCallbacks = [];
     var len = obj.callbacks[hook].length;
     var x;
-    var callback;
+    let callback;
 
     // log.info('!@$ Firing '+hook+' call back with length'+len)
     for (x = len - 1; x >= 0; x--) {
@@ -182,10 +182,10 @@ export function dtstamp() {
  * Compares statements (heavy comparison for repeatable canonical ordering)
  */
 export function heavyCompare(x, y, g, uriMap) {
-  var nonBlank = function nonBlank(x) {
+  var nonBlank = function (x) {
     return x.termType === 'BlankNode' ? null : x;
   };
-  var signature = function signature(x) {
+  var signature = function (x) {
     var lis = g.statementsMatching(x).map(function (st) {
       return '' + nonBlank(st.subject) + ' ' + nonBlank(st.predicate) + ' ' + nonBlank(st.object);
     }).concat(g.statementsMatching(undefined, undefined, x).map(function (st) {
@@ -194,7 +194,7 @@ export function heavyCompare(x, y, g, uriMap) {
     lis.sort();
     return lis.join('\n');
   };
-  var comparison = Object.prototype.hasOwnProperty.call(g, "compareTerms") ? g.compareTerms(x, y) : x.compareTerm(y);
+  const comparison = Object.prototype.hasOwnProperty.call(g, "compareTerms") ? g.compareTerms(x, y) : x.compareTerm(y);
   if (x.termType === 'BlankNode' && y.termType === 'BlankNode') {
     if (comparison === 0) return 0; // Same
     if (signature(x) > signature(y)) return +1;

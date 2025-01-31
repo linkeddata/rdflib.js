@@ -1,6 +1,6 @@
 /** A set of features that may be supported by a Data Factory */
 
-export var Feature = /*#__PURE__*/function (Feature) {
+export let Feature = /*#__PURE__*/function (Feature) {
   Feature["collections"] = "COLLECTIONS";
   Feature["defaultGraphType"] = "DEFAULT_GRAPH_TYPE";
   Feature["equalsMethod"] = "EQUALS_METHOD";

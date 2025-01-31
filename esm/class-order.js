@@ -1,7 +1,7 @@
 /**
 * Class orders
 */
-var ClassOrder = {
+const ClassOrder = {
   'Literal': 1,
   'Collection': 3,
   'Graph': 4,

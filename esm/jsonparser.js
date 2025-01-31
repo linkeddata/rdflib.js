@@ -1,6 +1,6 @@
 export default (function () {
   return {
-    parseJSON: function parseJSON(data, source, store) {
+    parseJSON: function (data, source, store) {
       var subject, predicate, object;
       var bnodes = {};
       var why = store.sym(source);

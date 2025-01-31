@@ -1,13 +1,12 @@
-import _typeof from "@babel/runtime/helpers/typeof";
 import { CollectionTermType, NamedNodeTermType, VariableTermType, BlankNodeTermType, LiteralTermType, GraphTermType, DefaultGraphTermType } from '../types';
 /** TypeGuard for RDFLib Statements */
 export function isStatement(obj) {
-  return _typeof(obj) === 'object' && obj !== null && 'subject' in obj;
+  return typeof obj === 'object' && obj !== null && 'subject' in obj;
 }
 
 /** TypeGuard for RDFlib Stores */
 export function isStore(obj) {
-  return _typeof(obj) === 'object' && obj !== null && 'statements' in obj;
+  return typeof obj === 'object' && obj !== null && 'statements' in obj;
 }
 
 /** TypeGuard for RDFLib Collections */
@@ -38,7 +37,7 @@ export function isVariable(obj) {
 
 /** TypeGuard for RDF/JS spec Terms */
 export function isTerm(obj) {
-  return _typeof(obj) === 'object' && obj !== null && 'termType' in obj;
+  return typeof obj === 'object' && obj !== null && 'termType' in obj;
 }
 
 /** TypeGuard for RDF/JS spec Literals */
@@ -48,7 +47,7 @@ export function isLiteral(value) {
 
 /** TypeGuard for RDF/JS spec Quads */
 export function isQuad(obj) {
-  return _typeof(obj) === "object" && obj !== null && 'subject' in obj && 'predicate' in obj && 'object' in obj;
+  return typeof obj === "object" && obj !== null && 'subject' in obj && 'predicate' in obj && 'object' in obj;
 }
 
 /** TypeGuard for RDF/JS spec NamedNodes */

@@ -1,4 +1,3 @@
-import _defineProperty from "@babel/runtime/helpers/defineProperty";
 import BlankNode from '../blank-node';
 import Literal from '../literal';
 import NamedNode from '../named-node';
@@ -13,25 +12,31 @@ export { defaultGraphURI } from '../utils/default-graph-uri';
 /**
  * Gets the default graph
  */
-var _defaultGraph = new DefaultGraph();
+const defaultGraph = new DefaultGraph();
 
 /** A basic internal RDFlib datafactory, which does not support Collections  */
-var CanonicalDataFactory = {
-  supports: _defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty(_defineProperty({}, Feature.collections, false), Feature.defaultGraphType, false), Feature.equalsMethod, true), Feature.identity, false), Feature.id, true), Feature.reversibleId, false), Feature.variableType, true),
+const CanonicalDataFactory = {
+  supports: {
+    [Feature.collections]: false,
+    [Feature.defaultGraphType]: false,
+    [Feature.equalsMethod]: true,
+    [Feature.identity]: false,
+    [Feature.id]: true,
+    [Feature.reversibleId]: false,
+    [Feature.variableType]: true
+  },
   /**
    * Creates a new blank node
    * @param value - The blank node's identifier
    */
-  blankNode: function blankNode(value) {
+  blankNode(value) {
     return new BlankNode(value);
   },
-  defaultGraph: function defaultGraph() {
-    return _defaultGraph;
-  },
+  defaultGraph: () => defaultGraph,
   /**
    * Compares to (rdf) objects for equality.
    */
-  equals: function equals(a, b) {
+  equals(a, b) {
     if (a === b || !a || !b) {
       return true;
     }
@@ -54,7 +59,7 @@ var CanonicalDataFactory = {
    * @example Use this to associate data with a term in an object
    *   { obj[id(term)] = "myData" }
    */
-  id: function id(term) {
+  id(term) {
     if (!term) {
       return 'undefined';
     }
@@ -67,14 +72,14 @@ var CanonicalDataFactory = {
       case VariableTermType:
         return Variable.toString(term);
       default:
-        var nq = this.termToNQ(term);
+        const nq = this.termToNQ(term);
         if (nq) {
           return nq;
         }
-        throw new Error("Can't id term with type '".concat(term.termType, "'"));
+        throw new Error(`Can't id term with type '${term.termType}'`);
     }
   },
-  isQuad: function isQuad(obj) {
+  isQuad(obj) {
     return obj instanceof Statement;
   },
   /**
@@ -82,11 +87,11 @@ var CanonicalDataFactory = {
    * @param value - The lexical value
    * @param languageOrDatatype - Either the language or the datatype
    */
-  literal: function literal(value, languageOrDatatype) {
+  literal(value, languageOrDatatype) {
     if (typeof value !== "string" && !languageOrDatatype) {
       return Literal.fromValue(value);
     }
-    var strValue = typeof value === 'string' ? value : '' + value;
+    const strValue = typeof value === 'string' ? value : '' + value;
     if (typeof languageOrDatatype === 'string') {
       if (languageOrDatatype.indexOf(':') === -1) {
         return new Literal(strValue, languageOrDatatype);
@@ -101,7 +106,7 @@ var CanonicalDataFactory = {
    * Creates a new named node
    * @param value - The new named node
    */
-  namedNode: function namedNode(value) {
+  namedNode(value) {
     return new NamedNode(value);
   },
   /**
@@ -111,8 +116,8 @@ var CanonicalDataFactory = {
    * @param object - The object
    * @param graph - The containing graph
    */
-  quad: function quad(subject, predicate, object, graph) {
-    return new Statement(subject, predicate, object, graph || _defaultGraph);
+  quad(subject, predicate, object, graph) {
+    return new Statement(subject, predicate, object, graph || defaultGraph);
   },
   /**
    * Creates a new statement
@@ -121,14 +126,14 @@ var CanonicalDataFactory = {
    * @param object - The object
    * @param graph - The containing graph
    */
-  triple: function triple(subject, predicate, object, graph) {
+  triple(subject, predicate, object, graph) {
     return this.quad(subject, predicate, object, graph);
   },
-  quadToNQ: function quadToNQ(q) {
-    return "".concat(this.termToNQ(q.subject), " ").concat(this.termToNQ(q.predicate), " ").concat(this.termToNQ(q.object), " ").concat(this.termToNQ(q.graph), " .");
+  quadToNQ(q) {
+    return `${this.termToNQ(q.subject)} ${this.termToNQ(q.predicate)} ${this.termToNQ(q.object)} ${this.termToNQ(q.graph)} .`;
   },
-  /** Stringify a {term} to n-quads serialization. */termToNQ: function termToNQ(term) {
-    var _this = this;
+  /** Stringify a {term} to n-quads serialization. */
+  termToNQ(term) {
     switch (term.termType) {
       case BlankNodeTermType:
         return '_:' + term.value;
@@ -142,14 +147,13 @@ var CanonicalDataFactory = {
       case NamedNodeTermType:
         return '<' + term.value + '>';
       case CollectionTermType:
-        return '(' + term.elements.map(function (t) {
-          return _this.termToNQ(t);
-        }).join(' ') + ')';
+        return '(' + term.elements.map(t => this.termToNQ(t)).join(' ') + ')';
       default:
-        throw new Error("Can't serialize nonstandard term type (was '".concat(term.termType, "')"));
+        throw new Error(`Can't serialize nonstandard term type (was '${term.termType}')`);
     }
   },
-  /** Convert an rdf object (term or quad) to n-quads serialization. */toNQ: function toNQ(term) {
+  /** Convert an rdf object (term or quad) to n-quads serialization. */
+  toNQ(term) {
     if (this.isQuad(term)) {
       return this.quadToNQ(term);
     }
@@ -159,7 +163,7 @@ var CanonicalDataFactory = {
    * Creates a new variable
    * @param name - The name for the variable
    */
-  variable: function variable(name) {
+  variable(name) {
     return new Variable(name);
   }
 };

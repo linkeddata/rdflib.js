@@ -20,8 +20,8 @@ import { TurtleContentType, N3ContentType, RDFXMLContentType, XHTMLContentType, 
  * @param [callback] - The callback to call when the data has been loaded
  */
 export default function parse(str, kb, base) {
-  var contentType = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 'text/turtle';
-  var callback = arguments.length > 4 ? arguments[4] : undefined;
+  let contentType = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 'text/turtle';
+  let callback = arguments.length > 4 ? arguments[4] : undefined;
   contentType = contentType || TurtleContentType;
   contentType = contentType.split(';')[0];
   try {
@@ -93,7 +93,7 @@ export default function parse(str, kb, base) {
       if (callback) {
         callback(e, kb);
       } else {
-        var e2 = new Error('' + e + ' while trying to parse <' + base + '> as ' + contentType);
+        let e2 = new Error('' + e + ' while trying to parse <' + base + '> as ' + contentType);
         //@ts-ignore .cause is not a default error property
         e2.cause = e;
         throw e2;

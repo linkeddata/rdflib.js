@@ -1,5 +1,3 @@
-import _createClass from "@babel/runtime/helpers/createClass";
-import _classCallCheck from "@babel/runtime/helpers/classCallCheck";
 // Matching a formula against another formula
 // Assync as well as Synchronously
 //
@@ -27,14 +25,15 @@ import { docpart } from './uri';
 /**
  * Query class, for tracking queries the user has in the UI.
  */
-export var Query = /*#__PURE__*/_createClass(function Query(name, id) {
-  _classCallCheck(this, Query);
-  this.pat = new IndexedFormula(); // The pattern to search for
-  this.vars = []; // Used by UI code but not in query.js
-  //    this.orderBy = [] // Not used yet
-  this.name = name;
-  this.id = id;
-});
+export class Query {
+  constructor(name, id) {
+    this.pat = new IndexedFormula(); // The pattern to search for
+    this.vars = []; // Used by UI code but not in query.js
+    //    this.orderBy = [] // Not used yet
+    this.name = name;
+    this.id = id;
+  }
+}
 
 /**
  * This function will match a pattern to the current Store
@@ -258,7 +257,7 @@ export function indexedFormulaQuery(myQuery, callback, fetcher, onDone) {
   };
 
   // An optional branch hoards its results.
-  var OptionalBranch = function OptionalBranch(junction) {
+  var OptionalBranch = function (junction) {
     this.count = 0;
     this.done = false;
     this.results = [];
@@ -297,7 +296,7 @@ export function indexedFormulaQuery(myQuery, callback, fetcher, onDone) {
     terms = [item.subject, item.predicate, item.object, item.why];
     ind = [f.subjectIndex, f.predicateIndex, f.objectIndex, f.whyIndex];
     for (i = 0; i < 4; i++) {
-      var t = terms[i];
+      let t = terms[i];
       // console.log("  Prepare (" + t + ") "+(t in bindings))
       if (t.uri && t.uri === defaultDocumentURI) {// chrome:session
         // console.log('     query: Ignoring slot ' + i)
@@ -349,7 +348,7 @@ export function indexedFormulaQuery(myQuery, callback, fetcher, onDone) {
   *
   * Will fetch linked data from the web iff the knowledge base an associated source fetcher (f.fetcher)
   ***/
-  var match = function match(f, g, bindingsSoFar, level, fetcher, localCallback, branch) {
+  var match = function (f, g, bindingsSoFar, level, fetcher, localCallback, branch) {
     log.debug('Match begins, Branch count now: ' + branch.count + ' for ' + branch.pattern_debug);
 
     // log.debug("match: f has "+f.statements.length+", g has "+g.statements.length)
@@ -386,7 +385,7 @@ export function indexedFormulaQuery(myQuery, callback, fetcher, onDone) {
     if (fetcher) {
       // Fetcher is used to fetch URIs, function first term is a URI term, second is the requester
       var id = 'match' + matchIndex++;
-      var fetchResource = function fetchResource(requestedTerm, id) {
+      var fetchResource = function (requestedTerm, id) {
         var docuri = requestedTerm.uri.split('#')[0];
         fetcher.nowOrWhenFetched(docuri, undefined, function (ok, body, xhr) {
           if (!ok) {
@@ -413,7 +412,7 @@ export function indexedFormulaQuery(myQuery, callback, fetcher, onDone) {
     match2(f, g, bindingsSoFar, level, fetcher, localCallback, branch);
   }; // match
 
-  var constraintsSatisfied = function constraintsSatisfied(bindings, constraints) {
+  var constraintsSatisfied = function (bindings, constraints) {
     var res = true;
     var x;
     var test;
@@ -431,7 +430,7 @@ export function indexedFormulaQuery(myQuery, callback, fetcher, onDone) {
   };
 
   /** match2 -- stuff after the fetch **/
-  var match2 = function match2(f, g, bindingsSoFar, level, fetcher, callback, branch) {
+  var match2 = function (f, g, bindingsSoFar, level, fetcher, callback, branch) {
     // post fetch
     var pattern = g.statements;
     var n = pattern.length;

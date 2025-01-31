@@ -50,8 +50,8 @@ export function AJAR_handleNewTerm(kb, p, requestedBy) {
     referringTerm: requestedBy
   });
 }
-export var appliedFactoryMethods = ['blankNode', 'defaultGraph', 'literal', 'namedNode', 'quad', 'variable', 'supports'];
-var rdf = {
+export const appliedFactoryMethods = ['blankNode', 'defaultGraph', 'literal', 'namedNode', 'quad', 'variable', 'supports'];
+const rdf = {
   first: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#first',
   rest: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#rest',
   nil: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#nil'
@@ -65,10 +65,10 @@ var rdf = {
  * @return The {data} as a set of statements.
  */
 export function arrayToStatements(rdfFactory, subject, data) {
-  var statements = [];
-  data.reduce(function (id, _listObj, i, listData) {
+  const statements = [];
+  data.reduce((id, _listObj, i, listData) => {
     statements.push(rdfFactory.quad(id, rdfFactory.namedNode(rdf.first), listData[i]));
-    var nextNode;
+    let nextNode;
     if (i < listData.length - 1) {
       nextNode = rdfFactory.blankNode();
       statements.push(rdfFactory.quad(id, rdfFactory.namedNode(rdf.rest), nextNode));
@@ -80,7 +80,7 @@ export function arrayToStatements(rdfFactory, subject, data) {
   return statements;
 }
 export function ArrayIndexOf(arr, item) {
-  var i = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
+  let i = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
   var length = arr.length;
   if (i < 0) i = length + i;
   for (; i < length; i++) {

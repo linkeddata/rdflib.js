@@ -14,7 +14,7 @@ import { isCollection, isLiteral } from './utils/terms';
  */
 Node.fromValue = fromValue;
 export default Node;
-var ns = {
+const ns = {
   xsd: Namespace('http://www.w3.org/2001/XMLSchema#')
 };
 

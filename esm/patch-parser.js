@@ -13,7 +13,7 @@ export default function sparqlUpdateParser(str, kb, base) {
   var SQNS = Namespace('http://www.w3.org/ns/pim/patch#');
   var p = N3Parser(kb, kb, base, base, null, null, '', null);
   var clauses = {};
-  var badSyntax = function badSyntax(uri, lines, str, i, why) {
+  var badSyntax = function (uri, lines, str, i, why) {
     return 'Line ' + (lines + 1) + ' of <' + uri + '>: Bad syntax:\n   ' + why + '\n   at: "' + str.slice(i, i + 30) + '"';
   };
 

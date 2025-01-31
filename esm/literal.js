@@ -1,12 +1,4 @@
-import _typeof from "@babel/runtime/helpers/typeof";
-import _classCallCheck from "@babel/runtime/helpers/classCallCheck";
-import _createClass from "@babel/runtime/helpers/createClass";
-import _possibleConstructorReturn from "@babel/runtime/helpers/possibleConstructorReturn";
-import _getPrototypeOf from "@babel/runtime/helpers/getPrototypeOf";
-import _inherits from "@babel/runtime/helpers/inherits";
 import _defineProperty from "@babel/runtime/helpers/defineProperty";
-function _callSuper(t, o, e) { return o = _getPrototypeOf(o), _possibleConstructorReturn(t, _isNativeReflectConstruct() ? Reflect.construct(o, e || [], _getPrototypeOf(t).constructor) : o.apply(t, e)); }
-function _isNativeReflectConstruct() { try { var t = !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); } catch (t) {} return (_isNativeReflectConstruct = function _isNativeReflectConstruct() { return !!t; })(); }
 import ClassOrder from './class-order';
 import RDFlibNamedNode from './named-node';
 import Node from './node-internal';
@@ -17,183 +9,157 @@ import XSD from './xsd-internal';
  * An RDF literal, containing some value which isn't expressed as an IRI.
  * @link https://rdf.js.org/data-model-spec/#literal-interface
  */
-var Literal = /*#__PURE__*/function (_Node) {
+export default class Literal extends Node {
   /**
    * Initializes a literal
    * @param value - The literal's lexical value
    * @param language - The language for the literal. Defaults to ''.
    * @param datatype - The literal's datatype as a named node. Defaults to xsd:string.
    */
-  function Literal(value, language, datatype) {
-    var _this;
-    _classCallCheck(this, Literal);
-    _this = _callSuper(this, Literal, [value]);
-    _defineProperty(_this, "termType", LiteralTermType);
-    _defineProperty(_this, "classOrder", ClassOrder.Literal);
+  constructor(value, language, datatype) {
+    super(value);
+    _defineProperty(this, "termType", LiteralTermType);
+    _defineProperty(this, "classOrder", ClassOrder.Literal);
     /**
      * The literal's datatype as a named node
      */
-    _defineProperty(_this, "datatype", XSD.string);
-    _defineProperty(_this, "isVar", 0);
+    _defineProperty(this, "datatype", XSD.string);
+    _defineProperty(this, "isVar", 0);
     /**
      * The language for the literal
      */
-    _defineProperty(_this, "language", '');
+    _defineProperty(this, "language", '');
     if (language) {
-      _this.language = language;
-      _this.datatype = XSD.langString;
+      this.language = language;
+      this.datatype = XSD.langString;
     } else if (datatype) {
-      _this.datatype = RDFlibNamedNode.fromValue(datatype);
+      this.datatype = RDFlibNamedNode.fromValue(datatype);
     } else {
-      _this.datatype = XSD.string;
+      this.datatype = XSD.string;
     }
-    return _this;
   }
 
   /**
    * Gets a copy of this literal
    */
-  _inherits(Literal, _Node);
-  return _createClass(Literal, [{
-    key: "copy",
-    value: function copy() {
-      return new Literal(this.value, this.lang, this.datatype);
-    }
+  copy() {
+    return new Literal(this.value, this.lang, this.datatype);
+  }
 
-    /**
-     * Gets whether two literals are the same
-     * @param other The other statement
-     */
-  }, {
-    key: "equals",
-    value: function equals(other) {
-      if (!other) {
-        return false;
-      }
-      return this.termType === other.termType && this.value === other.value && this.language === other.language && (!this.datatype && !other.datatype || this.datatype && this.datatype.equals(other.datatype));
+  /**
+   * Gets whether two literals are the same
+   * @param other The other statement
+   */
+  equals(other) {
+    if (!other) {
+      return false;
     }
+    return this.termType === other.termType && this.value === other.value && this.language === other.language && (!this.datatype && !other.datatype || this.datatype && this.datatype.equals(other.datatype));
+  }
 
-    /**
-     * The language for the literal
-     * @deprecated use {language} instead
-     */
-  }, {
-    key: "lang",
-    get: function get() {
-      return this.language;
-    },
-    set: function set(language) {
-      this.language = language || '';
-    }
-  }, {
-    key: "toNT",
-    value: function toNT() {
-      return Literal.toNT(this);
-    }
+  /**
+   * The language for the literal
+   * @deprecated use {language} instead
+   */
+  get lang() {
+    return this.language;
+  }
+  set lang(language) {
+    this.language = language || '';
+  }
+  toNT() {
+    return Literal.toNT(this);
+  }
 
-    /** Serializes a literal to an N-Triples string */
-  }, {
-    key: "toString",
-    value: function toString() {
-      return '' + this.value;
+  /** Serializes a literal to an N-Triples string */
+  static toNT(literal) {
+    if (typeof literal.value === 'number') {
+      return '' + literal.value;
+    } else if (typeof literal.value !== 'string') {
+      throw new Error('Value of RDF literal is not string or number: ' + literal.value);
     }
+    var str = literal.value;
+    // #x22 ("), #x5C (\), #x0A (\n) and #xD (\r) are disallowed and need to be replaced
+    // see https://www.w3.org/TR/n-triples/#grammar-production-STRING_LITERAL_QUOTE
+    str = str.replace(/\\/g, '\\\\');
+    str = str.replace(/\"/g, '\\"');
+    str = str.replace(/\n/g, '\\n');
+    str = str.replace(/\r/g, '\\r');
+    str = '"' + str + '"';
+    if (literal.language) {
+      str += '@' + literal.language;
+    } else if (!literal.datatype.equals(XSD.string)) {
+      // Only add datatype if it's not a string
+      str += '^^' + literal.datatype.toCanonical();
+    }
+    return str;
+  }
+  toString() {
+    return '' + this.value;
+  }
 
-    /**
-     * Builds a literal node from a boolean value
-     * @param value - The value
-     */
-  }], [{
-    key: "toNT",
-    value: function toNT(literal) {
-      if (typeof literal.value === 'number') {
-        return '' + literal.value;
-      } else if (typeof literal.value !== 'string') {
-        throw new Error('Value of RDF literal is not string or number: ' + literal.value);
-      }
-      var str = literal.value;
-      // #x22 ("), #x5C (\), #x0A (\n) and #xD (\r) are disallowed and need to be replaced
-      // see https://www.w3.org/TR/n-triples/#grammar-production-STRING_LITERAL_QUOTE
-      str = str.replace(/\\/g, '\\\\');
-      str = str.replace(/\"/g, '\\"');
-      str = str.replace(/\n/g, '\\n');
-      str = str.replace(/\r/g, '\\r');
-      str = '"' + str + '"';
-      if (literal.language) {
-        str += '@' + literal.language;
-      } else if (!literal.datatype.equals(XSD.string)) {
-        // Only add datatype if it's not a string
-        str += '^^' + literal.datatype.toCanonical();
-      }
-      return str;
-    }
-  }, {
-    key: "fromBoolean",
-    value: function fromBoolean(value) {
-      var strValue = value ? '1' : '0';
-      return new Literal(strValue, null, XSD.boolean);
-    }
+  /**
+   * Builds a literal node from a boolean value
+   * @param value - The value
+   */
+  static fromBoolean(value) {
+    let strValue = value ? '1' : '0';
+    return new Literal(strValue, null, XSD.boolean);
+  }
 
-    /**
-     * Builds a literal node from a date value
-     * @param value The value
-     */
-  }, {
-    key: "fromDate",
-    value: function fromDate(value) {
-      if (!(value instanceof Date)) {
-        throw new TypeError('Invalid argument to Literal.fromDate()');
-      }
-      var d2 = function d2(x) {
-        return ('' + (100 + x)).slice(1, 3);
-      };
-      var date = '' + value.getUTCFullYear() + '-' + d2(value.getUTCMonth() + 1) + '-' + d2(value.getUTCDate()) + 'T' + d2(value.getUTCHours()) + ':' + d2(value.getUTCMinutes()) + ':' + d2(value.getUTCSeconds()) + 'Z';
-      return new Literal(date, null, XSD.dateTime);
+  /**
+   * Builds a literal node from a date value
+   * @param value The value
+   */
+  static fromDate(value) {
+    if (!(value instanceof Date)) {
+      throw new TypeError('Invalid argument to Literal.fromDate()');
     }
+    let d2 = function (x) {
+      return ('' + (100 + x)).slice(1, 3);
+    };
+    let date = '' + value.getUTCFullYear() + '-' + d2(value.getUTCMonth() + 1) + '-' + d2(value.getUTCDate()) + 'T' + d2(value.getUTCHours()) + ':' + d2(value.getUTCMinutes()) + ':' + d2(value.getUTCSeconds()) + 'Z';
+    return new Literal(date, null, XSD.dateTime);
+  }
 
-    /**
-     * Builds a literal node from a number value
-     * @param value - The value
-     */
-  }, {
-    key: "fromNumber",
-    value: function fromNumber(value) {
-      if (typeof value !== 'number') {
-        throw new TypeError('Invalid argument to Literal.fromNumber()');
-      }
-      var datatype;
-      var strValue = value.toString();
-      if (strValue.indexOf('e') < 0 && Math.abs(value) <= Number.MAX_SAFE_INTEGER) {
-        datatype = Number.isInteger(value) ? XSD.integer : XSD.decimal;
-      } else {
-        datatype = XSD.double;
-      }
-      return new Literal(strValue, null, datatype);
+  /**
+   * Builds a literal node from a number value
+   * @param value - The value
+   */
+  static fromNumber(value) {
+    if (typeof value !== 'number') {
+      throw new TypeError('Invalid argument to Literal.fromNumber()');
     }
+    let datatype;
+    const strValue = value.toString();
+    if (strValue.indexOf('e') < 0 && Math.abs(value) <= Number.MAX_SAFE_INTEGER) {
+      datatype = Number.isInteger(value) ? XSD.integer : XSD.decimal;
+    } else {
+      datatype = XSD.double;
+    }
+    return new Literal(strValue, null, datatype);
+  }
 
-    /**
-     * Builds a literal node from an input value
-     * @param value - The input value
-     */
-  }, {
-    key: "fromValue",
-    value: function fromValue(value) {
-      if (isLiteral(value)) {
-        return value;
-      }
-      switch (_typeof(value)) {
-        case 'object':
-          if (value instanceof Date) {
-            return Literal.fromDate(value);
-          }
-        case 'boolean':
-          return Literal.fromBoolean(value);
-        case 'number':
-          return Literal.fromNumber(value);
-        case 'string':
-          return new Literal(value);
-      }
-      throw new Error("Can't make literal from " + value + ' of type ' + _typeof(value));
+  /**
+   * Builds a literal node from an input value
+   * @param value - The input value
+   */
+  static fromValue(value) {
+    if (isLiteral(value)) {
+      return value;
     }
-  }]);
-}(Node);
-export { Literal as default };
+    switch (typeof value) {
+      case 'object':
+        if (value instanceof Date) {
+          return Literal.fromDate(value);
+        }
+      case 'boolean':
+        return Literal.fromBoolean(value);
+      case 'number':
+        return Literal.fromNumber(value);
+      case 'string':
+        return new Literal(value);
+    }
+    throw new Error("Can't make literal from " + value + ' of type ' + typeof value);
+  }
+}

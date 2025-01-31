@@ -11,8 +11,8 @@ kb, base,
  * Defaults to Turtle.
  */
 contentType, callback, options) {
-  base = base || (target === null || target === void 0 ? void 0 : target.value);
-  var opts = options || {};
+  base = base || target?.value;
+  const opts = options || {};
   contentType = contentType || TurtleContentType; // text/n3 if complex?
   var documentString = undefined;
   try {
