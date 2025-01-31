@@ -47,7 +47,6 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: build
-      - run: rm .gitignore
       - uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
