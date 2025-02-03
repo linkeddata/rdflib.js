@@ -189,9 +189,10 @@ export default class UpdateManager {
           if (acceptPatch.length) {
             for (let i = 0; i < acceptPatch.length; i++) {
               method = acceptPatch[i].value.trim()
-              if (method.indexOf('text/n3') >= 0) return 'N3PATCH'
+              // 2025/02 temporarily priorize SPARQL until N3PATCH spec revised on inserts with blankNodes
               if (method.indexOf('application/sparql-update') >= 0) return 'SPARQL'
               if (method.indexOf('application/sparql-update-single-match') >= 0) return 'SPARQL'
+              if (method.indexOf('text/n3') >= 0) return 'N3PATCH'
             }
           }
           var authorVia = kb.each(response, this.ns.httph('ms-author-via'))
