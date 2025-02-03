@@ -36,7 +36,7 @@ const st3 = $rdf.st(baz, p, 333, doc2)
 const httpResultsText = `
 @prefix httph: <http://www.w3.org/2007/ont/httph#> .
 @prefix link: <http://www.w3.org/2007/ont/link#>.
- [] link:requestedURI "${doc.uri}", "${doc2.uri}"; link:response [ httph:accept-patch "application/sparql-update" ].
+ [] link:requestedURI "${doc.uri}", "${doc2.uri}"; link:response [ httph:accept-patch "text/n3 application/sparql-update" ].
  `
 
 function loadMeta (store) {
