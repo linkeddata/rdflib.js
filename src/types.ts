@@ -92,13 +92,13 @@ export type FromValueReturns<C extends Node = any> = Term | undefined | null | C
 export interface IRDFlibDataFactory extends DataFactory<
   RDFlibNamedNode | RDFlibBlankNode | RDFlibLiteral | Collection | Statement
 > {
-  fetcher: (store: IndexedFormula, options: any) => Fetcher
-  lit: (val: string, lang?: string, dt?: NamedNode) => RDFlibLiteral
-  graph: (features?, opts?) => IndexedFormula
-  st: (
+  fetcher(store: IndexedFormula, options: any) : Fetcher
+  lit(val: string, lang?: string, dt?: NamedNode) : RDFlibLiteral
+  graph(features?, opts?) : IndexedFormula
+  st(
     subject: Quad_Subject,
     predicate: Quad_Predicate,
     object: Quad_Object,
     graph?: Quad_Graph
-  ) => Statement
+  ) : Statement
 }
