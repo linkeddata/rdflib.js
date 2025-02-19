@@ -3,7 +3,7 @@ import { JSONLDContentType, N3ContentType, N3LegacyContentType, NQuadsAltContent
 /**
  * Serialize to the appropriate format
  */
-export default function serialize( /** The graph or nodes that should be serialized */
+export default function serialize(/** The graph or nodes that should be serialized */
 target, /** The store */
 kb, base,
 /**
