@@ -84,7 +84,9 @@ jobs:
   npm-publish-build:
     needs: [build, prerelease-check]
     runs-on: ubuntu-latest
-    if: needs.prerelease-check.outputs.should_publish == 'true'
+    if: |
+      needs.prerelease-check.outputs.should_publish == 'true' &&
+      (github.event_name != 'pull_request' || contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.pull_request.author_association))
     permissions:
       id-token: write
       contents: read
