@@ -48,7 +48,6 @@
     "@frogcat/ttl2jsonld": "^0.0.10",
     "@xmldom/xmldom": "^0.8.10",
     "cross-fetch": "^3.2.0",
-    "jsonld": "^8.3.3",
     "n3": "^1.23.1",
     "solid-namespace": "^0.5.4"
   },
