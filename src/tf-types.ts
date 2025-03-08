@@ -20,7 +20,7 @@ export interface Term {
    *
    * Note that the task force spec only allows comparison with other terms
    */
-  equals (other: Term): boolean
+  equals (other: Term | null | undefined): boolean
 }
 
 /**
