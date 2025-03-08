@@ -55,6 +55,8 @@ jobs:
   npm-publish-build:
     needs: test
     runs-on: ubuntu-latest
+    if: |
+      github.event_name != 'pull_request' || contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.pull_request.author_association)
     steps:
       - uses: actions/download-artifact@v4
         with:
