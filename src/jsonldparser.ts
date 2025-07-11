@@ -1,3 +1,4 @@
+import type { NodeObject } from 'jsonld'
 import type Formula from './formula'
 import type Node from './node-internal'
 import { arrayToStatements } from './utils'
@@ -75,22 +76,25 @@ function isNode(x: any): x is Node {
 export default async function jsonldParser<T extends Formula>(str: string, kb: T, base: string | Node): Promise<T> {
   const baseString: string = base && isNode(base) ? base.value : base;
   const jsonld = await import('jsonld');
-  const flattened = await jsonld.flatten(JSON.parse(str), null, { base: baseString });
-  const result = flattened.reduce((store, flatResource) => processResource(kb, baseString, flatResource), kb);
-  return result
+  // Another type definition bug: https://github.com/DefinitelyTyped/DefinitelyTyped/pull/73237
+  const flattened = (await jsonld.flatten(JSON.parse(str), undefined, { base: baseString }) as unknown as NodeObject[]);
+  return flattened.reduce((store, flatResource) => processResource(kb, baseString, flatResource), kb);
 }
 
-function nodeType(kb: Formula, obj: Record<string, any>) {
-  if (obj['@id'].startsWith('_:')) {
+function nodeType(kb: Formula, obj: NodeObject) {
+  // There is a bug in the @types/jsonld type definition implying that @id can be an array.
+  // See: https://github.com/DefinitelyTyped/DefinitelyTyped/pull/73237
+  const id = obj['@id'] as string | undefined;
+  if (typeof id !== "undefined" && id.startsWith('_:')) {
     // This object is a Blank Node. Pass the id without the `_:` prefix
-    return kb.rdfFactory.blankNode(obj['@id'].substring(2));
+    return kb.rdfFactory.blankNode(id.substring(2));
   } else {
     // This object is a Named Node
-    return kb.rdfFactory.namedNode(obj['@id']);
+    return kb.rdfFactory.namedNode(id);
   }
 }
 
-function processResource(kb: Formula, base: string, flatResource: Record<string, any>): Formula {
+function processResource<T extends Formula>(kb: T, base: string, flatResource: NodeObject): T {
   const id = flatResource['@id']
     ? nodeType(kb, flatResource)
     : kb.rdfFactory.blankNode()
@@ -102,8 +106,15 @@ function processResource(kb: Formula, base: string, flatResource: Record<string,
       // the JSON-LD flattened structure may contain nested graphs
       // the id value for this object is the new base (named graph id) for all nested flat resources
       const graphId = id
-      // this is an array of resources
-      const nestedFlatResources = flatResource[property]
+
+      // @graph can be an array of NodeObjects or a single NodeObject
+      let nestedFlatResources: NodeObject[] = [];
+      if(Array.isArray(flatResource[property])) {
+        nestedFlatResources = flatResource[property] as NodeObject[];
+      }
+      else if (typeof flatResource[property] === 'object') {
+        nestedFlatResources = [flatResource[property] as NodeObject];
+      }
 
       // recursively process all flat resources in the array, but with the graphId as base.
       for (let i = 0; i < nestedFlatResources.length; i++) {
