@@ -1,3 +1,5 @@
+import type Formula from './formula'
+import type Node from './node-internal'
 import { arrayToStatements } from './utils'
 
 /**
@@ -6,7 +8,7 @@ import { arrayToStatements } from './utils'
  * @param obj - The json-ld object to process.
  * @return {Literal|NamedNode|BlankNode|Collection}
  */
-export function jsonldObjectToTerm (kb, obj) {
+export function jsonldObjectToTerm(kb: Formula, obj: Record<string, any>) {
   if (typeof obj === 'string') {
     return kb.rdfFactory.literal(obj)
   }
@@ -41,7 +43,7 @@ export function jsonldObjectToTerm (kb, obj) {
 /**
  * Adds the statements in a json-ld list object to {kb}.
  */
-function listToStatements (kb, obj) {
+function listToStatements(kb: Formula, obj: Record<string, any>) {
   const listId = obj['@id'] ? nodeType(kb, obj) : kb.rdfFactory.blankNode()
 
   const items = obj['@list'].map((listItem => jsonldObjectToTerm(kb, listItem)))
@@ -51,7 +53,7 @@ function listToStatements (kb, obj) {
   return listId
 }
 
-function listToCollection (kb, obj) {
+function listToCollection(kb: Formula, obj: Record<string, any>) {
   if (!Array.isArray(obj)) {
     throw new TypeError("Object must be an array")
   }
@@ -59,28 +61,26 @@ function listToCollection (kb, obj) {
 }
 
 /**
+ * Type guard to check if an object is a Node.
+ */
+function isNode(x: any): x is Node {
+  return x && typeof x === 'object' && 'termType' in x && 'value' in x
+}
+
+/**
  * Takes a json-ld formatted string {str} and adds its statements to {kb}.
  *
  * Ensure that {kb.rdfFactory} is a DataFactory.
  */
-export default function jsonldParser (str, kb, base, callback) {
-  const baseString = base && Object.prototype.hasOwnProperty.call(base, 'termType')
-    ? base.value
-    : base
-
-  return import('jsonld')
-    .then(jsonld => { return jsonld.flatten(JSON.parse(str), null, { base: baseString }) })
-    .then((flattened) => flattened.reduce((store, flatResource) => {
-
-      kb = processResource(kb, base, flatResource)
-
-      return kb
-    }, kb))
-    .then(callback)
-    .catch(callback)
+export default async function jsonldParser<T extends Formula>(str: string, kb: T, base: string | Node): Promise<T> {
+  const baseString: string = base && isNode(base) ? base.value : base;
+  const jsonld = await import('jsonld');
+  const flattened = await jsonld.flatten(JSON.parse(str), null, { base: baseString });
+  const result = flattened.reduce((store, flatResource) => processResource(kb, baseString, flatResource), kb);
+  return result
 }
 
-function nodeType (kb, obj) {
+function nodeType(kb: Formula, obj: Record<string, any>) {
   if (obj['@id'].startsWith('_:')) {
     // This object is a Blank Node. Pass the id without the `_:` prefix
     return kb.rdfFactory.blankNode(obj['@id'].substring(2));
@@ -90,7 +90,7 @@ function nodeType (kb, obj) {
   }
 }
 
-function processResource(kb, base, flatResource) {
+function processResource(kb: Formula, base: string, flatResource: Record<string, any>): Formula {
   const id = flatResource['@id']
     ? nodeType(kb, flatResource)
     : kb.rdfFactory.blankNode()
@@ -106,7 +106,7 @@ function processResource(kb, base, flatResource) {
       const nestedFlatResources = flatResource[property]
 
       // recursively process all flat resources in the array, but with the graphId as base.
-      for (let i = 0; i < nestedFlatResources.length; i++ ) {
+      for (let i = 0; i < nestedFlatResources.length; i++) {
         kb = processResource(kb, graphId, nestedFlatResources[i])
       }
     }
@@ -132,7 +132,7 @@ function processResource(kb, base, flatResource) {
  * @param value
  * @return quad statement
  */
-function createStatement(kb, id, property, value, base) {
+function createStatement(kb: Formula, id: string, property: string, value: any, base: string) {
   let predicate, object
 
   if (property === "@type") {
