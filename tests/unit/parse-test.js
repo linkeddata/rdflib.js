@@ -220,13 +220,13 @@ ex:myid ex:prop1 [ ex:prop2 [ ex:prop3 "value" ] ].
         const mimeType = 'text/turtle'
         const store = DataFactory.graph()
         const content = `
-          <http://example.org/ns#subj.ect> <http://example.org/ns#predi.cate> <http://example.org/ns#object> .
+          <http://example.org/ns#subj.ect> <http://example.org/ns#predi.cate> <http://example.org/ns#obj.ect> .
         `
         parse(content, store, base, mimeType)
         expect(store.statements).to.have.length(1)
         expect(store.statements[0].subject.value).to.equal('http://example.org/ns#subj.ect')
         expect(store.statements[0].predicate.value).to.equal('http://example.org/ns#predi.cate')
-        expect(store.statements[0].object.value).to.equal('http://example.org/ns#object')
+        expect(store.statements[0].object.value).to.equal('http://example.org/ns#obj.ect')
       })
 
       it('parses a prefixed name with a dot', () => {
