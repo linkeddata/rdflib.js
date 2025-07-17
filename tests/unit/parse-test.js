@@ -214,6 +214,36 @@ ex:myid ex:prop1 [ ex:prop2 [ ex:prop3 "value" ] ].
         expect(serialize(store.sym(base), store, null, 'application/ld+json')).to.eql(body('def'))
       });
     })
+    describe("ttl with special characters", () => {
+      it('parses an IRI with a dot', () => {
+        const base = 'https://example.org/test.ttl'
+        const mimeType = 'text/turtle'
+        const store = DataFactory.graph()
+        const content = `
+          <http://example.org/ns#subj.ect> <http://example.org/ns#predi.cate> <http://example.org/ns#object> .
+        `
+        parse(content, store, base, mimeType)
+        expect(store.statements).to.have.length(1)
+        expect(store.statements[0].subject.value).to.equal('http://example.org/ns#subj.ect')
+        expect(store.statements[0].predicate.value).to.equal('http://example.org/ns#predi.cate')
+        expect(store.statements[0].object.value).to.equal('http://example.org/ns#object')
+      })
+
+      it('parses a prefixed name with a dot', () => {
+        const base = 'https://example.org/test.ttl'
+        const mimeType = 'text/turtle'
+        const store = DataFactory.graph()
+        const content = `
+          @prefix ex: <http://example.org/ns#> .
+          ex:subj.ect ex:predi.cate ex:obj.ect .
+        `
+        parse(content, store, base, mimeType)
+        expect(store.statements).to.have.length(1)
+        expect(store.statements[0].subject.value).to.equal('http://example.org/ns#subj.ect')
+        expect(store.statements[0].predicate.value).to.equal('http://example.org/ns#predi.cate')
+        expect(store.statements[0].object.value).to.equal('http://example.org/ns#obj.ect')
+      })
+    })
   })
 }) // ttl
 
