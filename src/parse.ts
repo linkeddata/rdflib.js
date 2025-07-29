@@ -52,7 +52,7 @@ export default function parse (
       sparqlUpdateParser(str, kb, base)
       executeCallback()
     } else if (contentType === JSONLDContentType) {
-      jsonldParser(str, kb, base, executeCallback)
+      jsonldParser(str, kb, base).then(result => executeCallback()).catch(executeErrorCallback)
     } else if (contentType === NQuadsContentType ||
                contentType === NQuadsAltContentType) {
       var n3Parser = new N3jsParser({ factory: DataFactory })
