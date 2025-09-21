@@ -496,28 +496,25 @@ class JsonLdHandler extends Handler {
       'q': 0.9
     }
   }
-  parse (
-    fetcher: Fetcher,
-    responseText: string,
-    options: {
-      req: Quad_Subject
-      original: Quad_Subject
-      resource: Quad_Subject
-    } & Options,
-    response: ExtendedResponse
+  async parse(
+      fetcher: Fetcher,
+      responseText: string,
+      options: {
+        req: Quad_Subject
+        original: Quad_Subject
+        resource: Quad_Subject
+      } & Options,
+      response: ExtendedResponse
   ): Promise<ExtendedResponse | FetchError> {
     const kb = fetcher.store
-    return new Promise((resolve, reject) => {
-      try {
-        jsonldParser (responseText, kb, options.original.value, () => {
-          resolve(fetcher.doneFetch(options, response))
-        })
-      } catch (err) {
-        const msg = 'Error trying to parse ' + options.resource +
+    try {
+      await jsonldParser(responseText, kb, options.original.value)
+      return fetcher.doneFetch(options, response)
+    } catch (err) {
+      const msg = 'Error trying to parse ' + options.resource +
           ' as JSON-LD:\n' + err  // not err.stack -- irrelevant
-        resolve(fetcher.failFetch(options, msg, 'parse_error', response))
-      }
-    })
+      return fetcher.failFetch(options, msg, 'parse_error', response)
+    }
   }
 }
 JsonLdHandler.pattern = /application\/ld\+json/

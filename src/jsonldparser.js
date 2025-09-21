@@ -63,7 +63,7 @@ function listToCollection(kb, obj) {
  *
  * Ensure that {kb.rdfFactory} is a DataFactory.
  */
-export default function jsonldParser(str, kb, base, callback) {
+export default function jsonldParser(str, kb, base) {
   const baseString = base && Object.prototype.hasOwnProperty.call(base, 'termType')
     ? base.value
     : base
@@ -75,13 +75,9 @@ export default function jsonldParser(str, kb, base, callback) {
       return jsonld.default.flatten(JSON.parse(str), null, {base: baseString})
     })
     .then((flattened) => flattened.reduce((store, flatResource) => {
-
       kb = processResource(kb, base, flatResource)
-
       return kb
     }, kb))
-    .then(callback)
-    .catch(callback)
 }
 
 function nodeType(kb, obj) {
