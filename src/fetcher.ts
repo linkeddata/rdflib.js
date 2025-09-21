@@ -262,7 +262,9 @@ class XHTMLHandler extends Handler {
   }
 
   static register (fetcher: Fetcher) {
-    fetcher.mediatypes[XHTMLContentType] = {}
+    fetcher.mediatypes[XHTMLContentType] = {
+      'q': 0.8
+    }
   }
 
   parse (
@@ -429,7 +431,7 @@ class HTMLHandler extends Handler {
 
   static register (fetcher: Fetcher) {
     fetcher.mediatypes['text/html'] = {
-      'q': 0.9
+      'q': 0.8
     }
   }
 
@@ -575,17 +577,8 @@ class N3Handler extends Handler {
   }
 
   static register (fetcher: Fetcher) {
-    fetcher.mediatypes['text/n3'] = {
-      'q': '1.0'
-    } // as per 2008 spec
-    /*
-     fetcher.mediatypes['application/x-turtle'] = {
-     'q': 1.0
-     } // pre 2008
-     */
-    fetcher.mediatypes['text/turtle'] = {
-      'q': 1.0
-    } // post 2008
+    fetcher.mediatypes['text/n3'] = {}
+    fetcher.mediatypes['text/turtle'] = {}
   }
 
   parse (
