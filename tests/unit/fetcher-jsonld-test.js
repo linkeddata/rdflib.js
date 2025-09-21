@@ -9,6 +9,7 @@ describe('fetch JSON-LD', () => {
   describe('Given a JSON-LD resource', () => {
 
     const uri = "http://localhost/jsonld#it"
+    let capturedHeaders;
 
     beforeEach(() => {
       const docContents = `
@@ -18,8 +19,11 @@ describe('fetch JSON-LD', () => {
             "https://predicate.example": "value"
         }
         `
-      nock('http://localhost').get('/jsonld').reply(200, docContents, {
-        'Content-Type': 'application/ld+json',
+      nock('http://localhost').get('/jsonld').reply(function () {
+        capturedHeaders = this.req.headers;
+        return [200, docContents, {
+          'Content-Type': 'application/ld+json',
+        }]
       })
     });
 
@@ -45,6 +49,13 @@ describe('fetch JSON-LD', () => {
         expect(match.subject.value).to.equal(uri);
         expect(match.predicate.value).to.equal('http://www.w3.org/1999/02/22-rdf-syntax-ns#type');
         expect(match.object.value).to.equal('https://type.example');
+      });
+
+      it('then the request used the correct accept headers', async () => {
+        await fetcher.load(uri);
+        expect(capturedHeaders['accept'][0]).to.equal(
+          'image/*;q=0.9, */*;q=0.1, application/rdf+xml;q=0.9, application/xhtml+xml, text/xml;q=0.5, application/xml;q=0.5, text/html;q=0.9, text/plain;q=0.5, text/n3;q=1.0, text/turtle;q=1, application/ld+json;q=0.9'
+        );
       });
     });
   });
@@ -118,5 +129,3 @@ SyntaxError: Unexpected token`);
     });
   });
 });
-
-
