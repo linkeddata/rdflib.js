@@ -76,6 +76,47 @@ SyntaxError: Unexpected token 'h', "this is not"... is not valid JSON`);
       });
     })
   });
+
+  describe('Given an activity streams JSON-LD resource, using "application/activity+json" content type', () => {
+    const uri = "https://fediverse.test/some/note"
+
+    beforeEach(() => {
+      const docContents = `
+        {
+            "@type": "https://www.w3.org/ns/activitystreams#Note",
+            "https://www.w3.org/ns/activitystreams#content": "Some content"
+        }
+        `
+      nock('https://fediverse.test').get('/some/note').reply(200, docContents, {
+        'Content-Type': 'application/activity+json',
+      })
+    });
+
+    describe('when it is fetched to the store', () => {
+
+      let fetcher, store;
+      beforeEach(() => {
+        store = rdf.graph();
+        fetcher = rdf.fetcher(store);
+      });
+
+      it('then the triples from the document can be found in the store', async () => {
+        await fetcher.load(uri);
+        const match = store.anyStatementMatching(undefined, rdf.sym("https://www.w3.org/ns/activitystreams#content"), undefined, rdf.sym(uri));
+        expect(match.subject.termType).to.eq("BlankNode");
+        expect(match.predicate.value).to.equal('https://www.w3.org/ns/activitystreams#content');
+        expect(match.object.value).to.equal('Some content');
+      });
+
+      it('then the type can be found in the store', async () => {
+        await fetcher.load(uri);
+        const match = store.anyStatementMatching(undefined, rdf.sym('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'), undefined, rdf.sym(uri));
+        expect(match.subject.termType).to.eq("BlankNode");
+        expect(match.predicate.value).to.equal('http://www.w3.org/1999/02/22-rdf-syntax-ns#type');
+        expect(match.object.value).to.equal('https://www.w3.org/ns/activitystreams#Note');
+      });
+    });
+  });
 });
 
 
