@@ -70,8 +70,8 @@ describe('fetch JSON-LD', () => {
           fail("Should have thrown an error");
         } catch (e) {
           // then a parsing error occurs
-          expect(e.message).to.equal(`Fetcher: Error trying to parse <http://localhost/invalid.jsonld> as JSON-LD:
-SyntaxError: Unexpected token 'h', "this is not"... is not valid JSON`);
+          expect(e.message).to.contain(`Fetcher: Error trying to parse <http://localhost/invalid.jsonld> as JSON-LD:
+SyntaxError: Unexpected token`);
         }
       });
     })

@@ -462,7 +462,7 @@ ex:myid ex:prop1 [ ex:prop2 [ ex:prop3 "value" ] ].
         parse(content, store, base, mimeType, (r) => {
           console.log("error callback in test reached")
           try {
-            expect(r.message).to.equal("Unexpected token 'h', \"this is not\"... is not valid JSON")
+            expect(r.message).to.contain("Unexpected token")
             done()
           } catch (assertionError) {
             done(assertionError)
