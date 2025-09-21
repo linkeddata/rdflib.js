@@ -517,7 +517,8 @@ class JsonLdHandler extends Handler {
     }
   }
 }
-JsonLdHandler.pattern = /application\/ld\+json/
+
+JsonLdHandler.pattern = /application\/(ld\+json|activity\+json)/
 
 class TextHandler extends Handler {
   static toString () {
