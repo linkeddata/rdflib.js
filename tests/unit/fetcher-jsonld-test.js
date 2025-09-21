@@ -45,6 +45,24 @@ describe('Given a JSON-LD resource', () => {
             expect(match.predicate.value).to.equal('http://www.w3.org/1999/02/22-rdf-syntax-ns#type');
             expect(match.object.value).to.equal('https://type.example');
         });
+
+        it('fetch fails when parsing JSON-LD fails', async () => {
+            // given a resource returns invalid JSON-LD that cannot be parsed
+            nock('http://localhost').get('/invalid.jsonld').reply(200, `this is not parsable JSON-LD`, {
+                'Content-Type': 'application/ld+json',
+            })
+
+            try {
+                // when this resource is fetched
+                await fetcher.load('http://localhost/invalid.jsonld');
+                fail("Should have thrown an error");
+            } catch (e) {
+                // then a parsing error occurs
+                expect(e.message).to.equal(`Fetcher: Error trying to parse <http://localhost/invalid.jsonld> as JSON-LD:
+SyntaxError: Unexpected token 'h', "this is not"... is not valid JSON`);
+            }
+
+        });
     });
 
 

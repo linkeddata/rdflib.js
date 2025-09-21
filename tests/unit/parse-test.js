@@ -126,7 +126,7 @@ describe('Parse', () => {
               ].
 
 `))
-/*      // replaced by above expect due to inpredictable order in store.statements 
+/*      // replaced by above expect due to inpredictable order in store.statements
         expect(store.statements[0].predicate.value).to.eql('http://www.w3.org/1999/02/22-rdf-syntax-ns#first')
         expect(store.statements[0].object.value).to.eql('1')
 
@@ -450,6 +450,26 @@ ex:myid ex:prop1 [ ex:prop2 [ ex:prop3 "value" ] ].
         expect(nt).to.include('_:b1 <http://example.com#prop3> "value" .')
       });
     })
+
+    describe('that fails to parse', () => {
+      let store
+
+      it('calls the callback with an error', (done) => {
+        const base = 'https://www.example.org/abc/def'
+        const mimeType = 'application/ld+json'
+        const content = `this is not valid JSON-LD`
+        store = DataFactory.graph(undefined, {rdfFactory: CanonicalDataFactory})
+        parse(content, store, base, mimeType, (r) => {
+          console.log("error callback in test reached")
+          try {
+            expect(r.message).to.equal("Unexpected token 'h', \"this is not\"... is not valid JSON")
+            done()
+          } catch (assertionError) {
+            done(assertionError)
+          }
+        })
+      });
+    });
 
   }) // JSONLD
 
