@@ -1055,7 +1055,7 @@ export default class Fetcher implements CallbackifyInterface {
     options.baseURI = options.baseURI || uri // Preserve though proxying etc
     options.original = kb.rdfFactory.namedNode(options.baseURI)
     options.req = kb.bnode()
-    options.headers = options.headers || new Headers()
+    options.headers = options.headers || {}
 
     if (options.contentType) {
       // @ts-ignore
