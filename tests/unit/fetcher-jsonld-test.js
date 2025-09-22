@@ -51,12 +51,26 @@ describe('fetch JSON-LD', () => {
         expect(match.object.value).to.equal('https://type.example');
       });
 
+      it('then type metadata for the document is present', async () => {
+        await fetcher.load(uri);
+        const matches = store.statementsMatching(
+          rdf.sym('http://localhost/jsonld'), rdf.sym('http://www.w3.org/1999/02/22-rdf-syntax-ns#type')
+        );
+
+        const types = matches.map(m => m.object.value);
+        expect(types).to.contain('http://www.w3.org/ns/iana/media-types/application/ld+json#Resource');
+        expect(types).to.contain('http://www.w3.org/2007/ont/link#Document');
+        expect(types).to.contain('http://www.w3.org/2007/ont/link#RDFDocument');
+      });
+
       it('then the request used the correct accept headers, preferring JSON-LD over HTML', async () => {
         await fetcher.load(uri);
         expect(capturedHeaders['accept'][0]).to.equal(
           'image/*;q=0.9, */*;q=0.1, application/rdf+xml;q=0.9, application/xhtml+xml;q=0.8, text/xml;q=0.5, application/xml;q=0.5, text/html;q=0.8, text/plain;q=0.5, text/n3, text/turtle, application/ld+json;q=0.9'
         );
       });
+
+
     });
   });
 

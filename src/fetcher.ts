@@ -511,6 +511,7 @@ class JsonLdHandler extends Handler {
     const kb = fetcher.store
     try {
       await jsonldParser(responseText, kb, options.original.value)
+      fetcher.store.add(options.original, ns.rdf('type'), ns.link('RDFDocument'), fetcher.appNode)
       return fetcher.doneFetch(options, response)
     } catch (err) {
       const msg = 'Error trying to parse ' + options.resource +
