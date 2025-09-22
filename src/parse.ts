@@ -54,7 +54,7 @@ export default function parse (
     } else if (contentType === JSONLDContentType) {
       // since we do not await the promise here, rejections will not be covered by the surrounding try catch
       // we do not use await, because parse() should stay sync
-      // so, to not lose the async error, we need to catch the rejection and call the error callback here additionally
+      // so, to not lose the async error, we need to catch the rejection and call the error callback here too
       jsonldParser(str, kb, base)
           .then(executeCallback)
           .catch(executeErrorCallback)
