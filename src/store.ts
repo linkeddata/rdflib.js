@@ -168,7 +168,9 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
   /** Function to remove quads from the store arrays with */
   private rdfArrayRemove: (arr: Quad[], q: Quad) => void
   /** Callbacks which are triggered after a statement has been added to the store */
-  private dataCallbacks?: Array<(q: Quad) => void>
+  private dataCallbacks: Array<(q: Quad) => void> = []
+  /** Callbacks which are triggered after a statement has been removed from the store */
+  private dataRemovalCallbacks: Array<(q: Quad) => void> = []
 
   /**
    * Creates a new formula
@@ -237,10 +239,11 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
    * @param cb
    */
   addDataCallback(cb: (q: Quad) => void): void {
-    if (!this.dataCallbacks) {
-      this.dataCallbacks = []
-    }
     this.dataCallbacks.push(cb)
+  }
+
+  addDataRemovalCallback(cb: (q: Quad) => void): void {
+    this.dataRemovalCallbacks.push(cb)
   }
 
   /**
@@ -987,6 +990,9 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
       }
     }
     this.rdfArrayRemove(this.statements, st)
+    for (const callback of this.dataRemovalCallbacks) {
+      callback(st)
+    }
     return this
   }
 
