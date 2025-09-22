@@ -489,10 +489,8 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     // log.debug("ADDING    {"+subj+" "+pred+" "+objNode+"} "+why)
     this.statements.push(st)
 
-    if (this.dataCallbacks) {
-      for (const callback of this.dataCallbacks) {
-        callback(st)
-      }
+    for (const callback of this.dataCallbacks) {
+      callback(st)
     }
 
     return st
