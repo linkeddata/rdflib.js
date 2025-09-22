@@ -154,5 +154,27 @@ describe('IndexedFormula', () => {
                 ))
             });
         });
+
+        describe('pass callbacks as options', () => {
+
+            it('data callback can be passed as option', () => {
+                const callback = sinon.spy()
+                const store = graph(undefined, {
+                    dataCallback: callback
+                })
+                store.add(statement1)
+                expect(callback).to.have.been.calledWith(statement1)
+            });
+
+            it('data removal callback can be passed as option', () => {
+                const callback = sinon.spy()
+                const store = graph(undefined, {
+                    dataRemovalCallback: callback
+                })
+                store.add(statement1)
+                store.remove(statement1)
+                expect(callback).to.have.been.calledWith(statement1)
+            });
+        });
     });
 });

@@ -210,6 +210,9 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
     if (opts.dataCallback) {
       this.dataCallbacks = [opts.dataCallback]
     }
+    if (opts.dataRemovalCallback) {
+      this.dataRemovalCallbacks = [opts.dataRemovalCallback]
+    }
 
     this.initPropertyActions(this.features)
   }
