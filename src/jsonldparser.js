@@ -63,21 +63,19 @@ function listToCollection(kb, obj) {
  *
  * Ensure that {kb.rdfFactory} is a DataFactory.
  */
-export default function jsonldParser(str, kb, base) {
+export default async function jsonldParser(str, kb, base) {
   const baseString = base && Object.prototype.hasOwnProperty.call(base, 'termType')
     ? base.value
     : base
 
-  return import('jsonld')
-    .then(jsonld => {
-      // ⚠ Unit tests also work without accessing `jsonld.default` explicitly, but real browser usage will fail with
-      // just calling `jsonld.flatten`, so please do not remove `default`
-      return jsonld.default.flatten(JSON.parse(str), null, {base: baseString})
-    })
-    .then((flattened) => flattened.reduce((store, flatResource) => {
-      kb = processResource(kb, base, flatResource)
-      return kb
-    }, kb))
+  const jsonld = await import('jsonld')
+  // ⚠ Unit tests also work without accessing `jsonld.default` explicitly, but real browser usage will fail with
+  // just calling `jsonld.flatten`, so please do not remove `default`
+  const flattened = await jsonld.default.flatten(JSON.parse(str), null, {base: baseString})
+  return flattened.reduce((store, flatResource) => {
+    kb = processResource(kb, base, flatResource)
+    return kb
+  }, kb)
 }
 
 function nodeType(kb, obj) {
