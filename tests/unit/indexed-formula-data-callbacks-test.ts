@@ -35,18 +35,20 @@ describe('IndexedFormula', () => {
 
       it('callback is called when a statement is added', () => {
         store.add(statement1)
-        expect(callback).to.have.been.calledWith(statement1)
+        expect(callback).to.have.been.calledOnceWith(statement1)
       });
 
       it('callback is called when many statements are added separately', () => {
         store.add(statement1)
         store.add(statement2)
+        expect(callback).to.have.been.calledTwice
         expect(callback).to.have.been.calledWith(statement1)
         expect(callback).to.have.been.calledWith(statement2)
       });
 
       it('callback is called when many statements are added at once', () => {
         store.addAll([statement1, statement2])
+        expect(callback).to.have.been.calledTwice
         expect(callback).to.have.been.calledWith(statement1)
         expect(callback).to.have.been.calledWith(statement2)
       });
@@ -57,6 +59,7 @@ describe('IndexedFormula', () => {
                                     <https://predicate2.test> <https://object2.test>; 
             .`,
           store, "https://graph.test/")
+        expect(callback).to.have.been.calledTwice
         expect(callback).to.have.been.calledWith(st(
           sym("https://subject.test"),
           sym("https://predicate1.test"),
@@ -81,8 +84,8 @@ describe('IndexedFormula', () => {
         const callback2 = sinon.spy()
         store.addDataCallback(callback2)
         store.add(statement1)
-        expect(callback).to.have.been.calledWith(statement1)
-        expect(callback2).to.have.been.calledWith(statement1)
+        expect(callback).to.have.been.calledOnceWith(statement1)
+        expect(callback2).to.have.been.calledOnceWith(statement1)
       });
     });
 
@@ -97,18 +100,20 @@ describe('IndexedFormula', () => {
 
       it('callback is called when a statement is removed', () => {
         store.remove(statement1)
-        expect(callback).to.have.been.calledWith(statement1)
+        expect(callback).to.have.been.calledOnceWith(statement1)
       });
 
       it('callback is called when many statements are removed separately', () => {
         store.remove(statement1)
         store.remove(statement2)
+        expect(callback).to.have.been.calledTwice
         expect(callback).to.have.been.calledWith(statement1)
         expect(callback).to.have.been.calledWith(statement2)
       });
 
       it('callback is called when many statements are removed at once', () => {
         store.removeStatements([statement1, statement2])
+        expect(callback).to.have.been.calledTwice
         expect(callback).to.have.been.calledWith(statement1)
         expect(callback).to.have.been.calledWith(statement2)
       });
@@ -121,7 +126,7 @@ describe('IndexedFormula', () => {
           store, "https://graph.test/")
 
         store.removeMany(sym("https://subject.test"), null, null, null)
-
+        expect(callback).to.have.been.calledTwice
         expect(callback).to.have.been.calledWith(st(
           sym("https://subject.test"),
           sym("https://predicate1.test"),
@@ -146,6 +151,7 @@ describe('IndexedFormula', () => {
 
         store.removeDocument(sym("https://graph.test/"))
 
+        expect(callback).to.have.been.calledTwice
         expect(callback).to.have.been.calledWith(st(
           sym("https://subject.test"),
           sym("https://predicate1.test"),
@@ -179,7 +185,7 @@ describe('IndexedFormula', () => {
           dataCallback: callback
         })
         store.add(statement1)
-        expect(callback).to.have.been.calledWith(statement1)
+        expect(callback).to.have.been.calledOnceWith(statement1)
       });
 
       it('data removal callback can be passed as option', () => {
@@ -189,7 +195,7 @@ describe('IndexedFormula', () => {
         })
         store.add(statement1)
         store.remove(statement1)
-        expect(callback).to.have.been.calledWith(statement1)
+        expect(callback).to.have.been.calledOnceWith(statement1)
       });
     });
   });
