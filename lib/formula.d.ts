@@ -12,6 +12,7 @@ import BlankNode from './blank-node';
 import NamedNode from './named-node';
 export interface FormulaOpts {
     dataCallback?: (q: Quad) => void;
+    dataRemovalCallback?: (q: Quad) => void;
     rdfArrayRemove?: (arr: Quad[], q: Quad) => void;
     rdfFactory?: RdfJsDataFactory;
 }

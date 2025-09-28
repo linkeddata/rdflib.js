@@ -61,7 +61,9 @@ export default class IndexedFormula extends Formula {
     /** Function to remove quads from the store arrays with */
     private rdfArrayRemove;
     /** Callbacks which are triggered after a statement has been added to the store */
-    private dataCallbacks?;
+    private dataCallbacks;
+    /** Callbacks which are triggered after a statement has been removed from the store */
+    private dataRemovalCallbacks;
     /**
      * Creates a new formula
      * @param features - What sort of automatic processing to do? Array of string
@@ -86,6 +88,7 @@ export default class IndexedFormula extends Formula {
      * @param cb
      */
     addDataCallback(cb: (q: Quad) => void): void;
+    addDataRemovalCallback(cb: (q: Quad) => void): void;
     /**
      * Apply a set of statements to be deleted and to be inserted
      *

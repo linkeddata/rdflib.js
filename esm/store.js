@@ -129,7 +129,9 @@ export default class IndexedFormula extends Formula {
     /** Function to remove quads from the store arrays with */
     _defineProperty(this, "rdfArrayRemove", void 0);
     /** Callbacks which are triggered after a statement has been added to the store */
-    _defineProperty(this, "dataCallbacks", void 0);
+    _defineProperty(this, "dataCallbacks", []);
+    /** Callbacks which are triggered after a statement has been removed from the store */
+    _defineProperty(this, "dataRemovalCallbacks", []);
     this.propertyActions = {};
     this.classActions = {};
     this.redirections = [];
@@ -150,6 +152,9 @@ export default class IndexedFormula extends Formula {
     this.rdfArrayRemove = opts.rdfArrayRemove || RDFArrayRemove;
     if (opts.dataCallback) {
       this.dataCallbacks = [opts.dataCallback];
+    }
+    if (opts.dataRemovalCallback) {
+      this.dataRemovalCallbacks = [opts.dataRemovalCallback];
     }
     this.initPropertyActions(this.features);
   }
@@ -179,10 +184,10 @@ export default class IndexedFormula extends Formula {
    * @param cb
    */
   addDataCallback(cb) {
-    if (!this.dataCallbacks) {
-      this.dataCallbacks = [];
-    }
     this.dataCallbacks.push(cb);
+  }
+  addDataRemovalCallback(cb) {
+    this.dataRemovalCallbacks.push(cb);
   }
 
   /**
@@ -397,10 +402,8 @@ export default class IndexedFormula extends Formula {
 
     // log.debug("ADDING    {"+subj+" "+pred+" "+objNode+"} "+why)
     this.statements.push(st);
-    if (this.dataCallbacks) {
-      for (const callback of this.dataCallbacks) {
-        callback(st);
-      }
+    for (const callback of this.dataCallbacks) {
+      callback(st);
     }
     return st;
   }
@@ -850,6 +853,9 @@ export default class IndexedFormula extends Formula {
       }
     }
     this.rdfArrayRemove(this.statements, st);
+    for (const callback of this.dataRemovalCallbacks) {
+      callback(st);
+    }
     return this;
   }
 
