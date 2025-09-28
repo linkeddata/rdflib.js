@@ -1,4 +1,4 @@
-import { arrayToStatements } from './utils'
+import {arrayToStatements} from './utils'
 
 /**
  * Parses json-ld formatted JS objects to a rdf Term.
@@ -6,7 +6,7 @@ import { arrayToStatements } from './utils'
  * @param obj - The json-ld object to process.
  * @return {Literal|NamedNode|BlankNode|Collection}
  */
-export function jsonldObjectToTerm (kb, obj) {
+export function jsonldObjectToTerm(kb, obj) {
   if (typeof obj === 'string') {
     return kb.rdfFactory.literal(obj)
   }
@@ -41,7 +41,7 @@ export function jsonldObjectToTerm (kb, obj) {
 /**
  * Adds the statements in a json-ld list object to {kb}.
  */
-function listToStatements (kb, obj) {
+function listToStatements(kb, obj) {
   const listId = obj['@id'] ? nodeType(kb, obj) : kb.rdfFactory.blankNode()
 
   const items = obj['@list'].map((listItem => jsonldObjectToTerm(kb, listItem)))
@@ -51,7 +51,7 @@ function listToStatements (kb, obj) {
   return listId
 }
 
-function listToCollection (kb, obj) {
+function listToCollection(kb, obj) {
   if (!Array.isArray(obj)) {
     throw new TypeError("Object must be an array")
   }
@@ -63,24 +63,19 @@ function listToCollection (kb, obj) {
  *
  * Ensure that {kb.rdfFactory} is a DataFactory.
  */
-export default function jsonldParser (str, kb, base, callback) {
+export default async function jsonldParser(str, kb, base) {
   const baseString = base && Object.prototype.hasOwnProperty.call(base, 'termType')
     ? base.value
     : base
 
-  return import('jsonld')
-    .then(jsonld => { return jsonld.flatten(JSON.parse(str), null, { base: baseString }) })
-    .then((flattened) => flattened.reduce((store, flatResource) => {
-
-      kb = processResource(kb, base, flatResource)
-
-      return kb
-    }, kb))
-    .then(callback)
-    .catch(callback)
+  const jsonld = await import('jsonld')
+  // ⚠ Unit tests also work without accessing `jsonld.default` explicitly, but real browser usage will fail with
+  // just calling `jsonld.flatten`, so please do not remove `default`
+  const flattened = await jsonld.default.flatten(JSON.parse(str), null, {base: baseString})
+  return flattened.reduce((store, flatResource) => processResource(store, base, flatResource), kb)
 }
 
-function nodeType (kb, obj) {
+function nodeType(kb, obj) {
   if (obj['@id'].startsWith('_:')) {
     // This object is a Blank Node. Pass the id without the `_:` prefix
     return kb.rdfFactory.blankNode(obj['@id'].substring(2));
@@ -106,7 +101,7 @@ function processResource(kb, base, flatResource) {
       const nestedFlatResources = flatResource[property]
 
       // recursively process all flat resources in the array, but with the graphId as base.
-      for (let i = 0; i < nestedFlatResources.length; i++ ) {
+      for (let i = 0; i < nestedFlatResources.length; i++) {
         kb = processResource(kb, graphId, nestedFlatResources[i])
       }
     }

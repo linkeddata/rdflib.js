@@ -142,7 +142,9 @@ class XHTMLHandler extends Handler {
     return 'XHTMLHandler';
   }
   static register(fetcher) {
-    fetcher.mediatypes[XHTMLContentType] = {};
+    fetcher.mediatypes[XHTMLContentType] = {
+      'q': 0.8
+    };
   }
   parse(fetcher, responseText, options) {
     let relation, reverse;
@@ -275,7 +277,7 @@ class HTMLHandler extends Handler {
   }
   static register(fetcher) {
     fetcher.mediatypes['text/html'] = {
-      'q': 0.9
+      'q': 0.8
     };
   }
   parse(fetcher, responseText, options) {
@@ -324,21 +326,19 @@ class JsonLdHandler extends Handler {
       'q': 0.9
     };
   }
-  parse(fetcher, responseText, options, response) {
+  async parse(fetcher, responseText, options, response) {
     const kb = fetcher.store;
-    return new Promise((resolve, reject) => {
-      try {
-        jsonldParser(responseText, kb, options.original.value, () => {
-          resolve(fetcher.doneFetch(options, response));
-        });
-      } catch (err) {
-        const msg = 'Error trying to parse ' + options.resource + ' as JSON-LD:\n' + err; // not err.stack -- irrelevant
-        resolve(fetcher.failFetch(options, msg, 'parse_error', response));
-      }
-    });
+    try {
+      await jsonldParser(responseText, kb, options.original.value);
+      fetcher.store.add(options.original, ns.rdf('type'), ns.link('RDFDocument'), fetcher.appNode);
+      return fetcher.doneFetch(options, response);
+    } catch (err) {
+      const msg = 'Error trying to parse ' + options.resource + ' as JSON-LD:\n' + err; // not err.stack -- irrelevant
+      return fetcher.failFetch(options, msg, 'parse_error', response);
+    }
   }
 }
-JsonLdHandler.pattern = /application\/ld\+json/;
+JsonLdHandler.pattern = /application\/(ld\+json|activity\+json)/;
 class TextHandler extends Handler {
   static toString() {
     return 'TextHandler';
@@ -376,17 +376,8 @@ class N3Handler extends Handler {
     return 'N3Handler';
   }
   static register(fetcher) {
-    fetcher.mediatypes['text/n3'] = {
-      'q': '1.0'
-    }; // as per 2008 spec
-    /*
-     fetcher.mediatypes['application/x-turtle'] = {
-     'q': 1.0
-     } // pre 2008
-     */
-    fetcher.mediatypes['text/turtle'] = {
-      'q': 1.0
-    }; // post 2008
+    fetcher.mediatypes['text/n3'] = {};
+    fetcher.mediatypes['text/turtle'] = {};
   }
   parse(fetcher, responseText, options, response) {
     // Parse the text of this N3 file
@@ -736,7 +727,7 @@ export default class Fetcher {
     options.baseURI = options.baseURI || uri; // Preserve though proxying etc
     options.original = kb.rdfFactory.namedNode(options.baseURI);
     options.req = kb.bnode();
-    options.headers = options.headers || new Headers();
+    options.headers = options.headers || {};
     if (options.contentType) {
       // @ts-ignore
       options.headers['content-type'] = options.contentType;

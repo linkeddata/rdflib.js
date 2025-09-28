@@ -5,7 +5,7 @@ type CallbackFunc = (error: any, kb: Formula | null) => void;
  * Parse a string and put the result into the graph kb.
  * Normal method is sync.
  * Unfortunately jsdonld is currently written to need to be called async.
- * Hence the mess below with executeCallback.
+ * If you are parsing JSON-LD and want to know when and whether it succeeded, you need to use the callback param.
  * @param str - The input string to parse
  * @param kb - The store to use
  * @param base - The base URI to use

@@ -12,7 +12,7 @@ import { TurtleContentType, N3ContentType, RDFXMLContentType, XHTMLContentType, 
  * Parse a string and put the result into the graph kb.
  * Normal method is sync.
  * Unfortunately jsdonld is currently written to need to be called async.
- * Hence the mess below with executeCallback.
+ * If you are parsing JSON-LD and want to know when and whether it succeeded, you need to use the callback param.
  * @param str - The input string to parse
  * @param kb - The store to use
  * @param base - The base URI to use
@@ -48,7 +48,10 @@ export default function parse(str, kb, base) {
       sparqlUpdateParser(str, kb, base);
       executeCallback();
     } else if (contentType === JSONLDContentType) {
-      jsonldParser(str, kb, base, executeCallback);
+      // since we do not await the promise here, rejections will not be covered by the surrounding try catch
+      // we do not use await, because parse() should stay sync
+      // so, to not lose the async error, we need to catch the rejection and call the error callback here too
+      jsonldParser(str, kb, base).then(executeCallback).catch(executeErrorCallback);
     } else if (contentType === NQuadsContentType || contentType === NQuadsAltContentType) {
       var n3Parser = new N3jsParser({
         factory: DataFactory

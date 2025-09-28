@@ -10,4 +10,4 @@ export function jsonldObjectToTerm(kb: any, obj: any): Literal | NamedNode | Bla
  *
  * Ensure that {kb.rdfFactory} is a DataFactory.
  */
-export default function jsonldParser(str: any, kb: any, base: any, callback: any): Promise<any>;
+export default function jsonldParser(str: any, kb: any, base: any): Promise<any>;
