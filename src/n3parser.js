@@ -1253,12 +1253,22 @@ export class SinkParser {
             var ln = "";
             while ((i < pyjslib_len(str))) {
                 var c = str.charAt(i);
-                if ((_notNameChars.indexOf(c) < 0)) {
-                    var ln =  ( ln + c ) ;
-                    var i =  ( i + 1 ) ;
-                }
-                else {
-                    break;
+                if (c ==='\\'){
+                    var c2 = str.charAt(i+1)
+                    if ((_notNameChars.indexOf(c2) >= 0)) {
+                        var ln =  ( ln + c2 ) ;
+                        var i =  ( i + 2 ) ;
+                    }
+                    else {
+                        break;
+                    }
+                } else {
+                    if ((_notNameChars.indexOf(c) < 0)) {
+                        var ln = (ln + c);
+                        var i = (i + 1);
+                    } else {
+                        break;
+                    }
                 }
             }
             res.push(new pyjslib_Tuple([pfx, ln]));
