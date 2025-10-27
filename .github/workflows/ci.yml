@@ -48,7 +48,7 @@ jobs:
       contents: write
       pages: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: build
       - uses: peaceiris/actions-gh-pages@v3
@@ -60,7 +60,7 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: build
       - uses: actions/setup-node@v1
@@ -80,7 +80,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: build
       - uses: actions/setup-node@v1
