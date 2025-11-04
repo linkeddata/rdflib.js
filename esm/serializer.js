@@ -21,6 +21,7 @@ export default function createSerializer(store) {
 export class Serializer {
   constructor(store) {
     _defineProperty(this, "_notQNameChars", '\t\r\n !"#$%&\'()*.,+/;<=>?@[\\]^`{|}~');
+    // issue#228
     _defineProperty(this, "_notNameChars", this._notQNameChars + ':');
     //  stringToN3:  String escaping for N3
     _defineProperty(this, "validPrefix", new RegExp(/^[a-zA-Z][a-zA-Z0-9]*$/));

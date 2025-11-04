@@ -1,3 +1,12 @@
+## 2025-11-04 - Turtle dots in terms (fix #601)
+- Parser: allow '.' inside names unless followed by whitespace/comment/EOF; leave '.' for checkDot().
+- Serializer: do not abbreviate IRIs containing '.'; emit <iri> instead of fake qname.
+- Tests: add tests/unit/dot-in-term-test.ts for parse/serialize with dots.
+- Refactor: helper dotTerminatesName(), shared wsOrHash regex, removed debug logs.
+Result: 257 tests passing.
+
+================================================================================
+
 REMOVED FILES:
 
 plistClosure.js -> no refs to about() or pickOne.
