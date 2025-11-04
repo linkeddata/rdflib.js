@@ -1,3 +1,22 @@
+## 2025-11-04 - Fix for parsing Turtle files with dots in terms
+
+Fixed issue #601: Parser now correctly handles dots within local names (e.g., ex:subject.example)
+without consuming the statement terminator dot. The fix distinguishes between dots that are part
+of a name and dots that serve as statement terminators by checking if the dot is followed by
+whitespace, a comment, or end-of-file.
+
+Changes:
+- Parser (src/n3parser.js): Modified bareWord() and qname() to allow dots inside names unless
+  followed by whitespace/comment/EOF, preventing misinterpretation as path operators.
+- Serializer (src/serializer.js): Added '.' to _notQNameChars to prevent incorrect abbreviation
+  of URIs containing dots (e.g., https://subject.example stays as <https://subject.example>
+  instead of being split into a fake qname like n0:subject.example).
+- Tests: Added tests/unit/dot-in-term-test.ts covering parse and serialize behavior with dots.
+
+All 257 tests passing.
+
+================================================================================
+
 REMOVED FILES:
 
 plistClosure.js -> no refs to about() or pickOne.
