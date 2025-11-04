@@ -554,7 +554,7 @@ export class SinkParser {
         <- prop -<
         _operator_*/
 
-        var j = this.skipSpace(str, i);
+    var j = this.skipSpace(str, i);
         if ((j < 0)) {
             return j;
         }
@@ -703,22 +703,17 @@ export class SinkParser {
                 if ((j >= 0)) {
                     var subj = objs[0];
                     if ((pyjslib_len(objs) > 1)) {
-
                         var __obj = new pyjslib_Iterator(objs);
                         try {
                             while (true) {
                                 var obj = __obj.next();
-
-
                                 this.makeStatement(new pyjslib_Tuple([this._context, this._store.sym(DAML_sameAs_URI), subj, obj]));
-
                             }
                         } catch (e) {
                             if (e != StopIteration) {
                                 throw e;
                             }
                         }
-
                     }
                     var j = this.skipSpace(str, j);
                     if ((j < 0)) {
@@ -742,6 +737,11 @@ export class SinkParser {
             var j = this.skipSpace(str, i);
             if ((j < 0)) {
                 throw BadSyntax(this._thisDoc, this.lines, str, i, "EOF when ']' expected after [ <propertyList>");
+            }
+            if ((str.slice( j,  ( j + 1 ) ) == ".")) {
+                // If a dot is found after a blank node, treat it as statement terminator
+                res.push(subj);
+                return j;
             }
             if ((str.slice( j,  ( j + 1 ) ) != "]")) {
                 throw BadSyntax(this._thisDoc, this.lines, str, j, "']' expected");
@@ -1208,7 +1208,19 @@ export class SinkParser {
             return -1;
         }
         var i = j;
-        while ((i < pyjslib_len(str)) && (_notNameChars.indexOf(str.charAt(i)) < 0)) {
+        while ((i < pyjslib_len(str))) {
+            var c = str.charAt(i);
+            // Allow dot in names unless it is followed by whitespace/comment/EOF
+            if (c === '.') {
+                var next = str.charAt(i + 1);
+                if (next === '' || /[\s#]/.test(next)) {
+                    break; // treat as statement terminator, not part of name
+                }
+                // else: accept '.' as part of name
+            } else if (_notNameChars.indexOf(c) >= 0) {
+                // Other invalid characters terminate the name
+                break;
+            }
             var i =  ( i + 1 ) ;
         }
         res.push(str.slice( j, i));
@@ -1235,13 +1247,17 @@ export class SinkParser {
             var i =  ( i + 1 ) ;
             while ((i < pyjslib_len(str))) {
                 var c = str.charAt(i);
-                if ((_notNameChars.indexOf(c) < 0)) {
-                    var ln =  ( ln + c ) ;
-                    var i =  ( i + 1 ) ;
-                }
-                else {
+                // Allow dot unless followed by whitespace/comment/EOF; otherwise break on invalid chars
+                if (c === '.') {
+                    var next = str.charAt(i + 1);
+                    if (next === '' || /[\s#]/.test(next)) {
+                        break; // dot ends the name here
+                    }
+                } else if (_notNameChars.indexOf(c) >= 0) {
                     break;
                 }
+                var ln =  ( ln + c ) ;
+                var i =  ( i + 1 ) ;
             }
         }
         else {
@@ -1253,13 +1269,17 @@ export class SinkParser {
             var ln = "";
             while ((i < pyjslib_len(str))) {
                 var c = str.charAt(i);
-                if ((_notNameChars.indexOf(c) < 0)) {
-                    var ln =  ( ln + c ) ;
-                    var i =  ( i + 1 ) ;
-                }
-                else {
+                // Allow dot unless followed by whitespace/comment/EOF; otherwise break on invalid chars
+                if (c === '.') {
+                    var next = str.charAt(i + 1);
+                    if (next === '' || /[\s#]/.test(next)) {
+                        break; // dot ends the name here
+                    }
+                } else if (_notNameChars.indexOf(c) >= 0) {
                     break;
                 }
+                var ln =  ( ln + c ) ;
+                var i =  ( i + 1 ) ;
             }
             res.push(new pyjslib_Tuple([pfx, ln]));
             return i;
