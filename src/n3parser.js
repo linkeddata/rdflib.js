@@ -212,9 +212,19 @@ var signed_integer = new RegExp("^[-+]?[0-9]+", 'g');
 var number_syntax = new RegExp("^([-+]?[0-9]+)(\\.[0-9]+)?([eE][-+]?[0-9]+)?", 'g');
 var datetime_syntax = new RegExp('^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9](T[0-9][0-9]:[0-9][0-9](:[0-9][0-9](\\.[0-9]*)?)?)?Z?');
 
+// Reused in tight loops to detect whitespace or comment after a dot
+var wsOrHash = new RegExp("[\\s#]");
+
 var digitstring = new RegExp("^[0-9]+", 'g');
 var interesting = new RegExp("[\\\\\\r\\n\\\"]", 'g');
 var langcode = new RegExp("^[a-zA-Z0-9]+(-[a-zA-Z0-9]+)*", 'g');
+
+// Returns true when a dot at position i should terminate a name,
+// i.e., when the next character is whitespace, a comment start, or EOF
+function dotTerminatesName(str, i) {
+    var next = str.charAt(i + 1);
+    return next === '' || wsOrHash.test(next);
+}
 
 function createSinkParser(store, openFormula, thisDoc, baseURI, genPrefix, metaURI, flags, why) {
     return new SinkParser(store, openFormula, thisDoc, baseURI, genPrefix, metaURI, flags, why);
@@ -739,9 +749,14 @@ export class SinkParser {
                 throw BadSyntax(this._thisDoc, this.lines, str, i, "EOF when ']' expected after [ <propertyList>");
             }
             if ((str.slice( j,  ( j + 1 ) ) == ".")) {
-                // If a dot is found after a blank node, treat it as statement terminator
+                // If a dot is found after a blank node, treat it as a statement terminator.
+                // Do NOT consume the '.' here: statement terminators are handled centrally by
+                // checkDot() (called by directiveOrStatement after statement()). Consuming the dot
+                // locally would bypass that unified logic and could cause inconsistencies.
+                // We do consume ']' below because it is a structural closer of the blank node,
+                // not a statement terminator.
                 res.push(subj);
-                return j;
+                return j; // leave '.' for checkDot()
             }
             if ((str.slice( j,  ( j + 1 ) ) != "]")) {
                 throw BadSyntax(this._thisDoc, this.lines, str, j, "']' expected");
@@ -1210,10 +1225,8 @@ export class SinkParser {
         var i = j;
         while ((i < pyjslib_len(str))) {
             var c = str.charAt(i);
-            // Allow dot in names unless it is followed by whitespace/comment/EOF
             if (c === '.') {
-                var next = str.charAt(i + 1);
-                if (next === '' || /[\s#]/.test(next)) {
+                if (dotTerminatesName(str, i)) {
                     break; // treat as statement terminator, not part of name
                 }
                 // else: accept '.' as part of name
@@ -1247,10 +1260,8 @@ export class SinkParser {
             var i =  ( i + 1 ) ;
             while ((i < pyjslib_len(str))) {
                 var c = str.charAt(i);
-                // Allow dot unless followed by whitespace/comment/EOF; otherwise break on invalid chars
                 if (c === '.') {
-                    var next = str.charAt(i + 1);
-                    if (next === '' || /[\s#]/.test(next)) {
+                    if (dotTerminatesName(str, i)) {
                         break; // dot ends the name here
                     }
                 } else if (_notNameChars.indexOf(c) >= 0) {
@@ -1269,10 +1280,8 @@ export class SinkParser {
             var ln = "";
             while ((i < pyjslib_len(str))) {
                 var c = str.charAt(i);
-                // Allow dot unless followed by whitespace/comment/EOF; otherwise break on invalid chars
                 if (c === '.') {
-                    var next = str.charAt(i + 1);
-                    if (next === '' || /[\s#]/.test(next)) {
+                    if (dotTerminatesName(str, i)) {
                         break; // dot ends the name here
                     }
                 } else if (_notNameChars.indexOf(c) >= 0) {
