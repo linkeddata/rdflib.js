@@ -212,9 +212,19 @@ var signed_integer = new RegExp("^[-+]?[0-9]+", 'g');
 var number_syntax = new RegExp("^([-+]?[0-9]+)(\\.[0-9]+)?([eE][-+]?[0-9]+)?", 'g');
 var datetime_syntax = new RegExp('^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9](T[0-9][0-9]:[0-9][0-9](:[0-9][0-9](\\.[0-9]*)?)?)?Z?');
 
+// Reused in tight loops to detect whitespace or comment after a dot
+var wsOrHash = new RegExp("[\\s#]");
+
 var digitstring = new RegExp("^[0-9]+", 'g');
 var interesting = new RegExp("[\\\\\\r\\n\\\"]", 'g');
 var langcode = new RegExp("^[a-zA-Z0-9]+(-[a-zA-Z0-9]+)*", 'g');
+
+// Returns true when a dot at position i should terminate a name,
+// i.e., when the next character is whitespace, a comment start, or EOF
+function dotTerminatesName(str, i) {
+    var next = str.charAt(i + 1);
+    return next === '' || wsOrHash.test(next);
+}
 
 function createSinkParser(store, openFormula, thisDoc, baseURI, genPrefix, metaURI, flags, why) {
     return new SinkParser(store, openFormula, thisDoc, baseURI, genPrefix, metaURI, flags, why);
@@ -554,7 +564,7 @@ export class SinkParser {
         <- prop -<
         _operator_*/
 
-        var j = this.skipSpace(str, i);
+    var j = this.skipSpace(str, i);
         if ((j < 0)) {
             return j;
         }
@@ -703,22 +713,17 @@ export class SinkParser {
                 if ((j >= 0)) {
                     var subj = objs[0];
                     if ((pyjslib_len(objs) > 1)) {
-
                         var __obj = new pyjslib_Iterator(objs);
                         try {
                             while (true) {
                                 var obj = __obj.next();
-
-
                                 this.makeStatement(new pyjslib_Tuple([this._context, this._store.sym(DAML_sameAs_URI), subj, obj]));
-
                             }
                         } catch (e) {
                             if (e != StopIteration) {
                                 throw e;
                             }
                         }
-
                     }
                     var j = this.skipSpace(str, j);
                     if ((j < 0)) {
@@ -742,6 +747,16 @@ export class SinkParser {
             var j = this.skipSpace(str, i);
             if ((j < 0)) {
                 throw BadSyntax(this._thisDoc, this.lines, str, i, "EOF when ']' expected after [ <propertyList>");
+            }
+            if ((str.slice( j,  ( j + 1 ) ) == ".")) {
+                // If a dot is found after a blank node, treat it as a statement terminator.
+                // Do NOT consume the '.' here: statement terminators are handled centrally by
+                // checkDot() (called by directiveOrStatement after statement()). Consuming the dot
+                // locally would bypass that unified logic and could cause inconsistencies.
+                // We do consume ']' below because it is a structural closer of the blank node,
+                // not a statement terminator.
+                res.push(subj);
+                return j; // leave '.' for checkDot()
             }
             if ((str.slice( j,  ( j + 1 ) ) != "]")) {
                 throw BadSyntax(this._thisDoc, this.lines, str, j, "']' expected");
@@ -1208,7 +1223,17 @@ export class SinkParser {
             return -1;
         }
         var i = j;
-        while ((i < pyjslib_len(str)) && (_notNameChars.indexOf(str.charAt(i)) < 0)) {
+        while ((i < pyjslib_len(str))) {
+            var c = str.charAt(i);
+            if (c === '.') {
+                if (dotTerminatesName(str, i)) {
+                    break; // treat as statement terminator, not part of name
+                }
+                // else: accept '.' as part of name
+            } else if (_notNameChars.indexOf(c) >= 0) {
+                // Other invalid characters terminate the name
+                break;
+            }
             var i =  ( i + 1 ) ;
         }
         res.push(str.slice( j, i));
@@ -1235,13 +1260,15 @@ export class SinkParser {
             var i =  ( i + 1 ) ;
             while ((i < pyjslib_len(str))) {
                 var c = str.charAt(i);
-                if ((_notNameChars.indexOf(c) < 0)) {
-                    var ln =  ( ln + c ) ;
-                    var i =  ( i + 1 ) ;
-                }
-                else {
+                if (c === '.') {
+                    if (dotTerminatesName(str, i)) {
+                        break; // dot ends the name here
+                    }
+                } else if (_notNameChars.indexOf(c) >= 0) {
                     break;
                 }
+                var ln =  ( ln + c ) ;
+                var i =  ( i + 1 ) ;
             }
         }
         else {
@@ -1253,13 +1280,15 @@ export class SinkParser {
             var ln = "";
             while ((i < pyjslib_len(str))) {
                 var c = str.charAt(i);
-                if ((_notNameChars.indexOf(c) < 0)) {
-                    var ln =  ( ln + c ) ;
-                    var i =  ( i + 1 ) ;
-                }
-                else {
+                if (c === '.') {
+                    if (dotTerminatesName(str, i)) {
+                        break; // dot ends the name here
+                    }
+                } else if (_notNameChars.indexOf(c) >= 0) {
                     break;
                 }
+                var ln =  ( ln + c ) ;
+                var i =  ( i + 1 ) ;
             }
             res.push(new pyjslib_Tuple([pfx, ln]));
             return i;
