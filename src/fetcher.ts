@@ -308,9 +308,7 @@ class XHTMLHandler extends Handler {
     let scripts = this.dom.getElementsByTagName('script')
     for (let i = 0; i < scripts.length; i++) {
       let contentType = scripts[i].getAttribute('type')
-      if (Parsable[contentType!]) {
-        // @ts-ignore incompatibility between Store.add and Formula.add
-        rdfParse(scripts[i].textContent as string, kb, options.original.value, contentType)
+      if (Parsable[contentType!] && scripts[i].textContent && scripts[i].textContent.trim().length) {
         // @ts-ignore incompatibility between Store.add and Formula.add
         rdfParse(scripts[i].textContent as string, kb, options.original.value, contentType)
       }

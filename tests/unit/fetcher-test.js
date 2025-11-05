@@ -564,6 +564,68 @@ describe('Fetcher', () => {
           expect(match.object.value).to.equal('http://example.com/foo/vocab#building4')
         })
     })
+
+    it('should handle empty script tags in HTML/RDFa documents without errors (issue #692)', () => {
+      // Test HTML with empty script tag with src attribute
+      let testHtml = `<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Test Document</title>
+  <script type="text/turtle" src="https://example.com/external.ttl"></script>
+</head>
+<body>
+  <h1>Test</h1>
+  <script type="text/turtle">
+    @prefix : <http://example.com/#>.
+    :subject :predicate :object.
+  </script>
+</body>
+</html>`
+
+      nock('https://example.com').get('/test.html')
+        .reply(200, testHtml, { 'Content-Type': 'application/xhtml+xml' })
+
+      return fetcher.load('https://example.com/test.html')
+        .then(res => {
+          expect(res.status).to.equal(200)
+          let kb = fetcher.store
+
+          // Verify that the non-empty script content was parsed
+          let match = kb.anyStatementMatching(
+            kb.sym('http://example.com/#subject'),
+            kb.sym('http://example.com/#predicate')
+          )
+
+          expect(match).to.exist()
+          expect(match.object.value).to.equal('http://example.com/#object')
+          
+          // The test passes if no error was thrown from the empty script tag
+        })
+    })
+
+    it('should ignore script tags with only whitespace', () => {
+      let testHtml = `<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Test Document</title>
+  <script type="text/turtle">   
+  
+  </script>
+</head>
+<body>
+  <h1>Test</h1>
+</body>
+</html>`
+
+      nock('https://example.com').get('/test-whitespace.html')
+        .reply(200, testHtml, { 'Content-Type': 'application/xhtml+xml' })
+
+      return fetcher.load('https://example.com/test-whitespace.html')
+        .then(res => {
+          expect(res.status).to.equal(200)
+          // The test passes if no error was thrown from the whitespace-only script tag
+        })
+    })
   })
 
   describe('createContainer', () => {
