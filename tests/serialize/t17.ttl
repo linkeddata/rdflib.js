@@ -1,0 +1,12 @@
+
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix show: <http://example.org/vocab/show/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+show:218 rdfs:label "That Seventies Show"^^xsd:string .
+show:218 rdfs:label "Another Seventies Show"^^<http://www.w3.org/2001/XMLSchema#string> .
+show:218 rdfs:label "Awesome Seventies Show" .
+show:218 show:localName "That Seventies Show"@en .                 
+show:218 show:localName "Cette Série des Années Soixante-dix"@fr . 
+show:218 show:localName "Cette Série des Années Septante"@fr-be .  
+show:218 show:size "10"^^xsd:integer .
