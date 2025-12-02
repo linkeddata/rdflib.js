@@ -170,7 +170,7 @@ export class Serializer {
     if (slash >= 0) p = p.slice(slash + 1)
     var i = 0
     while (i < p.length) {
-      if (this.prefixchars.indexOf(p[i])) {
+      if (this.prefixchars.indexOf(p[i]) >= 0) {
         i++
       } else {
         break
