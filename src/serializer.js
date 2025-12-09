@@ -257,7 +257,7 @@ export class Serializer {
     return this.statementsToN3(f.statements)
   }
 
-  _notQNameChars = '\t\r\n !"#$%&\'()*.,+/;<=>?@[\\]^`{|}~' // issue#228
+  _notQNameChars = '\t\r\n !"#$%&\'()*,+/;<=>?@[\\]^`{|}~' // issue#228
   _notNameChars =
     (this._notQNameChars + ':')
 
