@@ -86,7 +86,7 @@ Common flags used internally (you can combine them, e.g. `'o k'`):
 - `d e i n p r s t u x` – used for N-Triples/N-Quads to simplify output
 - `dr` – used with JSON‑LD conversion (no default, no relative prefix)
 - `o` – new: do not abbreviate to a prefixed name when the local part contains a dot. This keeps IRIs like
-  `http://foo.test/ns/subject.example` in `<...>` form instead of `ns:subject.example`.
+  `http://example.org/ns/subject.example` in `<...>` form instead of `ns:subject.example`.
 
 Notes:
 
