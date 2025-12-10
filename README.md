@@ -65,7 +65,7 @@ npm install --save rdflib
 
 ## Serializer flags
 
-The Turtle/N3/JSON‑LD serializers accept an optional flags string to tweak output formatting and abbreviation behavior.
+The Turtle/N3/JSON‑LD serializers accept an optional `flags` string to tweak output formatting and abbreviation behavior.
 
 - Pass flags via the options argument to `serialize(...)`:
 
