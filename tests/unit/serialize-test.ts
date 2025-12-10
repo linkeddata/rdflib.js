@@ -276,37 +276,37 @@ describe('parse --> serialize', () => {
   describe('example 0', () => {
     const ttl0 = `@prefix : <#>.
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
-@prefix voc: <http://example.com/foo/vocab#>.
+@prefix vocab: <http://example.com/foo/vocab#>.
 
-voc:building0 voc:bar 123, 78768; voc:connectsTo voc:building4 .
+vocab:building0 vocab:bar 123, 78768; vocab:connectsTo vocab:building4 .
 
-voc:building1 voc:created "2012-03-12"^^xsd:date; voc:length 145000.0e0 .
+vocab:building1 vocab:created "2012-03-12"^^xsd:date; vocab:length 145000.0e0 .
 
 `
 
     const jsonld0 = `{
   "@context": {
     "xsd": "http://www.w3.org/2001/XMLSchema#",
-    "voc": "http://example.com/foo/vocab#"
+    "vocab": "http://example.com/foo/vocab#"
   },
   "@graph": [
     {
-      "@id": "voc:building0",
-      "voc:bar": [
+      "@id": "vocab:building0",
+      "vocab:bar": [
         123,
         78768
       ],
-      "voc:connectsTo": {
-        "@id": "voc:building4"
+      "vocab:connectsTo": {
+        "@id": "vocab:building4"
       }
     },
     {
-      "@id": "voc:building1",
-      "voc:created": {
+      "@id": "vocab:building1",
+      "vocab:created": {
         "@value": "2012-03-12",
         "@type": "xsd:date"
       },
-      "voc:length": {
+      "vocab:length": {
         "@value": "145000.0e0",
         "@type": "http://www.w3.org/2001/XMLSchema#double"
       }
@@ -466,15 +466,15 @@ voc:building1 voc:created "2012-03-12"^^xsd:date; voc:length 145000.0e0 .
   describe('collections', () => {
     const ttlCollection = `@prefix : </#>.
 @prefix n: <https://example.org/ns#>.
-@prefix ex: <http://example.com/>.
+@prefix exa: <http://example.com/>.
 
-:me n:listProp ( "list item 0" 1 ex:2 ).
+:me n:listProp ( "list item 0" 1 exa:2 ).
 
 `    
     const jsonldCollection0 = `{
   "@context": {
     "n": "https://example.org/ns#",
-    "ex": "http://example.com/",
+    "exa": "http://example.com/",
     "n0": "https://www.example.org/#"
   },
   "@id": "n0:me",
@@ -483,7 +483,7 @@ voc:building1 voc:created "2012-03-12"^^xsd:date; voc:length 145000.0e0 .
       "list item 0",
       1,
       {
-        "@id": "ex:2"
+        "@id": "exa:2"
       }
     ]
   }
@@ -492,7 +492,7 @@ const jsonldCollection1 = `{
   "@context": {
     "n0": "https://www.example.org/#",
     "n": "https://example.org/ns#",
-    "ex": "http://example.com/"
+    "exa": "http://example.com/"
   },
   "@id": "n0:me",
   "n:listProp": {
@@ -500,7 +500,7 @@ const jsonldCollection1 = `{
       "list item 0",
       1,
       {
-        "@id": "ex:2"
+        "@id": "exa:2"
       }
     ]
   }
