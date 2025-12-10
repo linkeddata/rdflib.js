@@ -3,7 +3,7 @@ const kb = $rdf.graph();
 const base = 'http://example.com/';
 const doc = $rdf.sym(base + 'doc');
 // A URI in a different namespace so it can abbreviate to a prefix
-const other = 'http://foo.test/ns/subject.example';
+const other = 'http://example.org/ns/subject.example';
 kb.add($rdf.sym(base + 's'), $rdf.sym(base + 'p'), $rdf.sym(other), doc);
 
 function run(flags) {
