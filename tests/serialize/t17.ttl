@@ -1,0 +1,92 @@
+@prefix dct: <http://purl.org/dc/terms/>.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix com: <https://elm-server.com:9443/ccm/resource/itemName/com.ibm.team.workitem.WorkItem/>.
+@prefix cm: <http://open-services.net/ns/cm#>.
+@prefix n0: <http://jazz.net/ns/acp#>.
+@prefix n1: <https://elm-server.com:9443/ccm/oslc/access-control/>.
+@prefix pro: <http://jazz.net/ns/process#>.
+@prefix iter: <https://elm-server.com:9443/ccm/process/iterations/>.
+@prefix pr: <https://elm-server.com:9443/ccm/process/project-areas/>.
+@prefix te: <https://elm-server.com:9443/ccm/process/team-areas/>.
+@prefix n2: <http://jazz.net/xmlns/prod/jazz/rtc/cm/1.0/>.
+@prefix co: <https://elm-server.com:9443/ccm/resource/itemOid/com.ibm.team.workitem.Category/>.
+@prefix users: <https://elm-server.com:9443/jts/users/>.
+@prefix ite: <https://elm-server.com:9443/ccm/oslc/iterations/>.
+@prefix n3: <https://elm-server.com:9443/ccm/oslc/workitems/_IIVjEBSkEfCQ7aMNxFFsPQ/>.
+@prefix oslc: <https://elm-server.com:9443/ccm/oslc/>.
+@prefix t: <https://elm-server.com:9443/ccm/oslc/teamareas/>.
+@prefix n4: <https://elm-server.com:9443/ccm/oslc/types/_ByGZwRSkEfCQ7aMNxFFsPQ/>.
+@prefix n5: <http://jazz.net/xmlns/prod/jazz/rtc/ext/1.0/>.
+@prefix c: <http://open-services.net/ns/cm-x#>.
+@prefix proj: <https://elm-server.com:9443/ccm/oslc/projectareas/>.
+@prefix res: <https://elm-server.com:9443/rm/resources/>.
+@prefix n6: <http://open-services.net/ns/core/acc#>.
+@prefix n7: <https://elm-server.com:9443/ccm/acclist#>.
+@prefix core: <http://open-services.net/ns/core#>.
+@prefix wor: <https://elm-server.com:9443/ccm/oslc/shapes/workitems/>.
+@prefix wo: <https://elm-server.com:9443/ccm/oslc/contexts/_ByGZwRSkEfCQ7aMNxFFsPQ/workitems/>.
+@prefix pl: <http://open-services.net/ns/pl#>.
+
+com:257
+    a cm:ChangeRequest;
+    n0:accessControl n1:_ByGZwRSkEfCQ7aMNxFFsPQ;
+    pro:iteration iter:_B07rUxSkEfCQ7aMNxFFsPQ;
+    pro:projectArea pr:_ByGZwRSkEfCQ7aMNxFFsPQ;
+    pro:teamArea te:_D7V-MBSkEfCQ7aMNxFFsPQ;
+    <http://jazz.net/xmlns/prod/jazz/rtc/cm/1.0/com.ibm.team.workitem.linktype.blocksworkitem.blocks>
+    com:255;
+    <http://jazz.net/xmlns/prod/jazz/rtc/cm/1.0/com.ibm.team.workitem.linktype.duplicateworkitem.duplicates>
+    com:256;
+    n2:estimate 14400000;
+    n2:filedAgainst co:_HTlFaBSkEfCQ7aMNxFFsPQ;
+    n2:modifiedBy users:jamsden;
+    n2:plannedFor ite:_B07rUxSkEfCQ7aMNxFFsPQ;
+    n2:progressTracking n3:progressTracking;
+    n2:repository oslc:repository;
+    n2:resolvedBy users:unassigned;
+    n2:state
+        <https://elm-server.com:9443/ccm/oslc/workflows/_ByGZwRSkEfCQ7aMNxFFsPQ/states/com.ibm.team.workitem.defectWorkflow/com.ibm.team.workitem.defectWorkflow.state.s1>;
+    n2:subscribers users:marco;
+    n2:teamArea t:_D7V-MBSkEfCQ7aMNxFFsPQ;
+    n2:timeSheet
+        <https://elm-server.com:9443/ccm/oslc/workitems/_IIVjEBSkEfCQ7aMNxFFsPQ/rtc_cm:timeSheet>;
+    n2:type n4:defect;
+    n5:archived false;
+    n5:contextId "_ByGZwRSkEfCQ7aMNxFFsPQ";
+    c:priority
+        <https://elm-server.com:9443/ccm/oslc/enumerations/_ByGZwRSkEfCQ7aMNxFFsPQ/priority/priority.literal.l07>;
+    c:project proj:_ByGZwRSkEfCQ7aMNxFFsPQ;
+    c:severity
+        <https://elm-server.com:9443/ccm/oslc/enumerations/_ByGZwRSkEfCQ7aMNxFFsPQ/severity/severity.literal.l5>;
+    cm:approved false;
+    cm:closed false;
+    cm:fixed false;
+    cm:implementsRequirement
+        res:TX_ELU68BSkEfCQ7eullXDrzg, res:TX_EN0OQBSkEfCQ7eullXDrzg,
+        res:TX_EObSQBSkEfCQ7eullXDrzg;
+    cm:inprogress false;
+    cm:reviewed false;
+    cm:status "New";
+    cm:tracksRequirement
+        res:TX_ELU68BSkEfCQ7eullXDrzg, res:TX_EN0OQBSkEfCQ7eullXDrzg,
+        res:TX_EObSQBSkEfCQ7eullXDrzg;
+    cm:verified false;
+    n6:accessContext n7:_ByGZwRSkEfCQ7aMNxFFsPQ;
+    core:discussedBy
+        <https://elm-server.com:9443/ccm/oslc/workitems/_IIVjEBSkEfCQ7aMNxFFsPQ/rtc_cm:comments>;
+    core:instanceShape wor:_IIVjEBSkEfCQ7aMNxFFsPQ;
+    core:serviceProvider wo:services;
+    core:shortId "257";
+    core:shortTitle "Defect 257"^^rdf:XMLLiteral;
+    pl:schedule n3:schedule;
+    dct:contributor users:marco;
+    dct:created "2025-04-07T04:42:00.128Z"^^xsd:dateTime;
+    dct:creator users:marco;
+    dct:description
+        "org.eclipse.core.runtime.AssertionFailedException: null argument:<br/><br/>  - Tue Apr 15 2025 08:39:38 GMT-0400 (Eastern Daylight Time) - Tue Apr 22 2025 11:24:55 GMT-0400 (Eastern Daylight Time) - Tue Apr 22 2025 15:44:44 GMT-0400 (Eastern Daylight Time) - Fri May 23 2025 09:38:49 GMT-0400 (Eastern Daylight Time) - Fri May 23 2025 10:04:21 GMT-0400 (Eastern Daylight Time) - Fri May 23 2025 13:17:19 GMT-0400 (Eastern Daylight Time) - Mon Dec 08 2025 13:21:50 GMT-0500 (Eastern Standard Time)";
+    dct:identifier "257";
+    dct:modified "2025-05-23T17:17:19.734Z"^^xsd:dateTime;
+    dct:subject "";
+    dct:title "SWT Exception"^^rdf:XMLLiteral;
+    dct:type "Defect".
