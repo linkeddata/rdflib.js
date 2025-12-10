@@ -1,0 +1,67 @@
+<rdf:RDF
+ xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+ xmlns:n0="http://jazz.net/ns/acp#"
+ xmlns:pro="http://jazz.net/ns/process#"
+ xmlns:n2="http://jazz.net/xmlns/prod/jazz/rtc/cm/1.0/"
+ xmlns:n5="http://jazz.net/xmlns/prod/jazz/rtc/ext/1.0/"
+ xmlns:c="http://open-services.net/ns/cm-x#"
+ xmlns:cm="http://open-services.net/ns/cm#"
+ xmlns:n6="http://open-services.net/ns/core/acc#"
+ xmlns:core="http://open-services.net/ns/core#"
+ xmlns:pl="http://open-services.net/ns/pl#"
+ xmlns:dct="http://purl.org/dc/terms/">
+    <cm:ChangeRequest rdf:about="https://elm-server.com:9443/ccm/resource/itemName/com.ibm.team.workitem.WorkItem/257">
+        <n0:accessControl rdf:resource="https://elm-server.com:9443/ccm/oslc/access-control/_ByGZwRSkEfCQ7aMNxFFsPQ"/>
+        <pro:iteration rdf:resource="https://elm-server.com:9443/ccm/process/iterations/_B07rUxSkEfCQ7aMNxFFsPQ"/>
+        <pro:projectArea rdf:resource="https://elm-server.com:9443/ccm/process/project-areas/_ByGZwRSkEfCQ7aMNxFFsPQ"/>
+        <pro:teamArea rdf:resource="https://elm-server.com:9443/ccm/process/team-areas/_D7V-MBSkEfCQ7aMNxFFsPQ"/>
+        <n2:com.ibm.team.workitem.linktype.blocksworkitem.blocks rdf:resource="https://elm-server.com:9443/ccm/resource/itemName/com.ibm.team.workitem.WorkItem/255"/>
+        <n2:com.ibm.team.workitem.linktype.duplicateworkitem.duplicates rdf:resource="https://elm-server.com:9443/ccm/resource/itemName/com.ibm.team.workitem.WorkItem/256"/>
+        <n2:estimate rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">14400000</n2:estimate>
+        <n2:filedAgainst rdf:resource="https://elm-server.com:9443/ccm/resource/itemOid/com.ibm.team.workitem.Category/_HTlFaBSkEfCQ7aMNxFFsPQ"/>
+        <n2:modifiedBy rdf:resource="https://elm-server.com:9443/jts/users/jamsden"/>
+        <n2:plannedFor rdf:resource="https://elm-server.com:9443/ccm/oslc/iterations/_B07rUxSkEfCQ7aMNxFFsPQ"/>
+        <n2:progressTracking rdf:resource="https://elm-server.com:9443/ccm/oslc/workitems/_IIVjEBSkEfCQ7aMNxFFsPQ/progressTracking"/>
+        <n2:repository rdf:resource="https://elm-server.com:9443/ccm/oslc/repository"/>
+        <n2:resolvedBy rdf:resource="https://elm-server.com:9443/jts/users/unassigned"/>
+        <n2:state rdf:resource="https://elm-server.com:9443/ccm/oslc/workflows/_ByGZwRSkEfCQ7aMNxFFsPQ/states/com.ibm.team.workitem.defectWorkflow/com.ibm.team.workitem.defectWorkflow.state.s1"/>
+        <n2:subscribers rdf:resource="https://elm-server.com:9443/jts/users/marco"/>
+        <n2:teamArea rdf:resource="https://elm-server.com:9443/ccm/oslc/teamareas/_D7V-MBSkEfCQ7aMNxFFsPQ"/>
+        <n2:timeSheet rdf:resource="https://elm-server.com:9443/ccm/oslc/workitems/_IIVjEBSkEfCQ7aMNxFFsPQ/rtc_cm:timeSheet"/>
+        <n2:type rdf:resource="https://elm-server.com:9443/ccm/oslc/types/_ByGZwRSkEfCQ7aMNxFFsPQ/defect"/>
+        <n5:archived rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">0</n5:archived>
+        <n5:contextId>_ByGZwRSkEfCQ7aMNxFFsPQ</n5:contextId>
+        <c:priority rdf:resource="https://elm-server.com:9443/ccm/oslc/enumerations/_ByGZwRSkEfCQ7aMNxFFsPQ/priority/priority.literal.l07"/>
+        <c:project rdf:resource="https://elm-server.com:9443/ccm/oslc/projectareas/_ByGZwRSkEfCQ7aMNxFFsPQ"/>
+        <c:severity rdf:resource="https://elm-server.com:9443/ccm/oslc/enumerations/_ByGZwRSkEfCQ7aMNxFFsPQ/severity/severity.literal.l5"/>
+        <cm:approved rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">0</cm:approved>
+        <cm:closed rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">0</cm:closed>
+        <cm:fixed rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">0</cm:fixed>
+        <cm:implementsRequirement rdf:resource="https://elm-server.com:9443/rm/resources/TX_ELU68BSkEfCQ7eullXDrzg"/>
+        <cm:implementsRequirement rdf:resource="https://elm-server.com:9443/rm/resources/TX_EN0OQBSkEfCQ7eullXDrzg"/>
+        <cm:implementsRequirement rdf:resource="https://elm-server.com:9443/rm/resources/TX_EObSQBSkEfCQ7eullXDrzg"/>
+        <cm:inprogress rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">0</cm:inprogress>
+        <cm:reviewed rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">0</cm:reviewed>
+        <cm:status>New</cm:status>
+        <cm:tracksRequirement rdf:resource="https://elm-server.com:9443/rm/resources/TX_ELU68BSkEfCQ7eullXDrzg"/>
+        <cm:tracksRequirement rdf:resource="https://elm-server.com:9443/rm/resources/TX_EN0OQBSkEfCQ7eullXDrzg"/>
+        <cm:tracksRequirement rdf:resource="https://elm-server.com:9443/rm/resources/TX_EObSQBSkEfCQ7eullXDrzg"/>
+        <cm:verified rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">0</cm:verified>
+        <n6:accessContext rdf:resource="https://elm-server.com:9443/ccm/acclist#_ByGZwRSkEfCQ7aMNxFFsPQ"/>
+        <core:discussedBy rdf:resource="https://elm-server.com:9443/ccm/oslc/workitems/_IIVjEBSkEfCQ7aMNxFFsPQ/rtc_cm:comments"/>
+        <core:instanceShape rdf:resource="https://elm-server.com:9443/ccm/oslc/shapes/workitems/_IIVjEBSkEfCQ7aMNxFFsPQ"/>
+        <core:serviceProvider rdf:resource="https://elm-server.com:9443/ccm/oslc/contexts/_ByGZwRSkEfCQ7aMNxFFsPQ/workitems/services"/>
+        <core:shortId>257</core:shortId>
+        <core:shortTitle rdf:datatype="http://www.w3.org/1999/02/22-rdf-syntax-ns#XMLLiteral">Defect 257</core:shortTitle>
+        <pl:schedule rdf:resource="https://elm-server.com:9443/ccm/oslc/workitems/_IIVjEBSkEfCQ7aMNxFFsPQ/schedule"/>
+        <dct:contributor rdf:resource="https://elm-server.com:9443/jts/users/marco"/>
+        <dct:created rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-04-07T04:42:00.128Z</dct:created>
+        <dct:creator rdf:resource="https://elm-server.com:9443/jts/users/marco"/>
+        <dct:description>org.eclipse.core.runtime.AssertionFailedException: null argument:&lt;br/>&lt;br/>  - Tue Apr 15 2025 08:39:38 GMT-0400 (Eastern Daylight Time) - Tue Apr 22 2025 11:24:55 GMT-0400 (Eastern Daylight Time) - Tue Apr 22 2025 15:44:44 GMT-0400 (Eastern Daylight Time) - Fri May 23 2025 09:38:49 GMT-0400 (Eastern Daylight Time) - Fri May 23 2025 10:04:21 GMT-0400 (Eastern Daylight Time) - Fri May 23 2025 13:17:19 GMT-0400 (Eastern Daylight Time) - Mon Dec 08 2025 13:21:50 GMT-0500 (Eastern Standard Time)</dct:description>
+        <dct:identifier>257</dct:identifier>
+        <dct:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2025-05-23T17:17:19.734Z</dct:modified>
+        <dct:subject></dct:subject>
+        <dct:title rdf:datatype="http://www.w3.org/1999/02/22-rdf-syntax-ns#XMLLiteral">SWT Exception</dct:title>
+        <dct:type>Defect</dct:type>
+    </cm:ChangeRequest>
+</rdf:RDF>

@@ -52,6 +52,12 @@ export class Serializer {
     return this
   }
 
+  /**
+   * Set serializer behavior flags. Letters can be combined with spaces.
+   * Examples: 'si', 'deinprstux', 'si dr', 'o'.
+   * Notable flags:
+   *  - 'o': do not abbreviate to a prefixed name when the local part contains a dot
+   */
   setFlags(flags) {
     this.flags = flags || '';
     return this
@@ -251,9 +257,32 @@ export class Serializer {
     return this.statementsToN3(f.statements)
   }
 
-  _notQNameChars = '\t\r\n !"#$%&\'()*.,+/;<=>?@[\\]^`{|}~' // issue#228
+  _notQNameChars = '\t\r\n !"#$%&\'()*,+/;<=>?@[\\]^`{|}~' // issue#228
   _notNameChars =
     (this._notQNameChars + ':')
+
+  // Validate if a string is a valid PN_LOCAL per Turtle 1.1 spec
+  // Allows dots inside the local name but not as trailing character
+  // Also allows empty local names (for URIs ending in / or #)
+  isValidPNLocal(local) {
+    // Empty local name is valid (e.g., ex: for http://example.com/)
+    if (local.length === 0) return true
+    
+    // Cannot end with a dot
+    if (local[local.length - 1] === '.') return false
+    
+    // Check each character (allow dots mid-string)
+    for (var i = 0; i < local.length; i++) {
+      var ch = local[i]
+      // Dot is allowed unless it's the last character (checked above)
+      if (ch === '.') continue
+      // Other characters must not be in the blacklist
+      if (this._notNameChars.indexOf(ch) >= 0) {
+        return false
+      }
+    }
+    return true
+  }
 
   explicitURI(uri) {
     if (this.flags.indexOf('r') < 0 && this.base) {
@@ -628,13 +657,17 @@ export class Serializer {
     if (j >= 0 && this.flags.indexOf('p') < 0 &&
       // Can split at namespace but only if http[s]: URI or file: or ws[s] (why not others?)
       (uri.indexOf('http') === 0 || uri.indexOf('ws') === 0 || uri.indexOf('file') === 0)) {
-      var canSplit = true
-      for (var k = j + 1; k < uri.length; k++) {
-        if (this._notNameChars.indexOf(uri[k]) >= 0) {
-          canSplit = false
-          break
-        }
-      }
+      var localid = uri.slice(j + 1)
+      var namesp = uri.slice(0, j + 1)
+      // Don't split if namespace is just the protocol (e.g., https://)
+      // A valid namespace should have content after the protocol
+  var minNamespaceLength = uri.indexOf('://') + 4 // e.g., "http://x" minimum
+  // Also don't split if namespace is the base directory (would serialize as relative URI)
+  var baseDir = this.base ? this.base.slice(0, Math.max(this.base.lastIndexOf('/'), this.base.lastIndexOf('#')) + 1) : null
+  var namespaceIsBaseDir = baseDir && namesp === baseDir
+  // If flag 'o' is present, forbid dots in local part when abbreviating
+  var forbidDotLocal = this.flags.indexOf('o') >= 0 && localid.indexOf('.') >= 0
+  var canSplit = !namespaceIsBaseDir && !forbidDotLocal && namesp.length > minNamespaceLength && this.isValidPNLocal(localid)
 /*
       if (uri.slice(0, j + 1) === this.base + '#') { // base-relative
         if (canSplit) {
@@ -645,8 +678,6 @@ export class Serializer {
       }
 */
       if (canSplit) {
-        var localid = uri.slice(j + 1)
-        var namesp = uri.slice(0, j + 1)
         if (this.defaultNamespace && this.defaultNamespace === namesp &&
             this.flags.indexOf('d') < 0) { // d -> suppress default
           if (this.flags.indexOf('k') >= 0 &&

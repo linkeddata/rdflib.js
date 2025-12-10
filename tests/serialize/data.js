@@ -98,7 +98,15 @@ var doNext = async function (remaining) {
           // there is an issue with jsonld. The test returns an error : process exit 1. CI fails
           // await is only for jsonld serialize.
           try {
-            var options = {flags: 'z'} // Only applies to RDF/XML
+            // Flags:
+            //  - 'z' used historically for RDF/XML code path
+            //  - For Turtle outputs, use 'o' to avoid dotted local qnames and match reference fixtures
+            var options = {}
+            if ((contentType || '').indexOf('turtle') >= 0) {
+              options.flags = 'o'
+            } else if ((contentType || '').indexOf('rdf+xml') >= 0) {
+              options.flags = 'z'
+            }
             var out = await $rdf.serialize(inDocument, kb, inDocument.uri, contentType, undefined, options)
           } catch(e) {
             exitMessage('Error in serializer: ' + e + stackString(e))

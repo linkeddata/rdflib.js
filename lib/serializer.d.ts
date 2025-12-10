@@ -22,6 +22,12 @@ export class Serializer {
         string: NamedNode;
     };
     setBase(base: any): Serializer;
+    /**
+     * Set serializer behavior flags. Letters can be combined with spaces.
+     * Examples: 'si', 'deinprstux', 'si dr', 'o'.
+     * Notable flags:
+     *  - 'o': do not abbreviate to a prefixed name when the local part contains a dot
+     */
     setFlags(flags: any): Serializer;
     toStr(x: any): any;
     fromStr(s: any): any;
@@ -51,6 +57,7 @@ export class Serializer {
     toN3(f: any): string;
     _notQNameChars: string;
     _notNameChars: string;
+    isValidPNLocal(local: any): boolean;
     explicitURI(uri: any): string;
     statementsToNTriples(sts: any): string;
     statementsToN3(sts: any): string;

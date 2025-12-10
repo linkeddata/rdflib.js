@@ -413,6 +413,21 @@ voc:building1 voc:created "2012-03-12"^^xsd:date; voc:length 145000.0e0 .
   }
 }`
 
+    const xml1 = `<rdf:RDF
+ xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+ xmlns:sioc="http://rdfs.org/sioc/ns#"
+ xmlns:pad="http://www.w3.org/ns/pim/pad#">
+    <rdf:Description rdf:about="https://www.example.org/abc/def#id1443100844982">
+        <sioc:content>kasdfjsahdkfhkjhdkjsfhjkasdfkhjkajkdsajkhadsfkhjhjkdfajsdsafhjkdfhjksa</sioc:content>
+        <pad:date rdf:datatype="http://www.w3.org/2001/XMLSchema#date">2012-12-10</pad:date>
+        <pad:dateTime rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2012-12-25T23:59</pad:dateTime>
+        <pad:decimal rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">12</pad:decimal>
+        <pad:float rdf:datatype="http://www.w3.org/2001/XMLSchema#double">3.141</pad:float>
+        <pad:integer rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</pad:integer>
+        <pad:next rdf:resource="https://www.example.org/abc/def#id1443100912627"/>
+    </rdf:Description>
+</rdf:RDF>
+`
     describe('source ttl', () => {
       let store, base
       before(done => {
@@ -421,6 +436,8 @@ voc:building1 voc:created "2012-03-12"^^xsd:date; voc:length 145000.0e0 .
         const content = ttl1
         store = graph()
         parse(content, store, base, mimeType, done)
+        console.log(serialize(null, store, base, 'application/rdf+xml'))
+        console.log(serialize(null, store, undefined, 'application/rdf+xml'))
       })
 
       it('store contains 7 statements', () => {
@@ -428,6 +445,7 @@ voc:building1 voc:created "2012-03-12"^^xsd:date; voc:length 145000.0e0 .
       })
 
       it('serialize to ttl', () => {
+        // console.log(serialize(null, store, base, 'application/rdf+xml'))
         expect(serialize(null, store, base, 'text/turtle')).to.eql(ttl1)
       });
 
@@ -436,6 +454,12 @@ voc:building1 voc:created "2012-03-12"^^xsd:date; voc:length 145000.0e0 .
         // expect(await serialize(null, store, base, 'application/ld+json')).to.eql(jsonld1('0'))
         // expect(await serialize(store.sym(base), store, null, 'application/ld+json')).to.eql(jsonld1('0'))
         // expect(await serialize(store.sym(base), store, base, 'application/ld+json')).to.eql(jsonld1('0'))
+      })
+
+      it('serialize to xml', () => {
+        // console.log(serialize(null, store, null, 'application/rdf+xml'))
+        expect(serialize(null, store, null, 'application/rdf+xml')).to.eql(xml1)
+        // expect(serialize(null, store, base, 'application/rdf+xml')).to.eql(xml1)
       })
     })
 

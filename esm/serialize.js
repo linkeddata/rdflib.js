@@ -40,7 +40,8 @@ contentType, callback, options) {
         return executeCallback(null, documentString);
       case TurtleContentType:
       case TurtleLegacyContentType:
-        sz.setFlags('si'); // Suppress = for sameAs and => for implies
+        // Suppress = for sameAs and => for implies; preserve any user-specified flags (e.g., 'o')
+        sz.setFlags('si' + (opts.flags ? ' ' + opts.flags : ''));
         documentString = sz.statementsToN3(newSts);
         return executeCallback(null, documentString);
       case NTriplesContentType:
@@ -48,7 +49,8 @@ contentType, callback, options) {
         documentString = sz.statementsToNTriples(newSts);
         return executeCallback(null, documentString);
       case JSONLDContentType:
-        sz.setFlags('si dr'); // turtle + dr (means no default, no relative prefix)
+        // turtle + dr (means no default, no relative prefix); preserve user flags
+        sz.setFlags('si dr' + (opts.flags ? ' ' + opts.flags : ''));
         documentString = sz.statementsToJsonld(newSts); // convert via turtle
         return executeCallback(null, documentString);
       case NQuadsContentType:
