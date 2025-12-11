@@ -5,14 +5,12 @@
 ** This is or was https://github.com/linkeddata/rdflib.js/blob/main/src/serializer.js
 ** Licence: MIT
 */
-import NamedNode from './named-node'
-import BlankNode from './blank-node'
+import * as ttl2jsonld from '@frogcat/ttl2jsonld'
+import solidNs from 'solid-namespace'
+import CanonicalDataFactory from './factories/canonical-data-factory'
 import * as Uri from './uri'
 import * as Util from './utils-js'
-import CanonicalDataFactory from './factories/canonical-data-factory'
 import { createXSD } from './xsd'
-import solidNs from 'solid-namespace'
-import * as ttl2jsonld from '@frogcat/ttl2jsonld'
 
 
 export default function createSerializer(store) {
@@ -914,10 +912,10 @@ export class Serializer {
             break
           case 'Literal':
             results = results.concat(['<' + t +
-            (st.object.datatype.equals(this.xsd.string)
-              ? ''
-              : ' rdf:datatype="' + escapeForXML(st.object.datatype.uri) + '"') +
-            (st.object.language ? ' xml:lang="' + st.object.language + '"' : '') +
+            (st.object.language ? ' xml:lang="' + st.object.language + '"' :
+              (st.object.datatype.equals(this.xsd.string)
+                ? ''
+                : ' rdf:datatype="' + escapeForXML(st.object.datatype.uri) + '"')) +
             '>' + escapeForXML(st.object.value) +
             '</' + t + '>'])
             break
@@ -980,9 +978,10 @@ export class Serializer {
             break
           case 'Literal':
             results = results.concat(['<' + qname(st.predicate) +
-              (st.object.datatype.equals(this.xsd.string) ? '' : ' rdf:datatype="' + escapeForXML(st.object.datatype.value) + '"') +
-              (st.object.language ? ' xml:lang="' + st.object.language + '"' : '') +
-              '>' + escapeForXML(st.object.value) +
+              (st.object.language ? 
+                ' xml:lang="' + st.object.language + '"' :
+                (st.object.datatype.equals(this.xsd.string) ? '' : ' rdf:datatype="' + escapeForXML(st.object.datatype.value) + '"')) 
+              + '>' + escapeForXML(st.object.value) +
               '</' + qname(st.predicate) + '>'])
             break
           case 'Collection':

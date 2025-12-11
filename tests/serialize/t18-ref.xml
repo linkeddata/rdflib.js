@@ -1,0 +1,14 @@
+<rdf:RDF
+ xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+ xmlns:show="http://example.org/vocab/show/"
+ xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#">
+    <rdf:Description rdf:about="http://example.org/vocab/show/218">
+        <show:localName xml:lang="en">That Seventies Show</show:localName>
+        <show:localName xml:lang="fr">Cette Série des Années Soixante-dix</show:localName>
+        <show:localName xml:lang="fr-be">Cette Série des Années Septante</show:localName>
+        <show:size rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">10</show:size>
+        <rdfs:label>That Seventies Show</rdfs:label>
+        <rdfs:label>Another Seventies Show</rdfs:label>
+        <rdfs:label>Awesome Seventies Show</rdfs:label>
+    </rdf:Description>
+</rdf:RDF>
