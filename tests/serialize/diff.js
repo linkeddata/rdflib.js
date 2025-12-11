@@ -22,8 +22,8 @@
   var file1 = args[0]
   var file2 = args[1]
 
-  var data1 = fs.readFileSync(file1, 'utf-8')
-  var data2 = fs.readFileSync(file2, 'utf-8')
+  var data1 = fs.readFileSync(file1, 'utf-8').replace(/\r\n/g, '\n')
+  var data2 = fs.readFileSync(file2, 'utf-8').replace(/\r\n/g, '\n')
 
   var diff = jsdiff.diffChars(data1, data2)
 
@@ -35,6 +35,8 @@
   })
   console.log()
   if (diff.length > 1) {
+    console.log('Test failed, files are different: ' + file1 + ' and ' + file2)
+    console.log(diff)
     process.exit(1)
   }
 })()

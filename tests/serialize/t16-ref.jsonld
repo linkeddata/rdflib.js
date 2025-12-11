@@ -3,9 +3,9 @@
     "pad": "http://www.w3.org/ns/pim/pad#",
     "sioc": "http://rdfs.org/sioc/ns#",
     "xsd": "http://www.w3.org/2001/XMLSchema#",
-    "t1": "http://localhost/t1.ttl#"
+    "t": "http://localhost/t1.ttl#"
   },
-  "@id": "t1:id1443100844982",
+  "@id": "t:id1443100844982",
   "sioc:content": "kasdfjsahdkfhkjhdkjsfhjkasdfkhjkajkdsajkhadsfkhjhjkdfajsdsafhjkdfhjksa",
   "pad:date": {
     "@value": "2012-12-10",
@@ -25,6 +25,6 @@
   },
   "pad:integer": 0,
   "pad:next": {
-    "@id": "t1:id1443100912627"
+    "@id": "t:id1443100912627"
   }
 }

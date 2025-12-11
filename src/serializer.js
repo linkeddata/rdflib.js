@@ -39,7 +39,7 @@ export class Serializer {
 
     this.namespacesUsed = [] // Count actually used and so needed in @prefixes
     this.keywords = ['a'] // The only one we generate at the moment
-    this.prefixchars = 'abcdefghijklmnopqustuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    this.prefixchars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
     this.incoming = null // Array not calculated yet
     this.formulas = [] // remembering original formulae from hashes
     this.store = store
@@ -170,8 +170,8 @@ export class Serializer {
     if (slash >= 0) p = p.slice(slash + 1)
     var i = 0
     while (i < p.length) {
+      i++
       if (this.prefixchars.indexOf(p[i]) >= 0) {
-        i++
       } else {
         break
       }
