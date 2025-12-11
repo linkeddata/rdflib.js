@@ -53,7 +53,7 @@ ex:subject.example ex:pred ex:obj .
 `)
     })
 
-    it('does not abbreviate to qname when local part has a dot', () => {
+    it('abbreviates to qname when local part has a non-trailing dot', () => {
       const doc = sym('https://example.net/doc')
       const kb = graph()
       kb.setPrefixForURI('ex', 'http://example.com/')
@@ -64,8 +64,40 @@ ex:subject.example ex:pred ex:obj .
         doc
       ))
       const result = serialize(doc, kb, null, 'text/turtle')
-      expect(result).to.contain('<http://example.com/subject.example>')
-      expect(result).to.not.contain('ex:subject.example')
+      expect(result).to.contain('ex:subject.example')
+      expect(result).to.not.contain('<http://example.com/subject.example>')
+    })
+
+    it('does not abbreviate when local part ends with a dot', () => {
+      const doc = sym('https://example.net/doc')
+      const kb = graph()
+      kb.setPrefixForURI('ex', 'http://example.com/')
+      kb.add(st(
+        sym('http://example.com/subject.'),
+        sym('http://example.com/p'),
+        sym('http://example.com/o'),
+        doc
+      ))
+      const result = serialize(doc, kb, null, 'text/turtle')
+      expect(result).to.contain('<http://example.com/subject.>')
+      expect(result).to.not.contain('ex:subject.')
+    })
+
+    it("honors flag 'o' to avoid dotted local qnames", () => {
+      const doc = sym('https://example.net/doc')
+      const kb = graph()
+      kb.setPrefixForURI('ex', 'http://example.com/')
+      kb.add(st(
+        sym('http://example.com/file.name'),
+        sym('http://example.com/p'),
+        sym('http://example.com/o'),
+        doc
+      ))
+      const withDefault = serialize(doc, kb, null, 'text/turtle')
+      expect(withDefault).to.contain('ex:file.name')
+      const withFlag = serialize(doc, kb, null, 'text/turtle', undefined, { flags: 'o' })
+      expect(withFlag).to.contain('<http://example.com/file.name>')
+      expect(withFlag).to.not.contain('ex:file.name')
     })
   })
 })

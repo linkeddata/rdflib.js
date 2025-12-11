@@ -1,9 +1,5 @@
-## 2025-11-04 - Turtle dots in terms (fix #601)
-- Parser: allow '.' inside names unless followed by whitespace/comment/EOF; leave '.' for checkDot().
-- Serializer: do not abbreviate IRIs containing '.'; emit <iri> instead of fake qname.
-- Tests: add tests/unit/dot-in-term-test.ts for parse/serialize with dots.
-- Refactor: helper dotTerminatesName(), shared wsOrHash regex, removed debug logs.
-Result: 257 tests passing.
+## 2025-11-04 - Fix Turtle parser/serializer handling of dots in terms (#601)
+Parser allows dots inside local names (e.g., ex:subject.example) while correctly distinguishing statement terminators. Serializer now produces spec-compliant qnames with dots per Turtle 1.1 (e.g., ex:subject.example instead of <http://example.com/subject.example>), rejecting only trailing dots. Added isValidPNLocal() validator, dotTerminatesName() helper, and shared wsOrHash regex. New optional serializer flag 'o' lets callers suppress dotted local qnames and keep the conservative <IRI> form when desired. Fixed base-directory namespace handling to avoid spurious loc: prefix for relative URIs. Updated README with serializer flags documentation.
 
 ================================================================================
 
