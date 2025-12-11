@@ -25,7 +25,8 @@
   var data1 = fs.readFileSync(file1, 'utf-8')
   var data2 = fs.readFileSync(file2, 'utf-8')
 
-  var diff = jsdiff.diffChars(data1, data2)
+  // var diff = jsdiff.diffChars(data1, data2)
+  var diff = jsdiff.diffLines(data1, data2, { stripTrailingCr: true})
 
   diff.forEach(function (part) {
     var color = part.added ? 'green'
@@ -33,8 +34,10 @@
 
     process.stderr.write(part.value[color])
   })
-  console.log()
+  console.log('diff ')
+  // console.log(diff)
   if (diff.length > 1) {
+    console.log('Files %s and %s are different' + diff.length, file1, file2)
     process.exit(1)
   }
 })()
