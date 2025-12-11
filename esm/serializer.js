@@ -6,14 +6,12 @@ import _defineProperty from "@babel/runtime/helpers/defineProperty";
 ** This is or was https://github.com/linkeddata/rdflib.js/blob/main/src/serializer.js
 ** Licence: MIT
 */
-import NamedNode from './named-node';
-import BlankNode from './blank-node';
+import * as ttl2jsonld from '@frogcat/ttl2jsonld';
+import solidNs from 'solid-namespace';
+import CanonicalDataFactory from './factories/canonical-data-factory';
 import * as Uri from './uri';
 import * as Util from './utils-js';
-import CanonicalDataFactory from './factories/canonical-data-factory';
 import { createXSD } from './xsd';
-import solidNs from 'solid-namespace';
-import * as ttl2jsonld from '@frogcat/ttl2jsonld';
 export default function createSerializer(store) {
   return new Serializer(store);
 }
@@ -876,7 +874,7 @@ export class Serializer {
             results = results.concat(['<' + t + ' rdf:resource="' + relURI(st.object) + '"/>']);
             break;
           case 'Literal':
-            results = results.concat(['<' + t + (st.object.datatype.equals(this.xsd.string) ? '' : ' rdf:datatype="' + escapeForXML(st.object.datatype.uri) + '"') + (st.object.language ? ' xml:lang="' + st.object.language + '"' : '') + '>' + escapeForXML(st.object.value) + '</' + t + '>']);
+            results = results.concat(['<' + t + (st.object.language ? ' xml:lang="' + st.object.language + '"' : st.object.datatype.equals(this.xsd.string) ? '' : ' rdf:datatype="' + escapeForXML(st.object.datatype.uri) + '"') + '>' + escapeForXML(st.object.value) + '</' + t + '>']);
             break;
           case 'Collection':
             results = results.concat(['<' + t + ' rdf:parseType="Collection">', collectionXMLTree(st.object, stats), '</' + t + '>']);
@@ -927,7 +925,7 @@ export class Serializer {
             results = results.concat(['<' + qname(st.predicate) + ' rdf:resource="' + relURI(st.object) + '"/>']);
             break;
           case 'Literal':
-            results = results.concat(['<' + qname(st.predicate) + (st.object.datatype.equals(this.xsd.string) ? '' : ' rdf:datatype="' + escapeForXML(st.object.datatype.value) + '"') + (st.object.language ? ' xml:lang="' + st.object.language + '"' : '') + '>' + escapeForXML(st.object.value) + '</' + qname(st.predicate) + '>']);
+            results = results.concat(['<' + qname(st.predicate) + (st.object.language ? ' xml:lang="' + st.object.language + '"' : st.object.datatype.equals(this.xsd.string) ? '' : ' rdf:datatype="' + escapeForXML(st.object.datatype.value) + '"') + '>' + escapeForXML(st.object.value) + '</' + qname(st.predicate) + '>']);
             break;
           case 'Collection':
             results = results.concat(['<' + qname(st.predicate) + ' rdf:parseType="Collection">', collectionXMLTree(st.object, stats), '</' + qname(st.predicate) + '>']);

@@ -13,13 +13,13 @@ export class Serializer {
     store: any;
     rdfFactory: any;
     xsd: {
-        boolean: NamedNode;
-        dateTime: NamedNode;
-        decimal: NamedNode;
-        double: NamedNode;
-        integer: NamedNode;
-        langString: NamedNode;
-        string: NamedNode;
+        boolean: import("./named-node").default;
+        dateTime: import("./named-node").default;
+        decimal: import("./named-node").default;
+        double: import("./named-node").default;
+        integer: import("./named-node").default;
+        langString: import("./named-node").default;
+        string: import("./named-node").default;
     };
     setBase(base: any): Serializer;
     /**
@@ -72,4 +72,3 @@ export class Serializer {
     statementsToXML(sts: any): string;
     statementsToJsonld(sts: any): string;
 }
-import NamedNode from './named-node';
