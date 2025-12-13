@@ -1,4 +1,3 @@
-/* eslint-env mocha */
 import {expect} from 'chai'
 
 import { convertFirstRestNil } from '../../src/lists'

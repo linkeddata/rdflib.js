@@ -1,4 +1,4 @@
-import NamedNode from './named-node';
+import NamedNode from './named-node'
 
 export default {
   boolean: new NamedNode('http://www.w3.org/2001/XMLSchema#boolean'),

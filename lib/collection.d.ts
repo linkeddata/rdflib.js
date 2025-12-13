@@ -49,7 +49,7 @@ export default class Collection<T extends Node = Node | RdflibBlankNode | Collec
      * Creates a new Collection with the substituting bindings applied
      * @param bindings - The bindings to substitute
      */
-    substitute(bindings: Bindings): any;
+    substitute(bindings: Bindings): Collection<Node | Collection<any> | Literal | Variable>;
     toNT(): string;
     static toNT(collection: any): string;
     /**

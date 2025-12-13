@@ -1,11 +1,11 @@
 declare namespace _default {
-    const boolean: NamedNode;
-    const dateTime: NamedNode;
-    const decimal: NamedNode;
-    const double: NamedNode;
-    const integer: NamedNode;
-    const langString: NamedNode;
-    const string: NamedNode;
+    let boolean: NamedNode;
+    let dateTime: NamedNode;
+    let decimal: NamedNode;
+    let double: NamedNode;
+    let integer: NamedNode;
+    let langString: NamedNode;
+    let string: NamedNode;
 }
 export default _default;
 import NamedNode from './named-node';

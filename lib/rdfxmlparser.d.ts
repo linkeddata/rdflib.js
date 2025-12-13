@@ -25,7 +25,7 @@ export default class RDFParser {
     };
     constructor(store: any);
     /** Our triple store reference @private */
-    store: any; /** Our identified blank nodes @private */
+    private store; /** Our identified blank nodes @private */
     bnodes: {}; /** A context for context-aware stores @private */
     why: any; /** Reification flag */
     reify: boolean;

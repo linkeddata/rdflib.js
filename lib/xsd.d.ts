@@ -9,11 +9,11 @@ export function createXSD(localFactory?: import("./factories/factory-types").Dat
 };
 export default defaultXSD;
 declare namespace defaultXSD {
-    const boolean: import("./named-node").default;
-    const dateTime: import("./named-node").default;
-    const decimal: import("./named-node").default;
-    const double: import("./named-node").default;
-    const integer: import("./named-node").default;
-    const langString: import("./named-node").default;
-    const string: import("./named-node").default;
+    let boolean: import("./named-node").default;
+    let dateTime: import("./named-node").default;
+    let decimal: import("./named-node").default;
+    let double: import("./named-node").default;
+    let integer: import("./named-node").default;
+    let langString: import("./named-node").default;
+    let string: import("./named-node").default;
 }

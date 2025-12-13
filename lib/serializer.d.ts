@@ -21,14 +21,14 @@ export class Serializer {
         langString: import("./named-node").default;
         string: import("./named-node").default;
     };
-    setBase(base: any): Serializer;
+    setBase(base: any): this;
     /**
      * Set serializer behavior flags. Letters can be combined with spaces.
      * Examples: 'si', 'deinprstux', 'si dr', 'o'.
      * Notable flags:
      *  - 'o': do not abbreviate to a prefixed name when the local part contains a dot
      */
-    setFlags(flags: any): Serializer;
+    setFlags(flags: any): this;
     toStr(x: any): any;
     fromStr(s: any): any;
     /**
@@ -45,7 +45,7 @@ export class Serializer {
      */
     setPrefix(prefix: any, uri: any): void;
     suggestPrefix(prefix: any, uri: any): void;
-    suggestNamespaces(namespaces: any): Serializer;
+    suggestNamespaces(namespaces: any): this;
     checkIntegrity(): void;
     makeUpPrefix(uri: any): any;
     rootSubjects(sts: any): {

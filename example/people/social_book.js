@@ -55,7 +55,7 @@ function card(who,kb) {
         "  OPTIONAL { ?addr contact:country ?country . } \n"+
         "  OPTIONAL { ?addr contact:postalCode ?postcode . } \n"+
         "  OPTIONAL { ?addr contact:street ?street . } \n"+
-        "}";
+        "}"
 
     var eq = $rdf.SPARQLToQuery(query,false,kb)
     var onresult = function(result) {
@@ -75,7 +75,7 @@ function card(who,kb) {
         var obj = undefined
         var i=0
         while (!obj && i < arguments.length) {
-            obj = kb.any(who, arguments[i++]);
+            obj = kb.any(who, arguments[i++])
         }
         return obj
     }
@@ -90,11 +90,11 @@ function card(who,kb) {
     else nam = nam.value
     newCard.find(".name").text(nam)
 
-    var nick = findFirst(FOAF('nick'));
+    var nick = findFirst(FOAF('nick'))
     if (!nick) { nick = "" } else nick = nick.value
     newCard.find(".nickname").text(nick)
 
-    var mbox = kb.any(who, FOAF('mbox'));
+    var mbox = kb.any(who, FOAF('mbox'))
     var email_el = newCard.find(".email .user_info_input")
     if (mbox) {
         email_el.text(removeProtocol(mbox.uri))
@@ -103,7 +103,7 @@ function card(who,kb) {
         email_el.hide()
     }
 
-    var phone = kb.any(who, FOAF('phone'));
+    var phone = kb.any(who, FOAF('phone'))
     var phone_el = newCard.find(".phone .user_info_input")
     if (phone) {
         phone_el.text(removeProtocol(phone.uri))
@@ -112,7 +112,7 @@ function card(who,kb) {
         phone_el.hide()
     }
 
-    var bday = kb.any(who, FOAF('birthday'));
+    var bday = kb.any(who, FOAF('birthday'))
     if (bday) {
 
     }
@@ -131,7 +131,7 @@ function card(who,kb) {
 
 
 
-var uri = 'http://bblfish.net/people/henry/card#me';
+var uri = 'http://bblfish.net/people/henry/card#me'
 
 /**
  * fill out the html template for the person identified by the WebID person as described in the knowledge
@@ -139,12 +139,12 @@ var uri = 'http://bblfish.net/people/henry/card#me';
  */
 function friends (person,kb,col) {
     var panel = "#panel"+col
-    var friends = kb.each(person, FOAF('knows'));
-    var i, n = friends.length, friend;
-    var lis = "";
+    var friends = kb.each(person, FOAF('knows'))
+    var i, n = friends.length, friend
+    var lis = ""
 
     for (i = 0; i < n; i++) {
-        friend = friends[i];
+        friend = friends[i]
         if (friend && friend.termType === 'NamedNode') { //only show people with a WebID for the moment.
             var name = kb.any(friend, FOAF('name'))
             if (!name) {
@@ -169,8 +169,8 @@ function friends (person,kb,col) {
  */
 function redraw(webid, col) {
     if (!col) col = 0
-    var person = $rdf.sym(webid);
-    var indexOf = webid.indexOf('#');
+    var person = $rdf.sym(webid)
+    var indexOf = webid.indexOf('#')
     var docURI
     if (indexOf >= 0)
         docURI = webid.slice(0, indexOf)
@@ -178,13 +178,13 @@ function redraw(webid, col) {
     var kb = graphs[docURI]
     if (!kb) {
         //if the knowledge base was not initialised fetch info from the web (if need CORS go through CORS proxy)
-        kb = graphs[docURI] = new $rdf.IndexedFormula();
-        var fetch = $rdf.fetcher(kb);
+        kb = graphs[docURI] = new $rdf.IndexedFormula()
+        var fetch = $rdf.fetcher(kb)
         fetch.nowOrWhenFetched(docURI, undefined, function(ok, body) {
             // @@ check ok
             card(person,kb)
             friends(person,kb,col+1)
-        });
+        })
     } else {  //this does not take into account ageing!
         card(person,kb)
         friends(person,kb,col+1)

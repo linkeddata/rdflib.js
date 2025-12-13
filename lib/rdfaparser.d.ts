@@ -61,15 +61,15 @@ declare class RDFaProcessor {
     trim(str: any): any;
 }
 declare namespace RDFaProcessor {
-    const XMLLiteralURI: string;
-    const HTMLLiteralURI: string;
-    const PlainLiteralURI: string;
-    const objectURI: string;
-    const typeURI: string;
-    const nameChar: string;
-    const nameStartChar: string;
-    const NCNAME: RegExp;
-    const dateTimeTypes: {
+    let XMLLiteralURI: string;
+    let HTMLLiteralURI: string;
+    let PlainLiteralURI: string;
+    let objectURI: string;
+    let typeURI: string;
+    let nameChar: string;
+    let nameStartChar: string;
+    let NCNAME: RegExp;
+    let dateTimeTypes: {
         pattern: RegExp;
         type: string;
     }[];

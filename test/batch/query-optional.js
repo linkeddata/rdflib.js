@@ -21,7 +21,7 @@
 var $rdf = require('../../src')
 
 if (dump == undefined) {
-  var dump = function (str) { print('----  ' + str);}
+  var dump = function (str) { print('----  ' + str)}
   // $rdf.log.debug = function(str) {print("debug: "+str)}
   // $rdf.log.warn = function(str) {print("warn:  "+str)}
   // $rdf.log.info = function(str) {print("info:  "+str)}

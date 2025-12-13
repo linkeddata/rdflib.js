@@ -1,10 +1,10 @@
-"use strict";
+"use strict"
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function") } }
 
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor) } }
 
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor }
 
 //  RDFa Parser for rdflib.js
 // Originally by: Alex Milowski
@@ -15,17 +15,17 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 // RDFaProcessor.prototype.constructor=RDFaProcessor
 // options.base = base URI    not really an option, shopuld always be set.
 //
-var BlankNode = require('./blank-node');
+var BlankNode = require('./blank-node')
 
-var Literal = require('./literal');
+var Literal = require('./literal')
 
-var rdf = require('./data-factory');
+var rdf = require('./data-factory')
 
-var NamedNode = require('./named-node');
+var NamedNode = require('./named-node')
 
-var Uri = require('./uri');
+var Uri = require('./uri')
 
-var Util = require('./util');
+var Util = require('./util')
 
 if (typeof Node === 'undefined') {
   //  @@@@@@ Global. Interface to xmldom.
@@ -42,21 +42,21 @@ if (typeof Node === 'undefined') {
     DOCUMENT_TYPE_NODE: 10,
     DOCUMENT_FRAGMENT_NODE: 11,
     NOTATION_NODE: 12
-  };
+  }
 }
 
 const HTMLOPTIONS = {
   'selfClosing': 'br img input area base basefont col colgroup source wbr isindex link meta param hr'
-};
+}
 
 var RDFaProcessor =
 /*#__PURE__*/
 function () {
   function RDFaProcessor(kb, options) {
-    _classCallCheck(this, RDFaProcessor);
+    _classCallCheck(this, RDFaProcessor)
 
-    this.options = options || {};
-    this.kb = kb;
+    this.options = options || {}
+    this.kb = kb
     this.target = options.target || {
       graph: {
         subjects: {},
@@ -64,66 +64,66 @@ function () {
         terms: {}
       } // XXX: Added to track bnodes
 
-    };
-    this.blankNodes = []; // XXX: Added for normalisation
+    }
+    this.blankNodes = [] // XXX: Added for normalisation
 
     this.htmlOptions = {
       'selfClosing': 'br img input area base basefont col colgroup source wbr isindex link meta param hr'
-    };
-    this.theOne = '_:' + new Date().getTime();
-    this.language = null;
-    this.vocabulary = null;
-    this.blankCounter = 0;
+    }
+    this.theOne = '_:' + new Date().getTime()
+    this.language = null
+    this.vocabulary = null
+    this.blankCounter = 0
     this.langAttributes = [{
       namespaceURI: 'http://www.w3.org/XML/1998/namespace',
       localName: 'lang'
-    }];
-    this.inXHTMLMode = false;
-    this.absURIRE = /[\w\_\-]+:\S+/;
-    this.finishedHandlers = [];
-    this.init();
+    }]
+    this.inXHTMLMode = false
+    this.absURIRE = /[\w\_\-]+:\S+/
+    this.finishedHandlers = []
+    this.init()
   }
 
   _createClass(RDFaProcessor, [{
     key: "addTriple",
     value: function addTriple(origin, subject, predicate, object) {
-      var su, ob, pr, or;
+      var su, ob, pr, or
 
       if (typeof subject === 'undefined') {
-        su = rdf.namedNode(this.options.base);
+        su = rdf.namedNode(this.options.base)
       } else {
-        su = this.toRDFNodeObject(subject);
+        su = this.toRDFNodeObject(subject)
       }
 
-      pr = this.toRDFNodeObject(predicate);
-      ob = this.toRDFNodeObject(object);
-      or = rdf.namedNode(this.options.base);
+      pr = this.toRDFNodeObject(predicate)
+      ob = this.toRDFNodeObject(object)
+      or = rdf.namedNode(this.options.base)
       console.log('Adding { ' + su + ' ' + pr + ' ' + ob + ' ' + or + ' }')
 
-      this.kb.add(su, pr, ob, or);
+      this.kb.add(su, pr, ob, or)
     }
   }, {
     key: "ancestorPath",
     value: function ancestorPath(node) {
-      var path = '';
+      var path = ''
 
       while (node && node.nodeType !== Node.DOCUMENT_NODE) {
-        path = '/' + node.localName + path;
-        node = node.parentNode;
+        path = '/' + node.localName + path
+        node = node.parentNode
       }
 
-      return path;
+      return path
     }
   }, {
     key: "copyMappings",
     value: function copyMappings(mappings) {
-      var newMappings = {};
+      var newMappings = {}
 
       for (var k in mappings) {
-        newMappings[k] = mappings[k];
+        newMappings[k] = mappings[k]
       }
 
-      return newMappings;
+      return newMappings
     }
   }, {
     key: "copyProperties",
@@ -133,15 +133,15 @@ function () {
     value: function deriveDateTimeType(value) {
       for (var i = 0; i < RDFaProcessor.dateTimeTypes.length; i++) {
         // console.log("Checking "+value+" against "+RDFaProcessor.dateTimeTypes[i].type)
-        var matched = RDFaProcessor.dateTimeTypes[i].pattern.exec(value);
+        var matched = RDFaProcessor.dateTimeTypes[i].pattern.exec(value)
 
         if (matched && matched[0].length === value.length) {
           // console.log("Matched!")
-          return RDFaProcessor.dateTimeTypes[i].type;
+          return RDFaProcessor.dateTimeTypes[i].type
         }
       }
 
-      return null;
+      return null
     }
   }, {
     key: "init",
@@ -149,8 +149,8 @@ function () {
   }, {
     key: "newBlankNode",
     value: function newBlankNode() {
-      this.blankCounter++;
-      return '_:' + this.blankCounter;
+      this.blankCounter++
+      return '_:' + this.blankCounter
     }
   }, {
     key: "newSubjectOrigin",
@@ -158,162 +158,162 @@ function () {
   }, {
     key: "parseCURIE",
     value: function parseCURIE(value, prefixes, base) {
-      var colon = value.indexOf(':');
-      var uri;
+      var colon = value.indexOf(':')
+      var uri
 
       if (colon >= 0) {
-        var prefix = value.substring(0, colon);
+        var prefix = value.substring(0, colon)
 
         if (prefix === '') {
           // default prefix
-          uri = prefixes[''];
-          return uri ? uri + value.substring(colon + 1) : null;
+          uri = prefixes['']
+          return uri ? uri + value.substring(colon + 1) : null
         } else if (prefix === '_') {
           // blank node
-          return '_:' + value.substring(colon + 1);
+          return '_:' + value.substring(colon + 1)
         } else if (RDFaProcessor.NCNAME.test(prefix)) {
-          uri = prefixes[prefix];
+          uri = prefixes[prefix]
 
           if (uri) {
-            return uri + value.substring(colon + 1);
+            return uri + value.substring(colon + 1)
           }
         }
       }
 
-      return null;
+      return null
     }
   }, {
     key: "parseCURIEOrURI",
     value: function parseCURIEOrURI(value, prefixes, base) {
-      var curie = this.parseCURIE(value, prefixes, base);
+      var curie = this.parseCURIE(value, prefixes, base)
 
       if (curie) {
-        return curie;
+        return curie
       }
 
-      return this.resolveAndNormalize(base, value);
+      return this.resolveAndNormalize(base, value)
     }
   }, {
     key: "parsePredicate",
     value: function parsePredicate(value, defaultVocabulary, terms, prefixes, base, ignoreTerms) {
       if (value === '') {
-        return null;
+        return null
       }
 
-      var predicate = this.parseTermOrCURIEOrAbsURI(value, defaultVocabulary, ignoreTerms ? null : terms, prefixes, base);
+      var predicate = this.parseTermOrCURIEOrAbsURI(value, defaultVocabulary, ignoreTerms ? null : terms, prefixes, base)
 
       if (predicate && predicate.indexOf('_:') === 0) {
-        return null;
+        return null
       }
 
-      return predicate;
+      return predicate
     }
   }, {
     key: "parsePrefixMappings",
     value: function parsePrefixMappings(str, target) {
-      var values = this.tokenize(str);
-      var prefix = null; // var uri = null
+      var values = this.tokenize(str)
+      var prefix = null // var uri = null
 
       for (var i = 0; i < values.length; i++) {
         if (values[i][values[i].length - 1] === ':') {
-          prefix = values[i].substring(0, values[i].length - 1);
+          prefix = values[i].substring(0, values[i].length - 1)
         } else if (prefix) {
-          target[prefix] = this.options.base ? Uri.join(values[i], this.options.base) : values[i];
-          prefix = null;
+          target[prefix] = this.options.base ? Uri.join(values[i], this.options.base) : values[i]
+          prefix = null
         }
       }
     }
   }, {
     key: "parseSafeCURIEOrCURIEOrURI",
     value: function parseSafeCURIEOrCURIEOrURI(value, prefixes, base) {
-      value = this.trim(value);
+      value = this.trim(value)
 
       if (value.charAt(0) === '[' && value.charAt(value.length - 1) === ']') {
-        value = value.substring(1, value.length - 1);
-        value = value.trim(value);
+        value = value.substring(1, value.length - 1)
+        value = value.trim(value)
 
         if (value.length === 0) {
-          return null;
+          return null
         }
 
         if (value === '_:') {
           // the one node
-          return this.theOne;
+          return this.theOne
         }
 
-        return this.parseCURIE(value, prefixes, base);
+        return this.parseCURIE(value, prefixes, base)
       } else {
-        return this.parseCURIEOrURI(value, prefixes, base);
+        return this.parseCURIEOrURI(value, prefixes, base)
       }
     }
   }, {
     key: "parseTermOrCURIEOrAbsURI",
     value: function parseTermOrCURIEOrAbsURI(value, defaultVocabulary, terms, prefixes, base) {
       // alert("Parsing "+value+" with default vocab "+defaultVocabulary)
-      value = this.trim(value);
-      var curie = this.parseCURIE(value, prefixes, base);
+      value = this.trim(value)
+      var curie = this.parseCURIE(value, prefixes, base)
 
       if (curie) {
-        return curie;
+        return curie
       } else if (terms) {
         if (defaultVocabulary && !this.absURIRE.exec(value)) {
-          return defaultVocabulary + value;
+          return defaultVocabulary + value
         }
 
-        var term = terms[value];
+        var term = terms[value]
 
         if (term) {
-          return term;
+          return term
         }
 
-        var lcvalue = value.toLowerCase();
-        term = terms[lcvalue];
+        var lcvalue = value.toLowerCase()
+        term = terms[lcvalue]
 
         if (term) {
-          return term;
+          return term
         }
       }
 
       if (this.absURIRE.exec(value)) {
-        return this.resolveAndNormalize(base, value);
+        return this.resolveAndNormalize(base, value)
       }
 
-      return null;
+      return null
     }
   }, {
     key: "parseTermOrCURIEOrURI",
     value: function parseTermOrCURIEOrURI(value, defaultVocabulary, terms, prefixes, base) {
       // alert("Parsing "+value+" with default vocab "+defaultVocabulary)
-      value = this.trim(value);
-      var curie = this.parseCURIE(value, prefixes, base);
+      value = this.trim(value)
+      var curie = this.parseCURIE(value, prefixes, base)
 
       if (curie) {
-        return curie;
+        return curie
       } else {
-        var term = terms[value];
+        var term = terms[value]
 
         if (term) {
-          return term;
+          return term
         }
 
-        var lcvalue = value.toLowerCase();
-        term = terms[lcvalue];
+        var lcvalue = value.toLowerCase()
+        term = terms[lcvalue]
 
         if (term) {
-          return term;
+          return term
         }
 
         if (defaultVocabulary && !this.absURIRE.exec(value)) {
-          return defaultVocabulary + value;
+          return defaultVocabulary + value
         }
       }
 
-      return this.resolveAndNormalize(base, value);
+      return this.resolveAndNormalize(base, value)
     }
   }, {
     key: "parseURI",
     value: function parseURI(uri) {
-      return uri; // We just use strings as URIs, not objects now.
+      return uri // We just use strings as URIs, not objects now.
     }
   }, {
     key: "process",
@@ -322,211 +322,211 @@ function () {
       if (!window.console) {
          window.console = { log: function() {} }
       } */
-      var base;
+      var base
 
       if (node.nodeType === Node.DOCUMENT_NODE) {
-        base = node.baseURI;
-        node = node.documentElement;
+        base = node.baseURI
+        node = node.documentElement
         node.elementBaseURI = base
 
 
-        this.setContext(node);
+        this.setContext(node)
       } else if (node.parentNode.nodeType === Node.DOCUMENT_NODE) {
-        this.setContext(node);
+        this.setContext(node)
       }
 
-      var queue = []; // Fix for Firefox that includes the hash in the base URI
+      var queue = [] // Fix for Firefox that includes the hash in the base URI
 
       var removeHash = function removeHash(baseURI) {
         // Fix for undefined baseURI property
         if (!baseURI && options && options.baseURI) {
-          return options.baseURI;
+          return options.baseURI
         }
 
-        var hash = baseURI.indexOf('#');
+        var hash = baseURI.indexOf('#')
 
         if (hash >= 0) {
-          baseURI = baseURI.substring(0, hash);
+          baseURI = baseURI.substring(0, hash)
         }
 
         if (options && options.baseURIMap) {
-          baseURI = options.baseURIMap(baseURI);
+          baseURI = options.baseURIMap(baseURI)
         }
 
-        return baseURI;
-      };
+        return baseURI
+      }
 
       queue.push({
         current: node,
         context: this.push(null, removeHash(node.elementBaseURI))
-      });
+      })
 
       while (queue.length > 0) {
-        var item = queue.shift();
+        var item = queue.shift()
 
         if (item.parent) {
           // Sequence Step 14: list triple generation
           if (item.context.parent && item.context.parent.listMapping === item.listMapping) {
             // Skip a child context with exactly the same mapping
-            continue;
+            continue
           } // console.log("Generating lists for "+item.subject+", tag "+item.parent.localName)
 
 
           for (var _predicate in item.listMapping) {
-            var list = item.listMapping[_predicate];
+            var list = item.listMapping[_predicate]
 
             if (list.length === 0) {
               this.addTriple(item.parent, item.subject, _predicate, {
                 type: RDFaProcessor.objectURI,
                 value: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#nil'
-              });
-              continue;
+              })
+              continue
             }
 
-            var bnodes = [];
+            var bnodes = []
 
             for (var _i = 0; _i < list.length; _i++) {
-              bnodes.push(this.newBlankNode()); // this.newSubject(item.parent,bnodes[i])
+              bnodes.push(this.newBlankNode()) // this.newSubject(item.parent,bnodes[i])
             }
 
             for (var _i2 = 0; _i2 < bnodes.length; _i2++) {
-              this.addTriple(item.parent, bnodes[_i2], 'http://www.w3.org/1999/02/22-rdf-syntax-ns#first', list[_i2]);
+              this.addTriple(item.parent, bnodes[_i2], 'http://www.w3.org/1999/02/22-rdf-syntax-ns#first', list[_i2])
               this.addTriple(item.parent, bnodes[_i2], 'http://www.w3.org/1999/02/22-rdf-syntax-ns#rest', {
                 type: RDFaProcessor.objectURI,
                 value: _i2 + 1 < bnodes.length ? bnodes[_i2 + 1] : 'http://www.w3.org/1999/02/22-rdf-syntax-ns#nil'
-              });
+              })
             }
 
             this.addTriple(item.parent, item.subject, _predicate, {
               type: RDFaProcessor.objectURI,
               value: bnodes[0]
-            });
+            })
           }
 
-          continue;
+          continue
         }
 
-        var current = item.current;
-        var context = item.context; // console.log("Tag: "+current.localName+", listMapping="+JSON.stringify(context.listMapping))
+        var current = item.current
+        var context = item.context // console.log("Tag: "+current.localName+", listMapping="+JSON.stringify(context.listMapping))
         // Sequence Step 1
 
-        var skip = false;
-        var newSubject = null;
-        var currentObjectResource = null;
-        var typedResource = null;
-        var prefixes = context.prefixes;
-        var prefixesCopied = false;
-        var incomplete = [];
-        var listMapping = context.listMapping;
-        var listMappingDifferent = !context.parent;
-        var language = context.language;
-        var vocabulary = context.vocabulary; // TODO: the "base" element may be used for HTML+RDFa 1.1
+        var skip = false
+        var newSubject = null
+        var currentObjectResource = null
+        var typedResource = null
+        var prefixes = context.prefixes
+        var prefixesCopied = false
+        var incomplete = []
+        var listMapping = context.listMapping
+        var listMappingDifferent = !context.parent
+        var language = context.language
+        var vocabulary = context.vocabulary // TODO: the "base" element may be used for HTML+RDFa 1.1
 
-        base = this.parseURI(removeHash(current.elementBaseURI || options.baseURI));
-        current.item = null; // Sequence Step 2: set the default vocabulary
+        base = this.parseURI(removeHash(current.elementBaseURI || options.baseURI))
+        current.item = null // Sequence Step 2: set the default vocabulary
 
-        var vocabAtt = current.getAttributeNode('vocab');
+        var vocabAtt = current.getAttributeNode('vocab')
 
         if (vocabAtt) {
-          var value = this.trim(vocabAtt.value);
+          var value = this.trim(vocabAtt.value)
 
           if (value.length > 0) {
-            vocabulary = value;
-            var baseSubject = base.spec; // this.newSubject(current,baseSubject)
+            vocabulary = value
+            var baseSubject = base.spec // this.newSubject(current,baseSubject)
 
             this.addTriple(current, baseSubject, 'http://www.w3.org/ns/rdfa#usesVocabulary', {
               type: RDFaProcessor.objectURI,
               value: vocabulary
-            });
+            })
           } else {
-            vocabulary = this.vocabulary;
+            vocabulary = this.vocabulary
           }
         } // Sequence Step 3: IRI mappings
         // handle xmlns attributes
 
 
         for (var i = 0; i < current.attributes.length; i++) {
-          var att = current.attributes[i]; // if (att.namespaceURI=="http://www.w3.org/2000/xmlns/") {
+          var att = current.attributes[i] // if (att.namespaceURI=="http://www.w3.org/2000/xmlns/") {
 
           if (att.nodeName.charAt(0) === 'x' && att.nodeName.indexOf('xmlns:') === 0) {
             if (!prefixesCopied) {
-              prefixes = this.copyMappings(prefixes);
-              prefixesCopied = true;
+              prefixes = this.copyMappings(prefixes)
+              prefixesCopied = true
             }
 
-            var prefix = att.nodeName.substring(6); // TODO: resolve relative?
+            var prefix = att.nodeName.substring(6) // TODO: resolve relative?
 
-            var ref = RDFaProcessor.trim(att.value);
-            prefixes[prefix] = this.options.base ? Uri.join(ref, this.options.base) : ref;
+            var ref = RDFaProcessor.trim(att.value)
+            prefixes[prefix] = this.options.base ? Uri.join(ref, this.options.base) : ref
           }
         } // Handle prefix mappings (@prefix)
 
 
-        var prefixAtt = current.getAttributeNode('prefix');
+        var prefixAtt = current.getAttributeNode('prefix')
 
         if (prefixAtt) {
           if (!prefixesCopied) {
-            prefixes = this.copyMappings(prefixes);
-            prefixesCopied = true;
+            prefixes = this.copyMappings(prefixes)
+            prefixesCopied = true
           }
 
-          this.parsePrefixMappings(prefixAtt.value, prefixes);
+          this.parsePrefixMappings(prefixAtt.value, prefixes)
         } // Sequence Step 4: language
 
 
-        var xmlLangAtt = null;
+        var xmlLangAtt = null
 
         for (var _i3 = 0; !xmlLangAtt && _i3 < this.langAttributes.length; _i3++) {
-          xmlLangAtt = current.getAttributeNodeNS(this.langAttributes[_i3].namespaceURI, this.langAttributes[_i3].localName);
+          xmlLangAtt = current.getAttributeNodeNS(this.langAttributes[_i3].namespaceURI, this.langAttributes[_i3].localName)
         }
 
         if (xmlLangAtt) {
-          var _value = RDFaProcessor.trim(xmlLangAtt.value);
+          var _value = RDFaProcessor.trim(xmlLangAtt.value)
 
           if (_value.length > 0) {
-            language = _value;
+            language = _value
           } else {
-            language = null;
+            language = null
           }
         }
 
-        var relAtt = current.getAttributeNode('rel');
-        var revAtt = current.getAttributeNode('rev');
-        var typeofAtt = current.getAttributeNode('typeof');
-        var propertyAtt = current.getAttributeNode('property');
-        var datatypeAtt = current.getAttributeNode('datatype');
-        var datetimeAtt = this.inHTMLMode ? current.getAttributeNode('datetime') : null;
-        var contentAtt = current.getAttributeNode('content');
-        var aboutAtt = current.getAttributeNode('about');
-        var srcAtt = current.getAttributeNode('src');
-        var resourceAtt = current.getAttributeNode('resource');
-        var hrefAtt = current.getAttributeNode('href');
-        var inlistAtt = current.getAttributeNode('inlist');
-        var relAttPredicates = [];
-        var predicate, values;
+        var relAtt = current.getAttributeNode('rel')
+        var revAtt = current.getAttributeNode('rev')
+        var typeofAtt = current.getAttributeNode('typeof')
+        var propertyAtt = current.getAttributeNode('property')
+        var datatypeAtt = current.getAttributeNode('datatype')
+        var datetimeAtt = this.inHTMLMode ? current.getAttributeNode('datetime') : null
+        var contentAtt = current.getAttributeNode('content')
+        var aboutAtt = current.getAttributeNode('about')
+        var srcAtt = current.getAttributeNode('src')
+        var resourceAtt = current.getAttributeNode('resource')
+        var hrefAtt = current.getAttributeNode('href')
+        var inlistAtt = current.getAttributeNode('inlist')
+        var relAttPredicates = []
+        var predicate, values
 
         if (relAtt) {
-          values = this.tokenize(relAtt.value);
+          values = this.tokenize(relAtt.value)
 
           for (var _i4 = 0; _i4 < values.length; _i4++) {
-            predicate = this.parsePredicate(values[_i4], vocabulary, context.terms, prefixes, base, this.inHTMLMode && propertyAtt !== null);
+            predicate = this.parsePredicate(values[_i4], vocabulary, context.terms, prefixes, base, this.inHTMLMode && propertyAtt !== null)
 
             if (predicate) {
-              relAttPredicates.push(predicate);
+              relAttPredicates.push(predicate)
             }
           }
         }
 
-        var revAttPredicates = [];
+        var revAttPredicates = []
 
         if (revAtt) {
-          values = this.tokenize(revAtt.value);
+          values = this.tokenize(revAtt.value)
 
           for (var _i5 = 0; _i5 < values.length; _i5++) {
-            predicate = this.parsePredicate(values[_i5], vocabulary, context.terms, prefixes, base, this.inHTMLMode && propertyAtt);
+            predicate = this.parsePredicate(values[_i5], vocabulary, context.terms, prefixes, base, this.inHTMLMode && propertyAtt)
 
             if (predicate) {
-              revAttPredicates.push(predicate);
+              revAttPredicates.push(predicate)
             }
           }
         } // Section 3.1, bullet 7
@@ -534,134 +534,134 @@ function () {
 
         if (this.inHTMLMode && (relAtt || revAtt) && propertyAtt) {
           if (relAttPredicates.length === 0) {
-            relAtt = null;
+            relAtt = null
           }
 
           if (revAttPredicates.length === 0) {
-            revAtt = null;
+            revAtt = null
           }
         }
 
         if (relAtt || revAtt) {
           // Sequence Step 6: establish new subject and value
           if (aboutAtt) {
-            newSubject = this.parseSafeCURIEOrCURIEOrURI(aboutAtt.value, prefixes, base);
+            newSubject = this.parseSafeCURIEOrCURIEOrURI(aboutAtt.value, prefixes, base)
           }
 
           if (typeofAtt) {
-            typedResource = newSubject;
+            typedResource = newSubject
           }
 
           if (!newSubject) {
             if (current.parentNode.nodeType === Node.DOCUMENT_NODE) {
-              newSubject = removeHash(current.elementBaseURI || options.baseURI);
+              newSubject = removeHash(current.elementBaseURI || options.baseURI)
             } else if (context.parentObject) {
               // TODO: Verify: If the xml:base has been set and the parentObject is the elementBaseURI of the parent, then the subject needs to be the new base URI
-              newSubject = removeHash(current.parentNode.elementBaseURI) === context.parentObject ? removeHash(current.elementBaseURI || options.baseURI) : context.parentObject;
+              newSubject = removeHash(current.parentNode.elementBaseURI) === context.parentObject ? removeHash(current.elementBaseURI || options.baseURI) : context.parentObject
             }
           }
 
           if (resourceAtt) {
-            currentObjectResource = this.parseSafeCURIEOrCURIEOrURI(resourceAtt.value, prefixes, base);
+            currentObjectResource = this.parseSafeCURIEOrCURIEOrURI(resourceAtt.value, prefixes, base)
           }
 
           if (!currentObjectResource) {
             if (hrefAtt) {
-              currentObjectResource = this.resolveAndNormalize(base, encodeURI(hrefAtt.value));
+              currentObjectResource = this.resolveAndNormalize(base, encodeURI(hrefAtt.value))
             } else if (srcAtt) {
-              currentObjectResource = this.resolveAndNormalize(base, encodeURI(srcAtt.value));
+              currentObjectResource = this.resolveAndNormalize(base, encodeURI(srcAtt.value))
             } else if (typeofAtt && !aboutAtt && !(this.inXHTMLMode && (current.localName === 'head' || current.localName === 'body'))) {
-              currentObjectResource = this.newBlankNode();
+              currentObjectResource = this.newBlankNode()
             }
           }
 
           if (typeofAtt && !aboutAtt && this.inXHTMLMode && (current.localName === 'head' || current.localName === 'body')) {
-            typedResource = newSubject;
+            typedResource = newSubject
           } else if (typeofAtt && !aboutAtt) {
-            typedResource = currentObjectResource;
+            typedResource = currentObjectResource
           }
         } else if (propertyAtt && !contentAtt && !datatypeAtt) {
           // Sequence Step 5.1: establish a new subject
           if (aboutAtt) {
-            newSubject = this.parseSafeCURIEOrCURIEOrURI(aboutAtt.value, prefixes, base);
+            newSubject = this.parseSafeCURIEOrCURIEOrURI(aboutAtt.value, prefixes, base)
 
             if (typeofAtt) {
-              typedResource = newSubject;
+              typedResource = newSubject
             }
           }
 
           if (!newSubject && current.parentNode.nodeType === Node.DOCUMENT_NODE) {
-            newSubject = removeHash(current.elementBaseURI || options.baseURI);
+            newSubject = removeHash(current.elementBaseURI || options.baseURI)
 
             if (typeofAtt) {
-              typedResource = newSubject;
+              typedResource = newSubject
             }
           } else if (!newSubject && context.parentObject) {
             // TODO: Verify: If the xml:base has been set and the parentObject is the elementBaseURI of the parent, then the subject needs to be the new base URI
-            newSubject = removeHash(current.parentNode.elementBaseURI) === context.parentObject ? removeHash(current.elementBaseURI || options.baseURI) : context.parentObject;
+            newSubject = removeHash(current.parentNode.elementBaseURI) === context.parentObject ? removeHash(current.elementBaseURI || options.baseURI) : context.parentObject
           }
 
           if (typeofAtt && !typedResource) {
             if (resourceAtt) {
-              typedResource = this.parseSafeCURIEOrCURIEOrURI(resourceAtt.value, prefixes, base);
+              typedResource = this.parseSafeCURIEOrCURIEOrURI(resourceAtt.value, prefixes, base)
             }
 
             if (!typedResource && hrefAtt) {
-              typedResource = this.resolveAndNormalize(base, encodeURI(hrefAtt.value));
+              typedResource = this.resolveAndNormalize(base, encodeURI(hrefAtt.value))
             }
 
             if (!typedResource && srcAtt) {
-              typedResource = this.resolveAndNormalize(base, encodeURI(srcAtt.value));
+              typedResource = this.resolveAndNormalize(base, encodeURI(srcAtt.value))
             }
 
             if (!typedResource && (this.inXHTMLMode || this.inHTMLMode) && (current.localName === 'head' || current.localName === 'body')) {
-              typedResource = newSubject;
+              typedResource = newSubject
             }
 
             if (!typedResource) {
-              typedResource = this.newBlankNode();
+              typedResource = this.newBlankNode()
             }
 
-            currentObjectResource = typedResource;
+            currentObjectResource = typedResource
           } // console.log(current.localName+", newSubject="+newSubject+", typedResource="+typedResource+", currentObjectResource="+currentObjectResource)
 
         } else {
           // Sequence Step 5.2: establish a new subject
           if (aboutAtt) {
-            newSubject = this.parseSafeCURIEOrCURIEOrURI(aboutAtt.value, prefixes, base);
+            newSubject = this.parseSafeCURIEOrCURIEOrURI(aboutAtt.value, prefixes, base)
           }
 
           if (!newSubject && resourceAtt) {
-            newSubject = this.parseSafeCURIEOrCURIEOrURI(resourceAtt.value, prefixes, base);
+            newSubject = this.parseSafeCURIEOrCURIEOrURI(resourceAtt.value, prefixes, base)
           }
 
           if (!newSubject && hrefAtt) {
-            newSubject = this.resolveAndNormalize(base, encodeURI(hrefAtt.value));
+            newSubject = this.resolveAndNormalize(base, encodeURI(hrefAtt.value))
           }
 
           if (!newSubject && srcAtt) {
-            newSubject = this.resolveAndNormalize(base, encodeURI(srcAtt.value));
+            newSubject = this.resolveAndNormalize(base, encodeURI(srcAtt.value))
           }
 
           if (!newSubject) {
             if (current.parentNode.nodeType === Node.DOCUMENT_NODE) {
-              newSubject = removeHash(current.elementBaseURI || options.baseURI);
+              newSubject = removeHash(current.elementBaseURI || options.baseURI)
             } else if ((this.inXHTMLMode || this.inHTMLMode) && (current.localName === 'head' || current.localName === 'body')) {
-              newSubject = removeHash(current.parentNode.elementBaseURI) === context.parentObject ? removeHash(current.elementBaseURI || options.baseURI) : context.parentObject;
+              newSubject = removeHash(current.parentNode.elementBaseURI) === context.parentObject ? removeHash(current.elementBaseURI || options.baseURI) : context.parentObject
             } else if (typeofAtt) {
-              newSubject = this.newBlankNode();
+              newSubject = this.newBlankNode()
             } else if (context.parentObject) {
               // TODO: Verify: If the xml:base has been set and the parentObject is the baseURI of the parent, then the subject needs to be the new base URI
-              newSubject = removeHash(current.parentNode.elementBaseURI) === context.parentObject ? removeHash(current.elementBaseURI || options.baseURI) : context.parentObject;
+              newSubject = removeHash(current.parentNode.elementBaseURI) === context.parentObject ? removeHash(current.elementBaseURI || options.baseURI) : context.parentObject
 
               if (!propertyAtt) {
-                skip = true;
+                skip = true
               }
             }
           }
 
           if (typeofAtt) {
-            typedResource = newSubject;
+            typedResource = newSubject
           }
         } // console.log(current.tagName+": newSubject="+newSubject+", currentObjectResource="+currentObjectResource+", typedResource="+typedResource+", skip="+skip)
         // var rdfaData = null
@@ -670,29 +670,29 @@ function () {
         if (newSubject) {
           // this.newSubject(current,newSubject)
           if (aboutAtt || resourceAtt || typedResource) {
-            var id = newSubject;
+            var id = newSubject
 
             if (typeofAtt && !aboutAtt && !resourceAtt && currentObjectResource) {
-              id = currentObjectResource;
+              id = currentObjectResource
             } // console.log("Setting data attribute for "+current.localName+" for subject "+id)
 
 
-            this.newSubjectOrigin(current, id);
+            this.newSubjectOrigin(current, id)
           }
         } // Sequence Step 7: generate type triple
 
 
         if (typedResource) {
-          values = this.tokenize(typeofAtt.value);
+          values = this.tokenize(typeofAtt.value)
 
           for (var _i6 = 0; _i6 < values.length; _i6++) {
-            var object = this.parseTermOrCURIEOrAbsURI(values[_i6], vocabulary, context.terms, prefixes, base);
+            var object = this.parseTermOrCURIEOrAbsURI(values[_i6], vocabulary, context.terms, prefixes, base)
 
             if (object) {
               this.addTriple(current, typedResource, RDFaProcessor.typeURI, {
                 type: RDFaProcessor.objectURI,
                 value: object
-              });
+              })
             }
           }
         } // Sequence Step 8: new list mappings if there is a new subject
@@ -701,32 +701,32 @@ function () {
 
         if (newSubject && newSubject !== context.parentObject) {
           // console.log("Generating new list mapping for "+newSubject)
-          listMapping = {};
-          listMappingDifferent = true;
+          listMapping = {}
+          listMappingDifferent = true
         } // Sequence Step 9: generate object triple
 
 
         if (currentObjectResource) {
           if (relAtt && inlistAtt) {
             for (var _i7 = 0; _i7 < relAttPredicates.length; _i7++) {
-              var _list = listMapping[relAttPredicates[_i7]];
+              var _list = listMapping[relAttPredicates[_i7]]
 
               if (!_list) {
-                _list = [];
-                listMapping[relAttPredicates[_i7]] = _list;
+                _list = []
+                listMapping[relAttPredicates[_i7]] = _list
               }
 
               _list.push({
                 type: RDFaProcessor.objectURI,
                 value: currentObjectResource
-              });
+              })
             }
           } else if (relAtt) {
             for (var _i8 = 0; _i8 < relAttPredicates.length; _i8++) {
               this.addTriple(current, newSubject, relAttPredicates[_i8], {
                 type: RDFaProcessor.objectURI,
                 value: currentObjectResource
-              });
+              })
             }
           }
 
@@ -735,36 +735,36 @@ function () {
               this.addTriple(current, currentObjectResource, revAttPredicates[_i9], {
                 type: RDFaProcessor.objectURI,
                 value: newSubject
-              });
+              })
             }
           }
         } else {
           // Sequence Step 10: incomplete triples
           if (newSubject && !currentObjectResource && (relAtt || revAtt)) {
-            currentObjectResource = this.newBlankNode(); // alert(current.tagName+": generated blank node, newSubject="+newSubject+" currentObjectResource="+currentObjectResource)
+            currentObjectResource = this.newBlankNode() // alert(current.tagName+": generated blank node, newSubject="+newSubject+" currentObjectResource="+currentObjectResource)
           }
 
           if (relAtt && inlistAtt) {
             for (var _i10 = 0; _i10 < relAttPredicates.length; _i10++) {
-              var _list2 = listMapping[relAttPredicates[_i10]];
+              var _list2 = listMapping[relAttPredicates[_i10]]
 
               if (!_list2) {
-                _list2 = [];
-                listMapping[predicate] = _list2;
+                _list2 = []
+                listMapping[predicate] = _list2
               } // console.log("Adding incomplete list for "+predicate)
 
 
               incomplete.push({
                 predicate: relAttPredicates[_i10],
                 list: _list2
-              });
+              })
             }
           } else if (relAtt) {
             for (var _i11 = 0; _i11 < relAttPredicates.length; _i11++) {
               incomplete.push({
                 predicate: relAttPredicates[_i11],
                 forward: true
-              });
+              })
             }
           }
 
@@ -773,79 +773,79 @@ function () {
               incomplete.push({
                 predicate: revAttPredicates[_i12],
                 forward: false
-              });
+              })
             }
           }
         } // Step 11: Current property values
 
 
         if (propertyAtt) {
-          var datatype = null;
-          var content = null;
+          var datatype = null
+          var content = null
 
           if (datatypeAtt) {
-            datatype = datatypeAtt.value === '' ? RDFaProcessor.PlainLiteralURI : this.parseTermOrCURIEOrAbsURI(datatypeAtt.value, vocabulary, context.terms, prefixes, base);
+            datatype = datatypeAtt.value === '' ? RDFaProcessor.PlainLiteralURI : this.parseTermOrCURIEOrAbsURI(datatypeAtt.value, vocabulary, context.terms, prefixes, base)
 
             if (datetimeAtt && !contentAtt) {
-              content = datetimeAtt.value;
+              content = datetimeAtt.value
             } else {
-              content = datatype === RDFaProcessor.XMLLiteralURI || datatype === RDFaProcessor.HTMLLiteralURI ? null : contentAtt ? contentAtt.value : current.textContent;
+              content = datatype === RDFaProcessor.XMLLiteralURI || datatype === RDFaProcessor.HTMLLiteralURI ? null : contentAtt ? contentAtt.value : current.textContent
             }
           } else if (contentAtt) {
-            datatype = RDFaProcessor.PlainLiteralURI;
-            content = contentAtt.value;
+            datatype = RDFaProcessor.PlainLiteralURI
+            content = contentAtt.value
           } else if (datetimeAtt) {
-            content = datetimeAtt.value;
-            datatype = RDFaProcessor.deriveDateTimeType(content);
+            content = datetimeAtt.value
+            datatype = RDFaProcessor.deriveDateTimeType(content)
 
             if (!datatype) {
-              datatype = RDFaProcessor.PlainLiteralURI;
+              datatype = RDFaProcessor.PlainLiteralURI
             }
           } else if (!relAtt && !revAtt) {
             if (resourceAtt) {
-              content = this.parseSafeCURIEOrCURIEOrURI(resourceAtt.value, prefixes, base);
+              content = this.parseSafeCURIEOrCURIEOrURI(resourceAtt.value, prefixes, base)
             }
 
             if (!content && hrefAtt) {
-              content = this.resolveAndNormalize(base, encodeURI(hrefAtt.value));
+              content = this.resolveAndNormalize(base, encodeURI(hrefAtt.value))
             } else if (!content && srcAtt) {
-              content = this.resolveAndNormalize(base, encodeURI(srcAtt.value));
+              content = this.resolveAndNormalize(base, encodeURI(srcAtt.value))
             }
 
             if (content) {
-              datatype = RDFaProcessor.objectURI;
+              datatype = RDFaProcessor.objectURI
             }
           }
 
           if (!datatype) {
             if (typeofAtt && !aboutAtt) {
-              datatype = RDFaProcessor.objectURI;
-              content = typedResource;
+              datatype = RDFaProcessor.objectURI
+              content = typedResource
             } else {
-              content = current.textContent;
+              content = current.textContent
 
               if (this.inHTMLMode && current.localName === 'time') {
-                datatype = RDFaProcessor.deriveDateTimeType(content);
+                datatype = RDFaProcessor.deriveDateTimeType(content)
               }
 
               if (!datatype) {
-                datatype = RDFaProcessor.PlainLiteralURI;
+                datatype = RDFaProcessor.PlainLiteralURI
               }
             }
           }
 
-          values = this.tokenize(propertyAtt.value);
+          values = this.tokenize(propertyAtt.value)
 
           for (var _i13 = 0; _i13 < values.length; _i13++) {
-            var _predicate2 = this.parsePredicate(values[_i13], vocabulary, context.terms, prefixes, base);
+            var _predicate2 = this.parsePredicate(values[_i13], vocabulary, context.terms, prefixes, base)
 
             if (_predicate2) {
               if (inlistAtt) {
-                var _list3 = listMapping[_predicate2];
+                var _list3 = listMapping[_predicate2]
 
                 if (!_list3) {
-                  _list3 = [];
-                  listMapping[_predicate2] = _list3;
+                  _list3 = []
+                  listMapping[_predicate2] = _list3
                 }
 
                 _list3.push(datatype === RDFaProcessor.XMLLiteralURI || datatype === RDFaProcessor.HTMLLiteralURI ? {
@@ -855,19 +855,19 @@ function () {
                   type: datatype || RDFaProcessor.PlainLiteralURI,
                   value: content,
                   language: language
-                });
+                })
               } else {
                 if (datatype === RDFaProcessor.XMLLiteralURI || datatype === RDFaProcessor.HTMLLiteralURI) {
                   this.addTriple(current, newSubject, _predicate2, {
                     type: datatype,
                     value: current.childNodes
-                  });
+                  })
                 } else {
                   this.addTriple(current, newSubject, _predicate2, {
                     type: datatype || RDFaProcessor.PlainLiteralURI,
                     value: content,
                     language: language
-                  }); // console.log(newSubject+" "+predicate+"="+content)
+                  }) // console.log(newSubject+" "+predicate+"="+content)
                 }
               }
             }
@@ -883,52 +883,52 @@ function () {
               context.incomplete[_i14].list.push({
                 type: RDFaProcessor.objectURI,
                 value: newSubject
-              });
+              })
             } else if (context.incomplete[_i14].forward) {
               // console.log(current.tagName+": completing forward triple "+context.incomplete[i].predicate+" with object="+newSubject)
               this.addTriple(current, context.subject, context.incomplete[_i14].predicate, {
                 type: RDFaProcessor.objectURI,
                 value: newSubject
-              });
+              })
             } else {
               // console.log(current.tagName+": completing reverse triple with object="+context.subject)
               this.addTriple(current, newSubject, context.incomplete[_i14].predicate, {
                 type: RDFaProcessor.objectURI,
                 value: context.subject
-              });
+              })
             }
           }
         }
 
-        var childContext = null;
-        var listSubject = newSubject;
+        var childContext = null
+        var listSubject = newSubject
 
         if (skip) {
           // TODO: should subject be null?
-          childContext = this.push(context, context.subject); // TODO: should the entObject be passed along?  If not, then intermediary children will keep properties from being associated with incomplete triples.
+          childContext = this.push(context, context.subject) // TODO: should the entObject be passed along?  If not, then intermediary children will keep properties from being associated with incomplete triples.
           // TODO: Verify: if the current baseURI has changed and the parentObject is the parent's base URI, then the baseURI should change
 
-          childContext.parentObject = removeHash(current.parentNode.elementBaseURI) === context.parentObject ? removeHash(current.elementBaseURI || options.baseURI) : context.parentObject;
-          childContext.incomplete = context.incomplete;
-          childContext.language = language;
-          childContext.prefixes = prefixes;
-          childContext.vocabulary = vocabulary;
+          childContext.parentObject = removeHash(current.parentNode.elementBaseURI) === context.parentObject ? removeHash(current.elementBaseURI || options.baseURI) : context.parentObject
+          childContext.incomplete = context.incomplete
+          childContext.language = language
+          childContext.prefixes = prefixes
+          childContext.vocabulary = vocabulary
         } else {
-          childContext = this.push(context, newSubject);
-          childContext.parentObject = currentObjectResource || newSubject || context.subject;
-          childContext.prefixes = prefixes;
-          childContext.incomplete = incomplete;
+          childContext = this.push(context, newSubject)
+          childContext.parentObject = currentObjectResource || newSubject || context.subject
+          childContext.prefixes = prefixes
+          childContext.incomplete = incomplete
 
           if (currentObjectResource) {
             // console.log("Generating new list mapping for "+currentObjectResource)
-            listSubject = currentObjectResource;
-            listMapping = {};
-            listMappingDifferent = true;
+            listSubject = currentObjectResource
+            listMapping = {}
+            listMappingDifferent = true
           }
 
-          childContext.listMapping = listMapping;
-          childContext.language = language;
-          childContext.vocabulary = vocabulary;
+          childContext.listMapping = listMapping
+          childContext.language = language
+          childContext.vocabulary = vocabulary
         }
 
         if (listMappingDifferent) {
@@ -938,7 +938,7 @@ function () {
             context: context,
             subject: listSubject,
             listMapping: listMapping
-          });
+          })
         }
 
         for (var child = current.lastChild; child; child = child.previousSibling) {
@@ -948,17 +948,17 @@ function () {
             queue.unshift({
               current: child,
               context: childContext
-            });
+            })
           }
         }
       }
 
       if (this.inHTMLMode) {
-        this.copyProperties();
+        this.copyProperties()
       }
 
       for (var _i15 = 0; _i15 < this.finishedHandlers.length; _i15++) {
-        this.finishedHandlers[_i15](node);
+        this.finishedHandlers[_i15](node)
       }
     }
   }, {
@@ -974,165 +974,165 @@ function () {
         prefixes: parent ? parent.prefixes : this.target.graph.prefixes,
         terms: parent ? parent.terms : this.target.graph.terms,
         vocabulary: parent ? parent.vocabulary : this.vocabulary
-      };
+      }
     }
   }, {
     key: "resolveAndNormalize",
     value: function resolveAndNormalize(base, uri) {
       // console.log("Joining " + uri + " to " + base + " making " +  Uri.join(uri, base))
-      return Uri.join(uri, base); // @@ normalize?
+      return Uri.join(uri, base) // @@ normalize?
     }
   }, {
     key: "setContext",
     value: function setContext(node) {
       // We only recognized XHTML+RDFa 1.1 if the version is set propertyly
       if (node.localName === 'html' && node.getAttribute('version') === 'XHTML+RDFa 1.1') {
-        this.setXHTMLContext();
+        this.setXHTMLContext()
       } else if (node.localName === 'html' || node.namespaceURI === 'http://www.w3.org/1999/xhtml') {
         if (typeof document !== 'undefined' && document.doctype) {
           if (document.doctype.publicId === '-//W3C//DTD XHTML+RDFa 1.0//EN' && document.doctype.systemId === 'http://www.w3.org/MarkUp/DTD/xhtml-rdfa-1.dtd') {
-            console.log('WARNING: RDF 1.0 is not supported.  Defaulting to HTML5 mode.');
-            this.setHTMLContext();
+            console.log('WARNING: RDF 1.0 is not supported.  Defaulting to HTML5 mode.')
+            this.setHTMLContext()
           } else if (document.doctype.publicId === '-//W3C//DTD XHTML+RDFa 1.1//EN' && document.doctype.systemId === 'http://www.w3.org/MarkUp/DTD/xhtml-rdfa-2.dtd') {
-            this.setXHTMLContext();
+            this.setXHTMLContext()
           } else {
-            this.setHTMLContext();
+            this.setHTMLContext()
           }
         } else {
-          this.setHTMLContext();
+          this.setHTMLContext()
         }
       } else {
-        this.setXMLContext();
+        this.setXMLContext()
       }
     }
   }, {
     key: "setHTMLContext",
     value: function setHTMLContext() {
-      this.setInitialContext();
+      this.setInitialContext()
       this.langAttributes = [{
         namespaceURI: 'http://www.w3.org/XML/1998/namespace',
         localName: 'lang'
       }, {
         namespaceURI: null,
         localName: 'lang'
-      }];
-      this.inXHTMLMode = false;
-      this.inHTMLMode = true;
+      }]
+      this.inXHTMLMode = false
+      this.inHTMLMode = true
     }
   }, {
     key: "setInitialContext",
     value: function setInitialContext() {
-      this.vocabulary = null; // By default, the prefixes are terms are loaded to the RDFa 1.1. standard within the graph constructor
+      this.vocabulary = null // By default, the prefixes are terms are loaded to the RDFa 1.1. standard within the graph constructor
 
       this.langAttributes = [{
         namespaceURI: 'http://www.w3.org/XML/1998/namespace',
         localName: 'lang'
-      }];
+      }]
     }
   }, {
     key: "setXHTMLContext",
     value: function setXHTMLContext() {
-      this.setInitialContext();
-      this.inXHTMLMode = true;
-      this.inHTMLMode = false;
+      this.setInitialContext()
+      this.inXHTMLMode = true
+      this.inHTMLMode = false
       this.langAttributes = [{
         namespaceURI: 'http://www.w3.org/XML/1998/namespace',
         localName: 'lang'
       }, {
         namespaceURI: null,
         localName: 'lang'
-      }]; // From http://www.w3.org/2011/rdfa-context/xhtml-rdfa-1.1
+      }] // From http://www.w3.org/2011/rdfa-context/xhtml-rdfa-1.1
 
-      this.target.graph.terms['alternate'] = 'http://www.w3.org/1999/xhtml/vocab#alternate';
-      this.target.graph.terms['appendix'] = 'http://www.w3.org/1999/xhtml/vocab#appendix';
-      this.target.graph.terms['bookmark'] = 'http://www.w3.org/1999/xhtml/vocab#bookmark';
-      this.target.graph.terms['cite'] = 'http://www.w3.org/1999/xhtml/vocab#cite';
-      this.target.graph.terms['chapter'] = 'http://www.w3.org/1999/xhtml/vocab#chapter';
-      this.target.graph.terms['contents'] = 'http://www.w3.org/1999/xhtml/vocab#contents';
-      this.target.graph.terms['copyright'] = 'http://www.w3.org/1999/xhtml/vocab#copyright';
-      this.target.graph.terms['first'] = 'http://www.w3.org/1999/xhtml/vocab#first';
-      this.target.graph.terms['glossary'] = 'http://www.w3.org/1999/xhtml/vocab#glossary';
-      this.target.graph.terms['help'] = 'http://www.w3.org/1999/xhtml/vocab#help';
-      this.target.graph.terms['icon'] = 'http://www.w3.org/1999/xhtml/vocab#icon';
-      this.target.graph.terms['index'] = 'http://www.w3.org/1999/xhtml/vocab#index';
-      this.target.graph.terms['last'] = 'http://www.w3.org/1999/xhtml/vocab#last';
-      this.target.graph.terms['license'] = 'http://www.w3.org/1999/xhtml/vocab#license';
-      this.target.graph.terms['meta'] = 'http://www.w3.org/1999/xhtml/vocab#meta';
-      this.target.graph.terms['next'] = 'http://www.w3.org/1999/xhtml/vocab#next';
-      this.target.graph.terms['prev'] = 'http://www.w3.org/1999/xhtml/vocab#prev';
-      this.target.graph.terms['previous'] = 'http://www.w3.org/1999/xhtml/vocab#previous';
-      this.target.graph.terms['section'] = 'http://www.w3.org/1999/xhtml/vocab#section';
-      this.target.graph.terms['stylesheet'] = 'http://www.w3.org/1999/xhtml/vocab#stylesheet';
-      this.target.graph.terms['subsection'] = 'http://www.w3.org/1999/xhtml/vocab#subsection';
-      this.target.graph.terms['start'] = 'http://www.w3.org/1999/xhtml/vocab#start';
-      this.target.graph.terms['top'] = 'http://www.w3.org/1999/xhtml/vocab#top';
-      this.target.graph.terms['up'] = 'http://www.w3.org/1999/xhtml/vocab#up';
-      this.target.graph.terms['p3pv1'] = 'http://www.w3.org/1999/xhtml/vocab#p3pv1'; // other
+      this.target.graph.terms['alternate'] = 'http://www.w3.org/1999/xhtml/vocab#alternate'
+      this.target.graph.terms['appendix'] = 'http://www.w3.org/1999/xhtml/vocab#appendix'
+      this.target.graph.terms['bookmark'] = 'http://www.w3.org/1999/xhtml/vocab#bookmark'
+      this.target.graph.terms['cite'] = 'http://www.w3.org/1999/xhtml/vocab#cite'
+      this.target.graph.terms['chapter'] = 'http://www.w3.org/1999/xhtml/vocab#chapter'
+      this.target.graph.terms['contents'] = 'http://www.w3.org/1999/xhtml/vocab#contents'
+      this.target.graph.terms['copyright'] = 'http://www.w3.org/1999/xhtml/vocab#copyright'
+      this.target.graph.terms['first'] = 'http://www.w3.org/1999/xhtml/vocab#first'
+      this.target.graph.terms['glossary'] = 'http://www.w3.org/1999/xhtml/vocab#glossary'
+      this.target.graph.terms['help'] = 'http://www.w3.org/1999/xhtml/vocab#help'
+      this.target.graph.terms['icon'] = 'http://www.w3.org/1999/xhtml/vocab#icon'
+      this.target.graph.terms['index'] = 'http://www.w3.org/1999/xhtml/vocab#index'
+      this.target.graph.terms['last'] = 'http://www.w3.org/1999/xhtml/vocab#last'
+      this.target.graph.terms['license'] = 'http://www.w3.org/1999/xhtml/vocab#license'
+      this.target.graph.terms['meta'] = 'http://www.w3.org/1999/xhtml/vocab#meta'
+      this.target.graph.terms['next'] = 'http://www.w3.org/1999/xhtml/vocab#next'
+      this.target.graph.terms['prev'] = 'http://www.w3.org/1999/xhtml/vocab#prev'
+      this.target.graph.terms['previous'] = 'http://www.w3.org/1999/xhtml/vocab#previous'
+      this.target.graph.terms['section'] = 'http://www.w3.org/1999/xhtml/vocab#section'
+      this.target.graph.terms['stylesheet'] = 'http://www.w3.org/1999/xhtml/vocab#stylesheet'
+      this.target.graph.terms['subsection'] = 'http://www.w3.org/1999/xhtml/vocab#subsection'
+      this.target.graph.terms['start'] = 'http://www.w3.org/1999/xhtml/vocab#start'
+      this.target.graph.terms['top'] = 'http://www.w3.org/1999/xhtml/vocab#top'
+      this.target.graph.terms['up'] = 'http://www.w3.org/1999/xhtml/vocab#up'
+      this.target.graph.terms['p3pv1'] = 'http://www.w3.org/1999/xhtml/vocab#p3pv1' // other
 
-      this.target.graph.terms['related'] = 'http://www.w3.org/1999/xhtml/vocab#related';
-      this.target.graph.terms['role'] = 'http://www.w3.org/1999/xhtml/vocab#role';
-      this.target.graph.terms['transformation'] = 'http://www.w3.org/1999/xhtml/vocab#transformation';
+      this.target.graph.terms['related'] = 'http://www.w3.org/1999/xhtml/vocab#related'
+      this.target.graph.terms['role'] = 'http://www.w3.org/1999/xhtml/vocab#role'
+      this.target.graph.terms['transformation'] = 'http://www.w3.org/1999/xhtml/vocab#transformation'
     }
   }, {
     key: "setXMLContext",
     value: function setXMLContext() {
-      this.setInitialContext();
-      this.inXHTMLMode = false;
-      this.inHTMLMode = false;
+      this.setInitialContext()
+      this.inXHTMLMode = false
+      this.inHTMLMode = false
     }
   }, {
     key: "tokenize",
     value: function tokenize(str) {
-      return this.trim(str).split(/\s+/);
+      return this.trim(str).split(/\s+/)
     }
   }, {
     key: "toRDFNodeObject",
     value: function toRDFNodeObject(x) {
-      if (typeof x === 'undefined') return undefined;
+      if (typeof x === 'undefined') return undefined
 
       if (typeof x === 'string') {
         if (x.substring(0, 2) === '_:') {
           if (typeof this.blankNodes[x.substring(2)] === 'undefined') {
-            this.blankNodes[x.substring(2)] = new BlankNode(x.substring(2));
+            this.blankNodes[x.substring(2)] = new BlankNode(x.substring(2))
           }
 
-          return this.blankNodes[x.substring(2)];
+          return this.blankNodes[x.substring(2)]
         }
 
-        return rdf.namedNode(x);
+        return rdf.namedNode(x)
       }
 
       switch (x.type) {
         case RDFaProcessor.objectURI:
           if (x.value.substring(0, 2) === '_:') {
             if (typeof this.blankNodes[x.value.substring(2)] === 'undefined') {
-              this.blankNodes[x.value.substring(2)] = new BlankNode(x.value.substring(2));
+              this.blankNodes[x.value.substring(2)] = new BlankNode(x.value.substring(2))
             }
 
-            return this.blankNodes[x.value.substring(2)];
+            return this.blankNodes[x.value.substring(2)]
           }
 
-          return rdf.namedNode(x.value);
+          return rdf.namedNode(x.value)
 
         case RDFaProcessor.PlainLiteralURI:
-          return new Literal(x.value, x.language || '');
+          return new Literal(x.value, x.language || '')
 
         case RDFaProcessor.XMLLiteralURI:
         case RDFaProcessor.HTMLLiteralURI:
-          var string = '';
+          var string = ''
           Object.keys(x.value).forEach(function (i) {
-            string += Util.domToString(x.value[i], HTMLOPTIONS);
-          });
-          return new Literal(string, '', new NamedNode(x.type));
+            string += Util.domToString(x.value[i], HTMLOPTIONS)
+          })
+          return new Literal(string, '', new NamedNode(x.type))
 
         default:
-          return new Literal(x.value, '', new NamedNode(x.type));
+          return new Literal(x.value, '', new NamedNode(x.type))
       }
     }
   }, {
     key: "trim",
     value: function trim(str) {
-      return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
+      return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '')
     }
   }], [{
     key: "parseRDFaDOM",
@@ -1140,39 +1140,39 @@ function () {
       // console.log('@@@@@ base ' + base)
       var p = new RDFaProcessor(kb, {
         'base': base
-      }); //  Cannot assign to read only property 'baseURI' of object '#<XMLDocument>':
+      }) //  Cannot assign to read only property 'baseURI' of object '#<XMLDocument>':
 
       if (!dom.baseURI) {
         // Note this became a read-only attribute some time before 2018
-        dom.baseURI = base; // oinly set if not already set
+        dom.baseURI = base // oinly set if not already set
       }
       dom.elementBaseURI = base
 
-      p.process(dom, {baseURI: base});
+      p.process(dom, {baseURI: base})
     }
   }, {
     key: "tokenize",
     value: function tokenize(str) {
-      return this.trim(str).split(/\s+/);
+      return this.trim(str).split(/\s+/)
     }
   }, {
     key: "trim",
     value: function trim(str) {
-      return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
+      return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '')
     }
-  }]);
+  }])
 
-  return RDFaProcessor;
-}();
+  return RDFaProcessor
+}()
 
-RDFaProcessor.XMLLiteralURI = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#XMLLiteral';
-RDFaProcessor.HTMLLiteralURI = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#HTML';
-RDFaProcessor.PlainLiteralURI = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral';
-RDFaProcessor.objectURI = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#object';
-RDFaProcessor.typeURI = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type';
-RDFaProcessor.nameChar = "[-A-Z_a-z\xC0-\xD6\xD8-\xF6\xF8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\u10000-\uEFFFF.0-9\xB7\u0300-\u036F\u203F-\u2040]";
-RDFaProcessor.nameStartChar = "[A-Za-z\xC0-\xD6\xD8-\xF6\xF8-\xFF\u0100-\u0131\u0134-\u013E\u0141-\u0148\u014A-\u017E\u0180-\u01C3\u01CD-\u01F0\u01F4-\u01F5\u01FA-\u0217\u0250-\u02A8\u02BB-\u02C1\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03D6\u03DA\u03DC\u03DE\u03E0\u03E2-\u03F3\u0401-\u040C\u040E-\u044F\u0451-\u045C\u045E-\u0481\u0490-\u04C4\u04C7-\u04C8\u04CB-\u04CC\u04D0-\u04EB\u04EE-\u04F5\u04F8-\u04F9\u0531-\u0556\u0559\u0561-\u0586\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0641-\u064A\u0671-\u06B7\u06BA-\u06BE\u06C0-\u06CE\u06D0-\u06D3\u06D5\u06E5-\u06E6\u0905-\u0939\u093D\u0958-\u0961\u0985-\u098C\u098F-\u0990\u0993-\u09A8\u09AA-\u09B0\u09B2\u09B6-\u09B9\u09DC-\u09DD\u09DF-\u09E1\u09F0-\u09F1\u0A05-\u0A0A\u0A0F-\u0A10\u0A13-\u0A28\u0A2A-\u0A30\u0A32-\u0A33\u0A35-\u0A36\u0A38-\u0A39\u0A59-\u0A5C\u0A5E\u0A72-\u0A74\u0A85-\u0A8B\u0A8D\u0A8F-\u0A91\u0A93-\u0AA8\u0AAA-\u0AB0\u0AB2-\u0AB3\u0AB5-\u0AB9\u0ABD\u0AE0\u0B05-\u0B0C\u0B0F-\u0B10\u0B13-\u0B28\u0B2A-\u0B30\u0B32-\u0B33\u0B36-\u0B39\u0B3D\u0B5C-\u0B5D\u0B5F-\u0B61\u0B85-\u0B8A\u0B8E-\u0B90\u0B92-\u0B95\u0B99-\u0B9A\u0B9C\u0B9E-\u0B9F\u0BA3-\u0BA4\u0BA8-\u0BAA\u0BAE-\u0BB5\u0BB7-\u0BB9\u0C05-\u0C0C\u0C0E-\u0C10\u0C12-\u0C28\u0C2A-\u0C33\u0C35-\u0C39\u0C60-\u0C61\u0C85-\u0C8C\u0C8E-\u0C90\u0C92-\u0CA8\u0CAA-\u0CB3\u0CB5-\u0CB9\u0CDE\u0CE0-\u0CE1\u0D05-\u0D0C\u0D0E-\u0D10\u0D12-\u0D28\u0D2A-\u0D39\u0D60-\u0D61\u0E01-\u0E2E\u0E30\u0E32-\u0E33\u0E40-\u0E45\u0E81-\u0E82\u0E84\u0E87-\u0E88\u0E8A\u0E8D\u0E94-\u0E97\u0E99-\u0E9F\u0EA1-\u0EA3\u0EA5\u0EA7\u0EAA-\u0EAB\u0EAD-\u0EAE\u0EB0\u0EB2-\u0EB3\u0EBD\u0EC0-\u0EC4\u0F40-\u0F47\u0F49-\u0F69\u10A0-\u10C5\u10D0-\u10F6\u1100\u1102-\u1103\u1105-\u1107\u1109\u110B-\u110C\u110E-\u1112\u113C\u113E\u1140\u114C\u114E\u1150\u1154-\u1155\u1159\u115F-\u1161\u1163\u1165\u1167\u1169\u116D-\u116E\u1172-\u1173\u1175\u119E\u11A8\u11AB\u11AE-\u11AF\u11B7-\u11B8\u11BA\u11BC-\u11C2\u11EB\u11F0\u11F9\u1E00-\u1E9B\u1EA0-\u1EF9\u1F00-\u1F15\u1F18-\u1F1D\u1F20-\u1F45\u1F48-\u1F4D\u1F50-\u1F57\u1F59\u1F5B\u1F5D\u1F5F-\u1F7D\u1F80-\u1FB4\u1FB6-\u1FBC\u1FBE\u1FC2-\u1FC4\u1FC6-\u1FCC\u1FD0-\u1FD3\u1FD6-\u1FDB\u1FE0-\u1FEC\u1FF2-\u1FF4\u1FF6-\u1FFC\u2126\u212A-\u212B\u212E\u2180-\u2182\u3041-\u3094\u30A1-\u30FA\u3105-\u312C\uAC00-\uD7A3\u4E00-\u9FA5\u3007\u3021-\u3029_]";
-RDFaProcessor.NCNAME = new RegExp('^' + RDFaProcessor.nameStartChar + RDFaProcessor.nameChar + '*$');
+RDFaProcessor.XMLLiteralURI = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#XMLLiteral'
+RDFaProcessor.HTMLLiteralURI = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#HTML'
+RDFaProcessor.PlainLiteralURI = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#PlainLiteral'
+RDFaProcessor.objectURI = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#object'
+RDFaProcessor.typeURI = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type'
+RDFaProcessor.nameChar = "[-A-Z_a-z\xC0-\xD6\xD8-\xF6\xF8-\u02FF\u0370-\u037D\u037F-\u1FFF\u200C-\u200D\u2070-\u218F\u2C00-\u2FEF\u3001-\uD7FF\uF900-\uFDCF\uFDF0-\uFFFD\u10000-\uEFFFF.0-9\xB7\u0300-\u036F\u203F-\u2040]"
+RDFaProcessor.nameStartChar = "[A-Za-z\xC0-\xD6\xD8-\xF6\xF8-\xFF\u0100-\u0131\u0134-\u013E\u0141-\u0148\u014A-\u017E\u0180-\u01C3\u01CD-\u01F0\u01F4-\u01F5\u01FA-\u0217\u0250-\u02A8\u02BB-\u02C1\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03CE\u03D0-\u03D6\u03DA\u03DC\u03DE\u03E0\u03E2-\u03F3\u0401-\u040C\u040E-\u044F\u0451-\u045C\u045E-\u0481\u0490-\u04C4\u04C7-\u04C8\u04CB-\u04CC\u04D0-\u04EB\u04EE-\u04F5\u04F8-\u04F9\u0531-\u0556\u0559\u0561-\u0586\u05D0-\u05EA\u05F0-\u05F2\u0621-\u063A\u0641-\u064A\u0671-\u06B7\u06BA-\u06BE\u06C0-\u06CE\u06D0-\u06D3\u06D5\u06E5-\u06E6\u0905-\u0939\u093D\u0958-\u0961\u0985-\u098C\u098F-\u0990\u0993-\u09A8\u09AA-\u09B0\u09B2\u09B6-\u09B9\u09DC-\u09DD\u09DF-\u09E1\u09F0-\u09F1\u0A05-\u0A0A\u0A0F-\u0A10\u0A13-\u0A28\u0A2A-\u0A30\u0A32-\u0A33\u0A35-\u0A36\u0A38-\u0A39\u0A59-\u0A5C\u0A5E\u0A72-\u0A74\u0A85-\u0A8B\u0A8D\u0A8F-\u0A91\u0A93-\u0AA8\u0AAA-\u0AB0\u0AB2-\u0AB3\u0AB5-\u0AB9\u0ABD\u0AE0\u0B05-\u0B0C\u0B0F-\u0B10\u0B13-\u0B28\u0B2A-\u0B30\u0B32-\u0B33\u0B36-\u0B39\u0B3D\u0B5C-\u0B5D\u0B5F-\u0B61\u0B85-\u0B8A\u0B8E-\u0B90\u0B92-\u0B95\u0B99-\u0B9A\u0B9C\u0B9E-\u0B9F\u0BA3-\u0BA4\u0BA8-\u0BAA\u0BAE-\u0BB5\u0BB7-\u0BB9\u0C05-\u0C0C\u0C0E-\u0C10\u0C12-\u0C28\u0C2A-\u0C33\u0C35-\u0C39\u0C60-\u0C61\u0C85-\u0C8C\u0C8E-\u0C90\u0C92-\u0CA8\u0CAA-\u0CB3\u0CB5-\u0CB9\u0CDE\u0CE0-\u0CE1\u0D05-\u0D0C\u0D0E-\u0D10\u0D12-\u0D28\u0D2A-\u0D39\u0D60-\u0D61\u0E01-\u0E2E\u0E30\u0E32-\u0E33\u0E40-\u0E45\u0E81-\u0E82\u0E84\u0E87-\u0E88\u0E8A\u0E8D\u0E94-\u0E97\u0E99-\u0E9F\u0EA1-\u0EA3\u0EA5\u0EA7\u0EAA-\u0EAB\u0EAD-\u0EAE\u0EB0\u0EB2-\u0EB3\u0EBD\u0EC0-\u0EC4\u0F40-\u0F47\u0F49-\u0F69\u10A0-\u10C5\u10D0-\u10F6\u1100\u1102-\u1103\u1105-\u1107\u1109\u110B-\u110C\u110E-\u1112\u113C\u113E\u1140\u114C\u114E\u1150\u1154-\u1155\u1159\u115F-\u1161\u1163\u1165\u1167\u1169\u116D-\u116E\u1172-\u1173\u1175\u119E\u11A8\u11AB\u11AE-\u11AF\u11B7-\u11B8\u11BA\u11BC-\u11C2\u11EB\u11F0\u11F9\u1E00-\u1E9B\u1EA0-\u1EF9\u1F00-\u1F15\u1F18-\u1F1D\u1F20-\u1F45\u1F48-\u1F4D\u1F50-\u1F57\u1F59\u1F5B\u1F5D\u1F5F-\u1F7D\u1F80-\u1FB4\u1FB6-\u1FBC\u1FBE\u1FC2-\u1FC4\u1FC6-\u1FCC\u1FD0-\u1FD3\u1FD6-\u1FDB\u1FE0-\u1FEC\u1FF2-\u1FF4\u1FF6-\u1FFC\u2126\u212A-\u212B\u212E\u2180-\u2182\u3041-\u3094\u30A1-\u30FA\u3105-\u312C\uAC00-\uD7A3\u4E00-\u9FA5\u3007\u3021-\u3029_]"
+RDFaProcessor.NCNAME = new RegExp('^' + RDFaProcessor.nameStartChar + RDFaProcessor.nameChar + '*$')
 /*
 RDFaProcessor.prototype.resolveAndNormalize = function(base,href) {
    var u = base.resolve(href)
@@ -1200,5 +1200,5 @@ RDFaProcessor.dateTimeTypes = [{
 }, {
   pattern: /-?[1-9][0-9][0-9][0-9]|0[1-9][0-9][0-9]|00[1-9][0-9]|000[1-9]/,
   type: 'http://www.w3.org/2001/XMLSchema#gYear'
-}];
-module.exports = RDFaProcessor;
+}]
+module.exports = RDFaProcessor

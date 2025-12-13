@@ -1,4 +1,3 @@
-/* eslint-env mocha */
 import { expect } from 'chai'
 
 import CanonicalDataFactory from '../../src/factories/canonical-data-factory'
@@ -27,31 +26,32 @@ import Variable from '../../src/variable'
 describe('util', () => {
   describe('isTerm', () => {
     it('handles undefined', () => {
-      expect(isTerm(undefined)).to.be.false()
+      expect(isTerm(undefined)).to.equal(false)
     })
 
     it('handles null', () => {
-      expect(isTerm(null)).to.be.false()
+      expect(isTerm(null)).to.equal(false)
     })
 
     it('handles other objects', () => {
-      expect(isTerm(1)).to.be.false()
-      expect(isTerm(true)).to.be.false()
-      expect(isTerm(NaN)).to.be.false()
-      expect(isTerm({})).to.be.false()
+      expect(isTerm(1)).to.equal(false)
+      expect(isTerm(true)).to.equal(false)
+      expect(isTerm(NaN)).to.equal(false)
+      expect(isTerm({})).to.equal(false)
+      expect(isTerm([])).to.equal(false)
     })
 
     it('handles literals', () => {
-      expect(isTerm(new Literal('test'))).to.be.true()
-    });
+      expect(isTerm(new Literal('test'))).to.equal(true)
+    })
 
     it('handles namedNodes', () => {
-      expect(isTerm(new NamedNode('https://example.com/test'))).to.be.true()
-    });
+      expect(isTerm(new NamedNode('https://example.com/test'))).to.equal(true)
+    })
 
     it('handles blankNodes', () => {
-      expect(isTerm(new BlankNode('test'))).to.be.true()
-    });
+      expect(isTerm(new BlankNode('test'))).to.equal(true)
+    })
   })
 
   describe('isNamedNode', () => {
@@ -61,19 +61,19 @@ describe('util', () => {
       }
       const obj = Object.create(proto)
       obj.value = ''
-      expect(isNamedNode(obj)).to.be.true()
+      expect(isNamedNode(obj)).to.equal(true)
     })
 
     it('handles NamedNode instances', () => {
-      expect(isNamedNode(new NamedNode('http://example.org/'))).to.be.true()
+      expect(isNamedNode(new NamedNode('http://example.org/'))).to.equal(true)
     })
 
     it('handles Literal instances', () => {
-      expect(isNamedNode(new Literal('http://example.org/'))).to.be.false()
+      expect(isNamedNode(new Literal('http://example.org/'))).to.equal(false)
     })
 
     it('handles plain objects', () => {
-      expect(isNamedNode({ termType: 'NamedNode', value: '' })).to.be.true()
+      expect(isNamedNode({ termType: 'NamedNode', value: '' })).to.equal(true)
     })
 
     it('handles prototype based objects', () => {
@@ -82,170 +82,171 @@ describe('util', () => {
       }
       const obj = Object.create(proto)
       obj.value = ''
-      expect(isNamedNode(obj)).to.be.true()
+      expect(isNamedNode(obj)).to.equal(true)
     })
 
     it('handles plain objects', () => {
-      expect(isNamedNode({ termType: 'NamedNode', value: '' })).to.be.true()
+      expect(isNamedNode({ termType: 'NamedNode', value: '' })).to.equal(true)
     })
   })
 
   describe('isStatement', () => {
     it('handles Statement objects', () => {
       const t = new NamedNode('http://example.org')
-      expect(isStatement(new Statement(t, t, t))).to.be.true()
+      expect(isStatement(new Statement(t, t, t))).to.equal(true)
     })
 
     it('handles other objects', () => {
       const t = new NamedNode('http://example.org')
-      expect(isStatement(t)).to.be.false()
+      expect(isStatement(t)).to.equal(false)
     })
   })
 
   describe('isStore', () => {
     it('handles IndexedFormula objects', () => {
       const t = new IndexedFormula()
-      expect(isStore(t)).to.be.true()
+      expect(isStore(t)).to.equal(true)
     })
 
     it('handles other objects', () => {
-      expect(isStore(NaN)).to.be.false()
+      expect(isStore(NaN)).to.equal(false)
     })
   })
 
   describe('isCollection', () => {
     it('handles Collection objects', () => {
       const t = new Collection()
-      expect(isCollection(t)).to.be.true()
+      expect(isCollection(t)).to.equal(true)
     })
 
     it('handles other objects', () => {
       const t = new NamedNode('http://example.org')
-      expect(isCollection(t)).to.be.false()
+      expect(isCollection(t)).to.equal(false)
     })
   })
 
   describe('isRDFlibObject', () => {
     it('handles Collection objects', () => {
       const t = new Collection()
-      expect(isRDFlibObject(t)).to.be.true()
+      expect(isRDFlibObject(t)).to.equal(true)
     })
 
     it('handles NamedNode objects', () => {
       const t = new NamedNode('http://example.org')
-      expect(isRDFlibObject(t)).to.be.true()
+      expect(isRDFlibObject(t)).to.equal(true)
     })
 
     it('handles Variable objects', () => {
       const t = new Variable()
-      expect(isRDFlibObject(t)).to.be.true()
+      expect(isRDFlibObject(t)).to.equal(true)
     })
 
     it('handles BlankNode objects', () => {
       const t = new BlankNode()
-      expect(isRDFlibObject(t)).to.be.true()
+      expect(isRDFlibObject(t)).to.equal(true)
     })
 
     it('handles Literal objects', () => {
       const t = new Literal()
-      expect(isRDFlibObject(t)).to.be.true()
+      expect(isRDFlibObject(t)).to.equal(true)
     })
 
     it('handles other objects', () => {
       const t = {
         some: "object"
       }
-      expect(isRDFlibObject(t)).to.be.false()
+      expect(isRDFlibObject(t)).to.equal(false)
     })
   })
 
   describe('isVariable', () => {
     it('handles Variable objects', () => {
       const t = new Variable()
-      expect(isVariable(t)).to.be.true()
+      expect(isVariable(t)).to.equal(true)
     })
 
     it('handles other objects', () => {
       const t = new NamedNode('http://example.org')
-      expect(isVariable(t)).to.be.false()
-      expect(isVariable(undefined)).to.be.false()
-      expect(isVariable(2)).to.be.false()
+      expect(isVariable(t)).to.equal(false)
+      expect(isVariable(undefined)).to.equal(false)
+      expect(isVariable(2)).to.equal(false)
+      expect(isVariable({})).to.equal(false)
     })
   })
 
   describe('isLiteral', () => {
     it('handles Literal objects', () => {
       const t = new Literal()
-      expect(isLiteral(t)).to.be.true()
+      expect(isLiteral(t)).to.equal(true)
     })
 
     it('handles other objects', () => {
       const nn = new NamedNode('http://example.org')
-      expect(isLiteral(nn)).to.be.false()
+      expect(isLiteral(nn)).to.equal(false)
       const v = new Variable('http://example.org')
-      expect(isLiteral(v)).to.be.false()
+      expect(isLiteral(v)).to.equal(false)
       const bn = new BlankNode('http://example.org')
-      expect(isLiteral(bn)).to.be.false()
+      expect(isLiteral(bn)).to.equal(false)
     })
   })
 
   describe('isQuad', () => {
     it('handles Statement objects', () => {
       const t = new NamedNode('http://example.org')
-      expect(isQuad(new Statement(t, t, t))).to.be.true()
+      expect(isQuad(new Statement(t, t, t))).to.equal(true)
     })
 
     it('handles other objects', () => {
       const nn = new NamedNode('http://example.org')
-      expect(isQuad(nn)).to.be.false()
+      expect(isQuad(nn)).to.equal(false)
       const v = new Variable('http://example.org')
-      expect(isQuad(v)).to.be.false()
+      expect(isQuad(v)).to.equal(false)
       const bn = new BlankNode('http://example.org')
-      expect(isQuad(bn)).to.be.false()
+      expect(isQuad(bn)).to.equal(false)
     })
   })
 
   describe('isBlankNode', () => {
     it('handles BlankNode objects', () => {
       const t = new BlankNode()
-      expect(isBlankNode(t)).to.be.true()
+      expect(isBlankNode(t)).to.equal(true)
     })
 
     it('handles other objects', () => {
       const nn = new NamedNode('http://example.org')
-      expect(isBlankNode(nn)).to.be.false()
+      expect(isBlankNode(nn)).to.equal(false)
       const v = new Variable('http://example.org')
-      expect(isBlankNode(v)).to.be.false()
+      expect(isBlankNode(v)).to.equal(false)
       const bn = new Literal('http://example.org')
-      expect(isBlankNode(bn)).to.be.false()
+      expect(isBlankNode(bn)).to.equal(false)
     })
   })
 
   describe('isObject', () => {
     it('handles BlankNode objects', () => {
       const t = new BlankNode()
-      expect(isRDFObject(t)).to.be.true()
+      expect(isRDFObject(t)).to.equal(true)
     })
 
     it('handles Variable objects', () => {
       const t = new Variable()
-      expect(isRDFObject(t)).to.be.true()
+      expect(isRDFObject(t)).to.equal(true)
     })
 
     it('handles Literal objects', () => {
       const t = new Literal()
-      expect(isRDFObject(t)).to.be.true()
+      expect(isRDFObject(t)).to.equal(true)
     })
 
     it('handles NamedNode objects', () => {
       const t = new NamedNode("https://someurl.com")
-      expect(isRDFObject(t)).to.be.true()
+      expect(isRDFObject(t)).to.equal(true)
     })
 
     it('handles other objects', () => {
-      expect(isRDFObject(2)).to.be.false()
-      expect(isRDFObject({})).to.be.false()
-      expect(isRDFObject(undefined)).to.be.false()
+      expect(isRDFObject(2)).to.equal(false)
+      expect(isRDFObject({})).to.equal(false)
+      expect(isRDFObject(undefined)).to.equal(false)
     })
   })
 
