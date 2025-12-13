@@ -35,7 +35,8 @@
   })
   console.log()
   if (diff.length > 1) {
-    console.log('Files %s and %s are different: ' + diff.length)
+    console.log('Test failed, files are different: ' + file1 + ' and ' + file2)
+    console.log(diff)
     process.exit(1)
   }
 })()

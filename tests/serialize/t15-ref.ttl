@@ -17,10 +17,10 @@
 @prefix pso: <http://purl.org/spar/pso/>.
 @prefix n1: <https://creativecommons.org/licenses/by/4.0/>.
 @prefix li: <http://www.iana.org/assignments/link-relations/>.
-@prefix cs: <https://csarven.ca/>.
+@prefix csa: <https://csarven.ca/>.
 @prefix inbox: <https://csarven.ca/archives/linked-research-decentralised-web/inbox/>.
 @prefix n2: <http://www.w3.org/ns/odrl/2/>.
-@prefix dok: <https://dokie.li/>.
+@prefix dokie: <https://dokie.li/>.
 @prefix tests: <https://linkedresearch.org/ldn/tests/>.
 @prefix TR: <https://www.w3.org/TR/>.
 @prefix l: <https://linkedresearch.org/>.
@@ -52,17 +52,18 @@
     li:stylesheet
         <https://dokie.li/media/css/basic.css>,
         <https://dokie.li/media/css/dokieli.css>;
-    owl:sameAs cs:linked-research-decentralised-web;
+    owl:sameAs csa:linked-research-decentralised-web;
     ldp:inbox inbox:;
     n2:hasPolicy :document-policy-offer;
     prov:wasDerivedFrom
-        cs:call-for-linked-research, cs:cooling-down-web-science,
-        cs:dokieli-rww, cs:enabling-accessible-knowledge, cs:faipdaaf,
-        cs:linked-research, cs:linked-research-scholarly-communication,
-        cs:linked-sdmx-data, cs:linked-specifications-reports,
-        cs:linked-statistical-data-analysis, cs:sense-of-lsd-analysis,
-        cs:sparqlines-sparql-to-sparkline, cs:this-paper-is-a-demo,
-        cs:web-science-from-404-to-200, dok:, tests:summary, TR:annotation-html;
+        csa:call-for-linked-research, csa:cooling-down-web-science,
+        csa:dokieli-rww, csa:enabling-accessible-knowledge, csa:faipdaaf,
+        csa:linked-research, csa:linked-research-scholarly-communication,
+        csa:linked-sdmx-data, csa:linked-specifications-reports,
+        csa:linked-statistical-data-analysis, csa:sense-of-lsd-analysis,
+        csa:sparqlines-sparql-to-sparkline, csa:this-paper-is-a-demo,
+        csa:web-science-from-404-to-200, dokie:, tests:summary,
+        TR:annotation-html;
     as:inReplyTo l:calls;
     rel:latest-version lin:ce36de40-64a7-4d57-a189-f47c364daa74 .
 :31943b7f-b646-4ebd-8787-ec2341e862c1 pso:withStatus pso:published.
@@ -79,7 +80,7 @@
 :document-policy-offer
     a n2:Offer, n2:Policy;
     n2:permission :document-permission;
-    n2:target cs:linked-research-decentralised-web;
+    n2:target csa:linked-research-decentralised-web;
     n2:uid linke:document-policy-offer.
 pso:published a pso:PublicationStatus.
 
@@ -88,4 +89,4 @@ n0:i
     schema:familyName "Capadisli"@en;
     schema:givenName "Sarven"@en;
     schema:name "Sarven Capadisli"@en;
-    schema:url cs: .
+    schema:url csa: .

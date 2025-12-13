@@ -439,9 +439,9 @@ ex:myid ex:prop1 [ ex:prop2 [ ex:prop3 "value" ] ].
       it('store contains 3 statements', async () => {
         // console.log(await serialize(null, store, null, 'application/ld+json'))
         expect(store.statements).to.have.length(3)
-        expect(serialize(null, store, null, 'text/turtle')).to.eql(`@prefix ex: <http://example.com#>.
+        expect(serialize(null, store, null, 'text/turtle')).to.eql(`@prefix exa: <http://example.com#>.
 
-ex:myid ex:prop1 [ ex:prop2 [ ex:prop3 "value" ] ].
+exa:myid exa:prop1 [ exa:prop2 [ exa:prop3 "value" ] ].
 
 `)
         const nt = store.toNT()
