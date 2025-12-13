@@ -1,6 +1,6 @@
 import * as chai from 'chai'
 import { Headers } from 'cross-fetch'
-import * as dirtyChai from 'dirty-chai'
+// import * as dirtyChai from 'dirty-chai'
 import * as sinon from 'sinon'
 import * as sinonChai from 'sinon-chai'
 import { blankNode, Fetcher, graph, lit, namedNode, st, sym, UpdateManager } from '../../src/index'
@@ -10,7 +10,7 @@ import BlankNode from '../../src/blank-node';
 const { expect } = chai
 
 chai.use((sinonChai as any).default)
-chai.use((dirtyChai as any).default)
+// chai.use((dirtyChai as any).default)
 
 chai.should()
 

@@ -143,8 +143,8 @@ describe('IndexedFormula', () => {
       ])
 
       expect(store.statements.length).to.eq(2)
-      expect(store.holds(s1, p1, o1)).to.be.true()
-      expect(store.holds(s2, p2, o2)).to.be.true()
+      expect(store.holds(s1, p1, o1)).to.equal(true)
+      expect(store.holds(s2, p2, o2)).to.equal(true)
     })
 
     it ('works with statements', () => {
@@ -152,7 +152,7 @@ describe('IndexedFormula', () => {
       store.add(triple1)
 
       expect(store.statements.length).to.eq(1)
-      expect(store.holds(s1, p1, o1)).to.be.true()
+      expect(store.holds(s1, p1, o1)).to.equal(true)
     })
 
     it ('works with stores', () => {
@@ -163,8 +163,8 @@ describe('IndexedFormula', () => {
       store.add(store0)
 
       expect(store.statements.length).to.eq(2)
-      expect(store.holds(s1, p1, o1)).to.be.true()
-      expect(store.holds(s2, p2, o2)).to.be.true()
+      expect(store.holds(s1, p1, o1)).to.equal(true)
+      expect(store.holds(s2, p2, o2)).to.equal(true)
     })
 
     it ('works with terms as separate arguments', () => {
@@ -172,7 +172,7 @@ describe('IndexedFormula', () => {
       store.add(s1, p1, o1)
 
       expect(store.statements.length).to.eq(1)
-      expect(store.holds(triple1)).to.be.true()
+      expect(store.holds(triple1)).to.equal(true)
     })
 
     it('calls the data callback', () => {
@@ -249,8 +249,8 @@ describe('IndexedFormula', () => {
       ])
 
       expect(store.statements.length).to.eq(0)
-      expect(store.holds(s1, p1, o1)).to.be.false()
-      expect(store.holds(s2, p2, o2)).to.be.false()
+      expect(store.holds(s1, p1, o1)).to.equal(false)
+      expect(store.holds(s2, p2, o2)).to.equal(false)
     })
 
     it ('works with statements', () => {
@@ -260,7 +260,7 @@ describe('IndexedFormula', () => {
       store.remove(triple1)
 
       expect(store.statements.length).to.eq(0)
-      expect(store.holds(s1, p1, o1)).to.be.false()
+      expect(store.holds(s1, p1, o1)).to.equal(false)
     })
 
     it ('works with stores', () => {
@@ -273,8 +273,8 @@ describe('IndexedFormula', () => {
       store.remove(store0)
 
       expect(store.statements.length).to.eq(0)
-      expect(store.holds(s1, p1, o1)).to.be.false()
-      expect(store.holds(s2, p2, o2)).to.be.false()
+      expect(store.holds(s1, p1, o1)).to.equal(false)
+      expect(store.holds(s2, p2, o2)).to.equal(false)
     })
   });
 
@@ -292,7 +292,7 @@ describe('IndexedFormula', () => {
       const store = new IndexedFormula()
       try {
         store.removeStatement(triple1)
-        expect(true).to.be.false()
+        expect(true).to.equal(false)
       } catch (e) {
         expect(e.message).to.include('RDFArrayRemove: Array did not contain')
       }
@@ -307,7 +307,7 @@ describe('IndexedFormula', () => {
       store.removeMany(triple1.subject, null, null, null)
 
       expect(store.statements.length).to.eq(1)
-      expect(store.holds(s2, p2, o2)).to.be.true()
+      expect(store.holds(s2, p2, o2)).to.equal(true)
     })
 
     it ('removes a limited number of matching statements', () => {
@@ -328,7 +328,7 @@ describe('IndexedFormula', () => {
           store.removeMatches(null, null, triple3.object, null)
 
           expect(store.statements.length).to.eq(1)
-          expect(store.holds(s2, p2, o2)).to.be.true()
+          expect(store.holds(s2, p2, o2)).to.equal(true)
       })
       it ('does the same as remove of matches', () => {
           const store0 = new IndexedFormula()
@@ -338,8 +338,8 @@ describe('IndexedFormula', () => {
           store0.remove(store0.match(null, null, triple3.object, null))
           store1.removeMatches(null, null, triple3.object, null)
 
-          expect(store0.holdsStatement(store1)).to.be.true()
-          expect(store1.holdsStatement(store0)).to.be.true()
+          expect(store0.holdsStatement(store1)).to.equal(true)
+          expect(store1.holdsStatement(store0)).to.equal(true)
       })
   });
   describe('removeDocument', () => {

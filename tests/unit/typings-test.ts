@@ -18,7 +18,7 @@ describe('typings', () => {
     const b = test()
     const c = new Literal("")
 
-    expect(c.equals(b.object)).to.be.false()
+    expect(c.equals(b.object)).to.equal(false)
   })
 
   const s = DataFactory.namedNode(URI);

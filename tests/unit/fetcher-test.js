@@ -4,7 +4,7 @@
 import chai from 'chai'
 import sinon from 'sinon'
 import sinonChai from 'sinon-chai'
-import dirtyChai from 'dirty-chai'
+// import dirtyChai from 'dirty-chai'
 import nock from 'nock'
 
 import * as rdf from '../../src/index'
@@ -14,7 +14,7 @@ import CanonicalDataFactory from '../../src/factories/canonical-data-factory'
 import { Headers, Response } from 'cross-fetch'
 
 chai.use(sinonChai)
-chai.use(dirtyChai)
+// chai.use(dirtyChai)
 const { expect } = chai
 chai.should()
 
@@ -47,7 +47,7 @@ describe('Fetcher', () => {
       }
       let fetcher = new Fetcher()
 
-      expect(fetcher.store.fetcher === fetcher).to.be.true()
+      expect(fetcher.store.fetcher === fetcher).to.equal(true)
     })
   })
 
@@ -84,7 +84,7 @@ describe('Fetcher', () => {
         options.resource,
         store.rdfFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'),
         store.rdfFactory.namedNode('http://www.w3.org/ns/iana/media-types/image/png#Resource')
-      )).to.be.true()
+      )).to.equal(true)
     })
   })
 
@@ -105,7 +105,7 @@ describe('Fetcher', () => {
       fetcher._fetch = sinon.stub().rejects(new Error(errorMessage))
 
       fetcher.nowOrWhenFetched(docuri, (ok, message) => {
-        expect(ok).to.be.false()
+        expect(ok).to.equal(false)
         expect(message).to.include(errorMessage)
         done()
       })
@@ -130,7 +130,7 @@ describe('Fetcher', () => {
     it('nowOrWhenFetched(uri, userCallback)', done => {
       fetcher.nowOrWhenFetched(docuri, (ok, text, response) => {
         expect(fetcher.load).to.have.been.calledWith(docuri, {})
-        expect(ok).to.be.true()
+        expect(ok).to.equal(true)
         expect(response.status).to.equal(200)
         done()
       })
@@ -140,15 +140,14 @@ describe('Fetcher', () => {
       let options = {}
       fetcher.nowOrWhenFetched(docuri, options, (ok, text, response) => {
         expect(fetcher.load).to.have.been.calledWith(docuri, options)
-        expect(ok).to.be.true()
+        expect(ok).to.equal(true)
         done()
       })
     })
-
     it('nowOrWhenFetched(uri, referringTerm, userCallback, options)', done => {
       userCallback = (ok) => {
         expect(fetcher.load).to.have.been.calledWith(docuri, { referringTerm: rterm })
-        expect(ok).to.be.true()
+        expect(ok).equal(true)
         done()
       }
       fetcher.nowOrWhenFetched(docuri, rterm, userCallback, options)
@@ -157,7 +156,7 @@ describe('Fetcher', () => {
     it('nowOrWhenFetched(uri, undefined, userCallback, options)', done => {
       userCallback = (ok) => {
         expect(fetcher.load).to.have.been.calledWith(docuri, {})
-        expect(ok).to.be.true()
+        expect(ok).to.equal(true)
         done()
       }
       fetcher.nowOrWhenFetched(docuri, undefined, userCallback, options)
@@ -166,7 +165,7 @@ describe('Fetcher', () => {
     it('nowOrWhenFetched(uri, referringTerm, userCallback)', done => {
       fetcher.nowOrWhenFetched(docuri, rterm, (ok) => {
         expect(fetcher.load).to.have.been.calledWith(docuri, { referringTerm: rterm })
-        expect(ok).to.be.true()
+        expect(ok).to.equal(true)
         done()
       })
     })
@@ -206,7 +205,7 @@ describe('Fetcher', () => {
     it('should mark the uri as requested', () => {
       return fetcher.load(uri, options)
         .then(() => {
-          expect(fetcher.requested[uri]).to.be.true()
+          expect(fetcher.requested[uri]).to.equal(true)
         })
     })
 
@@ -215,7 +214,7 @@ describe('Fetcher', () => {
 
       return fetcher.load(uri, options)
         .then(() => {
-          expect(fetcher.saveRequestMetadata).to.have.been.called()
+          expect(fetcher.saveRequestMetadata).to.have.been.calledOnce // called()
         })
     })
 
@@ -226,7 +225,7 @@ describe('Fetcher', () => {
 
       return fetcher.load(uri, options)
         .then(() => {
-          expect(fetcher.saveRequestMetadata).to.not.have.been.called()
+          expect(fetcher.saveRequestMetadata).to.not.have.been.calledOnce // to.not.have.been.called(1)
         })
     })
 
@@ -248,10 +247,10 @@ describe('Fetcher', () => {
 
         return fetcher.load(uri, options)
           .then(response => {
-            expect(response.ok).to.be.true()
+            expect(response.ok).to.equal(true)
             expect(response.status).to.equal(200)
-            expect(fetcher._fetch).to.not.have.been.called()
-            expect(fetcher.handleError).to.not.have.been.called()
+            expect(fetcher._fetch).to.not.have.been.calledOnce // to.have.been.called(0)
+            expect(fetcher.handleError).to.not.have.been.calledOnce // to.have.been.called(0)
             expect(fetcher.requested[uri]).to.equal('done')
           })
       })
@@ -261,9 +260,9 @@ describe('Fetcher', () => {
 
         return fetcher.load(uri, options)
           .then(response => {}, error => {
-            expect(error.message.includes('Previously failed:')).to.be.true()
-            expect(fetcher._fetch).to.not.have.been.called()
-            expect(fetcher.handleError).to.not.have.been.called()
+            expect(error.message.includes('Previously failed:')).to.equal(true)
+            expect(fetcher._fetch).to.not.have.been.calledOnce // to.not.have.been.called()
+            expect(fetcher.handleError).to.not.have.been.calledOnce // to.not.have.been.called()
           })
       })
 
@@ -272,7 +271,7 @@ describe('Fetcher', () => {
 
         return fetcher.load(uri, options)
           .then(() => {
-            expect(fetcher.nonexistent[uri]).to.be.true()
+            expect(fetcher.nonexistent[uri]).to.equal(true)
           })
       })
     })
@@ -285,7 +284,7 @@ describe('Fetcher', () => {
 
         return fetcher.load(uri, options)
           .then(() => {
-            expect(fetcher.nonexistent[uri]).to.be.undefined()
+            expect(fetcher.nonexistent[uri]).to.equal(undefined) // to.be.undefined()
           })
       })
     })
@@ -338,7 +337,7 @@ describe('Fetcher', () => {
       delete fetcher.requested[uri]
       return fetcher.webOperation('PATCH', uri, options) // load() is not usable for PATCH
         .then(result => {}, () => {
-          expect(fetcher.requested[uri]).to.not.exist()
+          expect(fetcher.requested[uri]).to.equal(undefined) // to.not.exist()
         })
     })
   })
@@ -424,7 +423,7 @@ describe('Fetcher', () => {
       let options = { credentials: true }
 
       Fetcher.setCredentials(uri, options)
-      expect(options.credentials).to.be.true()
+      expect(options.credentials).to.equal(true)
     })
 
     it('should return false for an https uri with an override', () => {
@@ -432,7 +431,7 @@ describe('Fetcher', () => {
       let options = { credentials: false }
 
       Fetcher.setCredentials(uri, options)
-      expect(options.credentials).to.be.false()
+      expect(options.credentials).to.equal(false)
     })
   })
 

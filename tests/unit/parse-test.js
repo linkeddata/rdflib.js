@@ -262,7 +262,7 @@ ex:myid ex:prop1 [ ex:prop2 [ ex:prop3 "value" ] ].
       }) // before
 
       it('uses the specified base IRI', () => {
-        expect(store.rdfFactory.supports["COLLECTIONS"]).to.be.false()
+        expect(store.rdfFactory.supports["COLLECTIONS"]).to.equal(false)
 
         const homePageHeight = 5 // homepage + height + 3 x name
         const list = 2 * 3 + 1 // (rdf:first + rdf:rest) * 3 items + listProp
@@ -357,7 +357,7 @@ ex:myid ex:prop1 [ ex:prop2 [ ex:prop3 "value" ] ].
       })
 
       it('uses the specified base IRI', () => {
-        expect(store.rdfFactory.supports["COLLECTIONS"]).to.be.true()
+        expect(store.rdfFactory.supports["COLLECTIONS"]).to.equal(true)
         expect(store.statements).to.have.length(1)
 
         const collection = store.statements[0]

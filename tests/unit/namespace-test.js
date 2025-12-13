@@ -10,7 +10,7 @@ describe('Namespace', () => {
 
     expect(term).to.have.property("termType")
     expect(term).to.have.property("value")
-    expect(term.equals(new NamedNode("http://example.com/term"))).to.be.true()
+    expect(term.equals(new NamedNode("http://example.com/term"))).to.equal(true)
   })
 
   it('allows custom factories', () => {
@@ -24,9 +24,9 @@ describe('Namespace', () => {
 
     const ns = Namespace("http://example.com/", factory)
 
-    expect(called).to.be.false()
+    expect(called).to.equal(false)
     const term = ns('term')
-    expect(called).to.be.true()
-    expect(term.equals(new NamedNode("http://example.com/term"))).to.be.true()
+    expect(called).to.equal(true)
+    expect(term.equals(new NamedNode("http://example.com/term"))).to.equal(true)
   })
 })

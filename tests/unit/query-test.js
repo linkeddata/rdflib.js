@@ -4,12 +4,12 @@
 import chai from 'chai'
 import sinon from 'sinon'
 import sinonChai from 'sinon-chai'
-import dirtyChai from 'dirty-chai'
+// import dirtyChai from 'dirty-chai'
 import nock from 'nock'
 import * as rdf from '../../src/index'
 
 chai.use(sinonChai)
-chai.use(dirtyChai)
+// chai.use(dirtyChai)
 const { expect } = chai
 chai.should()
 
@@ -189,8 +189,8 @@ describe('Query', () => {
         result[(bindings['?x'].value)] = true
       }, null, () => { // fetcher, done callback
         result.sort()
-        expect(result[alice.uri]).to.be.true()
-        expect(result[bob.uri]).to.be.true()
+        expect(result[alice.uri]).to.equal(true)
+        expect(result[bob.uri]).to.equal(true)
         done()
       })
     })
@@ -365,8 +365,8 @@ describe('Synchronous Query', () => {
         result[(bindings['?x'].value)] = true
       }, null, () => { // fetcher, done callback
         result.sort()
-        expect(result[alice.uri]).to.be.true()
-        expect(result[bob.uri]).to.be.true()
+        expect(result[alice.uri]).to.equal(true)
+        expect(result[bob.uri]).to.equal(true)
         done()
       })
     })
