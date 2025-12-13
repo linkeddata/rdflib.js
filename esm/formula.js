@@ -25,15 +25,8 @@ export default class Formula extends Node {
    * @param opts
    * @param opts.rdfFactory - The rdf factory that should be used by the store
   */
-  constructor() {
-    var _this;
-    let statements = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
-    let constraints = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
-    let initBindings = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
-    let optional = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : [];
-    let opts = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : {};
+  constructor(statements = [], constraints = [], initBindings = [], optional = [], opts = {}) {
     super('');
-    _this = this;
     this.statements = statements;
     this.constraints = constraints;
     this.initBindings = initBindings;
@@ -57,9 +50,7 @@ export default class Formula extends Node {
     this.rdfFactory = opts && opts.rdfFactory || CanonicalDataFactory;
     // Enable default factory methods on this while preserving factory context.
     for (const factoryMethod of appliedFactoryMethods) {
-      this[factoryMethod] = function () {
-        return _this.rdfFactory[factoryMethod](...arguments);
-      };
+      this[factoryMethod] = (...args) => this.rdfFactory[factoryMethod](...args);
     }
   }
 

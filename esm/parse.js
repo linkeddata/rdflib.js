@@ -19,9 +19,7 @@ import { TurtleContentType, N3ContentType, RDFXMLContentType, XHTMLContentType, 
  * @param contentType - The MIME content type string for the input - defaults to text/turtle
  * @param [callback] - The callback to call when the data has been loaded
  */
-export default function parse(str, kb, base) {
-  let contentType = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 'text/turtle';
-  let callback = arguments.length > 4 ? arguments[4] : undefined;
+export default function parse(str, kb, base, contentType = 'text/turtle', callback) {
   contentType = contentType || TurtleContentType;
   contentType = contentType.split(';')[0];
   try {

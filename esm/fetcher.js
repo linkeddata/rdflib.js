@@ -435,8 +435,7 @@ function isXMLNS(responseText) {
   * and put back the data to the web.
  */
 export default class Fetcher {
-  constructor(store) {
-    let options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  constructor(store, options = {}) {
     _defineProperty(this, "store", void 0);
     _defineProperty(this, "timeout", void 0);
     _defineProperty(this, "_fetch", void 0);
@@ -589,8 +588,7 @@ export default class Fetcher {
    * @param requestedURI
    * @param options
    */
-  static setCredentials(requestedURI) {
-    let options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  static setCredentials(requestedURI, options = {}) {
     // 2014 CORS problem:
     // XMLHttpRequest cannot load http://www.w3.org/People/Berners-Lee/card.
     // A wildcard '*' cannot be used in the 'Access-Control-Allow-Origin'
@@ -653,8 +651,7 @@ export default class Fetcher {
    *
    * @returns {Promise<Result>}
    */
-  load(uri) {
-    let options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  load(uri, options = {}) {
     options = Object.assign({}, options); // Take a copy as we add stuff to the options!!
     if (uri instanceof Array) {
       return Promise.all(uri.map(x => {
@@ -872,8 +869,7 @@ export default class Fetcher {
    *    response         The fetch Response object (was: XHR) if there was was one
    *                     includes response.status as the HTTP status if any.
    */
-  nowOrWhenFetched(uriIn, p2, userCallback) {
-    let options = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
+  nowOrWhenFetched(uriIn, p2, userCallback, options = {}) {
     const uri = termValue(uriIn);
     if (typeof p2 === 'function') {
       // nowOrWhenFetched (uri, userCallback)
@@ -1055,8 +1051,7 @@ export default class Fetcher {
   /**
    * Writes back to the web what we have in the store for this uri
    */
-  putBack(uri) {
-    let options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  putBack(uri, options = {}) {
     const uriSting = termValue(uri);
     let doc = new RDFlibNamedNode(uriSting).doc(); // strip off #
     options.contentType = options["content-type"] || options["Content-Type"] || options.contentType || TurtleContentType;
@@ -1100,9 +1095,7 @@ export default class Fetcher {
    * as otherwise existing could  be deleted.
    * @param doc - The resource
   */
-  async createIfNotExists(doc) {
-    let contentType = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : TurtleContentType;
-    let data = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
+  async createIfNotExists(doc, contentType = TurtleContentType, data = '') {
     const fetcher = this;
     try {
       var response = await fetcher.load(doc);
@@ -1187,8 +1180,9 @@ export default class Fetcher {
    *  Returns promise of Response
    *  If data is returned, copies it to response.responseText before returning
    */
-  webOperation(method, uriIn) {
-    let options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+  webOperation(method, uriIn,
+  // Not sure about this type. Maybe this Options is different?
+  options = {}) {
     const uri = termValue(uriIn);
     options.method = method;
     options.body = options.data || options.body;

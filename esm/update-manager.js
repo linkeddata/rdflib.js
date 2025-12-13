@@ -378,8 +378,7 @@ export default class UpdateManager {
   /**
    * @private
    */
-  fire(uri, query, callbackFunction) {
-    let options = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
+  fire(uri, query, callbackFunction, options = {}) {
     return Promise.resolve().then(() => {
       if (!uri) {
         throw new Error('No URI given for remote editing operation: ' + query);
@@ -667,8 +666,7 @@ export default class UpdateManager {
    * @param insertions - Statement or statements to be inserted.
    * @returns a promise
    */
-  updateMany(deletions) {
-    let insertions = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
+  updateMany(deletions, insertions = []) {
     const docs = deletions.concat(insertions).map(st => st.why);
     const thisUpdater = this;
     const uniqueDocs = [];
@@ -781,8 +779,7 @@ _:patch
    *           OR returns a promise
    * @param options - Options for the fetch call
    */
-  update(deletions, insertions, callback, secondTry) {
-    let options = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : {};
+  update(deletions, insertions, callback, secondTry, options = {}) {
     if (!callback) {
       var thisUpdater = this;
       return new Promise(function (resolve, reject) {
@@ -925,8 +922,7 @@ _:patch
       callback(undefined, false, 'Exception in update: ' + e + '\n' + Util.stackString(e));
     }
   }
-  updateDav(doc, ds, is, callbackFunction) {
-    let options = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : {};
+  updateDav(doc, ds, is, callbackFunction, options = {}) {
     let kb = this.store;
     // The code below is derived from Kenny's UpdateCenter.js
     var request = kb.any(doc, this.ns.link('request'));
@@ -983,8 +979,7 @@ _:patch
    * @param callbackFunction
    * @param options
    */
-  updateLocalFile(doc, ds, is, callbackFunction) {
-    let options = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : {};
+  updateLocalFile(doc, ds, is, callbackFunction, options = {}) {
     const kb = this.store;
     // console.log('Writing back to local file\n')
 

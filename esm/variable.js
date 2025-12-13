@@ -15,8 +15,7 @@ export default class Variable extends Node {
    * Initializes this variable
    * @param name The variable's name
    */
-  constructor() {
-    let name = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
+  constructor(name = '') {
     super(name);
     _defineProperty(this, "termType", VariableTermType);
     /** The base string for a variable's name */

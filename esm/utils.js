@@ -79,8 +79,7 @@ export function arrayToStatements(rdfFactory, subject, data) {
   }, subject);
   return statements;
 }
-export function ArrayIndexOf(arr, item) {
-  let i = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
+export function ArrayIndexOf(arr, item, i = 0) {
   var length = arr.length;
   if (i < 0) i = length + i;
   for (; i < length; i++) {

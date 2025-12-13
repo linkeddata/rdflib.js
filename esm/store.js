@@ -92,8 +92,7 @@ export default class IndexedFormula extends Formula {
    * @param [opts.rdfArrayRemove] - Function which removes statements from the store
    * @param [opts.dataCallback] - Callback when a statement is added to the store, will not trigger when adding duplicates
    */
-  constructor(features) {
-    let opts = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  constructor(features, opts = {}) {
     super(undefined, undefined, undefined, undefined, opts);
     // IN future - allow pass array of statements to constructor
     /**
