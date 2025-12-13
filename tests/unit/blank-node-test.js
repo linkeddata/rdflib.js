@@ -24,10 +24,10 @@ describe('BlankNode', () => {
     let contentType = 'text/n3'
     rdf.parse(input, kb, base, contentType)
 
-    console.log(kb.toString())
+    // console.log(kb.toString())
 
     let output = rdf.serialize(rdf.sym('https://localhost/'), kb)
 
-    console.log(output)
+    // console.log(output)
   })
 })

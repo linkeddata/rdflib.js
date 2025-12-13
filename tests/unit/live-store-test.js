@@ -1,10 +1,9 @@
-/* eslint-env mocha */
 'use strict'
 
 import chai from 'chai'
 import sinon from 'sinon'
 import sinonChai from 'sinon-chai'
-import dirtyChai from 'dirty-chai'
+// import dirtyChai from 'dirty-chai'
 import nock from 'nock'
 import * as rdf from '../../src/index'
 
@@ -12,7 +11,7 @@ const self = {err: ''}
 const $rdf = rdf
 
 chai.use(sinonChai)
-chai.use(dirtyChai)
+// chai.use(dirtyChai)
 const { expect } = chai
 chai.should()
 
@@ -106,8 +105,8 @@ describe('UpdateManager', () => {
       updater.update([], [st1], (uri, ok, text) => {
         if (!ok) console.log(`update callback uri = ${uri}, ok = ${ok}, text = <<<${text}>>>` )
         // expect(updater.store.fetcher.load).to.have.been.calledWith(doc)
-        expect(updater.store.fetcher.webOperation).to.have.been.called()
-        expect(ok).to.be.true()
+        expect(updater.store.fetcher.webOperation).to.have.been.calledOnce
+        expect(ok).to.equal(true)
         done()
       })
     })
@@ -117,7 +116,7 @@ describe('UpdateManager', () => {
         if (!ok) console.log(`update callback uri = ${uri}, ok = ${ok}, text = <<<${text}>>>` )
         expect(updater.store.fetcher.load).to.have.been.calledWith(doc)
         // expect(updater.store.fetcher.webOperation).to.have.been.called()
-        expect(ok).to.be.true()
+        expect(ok).to.equal(true)
         done()
       })
     })
@@ -128,7 +127,7 @@ describe('UpdateManager', () => {
         if (!ok) console.log(`update callback uri = ${uri}, ok = ${ok}, text = <<<${text}>>>` )
         expect(updater.store.fetcher.load).to.have.been.calledWith(doc)
         // expect(updater.store.fetcher.webOperation).to.have.been.called()
-        expect(ok).to.be.true()
+        expect(ok).to.equal(true)
         done()
       })
     })
@@ -161,7 +160,7 @@ describe('UpdateManager', () => {
     it('Should insert triples in more than one document', () => {
       loadMeta(updater.store)
       updater.updateMany([], [st1, st2, st3]).then(array => {
-        expect(updater.store.fetcher.webOperation).to.have.been.called()
+        expect(updater.store.fetcher.webOperation).to.have.been.calledOnce
       })
     })
 
@@ -171,7 +170,7 @@ describe('UpdateManager', () => {
       updater.updateMany([], [st1, st2, st3])
       updater.updateMany([st1, st2, st3])
         .then(array => {
-          expect(updater.store.fetcher.webOperation).to.have.been.called()
+          expect((updater.store.fetcher.webOperation).callCount).to.equal(4)
         })
         .then(() => done(), done)
     })

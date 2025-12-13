@@ -1,4 +1,4 @@
-import CanonicalDataFactory from "./factories/canonical-data-factory";
+import CanonicalDataFactory from "./factories/canonical-data-factory"
 
 export function createXSD(localFactory = CanonicalDataFactory) {
   return {
@@ -13,9 +13,9 @@ export function createXSD(localFactory = CanonicalDataFactory) {
       "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString"
     ),
     string: localFactory.namedNode("http://www.w3.org/2001/XMLSchema#string"),
-  };
+  }
 }
 
-const defaultXSD = createXSD(CanonicalDataFactory);
+const defaultXSD = createXSD(CanonicalDataFactory)
 
-export default defaultXSD;
+export default defaultXSD

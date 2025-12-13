@@ -1,4 +1,3 @@
-/* eslint-env mocha */
 import { expect } from 'chai'
 
 import Literal from '../../src/literal'
@@ -67,24 +66,24 @@ describe('Literal', () => {
         it('escapes quotation marks (#x22)', () => {
           const node = new Literal('foo\x22bar',)
           expect(node.toNT()).to.equal('"foo\\"bar"')
-        });
+        })
 
         it('escapes backslashes (x5C)', () => {
           const node = new Literal('foo\x5Cbar',)
           expect(node.toNT()).to.equal('"foo\\\\bar"')
-        });
+        })
 
         it('escapes line feed (x0A)', () => {
           const node = new Literal('foo\x0Abar',)
           expect(node.toNT()).to.equal('"foo\\nbar"')
-        });
+        })
 
         it('escapes carriage return', () => {
           const node = new Literal('foo\x0Dbar',)
           expect(node.toNT()).to.equal('"foo\\rbar"')
-        });
+        })
 
-      });
+      })
 
     })
 
@@ -129,17 +128,17 @@ describe('Literal', () => {
     it('compares termType, value, language, and datatype', () => {
       const a = new Literal('hello world', 'en', XSD.langString)
       const b = new Literal('', '', null)
-      expect(a.equals(b)).to.be.false()
-      expect(b.equals(a)).to.be.false()
+      expect(a.equals(b)).to.equal(false)
+      expect(b.equals(a)).to.equal(false)
       b.value = 'hello world'
-      expect(a.equals(b)).to.be.false()
-      expect(b.equals(a)).to.be.false()
+      expect(a.equals(b)).to.equal(false)
+      expect(b.equals(a)).to.equal(false)
       b.language = 'en'
-      expect(a.equals(b)).to.be.false()
-      expect(b.equals(a)).to.be.false()
+      expect(a.equals(b)).to.equal(false)
+      expect(b.equals(a)).to.equal(false)
       b.datatype = XSD.langString
-      expect(a.equals(b)).to.be.true()
-      expect(b.equals(a)).to.be.true()
+      expect(a.equals(b)).to.equal(true)
+      expect(b.equals(a)).to.equal(true)
     })
   })
 })

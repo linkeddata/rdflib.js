@@ -1,4 +1,3 @@
-/* eslint-env mocha */
 import { expect } from 'chai'
 
 import NamedNode from '../../src/named-node'

@@ -18,19 +18,19 @@ var graphs = {}
 
 function card(who,kb) {
     var snip = '<div>'
-    var image = kb.any(who, FOAF('img'));
-    if (!image) image = kb.any(who, FOAF('depiction'));
-    if (!image) image = kb.any(who, FOAF('img'));
+    var image = kb.any(who, FOAF('img'))
+    if (!image) image = kb.any(who, FOAF('depiction'))
+    if (!image) image = kb.any(who, FOAF('img'))
     if (image) {
-        snip += '<img src="' + image.uri +'" align="right" height="100"/>';
+        snip += '<img src="' + image.uri +'" align="right" height="100"/>'
     }
-    var nam = kb.any(who, FOAF('name'));
-    if (!nam) { nam = "???";}
-    snip+="<h3> <a href='"+who.uri+"'>"+nam+"</a></h3>";
+    var nam = kb.any(who, FOAF('name'))
+    if (!nam) { nam = "???"}
+    snip+="<h3> <a href='"+who.uri+"'>"+nam+"</a></h3>"
 
-    nam = kb.any(who, FOAF('phone'));
+    nam = kb.any(who, FOAF('phone'))
     if (nam) {
-        snip+="<p>"+nam+"</p>";
+        snip+="<p>"+nam+"</p>"
     }
     snip += "</div>"
     return snip
@@ -48,17 +48,17 @@ function card(who,kb) {
 
 
 
-var uri = 'http://bblfish.net/people/henry/card#me';
+var uri = 'http://bblfish.net/people/henry/card#me'
 
 function draw (person,kb) {
     $("#description").html(card(person,kb))
     $("#url").attr("value",person.uri)
-    var friends = kb.each(person, FOAF('knows'));
-    var i, n = friends.length, friend;
-    var lis = "";
+    var friends = kb.each(person, FOAF('knows'))
+    var i, n = friends.length, friend
+    var lis = ""
 
     for (i = 0; i < n; i++) {
-        friend = friends[i];
+        friend = friends[i]
         var name = kb.any(friend, FOAF('name'))
         if ("" == name) {
            name = name.uri
@@ -73,12 +73,12 @@ function draw (person,kb) {
 }
 
 function redraw(webid) {
-    var person = $rdf.sym(webid);
-    var docURI = webid.slice(0, webid.indexOf('#'));
+    var person = $rdf.sym(webid)
+    var docURI = webid.slice(0, webid.indexOf('#'))
     var kb = graphs[docURI]
-    if (!kb) kb = graphs[docURI] = new $rdf.IndexedFormula();
-    var fetch = $rdf.fetcher(kb);
-    fetch.nowOrWhenFetched(docURI, undefined, function(ok, body) { draw(person,kb) }); // @@ check ok
+    if (!kb) kb = graphs[docURI] = new $rdf.IndexedFormula()
+    var fetch = $rdf.fetcher(kb)
+    fetch.nowOrWhenFetched(docURI, undefined, function(ok, body) { draw(person,kb) }) // @@ check ok
 }
 
 

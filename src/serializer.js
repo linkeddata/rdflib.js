@@ -14,7 +14,7 @@ import { createXSD } from './xsd'
 
 
 export default function createSerializer(store) {
-  return new Serializer(store);
+  return new Serializer(store)
 };
 
 export class Serializer {
@@ -46,7 +46,7 @@ export class Serializer {
   }
 
   setBase(base) {
-    this.base = base;
+    this.base = base
     return this
   }
 
@@ -57,7 +57,7 @@ export class Serializer {
    *  - 'o': do not abbreviate to a prefixed name when the local part contains a dot
    */
   setFlags(flags) {
-    this.flags = flags || '';
+    this.flags = flags || ''
     return this
   }
 
@@ -110,7 +110,7 @@ export class Serializer {
     // remove any existing mapping for this prefix
     for (let existingNs in this.prefixes) {
       if (this.prefixes[existingNs] == prefix)
-        delete this.prefixes[existingNs];
+        delete this.prefixes[existingNs]
     }
 
     this.prefixes[uri] = prefix
@@ -570,7 +570,7 @@ export class Serializer {
 
             case 'http://www.w3.org/2001/XMLSchema#double': {
               // Must force use of 'e'
-              const eNotation = val.toLowerCase().indexOf('e') > 0;
+              const eNotation = val.toLowerCase().indexOf('e') > 0
               if (val.indexOf('.') < 0 && !eNotation) val += '.0'
               if (!eNotation) val += 'e0'
               return val
@@ -590,7 +590,7 @@ export class Serializer {
       case 'NamedNode':
         return this.symbolToN3(expr)
       case 'DefaultGraph':
-        return '';
+        return ''
       default:
         throw new Error('Internal: atomicTermToN3 cannot handle ' + expr + ' of termType: ' + expr.termType)
     }
