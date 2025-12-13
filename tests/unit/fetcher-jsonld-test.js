@@ -65,7 +65,7 @@ describe('fetch JSON-LD', () => {
 
       it('then the request used the correct accept headers, preferring JSON-LD over HTML', async () => {
         await fetcher.load(uri);
-        expect(capturedHeaders['accept'][0]).to.equal(
+        expect(capturedHeaders['accept']).to.equal(
           'image/*;q=0.9, */*;q=0.1, application/rdf+xml;q=0.9, application/xhtml+xml;q=0.8, text/xml;q=0.5, application/xml;q=0.5, text/html;q=0.8, text/plain;q=0.5, text/n3, text/turtle, application/ld+json;q=0.9'
         );
       });
