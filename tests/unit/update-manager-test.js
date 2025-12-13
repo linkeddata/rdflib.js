@@ -1,10 +1,8 @@
-/* eslint-env mocha */
 'use strict'
 
 import chai from 'chai'
 import sinon from 'sinon'
 import sinonChai from 'sinon-chai'
-// import dirtyChai from 'dirty-chai'
 import nock from 'nock'
 import * as rdf from '../../src/index'
 
@@ -12,7 +10,6 @@ const self = {err: ''}
 const $rdf = rdf
 
 chai.use(sinonChai)
-// chai.use(dirtyChai)
 const { expect } = chai
 chai.should()
 
@@ -41,7 +38,7 @@ const httpResultsText = `
 
 function loadMeta (store) {
   $rdf.parse(httpResultsText, store, meta.uri)
-  console.log('Loaded metadata')
+  // console.log('Loaded metadata')
 }
 
 describe('UpdateManager', () => {

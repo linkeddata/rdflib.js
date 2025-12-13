@@ -1,4 +1,3 @@
-/* eslint-env mocha */
 'use strict'
 
 import chai from 'chai'
@@ -20,7 +19,7 @@ describe('Fetcher', () => {
       let c = nock(goodServer).get(path)
           .reply(200, bodyText, {'Content-type': 'text/html'})
 
-      let kb = rdf.graph();
+      let kb = rdf.graph()
       let fetcher = rdf.fetcher(kb, {a:1})
       fetcher.nowOrWhenFetched(kb.sym(goodServer + path), {force: true}, trywrap(done, function (ok, statusOrErrorText, resp) {
         expect(ok).to.equal(true) // .true()
@@ -35,7 +34,7 @@ describe('Fetcher', () => {
       const bodyText = '<html></html>'
       nock(goodServer).get(path).reply(404)
 
-      let kb = rdf.graph();
+      let kb = rdf.graph()
       let fetcher = rdf.fetcher(kb, {a:1})
 /*
       fetcher.nowOrWhenFetched(kb.sym(goodServer + path), {force: true}, function (ok, statusOrErrorText, resp) {
@@ -47,10 +46,10 @@ describe('Fetcher', () => {
       })
 */
       fetcher.nowOrWhenFetched(kb.sym(goodServer + path), {force: true}, trywrap(done, function (ok, statusOrErrorText, resp) {
-        console.log('@@@@@@ ok is ' + ok)
-        console.log('@@@@@@ statusOrErrorText is ' + statusOrErrorText)
-        console.log('@@@@@@ resp is ' + resp)
-        console.log('@@@@@@ resp.status is ' + resp.status)
+        // console.log('@@@@@@ ok is ' + ok)
+        // console.log('@@@@@@ statusOrErrorText is ' + statusOrErrorText)
+        // console.log('@@@@@@ resp is ' + resp)
+        // console.log('@@@@@@ resp.status is ' + resp.status)
 
         expect(ok).to.equal(false) // .false()
         expect(statusOrErrorText).to.include(404)
@@ -62,7 +61,7 @@ describe('Fetcher', () => {
     it('should handle dns error', done => {
       let path = '/200'
       const bodyText = '<html></html>'
-      let kb = rdf.graph();
+      let kb = rdf.graph()
       let fetcher = rdf.fetcher(kb, {a:1})
       fetcher.nowOrWhenFetched(kb.sym(badServer + path), {force: true}, trywrap(done, function (ok, statusOrErrorText, resp) {
         expect(ok).to.equal(false) // .false()
@@ -78,9 +77,9 @@ describe('Fetcher', () => {
 
       // Use up the nock path (note no .persistent() on nock).
       // dynamic import of node-fetch >= v3
-      const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
-      fetch(goodServer + path).then(() => null);
-      let kb = rdf.graph();
+      const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args))
+      fetch(goodServer + path).then(() => null)
+      let kb = rdf.graph()
       let fetcher = rdf.fetcher(kb, {a:1})
       fetcher.nowOrWhenFetched(kb.sym(goodServer + path), {force: true}, trywrap(done, function (ok, statusOrErrorText, resp) {
         expect(ok).to.equal(false) // .false()
@@ -97,10 +96,10 @@ describe('Fetcher', () => {
   function trywrap (done, f) {
     return function () {
       try {
-        f.apply(null, arguments);
-        done();
+        f.apply(null, arguments)
+        done()
       } catch (e) {
-        done(new Error('trywrap ' + e.message));
+        done(new Error('trywrap ' + e.message))
       }
     }
   }

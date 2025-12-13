@@ -1,4 +1,3 @@
-/* eslint-env mocha */
 import { expect } from 'chai'
 import CanonicalDataFactory from '../../src/factories/canonical-data-factory'
 import Formula from '../../src/formula'
@@ -43,7 +42,7 @@ describe('IndexedFormula', () => {
       expect(store.namespaces).to.eql({})
       expect(store.rdfArrayRemove).to.eq(RDFArrayRemove)
       expect(store.rdfFactory).to.eq(CanonicalDataFactory)
-    });
+    })
 
     it ('has referential index integrity', () => {
       const store = new IndexedFormula()
@@ -53,7 +52,7 @@ describe('IndexedFormula', () => {
       expect(store.objectIndex).to.equal(store.index[2])
       expect(store.whyIndex).to.equal(store.index[3])
     })
-  });
+  })
 
   describe('match', () => {
     it('when given no arguments returns all statements', () => {
@@ -276,7 +275,7 @@ describe('IndexedFormula', () => {
       expect(store.holds(s1, p1, o1)).to.equal(false)
       expect(store.holds(s2, p2, o2)).to.equal(false)
     })
-  });
+  })
 
   describe('removeStatement', () => {
     it('removes a statement', () => {
@@ -318,7 +317,7 @@ describe('IndexedFormula', () => {
 
         expect(store.statements.length).to.eq(2)
     })
-  });
+  })
 
   describe('removeMatches', () => {
       it ('removes matching statements', () => {
@@ -341,7 +340,7 @@ describe('IndexedFormula', () => {
           expect(store0.holdsStatement(store1)).to.equal(true)
           expect(store1.holdsStatement(store0)).to.equal(true)
       })
-  });
+  })
   describe('removeDocument', () => {
     const store = new IndexedFormula()
     const meta = store.sym('chrome://TheCurrentSession')
@@ -408,7 +407,7 @@ describe('IndexedFormula', () => {
       <#test> <#value> [ rdf:first 1; rdf:rest [ rdf:first 2; rdf:rest [ rdf:first 3; rdf:rest rdf:nil ]]] .
 `
       parse(docContent, store, doc.uri, 'text/turtle')
-      console.log(serialize(null, store, meta.uri))
+      // console.log(serialize(null, store, meta.uri))
       store.removeDocument(store.sym('https://bob.localhost:8443/profile/card'))
       expect(serialize(meta, store, null)).to.eql(voidDoc)
       expect(serialize(doc, store, doc.uri)).to.eql(voidDoc)

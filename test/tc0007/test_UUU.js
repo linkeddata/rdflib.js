@@ -63,7 +63,7 @@ var httpGetContents = function httpGetContents (uri, callback) {
     }
   }
 
-  xhr.open('GET', uri, true); // async=true
+  xhr.open('GET', uri, true) // async=true
   // xhr.setRequestHeader('Content-type', 'application/sparql-query')
   xhr.send()
 }
@@ -79,7 +79,7 @@ function testTC0007 (showDetails, callback) {
   callback(0, '<p>Now to get manifest ' + escapeForXML(manifest_uri) + '...</p>')
 
   var meta = $rdf.graph()
-  var fetcher = $rdf.fetcher(meta, undefined, true); // (store, timeout, async)
+  var fetcher = $rdf.fetcher(meta, undefined, true) // (store, timeout, async)
   fetcher.nowOrWhenFetched(kludgeForOfflineUse(manifest_uri), undefined, function (error, body) {
     callback(0, "<p>Loaded <a href='" + escapeForXML(manifest_uri) + "'>manifest</a></p>")
 
@@ -146,14 +146,14 @@ function testTC0007 (showDetails, callback) {
               kb.query(q, function (bindings) {callback(0, '<p>Match - result includes expected</p>')
                 forwards++},
                 undefined,
-                function () {callback(0, '<p>Done res in exp!</p>'); countDone();})
+                function () {callback(0, '<p>Done res in exp!</p>'); countDone()})
 
               var q2 = new $rdf.Query()
               q.pat = kb
               exp.query(q, function (bindings) {callback(0, '<p>Match - expected includes result</p>')
                 reverse++},
                 undefined,
-                function () {callback(0, '<p>Done exp in res</p>'); countDone();})
+                function () {callback(0, '<p>Done exp in res</p>'); countDone()})
             }
 
           } catch(e) {

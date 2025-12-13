@@ -1,4 +1,3 @@
-/* eslint-env mocha */
 import {expect} from 'chai'
 
 import parse from '../../src/parse'
@@ -183,7 +182,7 @@ describe('Parse', () => {
 ex:myid ex:prop1 [ ex:prop2 [ ex:prop3 "value" ] ].
 
 `)
-      });
+      })
     })
     describe('ttl to jsonld from test-suite', () => {
       let store
@@ -212,7 +211,7 @@ ex:myid ex:prop1 [ ex:prop2 [ ex:prop3 "value" ] ].
         expect(serialize(null, store, null, 'application/ld+json')).to.eql(body('def'))
         expect(serialize(null, store, base, 'application/ld+json')).to.eql(body('def'))
         expect(serialize(store.sym(base), store, null, 'application/ld+json')).to.eql(body('def'))
-      });
+      })
     })
   })
 }) // ttl
@@ -388,15 +387,15 @@ ex:myid ex:prop1 [ ex:prop2 [ ex:prop3 "value" ] ].
           "http://schema.org/name": "Jane Doe"
         }`
       const mimeType = 'application/ld+json'
-      let store;
+      let store
       before(async () => {
         store = DataFactory.graph()
         await parse(content, store, 'https://base.example/', mimeType, () => null)
-      });
+      })
 
       it('store contains 2 statements', () => {
         expect(store.statements).to.have.length(2)
-      });
+      })
 
       it('store contains type', async () => {
         const nameDe2 = store.statements[0]
@@ -404,14 +403,14 @@ ex:myid ex:prop1 [ ex:prop2 [ ex:prop3 "value" ] ].
         expect(nameDe2.predicate.value).to.equal('http://www.w3.org/1999/02/22-rdf-syntax-ns#type')
         expect(nameDe2.object.value).to.equal('http://schema.org/Person')
         expect(nameDe2.object.termType).to.equal('NamedNode')
-      });
+      })
 
       it('store contains name', async () => {
         const nameDe2 = store.statements[1]
         expect(nameDe2.subject.value).to.equal('https://base.example/jane')
         expect(nameDe2.predicate.value).to.equal('http://schema.org/name')
         expect(nameDe2.object.value).to.equal('Jane Doe')
-      });
+      })
     })
     }) // with a base IRI
 
@@ -448,7 +447,7 @@ exa:myid exa:prop1 [ exa:prop2 [ exa:prop3 "value" ] ].
         expect(nt).to.include('<http://example.com#myid> <http://example.com#prop1> _:b0 .')
         expect(nt).to.include('_:b0 <http://example.com#prop2> _:b1 .')
         expect(nt).to.include('_:b1 <http://example.com#prop3> "value" .')
-      });
+      })
     })
 
     describe('that fails to parse', () => {
@@ -468,8 +467,8 @@ exa:myid exa:prop1 [ exa:prop2 [ exa:prop3 "value" ] ].
             done(assertionError)
           }
         })
-      });
-    });
+      })
+    })
 
   }) // JSONLD
 

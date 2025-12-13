@@ -1,4 +1,3 @@
-
 import Statement from '../../src/statement'
 import Literal from '../../src/literal'
 import { expect } from 'chai'

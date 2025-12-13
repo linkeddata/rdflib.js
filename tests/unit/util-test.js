@@ -1,4 +1,3 @@
-/* eslint-env mocha */
 import { expect } from 'chai'
 
 import CanonicalDataFactory from '../../src/factories/canonical-data-factory'
@@ -44,15 +43,15 @@ describe('util', () => {
 
     it('handles literals', () => {
       expect(isTerm(new Literal('test'))).to.equal(true)
-    });
+    })
 
     it('handles namedNodes', () => {
       expect(isTerm(new NamedNode('https://example.com/test'))).to.equal(true)
-    });
+    })
 
     it('handles blankNodes', () => {
       expect(isTerm(new BlankNode('test'))).to.equal(true)
-    });
+    })
   })
 
   describe('isNamedNode', () => {

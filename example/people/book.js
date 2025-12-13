@@ -17,22 +17,22 @@ var CONTACT = $rdf.Namespace("http://www.w3.org/2000/10/swap/pim/contact#")
 
 var card = function(who) {
     var snip = '<div>'
-    var image = kb.any(who, FOAF('img'));
-    if (!image) image = kb.any(who, FOAF('depiction'));
+    var image = kb.any(who, FOAF('img'))
+    if (!image) image = kb.any(who, FOAF('depiction'))
     if (image) {
-        snip += '<img src="' + image.uri +'" align="right" height="100"/>';
+        snip += '<img src="' + image.uri +'" align="right" height="100"/>'
     }
-    var nam = kb.any(who, FOAF('name'));
-    if (!nam) { nam = "???";}
-    snip+="<h3>"+nam+"</h3>";
+    var nam = kb.any(who, FOAF('name'))
+    if (!nam) { nam = "???"}
+    snip+="<h3>"+nam+"</h3>"
 
-    nam = kb.any(who, FOAF('phone'));
+    nam = kb.any(who, FOAF('phone'))
     if (nam) {
-        snip+="<p>"+nam+"</p>";
+        snip+="<p>"+nam+"</p>"
     }
     snip += "</div>"
     $("body").append(snip)
-};
+}
 
 
 
@@ -44,26 +44,26 @@ var card = function(who) {
 
 // var kb = new TestStore()
 
-var kb = $rdf.graph();
+var kb = $rdf.graph()
 
-var uri = 'http://bblfish.net/people/henry/card#me';
+var uri = 'http://bblfish.net/people/henry/card#me'
 
-var person = $rdf.sym(uri);
-var docURI = uri.slice(0, uri.indexOf('#'));
-var fetch = $rdf.fetcher(kb);
+var person = $rdf.sym(uri)
+var docURI = uri.slice(0, uri.indexOf('#'))
+var fetch = $rdf.fetcher(kb)
 fetch.nowOrWhenFetched(docURI,undefined,function(ok, body, xhr){ // @@ check ok
     card(person)
-});
+})
 
 
 
 // document.write("<p><small>"+uri+ " Size: "+kb.statements.length+"</small></p>")
 
-var friends = kb.each(person, FOAF('knows'));
-var i, n = friends.length, friend;
+var friends = kb.each(person, FOAF('knows'))
+var i, n = friends.length, friend
 document.write("<p>"+n+" acquaintainces</p>")
 for (i=0; i<n; i++) {
-    friend = friends[i];
+    friend = friends[i]
     furi = friend.uri
     if (furi && (furi.indexOf('#') >= 0)) {
 //	document.write('<small>Loading:  '+furi+'</small>') 

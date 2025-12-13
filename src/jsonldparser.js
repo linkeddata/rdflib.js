@@ -78,10 +78,10 @@ export default async function jsonldParser(str, kb, base) {
 function nodeType(kb, obj) {
   if (obj['@id'].startsWith('_:')) {
     // This object is a Blank Node. Pass the id without the `_:` prefix
-    return kb.rdfFactory.blankNode(obj['@id'].substring(2));
+    return kb.rdfFactory.blankNode(obj['@id'].substring(2))
   } else {
     // This object is a Named Node
-    return kb.rdfFactory.namedNode(obj['@id']);
+    return kb.rdfFactory.namedNode(obj['@id'])
   }
 }
 

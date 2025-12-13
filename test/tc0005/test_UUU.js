@@ -41,7 +41,7 @@ function testTC0005 (showDetails) {
     } else {
       styleResult = passStyle
     }
-    allResults += '<p>EXPECTED: ' + escapeForXML(expected[i]) + '</p><p>RESULT: <span ' + styleResult + '>' + escapeForXML(result) + '</p>'; // / encode for XML!!
+    allResults += '<p>EXPECTED: ' + escapeForXML(expected[i]) + '</p><p>RESULT: <span ' + styleResult + '>' + escapeForXML(result) + '</p>' // / encode for XML!!
   }
   if (showDetails) return allResults
   else return tc0005Passed

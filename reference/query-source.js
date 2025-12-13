@@ -9,7 +9,7 @@
  */
 module.exports = QuerySource
 
-var optionalSubqueriesIndex = [];
+var optionalSubqueriesIndex = []
 
 function QuerySource () {
   /**

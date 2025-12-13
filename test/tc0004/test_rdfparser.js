@@ -306,7 +306,7 @@ function getTestCaseData (testCaseURI, format) {
     }
   })
 
-  return returnValue; // escapeEntities(returnValue)
+  return returnValue // escapeEntities(returnValue)
 }
 
 function parseN3FromString (docURI, data, kb, why) {

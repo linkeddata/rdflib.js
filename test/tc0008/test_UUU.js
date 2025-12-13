@@ -56,7 +56,7 @@ var httpGetContents = function httpGetContents (uri, callback) {
     }
   }
 
-  xhr.open('GET', uri, true); // async=true
+  xhr.open('GET', uri, true) // async=true
   // xhr.setRequestHeader('Content-type', 'application/sparql-query')
   xhr.send()
 }
@@ -72,7 +72,7 @@ function testTC0007 (showDetails, callback) {
   callback(0, '<p>got here</p>')
 
   var meta = $rdf.graph()
-  var fetcher = $rdf.fetcher(meta, undefined, true); // (store, timeout, async)
+  var fetcher = $rdf.fetcher(meta, undefined, true) // (store, timeout, async)
   fetcher.nowOrWhenFetched(kludgeForOfflineUse(mainifest_uri), undefined, function (error, body) {
     callback(0, "<p>Loaded <a href='" + escapeForXML(mainifest_uri) + "'>manifest</a></p>")
 

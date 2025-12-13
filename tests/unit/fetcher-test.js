@@ -1,10 +1,8 @@
-/* eslint-env mocha */
 'use strict'
 
 import chai from 'chai'
 import sinon from 'sinon'
 import sinonChai from 'sinon-chai'
-// import dirtyChai from 'dirty-chai'
 import nock from 'nock'
 
 import * as rdf from '../../src/index'
@@ -14,7 +12,6 @@ import CanonicalDataFactory from '../../src/factories/canonical-data-factory'
 import { Headers, Response } from 'cross-fetch'
 
 chai.use(sinonChai)
-// chai.use(dirtyChai)
 const { expect } = chai
 chai.should()
 
@@ -214,7 +211,7 @@ describe('Fetcher', () => {
 
       return fetcher.load(uri, options)
         .then(() => {
-          expect(fetcher.saveRequestMetadata).to.have.been.calledOnce // called()
+          expect(fetcher.saveRequestMetadata).to.have.been.calledOnce
         })
     })
 
@@ -225,7 +222,7 @@ describe('Fetcher', () => {
 
       return fetcher.load(uri, options)
         .then(() => {
-          expect(fetcher.saveRequestMetadata).to.not.have.been.calledOnce // to.not.have.been.called(1)
+          expect(fetcher.saveRequestMetadata).to.not.have.been.calledOnce
         })
     })
 
@@ -249,8 +246,8 @@ describe('Fetcher', () => {
           .then(response => {
             expect(response.ok).to.equal(true)
             expect(response.status).to.equal(200)
-            expect(fetcher._fetch).to.not.have.been.calledOnce // to.have.been.called(0)
-            expect(fetcher.handleError).to.not.have.been.calledOnce // to.have.been.called(0)
+            expect(fetcher._fetch).to.not.have.been.calledOnce
+            expect(fetcher.handleError).to.not.have.been.calledOnce
             expect(fetcher.requested[uri]).to.equal('done')
           })
       })
@@ -261,8 +258,8 @@ describe('Fetcher', () => {
         return fetcher.load(uri, options)
           .then(response => {}, error => {
             expect(error.message.includes('Previously failed:')).to.equal(true)
-            expect(fetcher._fetch).to.not.have.been.calledOnce // to.not.have.been.called()
-            expect(fetcher.handleError).to.not.have.been.calledOnce // to.not.have.been.called()
+            expect(fetcher._fetch).to.not.have.been.calledOnce
+            expect(fetcher.handleError).to.not.have.been.calledOnce
           })
       })
 
@@ -284,7 +281,7 @@ describe('Fetcher', () => {
 
         return fetcher.load(uri, options)
           .then(() => {
-            expect(fetcher.nonexistent[uri]).to.equal(undefined) // to.be.undefined()
+            expect(fetcher.nonexistent[uri]).to.equal(undefined)
           })
       })
     })
@@ -337,7 +334,7 @@ describe('Fetcher', () => {
       delete fetcher.requested[uri]
       return fetcher.webOperation('PATCH', uri, options) // load() is not usable for PATCH
         .then(result => {}, () => {
-          expect(fetcher.requested[uri]).to.equal(undefined) // to.not.exist()
+          expect(fetcher.requested[uri]).to.equal(undefined)
         })
     })
   })
