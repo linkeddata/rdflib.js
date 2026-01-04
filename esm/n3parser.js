@@ -588,8 +588,7 @@ export class SinkParser {
     while ("!^.".indexOf(str.slice(j, j + 1)) >= 0) {
       var ch = str.slice(j, j + 1);
       if (ch == ".") {
-        var ahead = str.slice(j + 1, j + 2);
-        if (!ahead || _notNameChars.indexOf(ahead) >= 0 && ":?<[{(".indexOf(ahead) < 0) {
+        if (dotTerminatesName(str, j)) {
           break;
         }
       }
