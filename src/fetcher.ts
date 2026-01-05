@@ -235,7 +235,7 @@ class RDFXMLHandler extends Handler {
       this.dom = Util.parseXML(responseText)
     }
     let root = this.dom.documentElement
-    if (root.nodeName === 'parsererror') { // Mozilla only See issue/issue110
+    if (root && root.nodeName === 'parsererror') { // Mozilla only See issue/issue110
       // have to fail the request
       return fetcher.failFetch(options, 'Badly formed XML in ' +
         options.resource!.value, 'parse_error')
@@ -756,12 +756,21 @@ export default class Fetcher implements CallbackifyInterface {
     this.timeout = options.timeout || 30000
 
     // solidFetcher is deprecated
-    this._fetch = options.fetch
+    let fetchFunc = options.fetch
                || (typeof global !== 'undefined' && (global.solidFetcher || global.solidFetch))
                || (typeof window !== 'undefined' && (window.solidFetcher || window.solidFetch))
                || crossFetch
-    if (!this._fetch) {
+    if (!fetchFunc) {
       throw new Error('No _fetch function available for Fetcher')
+    }
+    // Bind fetch to its context to avoid "Illegal invocation" errors
+    // Check if it's the native browser fetch or global fetch that needs binding
+    if (typeof window !== 'undefined' && fetchFunc === window.fetch) {
+      this._fetch = fetchFunc.bind(window)
+    } else if (typeof global !== 'undefined' && fetchFunc === global.fetch) {
+      this._fetch = fetchFunc.bind(global)
+    } else {
+      this._fetch = fetchFunc
     }
     // This is the name of the graph we store all the HTTP metadata in
     this.appNode = this.store.sym('chrome://TheCurrentSession')
