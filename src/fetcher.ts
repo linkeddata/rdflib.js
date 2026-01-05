@@ -235,7 +235,7 @@ class RDFXMLHandler extends Handler {
       this.dom = Util.parseXML(responseText)
     }
     let root = this.dom.documentElement
-    if (root.nodeName === 'parsererror') { // Mozilla only See issue/issue110
+    if (root && root.nodeName === 'parsererror') { // Mozilla only See issue/issue110
       // have to fail the request
       return fetcher.failFetch(options, 'Badly formed XML in ' +
         options.resource!.value, 'parse_error')
