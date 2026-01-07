@@ -50,7 +50,7 @@
     "@xmldom/xmldom": "^0.8.11",
     "cross-fetch": "^4.1.0",
     "jsonld": "^9.0.0",
-    "n3": "^1.26.0",
+    "n3": "^2.0.0",
     "solid-namespace": "^0.5.4"
   },
   "devDependencies": {
