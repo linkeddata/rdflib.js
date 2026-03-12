@@ -73,6 +73,9 @@ jobs:
   npm-publish-build:
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - uses: actions/download-artifact@v8
         with:
@@ -80,29 +83,40 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: 22.x
+          registry-url: 'https://registry.npmjs.org'
+      - name: Update npm to latest (required for OIDC)
+        run: npm install -g npm@latest
       - uses: rlespinasse/github-slug-action@v3.x
       - name: Append commit hash to package version
         run: 'sed -i -E "s/(\"version\": *\"[^\"]+)/\1-${GITHUB_SHA_SHORT}/" package.json'
       - name: Disable pre- and post-publish actions
         run: 'sed -i -E "s/\"((pre|post)publish)/\"ignore:\1/" package.json'
-      - uses: JS-DevTools/npm-publish@v1
-        with:
-          token: ${{ secrets.NPM_TOKEN }}
-          tag: ${{ env.GITHUB_REF_SLUG }}
+      - name: Publish to npm
+        if: github.actor != 'dependabot[bot]' && github.actor != 'dependabot-preview[bot]'
+        run: npm publish --tag ${{ env.GITHUB_REF_SLUG }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
   npm-publish-latest:
     needs: build
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - uses: actions/download-artifact@v8
         with:
           name: build
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v6
         with:
           node-version: 22.x
+          registry-url: 'https://registry.npmjs.org'
+      - name: Update npm to latest (required for OIDC)
+        run: npm install -g npm@latest
       - name: Disable pre- and post-publish actions
         run: 'sed -i -E "s/\"((pre|post)publish)/\"ignore:\1/" package.json'
-      - uses: JS-DevTools/npm-publish@v1
-        with:
-          token: ${{ secrets.NPM_TOKEN }}
-          tag: latest
+      - name: Publish to npm
+        if: github.actor != 'dependabot[bot]' && github.actor != 'dependabot-preview[bot]'
+        run: npm publish --tag latest
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
