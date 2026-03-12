@@ -9,17 +9,17 @@ on:
       - main
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         node-version:
-          - 20.x
           - 22.x
+          - 24.x
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v6
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
       - run: npm ci
@@ -30,8 +30,8 @@ jobs:
       - run: npm run build:browser
       - run: npm run build:esm
       - name: Save build
-        if: matrix.node-version == '20.x'
-        uses: actions/upload-artifact@v4
+        if: matrix.node-version == '22.x'
+        uses: actions/upload-artifact@v6
         with:
           name: build
           path: |
@@ -39,15 +39,30 @@ jobs:
             !node_modules
           retention-days: 1
 
+  dependabot:
+    name: 'Dependabot'
+    needs: build # After the E2E and build jobs, if one of them fails, it won't merge the PR.
+    runs-on: ubuntu-latest
+    if: ${{ github.actor == 'dependabot[bot]' && github.event_name == 'pull_request'}} # Detect that the PR author is dependabot
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Enable auto-merge for Dependabot PRs
+        run: gh pr merge --auto --merge "$PR_URL" # Use Github CLI to merge automatically the PR
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
   gh-pages:
-    needs: test
+    needs: build
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     permissions:
       contents: write
       pages: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: build
       - uses: peaceiris/actions-gh-pages@v3
@@ -56,15 +71,15 @@ jobs:
           publish_dir: .
 
   npm-publish-build:
-    needs: test
+    needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: build
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20.x
+          node-version: 22.x
       - uses: rlespinasse/github-slug-action@v3.x
       - name: Append commit hash to package version
         run: 'sed -i -E "s/(\"version\": *\"[^\"]+)/\1-${GITHUB_SHA_SHORT}/" package.json'
@@ -75,16 +90,16 @@ jobs:
           token: ${{ secrets.NPM_TOKEN }}
           tag: ${{ env.GITHUB_REF_SLUG }}
   npm-publish-latest:
-    needs: test
+    needs: build
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: build
       - uses: actions/setup-node@v1
         with:
-          node-version: 20.x
+          node-version: 22.x
       - name: Disable pre- and post-publish actions
         run: 'sed -i -E "s/\"((pre|post)publish)/\"ignore:\1/" package.json'
       - uses: JS-DevTools/npm-publish@v1
