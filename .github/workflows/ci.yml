@@ -58,7 +58,6 @@ jobs:
   prerelease-check:
     needs: build
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     outputs:
       name: ${{ steps.prerelease_check.outputs.name }}
       version: ${{ steps.prerelease_check.outputs.version }}
