@@ -39,26 +39,9 @@ jobs:
             !node_modules
           retention-days: 1
 
-  gh-pages:
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    permissions:
-      contents: write
-      pages: write
-    steps:
-      - uses: actions/download-artifact@v6
-        with:
-          name: build
-      - uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ github.token }}
-          publish_dir: .
-
   prerelease-check:
     needs: build
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     outputs:
       name: ${{ steps.prerelease_check.outputs.name }}
       version: ${{ steps.prerelease_check.outputs.version }}
@@ -119,6 +102,22 @@ jobs:
         run: 'sed -i -E "s/\"((pre|post)publish)/\"ignore:\1/" package.json'
       - name: Publish to npm
         run: npm publish --tag dev
+
+  gh-pages:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+      pages: write
+    steps:
+      - uses: actions/download-artifact@v6
+        with:
+          name: build
+      - uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ github.token }}
+          publish_dir: .
 
   npm-publish-latest:
     needs: build
