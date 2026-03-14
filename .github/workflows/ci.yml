@@ -39,21 +39,6 @@ jobs:
             !node_modules
           retention-days: 1
 
-  dependabot:
-    name: 'Dependabot'
-    needs: build # After the E2E and build jobs, if one of them fails, it won't merge the PR.
-    runs-on: ubuntu-latest
-    if: ${{ github.actor == 'dependabot[bot]' && github.event_name == 'pull_request'}} # Detect that the PR author is dependabot
-    permissions:
-      contents: write
-      pull-requests: write
-    steps:
-      - name: Enable auto-merge for Dependabot PRs
-        run: gh pr merge --auto --merge "$PR_URL" # Use Github CLI to merge automatically the PR
-        env:
-          PR_URL: ${{github.event.pull_request.html_url}}
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-
   gh-pages:
     needs: build
     runs-on: ubuntu-latest
@@ -70,8 +55,44 @@ jobs:
           github_token: ${{ github.token }}
           publish_dir: .
 
-  npm-publish-build:
+  prerelease-check:
     needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    outputs:
+      name: ${{ steps.prerelease_check.outputs.name }}
+      version: ${{ steps.prerelease_check.outputs.version }}
+      is_prerelease: ${{ steps.prerelease_check.outputs.is_prerelease }}
+      exists: ${{ steps.prerelease_check.outputs.exists }}
+    steps:
+      - uses: actions/checkout@v6
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22.x
+          registry-url: 'https://registry.npmjs.org'
+      - name: Check prerelease publishability
+        id: prerelease_check
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          echo "name=$NAME" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+          if [[ "$VERSION" == *-* ]]; then
+            echo "is_prerelease=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_prerelease=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          if npm view "$NAME@$VERSION" version >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  npm-publish-build:
+    needs: [build, prerelease-check]
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -86,14 +107,11 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
       - name: Update npm to latest (required for OIDC)
         run: npm install -g npm@latest
-      - uses: rlespinasse/github-slug-action@v3.x
-      - name: Append commit hash to package version
-        run: 'sed -i -E "s/(\"version\": *\"[^\"]+)/\1-${GITHUB_SHA_SHORT}/" package.json'
       - name: Disable pre- and post-publish actions
         run: 'sed -i -E "s/\"((pre|post)publish)/\"ignore:\1/" package.json'
       - name: Publish to npm
-        if: github.actor != 'dependabot[bot]' && github.actor != 'dependabot-preview[bot]'
-        run: npm publish --tag ${{ env.GITHUB_REF_SLUG }}
+        run: npm publish --tag dev
+
   npm-publish-latest:
     needs: build
     runs-on: ubuntu-latest
