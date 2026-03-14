@@ -9,7 +9,7 @@ on:
       - main
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -17,9 +17,9 @@ jobs:
           - 20.x
           - 22.x
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v6
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
       - run: npm ci
@@ -31,7 +31,7 @@ jobs:
       - run: npm run build:esm
       - name: Save build
         if: matrix.node-version == '20.x'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: build
           path: |
@@ -40,14 +40,14 @@ jobs:
           retention-days: 1
 
   gh-pages:
-    needs: test
+    needs: build
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     permissions:
-      contents: write
-      pages: write
+      id-token: write
+      contents: read
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: build
       - uses: peaceiris/actions-gh-pages@v3
@@ -56,38 +56,49 @@ jobs:
           publish_dir: .
 
   npm-publish-build:
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: build
-      - uses: actions/setup-node@v1
-        with:
-          node-version: 20.x
-      - uses: rlespinasse/github-slug-action@v3.x
-      - name: Append commit hash to package version
-        run: 'sed -i -E "s/(\"version\": *\"[^\"]+)/\1-${GITHUB_SHA_SHORT}/" package.json'
-      - name: Disable pre- and post-publish actions
-        run: 'sed -i -E "s/\"((pre|post)publish)/\"ignore:\1/" package.json'
-      - uses: JS-DevTools/npm-publish@v1
-        with:
-          token: ${{ secrets.NPM_TOKEN }}
-          tag: ${{ env.GITHUB_REF_SLUG }}
+      needs: build
+      runs-on: ubuntu-latest
+      permissions:
+        id-token: write
+        contents: write
+      steps:
+        - uses: actions/download-artifact@v8
+          with:
+            name: build
+        - uses: actions/setup-node@v6
+          with:
+            node-version: 20.x
+            registry-url: 'https://registry.npmjs.org'
+        - name: Update npm to latest (required for OIDC)
+          run: npm install -g npm@latest
+        - uses: rlespinasse/github-slug-action@v3.x
+        - name: Append commit hash to package version
+          run: 'sed -i -E "s/(\"version\": *\"[^\"]+)/\1-${GITHUB_SHA_SHORT}/" package.json'
+        - name: Disable pre- and post-publish actions
+          run: 'sed -i -E "s/\"((pre|post)publish)/\"ignore:\1/" package.json'
+        - name: Publish to npm
+          if: github.actor != 'dependabot[bot]' && github.actor != 'dependabot-preview[bot]'
+          run: npm publish --tag ${{ env.GITHUB_REF_SLUG }}
+
   npm-publish-latest:
-    needs: test
+    needs: [build, npm-publish-build]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
+    permissions:
+      id-token: write  # Required for OIDC
+      contents: read
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: build
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v6
         with:
           node-version: 20.x
+          registry-url: 'https://registry.npmjs.org'
+      - name: Update npm to latest (required for OIDC)
+        run: npm install -g npm@latest
       - name: Disable pre- and post-publish actions
         run: 'sed -i -E "s/\"((pre|post)publish)/\"ignore:\1/" package.json'
-      - uses: JS-DevTools/npm-publish@v1
-        with:
-          token: ${{ secrets.NPM_TOKEN }}
-          tag: latest
+      - name: Publish to npm
+        if: github.actor != 'dependabot[bot]' && github.actor != 'dependabot-preview[bot]'
+        run: npm publish --tag latest
