@@ -100,7 +100,7 @@
     "lint": "eslint src tests",
     "lint:fix": "eslint src tests --fix",
     "prepublishOnly": "npm ci && npm run build:all && npm run doc && npm run test",
-    "postversion": "git push --follow-tags",
+    "postversion": "case \"$npm_package_version\" in *-*) git push ;; *) git push --follow-tags ;; esac",
     "start": "webpack serve --port 4800",
     "test": "npm run test:unit && npm run test:serialize && npm run test:types",
     "test:clean": "rimraf tests/serialize/,*",

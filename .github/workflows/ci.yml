@@ -14,8 +14,8 @@ jobs:
     strategy:
       matrix:
         node-version:
+          - 20.x
           - 22.x
-          - 24.x
     steps:
       - uses: actions/checkout@v6
       - name: Use Node.js ${{ matrix.node-version }}
@@ -30,7 +30,7 @@ jobs:
       - run: npm run build:browser
       - run: npm run build:esm
       - name: Save build
-        if: matrix.node-version == '22.x'
+        if: matrix.node-version == '20.x'
         uses: actions/upload-artifact@v6
         with:
           name: build
@@ -38,6 +38,70 @@ jobs:
             .
             !node_modules
           retention-days: 1
+
+  prerelease-check:
+    needs: build
+    runs-on: ubuntu-latest
+    outputs:
+      name: ${{ steps.prerelease_check.outputs.name }}
+      version: ${{ steps.prerelease_check.outputs.version }}
+      is_prerelease: ${{ steps.prerelease_check.outputs.is_prerelease }}
+      exists: ${{ steps.prerelease_check.outputs.exists }}
+      should_publish: ${{ steps.prerelease_check.outputs.should_publish }}
+    steps:
+      - uses: actions/checkout@v6
+      - name: Use Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20.x
+          registry-url: 'https://registry.npmjs.org'
+      - name: Check prerelease publishability
+        id: prerelease_check
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          echo "name=$NAME" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+          IS_PRERELEASE="false"
+          if [[ "$VERSION" == *-* ]]; then
+            IS_PRERELEASE="true"
+          fi
+          echo "is_prerelease=$IS_PRERELEASE" >> "$GITHUB_OUTPUT"
+
+          EXISTS="false"
+          if npm view "$NAME@$VERSION" version >/dev/null 2>&1; then
+            EXISTS="true"
+          fi
+          echo "exists=$EXISTS" >> "$GITHUB_OUTPUT"
+
+          if [[ "$IS_PRERELEASE" == "true" && "$EXISTS" == "false" ]]; then
+            echo "should_publish=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_publish=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  npm-publish-build:
+    needs: [build, prerelease-check]
+    runs-on: ubuntu-latest
+    if: needs.prerelease-check.outputs.should_publish == 'true'
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: build
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 20.x
+          registry-url: 'https://registry.npmjs.org'
+      - name: Update npm to latest (required for OIDC)
+        run: npm install -g npm@latest
+      - name: Disable pre- and post-publish actions
+        run: 'sed -i -E "s/\"((pre|post)publish)/\"ignore:\1/" package.json'
+      - name: Publish to npm
+        run: npm publish --tag dev
 
   gh-pages:
     needs: build
@@ -55,30 +119,6 @@ jobs:
           github_token: ${{ github.token }}
           publish_dir: .
 
-  npm-publish-build:
-    needs: build
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
-    steps:
-      - uses: actions/download-artifact@v8
-        with:
-          name: build
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 22.x
-          registry-url: 'https://registry.npmjs.org'
-      - name: Update npm to latest (required for OIDC)
-        run: npm install -g npm@latest
-      - uses: rlespinasse/github-slug-action@v3.x
-      - name: Append commit hash to package version
-        run: 'sed -i -E "s/(\"version\": *\"[^\"]+)/\1-${GITHUB_SHA_SHORT}/" package.json'
-      - name: Disable pre- and post-publish actions
-        run: 'sed -i -E "s/\"((pre|post)publish)/\"ignore:\1/" package.json'
-      - name: Publish to npm
-        if: github.actor != 'dependabot[bot]' && github.actor != 'dependabot-preview[bot]'
-        run: npm publish --tag ${{ env.GITHUB_REF_SLUG }}
   npm-publish-latest:
     needs: build
     runs-on: ubuntu-latest
@@ -92,7 +132,7 @@ jobs:
           name: build
       - uses: actions/setup-node@v6
         with:
-          node-version: 22.x
+          node-version: 20.x
           registry-url: 'https://registry.npmjs.org'
       - name: Update npm to latest (required for OIDC)
         run: npm install -g npm@latest
