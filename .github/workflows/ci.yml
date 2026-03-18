@@ -14,8 +14,8 @@ jobs:
     strategy:
       matrix:
         node-version:
-          - 20.x
           - 22.x
+          - 24.x
     steps:
       - uses: actions/checkout@v6
       - name: Use Node.js ${{ matrix.node-version }}
@@ -30,7 +30,7 @@ jobs:
       - run: npm run build:browser
       - run: npm run build:esm
       - name: Save build
-        if: matrix.node-version == '20.x'
+        if: matrix.node-version == '22.x'
         uses: actions/upload-artifact@v6
         with:
           name: build
@@ -53,7 +53,7 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: 20.x
+          node-version: 22.x
           registry-url: 'https://registry.npmjs.org'
       - name: Check prerelease publishability
         id: prerelease_check
@@ -94,7 +94,7 @@ jobs:
           name: build
       - uses: actions/setup-node@v6
         with:
-          node-version: 20.x
+          node-version: 22.x
           registry-url: 'https://registry.npmjs.org'
       - name: Update npm to latest (required for OIDC)
         run: npm install -g npm@latest
@@ -132,7 +132,7 @@ jobs:
           name: build
       - uses: actions/setup-node@v6
         with:
-          node-version: 20.x
+          node-version: 22.x
           registry-url: 'https://registry.npmjs.org'
       - name: Update npm to latest (required for OIDC)
         run: npm install -g npm@latest
