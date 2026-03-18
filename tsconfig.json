@@ -9,6 +9,7 @@
     "strict": true,
     "noImplicitAny": false,
     "noUnusedLocals": true,
+    "skipLibCheck": true /* Skip type checking of declaration files in node_modules */,
     "lib": [
       "es2019",
       "dom"
