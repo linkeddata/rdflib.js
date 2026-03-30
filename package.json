@@ -47,7 +47,7 @@
     "@babel/runtime": "^7.28.6",
     "@frogcat/ttl2jsonld": "^0.0.10",
     "@rdfjs/types": "^2.0.1",
-    "@xmldom/xmldom": "^0.8.11",
+    "@xmldom/xmldom": "^0.9.9",
     "cross-fetch": "^4.1.0",
     "jsonld": "^9.0.0",
     "n3": "^2.0.3",
