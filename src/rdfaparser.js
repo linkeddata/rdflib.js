@@ -280,8 +280,8 @@ export default class RDFaProcessor {
     var queue = []
     // Fix for Firefox that includes the hash in the base URI
     var removeHash = function (baseURI) {
-      // Fix for undefined baseURI property
-      if (!baseURI && options && options.baseURI) {
+      // xmldom 0.9 defaults XMLDocument.baseURI to about:blank, which is not a useful document base.
+      if ((!baseURI || baseURI === 'about:blank') && options && options.baseURI) {
         return options.baseURI
       }
 

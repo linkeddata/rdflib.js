@@ -38,6 +38,7 @@ import { isCollection, isNamedNode} from './utils/terms'
 import * as Util from './utils-js'
 import serialize from './serialize'
 import crossFetch, { Headers } from 'cross-fetch'
+import type { Document as XmldomDocument, Element as XmldomElement, Node as XmldomNode } from '@xmldom/xmldom'
 
 import {
   ContentType, TurtleContentType, RDFXMLContentType, XHTMLContentType
@@ -199,10 +200,10 @@ class Handler {
   // TODO: Document, type
   response: ExtendedResponse
   // TODO: Document, type
-  dom: Document
+  dom: XmldomDocument
   static pattern: RegExp
 
-  constructor (response: ExtendedResponse, dom?: Document) {
+  constructor (response: ExtendedResponse, dom?: XmldomDocument) {
     this.response = response
     // The type assertion operator here might need to be removed.
     this.dom = dom!
@@ -232,7 +233,7 @@ class RDFXMLHandler extends Handler {
   ) {
     let kb = fetcher.store
     if (!this.dom) {
-      this.dom = Util.parseXML(responseText)
+      this.dom = Util.parseXML(responseText) as unknown as XmldomDocument
     }
     let root = this.dom.documentElement
     if (root && root.nodeName === 'parsererror') { // Mozilla only See issue/issue110
@@ -277,7 +278,7 @@ class XHTMLHandler extends Handler {
   ): Promise<FetchError> | ExtendedResponse {
     let relation, reverse: boolean
     if (!this.dom) {
-      this.dom = Util.parseXML(responseText)
+      this.dom = Util.parseXML(responseText) as unknown as XmldomDocument
     }
     let kb = fetcher.store
 
@@ -345,7 +346,7 @@ class XMLHandler extends Handler {
     fetcher.mediatypes['application/xml'] = { 'q': 0.5 }
   }
 
-  static isElement(node: Node): node is Element {
+  static isElement(node: XmldomNode): node is XmldomElement {
     return node.nodeType === Node.ELEMENT_NODE;
   }
 
@@ -359,14 +360,14 @@ class XMLHandler extends Handler {
       resource: Quad_Subject
     } & Options,
   ): ExtendedResponse | Promise<FetchError> {
-    let dom = Util.parseXML(responseText)
+    let dom = Util.parseXML(responseText) as unknown as XmldomDocument
 
     // XML Semantics defined by root element namespace
     // figure out the root element
     for (let c = 0; c < dom.childNodes.length; c++) {
       const node = dom.childNodes[c]
       // is this node an element?
-      if (XMLHandler.isElement(node)) {
+      if (XMLHandler.isElement(node as XmldomNode)) {
 
         // We've found the first element, it's the root
         let ns = node.namespaceURI
