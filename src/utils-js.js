@@ -249,6 +249,7 @@ import { DOMParser } from '@xmldom/xmldom'
 
 /**
  * Returns a DOM from parsed XML.
+ * @returns {Document}
  */
 export function parseXML (str, options) {
   var dparser
