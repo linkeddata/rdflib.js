@@ -25,6 +25,7 @@
  */
 import IndexedFormula from './store';
 import RDFlibNamedNode from './named-node';
+import type { Document as XmldomDocument } from '@xmldom/xmldom';
 import { ContentType } from './types';
 import { BlankNode, Quad_Graph, NamedNode, Quad_Predicate, Quad_Subject } from './tf-types';
 export interface FetchError extends Error {
@@ -113,9 +114,9 @@ export interface AutoInitOptions extends RequestInit {
 }
 declare class Handler {
     response: ExtendedResponse;
-    dom: Document;
+    dom: XmldomDocument;
     static pattern: RegExp;
-    constructor(response: ExtendedResponse, dom?: Document);
+    constructor(response: ExtendedResponse, dom?: XmldomDocument);
 }
 type StatusValues = 
 /** No record of web access or record reset */

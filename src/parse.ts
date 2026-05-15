@@ -10,6 +10,7 @@ import * as Util from './utils-js'
 import Formula from './formula'
 import { ContentType, TurtleContentType, N3ContentType, RDFXMLContentType, XHTMLContentType, HTMLContentType, SPARQLUpdateContentType, SPARQLUpdateSingleMatchContentType, JSONLDContentType, NQuadsContentType, NQuadsAltContentType } from './types'
 import { Quad } from './tf-types'
+import type { Document as XmldomDocument } from '@xmldom/xmldom'
 
 type CallbackFunc = (error: any, kb: Formula | null) => void
 
@@ -40,13 +41,13 @@ export default function parse (
       executeCallback()
     } else if (contentType === RDFXMLContentType) {
       var parser = new RDFParser(kb)
-      parser.parse(Util.parseXML(str), base, kb.sym(base))
+      parser.parse(Util.parseXML(str) as unknown as XmldomDocument, base, kb.sym(base))
       executeCallback()
     } else if (contentType === XHTMLContentType) {
-      parseRDFaDOM(Util.parseXML(str, {contentType: XHTMLContentType}), kb, base)
+      parseRDFaDOM(Util.parseXML(str, {contentType: XHTMLContentType}) as unknown as XmldomDocument, kb, base)
       executeCallback()
     } else if (contentType === HTMLContentType) {
-      parseRDFaDOM(Util.parseXML(str, {contentType: HTMLContentType}), kb, base)
+      parseRDFaDOM(Util.parseXML(str, {contentType: HTMLContentType}) as unknown as XmldomDocument, kb, base)
       executeCallback()
     } else if ((contentType === SPARQLUpdateContentType) || (contentType === SPARQLUpdateSingleMatchContentType)) { // @@ we handle a subset
       sparqlUpdateParser(str, kb, base)

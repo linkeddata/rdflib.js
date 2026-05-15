@@ -29,6 +29,7 @@ export function heavyCompareSPO(x: any, y: any, g: any, uriMap: any): any;
 export function output(o: string): void;
 /**
  * Returns a DOM from parsed XML.
+ * @returns {Document}
  */
 export function parseXML(str: any, options: any): Document;
 /**
