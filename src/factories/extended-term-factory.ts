@@ -38,8 +38,7 @@ const ExtendedTermFactory: CollectionFactory = {
 
   id (term: Term | DefaultFactoryTypes): Indexable {
     if (isCollection(term)) {
-      return `( ${term.elements.map((e) => {
-        return this.id(e) }).join(', ')} )`
+      return Collection.toNT(term)
     }
 
     if (isVariable(term)) {

@@ -8,6 +8,7 @@ import { RDFArrayRemove } from '../../src/utils-js'
 import DataFactory from '../../src/factories/rdflib-data-factory'
 import parse from '../../src/parse'
 import serialize from '../../src/serialize'
+import Collection from '../../src/collection'
 
 describe('IndexedFormula', () => {
   const g0 = NamedNode.fromValue('https://example.com/graph0')
@@ -274,6 +275,18 @@ describe('IndexedFormula', () => {
       expect(store.statements.length).to.eq(0)
       expect(store.holds(s1, p1, o1)).to.equal(false)
       expect(store.holds(s2, p2, o2)).to.equal(false)
+    })
+
+    it('removes statement after mutating Collection object', () => {
+      const store = new IndexedFormula()
+      const list = new Collection([o1, o2])
+      store.add(s1, p1, list)
+
+      // Mutating the list must not invalidate index lookups for removal.
+      list.append(o3)
+
+      expect(() => store.remove(store.statements[0])).not.to.throw()
+      expect(store.statements.length).to.eq(0)
     })
   })
 
