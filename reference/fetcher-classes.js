@@ -113,7 +113,7 @@ class XHTMLHandler {
       var scripts = this.dom.getElementsByTagName('script')
       for (var i = 0; i < scripts.length; i++) {
         var contentType = scripts[i].getAttribute('type')
-        if (Parsable[contentType]) {
+        if (Parsable[contentType] && scripts[i].textContent.trim().length) {
           rdfParse(scripts[i].textContent, kb, xhr.original.uri, contentType)
         }
       }
