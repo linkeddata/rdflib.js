@@ -29,9 +29,7 @@ const ExtendedTermFactory = {
   },
   id(term) {
     if (isCollection(term)) {
-      return `( ${term.elements.map(e => {
-        return this.id(e);
-      }).join(', ')} )`;
+      return Collection.toNT(term);
     }
     if (isVariable(term)) {
       return Variable.toString(term);

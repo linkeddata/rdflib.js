@@ -7,6 +7,7 @@ import { EmptyTermType, DefaultGraphTermType, VariableTermType, BlankNodeTermTyp
 import DefaultGraph from '../default-graph';
 import { Feature } from './factory-types';
 import { isQuad, isTerm } from '../utils/terms';
+import Collection from "../collection";
 export { defaultGraphURI } from '../utils/default-graph-uri';
 
 /**
@@ -69,6 +70,10 @@ const CanonicalDataFactory = {
     switch (term.termType) {
       case DefaultGraphTermType:
         return 'defaultGraph';
+      case CollectionTermType:
+        // Collections are mutable (elements can change), so ID must be stable.
+        // Use the collection's blank-node-like identifier, not element content.
+        return Collection.toNT(term);
       case VariableTermType:
         return Variable.toString(term);
       default:
