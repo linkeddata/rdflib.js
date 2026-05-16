@@ -106,6 +106,10 @@ const CanonicalDataFactory: DataFactory = {
     switch (term.termType) {
       case DefaultGraphTermType:
         return 'defaultGraph'
+      case CollectionTermType:
+        // Collections are mutable (elements can change), so ID must be stable.
+        // Use the collection's blank-node-like identifier, not element content.
+        return Collection.toNT(term as Collection)
       case VariableTermType:
         return Variable.toString(term)
       default:
