@@ -490,4 +490,156 @@ exa:myid exa:prop1 [ exa:prop2 [ exa:prop3 "value" ] ].
       }) // test
     }) // literals
   }) // xml
+
+  describe('rdfa', () => {
+    describe('html from test-suite', () => {
+            let store
+            let store1
+            let ttlContent
+      before(done => {
+        const base = 'https://www.example.org/abc/def'
+        const mimeType = 'text/html'
+      const content = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML+RDFa 1.1//EN"
+        "http://www.w3.org/MarkUp/DTD/xhtml-rdfa-2.dtd">
+<html version="XHTML+RDFa 1.1" xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:contact="http://www.w3.org/2000/10/swap/pim/contact#"
+      xmlns:foaf="http://xmlns.com/foaf/0.1/"
+      xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+      xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+      xml:lang="en"
+      lang="en">
+<head>
+    <title>XHTML+RDFa example</title>
+    <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=utf-8" />
+    <meta http-equiv="Content-Style-Type" content="text/css" />
+    <meta name="content-language" content="en" />
+    <meta name="robots" content="index, follow" />
+    <link rel="schema.DC" href="http://purl.org/dc/elements/1.1/" />
+    <link rel="schema.DCTERMS" href="http://purl.org/dc/terms/" />
+    <link rel="alternate" type="application/rss+xml" title="Feed channel of XHTML+RDFa example page" href="http://www.example.com/rss.xml" />
+    <meta name="DC.title" content="XHTML+RDFa example" />
+    <meta name="DC.subject" content="XHTML+RDFa, semantic web" />
+    <meta name="DC.description" content="Example for Extensible Hypertext Markup Language + Resource Description Framework – in – attributes." />
+    <meta name="DC.format" content="application/xhtml+xml" />
+    <meta name="DC.language" content="en" />
+    <link rel="shortcut icon" href="favicon.ico" />
+    <link  rel="stylesheet" type="text/css" href="main.css" title="main styles" />
+    <link rel="foaf:primaryTopic" type="application/rdf+xml" title="FOAF" href="http://www.example.com/metadata/foaf.rdf" />
+    <script type="text/javascript" src="js/click.js"></script>
+</head>
+<body>
+<div class="content">
+    <p>
+        <span property="foaf:name">Jerry Smith</span><br />
+        <i>Senior developer, QA</i><br />
+        <a title="More about me" rel="rdfs:seeAlso" href="about.htm">More...</a>
+    </p>
+    <p rel="contact:address">
+        93 Rose Ave <br />
+        <a property="contact:city" rel="rdfs:seeAlso" title="Adelaide on Wikipedia" resource="http://dbpedia.org/resource/Adelaide"
+           href="http://en.wikipedia.org/wiki/Adelaide">Adelaide</a>
+    </p>
+    <p>
+        <span rel="foaf:phone" resource="tel:+6112345678">+61 12/345-678</span>
+    </p>
+</div>
+</body>
+</html>`
+        store = DataFactory.graph() // (undefined, { rdfFactory: CanonicalDataFactory })
+        parse(content, store, base, mimeType, done)
+        // console.log('Alain test rdfa')
+        // console.log(store.statements)
+      }) // before
+
+      it('to ttl', () => {
+        ttlContent = `@prefix contact: <http://www.w3.org/2000/10/swap/pim/contact#>.
+@prefix foaf: <http://xmlns.com/foaf/0.1/>.
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix abc: <https://www.example.org/abc/>.
+@prefix vocab: <http://www.w3.org/1999/xhtml/vocab#>.
+@prefix www: <http://www.example.com/>.
+@prefix res: <http://dbpedia.org/resource/>.
+@prefix met: <http://www.example.com/metadata/>.
+
+abc:def
+    vocab:alternate www:rss.xml;
+    vocab:icon abc:favicon.ico;
+    vocab:stylesheet abc:main.css;
+    rdfs:seeAlso abc:about.htm;
+    contact:address [ rdfs:seeAlso res:Adelaide; contact:city "Adelaide"@en ];
+    foaf:name "Jerry Smith"@en;
+    foaf:phone <tel:+6112345678>;
+    foaf:primaryTopic met:foaf.rdf.
+`
+
+        expect(store.statements).to.have.length(10)
+        // console.log(serialize(null, store, null, 'text/turtle'))
+        expect(serialize(null, store, null, 'text/turtle')).to.eql(ttlContent)
+
+
+      }) // test ttl
+      it('to jsonld', () => {
+        let jsonldContent = `{
+  "@context": {
+    "contact": "http://www.w3.org/2000/10/swap/pim/contact#",
+    "foaf": "http://xmlns.com/foaf/0.1/",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "abc": "https://www.example.org/abc/",
+    "vocab": "http://www.w3.org/1999/xhtml/vocab#",
+    "www": "http://www.example.com/",
+    "res": "http://dbpedia.org/resource/",
+    "met": "http://www.example.com/metadata/"
+  },
+  "@id": "abc:def",
+  "vocab:alternate": {
+    "@id": "www:rss.xml"
+  },
+  "vocab:icon": {
+    "@id": "abc:favicon.ico"
+  },
+  "vocab:stylesheet": {
+    "@id": "abc:main.css"
+  },
+  "rdfs:seeAlso": {
+    "@id": "abc:about.htm"
+  },
+  "contact:address": {
+    "rdfs:seeAlso": {
+      "@id": "res:Adelaide"
+    },
+    "contact:city": {
+      "@value": "Adelaide",
+      "@language": "en"
+    }
+  },
+  "foaf:name": {
+    "@value": "Jerry Smith",
+    "@language": "en"
+  },
+  "foaf:phone": {
+    "@id": "tel:+6112345678"
+  },
+  "foaf:primaryTopic": {
+    "@id": "met:foaf.rdf"
+  }
+}`
+
+        expect(store.statements).to.have.length(10)
+        // console.log(serialize(null, store, null, 'application/ld+json'))
+        expect(serialize(null, store, null, 'application/ld+json')).to.eql(jsonldContent)
+        // Now parse back the jsonld content and see we get the same number of triples
+        let store1 = DataFactory.graph()
+        let base = 'https://www.example.org/abc/def'
+        let mimeType = 'application/ld+json'
+        parse(jsonldContent, store1, base, mimeType, (err) => {
+          expect(err).to.be.undefined
+          expect(store1.statements).to.have.length(10)
+          console.log('RDFa jsonld parse back successful')
+          expect(serialize(null, store1, null, 'text/turtle')).to.eql(ttlContent)
+        })
+      }) // test jsonld
+    }) // html
+  }) // rdfa
+
 }) // Parse
