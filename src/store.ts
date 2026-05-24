@@ -53,7 +53,6 @@ import {
   Quad_Subject,
   Term,
 } from './tf-types'
-import { namedNode } from './index'
 import serialize from "./serialize";
 import BlankNode from './blank-node'
 import DefaultGraph from './default-graph'
@@ -315,7 +314,7 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
       var query = new Query('patch')
       query.pat = patch.where
       query.pat.statements.map(function (st) {
-        st.graph = namedNode(target.value)
+        st.graph = new NamedNode(target.value)
       })
       //@ts-ignore TODO: add sync property to Query when converting Query to typescript
       query.sync = true
