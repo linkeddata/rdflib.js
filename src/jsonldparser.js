@@ -69,6 +69,8 @@ export default async function jsonldParser(str, kb, base) {
     : base
 
   const jsonld = await import('jsonld')
+  // ⚠ Unit tests also work without accessing `jsonld.default` explicitly, but real browser usage will fail with
+  // just calling `jsonld.flatten`, so please do not remove `default`
   // Handle both ESM (browser) and CommonJS (Node.js) module formats
   // Browser ESM: jsonld.default.flatten
   // Node.js CommonJS: jsonld.flatten
