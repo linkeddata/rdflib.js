@@ -58,7 +58,11 @@ export default async function jsonldParser(str, kb, base) {
   const jsonld = await import('jsonld');
   // ⚠ Unit tests also work without accessing `jsonld.default` explicitly, but real browser usage will fail with
   // just calling `jsonld.flatten`, so please do not remove `default`
-  const flattened = await jsonld.default.flatten(JSON.parse(str), null, {
+  // Handle both ESM (browser) and CommonJS (Node.js) module formats
+  // Browser ESM: jsonld.default.flatten
+  // Node.js CommonJS: jsonld.flatten
+  const jsonldLib = jsonld.default || jsonld;
+  const flattened = await jsonldLib.flatten(JSON.parse(str), null, {
     base: baseString
   });
   return flattened.reduce((store, flatResource) => processResource(store, base, flatResource), kb);
