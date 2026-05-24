@@ -33,7 +33,6 @@ import Variable from './variable';
 import { Query, indexedFormulaQuery } from './query';
 import { BlankNodeTermType, CollectionTermType, DefaultGraphTermType, EmptyTermType, GraphTermType, LiteralTermType, NamedNodeTermType, VariableTermType } from './types';
 import NamedNode from './named-node';
-import { namedNode } from './index';
 import serialize from "./serialize";
 import BlankNode from './blank-node';
 import DefaultGraph from './default-graph';
@@ -247,7 +246,7 @@ export default class IndexedFormula extends Formula {
       var query = new Query('patch');
       query.pat = patch.where;
       query.pat.statements.map(function (st) {
-        st.graph = namedNode(target.value);
+        st.graph = new NamedNode(target.value);
       });
       //@ts-ignore TODO: add sync property to Query when converting Query to typescript
       query.sync = true;
