@@ -10,6 +10,7 @@
 
 <>
     dc:title "XHTML+RDFa example";
+    lin:alternate <http://www.example.com/rss.xml>;
     <http://www.iana.org/assignments/link-relations/foaf%3AprimaryTopic>
     <http://www.example.com/metadata/foaf.rdf>;
     <http://www.iana.org/assignments/link-relations/schema.DC> dc:;
