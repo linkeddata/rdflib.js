@@ -576,7 +576,7 @@ describe('Fetcher', () => {
       why = store.sym('https://example.com/resource')
     })
 
-    const IANA_BASE = 'http://www.iana.org/assignments/relation/'
+    const IANA_BASE = 'http://www.iana.org/assignments/link-relations/'
     const RDFS_SEE_ALSO = 'http://www.w3.org/2000/01/rdf-schema#seeAlso'
 
     ;['alternate', 'seeAlso', 'meta', 'describedby'].forEach(rel => {

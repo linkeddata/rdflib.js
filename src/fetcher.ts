@@ -1355,7 +1355,7 @@ export default class Fetcher implements CallbackifyInterface {
       if (obj.value === originalUri.value) { return }
       // Also emit the IANA relation predicate triple (issue #741)
       predicates = [
-        kb.rdfFactory.namedNode('http://www.iana.org/assignments/relation/' + rel),
+        kb.rdfFactory.namedNode(this.ianaLinkRelation(rel)),
         this.ns.rdfs('seeAlso')
       ]
     } else if (rel === 'type') {
@@ -1365,8 +1365,7 @@ export default class Fetcher implements CallbackifyInterface {
       // Alas not yet in RDF yet for each predicate
       // encode space in e.g. rel="shortcut icon"
       predicates = [kb.rdfFactory.namedNode(
-        Uri.join(encodeURIComponent(rel),
-          'http://www.iana.org/assignments/link-relations/')
+        this.ianaLinkRelation(rel)
       )]
     }
     kb.addAll(
@@ -1376,6 +1375,11 @@ export default class Fetcher implements CallbackifyInterface {
           : kb.rdfFactory.quad(originalUri, predicate, obj, why)
       )
     )
+  }
+
+  private ianaLinkRelation(rel: string) {
+    return Uri.join(encodeURIComponent(rel),
+      'http://www.iana.org/assignments/link-relations/');
   }
 
   parseLinkHeader (
