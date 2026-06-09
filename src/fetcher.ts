@@ -1353,6 +1353,8 @@ export default class Fetcher implements CallbackifyInterface {
     if (rel === 'alternate' || rel === 'seeAlso' || rel === 'meta' ||
         rel === 'describedby') {
       if (obj.value === originalUri.value) { return }
+      // Also emit the IANA relation predicate triple (issue #741)
+      kb.add(originalUri, kb.rdfFactory.namedNode('http://www.iana.org/assignments/relation/' + rel), obj, why)
       predicate = this.ns.rdfs('seeAlso')
     } else if (rel === 'type') {
       predicate = kb.rdfFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type')
