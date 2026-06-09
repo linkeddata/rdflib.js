@@ -1346,32 +1346,36 @@ export default class Fetcher implements CallbackifyInterface {
   ) {
     if (!uri) return
     let kb = this.store
-    let predicate
     // See http://www.w3.org/TR/powder-dr/#httplink for describedby 2008-12-10
     let obj = kb.rdfFactory.namedNode(Uri.join(uri, originalUri.value))
 
+    let predicates: Quad_Predicate[]
     if (rel === 'alternate' || rel === 'seeAlso' || rel === 'meta' ||
         rel === 'describedby') {
       if (obj.value === originalUri.value) { return }
       // Also emit the IANA relation predicate triple (issue #741)
-      kb.add(originalUri, kb.rdfFactory.namedNode('http://www.iana.org/assignments/relation/' + rel), obj, why)
-      predicate = this.ns.rdfs('seeAlso')
+      predicates = [
+        kb.rdfFactory.namedNode('http://www.iana.org/assignments/relation/' + rel),
+        this.ns.rdfs('seeAlso')
+      ]
     } else if (rel === 'type') {
-      predicate = kb.rdfFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type')
+      predicates = [kb.rdfFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type')]
     } else {
       // See https://www.iana.org/assignments/link-relations/link-relations.xml
       // Alas not yet in RDF yet for each predicate
       // encode space in e.g. rel="shortcut icon"
-      predicate = kb.rdfFactory.namedNode(
+      predicates = [kb.rdfFactory.namedNode(
         Uri.join(encodeURIComponent(rel),
           'http://www.iana.org/assignments/link-relations/')
+      )]
+    }
+    kb.addAll(
+      predicates.map(predicate =>
+        reverse
+          ? kb.rdfFactory.quad(obj, predicate, originalUri, why)
+          : kb.rdfFactory.quad(originalUri, predicate, obj, why)
       )
-    }
-    if (reverse) {
-      kb.add(obj, predicate, originalUri, why)
-    } else {
-      kb.add(originalUri, predicate, obj, why)
-    }
+    )
   }
 
   parseLinkHeader (
