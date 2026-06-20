@@ -1346,30 +1346,40 @@ export default class Fetcher implements CallbackifyInterface {
   ) {
     if (!uri) return
     let kb = this.store
-    let predicate
     // See http://www.w3.org/TR/powder-dr/#httplink for describedby 2008-12-10
     let obj = kb.rdfFactory.namedNode(Uri.join(uri, originalUri.value))
 
+    let predicates: Quad_Predicate[]
     if (rel === 'alternate' || rel === 'seeAlso' || rel === 'meta' ||
         rel === 'describedby') {
       if (obj.value === originalUri.value) { return }
-      predicate = this.ns.rdfs('seeAlso')
+      // Also emit the IANA relation predicate triple (issue #741)
+      predicates = [
+        kb.rdfFactory.namedNode(this.ianaLinkRelation(rel)),
+        this.ns.rdfs('seeAlso')
+      ]
     } else if (rel === 'type') {
-      predicate = kb.rdfFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type')
+      predicates = [kb.rdfFactory.namedNode('http://www.w3.org/1999/02/22-rdf-syntax-ns#type')]
     } else {
       // See https://www.iana.org/assignments/link-relations/link-relations.xml
       // Alas not yet in RDF yet for each predicate
       // encode space in e.g. rel="shortcut icon"
-      predicate = kb.rdfFactory.namedNode(
-        Uri.join(encodeURIComponent(rel),
-          'http://www.iana.org/assignments/link-relations/')
+      predicates = [kb.rdfFactory.namedNode(
+        this.ianaLinkRelation(rel)
+      )]
+    }
+    kb.addAll(
+      predicates.map(predicate =>
+        reverse
+          ? kb.rdfFactory.quad(obj, predicate, originalUri, why)
+          : kb.rdfFactory.quad(originalUri, predicate, obj, why)
       )
-    }
-    if (reverse) {
-      kb.add(obj, predicate, originalUri, why)
-    } else {
-      kb.add(originalUri, predicate, obj, why)
-    }
+    )
+  }
+
+  private ianaLinkRelation(rel: string) {
+    return Uri.join(encodeURIComponent(rel),
+      'http://www.iana.org/assignments/link-relations/');
   }
 
   parseLinkHeader (

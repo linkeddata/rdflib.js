@@ -565,4 +565,44 @@ describe('Fetcher', () => {
   describe('createContainer', () => {
     // it.skip('should invoke webOperation with the right options', () => {})
   })
+
+  describe('linkData', () => {
+    let store, fetcher, originalUri, why
+
+    beforeEach(() => {
+      store = rdf.graph()
+      fetcher = new Fetcher(store)
+      originalUri = store.sym('https://example.com/resource')
+      why = store.sym('https://example.com/resource')
+    })
+
+    const IANA_BASE = 'http://www.iana.org/assignments/link-relations/'
+    const RDFS_SEE_ALSO = 'http://www.w3.org/2000/01/rdf-schema#seeAlso'
+
+    ;['alternate', 'seeAlso', 'meta', 'describedby'].forEach(rel => {
+      it(`emits an IANA predicate triple for rel="${rel}" in addition to rdfs:seeAlso`, () => {
+        const target = 'https://example.com/other'
+        fetcher.linkData(originalUri, rel, target, why)
+
+        // This is the new behaviour required by issue #741:
+        // the IANA predicate triple must be present alongside rdfs:seeAlso
+        expect(
+          store.holds(originalUri, store.sym(IANA_BASE + rel), store.sym(target)),
+          `expected triple <${originalUri.value}> <${IANA_BASE + rel}> <${target}>`
+        ).to.equal(true)
+      })
+    })
+
+    ;['alternate', 'seeAlso', 'meta', 'describedby'].forEach(rel => {
+      it(`still emits rdfs:seeAlso for rel="${rel}"`, () => {
+        const target = 'https://example.com/other'
+        fetcher.linkData(originalUri, rel, target, why)
+
+        expect(
+          store.holds(originalUri, store.sym(RDFS_SEE_ALSO), store.sym(target)),
+          `expected triple <${originalUri.value}> rdfs:seeAlso <${target}>`
+        ).to.equal(true)
+      })
+    })
+  })
 })

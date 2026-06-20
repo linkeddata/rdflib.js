@@ -340,6 +340,7 @@ export default class Fetcher implements CallbackifyInterface {
         original: Quad_Subject;
     } & Options, errorMessage: string, statusCode: StatusValues, response?: ExtendedResponse): Promise<FetchError>;
     linkData(originalUri: NamedNode, rel: string, uri: string, why: Quad_Graph, reverse?: boolean): void;
+    private ianaLinkRelation;
     parseLinkHeader(linkHeader: string, originalUri: NamedNode, reqNode: Quad_Graph): void;
     doneFetch(options: {
         req: Quad_Subject;
