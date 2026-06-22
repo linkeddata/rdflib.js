@@ -51,8 +51,6 @@
     "cross-fetch": "^4.1.0",
     "jsonld": "^9.0.0",
     "n3": "^2.0.3",
-    "package-lock.json": "^1.0.0",
-    "package.json": "^2.0.1",
     "solid-namespace": "^0.5.4"
   },
   "devDependencies": {
