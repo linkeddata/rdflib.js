@@ -577,7 +577,7 @@ export class Serializer {
             }
 
             case 'http://www.w3.org/2001/XMLSchema#boolean':
-              return expr.value === '1' ? 'true' : 'false'
+              return expr.value === '1' || expr.value === 'true' ? 'true' : 'false'
           }
         }
         var str = this.stringToN3(expr.value, this.flags)

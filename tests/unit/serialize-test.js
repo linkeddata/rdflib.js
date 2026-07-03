@@ -240,6 +240,42 @@ example:subject schema2:predicate 123e-2 .
 
     })
 
+    describe('booleans', () => {
+        const serializeBoolean = (lexicalForm) => {
+            const doc = sym("https://example.net/doc")
+            const statement = st(
+                sym('https://subject.example'),
+                sym('https://predicate.example'),
+                lit(lexicalForm, undefined, sym("http://www.w3.org/2001/XMLSchema#boolean")),
+                doc
+            )
+            const kb = graph()
+            kb.add(statement)
+            return serialize(doc, kb, null, 'text/turtle')
+        }
+        const expected = (token) => `@prefix : </doc#>.
+
+<https://subject.example> <https://predicate.example> ${token}.
+
+`
+
+        it('lexical form "true" serializes to true', () => {
+            expect(serializeBoolean('true')).to.equal(expected('true'))
+        })
+
+        it('lexical form "false" serializes to false', () => {
+            expect(serializeBoolean('false')).to.equal(expected('false'))
+        })
+
+        it('lexical form "1" serializes to true', () => {
+            expect(serializeBoolean('1')).to.equal(expected('true'))
+        })
+
+        it('lexical form "0" serializes to false', () => {
+            expect(serializeBoolean('0')).to.equal(expected('false'))
+        })
+    })
+
   describe('namespaces', () => {
     it('producing [prefix][colon] [dot]', () => {
       // when a symbol has a trailing slash, the automatic prefix production results in a prefixed symbol with no local name
