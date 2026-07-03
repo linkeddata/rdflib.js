@@ -306,7 +306,7 @@ export class Serializer {
         return self.atomicTermToN3(x)
       }
       var list = x.elements
-      var rest = kb.sym(rdfns + 'nill')
+      var rest = kb.sym(rdfns + 'nil')
       for (var i = list.length - 1; i >= 0; i--) {
         var bnode = factory.blankNode()
         str += termToNT(bnode) + ' ' + termToNT(kb.sym(rdfns + 'first')) + ' ' + termToNT(list[i]) + '.\n'

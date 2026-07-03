@@ -552,6 +552,12 @@ const jsonldCollection1 = `{
         // console.log(await serialize(null, store, base, 'application/ld+json'))
         expect(await serialize(null, store, base, 'application/ld+json')).to.eql(jsonldCollection0)
       })
+      it('serialize to n-triples terminates the list with rdf:nil', () => {
+        // https://github.com/linkeddata/rdflib.js/issues/750
+        const result = serialize(null, store, base, 'application/n-triples')
+        expect(result).to.contain('<http://www.w3.org/1999/02/22-rdf-syntax-ns#nil>')
+        expect(result).not.to.contain('<http://www.w3.org/1999/02/22-rdf-syntax-ns#nill>')
+      })
     })
 
     describe('collections - source jsonld', () => {
