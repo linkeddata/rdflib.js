@@ -20,7 +20,7 @@ import { BlankNode, NamedNode } from './tf-types'
  */
 export default function serialize (
   /** The graph or nodes that should be serialized */
-  target: Formula | NamedNode | BlankNode | null,
+  target: Formula | NamedNode | BlankNode | null | undefined,
   /** The store */
   kb: Formula,
   base?: unknown,
