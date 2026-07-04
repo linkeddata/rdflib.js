@@ -270,6 +270,28 @@ example:subject schema:predicate obj: .
 `)
     })
   })
+
+  describe('target', () => {
+    // https://github.com/linkeddata/rdflib.js/issues/450
+    it('serializes all statements when target is undefined and a base is given', () => {
+      const statement = st(
+        sym('https://subject.example'),
+        sym('https://predicate.example'),
+        lit('value'),
+        sym('https://example.net/doc')
+      )
+      const kb = graph()
+      kb.add(statement)
+
+      const result = serialize(undefined, kb, 'https://example.net/doc', 'text/turtle')
+
+      expect(result).to.equal(`@prefix : </doc#>.
+
+<https://subject.example> <https://predicate.example> "value".
+
+`)
+    })
+  })
 })
 
 describe('parse --> serialize', () => {
