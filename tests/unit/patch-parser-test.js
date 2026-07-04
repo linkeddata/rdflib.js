@@ -103,6 +103,43 @@ describe('sparqlUpdateParser', () => {
     expect(st[0].object).to.equal(result.where)
   })
 
+  it('resolves the clauses when the base URI carries a fragment', () => {
+    // Regression: the query node is written as <#query> in the generated N3,
+    // which RFC 3986 resolves by *replacing* any fragment on the base — but
+    // the lookup sym used to be built as `base + '#query'`. With a
+    // fragment-bearing base the two silently diverged and the returned patch
+    // lost its insert/delete/where clauses.
+    const store = new IndexedFormula()
+    const result = sparqlUpdateParser(
+      `DELETE { <#me> <http://xmlns.com/foaf/0.1/nick> "old". }
+       INSERT { <#me> <http://xmlns.com/foaf/0.1/nick> "new". }
+       WHERE  { <#me> <http://xmlns.com/foaf/0.1/nick> "old". }`,
+      store, 'https://example.org/profile/card#me')
+
+    expect(result.query.value).to.eql('https://example.org/profile/card#query')
+    expect(result.delete.statements.map(termValues)).to.eql([
+      {
+        subject: 'https://example.org/profile/card#me',
+        predicate: 'http://xmlns.com/foaf/0.1/nick',
+        object: 'old',
+      },
+    ])
+    expect(result.insert.statements.map(termValues)).to.eql([
+      {
+        subject: 'https://example.org/profile/card#me',
+        predicate: 'http://xmlns.com/foaf/0.1/nick',
+        object: 'new',
+      },
+    ])
+    expect(result.where.statements.map(termValues)).to.eql([
+      {
+        subject: 'https://example.org/profile/card#me',
+        predicate: 'http://xmlns.com/foaf/0.1/nick',
+        object: 'old',
+      },
+    ])
+  })
+
   it('throws a descriptive error on unknown top-level syntax', () => {
     const store = new IndexedFormula()
     expect(() => sparqlUpdateParser('FROBNICATE { <#a> <#b> <#c>. }', store, 'https://example.org/doc'))

@@ -15,7 +15,12 @@ const SQNS = Namespace('http://www.w3.org/ns/pim/patch#')
 
 export default function sparqlUpdateParser (str, kb, base) {
   const clauses = {}
-  const query = kb.sym(base + '#query') // Invent a URI for the query
+  // Invent a URI for the query. Resolve it against the *fragment-stripped*
+  // base: the N3 rewrite below names this node <#query>, which RFC 3986
+  // resolves by replacing any fragment on the base, so building the sym from
+  // `base + '#query'` would silently mismatch (and lose every clause) when
+  // the caller's base URI carries a fragment.
+  const query = kb.sym(base.split('#')[0] + '#query')
   clauses['query'] = query // A way of accessing it in its N3 model.
 
   const badSyntax = function (uri, str, i, why) {
@@ -58,7 +63,9 @@ export default function sparqlUpdateParser (str, kb, base) {
         if (end < 0) {
           throw badSyntax(base, str, j, 'bad syntax or EOF in {...} after ' + key)
         }
-        n3doc += '<#query> <' + SQNS(key.toLowerCase()).value + '> ' + str.slice(j, end) + ' .\n'
+        // Write the query node as an absolute IRI so that the sym used for
+        // insertion is byte-identical to the one used for lookup below.
+        n3doc += '<' + query.value + '> <' + SQNS(key.toLowerCase()).value + '> ' + str.slice(j, end) + ' .\n'
         order.push(key.toLowerCase())
         i = end
         found = true

@@ -564,6 +564,52 @@ describe('Fetcher', () => {
         })
     })
 
+    it('does not accumulate blank-node subgraphs on force-reload (force implies clearPreviousData)', () => {
+      // Parsed blank-node labels are not stable across parses, so re-parsing
+      // a document without clearing it first duplicates its blank-node
+      // subgraphs. `force: true` therefore implies `clearPreviousData: true`.
+      const testTurtle = `@prefix foaf: <http://xmlns.com/foaf/0.1/>.
+<#me> foaf:knows [ foaf:name "Amy" ], [ foaf:name "Bob" ].`
+      const doc = 'https://example.com/bnodes.ttl'
+
+      nock('https://example.com').get('/bnodes.ttl').twice()
+        .reply(200, testTurtle, { 'Content-Type': 'text/turtle' })
+
+      const kb = fetcher.store
+      return fetcher.load(doc)
+        .then(() => {
+          const before = kb.statementsMatching(null, null, null, kb.sym(doc)).length
+          expect(before).to.equal(4)
+
+          return fetcher.load(doc, { force: true })
+            .then(() => {
+              const after = kb.statementsMatching(null, null, null, kb.sym(doc)).length
+              expect(after).to.equal(before)
+            })
+        })
+    })
+
+    it('accumulates on force-reload when clearPreviousData is explicitly false', () => {
+      const testTurtle = `@prefix foaf: <http://xmlns.com/foaf/0.1/>.
+<#me> foaf:knows [ foaf:name "Amy" ].`
+      const doc = 'https://example.com/bnodes-keep.ttl'
+
+      nock('https://example.com').get('/bnodes-keep.ttl').twice()
+        .reply(200, testTurtle, { 'Content-Type': 'text/turtle' })
+
+      const kb = fetcher.store
+      return fetcher.load(doc)
+        .then(() => {
+          const before = kb.statementsMatching(null, null, null, kb.sym(doc)).length
+
+          return fetcher.load(doc, { force: true, clearPreviousData: false })
+            .then(() => {
+              const after = kb.statementsMatching(null, null, null, kb.sym(doc)).length
+              expect(after).to.be.above(before)
+            })
+        })
+    })
+
     it('should load and parse N3 with formula subjects (#567)', () => {
       // Loading a document like https://drive.verborgh.org/tmp/2022/cha-58-direct.n3
       // used to fail with "Subject is not a subject type".

@@ -154,7 +154,9 @@ export interface AutoInitOptions extends RequestInit{
   forceContentType?: ContentType
   /**
    * Load the data even if loaded before.
-   * Also sets the `Cache-Control:` header to `no-cache`
+   * Also sets the `Cache-Control:` header to `no-cache`, and (in
+   * `Fetcher.load`) implies `clearPreviousData: true` unless that option is
+   * explicitly set to `false`.
    */
   force?: boolean
   /**
@@ -942,7 +944,10 @@ export default class Fetcher implements CallbackifyInterface {
    *   force the data to be treated as this content-type (for reads)
    *
    * @param [options.force] {boolean} Load the data even if loaded before.
-   *   Also sets the `Cache-Control:` header to `no-cache`
+   *   Also sets the `Cache-Control:` header to `no-cache`, and implies
+   *   `clearPreviousData: true` unless that option is explicitly set to
+   *   `false` (re-parsing without clearing would duplicate blank-node
+   *   subgraphs, as parsed blank-node labels are not stable across parses)
    *
    * @param [options.baseURI=docuri] {Node|string} Original uri to preserve
    *   through proxying etc (`xhr.original`).
@@ -967,6 +972,13 @@ export default class Fetcher implements CallbackifyInterface {
     options: Options = {}
   ): T extends Array<string | NamedNode> ? Promise<Result[]> : Promise<Result> {
     options = Object.assign({}, options) // Take a copy as we add stuff to the options!!
+    // `force` implies `clearPreviousData` (unless the caller explicitly opts
+    // out): parsed blank-node labels are not stable across parses, so
+    // re-parsing a previously loaded document without clearing it first would
+    // duplicate its blank-node subgraphs on every forced reload.
+    if (options.force && options.clearPreviousData === undefined) {
+      options.clearPreviousData = true
+    }
     if (uri instanceof Array) {
       return Promise.all(uri.map((x) => {
         return this.load(x, Object.assign({}, options)) as unknown as Promise<Result>

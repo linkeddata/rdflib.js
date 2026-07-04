@@ -302,7 +302,21 @@ JS or Python arrays.
   generally, but are shortcts for test data and quick scripts.
   rdflib.js will understand these sytatax but never generate them
 </p>
+<p><b>Update for rdflib 3.0:</b> the parser was replaced by
+  <a href="https://github.com/rdfjs/N3.js">N3.js</a>, and the first two
+  extensions below &mdash; naked dates/date-times and
+  <tt>is</tt> &hellip; <tt>of</tt> &mdash; were <b>removed</b>: they now
+  raise a parse error under <em>every</em> content type, including
+  <tt>text/n3</tt>. They are kept here for historical reference, each with
+  its standard replacement. The local empty-prefix default (the third
+  extension) is still supported.
+</p>
 <h4>Naked Dates</h4>
+<p><b>Removed in rdflib 3.0.</b> Write the standard typed literals instead:
+  <tt>"2018-02-31"^^xsd:date</tt> and
+  <tt>"2018-02-31T08:24:00.0Z"^^xsd:dateTime</tt>
+  (with <tt>@prefix xsd: &lt;http://www.w3.org/2001/XMLSchema#&gt;.</tt>).
+</p>
 <table>
   <tr>
     <td><pre>
@@ -339,6 +353,11 @@ JS or Python arrays.
 </pre>
 <p>The <tt>is</tt> ... <tt>of</tt> syntax was in the original N3 language
   which Turtle was derived from but unfortunately left out of the turtle standard.
+</p>
+<p><b>Removed in rdflib 3.0</b> (the modern N3 Community Group grammar
+  dropped it too). Write the inverse triple instead, e.g.
+  <tt>:grampa fam:child :alice .</tt> rather than
+  <tt>:alice is fam:child of :grampa .</tt>
 </p>
 <h4>Local document prefix</h4>
 <p>It is handy to define the empty string prefix <tt>:</tt>

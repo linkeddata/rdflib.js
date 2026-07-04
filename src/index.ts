@@ -59,6 +59,18 @@ const term = Node.fromValue
 // it exports the _current_ value of nextId, which is always 0
 const NextId = BlankNode.nextId
 
+/**
+ * @deprecated The hand-rolled N3 parser was removed in rdflib 3.0 in favour
+ * of N3.js. This stub only exists to fail loudly with a pointer: use
+ * `parse(text, store, base, contentType)` (or the `n3` package directly)
+ * instead. Calling or constructing it always throws.
+ */
+function N3Parser (): never {
+  throw new Error(
+    'N3Parser was removed in rdflib 3.0; use parse(text, store, base, contentType) or the n3 package directly'
+  )
+}
+
 export * from './utils/terms'
 export type { AutoInitOptions, ExtendedResponse, FetchError } from './fetcher'
 export {
@@ -72,6 +84,7 @@ export {
   jsonParser,
   Literal,
   log,
+  N3Parser,
   NamedNode,
   Namespace,
   Node,
