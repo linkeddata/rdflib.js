@@ -1,5 +1,4 @@
 @prefix : </,structures.nt#>.
-@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
 @prefix str: </structures.n3#>.
 
@@ -46,23 +45,6 @@ _:_g_L4C88 str:name "Coretta Scott King".
 
 [
     a str:Marriage;
-    str:offspring
-            [
-                rdf:first str:MLK3;
-                rdf:rest
-                        [
-                            rdf:first str:DSK;
-                            rdf:rest
-                                    [
-                                        rdf:first str:YK;
-                                        rdf:rest
-                                                [
-                                                    rdf:first
-                                                    [ str:name "Bernice King" ];
-                                                    rdf:rest rdf:nill
-                                                ]
-                                    ]
-                        ]
-            ];
+    str:offspring ( str:MLK3 str:DSK str:YK [ str:name "Bernice King" ] );
     str:spouse str:MLK, _:_g_L4C88
 ].
