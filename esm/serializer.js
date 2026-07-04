@@ -656,7 +656,7 @@ export class Serializer {
       if (canSplit) {
         if (this.defaultNamespace && this.defaultNamespace === namesp && this.flags.indexOf('d') < 0) {
           // d -> suppress default
-          if (this.flags.indexOf('k') >= 0 && this.keyords.indexOf(localid) < 0) {
+          if (this.flags.indexOf('k') >= 0 && this.keywords.indexOf(localid) < 0) {
             return localid;
           }
           return ':' + localid;
