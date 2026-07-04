@@ -62,6 +62,15 @@ export const N3JS_FORMATS: { [contentType: string]: string } = {
   [TrigContentType]: 'application/trig',
 }
 
+/** Options accepted by {@link parseN3js} (a subset of `parse()`'s options). */
+export type ParseN3jsOptions = {
+  /**
+   * Canonicalize the lexical forms of boolean and numeric literals at parse
+   * time, as rdflib ≤2 did — see the `canonicalize` option of `parse()`.
+   */
+  canonicalize?: boolean
+}
+
 /**
  * Parse a Turtle-family document with N3.js and load it into the given store.
  *
@@ -69,16 +78,17 @@ export const N3JS_FORMATS: { [contentType: string]: string } = {
  * @param kb - The store (or plain Formula) to load the statements into
  * @param base - The base IRI for relative-IRI resolution; also names the document graph
  * @param contentType - One of the content types in {@link N3JS_FORMATS}
+ * @param [options] - Parse options; see {@link ParseN3jsOptions}
  * @returns The number of statements loaded
  */
-export default function parseN3js (str: string, kb: Formula, base: string, contentType: string): number {
+export default function parseN3js (str: string, kb: Formula, base: string, contentType: string, options?: ParseN3jsOptions): number {
   const format = N3JS_FORMATS[contentType]
   if (!format) {
     throw new Error('parseN3js: unsupported content type ' + contentType)
   }
   const sugared = format === 'text/n3' || format === 'text/turtle'
   try {
-    return runParse(str, kb, base, format, false)
+    return runParse(str, kb, base, format, false, options)
   } catch (e) {
     // rdflib's legacy parser implicitly bound the empty prefix `:` to
     // `<base#>`, so documents using `:name` without declaring `@prefix :`
@@ -89,13 +99,14 @@ export default function parseN3js (str: string, kb: Formula, base: string, conte
     // still overrides it from that point on, exactly like the sequential
     // semantics of the legacy parser.
     if (sugared && base && /Undefined prefix ":"/.test(String(e && (e as Error).message))) {
-      return runParse(str, kb, base, format, true)
+      return runParse(str, kb, base, format, true, options)
     }
     throw e
   }
 }
 
-function runParse (str: string, kb: Formula, base: string, format: string, seedEmptyPrefix: boolean): number {
+function runParse (str: string, kb: Formula, base: string, format: string, seedEmptyPrefix: boolean, options?: ParseN3jsOptions): number {
+  const canonicalize = !!(options && options.canonicalize)
   const n3Mode = format === 'text/n3'
   const rdfFactory = kb.rdfFactory
   const docGraph = base ? kb.sym(base) : rdfFactory.defaultGraph()
@@ -271,7 +282,11 @@ function runParse (str: string, kb: Formula, base: string, format: string, seedE
         if (n3Mode && t.value.charAt(0) === '.') return rdfFactory.blankNode(docLabelPrefix + t.value.slice(1))
         return rdfFactory.blankNode(t.value)
       case 'Literal':
-        return rdfFactory.literal(t.value, t.language || rdfFactory.namedNode(t.datatype.value))
+        if (t.language) return rdfFactory.literal(t.value, t.language)
+        return rdfFactory.literal(
+          canonicalize ? canonicalLexicalForm(t.value, t.datatype.value) : t.value,
+          rdfFactory.namedNode(t.datatype.value)
+        )
       case 'Variable':
         return rdfFactory.variable ? rdfFactory.variable(t.value) : new Variable(t.value)
       case 'DefaultGraph':
@@ -317,6 +332,56 @@ function runParse (str: string, kb: Formula, base: string, format: string, seedE
   }
 
   return count
+}
+
+const XSD_NS = 'http://www.w3.org/2001/XMLSchema#'
+const XSD_BOOLEAN = XSD_NS + 'boolean'
+const XSD_INTEGER = XSD_NS + 'integer'
+const XSD_DECIMAL = XSD_NS + 'decimal'
+const XSD_DOUBLE = XSD_NS + 'double'
+const XSD_FLOAT = XSD_NS + 'float'
+
+const INTEGER_LEXICAL = /^([+-]?)0*([0-9]+)$/
+const DECIMAL_LEXICAL = /^[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)$/
+const FLOATING_LEXICAL = /^[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?$/
+
+/**
+ * Map a boolean or numeric lexical form to the canonical form rdflib ≤2
+ * produced at parse time (the `canonicalize: true` compatibility mode):
+ * booleans become `"1"`/`"0"` (matching `Literal.fromBoolean`), integers
+ * lose their sign/leading-zero decoration, and decimals/doubles/floats are
+ * rewritten as JavaScript stringifies their numeric value (`12.0` → `"12"`,
+ * `3.141e0` → `"3.141"`), exactly as the legacy parsers' number round-trip
+ * did. Only valid lexical forms are rewritten; anything ill-typed (and any
+ * other datatype) is preserved as-is.
+ */
+function canonicalLexicalForm (value: string, datatype: string): string {
+  switch (datatype) {
+    case XSD_BOOLEAN:
+      if (value === 'true') return '1'
+      if (value === 'false') return '0'
+      return value
+    case XSD_INTEGER: {
+      // Rewritten lexically (not via Number) so arbitrary-precision integers
+      // keep their exact value.
+      const m = INTEGER_LEXICAL.exec(value)
+      if (!m) return value
+      return (m[1] === '-' && m[2] !== '0' ? '-' : '') + m[2]
+    }
+    case XSD_DECIMAL: {
+      if (!DECIMAL_LEXICAL.test(value)) return value
+      const canonical = String(Number(value))
+      // Guard: keep the source form when JS would stringify with an exponent
+      // (e.g. 0.0000001 → "1e-7"), which is outside xsd:decimal's lexical space.
+      return DECIMAL_LEXICAL.test(canonical) ? canonical : value
+    }
+    case XSD_DOUBLE:
+    case XSD_FLOAT:
+      // INF/-INF/NaN don't match and are preserved as-is.
+      return FLOATING_LEXICAL.test(value) ? String(Number(value)) : value
+    default:
+      return value
+  }
 }
 
 /** Percent-escape the characters that cannot appear in a Turtle IRIREF. */

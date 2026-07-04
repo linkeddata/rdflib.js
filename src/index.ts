@@ -72,7 +72,9 @@ function N3Parser (): never {
 }
 
 export * from './utils/terms'
+export { isTrue, literalToBoolean, literalToNumber } from './utils/literalValue'
 export type { AutoInitOptions, ExtendedResponse, FetchError } from './fetcher'
+export type { ParseOptions } from './parse'
 export {
   BlankNode,
   Collection,

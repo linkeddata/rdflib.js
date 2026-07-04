@@ -10,6 +10,29 @@ import type { Document as XmldomDocument } from '@xmldom/xmldom'
 
 type CallbackFunc = (error: any, kb: Formula | null) => void
 
+/** Options accepted by {@link parse}. */
+export type ParseOptions = {
+  /**
+   * Canonicalize the lexical forms of boolean and numeric literals at parse
+   * time, the way rdflib ≤2's own parsers did: `true`/`false` become
+   * `"1"`/`"0"` (matching `Literal.fromBoolean`), `12.0` becomes `"12"`,
+   * `3.141e0` becomes `"3.141"`, `+05` becomes `"5"`. Covers `xsd:boolean`,
+   * `xsd:integer`, `xsd:decimal`, `xsd:double` and `xsd:float`; ill-typed
+   * lexical forms and all other datatypes are preserved as-is. Applies to
+   * the Turtle-family content types (Turtle, N3, TriG, N-Triples, N-Quads).
+   *
+   * Off by default: since the migration to the N3.js parser, literals keep
+   * the exact lexical form found in the document, as the RDF specs
+   * prescribe. This flag is a transition aid for code that still compares
+   * literals by one canonical spelling (`term.value === '1'`,
+   * `kb.holds(s, p, Literal.fromBoolean(true))`); new code should keep the
+   * default and compare in value space instead — see `isTrue`,
+   * `literalToBoolean` and `literalToNumber` (also available as
+   * `Literal.toBoolean` / `Literal.toNumber`).
+   */
+  canonicalize?: boolean
+}
+
 /**
  * Parse a string and put the result into the graph kb.
  * Normal method is sync.
@@ -19,22 +42,29 @@ type CallbackFunc = (error: any, kb: Formula | null) => void
  * @param kb - The store to use
  * @param base - The base URI to use
  * @param contentType - The MIME content type string for the input - defaults to text/turtle
- * @param [callback] - The callback to call when the data has been loaded
+ * @param [callback] - The callback to call when the data has been loaded.
+ *   May be omitted: an options object may be passed in this position instead.
+ * @param [options] - Parse options; see {@link ParseOptions}
  */
 export default function parse (
   str: string,
   kb: Formula,
   base: string,
   contentType: string | ContentType = 'text/turtle',
-  callback?: CallbackFunc
+  callback?: CallbackFunc | ParseOptions | null,
+  options?: ParseOptions
 ) {
+  if (callback && typeof callback === 'object') {
+    options = callback // parse(str, kb, base, contentType, { canonicalize: true })
+  }
+  const cb: CallbackFunc | undefined = typeof callback === 'function' ? callback : undefined
   contentType = contentType || TurtleContentType
   contentType = contentType.split(';')[0] as ContentType
   try {
     if (Object.prototype.hasOwnProperty.call(N3JS_FORMATS, contentType)) {
       // The Turtle family — Turtle, N3, TriG, N-Triples and N-Quads — is
       // parsed by the N3.js parser, adapted onto rdflib's model.
-      parseN3js(str, kb, base, contentType)
+      parseN3js(str, kb, base, contentType, options)
       executeCallback()
     } else if (contentType === RDFXMLContentType) {
       var parser = new RDFParser(kb)
@@ -84,8 +114,8 @@ export default function parse (
   }
 
   function executeCallback () {
-    if (callback) {
-      callback(null, kb)
+    if (cb) {
+      cb(null, kb)
     } else {
       return
     }
@@ -100,8 +130,8 @@ export default function parse (
       // @ts-ignore always true?
       contentType !== NQuadsAltContentType
     ) {
-      if (callback) {
-        callback(e, kb)
+      if (cb) {
+        cb(e, kb)
       } else {
         let e2 = new Error('' + e + ' while trying to parse <' + base + '> as ' + contentType)
         //@ts-ignore .cause is not a default error property
