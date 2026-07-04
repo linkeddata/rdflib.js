@@ -9,7 +9,6 @@ import Store from './store'
 import jsonParser from './jsonparser'
 import Literal from './literal'
 import log from './log'
-import N3Parser from './n3parser'
 import NamedNode from './named-node'
 import Namespace from './namespace'
 import Node from './node'
@@ -73,7 +72,6 @@ export {
   jsonParser,
   Literal,
   log,
-  N3Parser,
   NamedNode,
   Namespace,
   Node,

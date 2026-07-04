@@ -1,15 +1,11 @@
-import DataFactory from './factories/extended-term-factory'
 import jsonldParser from './jsonldparser'
-// @ts-ignore is this injected?
-import { Parser as N3jsParser } from 'n3'  // @@ Goal: remove this dependency
-import N3Parser from './n3parser'
+import parseN3js, { N3JS_FORMATS } from './n3-adapter'
 import { parseRDFaDOM } from './rdfaparser'
 import RDFParser from './rdfxmlparser'
 import sparqlUpdateParser from './patch-parser'
 import * as Util from './utils-js'
 import Formula from './formula'
-import { ContentType, TurtleContentType, N3ContentType, RDFXMLContentType, XHTMLContentType, HTMLContentType, SPARQLUpdateContentType, SPARQLUpdateSingleMatchContentType, JSONLDContentType, NQuadsContentType, NQuadsAltContentType } from './types'
-import { Quad } from './tf-types'
+import { ContentType, TurtleContentType, RDFXMLContentType, XHTMLContentType, HTMLContentType, SPARQLUpdateContentType, SPARQLUpdateSingleMatchContentType, JSONLDContentType, NQuadsContentType, NQuadsAltContentType } from './types'
 import type { Document as XmldomDocument } from '@xmldom/xmldom'
 
 type CallbackFunc = (error: any, kb: Formula | null) => void
@@ -35,9 +31,10 @@ export default function parse (
   contentType = contentType || TurtleContentType
   contentType = contentType.split(';')[0] as ContentType
   try {
-    if (contentType === N3ContentType || contentType === TurtleContentType) {
-      var p = N3Parser(kb, kb, base, base, null, null, '', null)
-      p.loadBuf(str)
+    if (Object.prototype.hasOwnProperty.call(N3JS_FORMATS, contentType)) {
+      // The Turtle family — Turtle, N3, TriG, N-Triples and N-Quads — is
+      // parsed by the N3.js parser, adapted onto rdflib's model.
+      parseN3js(str, kb, base, contentType)
       executeCallback()
     } else if (contentType === RDFXMLContentType) {
       var parser = new RDFParser(kb)
@@ -59,10 +56,6 @@ export default function parse (
       jsonldParser(str, kb, base)
           .then(executeCallback)
           .catch(executeErrorCallback)
-    } else if (contentType === NQuadsContentType ||
-               contentType === NQuadsAltContentType) {
-      var n3Parser = new N3jsParser({ factory: DataFactory })
-      nquadCallback(null, str)
     } else if (contentType === undefined) {
       throw new Error("contentType is undefined")
     } else {
@@ -75,7 +68,9 @@ export default function parse (
 
   (parse as any).handled= {
     'text/n3': true,
+    'application/n3': true,
     'text/turtle': true,
+    'application/x-turtle': true,
     'application/rdf+xml': true,
     'application/xhtml+xml': true,
     'text/html': true,
@@ -83,7 +78,9 @@ export default function parse (
     'application/sparql-update-single-match': true,
     'application/ld+json': true,
     'application/nquads' : true,
-    'application/n-quads' : true
+    'application/n-quads' : true,
+    'application/n-triples' : true,
+    'application/trig' : true
   }
 
   function executeCallback () {
@@ -111,35 +108,6 @@ export default function parse (
         e2.cause = e
         throw e2
       }
-    }
-  }
-/*
-  function setJsonLdBase (doc, base) {
-    if (doc instanceof Array) {
-      return
-    }
-    if (!('@context' in doc)) {
-      doc['@context'] = {}
-    }
-    doc['@context']['@base'] = base
-  }
-*/
-  function nquadCallback (err?: Error | null, nquads?: string): void {
-    if (err) {
-      (callback as CallbackFunc)(err, kb)
-    }
-    try {
-      n3Parser.parse(nquads, tripleCallback)
-    } catch (err) {
-      (callback as CallbackFunc)(err, kb)
-    }
-  }
-
-  function tripleCallback (err: Error, triple: Quad) {
-    if (triple) {
-      kb.add(triple.subject, triple.predicate, triple.object, triple.graph)
-    } else {
-      (callback as CallbackFunc)(err, kb)
     }
   }
 }

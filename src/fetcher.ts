@@ -27,7 +27,6 @@
  */
 import IndexedFormula from './store'
 import log from './log'
-import N3Parser from './n3parser'
 import RDFlibNamedNode from './named-node'
 import Namespace from './namespace'
 import rdfParse from './parse'
@@ -592,20 +591,24 @@ class N3Handler extends Handler {
     } & Options,
     response: ExtendedResponse
   ): ExtendedResponse | Promise<FetchError> {
-    // Parse the text of this N3 file
+    // Parse the text of this Turtle or N3 file, through the same parse()
+    // entry point (and N3.js-based parser) as everything else.
     let kb = fetcher.store
-    let p = N3Parser(kb, kb, options.original.value, options.original.value,
-      null, null, '', null)
-    //                p.loadBuf(xhr.responseText)
+    const normalized = (fetcher.normalizedContentType(options as AutoInitOptions, response.headers) || '').split(';')[0]
+    // The handler's pattern also matches legacy aliases such as
+    // application/rdf+n3 or text/x-turtle; normalize them to the canonical
+    // content type of the same syntax.
+    const contentType = /n3/.test(normalized) ? 'text/n3' : 'text/turtle'
     try {
-      p.loadBuf(responseText)
+      rdfParse(responseText, kb, options.original.value, contentType)
     } catch (err) {
       let msg = 'Error trying to parse ' + options.resource +
         ' as Notation3:\n' + err  // not err.stack -- irrelevant
       return fetcher.failFetch(options, msg, 'parse_error', response)
     }
 
-    fetcher.addStatus(options.req, 'N3 parsed: ' + p.statementCount + ' triples in ' + p.lines + ' lines.')
+    const statementCount = kb.statementsMatching(null, null, null, options.original).length
+    fetcher.addStatus(options.req, 'N3 parsed: ' + statementCount + ' triples in ' + responseText.split('\n').length + ' lines.')
     fetcher.store.add(options.original, ns.rdf('type'), ns.link('RDFDocument'), fetcher.appNode)
 
     return fetcher.doneFetch(options, this.response)

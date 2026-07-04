@@ -3,7 +3,7 @@
 :building0 :bar 123, 78768.
 
 :building1  :length 1.45e5 ;
-    :created 2012-03-12 .
+    :created "2012-03-12"^^<http://www.w3.org/2001/XMLSchema#date> .
 
 :building0 :connectsTo :building4 .
 

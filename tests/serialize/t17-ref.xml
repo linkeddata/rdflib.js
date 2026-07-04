@@ -29,24 +29,24 @@
         <n2:teamArea rdf:resource="https://elm-server.com:9443/ccm/oslc/teamareas/_D7V-MBSkEfCQ7aMNxFFsPQ"/>
         <n2:timeSheet rdf:resource="https://elm-server.com:9443/ccm/oslc/workitems/_IIVjEBSkEfCQ7aMNxFFsPQ/rtc_cm:timeSheet"/>
         <n2:type rdf:resource="https://elm-server.com:9443/ccm/oslc/types/_ByGZwRSkEfCQ7aMNxFFsPQ/defect"/>
-        <n5:archived rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">0</n5:archived>
+        <n5:archived rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">false</n5:archived>
         <n5:contextId>_ByGZwRSkEfCQ7aMNxFFsPQ</n5:contextId>
         <c:priority rdf:resource="https://elm-server.com:9443/ccm/oslc/enumerations/_ByGZwRSkEfCQ7aMNxFFsPQ/priority/priority.literal.l07"/>
         <c:project rdf:resource="https://elm-server.com:9443/ccm/oslc/projectareas/_ByGZwRSkEfCQ7aMNxFFsPQ"/>
         <c:severity rdf:resource="https://elm-server.com:9443/ccm/oslc/enumerations/_ByGZwRSkEfCQ7aMNxFFsPQ/severity/severity.literal.l5"/>
-        <cm:approved rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">0</cm:approved>
-        <cm:closed rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">0</cm:closed>
-        <cm:fixed rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">0</cm:fixed>
+        <cm:approved rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">false</cm:approved>
+        <cm:closed rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">false</cm:closed>
+        <cm:fixed rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">false</cm:fixed>
         <cm:implementsRequirement rdf:resource="https://elm-server.com:9443/rm/resources/TX_ELU68BSkEfCQ7eullXDrzg"/>
         <cm:implementsRequirement rdf:resource="https://elm-server.com:9443/rm/resources/TX_EN0OQBSkEfCQ7eullXDrzg"/>
         <cm:implementsRequirement rdf:resource="https://elm-server.com:9443/rm/resources/TX_EObSQBSkEfCQ7eullXDrzg"/>
-        <cm:inprogress rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">0</cm:inprogress>
-        <cm:reviewed rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">0</cm:reviewed>
+        <cm:inprogress rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">false</cm:inprogress>
+        <cm:reviewed rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">false</cm:reviewed>
         <cm:status>New</cm:status>
         <cm:tracksRequirement rdf:resource="https://elm-server.com:9443/rm/resources/TX_ELU68BSkEfCQ7eullXDrzg"/>
         <cm:tracksRequirement rdf:resource="https://elm-server.com:9443/rm/resources/TX_EN0OQBSkEfCQ7eullXDrzg"/>
         <cm:tracksRequirement rdf:resource="https://elm-server.com:9443/rm/resources/TX_EObSQBSkEfCQ7eullXDrzg"/>
-        <cm:verified rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">0</cm:verified>
+        <cm:verified rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">false</cm:verified>
         <n6:accessContext rdf:resource="https://elm-server.com:9443/ccm/acclist#_ByGZwRSkEfCQ7aMNxFFsPQ"/>
         <core:discussedBy rdf:resource="https://elm-server.com:9443/ccm/oslc/workitems/_IIVjEBSkEfCQ7aMNxFFsPQ/rtc_cm:comments"/>
         <core:instanceShape rdf:resource="https://elm-server.com:9443/ccm/oslc/shapes/workitems/_IIVjEBSkEfCQ7aMNxFFsPQ"/>
