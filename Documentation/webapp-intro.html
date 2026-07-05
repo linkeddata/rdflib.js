@@ -254,6 +254,44 @@ $rdf.parse(text, store, doc.uri, 'text/turtle');  // pass base URI
 
 <p><i>We have introduced you to match() after the methods any() and each() because most of the time when you are programming we find those are actually more convenient than using match.</i></p>
 
+<h4>Querying the store with SPARQL</h4>
+
+<p>rdflib can also run a limited subset of SPARQL against the local store.  (It does not include a client for remote SPARQL endpoints, and it is not a full SPARQL engine — for complete SPARQL 1.1 support over an rdflib store consider a dedicated query engine such as Comunica.)  You first convert the SPARQL text into an rdflib Query object with <tt>$rdf.SPARQLToQuery</tt>, and then run that query over the store with <tt>store.query()</tt>:</p>
+
+<pre>
+<code class="language-javascript">const sparql = `
+PREFIX vcard: &lt;http://www.w3.org/2006/vcard/ns#&gt;
+SELECT ?name
+WHERE {
+   ?person vcard:fn ?name .
+}`;
+
+const query = $rdf.SPARQLToQuery(sparql, false, store);
+
+store.query(query, bindings =&gt; {
+	// Called once for every result found.
+	// Bindings are keyed by variable name, prefixed with '?'
+	console.log(bindings['?name'].value);
+}, null /* fetcher */, () =&gt; {
+	console.log('Query finished');
+});
+</code></pre>
+
+<p>The results callback is called once per solution, with an object mapping each <tt>?variable</tt> in the SELECT clause to a term.  There is also a synchronous variant, <tt>store.querySync(query)</tt>, which returns an array of such bindings objects.  Note that unless the second (<i>testMode</i>) argument of <tt>SPARQLToQuery</tt> is set to true, a store which has a fetcher attached will schedule a web look-up of every named node mentioned in the query patterns, following the linked-data idea that dereferencing a URI is how you find data about it.</p>
+
+<p>The supported SPARQL subset is, roughly:</p>
+
+<ul>
+	<li>Only the <tt>SELECT ... WHERE { ... }</tt> query form — no CONSTRUCT, ASK, DESCRIBE, and no SPARQL Update.</li>
+	<li><tt>PREFIX</tt> declarations (the <tt>rdf:</tt> and <tt>rdfs:</tt> prefixes are predefined); no <tt>BASE</tt>.</li>
+	<li>Basic graph patterns: triple patterns separated by <tt>.</tt>, with the <tt>;</tt> and <tt>,</tt> abbreviations and the <tt>a</tt> keyword; variables are written <tt>?name</tt> or <tt>$name</tt>.</li>
+	<li>Plain, language-tagged (<tt>"chat"@fr</tt>) and datatyped (<tt>"4"^^xsd:integer</tt>) literals.</li>
+	<li><tt>OPTIONAL { ... }</tt> blocks.</li>
+	<li><tt>FILTER</tt> with a very small constraint language: equality tests of the form <tt>FILTER(?v = &lt;term&gt;)</tt>, and regular-expression tests written <tt>FILTER(regexp('pattern', ?v))</tt> — note this differs from the standard SPARQL <tt>regex()</tt> function and argument order.  The comparison operators <tt>&lt;</tt> and <tt>&gt;</tt> are accepted by the parser but are currently evaluated as equality, so do not rely on them.</li>
+</ul>
+
+<p>Everything else — UNION, GRAPH, BIND, VALUES, property paths, subqueries, aggregates, DISTINCT, ORDER BY, LIMIT, OFFSET — is <b>not</b> supported.</p>
+
 <h4>Making new Statements</h4>
 
 <p>You can make a new statement using:</p>
