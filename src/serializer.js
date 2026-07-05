@@ -8,6 +8,8 @@
 import * as ttl2jsonld from '@frogcat/ttl2jsonld'
 import solidNs from 'solid-namespace'
 import CanonicalDataFactory from './factories/canonical-data-factory'
+import statementsToN3js from './n3-writer'
+import { NQuadsContentType, NTriplesContentType } from './types'
 import * as Uri from './uri'
 import * as Util from './utils-js'
 import { createXSD } from './xsd'
@@ -294,41 +296,17 @@ export class Serializer {
     return '<' + uri + '>'
   }
 
+  /**
+   * Serialize statements as N-Triples (or, with the 'q' flag set, N-Quads).
+   *
+   * Kept for API compatibility; the implementation is the N3.js Writer
+   * (src/n3-writer.ts), which always emits spec-valid lines — the legacy
+   * hand-rolled version leaked whatever the current flags produced (bare
+   * numeric tokens without the 'x' flag, hexified IRIs) into the output.
+   */
   statementsToNTriples(sts) {
-    var sorted = sts.slice()
-    sorted.sort()
-    var str = ''
-    var rdfns = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'
-    var self = this
-    var kb = this.store
-    var factory = this.rdfFactory
-    var termToNT = function (x) {
-      if (x.termType !== 'Collection') {
-        return self.atomicTermToN3(x)
-      }
-      var list = x.elements
-      var rest = kb.sym(rdfns + 'nil')
-      for (var i = list.length - 1; i >= 0; i--) {
-        var bnode = factory.blankNode()
-        str += termToNT(bnode) + ' ' + termToNT(kb.sym(rdfns + 'first')) + ' ' + termToNT(list[i]) + '.\n'
-        str += termToNT(bnode) + ' ' + termToNT(kb.sym(rdfns + 'rest')) + ' ' + termToNT(rest) + '.\n'
-        rest = bnode
-      }
-      return self.atomicTermToN3(rest)
-    }
-    for (var i = 0; i < sorted.length; i++) {
-      var st = sorted[i]
-      var s = ''
-      s += termToNT(st.subject) + ' '
-      s += termToNT(st.predicate) + ' '
-      s += termToNT(st.object) + ' '
-      if (this.flags.indexOf('q') >= 0) { // Do quads not nrtiples
-        s += termToNT(st.why) + ' '
-      }
-      s += '.\n'
-      str += s
-    }
-    return str
+    const contentType = this.flags.indexOf('q') >= 0 ? NQuadsContentType : NTriplesContentType
+    return statementsToN3js(sts, contentType, { factory: this.rdfFactory })
   }
 
   statementsToN3(sts) {
