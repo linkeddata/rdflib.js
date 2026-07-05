@@ -9,7 +9,7 @@ Javascript RDF library for browsers and Node.js.
 - Real-Time Collaborative editing with web sockets and PATCHes
 - Local API for querying a store
 - Compatible with the [RDF/JS data model specification](https://rdf.js.org/data-model-spec/)
-- SPARQL queries (not full SPARQL - just graph match and optional)
+- SPARQL queries (not full SPARQL — a documented subset, see [SPARQL support](#sparql-support))
 - Smushing of nodes from `owl:sameAs`, and `owl:{f,inverseF}unctionProperty`
 - Tracks provenance of triples keeps metadata (in RDF) from HTTP accesses
 
@@ -138,6 +138,62 @@ Notes:
 
 - For Turtle and JSON‑LD, user‑provided flags are merged with the defaults so your flags (like `o`) are honored.
 - By contrast, passing `'p'` disables prefix abbreviations entirely (all terms are written as `<...>` IRIs).
+
+## SPARQL support
+
+rdflib is not a SPARQL engine, but it accepts a well-defined subset of SPARQL
+in two places. Both are parsed with [sparqljs](https://github.com/RubenVerborgh/SPARQL.js),
+so anything accepted is real SPARQL 1.1 syntax and syntax errors are reported
+with clear messages.
+
+#### Queries: `SPARQLToQuery(sparql, testMode, kb)`
+
+`SPARQLToQuery` translates a SPARQL string onto rdflib's pattern-matching
+`Query` object, which you can run against a store with `kb.query(query,
+onResult, fetcher?, onDone?)` or `kb.querySync(query)`:
+
+```js
+const query = $rdf.SPARQLToQuery(`
+  PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+  SELECT ?name WHERE {
+    ?person a foaf:Person ;
+            foaf:name ?name .
+    OPTIONAL { ?person foaf:nick ?nick . }
+    FILTER regex(?name, "^A")
+  }`, false, kb)
+
+kb.query(query, bindings => console.log(bindings['?name'].value))
+```
+
+The supported subset is:
+
+- `SELECT ?x ?y WHERE { ... }` and `SELECT * WHERE { ... }` (a `CONSTRUCT`
+  query is executed as a `SELECT` over its `WHERE` clause: the API returns
+  variable bindings, not graphs)
+- basic graph patterns: triple patterns with `;`/`,` abbreviations, `a`,
+  prefixed names, IRIs, literals and blank nodes (`rdf:` and `rdfs:` are
+  predeclared)
+- `OPTIONAL { ... }` groups, which may nest and may contain `FILTER`s
+- `FILTER` constraints of the forms `FILTER (?x = constant)`,
+  `FILTER (?x > constant)`, `FILTER (?x < constant)` and
+  `FILTER regex(?x, "pattern"[, "flags"])`
+
+Everything else — `ASK`/`DESCRIBE`, property paths, `UNION`, `GRAPH`, `FROM`,
+`BIND`, `VALUES`, subqueries, aggregates and solution modifiers such as
+`ORDER BY`/`LIMIT`/`DISTINCT`, other `FILTER` operators — throws an
+informative error naming the unsupported construct. If you need full SPARQL
+1.1, run a real engine (e.g. [Comunica](https://comunica.dev/)) over the
+store instead.
+
+#### Updates
+
+`UpdateManager.update(deletions, insertions, callback?)` writes changes back
+to the web by generating spec-conformant SPARQL 1.1 Update (or N3 Patch)
+requests — you never write SPARQL yourself. The patch parser used for
+`text/n3`-less servers (`application/sparql-update` documents fed to
+`parse()`) accepts `INSERT DATA`, `DELETE DATA`, and `DELETE/INSERT/WHERE`
+operations built from basic graph patterns, with `PREFIX` (or legacy
+`@prefix ... .`) declarations, in any clause order.
 
 ## Contribute
 
