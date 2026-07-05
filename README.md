@@ -129,7 +129,6 @@ const turtle = serialize(doc, kb, doc.value, 'text/turtle', undefined, { flags: 
 Common flags used internally (you can combine them, e.g. `'o k'`):
 
 - `s` `i` – used by default for Turtle to suppress `=`, `=>` notations
-- `d e i n p r s t u x` – used for N-Triples/N-Quads to simplify output
 - `dr` – used with JSON‑LD conversion (no default, no relative prefix)
 - `o` – new: do not abbreviate to a prefixed name when the local part contains a dot. This keeps IRIs like
   `http://example.org/ns/subject.example` in `<...>` form instead of `ns:subject.example`.
@@ -138,6 +137,7 @@ Notes:
 
 - For Turtle and JSON‑LD, user‑provided flags are merged with the defaults so your flags (like `o`) are honored.
 - By contrast, passing `'p'` disables prefix abbreviations entirely (all terms are written as `<...>` IRIs).
+- N-Triples, N-Quads and TriG (`application/trig`) are serialized by the [N3.js](https://github.com/rdfjs/N3.js) writer and always produce spec-valid output; flags do not affect them.
 
 ## SPARQL support
 
