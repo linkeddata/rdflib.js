@@ -757,17 +757,14 @@ export default class UpdateManager {
   /**
    * @private
    *
-   * This helper function constructs a SPARQL 1.1 Update query from resolved
-   * arguments, by building a sparqljs AST and serializing it with the
-   * sparqljs Generator (rather than concatenating strings).
+   * Constructs a SPARQL 1.1 Update query from resolved arguments, via a
+   * sparqljs AST serialized with the sparqljs Generator.
    *
    * Blank nodes are illegal in DELETE templates and DELETE DATA, and a blank
-   * node in a WHERE pattern denotes a *fresh* variable rather than the node
-   * the caller meant. So every blank node that already exists in the store is
-   * consistently rewritten to one collision-free variable across the DELETE,
-   * INSERT and WHERE clauses (the WHERE clause built from `bnodes_context`
-   * grounds it), while genuinely fresh blank nodes are kept as blank nodes in
-   * insertions only.
+   * node in a WHERE pattern denotes a fresh variable rather than the node
+   * the caller meant, so every blank node already in the store is rewritten
+   * to one collision-free variable across the DELETE, INSERT and WHERE
+   * clauses; genuinely fresh blank nodes are kept in insertions only.
    *
    * @param ds: deletions array.
    * @param is: insertions array.
@@ -1052,9 +1049,7 @@ _:patch
 
       var startTime = Date.now()
 
-      // Validate the statements before generating anything from them (#278):
-      // a plain string (or other non-term value) in a term position would
-      // otherwise produce garbage SPARQL that only fails server-side.
+      // Validate before generating anything from the statements (#278)
       this.validateUpdateStatements(ds, 'deletions', doc)
       this.validateUpdateStatements(is, 'insertions', doc)
 

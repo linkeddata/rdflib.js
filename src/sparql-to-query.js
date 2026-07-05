@@ -5,8 +5,8 @@
 // existing Query object shape (`query.pat`, `query.vars`) that the matcher
 // and downstream UI code (e.g. solid-ui table panes) consume.
 //
-// SUPPORTED SUBSET — the rdflib matcher is a basic-graph-pattern engine, so
-// only the following SPARQL forms are accepted:
+// The rdflib matcher is a basic-graph-pattern engine, so only the
+// following SPARQL forms are accepted:
 //   - SELECT queries: `SELECT ?a ?b WHERE { ... }` and `SELECT * WHERE { ... }`
 //   - CONSTRUCT queries are executed as binding queries over their WHERE
 //     clause (the Query API returns variable bindings, not graphs)
@@ -18,8 +18,8 @@
 //       FILTER (?x < <constant>)   FILTER regex(?x, "pattern"[, "flags"])
 // Everything else (ASK/DESCRIBE, property paths, UNION, GRAPH, FROM, BIND,
 // VALUES, subqueries, aggregates, solution modifiers such as ORDER/LIMIT/
-// DISTINCT, other FILTER operators) throws an informative error rather than
-// silently misparsing, which is what the previous hand-rolled parser did.
+// DISTINCT, other FILTER operators) throws an informative error rather
+// than silently misparsing.
 
 import { Parser as SparqlParser } from 'sparqljs'
 import { Query } from './query'
