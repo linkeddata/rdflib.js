@@ -90,7 +90,7 @@ export default function sparqlUpdateParser (str, kb, base) {
       found = true
     }
     if (!found && str.slice(i, i + 7) === 'PREFIX ') {
-      // SPARQL-style PREFIX declaration (no trailing dot) — see #651.
+      // SPARQL-style PREFIX declaration, with no trailing dot (#651)
       let j = str.indexOf('<', i)
       if (j >= 0) j = str.indexOf('>', j)
       if (j < 0) {
@@ -135,7 +135,7 @@ function skipSpace (str, i) {
 }
 
 /**
- * Skip a balanced `{ … }` clause starting at the opening brace, ignoring
+ * Skip a balanced `{ ... }` clause starting at the opening brace, ignoring
  * braces inside string literals, IRIs and comments.
  * Returns the index just past the matching `}`, or -1 on EOF.
  */
@@ -164,7 +164,7 @@ function skipClause (str, i) {
   return -1
 }
 
-/** Skip a short or long ("""…""") string literal; -1 on EOF. */
+/** Skip a short or long ("""...""") string literal; -1 on EOF. */
 function skipStringLiteral (str, i) {
   const quote = str[i]
   const delim = str.slice(i, i + 3) === quote + quote + quote ? quote + quote + quote : quote

@@ -10,11 +10,8 @@ const XSD = 'http://www.w3.org/2001/XMLSchema#'
 /**
  * Tests for the Turtle-family formats parsed by the N3.js parser
  * (text/turtle, text/n3, application/n-triples, application/n-quads,
- * application/trig).
- *
- * These cover spec-conformance cases that rdflib's historical hand-rolled
- * parser did not handle, plus the Notation3 model mapping (formulae,
- * variables, quantifiers). See the "Closes #…" list on the migration PR.
+ * application/trig): spec-conformance cases plus the Notation3 model
+ * mapping (formulae, variables, quantifiers).
  */
 describe('Turtle-family parsing via N3.js', () => {
   const base = 'https://example.org/doc'
@@ -230,7 +227,7 @@ describe('Turtle-family parsing via N3.js', () => {
 
     it('keeps document-labelled blank nodes whole across [ … ] property lists', () => {
       // N3.js's n3 mode mis-scopes `_:c` when it is mentioned inside a
-      // [ … ] property list (it applies the graph label as a prefix); the
+      // [ ... ] property list (it applies the graph label as a prefix); the
       // adapter repairs the label so both mentions are the same node.
       const store = parseN3(`@prefix : <#>. _:c :p 1. [ :q _:c ] :r 2.`)
       const direct = store.statements.find(s => s.predicate.value === `${base}#p`).subject

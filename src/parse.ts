@@ -14,21 +14,20 @@ type CallbackFunc = (error: any, kb: Formula | null) => void
 export type ParseOptions = {
   /**
    * Canonicalize the lexical forms of boolean and numeric literals at parse
-   * time, the way rdflib ≤2's own parsers did: `true`/`false` become
+   * time, the way rdflib <= 2's own parsers did: `true`/`false` become
    * `"1"`/`"0"` (matching `Literal.fromBoolean`), `12.0` becomes `"12"`,
    * `3.141e0` becomes `"3.141"`, `+05` becomes `"5"`. Covers `xsd:boolean`,
    * `xsd:integer`, `xsd:decimal`, `xsd:double` and `xsd:float`; ill-typed
    * lexical forms and all other datatypes are preserved as-is. Applies to
    * the Turtle-family content types (Turtle, N3, TriG, N-Triples, N-Quads).
    *
-   * Off by default: since the migration to the N3.js parser, literals keep
-   * the exact lexical form found in the document, as the RDF specs
-   * prescribe. This flag is a transition aid for code that still compares
-   * literals by one canonical spelling (`term.value === '1'`,
-   * `kb.holds(s, p, Literal.fromBoolean(true))`); new code should keep the
-   * default and compare in value space instead — see `isTrue`,
-   * `literalToBoolean` and `literalToNumber` (also available as
-   * `Literal.toBoolean` / `Literal.toNumber`).
+   * Off by default: literals keep the exact lexical form found in the
+   * document, as the RDF specs prescribe. This flag is a transition aid for
+   * code that still compares literals by one canonical spelling
+   * (`term.value === '1'`); new code should keep the default and compare in
+   * value space instead, via `isTrue`, `literalToBoolean` and
+   * `literalToNumber` (also available as `Literal.toBoolean` /
+   * `Literal.toNumber`).
    */
   canonicalize?: boolean
 }
@@ -62,7 +61,7 @@ export default function parse (
   contentType = contentType.split(';')[0] as ContentType
   try {
     if (Object.prototype.hasOwnProperty.call(N3JS_FORMATS, contentType)) {
-      // The Turtle family — Turtle, N3, TriG, N-Triples and N-Quads — is
+      // The Turtle family (Turtle, N3, TriG, N-Triples and N-Quads) is
       // parsed by the N3.js parser, adapted onto rdflib's model.
       parseN3js(str, kb, base, contentType, options)
       executeCallback()

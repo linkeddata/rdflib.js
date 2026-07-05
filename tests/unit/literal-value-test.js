@@ -14,10 +14,9 @@ const boolLit = (lexical) => new Literal(lexical, null, XSD.boolean)
 const typedLit = (lexical, localName) => new Literal(lexical, null, new NamedNode(XSDNS + localName))
 
 /**
- * Value-space reads of typed literals. The N3.js-based parsers preserve the
- * source lexical form (a stored `true` is no longer normalised to `"1"`), so
- * consumers must compare boolean/numeric literals in value space — these
- * helpers are the supported way to do that.
+ * Value-space reads of typed literals. The parsers preserve the source
+ * lexical form, so consumers must compare boolean/numeric literals in
+ * value space; these helpers are the supported way to do that.
  */
 describe('value-space literal helpers', () => {
   describe('literalToBoolean', () => {
@@ -74,13 +73,13 @@ describe('value-space literal helpers', () => {
     })
 
     it('reads a stored `true` back from a parsed document (the solid-ui pattern)', () => {
-      // Serialized pods hold `true` (rdflib's own serializer emits it), which
-      // no longer parses back to the `"1"` that `value === '1'` checks expect.
+      // Serialized pods hold `true` (rdflib's own serializer emits it),
+      // which parses back as `"true"`, not the `"1"` old checks expect
       const kb = DataFactory.graph()
       parse(`<#s> <#p> true . <#s> <#q> false .`, kb, base, 'text/turtle')
       const s = kb.sym(`${base}#s`)
-      expect(kb.anyValue(s, kb.sym(`${base}#p`))).to.equal('true') // lexical form preserved…
-      expect(isTrue(kb.any(s, kb.sym(`${base}#p`)))).to.equal(true) // …but value space reads fine
+      expect(kb.anyValue(s, kb.sym(`${base}#p`))).to.equal('true') // lexical form preserved...
+      expect(isTrue(kb.any(s, kb.sym(`${base}#p`)))).to.equal(true) // ...but value space reads fine
       expect(isTrue(kb.any(s, kb.sym(`${base}#q`)))).to.equal(false)
       expect(isTrue(kb.any(s, kb.sym(`${base}#missing`)))).to.equal(false)
     })

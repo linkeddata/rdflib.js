@@ -31,7 +31,7 @@ describe('n3 import hygiene (#449)', () => {
 
     expect(
       offenders,
-      `root 'n3' import found in: ${offenders.join(', ')} — ` +
+      `root 'n3' import found in: ${offenders.join(', ')}; ` +
       "deep-import the class instead (e.g. `import N3jsParser from 'n3/lib/N3Parser.js'`)"
     ).to.deep.equal([])
   })

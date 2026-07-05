@@ -165,14 +165,13 @@ export default class Literal extends Node implements TFLiteral {
   }
 
   /**
-   * Reads an `xsd:boolean` literal in value space — the inverse of
+   * Reads an `xsd:boolean` literal in value space, the inverse of
    * {@link fromBoolean}, accepting every valid lexical form (`"true"`,
    * `"1"`, `"false"`, `"0"`). Returns `undefined` for non-literals,
    * other datatypes and ill-typed lexical forms.
    *
-   * The parser preserves source lexical forms, so a stored `true` no longer
-   * reads back as `"1"`; compare booleans with this (or {@link isTrue})
-   * rather than against one spelling of `term.value`.
+   * The parser preserves source lexical forms; compare booleans with this
+   * (or {@link isTrue}) rather than against one spelling of `term.value`.
    * @param term - The term to read; may be `null`/`undefined`
    */
   static toBoolean (term: Term | null | undefined): boolean | undefined {
@@ -181,7 +180,7 @@ export default class Literal extends Node implements TFLiteral {
 
   /**
    * Reads a numeric (`xsd:decimal`/integer-family/floating-point) literal in
-   * value space — the inverse of {@link fromNumber}, accepting every valid
+   * value space, the inverse of {@link fromNumber}, accepting every valid
    * lexical form (`"12"`, `"12.0"`, `"1.2e1"` all read as `12`). Returns
    * `undefined` for non-literals, non-numeric datatypes and ill-typed
    * lexical forms.

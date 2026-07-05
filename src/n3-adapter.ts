@@ -2,21 +2,21 @@
  * Adapter between the N3.js parser and rdflib's data model.
  *
  * All Turtle-family content types (Turtle, TriG, N-Triples, N-Quads and full
- * Notation3) are parsed by the spec-compliant, optimised N3.js parser; this
- * module maps its flat quad stream back onto rdflib's richer model:
+ * Notation3) are parsed by N3.js; this module maps its flat quad stream back
+ * onto rdflib's richer model:
  *
- *  - `( … )` collections are folded into rdflib `Collection` terms using
+ *  - `( ... )` collections are folded into rdflib `Collection` terms using
  *    N3.js's own list machinery (`Store#extractLists`);
- *  - N3 formulae `{ … }` (which N3.js emits as quads whose graph is a fresh
+ *  - N3 formulae `{ ... }` (which N3.js emits as quads whose graph is a fresh
  *    blank node) are rebuilt into rdflib `Formula` sub-stores;
  *  - `@forAll` / `@forSome` declarations (reified by N3.js under
  *    `explicitQuantifiers`) are registered through `newUniversal` /
  *    `declareExistential`, as the legacy parser did;
  *  - `?x` becomes a `Variable`, `=` becomes `owl:sameAs`, `=>`/`<=` become
- *    (reversed) `log:implies` — all handled natively by N3.js's n3 mode.
+ *    (reversed) `log:implies`, all handled natively by N3.js's n3 mode.
  *
  * Statements in the default graph are attributed to the document graph
- * `kb.sym(base)` — rdflib's provenance convention — while explicit named
+ * `kb.sym(base)` (rdflib's provenance convention) while explicit named
  * graphs (TriG / N-Quads) are kept as-is.
  */
 // Deep imports of just the classes this adapter needs: a root `import 'n3'`
@@ -74,7 +74,7 @@ export const N3JS_FORMATS: { [contentType: string]: string } = {
 export type ParseN3jsOptions = {
   /**
    * Canonicalize the lexical forms of boolean and numeric literals at parse
-   * time, as rdflib ≤2 did — see the `canonicalize` option of `parse()`.
+   * time, as rdflib <= 2 did; see the `canonicalize` option of `parse()`.
    */
   canonicalize?: boolean
 }
@@ -98,14 +98,10 @@ export default function parseN3js (str: string, kb: Formula, base: string, conte
   try {
     return runParse(str, kb, base, format, false, options)
   } catch (e) {
-    // rdflib's legacy parser implicitly bound the empty prefix `:` to
-    // `<base#>`, so documents using `:name` without declaring `@prefix :`
-    // parsed anyway. N3.js is strict, so when (and only when) it reports an
-    // undefined empty prefix in one of the syntaxes the legacy parser
-    // accepted, re-parse once with a synthetic `@prefix : <base#>.` seeded.
-    // Because the declaration is prepended, a later in-document declaration
-    // still overrides it from that point on, exactly like the sequential
-    // semantics of the legacy parser.
+    // rdflib implicitly binds the empty prefix `:` to `<base#>`; N3.js is
+    // strict, so on (and only on) an undefined-empty-prefix error re-parse
+    // once with a synthetic `@prefix : <base#>.` seeded. Being prepended, a
+    // later in-document declaration still overrides it from that point on.
     if (sugared && base && /Undefined prefix ":"/.test(String(e && (e as Error).message))) {
       return runParse(str, kb, base, format, true, options)
     }
@@ -121,14 +117,14 @@ function runParse (str: string, kb: Formula, base: string, format: string, seedE
   const foldLists = (n3Mode || format === 'text/turtle') &&
     !!(rdfFactory && rdfFactory.supports && rdfFactory.supports['COLLECTIONS'])
 
-  // --- 1. Parse (synchronously — N3.js throws on error in this mode) -------
+  // --- 1. Parse (synchronous: N3.js throws on error in this mode) -------
   const prefixes: { [prefix: string]: string } = {}
   let sawSyntheticEmptyPrefix = false
   const input = seedEmptyPrefix ? '@prefix : <' + escapeIri(base) + '#>.\n' + str : str
   // In n3 mode, N3.js mis-scopes a document-labelled blank node (`_:c`)
-  // mentioned inside a `[ … ]` property list: it gets the label
+  // mentioned inside a `[ ... ]` property list: it gets the label
   // `<currentGraphLabel>.c` instead of the document-wide label. At the top
-  // level the graph label is empty, so such labels start with "." — we pass an
+  // level the graph label is empty, so such labels start with "."; we pass an
   // explicit per-parse prefix so they can be renamed back to the document
   // label (inside a formula the formula label is used, which is the correct
   // formula-wide scoping, so those are left alone).
@@ -165,7 +161,7 @@ function runParse (str: string, kb: Formula, base: string, format: string, seedE
   // --- 3. List and quantifier work, via N3.js's own store machinery --------
   // Only build the intermediate N3.Store when there is work for it: full N3
   // (formulae/quantifiers possible), or a document that actually mentions
-  // rdf:nil (every complete list ends in one — same gate the legacy parser
+  // rdf:nil (every complete list ends in one, the same gate the legacy parser
   // used for its list folding).
   const listItems: { [head: string]: any[] } = {}
   const quantifiers: Array<{ scopeLabel: string | null, forAll: boolean, vars: string[] }> = []
@@ -185,7 +181,7 @@ function runParse (str: string, kb: Formula, base: string, format: string, seedE
     isLive = (q: any): boolean => n3Store.has(q)
 
     if (n3Mode) {
-      // Under explicitQuantifiers, each `@forAll x, y` / `@forSome …` becomes
+      // Under explicitQuantifiers, each `@forAll x, y` / `@forSome ...` becomes
       //   <scope> reify:forAll ( x y )   in graph <urn:n3:quantifiers>
       // where <scope> is the default graph or the enclosing formula's label.
       const quantifierQuads = n3Store.getQuads(null, null, null, N3jsDataFactory.namedNode(QUANTIFIERS_GRAPH))
@@ -308,7 +304,7 @@ function runParse (str: string, kb: Formula, base: string, format: string, seedE
 
   // --- 6. Load the statements ----------------------------------------------
   // Statements whose graph is a formula's blank node go into that Formula;
-  // everything else goes into kb (default graph → the document graph,
+  // everything else goes into kb (default graph mapped to the document graph,
   // TriG/N-Quads named graphs kept as-is). Inner formula statements carry the
   // document as their `why`, exactly like the legacy parser.
   let count = 0
@@ -354,12 +350,12 @@ const DECIMAL_LEXICAL = /^[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)$/
 const FLOATING_LEXICAL = /^[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?$/
 
 /**
- * Map a boolean or numeric lexical form to the canonical form rdflib ≤2
+ * Map a boolean or numeric lexical form to the canonical form rdflib <= 2
  * produced at parse time (the `canonicalize: true` compatibility mode):
  * booleans become `"1"`/`"0"` (matching `Literal.fromBoolean`), integers
  * lose their sign/leading-zero decoration, and decimals/doubles/floats are
- * rewritten as JavaScript stringifies their numeric value (`12.0` → `"12"`,
- * `3.141e0` → `"3.141"`), exactly as the legacy parsers' number round-trip
+ * rewritten as JavaScript stringifies their numeric value (`12.0` -> `"12"`,
+ * `3.141e0` -> `"3.141"`), exactly as the legacy parsers' number round-trip
  * did. Only valid lexical forms are rewritten; anything ill-typed (and any
  * other datatype) is preserved as-is.
  */
@@ -380,7 +376,7 @@ function canonicalLexicalForm (value: string, datatype: string): string {
       if (!DECIMAL_LEXICAL.test(value)) return value
       const canonical = String(Number(value))
       // Guard: keep the source form when JS would stringify with an exponent
-      // (e.g. 0.0000001 → "1e-7"), which is outside xsd:decimal's lexical space.
+      // (e.g. 0.0000001 -> "1e-7"), which is outside xsd:decimal's lexical space.
       return DECIMAL_LEXICAL.test(canonical) ? canonical : value
     }
     case XSD_DOUBLE:

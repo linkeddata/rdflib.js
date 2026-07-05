@@ -972,10 +972,9 @@ export default class Fetcher implements CallbackifyInterface {
     options: Options = {}
   ): T extends Array<string | NamedNode> ? Promise<Result[]> : Promise<Result> {
     options = Object.assign({}, options) // Take a copy as we add stuff to the options!!
-    // `force` implies `clearPreviousData` (unless the caller explicitly opts
-    // out): parsed blank-node labels are not stable across parses, so
-    // re-parsing a previously loaded document without clearing it first would
-    // duplicate its blank-node subgraphs on every forced reload.
+    // `force` implies `clearPreviousData` unless the caller opts out:
+    // blank-node labels are not stable across parses, so re-parsing without
+    // clearing would duplicate blank-node subgraphs
     if (options.force && options.clearPreviousData === undefined) {
       options.clearPreviousData = true
     }

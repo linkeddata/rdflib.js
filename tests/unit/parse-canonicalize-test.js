@@ -9,9 +9,9 @@ const base = 'https://example.org/doc'
 
 /**
  * The opt-in `canonicalize` parse option: a transition aid that restores the
- * parse-time lexical normalisation rdflib ≤2 applied to boolean and numeric
+ * parse-time lexical normalisation rdflib <= 2 applied to boolean and numeric
  * literals, for consumers that still compare literals by one canonical
- * spelling. Off by default — lexical forms are preserved as found.
+ * spelling. Off by default: lexical forms are preserved as found.
  */
 describe('parse() `canonicalize` option', () => {
   function parseDoc (content, options, contentType = 'text/turtle') {
@@ -41,7 +41,7 @@ describe('parse() `canonicalize` option', () => {
     }
   })
 
-  describe('on: booleans and numerics get the rdflib ≤2 canonical forms', () => {
+  describe('on: booleans and numerics get the rdflib <= 2 canonical forms', () => {
     it('canonicalizes `true`/`12.0`/`3.141e0` to `1`/`12`/`3.141`', () => {
       const kb = parseDoc(doc, { canonicalize: true })
       expect(objectByDatatype(kb, 'boolean').value).to.equal('1')
@@ -53,12 +53,12 @@ describe('parse() `canonicalize` option', () => {
       const s = DataFactory.namedNode(`${base}#s`)
       const p = DataFactory.namedNode(`${base}#p`)
 
-      // Without the flag the 2.x-idiom lookups miss…
+      // Without the flag the 2.x-idiom lookups miss...
       const plain = parseDoc(doc)
       expect(plain.holds(s, p, Literal.fromBoolean(true))).to.equal(false)
       expect(plain.holds(s, p, new Literal('12', null, DataFactory.namedNode(XSD + 'decimal')))).to.equal(false)
 
-      // …with it they hit, as they did on rdflib ≤2 parses.
+      // ...with it they hit, as they did on rdflib <= 2 parses.
       const canonical = parseDoc(doc, { canonicalize: true })
       expect(canonical.holds(s, p, Literal.fromBoolean(true))).to.equal(true)
       expect(canonical.holds(s, p, new Literal('12', null, DataFactory.namedNode(XSD + 'decimal')))).to.equal(true)

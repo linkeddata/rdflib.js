@@ -1,23 +1,18 @@
 /**
  * Value-space helpers for reading typed literals.
  *
- * Since the migration to the N3.js parser, the Turtle-family parsers preserve
- * the source lexical form of literals: `true` is kept as
- * `"true"^^xsd:boolean` (it is no longer normalised to `"1"`), `12.0` stays
- * `"12.0"^^xsd:decimal` (no longer `"12"`), `3.141e0` stays `"3.141e0"`.
- * Code that compares `term.value` against a single canonical spelling —
- * `term.value === '1'`, `kb.holds(s, p, Literal.fromBoolean(true))` — breaks
- * silently on data whose author spelled the same value differently (and
- * rdflib's own serializer emits `true`, so stored data usually has the
- * non-`"1"` spelling).
+ * The Turtle-family parsers preserve the source lexical form of literals,
+ * so code comparing `term.value` against a single canonical spelling
+ * (`term.value === '1'`, `kb.holds(s, p, Literal.fromBoolean(true))`)
+ * breaks silently on data that spells the same value differently.
  *
- * These helpers compare in *value space* instead: they accept every lexical
+ * These helpers compare in value space instead: they accept every lexical
  * form the datatype's lexical space allows and return the datatype's value,
  * so `"true"`, `"1"`, `" true "` all read as `true`, and `"12"`, `"12.0"`,
  * `"1.2e1"` all read as `12`.
  *
  * See also the `canonicalize` option of `parse()` for a transitional
- * alternative that restores the old parse-time normalisation instead.
+ * alternative that restores parse-time normalisation instead.
  */
 import { Term, Literal as TFLiteral } from '../tf-types'
 
@@ -70,7 +65,7 @@ function asLiteral (term: Term | null | undefined): TFLiteral | null {
  *
  * Returns `true` for the lexical forms `"true"` and `"1"`, `false` for
  * `"false"` and `"0"` (leading/trailing whitespace is ignored, per XSD's
- * whitespace collapse), and `undefined` for everything else — a missing
+ * whitespace collapse), and `undefined` for everything else: a missing
  * term, a non-literal, a literal of another datatype, or an ill-typed
  * lexical form.
  *
@@ -104,7 +99,7 @@ export function literalToBoolean (term: Term | null | undefined): boolean | unde
 
 /**
  * Whether the given term is an `xsd:boolean` literal that is true in value
- * space — i.e. its lexical form is `"true"` or `"1"`.
+ * space, i.e. its lexical form is `"true"` or `"1"`.
  *
  * This is the drop-in, value-space replacement for the pre-3.0 pattern
  * `kb.anyValue(s, p) === '1'`, which relied on the old parsers normalising
@@ -112,8 +107,8 @@ export function literalToBoolean (term: Term | null | undefined): boolean | unde
  * ```js
  * const enabled = isTrue(kb.any(subject, predicate, null, doc))
  * ```
- * Anything that is not a true boolean literal — a false one, an ill-typed
- * one, a non-literal, `null`, `undefined` — yields `false`.
+ * Anything that is not a true boolean literal (a false one, an ill-typed
+ * one, a non-literal, `null`, `undefined`) yields `false`.
  */
 export function isTrue (term: Term | null | undefined): boolean {
   return literalToBoolean(term) === true
@@ -125,7 +120,7 @@ export function isTrue (term: Term | null | undefined): boolean {
  * `12` no matter how the source document spelled them.
  *
  * Handles `xsd:decimal`, the derived integer types (`xsd:integer`,
- * `xsd:long`, `xsd:int`, …) and the floating-point types (`xsd:double`,
+ * `xsd:long`, `xsd:int`, ...) and the floating-point types (`xsd:double`,
  * `xsd:float`, including their `INF`/`-INF`/`NaN` specials). Returns
  * `undefined` for a missing term, a non-literal, a literal of a
  * non-numeric datatype, or a lexical form outside the datatype's lexical

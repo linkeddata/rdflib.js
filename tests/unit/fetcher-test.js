@@ -611,8 +611,6 @@ describe('Fetcher', () => {
     })
 
     it('should load and parse N3 with formula subjects (#567)', () => {
-      // Loading a document like https://drive.verborgh.org/tmp/2022/cha-58-direct.n3
-      // used to fail with "Subject is not a subject type".
       let testN3 = `@prefix : <http://example.com/foo/vocab#>.
 { :a :b :c } => { :d :e :f }.`
 

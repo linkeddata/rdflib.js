@@ -104,11 +104,9 @@ describe('sparqlUpdateParser', () => {
   })
 
   it('resolves the clauses when the base URI carries a fragment', () => {
-    // Regression: the query node is written as <#query> in the generated N3,
-    // which RFC 3986 resolves by *replacing* any fragment on the base — but
-    // the lookup sym used to be built as `base + '#query'`. With a
-    // fragment-bearing base the two silently diverged and the returned patch
-    // lost its insert/delete/where clauses.
+    // The query node is written as <#query> in the generated N3, which
+    // RFC 3986 resolves by replacing any fragment on the base; the lookup
+    // sym must resolve the same way or the clauses are silently lost
     const store = new IndexedFormula()
     const result = sparqlUpdateParser(
       `DELETE { <#me> <http://xmlns.com/foaf/0.1/nick> "old". }
