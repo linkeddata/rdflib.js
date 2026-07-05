@@ -15,7 +15,6 @@ import parse from './parse'
 import { Query } from './query'
 import queryToSPARQL from './query-to-sparql'
 import RDFaProcessor from './rdfaparser'
-import RDFParser from './rdfxmlparser'
 import serialize from './serialize'
 import Serializer from './serializer'
 import SPARQLToQuery from './sparql-to-query'
@@ -67,6 +66,19 @@ const NextId = BlankNode.nextId
 function N3Parser (): never {
   throw new Error(
     'N3Parser was removed in rdflib 3.0; use parse(text, store, base, contentType) or the n3 package directly'
+  )
+}
+
+/**
+ * @deprecated The hand-rolled DOM-walking RDF/XML parser was removed in
+ * rdflib 3.0 in favour of rdfxml-streaming-parser. This stub only exists to
+ * fail loudly with a pointer: use
+ * `parse(text, store, base, 'application/rdf+xml', callback)` instead.
+ * Calling or constructing it always throws.
+ */
+function RDFParser (): never {
+  throw new Error(
+    "RDFParser was removed in rdflib 3.0; use parse(text, store, base, 'application/rdf+xml', callback) instead"
   )
 }
 
