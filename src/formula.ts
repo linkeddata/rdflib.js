@@ -115,9 +115,8 @@ export default class Formula extends Node {
     graph?: Quad_Graph
   ): Statement | null | this | number {
     if (arguments.length === 1) {
-      // Don't fall through to the 4-argument case below: it would construct a
-      // corrupt statement out of the array/statement itself, with an undefined
-      // predicate and object. See issue #362.
+      // A lone array or statement must not fall through to the 4-argument
+      // case, which would build a corrupt statement from it (issue #362)
       if (subject instanceof Array) {
         subject.forEach(st => this.add(st.subject, st.predicate, st.object, st.graph))
       } else {

@@ -51,10 +51,8 @@ export class Query {
  * @param onDone -  callback when query finished
  */
 export function indexedFormulaQuery (myQuery, callback, fetcher, onDone) {
-  // When the query selects specific variables (query.vars, as set by e.g.
-  // SPARQLToQuery from a SELECT clause), only report bindings for those
-  // variables — not for every variable that happened to be used in the
-  // pattern. See issue #393. Queries built without vars are unaffected.
+  // Project reported bindings onto the selected variables (query.vars),
+  // if the query set any (issue #393)
   if (myQuery.vars && myQuery.vars.length > 0) {
     const userCallback = callback
     const selected = myQuery.vars.map(function (v) { return String(v) })

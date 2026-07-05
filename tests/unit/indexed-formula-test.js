@@ -293,8 +293,7 @@ describe('IndexedFormula', () => {
       const store = new IndexedFormula()
       store.add([triple1, triple2, triple4])
 
-      // statementsMatching returns the store's own index array, which each
-      // removal mutates. remove() must not skip elements because of that.
+      // statementsMatching returns the store's own index array, which removal mutates
       const matches = store.statementsMatching(s1, null, null)
       expect(matches.length).to.eq(2)
 
@@ -318,9 +317,8 @@ describe('IndexedFormula', () => {
   })
 
   describe('add with terms from a foreign RDF/JS factory (issue #480)', () => {
-    // Simulates terms produced by other RDF/JS-compliant libraries (e.g.
-    // Comunica), which may expose termType as an es6 class getter rather
-    // than an own property.
+    // Other RDF/JS libraries may expose termType as a class getter
+    // rather than an own property
     class ForeignNamedNode {
       constructor (value) {
         this._value = value

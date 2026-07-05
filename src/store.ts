@@ -857,8 +857,8 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
    */
   remove(st: Quad | Quad[]): IndexedFormula {
     if (st instanceof Array) {
-      // The array may be an index of this store (e.g. the result of statementsMatching),
-      // which removal mutates while we iterate — take a copy first. See issue #145.
+      // Copy first: the array may be an index of this store, which removal
+      // mutates while we iterate (issue #145)
       const statements = st.slice()
       for (var i = 0; i < statements.length; i++) {
         this.remove(statements[i])
@@ -1004,8 +1004,8 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
    * @param sts The statements to remove
    */
   removeStatements(sts: ReadonlyArray<Quad>): IndexedFormula {
-    // Copy the array first: it may be an index of this store, which removal
-    // mutates while we iterate. See issue #145.
+    // Copy first: the array may be an index of this store, which removal
+    // mutates while we iterate (issue #145)
     const statements = sts.slice()
     for (var i = 0; i < statements.length; i++) {
       this.remove(statements[i])
