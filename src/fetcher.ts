@@ -31,7 +31,7 @@ import RDFlibNamedNode from './named-node'
 import Namespace from './namespace'
 import rdfParse from './parse'
 import { parseRDFaDOM } from './rdfaparser'
-import RDFParser from './rdfxmlparser'
+import parseRDFXML from './rdfxml-adapter'
 import * as Uri from './uri'
 import { isCollection, isNamedNode} from './utils/terms'
 import * as Util from './utils-js'
@@ -228,7 +228,7 @@ class RDFXMLHandler extends Handler {
     }
   }
 
-  parse (
+  async parse (
     fetcher: Fetcher,
     /** An XML String */
     responseText: String,
@@ -237,20 +237,13 @@ class RDFXMLHandler extends Handler {
       original: Quad_Subject
       req: Quad_Subject
     } & Options,
-  ) {
+  ): Promise<ExtendedResponse | FetchError> {
     let kb = fetcher.store
-    if (!this.dom) {
-      this.dom = Util.parseXML(responseText) as unknown as XmldomDocument
-    }
-    let root = this.dom.documentElement
-    if (root && root.nodeName === 'parsererror') { // Mozilla only See issue/issue110
-      // have to fail the request
-      return fetcher.failFetch(options, 'Badly formed XML in ' +
-        options.resource!.value, 'parse_error')
-    }
-    let parser = new RDFParser(kb)
     try {
-      parser.parse(this.dom, options.original.value, options.original)
+      // rdfxml-streaming-parser is asynchronous — awaited here so that
+      // fetcher.load() only settles once the store is populated, the same
+      // pattern as the JSON-LD handler below.
+      await parseRDFXML(responseText as string, kb, options.original.value)
     } catch (err) {
       return fetcher.failFetch(options, 'Syntax error parsing RDF/XML! ' + err,
         'parse_error')
@@ -366,7 +359,7 @@ class XMLHandler extends Handler {
       req: BlankNode
       resource: Quad_Subject
     } & Options,
-  ): ExtendedResponse | Promise<FetchError> {
+  ): ExtendedResponse | Promise<ExtendedResponse | FetchError> {
     let dom = Util.parseXML(responseText) as unknown as XmldomDocument
 
     // XML Semantics defined by root element namespace
@@ -552,7 +545,7 @@ class TextHandler extends Handler {
       original: Quad_Subject
       resource: Quad_Subject
     } & Options
-  ): ExtendedResponse | Promise<FetchError> {
+  ): ExtendedResponse | Promise<ExtendedResponse | FetchError> {
     // We only speak dialects of XML right now. Is this XML?
 
     // Look for an XML declaration

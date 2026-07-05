@@ -1,7 +1,7 @@
 import jsonldParser from './jsonldparser'
 import parseN3js, { N3JS_FORMATS } from './n3-adapter'
 import { parseRDFaDOM } from './rdfaparser'
-import RDFParser from './rdfxmlparser'
+import parseRDFXML from './rdfxml-adapter'
 import sparqlUpdateParser from './patch-parser'
 import * as Util from './utils-js'
 import Formula from './formula'
@@ -36,8 +36,9 @@ export type ParseOptions = {
 /**
  * Parse a string and put the result into the graph kb.
  * Normal method is sync.
- * Unfortunately jsdonld is currently written to need to be called async.
- * If you are parsing JSON-LD and want to know when and whether it succeeded, you need to use the callback param.
+ * The JSON-LD and RDF/XML parsers are asynchronous: parse() returns before
+ * the store is populated. If you are parsing JSON-LD or RDF/XML and want to
+ * know when and whether it succeeded, you need to use the callback param.
  * @param str - The input string to parse
  * @param kb - The store to use
  * @param base - The base URI to use
@@ -70,9 +71,12 @@ export default function parse (
       parseN3js(str, kb, base, contentType, options)
       executeCallback()
     } else if (contentType === RDFXMLContentType) {
-      var parser = new RDFParser(kb)
-      parser.parse(Util.parseXML(str) as unknown as XmldomDocument, base, kb.sym(base))
-      executeCallback()
+      // rdfxml-streaming-parser is asynchronous: the promise is routed into
+      // the callback, exactly like the JSON-LD branch below. Callers that
+      // read the store synchronously after parse() must move to the callback.
+      parseRDFXML(str, kb, base)
+          .then(executeCallback)
+          .catch(executeErrorCallback)
     } else if (contentType === XHTMLContentType) {
       parseRDFaDOM(Util.parseXML(str, {contentType: XHTMLContentType}) as unknown as XmldomDocument, kb, base)
       executeCallback()
