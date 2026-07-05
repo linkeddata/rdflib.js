@@ -41,7 +41,7 @@ import crossFetch, { Headers } from 'cross-fetch'
 import type { Document as XmldomDocument, Element as XmldomElement, Node as XmldomNode } from '@xmldom/xmldom'
 
 import {
-  ContentType, TurtleContentType, RDFXMLContentType, XHTMLContentType
+  ContentType, TurtleContentType, RDFXMLContentType, XHTMLContentType, JsonLdDocumentLoader
 } from './types'
 import { termValue } from './utils/termValue'
 import {
@@ -178,6 +178,12 @@ export interface AutoInitOptions extends RequestInit{
   noRDFa?: boolean
   handlers?: Handler[]
   timeout?: number
+  /**
+   * JSON-LD only: loader used to resolve remote `@context` URLs. When
+   * omitted, remote context fetching is refused (SSRF protection) and
+   * documents that rely on it fail to parse.
+   */
+  documentLoader?: JsonLdDocumentLoader
   method?: HTTPMethods
   retriedWithNoCredentials?: boolean
   requestedURI?: string
@@ -511,7 +517,9 @@ class JsonLdHandler extends Handler {
   ): Promise<ExtendedResponse | FetchError> {
     const kb = fetcher.store
     try {
-      await jsonldParser(responseText, kb, options.original.value)
+      // Remote @context fetching is refused unless the caller explicitly
+      // injected options.documentLoader (deliberate SSRF protection)
+      await jsonldParser(responseText, kb, options.original.value, { documentLoader: options.documentLoader })
       fetcher.store.add(options.original, ns.rdf('type'), ns.link('RDFDocument'), fetcher.appNode)
       return fetcher.doneFetch(options, response)
     } catch (err) {

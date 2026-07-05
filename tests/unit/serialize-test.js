@@ -362,6 +362,13 @@ vocab:building1 vocab:created "2012-03-12"^^xsd:date; vocab:length 145000.0e0 .
     })
 
     describe('source jsonld', () => {
+      // The JSON-LD parser (jsonld.toRDF) canonicalizes xsd:double lexical
+      // forms per the W3C JSON-LD 1.1 "Object to RDF Conversion" algorithm,
+      // so a non-canonical double lexical in a JSON-LD source document is
+      // stored canonically: "145000.0e0" -> "1.45E5"
+      const ttl0Parsed = ttl0.replace('145000.0e0', '1.45E5')
+      const jsonld0Parsed = jsonld0.replace('"145000.0e0"', '"1.45E5"')
+
       let store, base
       before(done => {
         base = 'https://www.example.org/abc/def'
@@ -378,11 +385,11 @@ vocab:building1 vocab:created "2012-03-12"^^xsd:date; vocab:length 145000.0e0 .
 
       it('serialize to ttl', () => {
         // console.log(serialize(null, store, base, 'text/turtle'))
-        expect(serialize(null, store, base, 'text/turtle')).to.eql(ttl0)
+        expect(serialize(null, store, base, 'text/turtle')).to.eql(ttl0Parsed)
       })
       it('serialize to jsonld', async () => {
         // console.log(serialize(null, store, base, 'application/ld+json'))
-        expect(await serialize(null, store, null, 'application/ld+json')).to.eql(jsonld0)
+        expect(await serialize(null, store, null, 'application/ld+json')).to.eql(jsonld0Parsed)
       })
     })
   })
@@ -486,6 +493,13 @@ vocab:building1 vocab:created "2012-03-12"^^xsd:date; vocab:length 145000.0e0 .
     })
 
     describe('source jsonld', () => {
+      // The JSON-LD parser (jsonld.toRDF) canonicalizes xsd:double lexical
+      // forms per the W3C JSON-LD 1.1 "Object to RDF Conversion" algorithm,
+      // so a non-canonical double lexical in a JSON-LD source document is
+      // stored canonically: "3.141e0" -> "3.141E0"
+      const ttl1Parsed = ttl1.replace('3.141e0', '3.141E0')
+      const jsonld1Parsed = jsonld1('def').replace('"3.141e0"', '"3.141E0"')
+
       let store, base
       before(done => {
         base = 'https://www.example.org/abc/def'
@@ -500,11 +514,11 @@ vocab:building1 vocab:created "2012-03-12"^^xsd:date; vocab:length 145000.0e0 .
       })
 
       it('serialize to ttl', () => {
-        expect(serialize(null, store, base, 'text/turtle')).to.eql(ttl1)
+        expect(serialize(null, store, base, 'text/turtle')).to.eql(ttl1Parsed)
       })
 
       it('serialize to jsonld', async () => {
-          expect(await serialize(null, store, base, 'application/ld+json')).to.eql(jsonld1('def'))
+          expect(await serialize(null, store, base, 'application/ld+json')).to.eql(jsonld1Parsed)
       })
     })
   })

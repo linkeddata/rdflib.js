@@ -142,4 +142,58 @@ SyntaxError: Unexpected token`)
       })
     })
   })
+
+  describe('Given a JSON-LD resource that references a remote @context', () => {
+    const uri = 'http://localhost/remote-context.jsonld'
+
+    beforeEach(() => {
+      const docContents = `
+        {
+            "@context": "https://remote.example/context.jsonld",
+            "@id": "${uri}#it",
+            "name": "value"
+        }
+        `
+      nock('http://localhost').get('/remote-context.jsonld').reply(200, docContents, {
+        'Content-Type': 'application/ld+json',
+      })
+    })
+
+    describe('when it is fetched without a documentLoader', () => {
+      let fetcher, store
+      beforeEach(() => {
+        store = rdf.graph()
+        fetcher = rdf.fetcher(store)
+      })
+
+      it('then the load fails instead of issuing a network request for the context', async () => {
+        try {
+          await fetcher.load(uri)
+          expect.fail('Should have thrown an error')
+        } catch (e) {
+          expect(e.message).to.contain('Refused to fetch remote @context')
+          expect(e.message).to.contain('https://remote.example/context.jsonld')
+        }
+      })
+    })
+
+    describe('when it is fetched with an injected documentLoader', () => {
+      let fetcher, store
+      beforeEach(() => {
+        store = rdf.graph()
+        fetcher = rdf.fetcher(store)
+      })
+
+      it('then the context is resolved through the loader and the triples land in the store', async () => {
+        const documentLoader = async (url) => ({
+          documentUrl: url,
+          document: { '@context': { name: 'http://xmlns.com/foaf/0.1/name' } },
+          contextUrl: null,
+        })
+        await fetcher.load(uri, { documentLoader })
+        const match = store.anyStatementMatching(rdf.sym(uri + '#it'), rdf.sym('http://xmlns.com/foaf/0.1/name'))
+        expect(match.object.value).to.equal('value')
+      })
+    })
+  })
 })
