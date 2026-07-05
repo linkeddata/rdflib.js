@@ -288,6 +288,62 @@ describe('IndexedFormula', () => {
       expect(() => store.remove(store.statements[0])).not.to.throw()
       expect(store.statements.length).to.eq(0)
     })
+
+    it('removes every statement when passed an index of the store itself (issue #145)', () => {
+      const store = new IndexedFormula()
+      store.add([triple1, triple2, triple4])
+
+      // statementsMatching returns the store's own index array, which each
+      // removal mutates. remove() must not skip elements because of that.
+      const matches = store.statementsMatching(s1, null, null)
+      expect(matches.length).to.eq(2)
+
+      store.remove(matches)
+
+      expect(store.statementsMatching(s1, null, null)).to.have.length(0)
+      expect(store.holds(s1, p1, o1)).to.equal(false)
+      expect(store.holds(s1, p2, o3)).to.equal(false)
+    })
+  })
+
+  describe('removeStatements', () => {
+    it('removes all given statements, even from the store\'s own statements array (issue #145)', () => {
+      const store = new IndexedFormula()
+      store.add([triple1, triple2, triple3])
+
+      store.removeStatements(store.statements)
+
+      expect(store.statements).to.have.length(0)
+    })
+  })
+
+  describe('add with terms from a foreign RDF/JS factory (issue #480)', () => {
+    // Simulates terms produced by other RDF/JS-compliant libraries (e.g.
+    // Comunica), which may expose termType as an es6 class getter rather
+    // than an own property.
+    class ForeignNamedNode {
+      constructor (value) {
+        this._value = value
+      }
+      get termType () { return 'NamedNode' }
+      get value () { return this._value }
+      equals (other) {
+        return !!other && other.termType === this.termType && other.value === this.value
+      }
+    }
+
+    it('imports quads whose terms have termType getters', () => {
+      const store = new IndexedFormula()
+      const s = new ForeignNamedNode('https://example.com/subject1')
+      const p = new ForeignNamedNode('https://example.com/predicate1')
+      const o = new ForeignNamedNode('https://example.com/object1')
+
+      store.add(s, p, o)
+
+      expect(store.statements).to.have.length(1)
+      // The imported quad is interoperable with rdflib's own terms
+      expect(store.holds(s1, p1, o1)).to.equal(true)
+    })
   })
 
   describe('removeStatement', () => {

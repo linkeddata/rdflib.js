@@ -115,7 +115,16 @@ export default class Formula extends Node {
     graph?: Quad_Graph
   ): Statement | null | this | number {
     if (arguments.length === 1) {
-      (subject as Quad[]).forEach(st => this.add(st.subject, st.predicate, st.object, st.graph))
+      // Don't fall through to the 4-argument case below: it would construct a
+      // corrupt statement out of the array/statement itself, with an undefined
+      // predicate and object. See issue #362.
+      if (subject instanceof Array) {
+        subject.forEach(st => this.add(st.subject, st.predicate, st.object, st.graph))
+      } else {
+        const st = subject as Quad
+        this.add(st.subject, st.predicate, st.object, st.graph)
+      }
+      return this
     }
     return this.statements.push(this.rdfFactory.quad(subject, predicate, object, graph))
   }

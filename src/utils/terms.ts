@@ -35,7 +35,10 @@ export function isCollection(obj: any): obj is Collection<any> {
 
 /** TypeGuard for valid RDFlib Object types, also allows Collections, Graphs */
 export function isRDFlibObject(obj: any): obj is ObjectType {
-  return obj && Object.prototype.hasOwnProperty.call(obj, 'termType') && (
+  // Duck-type on termType instead of checking for an own property: terms from
+  // other RDF/JS factories may expose termType as a getter or prototype
+  // property (e.g. es6 class getters), which hasOwnProperty misses. See issue #480.
+  return isTerm(obj) && (
     obj.termType === NamedNodeTermType ||
     obj.termType === VariableTermType ||
     obj.termType === BlankNodeTermType ||
@@ -48,7 +51,8 @@ export function isRDFlibObject(obj: any): obj is ObjectType {
 /** TypeGuard for valid RDFlib Subject types, same as Object as RDFLib symmetrical.
 */
 export function isRDFlibSubject(obj: any): obj is ObjectType {
-  return obj && Object.prototype.hasOwnProperty.call(obj, 'termType') && (
+  // Duck-type on termType — see isRDFlibObject above and issue #480.
+  return isTerm(obj) && (
     obj.termType === NamedNodeTermType ||
     obj.termType === VariableTermType ||
     obj.termType === BlankNodeTermType ||

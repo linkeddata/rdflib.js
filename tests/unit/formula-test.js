@@ -5,6 +5,7 @@ import Literal from '../../src/literal'
 import NamedNode from '../../src/named-node'
 import Namespace from '../../src/namespace'
 import Formula from '../../src/formula'
+import Statement from '../../src/statement'
 
 const alice = new NamedNode('https://alice.example.com/profile#alice')
 const doc = alice.doc()
@@ -120,6 +121,30 @@ describe('Formula', () => {
       let d = kb.anyJS(alice, age)
       expect(d instanceof Date).to.equal(true)
       expect(d.toISOString()).to.equal('2000-10-10T00:00:00.000Z')
+    })
+  })
+
+  describe('add', () => {
+    it('does not append a corrupt statement when given an array (issue #362)', () => {
+      const kb = new Formula()
+      kb.add([
+        new Statement(alice, knows, bob, doc),
+        new Statement(alice, knows, charlie, doc)
+      ])
+
+      expect(kb.statements).to.have.length(2)
+      for (const st of kb.statements) {
+        expect(st.subject.equals(alice)).to.equal(true)
+        expect(st.predicate.equals(knows)).to.equal(true)
+      }
+    })
+
+    it('adds a single statement object via addStatement', () => {
+      const kb = new Formula()
+      kb.addStatement(new Statement(alice, knows, bob, doc))
+
+      expect(kb.statements).to.have.length(1)
+      expect(kb.statements[0].object.equals(bob)).to.equal(true)
     })
   })
 
