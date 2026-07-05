@@ -630,3 +630,139 @@ const jsonldCollection1 = `{
     })
   })
 })
+
+// Term-level correctness of the Turtle serializer: abbreviate numeric/boolean
+// literals only when the lexical form is valid for the datatype, and escape
+// strings per the Turtle grammar. Covers the datatype-abbreviation bug family
+// (#147 / #619 / #772) plus the \v / control-character escaping bugs.
+describe('serialize text/turtle - term-level correctness', () => {
+  const XSD = (local) => sym('http://www.w3.org/2001/XMLSchema#' + local)
+  const S = sym('http://example.org/s')
+  const P = sym('http://example.org/p')
+  const base = 'http://example.org/'
+  const doc = sym(base + 'doc')
+
+  // Serialize a single `s p object` statement and return the Turtle string.
+  const ttlOf = (object) => {
+    const kb = graph()
+    kb.add(st(S, P, object, doc))
+    return serialize(doc, kb, base, 'text/turtle')
+  }
+  // Serialize then re-parse; returns the parsed-back object term (round-trip).
+  const roundTrip = (object) => {
+    const ttl = ttlOf(object)
+    const kb2 = graph()
+    parse(ttl, kb2, base, 'text/turtle') // throws if the output is invalid Turtle
+    const back = kb2.statementsMatching(S, P, null)
+    return { ttl, obj: back.length === 1 ? back[0].object : null }
+  }
+  const truth = (v) => v === 'true' || v === '1'
+
+  describe('xsd:boolean (#147/#619/#772)', () => {
+    it('serializes canonical "true" as true, not false (#772)', () => {
+      const ttl = ttlOf(lit('true', null, XSD('boolean')))
+      expect(ttl).to.match(/\btrue\b/)
+      expect(ttl).to.not.match(/\bfalse\b/)
+    })
+
+    it('serializes "false", "1", "0" to the correct native token', () => {
+      expect(ttlOf(lit('false', null, XSD('boolean')))).to.match(/\bfalse\b/)
+      expect(ttlOf(lit('1', null, XSD('boolean')))).to.match(/\btrue\b/)
+      expect(ttlOf(lit('0', null, XSD('boolean')))).to.match(/\bfalse\b/)
+    })
+
+    it('preserves the truth value through a round-trip for every valid form', () => {
+      for (const form of ['true', 'false', '1', '0']) {
+        const { obj } = roundTrip(lit(form, null, XSD('boolean')))
+        expect(obj.datatype.value).to.equal('http://www.w3.org/2001/XMLSchema#boolean')
+        expect(truth(obj.value)).to.equal(truth(form))
+      }
+    })
+
+    it('preserves invalid boolean forms verbatim instead of coercing to false', () => {
+      for (const bad of ['yes', 'TRUE', '2', '']) {
+        const { ttl, obj } = roundTrip(lit(bad, null, XSD('boolean')))
+        expect(ttl).to.contain('^^xsd:boolean')
+        expect(obj.value).to.equal(bad)
+        expect(obj.datatype.value).to.equal('http://www.w3.org/2001/XMLSchema#boolean')
+      }
+    })
+  })
+
+  describe('xsd:integer / xsd:decimal / xsd:double', () => {
+    it('abbreviates valid numeric forms exactly as before', () => {
+      expect(ttlOf(lit('42', null, XSD('integer')))).to.match(/\s42\s/)
+      expect(ttlOf(lit('12.0', null, XSD('decimal')))).to.match(/\s12\.0\s/)
+      expect(ttlOf(lit('0.123', null, XSD('double')))).to.match(/\s0\.123e0\s/)
+    })
+
+    it('completes the Turtle DECIMAL fraction ("5" -> 5.0, "2." -> 2.0)', () => {
+      expect(ttlOf(lit('5', null, XSD('decimal')))).to.match(/\s5\.0\s/)
+      expect(ttlOf(lit('2.', null, XSD('decimal')))).to.match(/\s2\.0\s/)
+    })
+
+    it('never emits an invalid Turtle token for invalid lexical forms', () => {
+      const cases = [
+        ['abc', 'integer'],
+        ['1.2.3', 'decimal'],
+        ['NaN', 'double'],
+        ['INF', 'double'],
+        ['-INF', 'double'],
+      ]
+      for (const [value, dt] of cases) {
+        const { ttl, obj } = roundTrip(lit(value, null, XSD(dt)))
+        expect(ttl, `${value}^^xsd:${dt}`).to.contain('"' + value + '"^^xsd:' + dt)
+        expect(obj.value).to.equal(value)
+        expect(obj.datatype.value).to.equal('http://www.w3.org/2001/XMLSchema#' + dt)
+      }
+    })
+  })
+
+  describe('string escaping', () => {
+    it('escapes U+000B as \\u000b, never the invalid \\v escape', () => {
+      const { ttl, obj } = roundTrip(lit('a' + String.fromCharCode(0x0b) + 'b', null, XSD('string')))
+      expect(ttl).to.contain('\\u000b')
+      expect(ttl).to.not.contain('\\v')
+      expect(obj.value).to.equal('a' + String.fromCharCode(0x0b) + 'b')
+    })
+
+    it('escapes control characters that have no named Turtle escape', () => {
+      const raw = 'x' + String.fromCharCode(0x01) + String.fromCharCode(0x1f) + 'y'
+      const { ttl, obj } = roundTrip(lit(raw, null, XSD('string')))
+      expect(ttl).to.contain('\\u0001')
+      expect(ttl).to.contain('\\u001f')
+      expect(obj.value).to.equal(raw)
+    })
+  })
+
+  describe('a graph of invalid-and-valid literals', () => {
+    it('always serializes to valid, re-parseable Turtle with no value loss', () => {
+      const kb = graph()
+      const objects = [
+        lit('true', null, XSD('boolean')),
+        lit('yes', null, XSD('boolean')),
+        lit('abc', null, XSD('integer')),
+        lit('1.2.3', null, XSD('decimal')),
+        lit('NaN', null, XSD('double')),
+        lit('42', null, XSD('integer')),
+      ]
+      objects.forEach((o, i) => kb.add(st(S, sym(base + 'p' + i), o, doc)))
+      const ttl = serialize(doc, kb, base, 'text/turtle')
+      const kb2 = graph()
+      expect(() => parse(ttl, kb2, base, 'text/turtle')).to.not.throw()
+      expect(kb2.statements).to.have.length(objects.length)
+    })
+  })
+})
+
+// JSON-LD serialization routes through the Turtle serializer, so the boolean
+// fix also resolves the value flip reported for JSON-LD in #619.
+describe('serialize application/ld+json - boolean value (#619)', () => {
+  const XSD = (local) => sym('http://www.w3.org/2001/XMLSchema#' + local)
+  it('keeps xsd:boolean "true" as true (not false)', async () => {
+    const kb = graph()
+    kb.add(st(sym('http://ex/s'), sym('http://ex/p'), lit('true', null, XSD('boolean')), sym('http://ex/doc')))
+    const jsonld = await serialize(sym('http://ex/doc'), kb, 'http://ex/', 'application/ld+json')
+    expect(JSON.parse(jsonld)['http://ex/p']).to.equal(true)
+  })
+})

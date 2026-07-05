@@ -11,6 +11,7 @@ import CanonicalDataFactory from './factories/canonical-data-factory'
 import * as Uri from './uri'
 import * as Util from './utils-js'
 import { createXSD } from './xsd'
+import { abbreviateTypedLiteral, escapeStringBody } from './serialize-term'
 
 
 export default function createSerializer(store) {
@@ -558,30 +559,14 @@ export class Serializer {
           throw new TypeError('Value of RDF literal node must be a string')
         }
         // var val = expr.value.toString() // should be a string already
-        if (expr.datatype && this.flags.indexOf('x') < 0) { // Supress native numbers
-          switch (expr.datatype.uri) {
-
-            case 'http://www.w3.org/2001/XMLSchema#integer':
-              return val
-
-            case 'http://www.w3.org/2001/XMLSchema#decimal': // In Turtle, must have dot
-              if (val.indexOf('.') < 0) val += '.0'
-              return val
-
-            case 'http://www.w3.org/2001/XMLSchema#double': {
-              // Must force use of 'e'
-              const eNotation = val.toLowerCase().indexOf('e') > 0
-              if (val.indexOf('.') < 0 && !eNotation) val += '.0'
-              if (!eNotation) val += 'e0'
-              return val
-            }
-
-            case 'http://www.w3.org/2001/XMLSchema#boolean':
-              // The XSD lexical space is {'true', 'false', '1', '0'}; the
-              // legacy parser normalised to '1'/'0', the N3.js parser
-              // preserves the source form.
-              return (expr.value === '1' || expr.value === 'true') ? 'true' : 'false'
-          }
+        // Abbreviate numeric/boolean literals to native Turtle tokens, but ONLY
+        // when the lexical form is valid for the datatype and expressible as a
+        // Turtle token; otherwise fall through to the lossless quoted form below.
+        // This fixes the datatype-abbreviation bug family (#147/#619/#772):
+        // no value flips, no silent coercion of invalid values, no invalid tokens.
+        if (expr.datatype && this.flags.indexOf('x') < 0) { // Supress native numbers with 'x'
+          var abbreviated = abbreviateTypedLiteral(val, expr.datatype.uri)
+          if (abbreviated !== null) return abbreviated
         }
         var str = this.stringToN3(expr.value, this.flags)
         if (expr.language) {
@@ -603,49 +588,23 @@ export class Serializer {
 
   validPrefix = new RegExp(/^[a-zA-Z][a-zA-Z0-9]*$/)
 
-  forbidden1 = new RegExp(/[\\"\b\f\r\v\t\n\u0080-\uffff]/gm)
-  forbidden3 = new RegExp(/[\\"\b\f\r\v\u0080-\uffff]/gm)
+  // Choose the delimiter (this pretty-printing decision is unchanged); the
+  // character-level escaping is delegated to the correctness layer in
+  // ./serialize-term so control characters and U+000B are handled per the
+  // Turtle grammar (previously U+000B produced the invalid escape "\v").
   stringToN3(str, flags) {
     if (!flags) flags = 'e'
-    var res = ''
-    var i, j, k
-    var delim
-    var forbidden
-    if (str.length > 20 && // Long enough to make sense
-        str.slice(-1) !== '"' && // corner case'
-        flags.indexOf('n') < 0 && // Force single line
-        (str.indexOf('\n') > 0 || str.indexOf('"') > 0)) {
-      delim = '"""'
-      forbidden = this.forbidden3
-    } else {
-      delim = '"'
-      forbidden = this.forbidden1
-    }
-    for (i = 0; i < str.length;) {
-      forbidden.lastIndex = 0
-      var m = forbidden.exec(str.slice(i))
-      if (m == null) break
-      j = i + forbidden.lastIndex - 1
-      res += str.slice(i, j)
-      var ch = str[j]
-      if (ch === '"' && delim === '"""' && str.slice(j, j + 3) !== '"""') {
-        res += ch
-      } else {
-        k = '\b\f\r\t\v\n\\"'.indexOf(ch) // No escaping of bell (7)?
-        if (k >= 0) {
-          res += '\\' + 'bfrtvn\\"'[k]
-        } else {
-          if (flags.indexOf('e') >= 0) { // Unicode escaping in strings not unix style
-            res += '\\u' + ('000' +
-              ch.charCodeAt(0).toString(16).toLowerCase()).slice(-4)
-          } else { // no 'e' flag
-            res += ch
-          }
-        }
-      }
-      i = j + 1
-    }
-    return delim + res + str.slice(i) + delim
+    var longString =
+      str.length > 20 && // Long enough to make sense
+      str.slice(-1) !== '"' && // corner case'
+      flags.indexOf('n') < 0 && // Force single line
+      (str.indexOf('\n') > 0 || str.indexOf('"') > 0)
+    var delim = longString ? '"""' : '"'
+    var body = escapeStringBody(str, {
+      longString: longString,
+      unicodeEscape: flags.indexOf('e') >= 0, // Unicode escaping in strings not unix style
+    })
+    return delim + body + delim
   }
   //  A single symbol, either in  <> or namespace notation
 
