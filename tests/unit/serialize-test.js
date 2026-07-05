@@ -631,10 +631,8 @@ const jsonldCollection1 = `{
   })
 })
 
-// Term-level correctness of the Turtle serializer: abbreviate numeric/boolean
-// literals only when the lexical form is valid for the datatype, and escape
-// strings per the Turtle grammar. Covers the datatype-abbreviation bug family
-// (#147 / #619 / #772) plus the \v / control-character escaping bugs.
+// Term-level correctness of the Turtle serializer: datatype abbreviation
+// (#147/#619/#772) and string escaping per the Turtle grammar
 describe('serialize text/turtle - term-level correctness', () => {
   const XSD = (local) => sym('http://www.w3.org/2001/XMLSchema#' + local)
   const S = sym('http://example.org/s')
@@ -755,8 +753,7 @@ describe('serialize text/turtle - term-level correctness', () => {
   })
 })
 
-// JSON-LD serialization routes through the Turtle serializer, so the boolean
-// fix also resolves the value flip reported for JSON-LD in #619.
+// JSON-LD serialization routes through the Turtle serializer (#619)
 describe('serialize application/ld+json - boolean value (#619)', () => {
   const XSD = (local) => sym('http://www.w3.org/2001/XMLSchema#' + local)
   it('keeps xsd:boolean "true" as true (not false)', async () => {

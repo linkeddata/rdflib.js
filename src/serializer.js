@@ -559,11 +559,9 @@ export class Serializer {
           throw new TypeError('Value of RDF literal node must be a string')
         }
         // var val = expr.value.toString() // should be a string already
-        // Abbreviate numeric/boolean literals to native Turtle tokens, but ONLY
-        // when the lexical form is valid for the datatype and expressible as a
-        // Turtle token; otherwise fall through to the lossless quoted form below.
-        // This fixes the datatype-abbreviation bug family (#147/#619/#772):
-        // no value flips, no silent coercion of invalid values, no invalid tokens.
+        // Abbreviate to a native Turtle token only when the lexical form is
+        // valid for the datatype; otherwise fall through to the lossless
+        // quoted form below (#147/#619/#772)
         if (expr.datatype && this.flags.indexOf('x') < 0) { // Supress native numbers with 'x'
           var abbreviated = abbreviateTypedLiteral(val, expr.datatype.uri)
           if (abbreviated !== null) return abbreviated
@@ -588,10 +586,8 @@ export class Serializer {
 
   validPrefix = new RegExp(/^[a-zA-Z][a-zA-Z0-9]*$/)
 
-  // Choose the delimiter (this pretty-printing decision is unchanged); the
-  // character-level escaping is delegated to the correctness layer in
-  // ./serialize-term so control characters and U+000B are handled per the
-  // Turtle grammar (previously U+000B produced the invalid escape "\v").
+  // Chooses the delimiter; character-level escaping per the Turtle grammar
+  // is delegated to ./serialize-term
   stringToN3(str, flags) {
     if (!flags) flags = 'e'
     var longString =
