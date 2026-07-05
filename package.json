@@ -51,7 +51,9 @@
     "cross-fetch": "^4.1.0",
     "jsonld": "^9.0.0",
     "n3": "^2.0.3",
-    "solid-namespace": "^0.5.4"
+    "rdfxml-streaming-parser": "^3.2.0",
+    "solid-namespace": "^0.5.4",
+    "sparqljs": "^3.7.4"
   },
   "devDependencies": {
     "@babel/cli": "^7.28.6",
@@ -68,6 +70,7 @@
     "@types/mocha": "^10.0.10",
     "@types/node": "^25.9.1",
     "@types/sinon-chai": "^4.0.0",
+    "@types/sparqljs": "^3.1.12",
     "babel-loader": "^10.1.1",
     "chai": "^6.2.2",
     "colors": "^1.4.0",

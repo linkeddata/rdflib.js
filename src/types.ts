@@ -41,9 +41,46 @@ export const NTriplesContentType = "application/n-triples" as const
 export const RDFXMLContentType = "application/rdf+xml" as const
 export const SPARQLUpdateContentType = "application/sparql-update" as const
 export const SPARQLUpdateSingleMatchContentType = "application/sparql-update-single-match" as const
+export const TrigContentType = "application/trig" as const
 export const TurtleContentType = "text/turtle" as const
 export const TurtleLegacyContentType = "application/x-turtle" as const
 export const XHTMLContentType = "application/xhtml+xml" as const
+
+/**
+ * A jsonld.js documentLoader: resolves a (context) URL to a remote document.
+ * See https://github.com/digitalbazaar/jsonld.js#custom-document-loader
+ */
+export type JsonLdDocumentLoader = (
+  url: string,
+  options?: unknown
+) => Promise<{
+  /** The retrieved document, parsed */
+  document: unknown
+  /** The final URL of the document, after redirects */
+  documentUrl?: string
+  /** A context URL found in an HTTP Link header, if any */
+  contextUrl?: string | null
+}>
+
+/**
+ * Options accepted by the JSON-LD parser (and threaded through `parse()` for
+ * `application/ld+json` input).
+ */
+export interface JsonLdParserOptions {
+  /**
+   * Loader used to resolve remote `@context` URLs. When omitted, remote
+   * context fetching is REFUSED: parsing untrusted JSON-LD must not trigger
+   * outbound network requests (SSRF). Pass a loader (e.g. jsonld.js's
+   * `documentLoaders.node()` or one backed by your own fetch policy) to opt
+   * in.
+   */
+  documentLoader?: JsonLdDocumentLoader
+  /**
+   * A context to expand the input document with, for documents whose context
+   * is supplied out-of-band (JSON-LD API `expandContext`).
+   */
+  expandContext?: unknown
+}
 
 /**
  * A valid mime type header
@@ -55,8 +92,10 @@ export type ContentType = typeof RDFXMLContentType
   | typeof N3LegacyContentType
   | typeof NQuadsAltContentType
   | typeof NQuadsContentType
+  | typeof NTriplesContentType
   | typeof SPARQLUpdateContentType
   | typeof SPARQLUpdateSingleMatchContentType
+  | typeof TrigContentType
   | typeof TurtleContentType
   | typeof TurtleLegacyContentType
   | typeof XHTMLContentType

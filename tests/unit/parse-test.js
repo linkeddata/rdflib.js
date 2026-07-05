@@ -216,6 +216,30 @@ ex:myid ex:prop1 [ ex:prop2 [ ex:prop3 "value" ] ].
   })
 }) // ttl
 
+  describe('n-triples', () => {
+    it('parses application/n-triples', () => {
+      let base = 'https://www.example.org/abc/def'
+      let mimeType = 'application/n-triples'
+      let store = DataFactory.graph()
+      let content = '<http://www.wikidata.org/entity/Q328> <http://www.w3.org/2000/01/rdf-schema#label> "English Wikipedia"@en .'
+      parse(content, store, base, mimeType)
+      expect(store.statements).to.have.length(1)
+      expect(store.statements[0].subject.value).to.eql('http://www.wikidata.org/entity/Q328')
+      expect(store.statements[0].object.value).to.eql('English Wikipedia')
+      expect(store.statements[0].object.lang).to.eql('en')
+    })
+
+    it('parses application/n-triples with charset', () => {
+      let base = 'https://www.example.org/abc/def'
+      let mimeType = 'application/n-triples;charset=UTF-8'
+      let store = DataFactory.graph()
+      let content = '<http://www.wikidata.org/entity/Q328> <http://www.w3.org/2000/01/rdf-schema#label> "ангельская Вікіпэдыя"@be-x-old .'
+      parse(content, store, base, mimeType)
+      expect(store.statements).to.have.length(1)
+      expect(store.statements[0].object.lang).to.eql('be-x-old')
+    })
+  }) // n-triples
+
   describe('a JSON-LD document', () => {
     describe('with a base IRI', () => {
       let store
@@ -261,73 +285,41 @@ ex:myid ex:prop1 [ ex:prop2 [ ex:prop3 "value" ] ].
       }) // before
 
       it('uses the specified base IRI', () => {
+        // Statement *insertion order* is an implementation detail of the
+        // parser (jsonld.toRDF emits node-map-sorted quads), so this test
+        // matches by pattern rather than by array index.
         expect(store.rdfFactory.supports["COLLECTIONS"]).to.equal(false)
 
         const homePageHeight = 5 // homepage + height + 3 x name
         const list = 2 * 3 + 1 // (rdf:first + rdf:rest) * 3 items + listProp
         expect(store.statements).to.have.length(homePageHeight + list)
 
-        const height = store.statements[0]
-        expect(height.subject.value).to.equal('https://www.example.org/#me')
-        expect(height.predicate.value).to.equal('http://schema.org/height')
+        const me = store.sym('https://www.example.org/#me')
+
+        const height = store.statementsMatching(me, store.sym('http://schema.org/height'))[0]
         expect(height.object.datatype.value).to.equal('http://www.w3.org/2001/XMLSchema#float')
         expect(height.object.termType).to.equal('Literal')
         expect(height.object.value).to.equal('173.9')
 
-        const homepage = store.statements[1]
-        expect(homepage.subject.value).to.equal('https://www.example.org/#me')
-        expect(homepage.predicate.value).to.equal('http://xmlns.com/foaf/0.1/homepage')
+        const homepage = store.statementsMatching(me, store.sym('http://xmlns.com/foaf/0.1/homepage'))[0]
         expect(homepage.object.value).to.equal('https://www.example.org/abc/xyz')
 
-        const nameDe1 = store.statements[2]
-        expect(nameDe1.subject.value).to.equal('https://www.example.org/#me')
-        expect(nameDe1.predicate.value).to.equal('http://xmlns.com/foaf/0.1/name')
-        expect(nameDe1.object.value).to.equal('Die Königin')
+        const names = store.statementsMatching(me, store.sym('http://xmlns.com/foaf/0.1/name'))
+          .map(st => st.object.value).sort()
+        expect(names).to.eql(['Die Königin', 'Ihre Majestät', 'The Queen'])
 
-        const nameDe2 = store.statements[3]
-        expect(nameDe2.subject.value).to.equal('https://www.example.org/#me')
-        expect(nameDe2.predicate.value).to.equal('http://xmlns.com/foaf/0.1/name')
-        expect(nameDe2.object.value).to.equal('Ihre Majestät')
-
-        const nameEn = store.statements[4]
-        expect(nameEn.subject.value).to.equal('https://www.example.org/#me')
-        expect(nameEn.predicate.value).to.equal('http://xmlns.com/foaf/0.1/name')
-        expect(nameEn.object.value).to.equal('The Queen')
-
-        const list0First = store.statements[5]
-        // expect(list0First.subject.value).to.equal('n0')
-        expect(list0First.predicate.value).to.equal('http://www.w3.org/1999/02/22-rdf-syntax-ns#first')
-        expect(list0First.object.value).to.equal('list item 0')
-
-        const list0Rest = store.statements[6]
-        expect(list0Rest.subject.termType).to.equal('BlankNode')
-        expect(list0Rest.predicate.value).to.equal('http://www.w3.org/1999/02/22-rdf-syntax-ns#rest')
-        expect(list0Rest.object.value).to.equal(store.statements[7].subject.value)
-
-        const list1First = store.statements[7]
-        expect(list1First.subject.termType).to.equal('BlankNode')
-        expect(list1First.predicate.value).to.equal('http://www.w3.org/1999/02/22-rdf-syntax-ns#first')
-        expect(list1First.object.value).to.equal('list item 1')
-
-        const list1Rest = store.statements[8]
-        expect(list1Rest.subject.termType).to.eql('BlankNode')
-        expect(list1Rest.predicate.value).to.equal('http://www.w3.org/1999/02/22-rdf-syntax-ns#rest')
-        expect(list1Rest.object.value).to.equal(store.statements[9].subject.value)
-
-        const list2First = store.statements[9]
-        expect(list2First.subject.termType).to.eql('BlankNode')
-        expect(list2First.predicate.value).to.equal('http://www.w3.org/1999/02/22-rdf-syntax-ns#first')
-        expect(list2First.object.value).to.equal('list item 2')
-
-        const list2Rest = store.statements[10]
-        expect(list2Rest.subject.termType).to.eql('BlankNode')
-        expect(list2Rest.predicate.value).to.equal('http://www.w3.org/1999/02/22-rdf-syntax-ns#rest')
-        expect(list2Rest.object.value).to.equal('http://www.w3.org/1999/02/22-rdf-syntax-ns#nil')
-
-        const listProp = store.statements[11]
-        expect(listProp.subject.value).to.equal('https://www.example.org/#me')
-        expect(listProp.predicate.value).to.equal('https://example.org/ns#listProp')
-        expect(listProp.object.termType).to.eql('BlankNode')
+        // Walk the raw rdf:first/rdf:rest chain from the list property
+        const listProp = store.statementsMatching(me, store.sym('https://example.org/ns#listProp'))[0]
+        let node = listProp.object
+        const items = []
+        for (let i = 0; i < 3; i++) {
+          expect(node.termType).to.equal('BlankNode')
+          const first = store.statementsMatching(node, store.sym('http://www.w3.org/1999/02/22-rdf-syntax-ns#first'))[0]
+          items.push(first.object.value)
+          node = store.statementsMatching(node, store.sym('http://www.w3.org/1999/02/22-rdf-syntax-ns#rest'))[0].object
+        }
+        expect(items).to.eql(['list item 0', 'list item 1', 'list item 2'])
+        expect(node.value).to.equal('http://www.w3.org/1999/02/22-rdf-syntax-ns#nil')
     })
 
     describe('with collections enabled', () => {
@@ -443,10 +435,16 @@ ex:myid ex:prop1 [ ex:prop2 [ ex:prop3 "value" ] ].
 exa:myid exa:prop1 [ exa:prop2 [ exa:prop3 "value" ] ].
 
 `)
-        const nt = store.toNT()
-        expect(nt).to.include('<http://example.com#myid> <http://example.com#prop1> _:b0 .')
-        expect(nt).to.include('_:b0 <http://example.com#prop2> _:b1 .')
-        expect(nt).to.include('_:b1 <http://example.com#prop3> "value" .')
+        // Blank node labels are allocated fresh per parse (so labels of two
+        // documents can never collide in one store); match by structure, not
+        // by label
+        const prop1 = store.statementsMatching(store.sym('http://example.com#myid'), store.sym('http://example.com#prop1'))[0]
+        expect(prop1.object.termType).to.equal('BlankNode')
+        const prop2 = store.statementsMatching(prop1.object, store.sym('http://example.com#prop2'))[0]
+        expect(prop2.object.termType).to.equal('BlankNode')
+        expect(prop2.object.value).to.not.equal(prop1.object.value)
+        const prop3 = store.statementsMatching(prop2.object, store.sym('http://example.com#prop3'))[0]
+        expect(prop3.object.value).to.equal('value')
       })
     })
 
@@ -474,7 +472,7 @@ exa:myid exa:prop1 [ exa:prop2 [ exa:prop3 "value" ] ].
 
   describe('xml', () => {
     describe('literals', () => {
-      it('handles language subtags', () => {
+      it('handles language subtags', done => {
         let base = 'http://test.com'
         let mimeType = 'application/rdf+xml'
         let store = DataFactory.graph()
@@ -485,8 +483,25 @@ exa:myid exa:prop1 [ exa:prop2 [ exa:prop3 "value" ] ].
                <core:prefLabel rdf:datatype="http://www.w3.org/1999/02/22-rdf-syntax-ns#langString" xml:lang="fr">Valeur de test</core:prefLabel>
            </rdf:Description>
        </rdf:RDF>`
-        parse(content, store, base, mimeType)
-        expect(store.statements[0].object.lang).to.eql('fr')
+        // Since the migration to rdfxml-streaming-parser, RDF/XML parsing is
+        // asynchronous (like JSON-LD): results must be read via the callback.
+        //
+        // BEHAVIOR DELTA (flagged in the migration PR): when rdf:datatype is
+        // present, the datatype now wins over an xml:lang in scope, per the
+        // RDF/XML spec (typed literals carry no language tag). The old
+        // parser preferred xml:lang and produced lang 'fr' for this input.
+        parse(content, store, base, mimeType, err => {
+          try {
+            expect(err).to.equal(null)
+            const literal = store.statements[0].object
+            expect(literal.datatype.value).to.eql('http://www.w3.org/1999/02/22-rdf-syntax-ns#langString')
+            expect(literal.lang).to.eql('')
+            expect(literal.value).to.eql('Valeur de test')
+            done()
+          } catch (e) {
+            done(e)
+          }
+        })
       }) // test
     }) // literals
   }) // xml

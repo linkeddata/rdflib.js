@@ -27,12 +27,11 @@
  */
 import IndexedFormula from './store'
 import log from './log'
-import N3Parser from './n3parser'
 import RDFlibNamedNode from './named-node'
 import Namespace from './namespace'
 import rdfParse from './parse'
 import { parseRDFaDOM } from './rdfaparser'
-import RDFParser from './rdfxmlparser'
+import parseRDFXML from './rdfxml-adapter'
 import * as Uri from './uri'
 import { isCollection, isNamedNode} from './utils/terms'
 import * as Util from './utils-js'
@@ -41,7 +40,7 @@ import crossFetch, { Headers } from 'cross-fetch'
 import type { Document as XmldomDocument, Element as XmldomElement, Node as XmldomNode } from '@xmldom/xmldom'
 
 import {
-  ContentType, TurtleContentType, RDFXMLContentType, XHTMLContentType
+  ContentType, TurtleContentType, RDFXMLContentType, XHTMLContentType, JsonLdDocumentLoader
 } from './types'
 import { termValue } from './utils/termValue'
 import {
@@ -155,7 +154,9 @@ export interface AutoInitOptions extends RequestInit{
   forceContentType?: ContentType
   /**
    * Load the data even if loaded before.
-   * Also sets the `Cache-Control:` header to `no-cache`
+   * Also sets the `Cache-Control:` header to `no-cache`, and (in
+   * `Fetcher.load`) implies `clearPreviousData: true` unless that option is
+   * explicitly set to `false`.
    */
   force?: boolean
   /**
@@ -178,6 +179,12 @@ export interface AutoInitOptions extends RequestInit{
   noRDFa?: boolean
   handlers?: Handler[]
   timeout?: number
+  /**
+   * JSON-LD only: loader used to resolve remote `@context` URLs. When
+   * omitted, remote context fetching is refused (SSRF protection) and
+   * documents that rely on it fail to parse.
+   */
+  documentLoader?: JsonLdDocumentLoader
   method?: HTTPMethods
   retriedWithNoCredentials?: boolean
   requestedURI?: string
@@ -221,7 +228,7 @@ class RDFXMLHandler extends Handler {
     }
   }
 
-  parse (
+  async parse (
     fetcher: Fetcher,
     /** An XML String */
     responseText: String,
@@ -230,20 +237,13 @@ class RDFXMLHandler extends Handler {
       original: Quad_Subject
       req: Quad_Subject
     } & Options,
-  ) {
+  ): Promise<ExtendedResponse | FetchError> {
     let kb = fetcher.store
-    if (!this.dom) {
-      this.dom = Util.parseXML(responseText) as unknown as XmldomDocument
-    }
-    let root = this.dom.documentElement
-    if (root && root.nodeName === 'parsererror') { // Mozilla only See issue/issue110
-      // have to fail the request
-      return fetcher.failFetch(options, 'Badly formed XML in ' +
-        options.resource!.value, 'parse_error')
-    }
-    let parser = new RDFParser(kb)
     try {
-      parser.parse(this.dom, options.original.value, options.original)
+      // rdfxml-streaming-parser is asynchronous — awaited here so that
+      // fetcher.load() only settles once the store is populated, the same
+      // pattern as the JSON-LD handler below.
+      await parseRDFXML(responseText as string, kb, options.original.value)
     } catch (err) {
       return fetcher.failFetch(options, 'Syntax error parsing RDF/XML! ' + err,
         'parse_error')
@@ -359,7 +359,7 @@ class XMLHandler extends Handler {
       req: BlankNode
       resource: Quad_Subject
     } & Options,
-  ): ExtendedResponse | Promise<FetchError> {
+  ): ExtendedResponse | Promise<ExtendedResponse | FetchError> {
     let dom = Util.parseXML(responseText) as unknown as XmldomDocument
 
     // XML Semantics defined by root element namespace
@@ -511,7 +511,9 @@ class JsonLdHandler extends Handler {
   ): Promise<ExtendedResponse | FetchError> {
     const kb = fetcher.store
     try {
-      await jsonldParser(responseText, kb, options.original.value)
+      // Remote @context fetching is refused unless the caller explicitly
+      // injected options.documentLoader (deliberate SSRF protection)
+      await jsonldParser(responseText, kb, options.original.value, { documentLoader: options.documentLoader })
       fetcher.store.add(options.original, ns.rdf('type'), ns.link('RDFDocument'), fetcher.appNode)
       return fetcher.doneFetch(options, response)
     } catch (err) {
@@ -543,7 +545,7 @@ class TextHandler extends Handler {
       original: Quad_Subject
       resource: Quad_Subject
     } & Options
-  ): ExtendedResponse | Promise<FetchError> {
+  ): ExtendedResponse | Promise<ExtendedResponse | FetchError> {
     // We only speak dialects of XML right now. Is this XML?
 
     // Look for an XML declaration
@@ -592,20 +594,24 @@ class N3Handler extends Handler {
     } & Options,
     response: ExtendedResponse
   ): ExtendedResponse | Promise<FetchError> {
-    // Parse the text of this N3 file
+    // Parse the text of this Turtle or N3 file, through the same parse()
+    // entry point (and N3.js-based parser) as everything else.
     let kb = fetcher.store
-    let p = N3Parser(kb, kb, options.original.value, options.original.value,
-      null, null, '', null)
-    //                p.loadBuf(xhr.responseText)
+    const normalized = (fetcher.normalizedContentType(options as AutoInitOptions, response.headers) || '').split(';')[0]
+    // The handler's pattern also matches legacy aliases such as
+    // application/rdf+n3 or text/x-turtle; normalize them to the canonical
+    // content type of the same syntax.
+    const contentType = /n3/.test(normalized) ? 'text/n3' : 'text/turtle'
     try {
-      p.loadBuf(responseText)
+      rdfParse(responseText, kb, options.original.value, contentType)
     } catch (err) {
       let msg = 'Error trying to parse ' + options.resource +
         ' as Notation3:\n' + err  // not err.stack -- irrelevant
       return fetcher.failFetch(options, msg, 'parse_error', response)
     }
 
-    fetcher.addStatus(options.req, 'N3 parsed: ' + p.statementCount + ' triples in ' + p.lines + ' lines.')
+    const statementCount = kb.statementsMatching(null, null, null, options.original).length
+    fetcher.addStatus(options.req, 'N3 parsed: ' + statementCount + ' triples in ' + responseText.split('\n').length + ' lines.')
     fetcher.store.add(options.original, ns.rdf('type'), ns.link('RDFDocument'), fetcher.appNode)
 
     return fetcher.doneFetch(options, this.response)
@@ -939,7 +945,10 @@ export default class Fetcher implements CallbackifyInterface {
    *   force the data to be treated as this content-type (for reads)
    *
    * @param [options.force] {boolean} Load the data even if loaded before.
-   *   Also sets the `Cache-Control:` header to `no-cache`
+   *   Also sets the `Cache-Control:` header to `no-cache`, and implies
+   *   `clearPreviousData: true` unless that option is explicitly set to
+   *   `false` (re-parsing without clearing would duplicate blank-node
+   *   subgraphs, as parsed blank-node labels are not stable across parses)
    *
    * @param [options.baseURI=docuri] {Node|string} Original uri to preserve
    *   through proxying etc (`xhr.original`).
@@ -964,6 +973,13 @@ export default class Fetcher implements CallbackifyInterface {
     options: Options = {}
   ): T extends Array<string | NamedNode> ? Promise<Result[]> : Promise<Result> {
     options = Object.assign({}, options) // Take a copy as we add stuff to the options!!
+    // `force` implies `clearPreviousData` (unless the caller explicitly opts
+    // out): parsed blank-node labels are not stable across parses, so
+    // re-parsing a previously loaded document without clearing it first would
+    // duplicate its blank-node subgraphs on every forced reload.
+    if (options.force && options.clearPreviousData === undefined) {
+      options.clearPreviousData = true
+    }
     if (uri instanceof Array) {
       return Promise.all(uri.map((x) => {
         return this.load(x, Object.assign({}, options)) as unknown as Promise<Result>

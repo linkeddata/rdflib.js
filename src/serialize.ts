@@ -1,4 +1,5 @@
 import Formula from './formula'
+import statementsToN3js from './n3-writer'
 import Serializer from './serializer'
 import {
   ContentType,
@@ -9,6 +10,7 @@ import {
   NQuadsContentType,
   NTriplesContentType,
   RDFXMLContentType,
+  TrigContentType,
   TurtleContentType,
   TurtleLegacyContentType,
 } from './types'
@@ -77,8 +79,18 @@ export default function serialize (
         documentString = sz.statementsToN3(newSts)
         return executeCallback(null, documentString)
       case NTriplesContentType:
-        sz.setFlags('deinprstux') // Suppress nice parts of N3 to make ntriples
-        documentString = sz.statementsToNTriples(newSts)
+        documentString = statementsToN3js(newSts, NTriplesContentType, {
+          factory: (kb as any).rdfFactory,
+        })
+        return executeCallback(null, documentString)
+      case TrigContentType:
+        documentString = statementsToN3js(newSts, TrigContentType, {
+          factory: (kb as any).rdfFactory,
+          namespaces: {
+            ...('namespaces' in kb ? (kb as IndexedFormula).namespaces : {}),
+            ...(opts.namespaces || {}),
+          },
+        })
         return executeCallback(null, documentString)
       case JSONLDContentType:
         // turtle + dr (means no default, no relative prefix); preserve user flags
@@ -86,9 +98,10 @@ export default function serialize (
         documentString = sz.statementsToJsonld(newSts) // convert via turtle
         return executeCallback(null, documentString)
       case NQuadsContentType:
-      case NQuadsAltContentType: // @@@ just outpout the quads? Does not work for collections
-        sz.setFlags('deinprstux q') // Suppress nice parts of N3 to make ntriples
-        documentString = sz.statementsToNTriples(newSts) // q in flag means actually quads
+      case NQuadsAltContentType:
+        documentString = statementsToN3js(newSts, NQuadsContentType, {
+          factory: (kb as any).rdfFactory,
+        })
         return executeCallback(null, documentString)
       default:
         throw new Error('Serialize: Content-type ' + contentType + ' not supported for data write.')

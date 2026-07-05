@@ -677,7 +677,8 @@ export default class Formula extends Node {
   }
 
   /**
-   * Used by the n3parser to generate list elements
+   * Creates a collection (or an rdf:first/rest chain when the factory has no
+   * collection support) from a list of values
    * @param values - The values of the collection
    * @param context - The store
    * @return {BlankNode|Collection} - The term for the statement

@@ -8,9 +8,12 @@
 import * as ttl2jsonld from '@frogcat/ttl2jsonld'
 import solidNs from 'solid-namespace'
 import CanonicalDataFactory from './factories/canonical-data-factory'
+import statementsToN3js from './n3-writer'
+import { NQuadsContentType, NTriplesContentType } from './types'
 import * as Uri from './uri'
 import * as Util from './utils-js'
 import { createXSD } from './xsd'
+import { abbreviateTypedLiteral, escapeStringBody } from './serialize-term'
 
 
 export default function createSerializer(store) {
@@ -293,41 +296,17 @@ export class Serializer {
     return '<' + uri + '>'
   }
 
+  /**
+   * Serialize statements as N-Triples (or, with the 'q' flag set, N-Quads).
+   *
+   * Kept for API compatibility; the implementation is the N3.js Writer
+   * (src/n3-writer.ts), which always emits spec-valid lines — the legacy
+   * hand-rolled version leaked whatever the current flags produced (bare
+   * numeric tokens without the 'x' flag, hexified IRIs) into the output.
+   */
   statementsToNTriples(sts) {
-    var sorted = sts.slice()
-    sorted.sort()
-    var str = ''
-    var rdfns = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'
-    var self = this
-    var kb = this.store
-    var factory = this.rdfFactory
-    var termToNT = function (x) {
-      if (x.termType !== 'Collection') {
-        return self.atomicTermToN3(x)
-      }
-      var list = x.elements
-      var rest = kb.sym(rdfns + 'nil')
-      for (var i = list.length - 1; i >= 0; i--) {
-        var bnode = factory.blankNode()
-        str += termToNT(bnode) + ' ' + termToNT(kb.sym(rdfns + 'first')) + ' ' + termToNT(list[i]) + '.\n'
-        str += termToNT(bnode) + ' ' + termToNT(kb.sym(rdfns + 'rest')) + ' ' + termToNT(rest) + '.\n'
-        rest = bnode
-      }
-      return self.atomicTermToN3(rest)
-    }
-    for (var i = 0; i < sorted.length; i++) {
-      var st = sorted[i]
-      var s = ''
-      s += termToNT(st.subject) + ' '
-      s += termToNT(st.predicate) + ' '
-      s += termToNT(st.object) + ' '
-      if (this.flags.indexOf('q') >= 0) { // Do quads not nrtiples
-        s += termToNT(st.why) + ' '
-      }
-      s += '.\n'
-      str += s
-    }
-    return str
+    const contentType = this.flags.indexOf('q') >= 0 ? NQuadsContentType : NTriplesContentType
+    return statementsToN3js(sts, contentType, { factory: this.rdfFactory })
   }
 
   statementsToN3(sts) {
@@ -558,27 +537,14 @@ export class Serializer {
           throw new TypeError('Value of RDF literal node must be a string')
         }
         // var val = expr.value.toString() // should be a string already
-        if (expr.datatype && this.flags.indexOf('x') < 0) { // Supress native numbers
-          switch (expr.datatype.uri) {
-
-            case 'http://www.w3.org/2001/XMLSchema#integer':
-              return val
-
-            case 'http://www.w3.org/2001/XMLSchema#decimal': // In Turtle, must have dot
-              if (val.indexOf('.') < 0) val += '.0'
-              return val
-
-            case 'http://www.w3.org/2001/XMLSchema#double': {
-              // Must force use of 'e'
-              const eNotation = val.toLowerCase().indexOf('e') > 0
-              if (val.indexOf('.') < 0 && !eNotation) val += '.0'
-              if (!eNotation) val += 'e0'
-              return val
-            }
-
-            case 'http://www.w3.org/2001/XMLSchema#boolean':
-              return expr.value === '1' ? 'true' : 'false'
-          }
+        // Abbreviate numeric/boolean literals to native Turtle tokens, but ONLY
+        // when the lexical form is valid for the datatype and expressible as a
+        // Turtle token; otherwise fall through to the lossless quoted form below.
+        // This fixes the datatype-abbreviation bug family (#147/#619/#772):
+        // no value flips, no silent coercion of invalid values, no invalid tokens.
+        if (expr.datatype && this.flags.indexOf('x') < 0) { // Supress native numbers with 'x'
+          var abbreviated = abbreviateTypedLiteral(val, expr.datatype.uri)
+          if (abbreviated !== null) return abbreviated
         }
         var str = this.stringToN3(expr.value, this.flags)
         if (expr.language) {
@@ -600,49 +566,23 @@ export class Serializer {
 
   validPrefix = new RegExp(/^[a-zA-Z][a-zA-Z0-9]*$/)
 
-  forbidden1 = new RegExp(/[\\"\b\f\r\v\t\n\u0080-\uffff]/gm)
-  forbidden3 = new RegExp(/[\\"\b\f\r\v\u0080-\uffff]/gm)
+  // Choose the delimiter (this pretty-printing decision is unchanged); the
+  // character-level escaping is delegated to the correctness layer in
+  // ./serialize-term so control characters and U+000B are handled per the
+  // Turtle grammar (previously U+000B produced the invalid escape "\v").
   stringToN3(str, flags) {
     if (!flags) flags = 'e'
-    var res = ''
-    var i, j, k
-    var delim
-    var forbidden
-    if (str.length > 20 && // Long enough to make sense
-        str.slice(-1) !== '"' && // corner case'
-        flags.indexOf('n') < 0 && // Force single line
-        (str.indexOf('\n') > 0 || str.indexOf('"') > 0)) {
-      delim = '"""'
-      forbidden = this.forbidden3
-    } else {
-      delim = '"'
-      forbidden = this.forbidden1
-    }
-    for (i = 0; i < str.length;) {
-      forbidden.lastIndex = 0
-      var m = forbidden.exec(str.slice(i))
-      if (m == null) break
-      j = i + forbidden.lastIndex - 1
-      res += str.slice(i, j)
-      var ch = str[j]
-      if (ch === '"' && delim === '"""' && str.slice(j, j + 3) !== '"""') {
-        res += ch
-      } else {
-        k = '\b\f\r\t\v\n\\"'.indexOf(ch) // No escaping of bell (7)?
-        if (k >= 0) {
-          res += '\\' + 'bfrtvn\\"'[k]
-        } else {
-          if (flags.indexOf('e') >= 0) { // Unicode escaping in strings not unix style
-            res += '\\u' + ('000' +
-              ch.charCodeAt(0).toString(16).toLowerCase()).slice(-4)
-          } else { // no 'e' flag
-            res += ch
-          }
-        }
-      }
-      i = j + 1
-    }
-    return delim + res + str.slice(i) + delim
+    var longString =
+      str.length > 20 && // Long enough to make sense
+      str.slice(-1) !== '"' && // corner case'
+      flags.indexOf('n') < 0 && // Force single line
+      (str.indexOf('\n') > 0 || str.indexOf('"') > 0)
+    var delim = longString ? '"""' : '"'
+    var body = escapeStringBody(str, {
+      longString: longString,
+      unicodeEscape: flags.indexOf('e') >= 0, // Unicode escaping in strings not unix style
+    })
+    return delim + body + delim
   }
   //  A single symbol, either in  <> or namespace notation
 

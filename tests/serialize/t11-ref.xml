@@ -7,13 +7,13 @@
         <str:friend rdf:parseType="Resource">
             </str:friend>
         <str:name>Martin Luther King, Jr</str:name>
-        <str:spouse rdf:nodeID="_g_L4C88"/>
+        <str:spouse rdf:nodeID="dl1_coretta"/>
         <str:wikipediapage rdf:resource="https://en.wikipedia.org/wiki/Martin_Luther_King_Jr."/>
     </rdf:Description>
-    <rdf:Description rdf:nodeID="_g_L4C88">
+    <rdf:Description rdf:nodeID="dl1_coretta">
        <str:name>Coretta Scott King</str:name>
     </rdf:Description>
-    <str:Marriage rdf:nodeID="_g_L6C140">
+    <str:Marriage rdf:nodeID="n3-0">
         <str:offspring rdf:parseType="Collection">
                 <rdf:Description rdf:about="/structures.n3#MLK3">
                    <str:name>Martin Luther King III</str:name>
@@ -28,8 +28,8 @@
                    <str:name>Bernice King</str:name>
                 </rdf:Description>
         </str:offspring>
+        <str:spouse rdf:nodeID="dl1_coretta"/>
         <str:spouse rdf:resource="/structures.n3#MLK"/>
-        <str:spouse rdf:nodeID="_g_L4C88"/>
     </str:Marriage>
     <rdf:Description rdf:about="/structures.n3#MLK3">
        <str:name>Martin Luther King III</str:name>
@@ -40,29 +40,29 @@
     <rdf:Description rdf:about="/structures.n3#YK">
        <str:name>Yolanda King</str:name>
     </rdf:Description>
-    <rdf:Description rdf:nodeID="_g_L20C476">
+    <rdf:Description rdf:nodeID="n3-7">
        <str:friend rdf:resource="/structures.n3#MLK"/>
     </rdf:Description>
-    <rdf:Description rdf:nodeID="_g_L22C530">
+    <rdf:Description rdf:nodeID="n3-8">
        <str:loves rdf:parseType="Resource"></str:loves>
     </rdf:Description>
-    <str:Speech rdf:nodeID="_g_L24C602">
+    <str:Speech rdf:nodeID="n3-10">
         <str:author rdf:resource="/structures.n3#MLK"/>
         <str:date rdf:datatype="http://www.w3.org/2001/XMLSchema#date">1963-08-23</str:date>
         <str:title>I have a dream</str:title>
     </str:Speech>
     <rdf:Description rdf:about="/structures.n3#ZooReading1">
-        <str:boolDisabled rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">0</str:boolDisabled>
-        <str:boolEnabled rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">1</str:boolEnabled>
+        <str:boolDisabled rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">false</str:boolDisabled>
+        <str:boolEnabled rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</str:boolEnabled>
         <str:date rdf:datatype="http://www.w3.org/2001/XMLSchema#date">2015-02-28</str:date>
         <str:decBig rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1234567890.99</str:decBig>
         <str:decBigNegative rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">-1234567890.99</str:decBigNegative>
-        <str:decWithPoint rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">10</str:decWithPoint>
-        <str:decWithPointNegative rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">-10</str:decWithPointNegative>
-        <str:floatBig rdf:datatype="http://www.w3.org/2001/XMLSchema#double">3.14159e+100</str:floatBig>
-        <str:floatOne rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1</str:floatOne>
-        <str:floatSmallNegative rdf:datatype="http://www.w3.org/2001/XMLSchema#double">-0.0000016507</str:floatSmallNegative>
-        <str:floatTen rdf:datatype="http://www.w3.org/2001/XMLSchema#double">10</str:floatTen>
+        <str:decWithPoint rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">10.0</str:decWithPoint>
+        <str:decWithPointNegative rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">-10.0</str:decWithPointNegative>
+        <str:floatBig rdf:datatype="http://www.w3.org/2001/XMLSchema#double">3.14159e100</str:floatBig>
+        <str:floatOne rdf:datatype="http://www.w3.org/2001/XMLSchema#double">1e0</str:floatOne>
+        <str:floatSmallNegative rdf:datatype="http://www.w3.org/2001/XMLSchema#double">-1.6507e-6</str:floatSmallNegative>
+        <str:floatTen rdf:datatype="http://www.w3.org/2001/XMLSchema#double">10.0e0</str:floatTen>
         <str:intBig rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1234567890</str:intBig>
         <str:intCount rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">16</str:intCount>
         <str:intNegative rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">-123</str:intNegative>

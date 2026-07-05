@@ -8,7 +8,6 @@ import Formula from './formula'
 import Store from './store'
 import Literal from './literal'
 import log from './log'
-import N3Parser from './n3parser'
 import NamedNode from './named-node'
 import Namespace from './namespace'
 import Node from './node'
@@ -16,7 +15,6 @@ import parse from './parse'
 import { Query } from './query'
 import queryToSPARQL from './query-to-sparql'
 import RDFaProcessor from './rdfaparser'
-import RDFParser from './rdfxmlparser'
 import serialize from './serialize'
 import Serializer from './serializer'
 import SPARQLToQuery from './sparql-to-query'
@@ -59,8 +57,35 @@ const term = Node.fromValue
 // it exports the _current_ value of nextId, which is always 0
 const NextId = BlankNode.nextId
 
+/**
+ * @deprecated The hand-rolled N3 parser was removed in rdflib 3.0 in favour
+ * of N3.js. This stub only exists to fail loudly with a pointer: use
+ * `parse(text, store, base, contentType)` (or the `n3` package directly)
+ * instead. Calling or constructing it always throws.
+ */
+function N3Parser (): never {
+  throw new Error(
+    'N3Parser was removed in rdflib 3.0; use parse(text, store, base, contentType) or the n3 package directly'
+  )
+}
+
+/**
+ * @deprecated The hand-rolled DOM-walking RDF/XML parser was removed in
+ * rdflib 3.0 in favour of rdfxml-streaming-parser. This stub only exists to
+ * fail loudly with a pointer: use
+ * `parse(text, store, base, 'application/rdf+xml', callback)` instead.
+ * Calling or constructing it always throws.
+ */
+function RDFParser (): never {
+  throw new Error(
+    "RDFParser was removed in rdflib 3.0; use parse(text, store, base, 'application/rdf+xml', callback) instead"
+  )
+}
+
 export * from './utils/terms'
+export { isTrue, literalToBoolean, literalToNumber } from './utils/literalValue'
 export type { AutoInitOptions, ExtendedResponse, FetchError } from './fetcher'
+export type { ParseOptions } from './parse'
 export {
   BlankNode,
   Collection,
