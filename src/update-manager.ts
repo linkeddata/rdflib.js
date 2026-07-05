@@ -476,8 +476,8 @@ export default class UpdateManager {
         query += 'DELETE DATA { ' + this.statementNT + ' } ;\n'
         const statement = this.statement as [Quad_Subject, Quad_Predicate, Quad_Object, Quad_Graph]
         query += 'INSERT DATA { ' +
-          // `this` is the object literal returned by update_statement, which has no
-          // anonymize method (issue #231) — use the captured UpdateManager instead.
+          // `this` here has no anonymize method; use the captured
+          // UpdateManager (issue #231)
           updater.anonymize(statement[0]) + ' ' +
           updater.anonymize(statement[1]) + ' ' +
           updater.anonymize(obj) + ' ' + ' . }\n'
@@ -941,7 +941,7 @@ _:patch
         if (secondTry) {
           throw new Error('Update: Loaded ' + doc + " but still can't figure out what editing protocol it supports.")
         }
-        // No metadata about the document: load it (once) and try the update again (issue #250)
+        // Load the document (once) and try the update again (issue #250)
         // console.log(`Update: have not loaded ${doc} before: loading now...`);
         (this.store.fetcher.load(doc as NamedNode) as Promise<Response>).then(response => {
           this.update(deletions, insertions, callback, true, options)
@@ -949,8 +949,7 @@ _:patch
           if (err.status === 404 || (err.response && err.response.status === 404)) { // nonexistent files are fine
             this.update(deletions, insertions, callback, true, options)
           } else {
-            // Route the failure through the callback so the returned promise
-            // rejects instead of hanging forever (issue #479)
+            // Fail via the callback so the returned promise settles (issue #479)
             callback(doc.value, false,
               `Update: Can't get updatability status ${doc} before patching: ${err}`, err)
           }
@@ -1045,7 +1044,7 @@ _:patch
     } // should not happen
     var response = kb.any(request as NamedNode, this.ns.link('response')) as Quad_Subject
     if (!response) {
-      // Returning null silently here left update() callers hanging forever (issue #479)
+      // Throw rather than return null, which left update() hanging (issue #479)
       throw new Error('No record of HTTP GET response for document: ' + doc)
     }
     var contentType = (kb.the(response, this.ns.httph('content-type')) as Term).value
@@ -1139,7 +1138,7 @@ _:patch
       }
       callbackFunction(doc.value, true, '')  // success!
     }).catch((err) => {
-      // Without this the returned promise never settled on write failure (issue #479)
+      // Report write failures so the returned promise settles (issue #479)
       callbackFunction(doc.value, false, err.message, err)
     })
   }

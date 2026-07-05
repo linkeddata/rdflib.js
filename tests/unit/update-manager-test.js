@@ -256,7 +256,6 @@ describe('UpdateManager', () => {
       updater.store.add(st1)
 
       const handle = updater.update_statement(st1)
-      // Before the fix this threw synchronously: `this.anonymize is not a function`
       handle.set_object($rdf.literal('999'), (uri, ok, text) => {
         try {
           expect(ok).to.equal(true)
@@ -298,8 +297,7 @@ describe('UpdateManager', () => {
     })
 
     it('callback form should report failure when the load error carries no response object', done => {
-      // Network-level failures have no `.response`; this used to crash inside the
-      // rejection handler and swallow the error, so update() never settled.
+      // Network-level failures carry no `.response`
       const err = new Error('Fetcher: network failure')
       err.status = 999
       sinon.stub(updater.store.fetcher, 'load').rejects(err)
