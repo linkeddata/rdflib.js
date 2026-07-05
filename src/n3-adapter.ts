@@ -19,7 +19,15 @@
  * `kb.sym(base)` — rdflib's provenance convention — while explicit named
  * graphs (TriG / N-Quads) are kept as-is.
  */
-import { Parser as N3jsParser, Store as N3jsStore, DataFactory as N3jsDataFactory } from 'n3'
+// Deep imports of just the classes this adapter needs: a root `import 'n3'`
+// drags N3StreamWriter (and its readable-stream/Node polyfill chain) into
+// downstream browser bundles (#449).
+// @ts-ignore no type declarations for the deep import
+import N3jsParser from 'n3/lib/N3Parser.js'
+// @ts-ignore no type declarations for the deep import
+import N3jsStore from 'n3/lib/N3Store.js'
+// @ts-ignore no type declarations for the deep import
+import N3jsDataFactory from 'n3/lib/N3DataFactory.js'
 import Collection from './collection'
 import Formula from './formula'
 import Variable from './variable'
