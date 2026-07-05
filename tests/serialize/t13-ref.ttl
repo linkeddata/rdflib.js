@@ -9,7 +9,7 @@ str:MLK
     str:died "1968-01-15"^^xsd:date;
     str:friend [];
     str:name "Martin Luther King, Jr";
-    str:spouse _:_g_L4C88;
+    str:spouse _:dl0_dl1_coretta;
     str:wikipediapage <https://en.wikipedia.org/wiki/Martin_Luther_King_Jr.>.
 str:MLK3 str:name "Martin Luther King III".
 
@@ -23,15 +23,15 @@ str:ZooReading1
     str:decBigNegative -1234567890.99;
     str:decWithPoint 10.0;
     str:decWithPointNegative -10.0;
-    str:floatBig 3.14159e+100;
-    str:floatOne 1.0e0;
-    str:floatSmallNegative -0.0000016507e0;
+    str:floatBig 3.14159e100;
+    str:floatOne 1e0;
+    str:floatSmallNegative -1.6507e-6;
     str:floatTen 10.0e0;
     str:intBig 1234567890;
     str:intCount 16;
     str:intNegative -123;
     str:time "2015-03-16T17:53Z"^^xsd:dateTime.
-_:_g_L4C88 str:name "Coretta Scott King".
+_:dl0_dl1_coretta str:name "Coretta Scott King".
 
 [
     a str:Speech;
@@ -46,5 +46,5 @@ _:_g_L4C88 str:name "Coretta Scott King".
 [
     a str:Marriage;
     str:offspring ( str:MLK3 str:DSK str:YK [ str:name "Bernice King" ] );
-    str:spouse str:MLK, _:_g_L4C88
+    str:spouse str:MLK, _:dl0_dl1_coretta
 ].

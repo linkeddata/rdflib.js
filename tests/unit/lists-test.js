@@ -1,6 +1,5 @@
 import {expect} from 'chai'
 
-import { convertFirstRestNil } from '../../src/lists'
 import parse from '../../src/parse'
 import CanonicalDataFactory from '../../src/factories/canonical-data-factory'
 import defaultXSD from '../../src/xsd'
@@ -43,7 +42,6 @@ describe('Lists', () => {
         let content = prefixes +
   ' <#test> <#value> [ rdf:first 1; rdf:rest [ rdf:first 2; rdf:rest [ rdf:first 3; rdf:rest rdf:nil ]]] .'
         parse(content, store, base, mimeType)
-        convertFirstRestNil(store, doc)
         expect(store.statements[0].object.termType).to.eql('Collection')
         expect(showDoc(store, doc)).to.eql(`@prefix : <#>.
 
@@ -60,7 +58,6 @@ describe('Lists', () => {
         let content = prefixes +
   '[ rdf:first 1; rdf:rest [ rdf:first 2; rdf:rest [ rdf:first 3; rdf:rest rdf:nil ]]] <#value>  <#test>  .'
         parse(content, store, base, mimeType)
-        convertFirstRestNil(store, doc)
         // console.log('@@@ CCC ' + dumpStore(store))
         expect(store.statements[0].subject.termType).to.eql('Collection')
         expect(store.statements[0].subject.elements.length).to.eql(3)
@@ -78,7 +75,6 @@ describe('Lists', () => {
         parse(content, store, base, mimeType)
         // console.log('@@@ AAA ' + showDoc(store, doc))
         // expect(store.statements[0].object.termType).to.eql('BlankNode')
-        convertFirstRestNil(store, doc)
         // console.log('@@@ CCC ' + dumpStore(store))
         // expect(store.statements[0].object.termType).to.eql('Collection')
         expect(showDoc(store, doc)).to.eql(`@prefix : <#>.
@@ -101,7 +97,6 @@ describe('Lists', () => {
         parse(content, store, base, mimeType)
         // console.log('@@@ AAA ' + showDoc(store, doc))
         // expect(store.statements[0].object.termType).to.eql('BlankNode')
-        convertFirstRestNil(store, doc)
         // console.log('@@@ BBB ' + showDoc(store, doc))
         // expect(store.statements[0].object.termType).to.eql('Collection')
         expect(showDoc(store, doc)).to.eql(`@prefix : <#>.
@@ -119,7 +114,6 @@ describe('Lists', () => {
         let content = prefixes +
   ' <#test> <#value> rdf:nil .'
         parse(content, store, base, mimeType)
-        convertFirstRestNil(store, doc)
         expect(showDoc(store, doc)).to.eql(`@prefix : <#>.
 
 :test :value ( ).
@@ -138,7 +132,6 @@ describe('Lists', () => {
          :zap [ rdf:first 2;  rdf:rest [  rdf:first rdf:nil; rdf:rest [ rdf:first 4; rdf:rest rdf:nil]]] .
   `
         parse(content, store, base, mimeType)
-        convertFirstRestNil(store, doc)
         expect(showDoc(store, doc)).to.eql(`@prefix : <#>.
 
 :test :value ( ).

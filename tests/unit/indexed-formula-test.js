@@ -355,7 +355,14 @@ describe('IndexedFormula', () => {
       })
   })
   describe('removeDocument', () => {
-    const store = new IndexedFormula()
+    // Use a collection-supporting store (the default in normal rdflib usage via
+    // DataFactory.graph()). The N3.js-based parser correctly attributes the
+    // status list's rdf:first/rest triples to the document graph, so — unlike a
+    // bare IndexedFormula() whose CanonicalDataFactory cannot fold them into a
+    // Collection — the list is stored as a single Collection term that
+    // removeMetadata/removeDocument clean up. (The legacy parser only "passed"
+    // here by misfiling those list triples into the default graph.)
+    const store = DataFactory.graph()
     const meta = store.sym('chrome://TheCurrentSession')
     const prefixes = `@prefix : <#>.
     @prefix http: <http://www.w3.org/2007/ont/http#>.
@@ -424,6 +431,23 @@ describe('IndexedFormula', () => {
       store.removeDocument(store.sym('https://bob.localhost:8443/profile/card'))
       expect(serialize(meta, store, null)).to.eql(voidDoc)
       expect(serialize(doc, store, doc.uri)).to.eql(voidDoc)
+    })
+    it ('removeMetadata on a store without collection support leaves the raw status-list triples (pre-existing #631 gap, now visible)', () => {
+      // With a CanonicalDataFactory store the status list cannot be folded
+      // into a Collection, so it stays as raw rdf:first/rest triples that are
+      // now correctly attributed to the metadata graph (the legacy parser
+      // misfiled them into the default graph, which made the old version of
+      // this test pass vacuously). removeMetadata only knows how to remove a
+      // status Collection, so those triples survive — documented here until
+      // #631 is fixed.
+      const rawStore = new IndexedFormula()
+      parse(metaContent, rawStore, meta.value, 'text/turtle')
+      rawStore.removeMetadata(rawStore.sym('https://bob.localhost:8443/profile/card'))
+      const leftovers = rawStore.statementsMatching(null, null, null, meta)
+      expect(leftovers.length).to.be.greaterThan(0)
+      leftovers.forEach(st => {
+        expect(st.predicate.value).to.match(/rdf-syntax-ns#(first|rest)$/)
+      })
     })
   })
 })

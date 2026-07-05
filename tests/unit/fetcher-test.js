@@ -538,10 +538,13 @@ describe('Fetcher', () => {
     })
 
     it('should load and parse N3', () => {
+      // (bareword dates were a nonstandard cwm-era extension; the N3.js-based
+      // parser requires the standard quoted xsd:date form)
       let testN3 = `@prefix : <http://example.com/foo/vocab#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
 :building0 :bar 123, 78768.
 :building1  :length 1.45e5 ;
-    :created 2012-03-12 .
+    :created "2012-03-12"^^xsd:date .
 :building0 :connectsTo :building4 .`
 
       nock('https://example.com').get('/test.n3')
@@ -558,6 +561,77 @@ describe('Fetcher', () => {
           )
 
           expect(match.object.value).to.equal('http://example.com/foo/vocab#building4')
+        })
+    })
+
+    it('does not accumulate blank-node subgraphs on force-reload (force implies clearPreviousData)', () => {
+      // Parsed blank-node labels are not stable across parses, so re-parsing
+      // a document without clearing it first duplicates its blank-node
+      // subgraphs. `force: true` therefore implies `clearPreviousData: true`.
+      const testTurtle = `@prefix foaf: <http://xmlns.com/foaf/0.1/>.
+<#me> foaf:knows [ foaf:name "Amy" ], [ foaf:name "Bob" ].`
+      const doc = 'https://example.com/bnodes.ttl'
+
+      nock('https://example.com').get('/bnodes.ttl').twice()
+        .reply(200, testTurtle, { 'Content-Type': 'text/turtle' })
+
+      const kb = fetcher.store
+      return fetcher.load(doc)
+        .then(() => {
+          const before = kb.statementsMatching(null, null, null, kb.sym(doc)).length
+          expect(before).to.equal(4)
+
+          return fetcher.load(doc, { force: true })
+            .then(() => {
+              const after = kb.statementsMatching(null, null, null, kb.sym(doc)).length
+              expect(after).to.equal(before)
+            })
+        })
+    })
+
+    it('accumulates on force-reload when clearPreviousData is explicitly false', () => {
+      const testTurtle = `@prefix foaf: <http://xmlns.com/foaf/0.1/>.
+<#me> foaf:knows [ foaf:name "Amy" ].`
+      const doc = 'https://example.com/bnodes-keep.ttl'
+
+      nock('https://example.com').get('/bnodes-keep.ttl').twice()
+        .reply(200, testTurtle, { 'Content-Type': 'text/turtle' })
+
+      const kb = fetcher.store
+      return fetcher.load(doc)
+        .then(() => {
+          const before = kb.statementsMatching(null, null, null, kb.sym(doc)).length
+
+          return fetcher.load(doc, { force: true, clearPreviousData: false })
+            .then(() => {
+              const after = kb.statementsMatching(null, null, null, kb.sym(doc)).length
+              expect(after).to.be.above(before)
+            })
+        })
+    })
+
+    it('should load and parse N3 with formula subjects (#567)', () => {
+      // Loading a document like https://drive.verborgh.org/tmp/2022/cha-58-direct.n3
+      // used to fail with "Subject is not a subject type".
+      let testN3 = `@prefix : <http://example.com/foo/vocab#>.
+{ :a :b :c } => { :d :e :f }.`
+
+      nock('https://example.com').get('/rules.n3')
+        .reply(200, testN3, { 'Content-Type': 'text/n3' })
+
+      return fetcher.load('https://example.com/rules.n3')
+        .then(res => {
+          expect(res.status).to.equal(200)
+          let kb = fetcher.store
+
+          let match = kb.anyStatementMatching(
+            null,
+            kb.sym('http://www.w3.org/2000/10/swap/log#implies')
+          )
+
+          expect(match.subject.termType).to.equal('Graph')
+          expect(match.subject.statements).to.have.length(1)
+          expect(match.object.termType).to.equal('Graph')
         })
     })
   })
