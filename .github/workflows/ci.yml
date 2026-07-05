@@ -39,6 +39,31 @@ jobs:
             !node_modules
           retention-days: 1
 
+  # Runs every unit test file in its own mocha process so shared-state
+  # leaks between test files are caught (#400).
+  test-isolation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22.x
+      - run: npm ci
+      - run: npm run test:unit:isolation
+
+  # Loads the built browser bundle in a real Chromium page (#713).
+  browser-e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22.x
+      - run: npm ci
+      - run: npm run build:browser
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e:browser
+
   prerelease-check:
     needs: build
     runs-on: ubuntu-latest
