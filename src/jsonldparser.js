@@ -101,8 +101,8 @@ function isNil (term) {
  * parse path does (see src/lists.ts) so `Collection.elements` keeps working
  * for downstream consumers.
  *
- * Operates only on the quads produced by the current parse — never on
- * pre-existing store content — and, unlike lists.ts's convertFirstRestNil,
+ * Operates only on the quads produced by the current parse (never on
+ * pre-existing store content) and, unlike lists.ts's convertFirstRestNil,
  * leaves non-well-formed chains as raw triples instead of throwing.
  *
  * @param kb - The store whose rdfFactory builds the Collections.

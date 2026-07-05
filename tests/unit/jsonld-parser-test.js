@@ -188,8 +188,8 @@ describe('JSON-LD parser (jsonld.toRDF)', () => {
   describe('blank nodes are fresh per parse (regression: cross-document conflation)', () => {
     it('never conflates blank nodes from two documents parsed into one store', async () => {
       const store = collectionStore()
-      // Both docs make jsonld.js emit the label _:b0 internally; the old
-      // walker copied those labels into the store, conflating the two nodes.
+      // Both docs make jsonld.js emit the label _:b0 internally; the label
+      // must not be copied into the store verbatim
       await jsonldParser(JSON.stringify({
         '@id': 'http://example.com/a',
         'http://example.com/p': { 'http://example.com/q': 'first doc' }
