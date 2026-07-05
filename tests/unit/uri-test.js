@@ -51,6 +51,15 @@ describe('uri', () => {
         expect(uri.join(rel, base)).to.equal(abs)
       })
     })
+
+    // https://github.com/linkeddata/rdflib.js/issues/265
+    it('does not produce a double slash when joining an absolute path to a bare origin', () => {
+      expect(uri.join('/some/absolute/path', 'https://example.org'))
+        .to.equal('https://example.org/some/absolute/path')
+      // and still behaves the same when the origin has a trailing slash
+      expect(uri.join('/some/absolute/path', 'https://example.org/'))
+        .to.equal('https://example.org/some/absolute/path')
+    })
   })
 
   describe('refTo', () => {
