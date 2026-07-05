@@ -63,6 +63,32 @@ installed.
 npm install --save rdflib
 ```
 
+## Creating terms
+
+rdflib implements the [RDF/JS data model specification](https://rdf.js.org/data-model-spec/): terms are created with the factory functions `namedNode()`, `blankNode()`, `literal()`, `variable()` and `quad()`, all exported from the package root (`sym()` is an alias for `namedNode()`).
+
+Note that, per that specification, `literal()` takes **two** arguments — the second one is *either* a language tag *or* a datatype:
+
+```ts
+literal(value: string | number | boolean | Date, languageOrDatatype?: string | NamedNode): Literal
+```
+
+For example:
+
+```js
+import { literal, namedNode } from 'rdflib'
+
+literal('chat')       // plain string literal ("chat"^^xsd:string)
+literal('chat', 'fr') // language-tagged literal ("chat"@fr, datatype rdf:langString)
+literal('2019', namedNode('http://www.w3.org/2001/XMLSchema#gYear')) // typed literal
+literal('2019', 'http://www.w3.org/2001/XMLSchema#gYear')            // same, with the datatype IRI as a string
+literal(4)            // convenience form: infers the datatype ("4"^^xsd:integer)
+```
+
+A string second argument is interpreted as a datatype IRI when it contains a colon, and as a language tag otherwise.
+
+A common pitfall (present in some older tutorials) is calling `literal(value, undefined, datatype)`: the factory function ignores the third argument and returns a plain `xsd:string` literal. The three-argument form only exists on the class constructor, `new Literal(value, language, datatype)`. To create a typed literal with the factory function, pass the datatype as the second argument, as shown above.
+
 ## Serializer flags
 
 The Turtle/N3/JSON‑LD serializers accept an optional `flags` string to tweak output formatting and abbreviation behavior.
