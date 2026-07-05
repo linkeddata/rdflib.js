@@ -4,6 +4,7 @@
 ** 2010-08-08 TimBL folded in Kenny's WEBDAV
 ** 2010-12-07 TimBL added local file write code
 */
+import { Generator as SparqlGenerator } from 'sparqljs'
 import IndexedFormula from './store'
 import { docpart, join as uriJoin } from './uri'
 import Fetcher, { Options } from './fetcher'
@@ -13,6 +14,7 @@ import { isBlankNode, isStore } from './utils/terms'
 import * as Util from './utils-js'
 import Statement from './statement'
 import RDFlibNamedNode from './named-node'
+import Variable from './variable'
 import { termValue } from './utils/termValue'
 import { BlankNode, NamedNode, Quad, Quad_Graph, Quad_Object, Quad_Predicate, Quad_Subject, Term, } from './tf-types'
 
@@ -754,9 +756,19 @@ export default class UpdateManager {
 
   /**
    * @private
-   * 
-   * This helper function constructs SPARQL Update query from resolved arguments.
-   * 
+   *
+   * This helper function constructs a SPARQL 1.1 Update query from resolved
+   * arguments, by building a sparqljs AST and serializing it with the
+   * sparqljs Generator (rather than concatenating strings).
+   *
+   * Blank nodes are illegal in DELETE templates and DELETE DATA, and a blank
+   * node in a WHERE pattern denotes a *fresh* variable rather than the node
+   * the caller meant. So every blank node that already exists in the store is
+   * consistently rewritten to one collision-free variable across the DELETE,
+   * INSERT and WHERE clauses (the WHERE clause built from `bnodes_context`
+   * grounds it), while genuinely fresh blank nodes are kept as blank nodes in
+   * insertions only.
+   *
    * @param ds: deletions array.
    * @param is: insertions array.
    * @param bnodes_context: Additional context to uniquely identify any blank nodes.
@@ -766,42 +778,111 @@ export default class UpdateManager {
     is: ReadonlyArray<Statement>,
     bnodes_context,
   ): string {
-    var whereClause = this.contextWhere(bnodes_context)
-    var query = ''
-    if (whereClause.length) { // Is there a WHERE clause?
-      if (ds.length) {
-        query += 'DELETE { '
-        for (let i = 0; i < ds.length; i++) {
-          query += this.anonymizeNT(ds[i]) + '\n'
+    const context: Quad[] = bnodes_context || []
+    const rdfNS = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'
+
+    // One collision-free variable per blank node, consistent across clauses
+    const usedVarNames = new Set<string>()
+    const varByBnode = new Map<string, Variable>()
+    const variableForBnode = (bnode: Term): Variable => {
+      let variable = varByBnode.get(bnode.value)
+      if (!variable) {
+        const base = bnode.value.replace(/[^A-Za-z0-9_]/g, '_') || 'bnode'
+        let name = base
+        for (let n = 2; usedVarNames.has(name); n++) {
+          name = base + '_' + n
         }
-        query += ' }\n'
+        usedVarNames.add(name)
+        variable = new Variable(name)
+        varByBnode.set(bnode.value, variable)
       }
-      if (is.length) {
-        query += 'INSERT { '
-        for (let i = 0; i < is.length; i++) {
-          query += this.anonymizeNT(is[i]) + '\n'
+      return variable
+    }
+
+    // Rewrite one term for use in the given clause. `role` is 'delete',
+    // 'insert' or 'where'; `data` is true when generating a DATA operation
+    // (no WHERE clause available to ground variables).
+    let freshBnodeCount = 0
+    const termFor = (term: Term, role: string, data: boolean, triples: any[]): Term => {
+      const anyTerm = term as any
+      if (anyTerm.termType === 'Collection' || anyTerm.termType === 'Empty') {
+        // Desugar rdflib Collections into standard rdf:first/rest triples
+        if (role === 'delete') {
+          throw new Error('UpdateManager.update: cannot delete a statement containing a ' +
+            'Collection ' + anyTerm.toNT() + ': there is no SPARQL Update template for it. ' +
+            'Delete the underlying statements instead.')
         }
-        query += ' }\n'
+        const elements = anyTerm.elements || []
+        if (elements.length === 0) {
+          return this.store.rdfFactory.namedNode(rdfNS + 'nil') as Term
+        }
+        let head = this.store.rdfFactory.blankNode('l_' + freshBnodeCount++)
+        const first = head
+        for (let i = 0; i < elements.length; i++) {
+          triples.push({
+            subject: head,
+            predicate: this.store.rdfFactory.namedNode(rdfNS + 'first'),
+            object: termFor(elements[i], role, data, triples)
+          })
+          const rest = (i === elements.length - 1)
+            ? this.store.rdfFactory.namedNode(rdfNS + 'nil')
+            : this.store.rdfFactory.blankNode('l_' + freshBnodeCount++)
+          triples.push({
+            subject: head,
+            predicate: this.store.rdfFactory.namedNode(rdfNS + 'rest'),
+            object: rest
+          })
+          head = rest as any
+        }
+        return first as Term
       }
-      query += whereClause
+      if (isBlankNode(term)) {
+        if (this.mentioned(term)) {
+          if (data) {
+            throw new Error('UpdateManager.update: cannot patch the blank node ' +
+              (term as any).toNT() + ': no identifying WHERE context could be built for it ' +
+              'in its document, so a SPARQL Update cannot refer to it unambiguously.')
+          }
+          return variableForBnode(term) as unknown as Term
+        }
+        if (role === 'delete') {
+          throw new Error('UpdateManager.update: cannot delete a statement containing the ' +
+            'blank node ' + (term as any).toNT() + ' which is not in the store: there is nothing ' +
+            'to identify it by.')
+        }
+        return term // fresh blank node in an insertion: legal SPARQL
+      }
+      return term
+    }
+
+    const bgpFor = (sts: ReadonlyArray<Quad>, role: string, data: boolean): any[] => {
+      const triples: any[] = []
+      for (const st of sts) {
+        triples.push({
+          subject: termFor(st.subject, role, data, triples),
+          predicate: termFor(st.predicate, role, data, triples),
+          object: termFor(st.object, role, data, triples)
+        })
+      }
+      return [{ type: 'bgp', triples }]
+    }
+
+    const updates: any[] = []
+    if (context.length) { // Is there a WHERE clause?
+      const op: any = { updateType: 'insertdelete', delete: [], insert: [] }
+      if (ds.length) op.delete = bgpFor(ds, 'delete', false)
+      if (is.length) op.insert = bgpFor(is, 'insert', false)
+      op.where = bgpFor(context, 'where', false)
+      updates.push(op)
     } else { // no where clause
       if (ds.length) {
-        query += 'DELETE DATA { '
-        for (let i = 0; i < ds.length; i++) {
-          query += this.anonymizeNT(ds[i]) + '\n'
-        }
-        query += ' } \n'
+        updates.push({ updateType: 'delete', delete: bgpFor(ds, 'delete', true) })
       }
       if (is.length) {
-        if (ds.length) query += ' ; '
-        query += 'INSERT DATA { '
-        for (let i = 0; i < is.length; i++) {
-          query += this.nTriples(is[i]) + '\n'
-        }
-        query += ' }\n'
+        updates.push({ updateType: 'insert', insert: bgpFor(is, 'insert', true) })
       }
     }
-    return query;
+    return new SparqlGenerator().stringify({ type: 'update', prefixes: {}, updates } as any) + '\n'
   }
 
   /**
@@ -846,6 +927,62 @@ _:patch
     query += "   a solid:InsertDeletePatch .\n"
 
     return query;
+  }
+
+  /**
+   * @private
+   *
+   * Validates that every statement handed to update() is made of real RDF
+   * terms and targets the document being patched. Throws a clear TypeError
+   * naming the offending argument, rather than letting a plain string (or
+   * other non-term value) turn into garbage SPARQL that only fails
+   * server-side (#278).
+   */
+  validateUpdateStatements(sts: ReadonlyArray<Statement>, role: string, doc): void {
+    const expected = {
+      subject: 'a NamedNode or BlankNode',
+      predicate: 'a NamedNode',
+      object: 'a NamedNode, BlankNode, Literal or Collection',
+      graph: 'the NamedNode of the document to patch'
+    }
+    const allowedTermTypes = {
+      subject: ['NamedNode', 'BlankNode', 'Variable'],
+      predicate: ['NamedNode', 'Variable'],
+      object: ['NamedNode', 'BlankNode', 'Literal', 'Collection', 'Empty', 'Variable'],
+      graph: ['NamedNode']
+    }
+    sts.forEach((st, i) => {
+      if (!st || typeof st !== 'object' || typeof (st as any).subject === 'undefined') {
+        throw new TypeError(`UpdateManager.update: ${role}[${i}] is not a Statement: ${st}. ` +
+          'Expected a Statement as produced by st() or statementsMatching().')
+      }
+      for (const prop of ['subject', 'predicate', 'object', 'graph']) {
+        const term = st[prop]
+        if (term === undefined || term === null) {
+          throw new TypeError(`UpdateManager.update: the ${prop} of ${role}[${i}] is missing; ` +
+            `expected ${expected[prop]}.`)
+        }
+        if (typeof term === 'string') {
+          throw new TypeError(`UpdateManager.update: the ${prop} of ${role}[${i}] is the string ` +
+            `${JSON.stringify(term)}, not an RDF term; expected ${expected[prop]}. ` +
+            'Build terms with sym()/namedNode() or literal().')
+        }
+        if (typeof (term as any).termType !== 'string') {
+          throw new TypeError(`UpdateManager.update: the ${prop} of ${role}[${i}] is not an ` +
+            `RDF term (it has no termType); expected ${expected[prop]}.`)
+        }
+        const allowed = allowedTermTypes[prop]
+        if (allowed.indexOf((term as any).termType) < 0) {
+          throw new TypeError(`UpdateManager.update: the ${prop} of ${role}[${i}] is a ` +
+            `${(term as any).termType} ("${(term as any).value}"); expected ${expected[prop]}. ` +
+            '(Note that a plain string passed to st() becomes a Literal.)')
+        }
+      }
+      if (!doc.equals(st.graph)) {
+        throw new Error('update: destination ' + doc +
+          ' inconsistent with ' + role.slice(0, -1) + ' quad targeting ' + st.graph)
+      }
+    })
   }
 
   /**
@@ -915,22 +1052,11 @@ _:patch
 
       var startTime = Date.now()
 
-      var props = ['subject', 'predicate', 'object', 'why']
-      var verbs = ['insert', 'delete']
-      var clauses = { 'delete': ds, 'insert': is }
-      verbs.map(function (verb) {
-        clauses[verb].map(function (st: Quad) {
-          if (!doc.equals(st.graph)) {
-            throw new Error('update: destination ' + doc +
-              ' inconsistent with delete quad ' + st.graph)
-          }
-          props.map(function (prop) {
-            if (typeof st[prop] === 'undefined') {
-              throw new Error('update: undefined ' + prop + ' of statement.')
-            }
-          })
-        })
-      })
+      // Validate the statements before generating anything from them (#278):
+      // a plain string (or other non-term value) in a term position would
+      // otherwise produce garbage SPARQL that only fails server-side.
+      this.validateUpdateStatements(ds, 'deletions', doc)
+      this.validateUpdateStatements(is, 'insertions', doc)
 
       var protocol = this.editable(doc.value, kb);
 
