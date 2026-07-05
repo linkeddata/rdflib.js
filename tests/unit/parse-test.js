@@ -474,7 +474,7 @@ exa:myid exa:prop1 [ exa:prop2 [ exa:prop3 "value" ] ].
 
   describe('xml', () => {
     describe('literals', () => {
-      it('handles language subtags', () => {
+      it('handles language subtags', done => {
         let base = 'http://test.com'
         let mimeType = 'application/rdf+xml'
         let store = DataFactory.graph()
@@ -485,8 +485,25 @@ exa:myid exa:prop1 [ exa:prop2 [ exa:prop3 "value" ] ].
                <core:prefLabel rdf:datatype="http://www.w3.org/1999/02/22-rdf-syntax-ns#langString" xml:lang="fr">Valeur de test</core:prefLabel>
            </rdf:Description>
        </rdf:RDF>`
-        parse(content, store, base, mimeType)
-        expect(store.statements[0].object.lang).to.eql('fr')
+        // Since the migration to rdfxml-streaming-parser, RDF/XML parsing is
+        // asynchronous (like JSON-LD): results must be read via the callback.
+        //
+        // BEHAVIOR DELTA (flagged in the migration PR): when rdf:datatype is
+        // present, the datatype now wins over an xml:lang in scope, per the
+        // RDF/XML spec (typed literals carry no language tag). The old
+        // parser preferred xml:lang and produced lang 'fr' for this input.
+        parse(content, store, base, mimeType, err => {
+          try {
+            expect(err).to.equal(null)
+            const literal = store.statements[0].object
+            expect(literal.datatype.value).to.eql('http://www.w3.org/1999/02/22-rdf-syntax-ns#langString')
+            expect(literal.lang).to.eql('')
+            expect(literal.value).to.eql('Valeur de test')
+            done()
+          } catch (e) {
+            done(e)
+          }
+        })
       }) // test
     }) // literals
   }) // xml
