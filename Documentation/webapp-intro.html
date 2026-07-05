@@ -48,7 +48,7 @@ td: { background-color: #eee; }
 	<li><b>Statement</b> - Another word for quad.</li>
 </ul><h3>Setting up rdflib.js</h3>
 
-<p>Typically people define rdflib in your module as $rdf, so that you an easily cut and paste code between projects and examples here, without confusion.</p>
+<p>Typically people define rdflib in your module as $rdf, so that you can easily cut and paste code between projects and examples here, without confusion.</p>
 
 <p>Installation steps (using npm):</p>
 
@@ -64,7 +64,7 @@ td: { background-color: #eee; }
 
 <h3>Setting up a Store</h3>
 
-<p>Suppose we have a store, and we set up a person and their profile. Their webid is the URI '<a href="https://example.com/alice/card#me">https://example.com/alice/card#me</a>', which is, if you like, a local variable ‘me’ within the the file '<a href="https://example.com/alice/card">https://example.com/alice/card</a>'. </p>
+<p>Suppose we have a store, and we set up a person and their profile. Their WebID is the URI '<a href="https://example.com/alice/card#me">https://example.com/alice/card#me</a>', which is, if you like, a local variable ‘me’ within the the file '<a href="https://example.com/alice/card">https://example.com/alice/card</a>'. </p>
 
 <p>There are two ways of creating a store:  </p>
 
@@ -84,7 +84,7 @@ td: { background-color: #eee; }
 
 <pre>
 <code>const me = store.sym('https://example.com/alice/card#me');
-const profile = me.doc();       //i.e. store.sym(''https://example.com/alice/card#me')</code></pre>
+const profile = me.doc();       //i.e. store.sym(''https://example.com/alice/card#me').doc()</code></pre>
 
 <p>We are going to be using the VCARD terms, and so we set up a <b>Namespace</b> object to which generates the right predicate URIs for each term.</p>
 
@@ -145,7 +145,7 @@ $rdf.parse(text, store, doc.uri, 'text/turtle');  // pass base URI
 <code class="language-javascript">console.log($rdf.serialize(doc, store, doc.uri, 'text/turtle'));
 </code></pre>
 
-<p>If you omit the document parameter to serialize, or pass null, then you will get all the triples in the store.  This may, if you have used a Fetcher,  possibly metadata which the fetcher has stored about the HTTP requests it made in fetching your documents.  Which might be interesting... but not what you were expecting.</p>
+<p>If you omit the document parameter to serialize, or pass null, then you will get all the triples in the store. If you have used a Fetcher, this may display metadata which the fetcher has stored about the HTTP requests it made in fetching your documents.  Which might be interesting... but not what you were expecting.</p>
 
 <h4>Using match() to Search the store</h4>
 
@@ -254,6 +254,44 @@ $rdf.parse(text, store, doc.uri, 'text/turtle');  // pass base URI
 
 <p><i>We have introduced you to match() after the methods any() and each() because most of the time when you are programming we find those are actually more convenient than using match.</i></p>
 
+<h4>Querying the store with SPARQL</h4>
+
+<p>rdflib can also run a limited subset of SPARQL against the local store.  (It does not include a client for remote SPARQL endpoints, and it is not a full SPARQL engine — for complete SPARQL 1.1 support over an rdflib store consider a dedicated query engine such as Comunica.)  You first convert the SPARQL text into an rdflib Query object with <tt>$rdf.SPARQLToQuery</tt>, and then run that query over the store with <tt>store.query()</tt>:</p>
+
+<pre>
+<code class="language-javascript">const sparql = `
+PREFIX vcard: &lt;http://www.w3.org/2006/vcard/ns#&gt;
+SELECT ?name
+WHERE {
+   ?person vcard:fn ?name .
+}`;
+
+const query = $rdf.SPARQLToQuery(sparql, false, store);
+
+store.query(query, bindings =&gt; {
+	// Called once for every result found.
+	// Bindings are keyed by variable name, prefixed with '?'
+	console.log(bindings['?name'].value);
+}, null /* fetcher */, () =&gt; {
+	console.log('Query finished');
+});
+</code></pre>
+
+<p>The results callback is called once per solution, with an object mapping each <tt>?variable</tt> in the SELECT clause to a term.  There is also a synchronous variant, <tt>store.querySync(query)</tt>, which returns an array of such bindings objects.  Note that unless the second (<i>testMode</i>) argument of <tt>SPARQLToQuery</tt> is set to true, a store which has a fetcher attached will schedule a web look-up of every named node mentioned in the query patterns, following the linked-data idea that dereferencing a URI is how you find data about it.</p>
+
+<p>The supported SPARQL subset is, roughly:</p>
+
+<ul>
+	<li>Only the <tt>SELECT ... WHERE { ... }</tt> query form — no CONSTRUCT, ASK, DESCRIBE, and no SPARQL Update.</li>
+	<li><tt>PREFIX</tt> declarations (the <tt>rdf:</tt> and <tt>rdfs:</tt> prefixes are predefined); no <tt>BASE</tt>.</li>
+	<li>Basic graph patterns: triple patterns separated by <tt>.</tt>, with the <tt>;</tt> and <tt>,</tt> abbreviations and the <tt>a</tt> keyword; variables are written <tt>?name</tt> or <tt>$name</tt>.</li>
+	<li>Plain, language-tagged (<tt>"chat"@fr</tt>) and datatyped (<tt>"4"^^xsd:integer</tt>) literals.</li>
+	<li><tt>OPTIONAL { ... }</tt> blocks.</li>
+	<li><tt>FILTER</tt> with a very small constraint language: equality tests of the form <tt>FILTER(?v = &lt;term&gt;)</tt>, and regular-expression tests written <tt>FILTER(regexp('pattern', ?v))</tt> — note this differs from the standard SPARQL <tt>regex()</tt> function and argument order.  The comparison operators <tt>&lt;</tt> and <tt>&gt;</tt> are accepted by the parser but are currently evaluated as equality, so do not rely on them.</li>
+</ul>
+
+<p>Everything else — UNION, GRAPH, BIND, VALUES, property paths, subqueries, aggregates, DISTINCT, ORDER BY, LIMIT, OFFSET — is <b>not</b> supported.</p>
+
 <h4>Making new Statements</h4>
 
 <p>You can make a new statement using:</p>
@@ -282,7 +320,7 @@ $rdf.parse(text, store, doc.uri, 'text/turtle');  // pass base URI
   or the data corresponding to one data document out there.
 </p>
 
-<img src="https://raw.githubusercontent.com/linkeddata/rdflib.js/Documentation/diagrams/rdflib_block_diagram.png" />
+<img src="https://raw.githubusercontent.com/linkeddata/rdflib.js/master/diagrams/rdflib_block_diagram.png" />
 
 <p>Let's set up a store as before.</p>
 
@@ -296,7 +334,7 @@ const VCARD = new $rdf.Namespace('http://www.w3.org/2006/vcard/ns#');
 <p>This time, we'll also make a Fetcher for the store. The Fetcher is a helper object which allows you to transfer data to and from the web of data. </p>
 
 <pre>
-<code class="language-javascript">const fetcher =new $rdf.Fetcher(store);
+<code class="language-javascript">const fetcher = new $rdf.Fetcher(store);
 </code></pre>
 
 <p>Now let's load the document we have been talking about.</p>
@@ -371,14 +409,14 @@ function cardFor (person) {
 <p>Then inside of our web application, we could run the following commands:</p>
 
 <pre>
-<code class="language-javascript">div.appendChild(card(me)); // My card
+<code class="language-javascript">div.appendChild(cardFor(me)); // My card
 
 fetcher.load(me.doc).then(resp -&gt; {
-	store.each(me, FOAF('friend')).forEach(friend =&gt; div.appendChild(card(friend)));
+	store.each(me, FOAF('friend')).forEach(friend =&gt; div.appendChild(cardFor(friend)));
 });
 </code></pre>
 
-<p>This will pull in the user’s profile to make the picture and name for my own card.  Then we explicitly pull it in again to find the list of friends.  This is reasonable as the fetcher’s `load` method really means “load if you haven’t already” so continues immediately if it has already been fetched.  It’s wise to explicitly load the things you need and let the system track what has already been loaded.</p>
+<p>This will pull in the user’s profile to make the picture and name for my own card. Then we explicitly pull it in again to find the list of friends. This is reasonable as the fetcher’s `load` method really means “load if you haven’t already”, so it continues immediately if it has already been fetched. It’s wise to explicitly load the things you need and let the system track what has already been loaded.</p>
 
 <p>Then for each of the friends it will load their profile to fill in the name and picture of the friend.</p>
 
@@ -386,7 +424,7 @@ fetcher.load(me.doc).then(resp -&gt; {
 
 <h3>Listing Data</h3>
 
-<p>Everything in RDF is a thing.  We store data about all things in the same sort of way, just using different vocabulary.  Suppose you want to list the content of the folder in someone’s solid space.  It is very like listing their friends.  The namespace for the contents of folders is LDP. So..</p>
+<p>Everything in RDF is a thing.  We store data about all things in the same sort of way, just using different vocabulary. Suppose you want to list the content of the folder in someone’s solid space.  It is very like listing their friends.  The namespace for the contents of folders is LDP. So..</p>
 
 <pre>
 <code class="language-javascript">const LDP = $rdf.Namespace('http://www.w3.org/ns/ldp#&gt;');
@@ -452,7 +490,7 @@ list(rdf.sym('https://alice.example.com/Public/'));</code></pre>
   The first parameter to update() is the array of statements to be deleted.
 If it is empty then update() just adds data to the store.
 (Note for this the user only needs Append privileges, not full Write).
-The second parameter to update() is the array of statements to be deleted.
+The second parameter to update() is the array of statements to be inserted.
 </p>
 <pre>
   function modifyName(person, name, doc) {
@@ -467,7 +505,7 @@ The second parameter to update() is the array of statements to be deleted.
 </pre>
 
   <p>So in this second case, the function will first find any statements which
-    give the name of the person. It then asked update to in one operation
+    gives the name of the person. It is then asked to do two updates in one operation:
     remove the old statements (quads) from the store, and add the new one.
   </p>
   <h4>409 Conflict</h4>
@@ -620,8 +658,8 @@ So all you have to do is provide a function which will sync changes in the store
 <h2>Conclusion</h2>
 <p>
   We've looked at how to interact directly with the store as a local in-memory triple store, and we
-  have looked at how to load it and save it, web resource at a time.
-  We see how it ina away acts as a local in-memory cache of the big wide web of linked data,
+  have looked at how to load it and save it, one web resource at a time.
+  We see how it in a way acts as a local in-memory cache of the big wide web of linked data,
   allowing a user-interface to keep in sync with the state of the data web.
   As developers we can now write code which will allow users to explore, create, modify and link together
   a web of linked data which can grow to encompass more and more domains, different applications.

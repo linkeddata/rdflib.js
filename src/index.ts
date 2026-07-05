@@ -6,7 +6,6 @@ import Empty from './empty'
 import Fetcher from './fetcher'
 import Formula from './formula'
 import Store from './store'
-import jsonParser from './jsonparser'
 import Literal from './literal'
 import log from './log'
 import N3Parser from './n3parser'
@@ -70,7 +69,6 @@ export {
   Fetcher,
   Formula,
   Store,
-  jsonParser,
   Literal,
   log,
   N3Parser,

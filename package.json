@@ -99,6 +99,7 @@
     "doc": "typedoc --out ./doc ./src/index.ts --excludePrivate --excludeInternal --tsconfig ./tsconfig.json",
     "lint": "eslint src tests",
     "lint:fix": "eslint src tests --fix",
+    "prepare": "npm run build",
     "prepublishOnly": "npm ci && npm run build:all && npm run doc && npm run test",
     "postversion": "case \"$npm_package_version\" in *-*) git push ;; *) git push --follow-tags ;; esac",
     "start": "webpack serve --port 4800",

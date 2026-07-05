@@ -8,7 +8,7 @@ Javascript RDF library for browsers and Node.js.
 - Read/Write Linked Data client, using WebDav or SPARQL/Update
 - Real-Time Collaborative editing with web sockets and PATCHes
 - Local API for querying a store
-- Compatible with [RDFJS task force spec](https://github.com/rdfjs/representation-task-force/blob/master/interface-spec.md)
+- Compatible with the [RDF/JS data model specification](https://rdf.js.org/data-model-spec/)
 - SPARQL queries (not full SPARQL - just graph match and optional)
 - Smushing of nodes from `owl:sameAs`, and `owl:{f,inverseF}unctionProperty`
 - Tracks provenance of triples keeps metadata (in RDF) from HTTP accesses
@@ -62,6 +62,52 @@ installed.
 ```bash
 npm install --save rdflib
 ```
+
+## Creating terms
+
+rdflib implements the [RDF/JS data model specification](https://rdf.js.org/data-model-spec/): terms are created with the factory functions `namedNode()`, `blankNode()`, `literal()`, `variable()` and `quad()`, all exported from the package root (`sym()` is an alias for `namedNode()`).
+
+Note that, per that specification, `literal()` takes **two** arguments — the second one is *either* a language tag *or* a datatype:
+
+```ts
+literal(value: string | number | boolean | Date, languageOrDatatype?: string | NamedNode): Literal
+```
+
+For example:
+
+```js
+import { literal, namedNode } from 'rdflib'
+
+literal('chat')       // plain string literal ("chat"^^xsd:string)
+literal('chat', 'fr') // language-tagged literal ("chat"@fr, datatype rdf:langString)
+literal('2019', namedNode('http://www.w3.org/2001/XMLSchema#gYear')) // typed literal
+literal('2019', 'http://www.w3.org/2001/XMLSchema#gYear')            // same, with the datatype IRI as a string
+literal(4)            // convenience form: infers the datatype ("4"^^xsd:integer)
+```
+
+A string second argument is interpreted as a datatype IRI when it contains a colon, and as a language tag otherwise.
+
+A common pitfall (present in some older tutorials) is calling `literal(value, undefined, datatype)`: the factory function ignores the third argument and returns a plain `xsd:string` literal. The three-argument form only exists on the class constructor, `new Literal(value, language, datatype)`. To create a typed literal with the factory function, pass the datatype as the second argument, as shown above.
+
+## owl:sameAs smushing and link#uri statements
+
+"Smushing" is the merging of everything a graph knows about two identifiers which are stated to denote the same thing. Stores perform **no** smushing by default (see [#458](https://github.com/linkeddata/rdflib.js/issues/458)); you opt in per feature when creating the store:
+
+```js
+const kb = $rdf.graph(['sameAs', 'InverseFunctionalProperty', 'FunctionalProperty'])
+```
+
+With the `sameAs` feature enabled, whenever a statement `A owl:sameAs B` is added the store equates the two nodes: one of them is chosen as canonical and all statements are re-indexed under it, so queries about either identifier see the merged data. The `InverseFunctionalProperty` and `FunctionalProperty` features likewise equate nodes which share a value of such a property.
+
+When two nodes are equated, the store records the equivalence by adding one statement of the form:
+
+```
+<canonical> <http://www.w3.org/2007/ont/link#uri> <obsoleted> .
+```
+
+that is, a back-link from the canonical node to the identifier it replaced. This is internal book-keeping: it is how the store remembers aliases, so that `store.uris(term)` and `store.allAliases(node)` can list all the identifiers something is known by. It is stored like any other statement, though, so you may encounter these triples when querying or serializing a store that has smushing enabled. If a Fetcher is attached to the store, equating two nodes also triggers a look-up of the newly-learned alias, so that data published under either URI gets loaded.
+
+The same `http://www.w3.org/2007/ont/link#` namespace is also used by the Fetcher for the HTTP metadata (requests, responses, status codes) it records; that metadata lives in a separate metadata graph and can be removed with `store.removeMetadata(doc)`.
 
 ## Serializer flags
 
