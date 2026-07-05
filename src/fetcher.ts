@@ -1017,9 +1017,8 @@ export default class Fetcher implements CallbackifyInterface {
       this.cleanupFetchRequest(originalUri, undefined, this.timeout)
     }
 
-    // Clear the request's pending timeouts however the request settles;
-    // otherwise a failed fetch leaves its timer armed, holding the Node.js
-    // event loop open until the full timeout elapses (issue #68).
+    // Clear pending timeouts however the request settles, or a failed fetch
+    // leaves its timer holding the event loop open (issue #68)
     const clearRequestTimeouts = () => {
       if (uri in this.timeouts) {
         this.timeouts[uri].forEach(clearTimeout)
@@ -1572,9 +1571,8 @@ export default class Fetcher implements CallbackifyInterface {
       headers['slug'] = folderName
     }
 
-    // Use the contentType option to force the right mime type for containers,
-    // as that is what webOperation expects (issue #266). webOperation sets the
-    // content-type header from it.
+    // Force the right mime type for containers via the contentType option,
+    // which webOperation turns into the content-type header (issue #266)
     // @ts-ignore These headers lack some of the required operators.
     let options: Options = { headers, contentType: TurtleContentType }
 

@@ -663,9 +663,8 @@ describe('Fetcher', () => {
       return fetcher.load(uri).then(
         () => { throw new Error('load should have rejected') },
         () => {
-          // Before the fix the 30s timer armed by setRequestTimeout() stayed
-          // in fetcher.timeouts on the failure path, keeping the Node.js
-          // event loop alive until the full timeout elapsed.
+          // The timer armed by setRequestTimeout() must not stay in
+          // fetcher.timeouts on the failure path
           expect(fetcher.timeouts[uri] || []).to.have.length(0)
         })
     })
