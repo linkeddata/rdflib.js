@@ -5,7 +5,7 @@ import RDFParser from './rdfxmlparser'
 import sparqlUpdateParser from './patch-parser'
 import * as Util from './utils-js'
 import Formula from './formula'
-import { ContentType, TurtleContentType, RDFXMLContentType, XHTMLContentType, HTMLContentType, SPARQLUpdateContentType, SPARQLUpdateSingleMatchContentType, JSONLDContentType, NQuadsContentType, NQuadsAltContentType } from './types'
+import { ContentType, TurtleContentType, RDFXMLContentType, XHTMLContentType, HTMLContentType, SPARQLUpdateContentType, SPARQLUpdateSingleMatchContentType, JSONLDContentType, NQuadsContentType, NQuadsAltContentType, JsonLdParserOptions } from './types'
 import type { Document as XmldomDocument } from '@xmldom/xmldom'
 
 type CallbackFunc = (error: any, kb: Formula | null) => void
@@ -44,15 +44,18 @@ export type ParseOptions = {
  * @param contentType - The MIME content type string for the input - defaults to text/turtle
  * @param [callback] - The callback to call when the data has been loaded.
  *   May be omitted: an options object may be passed in this position instead.
- * @param [options] - Parse options; see {@link ParseOptions}
+ * @param [options] - Parse options; see {@link ParseOptions}. Also carries
+ *   format-specific parse options. For JSON-LD: a `documentLoader` to opt in
+ *   to remote `@context` resolution (refused by default to avoid SSRF) and an
+ *   out-of-band `expandContext`.
  */
 export default function parse (
   str: string,
   kb: Formula,
   base: string,
   contentType: string | ContentType = 'text/turtle',
-  callback?: CallbackFunc | ParseOptions | null,
-  options?: ParseOptions
+  callback?: CallbackFunc | (ParseOptions & JsonLdParserOptions) | null,
+  options?: ParseOptions & JsonLdParserOptions
 ) {
   if (callback && typeof callback === 'object') {
     options = callback // parse(str, kb, base, contentType, { canonicalize: true })
@@ -83,7 +86,7 @@ export default function parse (
       // since we do not await the promise here, rejections will not be covered by the surrounding try catch
       // we do not use await, because parse() should stay sync
       // so, to not lose the async error, we need to catch the rejection and call the error callback here too
-      jsonldParser(str, kb, base)
+      jsonldParser(str, kb, base, options)
           .then(executeCallback)
           .catch(executeErrorCallback)
     } else if (contentType === undefined) {
