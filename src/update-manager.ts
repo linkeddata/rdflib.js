@@ -474,15 +474,15 @@ export default class UpdateManager {
       set_object: function (obj, callbackFunction) {
         var query = this.where
         query += 'DELETE DATA { ' + this.statementNT + ' } ;\n'
+        const statement = this.statement as [Quad_Subject, Quad_Predicate, Quad_Object, Quad_Graph]
         query += 'INSERT DATA { ' +
-          // @ts-ignore `this` might refer to the wrong scope. Does this work?
-          this.anonymize(this.statement[0]) + ' ' +
-          // @ts-ignore
-          this.anonymize(this.statement[1]) + ' ' +
-          // @ts-ignore
-          this.anonymize(obj) + ' ' + ' . }\n'
+          // `this` is the object literal returned by update_statement, which has no
+          // anonymize method (issue #231) — use the captured UpdateManager instead.
+          updater.anonymize(statement[0]) + ' ' +
+          updater.anonymize(statement[1]) + ' ' +
+          updater.anonymize(obj) + ' ' + ' . }\n'
 
-        updater.fire((this.statement as [Quad_Subject, Quad_Predicate, Quad_Object, Quad_Graph])[3].value, query, callbackFunction)
+        updater.fire(statement[3].value, query, callbackFunction)
       }
     }
   }
@@ -939,16 +939,20 @@ _:patch
       }
       if (protocol === undefined) { // Not enough metadata
         if (secondTry) {
-          throw new Error('Update: Loaded ' + doc + "but still can't figure out what editing protocol it supports.")
+          throw new Error('Update: Loaded ' + doc + " but still can't figure out what editing protocol it supports.")
         }
+        // No metadata about the document: load it (once) and try the update again (issue #250)
         // console.log(`Update: have not loaded ${doc} before: loading now...`);
         (this.store.fetcher.load(doc as NamedNode) as Promise<Response>).then(response => {
           this.update(deletions, insertions, callback, true, options)
         }, err => {
-          if (err.response.status === 404) { // nonexistent files are fine
+          if (err.status === 404 || (err.response && err.response.status === 404)) { // nonexistent files are fine
             this.update(deletions, insertions, callback, true, options)
           } else {
-            throw new Error(`Update: Can't get updatability status ${doc} before patching: ${err}`)
+            // Route the failure through the callback so the returned promise
+            // rejects instead of hanging forever (issue #479)
+            callback(doc.value, false,
+              `Update: Can't get updatability status ${doc} before patching: ${err}`, err)
           }
         })
         return
@@ -1041,7 +1045,8 @@ _:patch
     } // should not happen
     var response = kb.any(request as NamedNode, this.ns.link('response')) as Quad_Subject
     if (!response) {
-      return null // throw "No record HTTP GET response for document: "+doc
+      // Returning null silently here left update() callers hanging forever (issue #479)
+      throw new Error('No record of HTTP GET response for document: ' + doc)
     }
     var contentType = (kb.the(response, this.ns.httph('content-type')) as Term).value
 
@@ -1133,6 +1138,9 @@ _:patch
         kb.add(is[i].subject, is[i].predicate, is[i].object, doc);
       }
       callbackFunction(doc.value, true, '')  // success!
+    }).catch((err) => {
+      // Without this the returned promise never settled on write failure (issue #479)
+      callbackFunction(doc.value, false, err.message, err)
     })
   }
 
