@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { existsSync } from 'fs'
+import { existsSync, readFileSync } from 'fs'
 import * as path from 'path'
 import { pathToFileURL } from 'url'
 
@@ -53,4 +53,15 @@ test('browser bundle parses Turtle and answers store queries', async ({ page }) 
   expect(result.bobName).toBe('Bobé')
   expect(result.personCount).toBe(2)
   expect(result.statementCount).toBeGreaterThanOrEqual(5)
+})
+
+// Output-level guard for #449: the deep n3 import must keep N3's stream
+// classes (and their readable-stream/Node-polyfill chain) out of the bundle.
+test('browser bundle does not embed n3 stream classes or readable-stream', () => {
+  test.skip(!existsSync(bundlePath), 'dist/rdflib.min.js missing — run `npm run build:browser` first')
+
+  const bundle = readFileSync(bundlePath, 'utf8')
+  for (const marker of ['N3StreamWriter', 'N3StreamParser', 'readable-stream']) {
+    expect(bundle.includes(marker), `dist/rdflib.min.js must not contain "${marker}" (#449)`).toBe(false)
+  }
 })
