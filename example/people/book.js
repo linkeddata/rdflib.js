@@ -51,33 +51,34 @@ var uri = 'http://bblfish.net/people/henry/card#me'
 var person = $rdf.sym(uri)
 var docURI = uri.slice(0, uri.indexOf('#'))
 var fetch = $rdf.fetcher(kb)
-fetch.nowOrWhenFetched(docURI,undefined,function(ok, body, xhr){ // @@ check ok
+fetch.nowOrWhenFetched(docURI, undefined, function (ok, body, xhr) {
+    if (!ok) {
+        document.write("<p>Could not load " + docURI + ": " + body + "</p>")
+        return
+    }
     card(person)
+
+    // document.write("<p><small>"+uri+ " Size: "+kb.statements.length+"</small></p>")
+
+    var friends = kb.each(person, FOAF('knows'))
+    document.write("<p>" + friends.length + " acquaintances</p>")
+
+    friends.forEach(function (friend) {
+        var toLoad = []
+        if (friend.uri && friend.uri.indexOf('#') >= 0) {
+            toLoad.push(friend.uri) // the fetcher loads the friend's profile document
+        }
+        var sa = kb.any(friend, RDFS('seeAlso'))
+        if (sa) {
+            toLoad.push(sa.uri)
+        }
+        // load() fetches each document into the store, if not already loaded
+        fetch.load(toLoad).then(function () {
+            card(friend)
+        }, function (err) {
+            document.write("<p>Could not load data about " + friend + ": " + err + "</p>")
+        })
+    })
 })
-
-
-
-// document.write("<p><small>"+uri+ " Size: "+kb.statements.length+"</small></p>")
-
-var friends = kb.each(person, FOAF('knows'))
-var i, n = friends.length, friend
-document.write("<p>"+n+" acquaintainces</p>")
-for (i=0; i<n; i++) {
-    friend = friends[i]
-    furi = friend.uri
-    if (furi && (furi.indexOf('#') >= 0)) {
-//	document.write('<small>Loading:  '+furi+'</small>') 
-        furi = furi.slice(0, furi.indexOf('#'))
-        kb.load(furi)
-    }
-
-    sa = kb.any(friend, RDFS('seeAlso'))
-    if (sa) {
-//	document.write('<small>See also: '+sa.uri+'</small>') 
-        kb.load(sa.uri)
-    }
-
-    card(friend)
-} 
 
 
