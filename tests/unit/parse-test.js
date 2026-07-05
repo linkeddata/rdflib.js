@@ -216,6 +216,30 @@ ex:myid ex:prop1 [ ex:prop2 [ ex:prop3 "value" ] ].
   })
 }) // ttl
 
+  describe('n-triples', () => {
+    it('parses application/n-triples', () => {
+      let base = 'https://www.example.org/abc/def'
+      let mimeType = 'application/n-triples'
+      let store = DataFactory.graph()
+      let content = '<http://www.wikidata.org/entity/Q328> <http://www.w3.org/2000/01/rdf-schema#label> "English Wikipedia"@en .'
+      parse(content, store, base, mimeType)
+      expect(store.statements).to.have.length(1)
+      expect(store.statements[0].subject.value).to.eql('http://www.wikidata.org/entity/Q328')
+      expect(store.statements[0].object.value).to.eql('English Wikipedia')
+      expect(store.statements[0].object.lang).to.eql('en')
+    })
+
+    it('parses application/n-triples with charset', () => {
+      let base = 'https://www.example.org/abc/def'
+      let mimeType = 'application/n-triples;charset=UTF-8'
+      let store = DataFactory.graph()
+      let content = '<http://www.wikidata.org/entity/Q328> <http://www.w3.org/2000/01/rdf-schema#label> "ангельская Вікіпэдыя"@be-x-old .'
+      parse(content, store, base, mimeType)
+      expect(store.statements).to.have.length(1)
+      expect(store.statements[0].object.lang).to.eql('be-x-old')
+    })
+  }) // n-triples
+
   describe('a JSON-LD document', () => {
     describe('with a base IRI', () => {
       let store

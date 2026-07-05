@@ -8,7 +8,7 @@ import RDFParser from './rdfxmlparser'
 import sparqlUpdateParser from './patch-parser'
 import * as Util from './utils-js'
 import Formula from './formula'
-import { ContentType, TurtleContentType, N3ContentType, RDFXMLContentType, XHTMLContentType, HTMLContentType, SPARQLUpdateContentType, SPARQLUpdateSingleMatchContentType, JSONLDContentType, NQuadsContentType, NQuadsAltContentType } from './types'
+import { ContentType, TurtleContentType, N3ContentType, NTriplesContentType, RDFXMLContentType, XHTMLContentType, HTMLContentType, SPARQLUpdateContentType, SPARQLUpdateSingleMatchContentType, JSONLDContentType, NQuadsContentType, NQuadsAltContentType } from './types'
 import { Quad } from './tf-types'
 import type { Document as XmldomDocument } from '@xmldom/xmldom'
 
@@ -35,7 +35,7 @@ export default function parse (
   contentType = contentType || TurtleContentType
   contentType = contentType.split(';')[0] as ContentType
   try {
-    if (contentType === N3ContentType || contentType === TurtleContentType) {
+    if (contentType === N3ContentType || contentType === TurtleContentType || contentType === NTriplesContentType) {
       var p = N3Parser(kb, kb, base, base, null, null, '', null)
       p.loadBuf(str)
       executeCallback()
@@ -83,7 +83,8 @@ export default function parse (
     'application/sparql-update-single-match': true,
     'application/ld+json': true,
     'application/nquads' : true,
-    'application/n-quads' : true
+    'application/n-quads' : true,
+    'application/n-triples' : true
   }
 
   function executeCallback () {

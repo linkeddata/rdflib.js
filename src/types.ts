@@ -55,6 +55,7 @@ export type ContentType = typeof RDFXMLContentType
   | typeof N3LegacyContentType
   | typeof NQuadsAltContentType
   | typeof NQuadsContentType
+  | typeof NTriplesContentType
   | typeof SPARQLUpdateContentType
   | typeof SPARQLUpdateSingleMatchContentType
   | typeof TurtleContentType
