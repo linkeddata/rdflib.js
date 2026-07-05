@@ -4,20 +4,17 @@ import * as path from 'path'
 import { pathToFileURL } from 'url'
 
 // Browser e2e for the built UMD bundle (#713): load dist/rdflib.min.js in
-// Chromium via a <script src> tag (the documented consumer usage), then parse
-// a small Turtle document and run store queries against it.
+// Chromium via a <script src> tag, then parse Turtle and query the store.
 const bundlePath = path.join(__dirname, '..', '..', 'dist', 'rdflib.min.js')
 const fixturePath = path.join(__dirname, 'e2e-fixture.html')
 
 test('browser bundle parses Turtle and answers store queries', async ({ page }) => {
-  test.skip(!existsSync(bundlePath), 'dist/rdflib.min.js missing — run `npm run build:browser` first')
+  test.skip(!existsSync(bundlePath), 'dist/rdflib.min.js missing; run `npm run build:browser` first')
 
   await page.goto(pathToFileURL(fixturePath).href)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await page.waitForFunction(() => (window as any).$rdf !== undefined)
 
   const result = await page.evaluate(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const $rdf = (window as any).$rdf
     if (!$rdf) { throw new Error('$rdf global not exposed by the bundle') }
 
@@ -58,7 +55,7 @@ test('browser bundle parses Turtle and answers store queries', async ({ page }) 
 // Output-level guard for #449: the deep n3 import must keep N3's stream
 // classes (and their readable-stream/Node-polyfill chain) out of the bundle.
 test('browser bundle does not embed n3 stream classes or readable-stream', () => {
-  test.skip(!existsSync(bundlePath), 'dist/rdflib.min.js missing — run `npm run build:browser` first')
+  test.skip(!existsSync(bundlePath), 'dist/rdflib.min.js missing; run `npm run build:browser` first')
 
   const bundle = readFileSync(bundlePath, 'utf8')
   for (const marker of ['N3StreamWriter', 'N3StreamParser', 'readable-stream']) {
