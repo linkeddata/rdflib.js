@@ -355,7 +355,12 @@ describe('IndexedFormula', () => {
       })
   })
   describe('removeDocument', () => {
-    const store = new IndexedFormula()
+    // Use a collection-supporting store (the default in normal rdflib usage
+    // via DataFactory.graph()): the status list's rdf:first/rest triples are
+    // folded into a single Collection term that removeMetadata/removeDocument
+    // clean up, unlike a bare IndexedFormula() whose CanonicalDataFactory
+    // cannot fold them.
+    const store = DataFactory.graph()
     const meta = store.sym('chrome://TheCurrentSession')
     const prefixes = `@prefix : <#>.
     @prefix http: <http://www.w3.org/2007/ont/http#>.
@@ -424,6 +429,21 @@ describe('IndexedFormula', () => {
       store.removeDocument(store.sym('https://bob.localhost:8443/profile/card'))
       expect(serialize(meta, store, null)).to.eql(voidDoc)
       expect(serialize(doc, store, doc.uri)).to.eql(voidDoc)
+    })
+    it ('removeMetadata on a store without collection support leaves the raw status-list triples (pre-existing #631 gap, now visible)', () => {
+      // With a CanonicalDataFactory store the status list cannot be folded
+      // into a Collection; it stays as raw rdf:first/rest triples in the
+      // metadata graph, and removeMetadata only knows how to remove a status
+      // Collection, so those triples survive. Documented here until #631 is
+      // fixed.
+      const rawStore = new IndexedFormula()
+      parse(metaContent, rawStore, meta.value, 'text/turtle')
+      rawStore.removeMetadata(rawStore.sym('https://bob.localhost:8443/profile/card'))
+      const leftovers = rawStore.statementsMatching(null, null, null, meta)
+      expect(leftovers.length).to.be.greaterThan(0)
+      leftovers.forEach(st => {
+        expect(st.predicate.value).to.match(/rdf-syntax-ns#(first|rest)$/)
+      })
     })
   })
 })

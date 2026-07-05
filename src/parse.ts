@@ -1,18 +1,36 @@
-import DataFactory from './factories/extended-term-factory'
 import jsonldParser from './jsonldparser'
-// @ts-ignore is this injected?
-import { Parser as N3jsParser } from 'n3'  // @@ Goal: remove this dependency
-import N3Parser from './n3parser'
+import parseN3js, { N3JS_FORMATS } from './n3-adapter'
 import { parseRDFaDOM } from './rdfaparser'
 import RDFParser from './rdfxmlparser'
 import sparqlUpdateParser from './patch-parser'
 import * as Util from './utils-js'
 import Formula from './formula'
-import { ContentType, TurtleContentType, N3ContentType, RDFXMLContentType, XHTMLContentType, HTMLContentType, SPARQLUpdateContentType, SPARQLUpdateSingleMatchContentType, JSONLDContentType, NQuadsContentType, NQuadsAltContentType } from './types'
-import { Quad } from './tf-types'
+import { ContentType, TurtleContentType, RDFXMLContentType, XHTMLContentType, HTMLContentType, SPARQLUpdateContentType, SPARQLUpdateSingleMatchContentType, JSONLDContentType, NQuadsContentType, NQuadsAltContentType } from './types'
 import type { Document as XmldomDocument } from '@xmldom/xmldom'
 
 type CallbackFunc = (error: any, kb: Formula | null) => void
+
+/** Options accepted by {@link parse}. */
+export type ParseOptions = {
+  /**
+   * Canonicalize the lexical forms of boolean and numeric literals at parse
+   * time, the way rdflib <= 2's own parsers did: `true`/`false` become
+   * `"1"`/`"0"` (matching `Literal.fromBoolean`), `12.0` becomes `"12"`,
+   * `3.141e0` becomes `"3.141"`, `+05` becomes `"5"`. Covers `xsd:boolean`,
+   * `xsd:integer`, `xsd:decimal`, `xsd:double` and `xsd:float`; ill-typed
+   * lexical forms and all other datatypes are preserved as-is. Applies to
+   * the Turtle-family content types (Turtle, N3, TriG, N-Triples, N-Quads).
+   *
+   * Off by default: literals keep the exact lexical form found in the
+   * document, as the RDF specs prescribe. This flag is a transition aid for
+   * code that still compares literals by one canonical spelling
+   * (`term.value === '1'`); new code should keep the default and compare in
+   * value space instead, via `isTrue`, `literalToBoolean` and
+   * `literalToNumber` (also available as `Literal.toBoolean` /
+   * `Literal.toNumber`).
+   */
+  canonicalize?: boolean
+}
 
 /**
  * Parse a string and put the result into the graph kb.
@@ -23,21 +41,29 @@ type CallbackFunc = (error: any, kb: Formula | null) => void
  * @param kb - The store to use
  * @param base - The base URI to use
  * @param contentType - The MIME content type string for the input - defaults to text/turtle
- * @param [callback] - The callback to call when the data has been loaded
+ * @param [callback] - The callback to call when the data has been loaded.
+ *   May be omitted: an options object may be passed in this position instead.
+ * @param [options] - Parse options; see {@link ParseOptions}
  */
 export default function parse (
   str: string,
   kb: Formula,
   base: string,
   contentType: string | ContentType = 'text/turtle',
-  callback?: CallbackFunc
+  callback?: CallbackFunc | ParseOptions | null,
+  options?: ParseOptions
 ) {
+  if (callback && typeof callback === 'object') {
+    options = callback // parse(str, kb, base, contentType, { canonicalize: true })
+  }
+  const cb: CallbackFunc | undefined = typeof callback === 'function' ? callback : undefined
   contentType = contentType || TurtleContentType
   contentType = contentType.split(';')[0] as ContentType
   try {
-    if (contentType === N3ContentType || contentType === TurtleContentType) {
-      var p = N3Parser(kb, kb, base, base, null, null, '', null)
-      p.loadBuf(str)
+    if (Object.prototype.hasOwnProperty.call(N3JS_FORMATS, contentType)) {
+      // The Turtle family (Turtle, N3, TriG, N-Triples and N-Quads) is
+      // parsed by the N3.js parser, adapted onto rdflib's model.
+      parseN3js(str, kb, base, contentType, options)
       executeCallback()
     } else if (contentType === RDFXMLContentType) {
       var parser = new RDFParser(kb)
@@ -59,10 +85,6 @@ export default function parse (
       jsonldParser(str, kb, base)
           .then(executeCallback)
           .catch(executeErrorCallback)
-    } else if (contentType === NQuadsContentType ||
-               contentType === NQuadsAltContentType) {
-      var n3Parser = new N3jsParser({ factory: DataFactory })
-      nquadCallback(null, str)
     } else if (contentType === undefined) {
       throw new Error("contentType is undefined")
     } else {
@@ -75,7 +97,9 @@ export default function parse (
 
   (parse as any).handled= {
     'text/n3': true,
+    'application/n3': true,
     'text/turtle': true,
+    'application/x-turtle': true,
     'application/rdf+xml': true,
     'application/xhtml+xml': true,
     'text/html': true,
@@ -83,12 +107,14 @@ export default function parse (
     'application/sparql-update-single-match': true,
     'application/ld+json': true,
     'application/nquads' : true,
-    'application/n-quads' : true
+    'application/n-quads' : true,
+    'application/n-triples' : true,
+    'application/trig' : true
   }
 
   function executeCallback () {
-    if (callback) {
-      callback(null, kb)
+    if (cb) {
+      cb(null, kb)
     } else {
       return
     }
@@ -103,43 +129,14 @@ export default function parse (
       // @ts-ignore always true?
       contentType !== NQuadsAltContentType
     ) {
-      if (callback) {
-        callback(e, kb)
+      if (cb) {
+        cb(e, kb)
       } else {
         let e2 = new Error('' + e + ' while trying to parse <' + base + '> as ' + contentType)
         //@ts-ignore .cause is not a default error property
         e2.cause = e
         throw e2
       }
-    }
-  }
-/*
-  function setJsonLdBase (doc, base) {
-    if (doc instanceof Array) {
-      return
-    }
-    if (!('@context' in doc)) {
-      doc['@context'] = {}
-    }
-    doc['@context']['@base'] = base
-  }
-*/
-  function nquadCallback (err?: Error | null, nquads?: string): void {
-    if (err) {
-      (callback as CallbackFunc)(err, kb)
-    }
-    try {
-      n3Parser.parse(nquads, tripleCallback)
-    } catch (err) {
-      (callback as CallbackFunc)(err, kb)
-    }
-  }
-
-  function tripleCallback (err: Error, triple: Quad) {
-    if (triple) {
-      kb.add(triple.subject, triple.predicate, triple.object, triple.graph)
-    } else {
-      (callback as CallbackFunc)(err, kb)
     }
   }
 }

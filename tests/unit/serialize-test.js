@@ -443,8 +443,8 @@ vocab:building1 vocab:created "2012-03-12"^^xsd:date; vocab:length 145000.0e0 .
         <sioc:content>kasdfjsahdkfhkjhdkjsfhjkasdfkhjkajkdsajkhadsfkhjhjkdfajsdsafhjkdfhjksa</sioc:content>
         <pad:date rdf:datatype="http://www.w3.org/2001/XMLSchema#date">2012-12-10</pad:date>
         <pad:dateTime rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTime">2012-12-25T23:59</pad:dateTime>
-        <pad:decimal rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">12</pad:decimal>
-        <pad:float rdf:datatype="http://www.w3.org/2001/XMLSchema#double">3.141</pad:float>
+        <pad:decimal rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">12.0</pad:decimal>
+        <pad:float rdf:datatype="http://www.w3.org/2001/XMLSchema#double">3.141e0</pad:float>
         <pad:integer rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</pad:integer>
         <pad:next rdf:resource="https://www.example.org/abc/def#id1443100912627"/>
     </rdf:Description>
