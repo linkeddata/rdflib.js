@@ -89,6 +89,26 @@ A string second argument is interpreted as a datatype IRI when it contains a col
 
 A common pitfall (present in some older tutorials) is calling `literal(value, undefined, datatype)`: the factory function ignores the third argument and returns a plain `xsd:string` literal. The three-argument form only exists on the class constructor, `new Literal(value, language, datatype)`. To create a typed literal with the factory function, pass the datatype as the second argument, as shown above.
 
+## owl:sameAs smushing and link#uri statements
+
+"Smushing" is the merging of everything a graph knows about two identifiers which are stated to denote the same thing. Stores perform **no** smushing by default (see [#458](https://github.com/linkeddata/rdflib.js/issues/458)); you opt in per feature when creating the store:
+
+```js
+const kb = $rdf.graph(['sameAs', 'InverseFunctionalProperty', 'FunctionalProperty'])
+```
+
+With the `sameAs` feature enabled, whenever a statement `A owl:sameAs B` is added the store equates the two nodes: one of them is chosen as canonical and all statements are re-indexed under it, so queries about either identifier see the merged data. The `InverseFunctionalProperty` and `FunctionalProperty` features likewise equate nodes which share a value of such a property.
+
+When two nodes are equated, the store records the equivalence by adding one statement of the form:
+
+```
+<canonical> <http://www.w3.org/2007/ont/link#uri> <obsoleted> .
+```
+
+that is, a back-link from the canonical node to the identifier it replaced. This is internal book-keeping: it is how the store remembers aliases, so that `store.uris(term)` and `store.allAliases(node)` can list all the identifiers something is known by. It is stored like any other statement, though, so you may encounter these triples when querying or serializing a store that has smushing enabled. If a Fetcher is attached to the store, equating two nodes also triggers a look-up of the newly-learned alias, so that data published under either URI gets loaded.
+
+The same `http://www.w3.org/2007/ont/link#` namespace is also used by the Fetcher for the HTTP metadata (requests, responses, status codes) it records; that metadata lives in a separate metadata graph and can be removed with `store.removeMetadata(doc)`.
+
 ## Serializer flags
 
 The Turtle/N3/JSON‑LD serializers accept an optional `flags` string to tweak output formatting and abbreviation behavior.
