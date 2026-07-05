@@ -41,9 +41,8 @@ export default function parse (
       p.loadBuf(str)
       executeCallback()
     } else if (contentType === RDFXMLContentType) {
-      // rdfxml-streaming-parser is asynchronous: the promise is routed into
-      // the callback, exactly like the JSON-LD branch below. Callers that
-      // read the store synchronously after parse() must move to the callback.
+      // RDF/XML parsing is asynchronous, like the JSON-LD branch below:
+      // completion is only observable through the callback
       parseRDFXML(str, kb, base)
           .then(executeCallback)
           .catch(executeErrorCallback)

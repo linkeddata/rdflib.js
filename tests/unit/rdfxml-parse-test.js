@@ -1,10 +1,7 @@
 /**
- * Regression tests for the RDF/XML parser migration onto
- * rdfxml-streaming-parser (replacing the hand-rolled DOM-walking parser in
- * src/rdfxmlparser.js).
+ * Tests for RDF/XML parsing via rdfxml-streaming-parser.
  *
- * NOTE: since the migration, parse() for application/rdf+xml is
- * asynchronous, exactly like the JSON-LD branch: results must be read via
+ * parse() for application/rdf+xml is asynchronous: results must be read via
  * the callback. Every test here goes through the public parse() API.
  */
 import { expect } from 'chai'
@@ -417,11 +414,11 @@ describe('RDF/XML parsing (rdfxml-streaming-parser)', () => {
     })
   })
 
-  describe('round-trips through the (unchanged) in-house RDF/XML serializer', () => {
-    // The tests/serialize suite already exercises ttl→xml; these add
-    // xml→store→xml→store coverage on the same reference fixtures.
+  describe('round-trips through the in-house RDF/XML serializer', () => {
+    // The tests/serialize suite already exercises ttl-to-xml; these add
+    // xml-store-xml-store coverage on the same reference fixtures.
     for (const fixture of ['t1-ref.xml', 't2-ref.xml', 't3-ref.xml']) {
-      it(`parse → serialize → re-parse is stable for ${fixture}`, async () => {
+      it(`parse, serialize, re-parse is stable for ${fixture}`, async () => {
         const xml = readFileSync(join(__dirname, '..', 'serialize', fixture), 'utf8')
         const base = 'https://example.com/' + fixture.replace('-ref.xml', '.ttl')
         const store1 = DataFactory.graph()

@@ -485,13 +485,10 @@ exa:myid exa:prop1 [ exa:prop2 [ exa:prop3 "value" ] ].
                <core:prefLabel rdf:datatype="http://www.w3.org/1999/02/22-rdf-syntax-ns#langString" xml:lang="fr">Valeur de test</core:prefLabel>
            </rdf:Description>
        </rdf:RDF>`
-        // Since the migration to rdfxml-streaming-parser, RDF/XML parsing is
-        // asynchronous (like JSON-LD): results must be read via the callback.
-        //
-        // BEHAVIOR DELTA (flagged in the migration PR): when rdf:datatype is
-        // present, the datatype now wins over an xml:lang in scope, per the
-        // RDF/XML spec (typed literals carry no language tag). The old
-        // parser preferred xml:lang and produced lang 'fr' for this input.
+        // RDF/XML parsing is asynchronous: results must be read via the
+        // callback. When rdf:datatype is present it wins over an xml:lang
+        // in scope, per the RDF/XML spec (typed literals carry no language
+        // tag), so no lang 'fr' here.
         parse(content, store, base, mimeType, err => {
           try {
             expect(err).to.equal(null)

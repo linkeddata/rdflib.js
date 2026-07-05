@@ -1,28 +1,17 @@
 /**
- * Adapter between rdfxml-streaming-parser and rdflib's data model.
+ * Adapter between rdfxml-streaming-parser and rdflib's data model:
  *
- * The whole document string is fed into the streaming parser and the
- * resulting quads are loaded into the store, replicating the behaviour of
- * the retired hand-rolled DOM-walking parser (src/rdfxmlparser.js):
- *
- *  - every statement is attributed to the document graph `kb.sym(base)`
- *    (RDF/XML has no named-graph syntax; this is rdflib's provenance
- *    convention, matching the old `parse(dom, base, kb.sym(base))` call);
- *  - blank nodes are fresh per parse: document `rdf:nodeID` labels are
- *    preserved inside a per-parse-unique scope (`rxN_<label>`), so the same
- *    nodeID unifies within one document (and remains recognisable — issue
- *    #751) while two documents using the same nodeID can never collide in
- *    one store (the old parser's uniqueness semantics);
- *  - `rdf:parseType="Collection"` chains (which the streaming parser emits
- *    as standard rdf:first/rdf:rest/rdf:nil triples) are folded back into
- *    live rdflib `Collection` terms when the store's data factory supports
- *    them, so downstream `Collection.elements` consumers keep working —
- *    same folding idiom as src/lists.ts;
+ *  - statements are attributed to the document graph `kb.sym(base)`
+ *    (rdflib's provenance convention);
+ *  - `rdf:nodeID` labels are scoped per parse (`rxN_<label>`), so a nodeID
+ *    unifies within one document (issue #751) but two documents using the
+ *    same nodeID can never collide in one store;
+ *  - `rdf:parseType="Collection"` chains are folded back into rdflib
+ *    `Collection` terms when the data factory supports them;
  *  - `xmlns:` prefix declarations are harvested into the store's prefix
- *    table (`setPrefixForURI`), feeding the serializer, as before;
- *  - the old parser's leniencies are kept: duplicate `rdf:ID` values are
- *    tolerated (`allowDuplicateRdfIds`) and IRIs are not validated
- *    (`validateUri: false`).
+ *    table, feeding the serializer;
+ *  - duplicate `rdf:ID` values are tolerated and IRIs are not validated,
+ *    keeping the leniency of the parser this replaces.
  */
 import { RdfXmlParser } from 'rdfxml-streaming-parser'
 import BlankNode from './blank-node'
@@ -93,9 +82,8 @@ export default function parseRDFXML (str: string, kb: Formula, base: string): Pr
       baseIRI: base,
       dataFactory: dataFactory as any,
       defaultGraph: docGraph,
-      // The old parser tolerated duplicate rdf:ID values — keep tolerating.
+      // Keep tolerating duplicate rdf:ID values and lax IRIs
       allowDuplicateRdfIds: true,
-      // The old parser never validated IRIs — keep accepting lax IRIs.
       validateUri: false,
     })
 
@@ -110,12 +98,10 @@ export default function parseRDFXML (str: string, kb: Formula, base: string): Pr
     parser.on('error', fail)
     parser.on('end', () => {
       if (settled) return
-      // Upstream RdfXmlParser never closes its saxes parser at end of
-      // stream, so a truncated document (unclosed tags at EOF) would be
-      // silently accepted. The old xmldom-based path raised
-      // "unclosed xml tag(s)" — closing saxes here keeps that behavior:
-      // saxes validates its end-of-document state and reports unclosed
-      // tags through the parser's regular error path.
+      // RdfXmlParser never closes its saxes parser at end of stream, so a
+      // truncated document (unclosed tags at EOF) would be silently
+      // accepted; closing saxes makes it report unclosed tags through the
+      // parser's regular error path.
       try {
         (parser as any).saxParser.close()
       } catch (e) {
@@ -140,9 +126,8 @@ export default function parseRDFXML (str: string, kb: Formula, base: string): Pr
 }
 
 /**
- * Register `xmlns:` prefix declarations into the store's prefix table, as
- * the old parser did (it fed the serializer's prefix selection). Harvested
- * textually since the streaming parser exposes no namespace events.
+ * Register `xmlns:` prefix declarations into the store's prefix table.
+ * Harvested textually since the streaming parser exposes no namespace events.
  */
 function harvestPrefixes (str: string, kb: Formula, base: string): void {
   const setPrefix = (kb as any).setPrefixForURI
@@ -162,12 +147,9 @@ function harvestPrefixes (str: string, kb: Formula, base: string): void {
 
 /**
  * Fold well-formed rdf:first/rdf:rest/rdf:nil chains in the document graph
- * back into live rdflib `Collection` terms (the shape the old parser
- * produced for `rdf:parseType="Collection"`, on which downstream
- * `Collection.elements` consumers rely). Malformed or externally referenced
- * chains are left untouched as plain triples. Same idiom as
- * `convertFirstRestNil` in src/lists.ts, but defensive: it skips instead of
- * throwing.
+ * back into rdflib `Collection` terms, the shape `rdf:parseType="Collection"`
+ * consumers expect. Malformed or externally referenced chains are left
+ * untouched as plain triples (unlike src/lists.ts, this never throws).
  */
 function foldCollections (kb: Formula, doc: NamedNode): void {
   const anyKb = kb as any
@@ -202,7 +184,7 @@ function foldCollections (kb: Formula, doc: NamedNode): void {
   }
 
   // 2. A lone rdf:nil in object position (not a chain tail) is an empty
-  //    collection — the shape `<p rdf:parseType="Collection"/>` produces.
+  //    collection: the shape `<p rdf:parseType="Collection"/>` produces.
   for (const st of anyKb.statementsMatching(null, null, nil, doc)) {
     if (st.predicate.value === rest.value) continue
     const empty: Collection = anyKb.rdfFactory.collection([])
@@ -240,7 +222,7 @@ function wellFormedChain (
     if (kb.statementsMatching(null, null, node, doc).length !== 1) return null
     node = incoming[0].subject
   }
-  nodes.reverse() // head → tail
+  nodes.reverse() // head to tail
   const elements: Quad_Object[] = []
   const trash: Quad[] = []
   for (const n of nodes) {

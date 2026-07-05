@@ -233,9 +233,7 @@ class RDFXMLHandler extends Handler {
   ): Promise<ExtendedResponse | FetchError> {
     let kb = fetcher.store
     try {
-      // rdfxml-streaming-parser is asynchronous — awaited here so that
-      // fetcher.load() only settles once the store is populated, the same
-      // pattern as the JSON-LD handler below.
+      // Awaited so fetcher.load() only settles once the store is populated
       await parseRDFXML(responseText as string, kb, options.original.value)
     } catch (err) {
       return fetcher.failFetch(options, 'Syntax error parsing RDF/XML! ' + err,
