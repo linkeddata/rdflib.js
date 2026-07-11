@@ -1044,7 +1044,7 @@ _:patch
     } // should not happen
     var response = kb.any(request as NamedNode, this.ns.link('response')) as Quad_Subject
     if (!response) {
-      // Throw rather than return null, which left update() hanging (issue #479)
+      // Caught by update(), which reports the failure via the callback (issue #479)
       throw new Error('No record of HTTP GET response for document: ' + doc)
     }
     var contentType = (kb.the(response, this.ns.httph('content-type')) as Term).value
