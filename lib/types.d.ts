@@ -36,7 +36,7 @@ export declare const XHTMLContentType: "application/xhtml+xml";
 /**
  * A valid mime type header
  */
-export type ContentType = typeof RDFXMLContentType | typeof HTMLContentType | typeof JSONLDContentType | typeof N3ContentType | typeof N3LegacyContentType | typeof NQuadsAltContentType | typeof NQuadsContentType | typeof SPARQLUpdateContentType | typeof SPARQLUpdateSingleMatchContentType | typeof TurtleContentType | typeof TurtleLegacyContentType | typeof XHTMLContentType;
+export type ContentType = typeof RDFXMLContentType | typeof HTMLContentType | typeof JSONLDContentType | typeof N3ContentType | typeof N3LegacyContentType | typeof NQuadsAltContentType | typeof NQuadsContentType | typeof NTriplesContentType | typeof SPARQLUpdateContentType | typeof SPARQLUpdateSingleMatchContentType | typeof TurtleContentType | typeof TurtleLegacyContentType | typeof XHTMLContentType;
 /** A type for values that serves as inputs */
 export type ValueType = Term | Node | Date | string | number | boolean | undefined | null | Collection;
 /**

@@ -7,7 +7,7 @@ import { parseRDFaDOM } from './rdfaparser';
 import RDFParser from './rdfxmlparser';
 import sparqlUpdateParser from './patch-parser';
 import * as Util from './utils-js';
-import { TurtleContentType, N3ContentType, RDFXMLContentType, XHTMLContentType, HTMLContentType, SPARQLUpdateContentType, SPARQLUpdateSingleMatchContentType, JSONLDContentType, NQuadsContentType, NQuadsAltContentType } from './types';
+import { TurtleContentType, N3ContentType, NTriplesContentType, RDFXMLContentType, XHTMLContentType, HTMLContentType, SPARQLUpdateContentType, SPARQLUpdateSingleMatchContentType, JSONLDContentType, NQuadsContentType, NQuadsAltContentType } from './types';
 /**
  * Parse a string and put the result into the graph kb.
  * Normal method is sync.
@@ -23,7 +23,7 @@ export default function parse(str, kb, base, contentType = 'text/turtle', callba
   contentType = contentType || TurtleContentType;
   contentType = contentType.split(';')[0];
   try {
-    if (contentType === N3ContentType || contentType === TurtleContentType) {
+    if (contentType === N3ContentType || contentType === TurtleContentType || contentType === NTriplesContentType) {
       var p = N3Parser(kb, kb, base, base, null, null, '', null);
       p.loadBuf(str);
       executeCallback();
@@ -74,7 +74,8 @@ export default function parse(str, kb, base, contentType = 'text/turtle', callba
     'application/sparql-update-single-match': true,
     'application/ld+json': true,
     'application/nquads': true,
-    'application/n-quads': true
+    'application/n-quads': true,
+    'application/n-triples': true
   };
   function executeCallback() {
     if (callback) {
