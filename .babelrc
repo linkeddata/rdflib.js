@@ -12,9 +12,16 @@
       "presets": [
         [
           "@babel/preset-env",
-          { "modules": false }
+          {
+            "modules": false,
+            "targets": { "esmodules": true }
+          }
         ]
-      ] 
-    },
-  },
+      ],
+      "plugins": [
+        ["@babel/plugin-transform-runtime", { "helpers": false, "regenerator": false }],
+        ["babel-plugin-add-import-extension", { "extension": "js" }]
+      ]
+    }
+  }
 }

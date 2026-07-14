@@ -1,8 +1,8 @@
-import Fetcher from './fetcher'
-import log from './log'
-import { docpart } from './uri'
-import { string_startswith } from './utils-js'
-import { RdfJsDataFactory, Quad, Quad_Subject, Term } from './tf-types'
+import Fetcher from '../fetcher'
+import log from '../log'
+import { docpart } from '../uri'
+import { string_startswith } from '../utils-js'
+import { RdfJsDataFactory, Quad, Quad_Subject, Term } from '../tf-types'
 
 /** RDF/JS spec Typeguards */
 

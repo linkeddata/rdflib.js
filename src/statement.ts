@@ -1,4 +1,6 @@
-import Node from './node-internal'
+// Import via './node' (not './node-internal') so the module that attaches
+// Node.fromValue is always loaded, whichever entry point loads this file (#400).
+import Node from './node'
 import {
   Bindings,
   GraphType,
