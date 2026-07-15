@@ -54,6 +54,10 @@
  *
  * @author David Sheets <dsheets@mit.edu>
  *
+ * @deprecated rdflib itself no longer uses this class: `parse()` routes
+ * application/rdf+xml through src/rdfxml-adapter.ts instead. Kept only as
+ * part of the public export surface (`RDFParser`) and slated for removal.
+ * Use `parse(str, kb, base, 'application/rdf+xml', callback)` instead.
 */
 import * as uriUtil from './uri'
 
