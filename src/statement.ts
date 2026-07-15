@@ -59,6 +59,15 @@ export default class Statement<
     object: O,
     graph?: G | DefaultGraph,
   ) {
+    if (subject === null || subject === undefined) {
+      throw new Error('Statement: the subject of a statement can not be ' + subject + ' (see https://github.com/linkeddata/rdflib.js/issues/362)')
+    }
+    if (predicate === null || predicate === undefined) {
+      throw new Error('Statement: the predicate of a statement can not be ' + predicate + ' (see https://github.com/linkeddata/rdflib.js/issues/362)')
+    }
+    if (object === null || object === undefined) {
+      throw new Error('Statement: the object of a statement can not be ' + object + ' (see https://github.com/linkeddata/rdflib.js/issues/362)')
+    }
     this.subject = Node.fromValue(subject)
     this.predicate = Node.fromValue(predicate)
     this.object = Node.fromValue(object)

@@ -51,6 +51,22 @@ export class Query {
  * @param onDone -  callback when query finished
  */
 export function indexedFormulaQuery (myQuery, callback, fetcher, onDone) {
+  // Project reported bindings onto the selected variables (query.vars),
+  // if the query set any (issue #393)
+  if (myQuery.vars && myQuery.vars.length > 0) {
+    const userCallback = callback
+    const selected = myQuery.vars.map(function (v) { return String(v) })
+    callback = function (bindings) {
+      const projected = {}
+      for (let i = 0; i < selected.length; i++) {
+        if (bindings[selected[i]] !== undefined) {
+          projected[selected[i]] = bindings[selected[i]]
+        }
+      }
+      return userCallback(projected)
+    }
+  }
+
   /** Debug strings
   */
   function bindingDebug (b) {
