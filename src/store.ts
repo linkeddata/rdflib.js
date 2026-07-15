@@ -914,9 +914,15 @@ export default class IndexedFormula extends Formula { // IN future - allow pass 
             this.removeStatement(sts[i])
           }
         }
+        // link relations (acl, describedby, type, ...) from HTTP Link headers
+        // are stored with the request node as their graph (issue #640)
+        sts = this.statementsMatching(null, null, null, request as Quad_Graph).slice()
+        for (var i = 0; i < sts.length; i++) {
+          this.removeStatement(sts[i])
+        }
         // request triples
         sts = this.statementsMatching(request, null, null, meta).slice()
-        for (var i = 0; i < sts.length; i++) {
+        for (i = 0; i < sts.length; i++) {
           this.removeStatement(sts[i])
         }
 

@@ -425,5 +425,28 @@ describe('IndexedFormula', () => {
       expect(serialize(meta, store, null)).to.eql(voidDoc)
       expect(serialize(doc, store, doc.uri)).to.eql(voidDoc)
     })
+
+    // https://github.com/linkeddata/rdflib.js/issues/640
+    it ('removeDocument removes the link relations of the document', () => {
+      const store = new IndexedFormula()
+      const meta = store.sym('chrome://TheCurrentSession')
+      const doc = store.sym('https://bob.localhost:8443/profile/card')
+      const req = store.rdfFactory.blankNode()
+      const linkNamespaceURI = 'http://www.w3.org/2007/ont/link#'
+      // request metadata, as saved by Fetcher.saveRequestMetadata()
+      store.add(req, store.sym(`${linkNamespaceURI}requestedURI`), store.rdfFactory.literal(doc.value), meta)
+      // link relations, as saved by Fetcher.linkData() from the HTTP Link
+      // header, with the request node as their graph
+      store.add(doc, store.sym('http://www.iana.org/assignments/link-relations/acl'), store.sym(`${doc.value}.acl`), req)
+      store.add(doc, store.sym('http://www.iana.org/assignments/link-relations/describedby'), store.sym(`${doc.value}.meta`), req)
+      store.add(doc, store.sym('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'), store.sym('http://www.w3.org/ns/ldp#Resource'), req)
+      // a reversed (rev=) link relation has the document as object, not subject
+      store.add(store.sym(`${doc.value}.meta`), store.sym('http://www.iana.org/assignments/link-relations/describes'), doc, req)
+
+      store.removeDocument(doc)
+
+      expect(store.statementsMatching(null, null, null, req)).to.have.length(0)
+      expect(store.statements).to.have.length(0)
+    })
   })
 })

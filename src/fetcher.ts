@@ -1017,12 +1017,20 @@ export default class Fetcher implements CallbackifyInterface {
       this.cleanupFetchRequest(originalUri, undefined, this.timeout)
     }
 
-    return pendingPromise.then(x => {
+    // Clear pending timeouts however the request settles, or a failed fetch
+    // leaves its timer holding the event loop open (issue #68)
+    const clearRequestTimeouts = () => {
       if (uri in this.timeouts) {
         this.timeouts[uri].forEach(clearTimeout)
         delete this.timeouts[uri]
       }
+    }
+    return pendingPromise.then(x => {
+      clearRequestTimeouts()
       return x
+    }, err => {
+      clearRequestTimeouts()
+      throw err
     })
   }
 
@@ -1470,17 +1478,24 @@ export default class Fetcher implements CallbackifyInterface {
           if (err) {
             reject(err)
           } else {
-            // @ts-ignore
-            options.data = jsonString
+            options.data = jsonString || undefined
             this.webOperation('PUT', uri, options)
-              .then((res) => resolve(res))
+              .then((res) => {
+                // The web now has what we have in the store for this doc (issue #331)
+                this.requested[doc.value] = 'done'
+                resolve(res)
+              })
               .catch((error) => reject(error))
           }
         })
       })
     }
     options.data = serialize(doc, this.store, doc.value, options.contentType) as string
-    return this.webOperation('PUT', uriSting, options)
+    return this.webOperation('PUT', uriSting, options).then((response) => {
+      // The web now has what we have in the store for this doc (issue #331)
+      this.requested[doc.value] = 'done'
+      return response
+    })
   }
 
   webCopy (here: string, there: string, contentType): Promise<ExtendedResponse> {
@@ -1549,8 +1564,6 @@ export default class Fetcher implements CallbackifyInterface {
     data: string
   ): Promise<Response> {
     let headers = {
-      // Force the right mime type for containers
-      'content-type': TurtleContentType,
       'link': this.ns.ldp('BasicContainer') + '; rel="type"'
     }
 
@@ -1558,8 +1571,10 @@ export default class Fetcher implements CallbackifyInterface {
       headers['slug'] = folderName
     }
 
+    // Force the right mime type for containers via the contentType option,
+    // which webOperation turns into the content-type header (issue #266)
     // @ts-ignore These headers lack some of the required operators.
-    let options: Options = { headers }
+    let options: Options = { headers, contentType: TurtleContentType }
 
     if (data) {
       options.body = data
@@ -1750,6 +1765,10 @@ export default class Fetcher implements CallbackifyInterface {
     const kb = this.store
 
     let responseNode = kb.bnode()
+
+    if (options.noMeta) { // Don't save metadata to the store if noMeta is set (issue #296)
+      return responseNode
+    }
 
     kb.add(options.req, this.ns.link('response'), responseNode, this.appNode)
     kb.add(responseNode, this.ns.http('status'),
