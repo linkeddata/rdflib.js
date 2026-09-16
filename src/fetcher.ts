@@ -979,12 +979,19 @@ export default class Fetcher implements CallbackifyInterface {
     // if metadata flaged clear cache and removeDocument
     const meta = this.appNode
     const kb = this.store
-    const requests = kb.statementsMatching(undefined, this.ns.link('requestedURI'), kb.sym(docuri), meta).map(st => st.subject)
+    // The recorded URI is stored as a string literal, not as a node (see
+    // saveRequestMetadata and linkeddata/rdflib.js#427): matching it with
+    // kb.sym() never found the request, so a flagged document was answered from
+    // the cache instead of being refetched (#870).
+    const requests = kb.statementsMatching(undefined, this.ns.link('requestedURI'), kb.rdfFactory.literal(docuri), meta).map(st => st.subject)
     for (const request of requests) {
       const response = kb.any(request, this.ns.link('response'), null, meta) as Quad_Subject
       if (response != undefined) { // ts
-        const quad = kb.statementsMatching(response, this.ns.link('outOfDate'), true as any, meta)
-        kb.remove(quad)
+        // Refresh instead of answering from the cache. The previous answers
+        // keep their outOfDate mark: removing it (as this loop used to) makes
+        // them eligible again, so an older answer can win over the fresh one —
+        // and if the refetch fails it becomes definitive again instead of
+        // staying "unknown".
         options.force = true
         options.clearPreviousData = true
       }

@@ -605,4 +605,62 @@ describe('Fetcher', () => {
       })
     })
   })
+
+  describe('load of a flagged document (#870)', () => {
+    let store, fetcher, docuri, calls, failNext
+
+    beforeEach(() => {
+      store = rdf.graph()
+      docuri = 'https://example.com/flagged.ttl'
+      calls = 0
+      failNext = false
+      const fetchStub = sinon.stub().callsFake(async () => {
+        calls += 1
+        if (failNext) {
+          throw new Error('network down')
+        }
+        return new Response('<> <http://purl.org/dc/terms/title> "loaded" .', {
+          status: 200,
+          headers: new Headers({
+            'Content-Type': 'text/turtle',
+            // Read-only first, writable second: the flag has to make the
+            // second fetch happen.
+            'WAC-Allow': calls === 1 ? 'user="read"' : 'user="read write"',
+            'Accept-Patch': 'text/n3'
+          })
+        })
+      })
+      fetcher = new Fetcher(store, { fetch: fetchStub })
+      store.updater = new rdf.UpdateManager(store)
+    })
+
+    it('refetches it instead of answering from the cached copy', async () => {
+      await fetcher.load(docuri)
+      expect(calls).to.equal(1)
+      expect(store.updater.editable(docuri)).to.equal(false)
+
+      store.updater.flagAuthorizationMetadata()
+      expect(store.updater.editable(docuri)).to.equal(undefined)
+
+      await fetcher.load(docuri)
+
+      // Regression: requestedURI is recorded as a string literal, so looking
+      // it up with kb.sym() found nothing and fetchUri answered "Already
+      // loaded" — the stale read-only answer stayed.
+      expect(calls).to.equal(2)
+      // The fresh response answers; the previous identity's answer keeps its
+      // outOfDate mark and does not win again.
+      expect(store.updater.editable(docuri)).to.equal('N3PATCH')
+    })
+
+    it('stays unknown when the refetch fails instead of reviving the old answer', async () => {
+      await fetcher.load(docuri)
+      store.updater.flagAuthorizationMetadata()
+
+      failNext = true
+      await fetcher.load(docuri).catch(() => undefined)
+
+      expect(store.updater.editable(docuri)).to.equal(undefined)
+    })
+  })
 })
