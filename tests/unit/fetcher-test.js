@@ -660,7 +660,35 @@ describe('Fetcher', () => {
       failNext = true
       await fetcher.load(docuri).catch(() => undefined)
 
+      // The refetch has to be attempted: without this, the test also passes
+      // when load() answers from the cache, because the marked response alone
+      // already makes editable() return undefined.
+      expect(calls).to.equal(2)
       expect(store.updater.editable(docuri)).to.equal(undefined)
+    })
+
+    it('still answers an unmarked document from the cache', async () => {
+      await fetcher.load(docuri)
+      expect(calls).to.equal(1)
+
+      // Nothing was flagged: load() must not turn into a refetch for every
+      // document that was fetched before.
+      await fetcher.load(docuri)
+
+      expect(calls).to.equal(1)
+    })
+
+    it('is a cache hit again once the fresh answer is recorded', async () => {
+      await fetcher.load(docuri)
+      store.updater.flagAuthorizationMetadata()
+      await fetcher.load(docuri)
+      expect(calls).to.equal(2)
+
+      // The refetched answer is usable, so later loads do not fetch again even
+      // though the previous (flagged) answer is still in the store.
+      await fetcher.load(docuri)
+
+      expect(calls).to.equal(2)
     })
   })
 })

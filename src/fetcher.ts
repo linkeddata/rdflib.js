@@ -984,17 +984,37 @@ export default class Fetcher implements CallbackifyInterface {
     // kb.sym() never found the request, so a flagged document was answered from
     // the cache instead of being refetched (#870).
     const requests = kb.statementsMatching(undefined, this.ns.link('requestedURI'), kb.rdfFactory.literal(docuri), meta).map(st => st.subject)
+    let answered = false
+    let usableAnswer = false
     for (const request of requests) {
       const response = kb.any(request, this.ns.link('response'), null, meta) as Quad_Subject
-      if (response != undefined) { // ts
-        // Refresh instead of answering from the cache. The previous answers
-        // keep their outOfDate mark: removing it (as this loop used to) makes
-        // them eligible again, so an older answer can win over the fresh one —
-        // and if the refetch fails it becomes definitive again instead of
-        // staying "unknown".
-        options.force = true
-        options.clearPreviousData = true
+      // any() returns null (never undefined) when nothing matches: keep the
+      // loose check so a request that has no recorded answer yet is not
+      // counted as answered.
+      if (response == null) {
+        continue
       }
+      answered = true
+      // Every recorded answer that is flagged out-of-date is unusable: the
+      // answer of a previous identity/authorization (flagAuthorizationMetadata).
+      // Read the mark with anyJS, as update-manager.editable does: it is stored
+      // as an xsd:boolean literal and the object position has to stay a
+      // wildcard - any() returns null when all four positions are given, even
+      // when the statement exists.
+      const outOfDate = kb.anyJS(response, this.ns.link('outOfDate'), null, meta)
+      if (!outOfDate) {
+        usableAnswer = true
+        break
+      }
+    }
+    if (answered && !usableAnswer) {
+      // Refetch instead of answering from the cache, and keep the marks: an
+      // answer of the previous authorization stays excluded, so it cannot win
+      // over the fresh one — and if the refetch fails the state stays
+      // "unknown" instead of becoming definitive again. Once a fresh answer is
+      // recorded the loop above finds it and later loads are cache hits again.
+      options.force = true
+      options.clearPreviousData = true
     }
 
     const initialisedOptions = this.initFetchOptions(docuri, options)
