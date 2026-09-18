@@ -101,7 +101,7 @@ jobs:
       - name: Disable pre- and post-publish actions
         run: 'sed -i -E "s/\"((pre|post)publish)/\"ignore:\1/" package.json'
       - name: Publish to npm
-        run: npm publish --tag dev
+        run: npm publish --tag dev --ignore-scripts
 
   gh-pages:
     needs: build
@@ -140,4 +140,4 @@ jobs:
         run: 'sed -i -E "s/\"((pre|post)publish)/\"ignore:\1/" package.json'
       - name: Publish to npm
         if: github.actor != 'dependabot[bot]' && github.actor != 'dependabot-preview[bot]'
-        run: npm publish --tag latest
+        run: npm publish --tag latest --ignore-scripts
