@@ -35,7 +35,9 @@ export function isCollection(obj: any): obj is Collection<any> {
 
 /** TypeGuard for valid RDFlib Object types, also allows Collections, Graphs */
 export function isRDFlibObject(obj: any): obj is ObjectType {
-  return obj && Object.prototype.hasOwnProperty.call(obj, 'termType') && (
+  // Terms from other RDF/JS factories may expose termType as a getter,
+  // which hasOwnProperty misses (issue #480)
+  return isTerm(obj) && (
     obj.termType === NamedNodeTermType ||
     obj.termType === VariableTermType ||
     obj.termType === BlankNodeTermType ||
@@ -48,7 +50,8 @@ export function isRDFlibObject(obj: any): obj is ObjectType {
 /** TypeGuard for valid RDFlib Subject types, same as Object as RDFLib symmetrical.
 */
 export function isRDFlibSubject(obj: any): obj is ObjectType {
-  return obj && Object.prototype.hasOwnProperty.call(obj, 'termType') && (
+  // See isRDFlibObject above (issue #480)
+  return isTerm(obj) && (
     obj.termType === NamedNodeTermType ||
     obj.termType === VariableTermType ||
     obj.termType === BlankNodeTermType ||

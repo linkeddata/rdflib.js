@@ -115,7 +115,15 @@ export default class Formula extends Node {
     graph?: Quad_Graph
   ): Statement | null | this | number {
     if (arguments.length === 1) {
-      (subject as Quad[]).forEach(st => this.add(st.subject, st.predicate, st.object, st.graph))
+      // A lone array or statement must not fall through to the 4-argument
+      // case, which would build a corrupt statement from it (issue #362)
+      if (subject instanceof Array) {
+        subject.forEach(st => this.add(st.subject, st.predicate, st.object, st.graph))
+      } else {
+        const st = subject as Quad
+        this.add(st.subject, st.predicate, st.object, st.graph)
+      }
+      return this
     }
     return this.statements.push(this.rdfFactory.quad(subject, predicate, object, graph))
   }

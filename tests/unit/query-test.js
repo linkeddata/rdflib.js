@@ -194,6 +194,62 @@ describe('Query', () => {
 
   })
 })
+
+describe('Query variable projection (issue #393)', () => {
+  after(() => {
+    BlankNode.nextId = 0
+  })
+
+  const a = rdf.sym('http://www.w3.org/1999/02/22-rdf-syntax-ns#type')
+  const person = rdf.sym('http://xmlns.com/foaf/0.1/Person')
+  const doc = rdf.sym('https://example.com/data')
+
+  const kb = rdf.graph()
+  kb.add(rdf.sym('https://example.com/alice#i'), a, person, doc)
+  kb.add(rdf.sym('https://example.com/bob#me'), a, person, doc)
+
+  it('only reports bindings for the variables the query selects', done => {
+    const query = rdf.SPARQLToQuery('SELECT ?type WHERE { ?subject a ?type. }', true, kb)
+    const results = []
+    kb.query(query, (bindings) => {
+      results.push(bindings)
+    }, null, () => {
+      expect(results).to.have.length(2)
+      for (const bindings of results) {
+        expect(Object.keys(bindings)).to.eql(['?type'])
+        expect(bindings['?type'].value).to.equal(person.value)
+      }
+      done()
+    })
+  })
+
+  it('projects querySync results to the selected variables too', () => {
+    const query = rdf.SPARQLToQuery('SELECT ?type WHERE { ?subject a ?type. }', true, kb)
+    const results = kb.querySync(query)
+    expect(results).to.have.length(2)
+    for (const bindings of results) {
+      expect(Object.keys(bindings)).to.eql(['?type'])
+      expect(bindings['?type'].value).to.equal(person.value)
+    }
+  })
+
+  it('keeps all bindings for queries that do not select specific variables', done => {
+    const s = new Variable('s')
+    const t = new Variable('t')
+    const query = new rdf.Query()
+    query.pat.add(rdf.st(s, a, t, doc))
+    const results = []
+    kb.query(query, (bindings) => {
+      results.push(bindings)
+    }, null, () => {
+      expect(results).to.have.length(2)
+      for (const bindings of results) {
+        expect(Object.keys(bindings).sort()).to.eql(['?s', '?t'])
+      }
+      done()
+    })
+  })
+})
 /////////////////////////////////////////////////
 
 describe('Synchronous Query', () => {
