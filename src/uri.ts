@@ -85,6 +85,11 @@ export function join(given: string, base: string): string {
     baseSingle = base.indexOf('/', baseColon + 3)
     if (baseSingle < 0) {
       if (base.length - baseColon - 3 > 0) {
+        if (given.indexOf('/') === 0) {
+          // The given URI is an absolute path and the base has no path:
+          // avoid inserting a double slash (issue #265)
+          return base + given
+        }
         return base + '/' + given
       } else {
         return baseScheme + given

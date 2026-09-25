@@ -83,6 +83,28 @@ describe('Fetcher', () => {
         store.rdfFactory.namedNode('http://www.w3.org/ns/iana/media-types/image/png#Resource')
       )).to.equal(true)
     })
+
+    // https://github.com/linkeddata/rdflib.js/issues/296
+    it('does not write metadata to the store when noMeta is set', () => {
+      const store = rdf.graph()
+      const fetcher = new Fetcher(store)
+      const response = new Response(null, {
+        headers: new Headers({
+          'Content-Type': 'text/turtle'
+        }),
+        status: 200,
+      })
+      const options = {
+        req: store.rdfFactory.blankNode(),
+        resource: store.rdfFactory.namedNode('https://example.com/resource/1'),
+        noMeta: true
+      }
+
+      const responseNode = fetcher.saveResponseMetadata(response, options)
+
+      expect(responseNode).to.exist
+      expect(store.statements).to.have.length(0)
+    })
   })
 
   describe('nowOrWhenFetched 1', () => {
@@ -563,7 +585,101 @@ describe('Fetcher', () => {
   })
 
   describe('createContainer', () => {
-    // it.skip('should invoke webOperation with the right options', () => {})
+    let fetcher
+
+    beforeEach(() => {
+      fetcher = new Fetcher(rdf.graph())
+    })
+
+    afterEach(() => {
+      nock.cleanAll()
+    })
+
+    // https://github.com/linkeddata/rdflib.js/issues/266
+    it('POSTs folder data with a text/turtle Content-Type', () => {
+      nock('https://example.com')
+        .matchHeader('content-type', 'text/turtle')
+        .matchHeader('slug', 'folder1')
+        .post('/parent/', '<#this> a <#folder> .')
+        .reply(201)
+
+      return fetcher.createContainer('https://example.com/parent/', 'folder1', '<#this> a <#folder> .')
+        .then(res => {
+          expect(res.status).to.equal(201)
+        })
+    })
+
+    it('POSTs with a text/turtle Content-Type when there is no folder data', () => {
+      nock('https://example.com')
+        .matchHeader('content-type', 'text/turtle')
+        .post('/parent/')
+        .reply(201)
+
+      return fetcher.createContainer('https://example.com/parent/', 'folder2')
+        .then(res => {
+          expect(res.status).to.equal(201)
+        })
+    })
+  })
+
+  describe('putBack', () => {
+    let fetcher, store
+
+    beforeEach(() => {
+      store = rdf.graph()
+      fetcher = new Fetcher(store)
+    })
+
+    afterEach(() => {
+      nock.cleanAll()
+    })
+
+    // https://github.com/linkeddata/rdflib.js/issues/331
+    it('sets the request cache state to "done" after a successful putBack', () => {
+      nock('https://example.com').put('/doc.ttl').reply(201)
+
+      const doc = store.sym('https://example.com/doc.ttl')
+      store.add(store.sym(`${doc.value}#a`), store.sym(`${doc.value}#b`), store.rdfFactory.literal('c'), doc)
+
+      return fetcher.putBack(doc)
+        .then(() => {
+          expect(fetcher.requested[doc.value]).to.equal('done')
+          expect(fetcher.getState(doc.value)).to.equal('fetched')
+        })
+    })
+  })
+
+  describe('request timeout cleanup', () => {
+    afterEach(() => {
+      nock.cleanAll()
+    })
+
+    // https://github.com/linkeddata/rdflib.js/issues/68
+    it('clears the pending request timeout when the fetch fails', () => {
+      nock('https://example.com').get('/broken.ttl').reply(500)
+      const uri = 'https://example.com/broken.ttl'
+      const fetcher = new Fetcher(rdf.graph())
+
+      return fetcher.load(uri).then(
+        () => { throw new Error('load should have rejected') },
+        () => {
+          // The timer armed by setRequestTimeout() must not stay in
+          // fetcher.timeouts on the failure path
+          expect(fetcher.timeouts[uri] || []).to.have.length(0)
+        })
+    })
+
+    it('clears the pending request timeout when the fetch succeeds', () => {
+      nock('https://example.com').get('/ok.ttl').reply(200, '<#a> <#b> "c" .', {
+        'Content-Type': 'text/turtle'
+      })
+      const uri = 'https://example.com/ok.ttl'
+      const fetcher = new Fetcher(rdf.graph())
+
+      return fetcher.load(uri).then(() => {
+        expect(fetcher.timeouts[uri] || []).to.have.length(0)
+      })
+    })
   })
 
   describe('linkData', () => {
