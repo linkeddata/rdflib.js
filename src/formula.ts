@@ -4,7 +4,9 @@ import CanonicalDataFactory from './factories/canonical-data-factory'
 import log from './log'
 import RDFlibNamedNode from './named-node'
 import Namespace from './namespace'
-import Node from './node-internal'
+// Import via './node' (not './node-internal') so the module that attaches
+// Node.toJS is always loaded, whichever entry point loads this file (#400).
+import Node from './node'
 import serialize from './serialize'
 import Statement from './statement'
 import {

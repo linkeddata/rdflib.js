@@ -1,7 +1,9 @@
 import DataFactory from './factories/extended-term-factory'
 import jsonldParser from './jsonldparser'
-// @ts-ignore is this injected?
-import { Parser as N3jsParser } from 'n3'  // @@ Goal: remove this dependency
+// Deep import of just the parser class: keeps N3StreamWriter (and its
+// readable-stream/Node polyfill chain) out of downstream browser bundles (#449).
+// @ts-ignore no type declarations for the deep import
+import N3jsParser from 'n3/lib/N3Parser.js'  // @@ Goal: remove this dependency
 import N3Parser from './n3parser'
 import { parseRDFaDOM } from './rdfaparser'
 import RDFParser from './rdfxmlparser'

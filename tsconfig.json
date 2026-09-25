@@ -1,6 +1,8 @@
 {
   "compilerOptions": {
+    "ignoreDeprecations": "6.0",
     "moduleResolution": "node",
+    "rootDir": "./src",
     "allowSyntheticDefaultImports": true,
     "checkJs": false,
     "allowJs": true,
@@ -13,6 +15,9 @@
     "lib": [
       "es2019",
       "dom"
+    ],
+    "types": [
+      "node"
     ],
     "outDir": "./temp_ts_output"
   },

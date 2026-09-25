@@ -1,5 +1,6 @@
 const path = require('path')
 const NodePolyfillPlugin = require("node-polyfill-webpack-plugin")
+const TerserPlugin = require('terser-webpack-plugin')
 
 module.exports = (env, args) => {
   return {
@@ -28,6 +29,18 @@ module.exports = (env, args) => {
       ]
     },
     resolve: { extensions: ['.js', '.ts'] },
+    optimization: {
+      minimizer: [
+        // Escape non-ASCII characters in the minified output so the bundle
+        // still parses when served without a charset declaration and the
+        // browser falls back to e.g. windows-1252 (#422).
+        new TerserPlugin({
+          terserOptions: {
+            format: { ascii_only: true }
+          }
+        })
+      ]
+    },
     externals: {
       '@trust/webcrypto': 'crypto',
       '@xmldom/xmldom': 'window',
