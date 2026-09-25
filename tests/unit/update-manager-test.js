@@ -247,4 +247,124 @@ describe('UpdateManager', () => {
       expect(result).to.equal(undefined)
     })
   })
+
+  describe('update_statement', () => {
+    it('set_object should use the anonymize method of the UpdateManager (issue #231)', done => {
+      const updater = new UpdateManager()
+      updater.store.fetcher.webOperation = sinon.stub().resolves({ ok: true, status: 200, statusText: 'Dummy stub' })
+      loadMeta(updater.store)
+      updater.store.add(st1)
+
+      const handle = updater.update_statement(st1)
+      handle.set_object($rdf.literal('999'), (uri, ok, text) => {
+        try {
+          expect(ok).to.equal(true)
+          expect(updater.store.fetcher.webOperation).to.have.been.calledOnce
+          const [method, patchUri, options] = updater.store.fetcher.webOperation.firstCall.args
+          expect(method).to.equal('PATCH')
+          expect(patchUri).to.equal(doc.uri)
+          expect(options.body).to.include('DELETE DATA')
+          expect(options.body).to.include('INSERT DATA')
+          expect(options.body).to.include('"999"')
+          done()
+        } catch (e) { done(e) }
+      })
+    })
+  })
+
+  describe('update() error propagation (issue #479)', () => {
+    let updater
+
+    beforeEach(() => {
+      updater = new UpdateManager()
+      updater.store.fetcher.webOperation = sinon.stub().resolves({ ok: true, status: 200, statusText: 'Dummy stub' })
+    })
+
+    it('promise form should reject when the metadata load fails (e.g. unauthorized)', async () => {
+      const err = new Error('Fetcher: unauthorized')
+      err.status = 401
+      err.response = { status: 401 }
+      sinon.stub(updater.store.fetcher, 'load').rejects(err)
+
+      let rejection
+      try {
+        await updater.update([], [st1])
+      } catch (e) {
+        rejection = e
+      }
+      expect(rejection).to.be.instanceOf(Error)
+      expect(rejection.message).to.include("Can't get updatability status")
+    })
+
+    it('callback form should report failure when the load error carries no response object', done => {
+      // Network-level failures carry no `.response`
+      const err = new Error('Fetcher: network failure')
+      err.status = 999
+      sinon.stub(updater.store.fetcher, 'load').rejects(err)
+
+      updater.update([], [st1], (uri, ok, body) => {
+        try {
+          expect(ok).to.equal(false)
+          expect(body).to.include("Can't get updatability status")
+          done()
+        } catch (e) { done(e) }
+      })
+    })
+  })
+
+  describe('update() loads metadata then retries once (issue #250)', () => {
+    let updater
+
+    beforeEach(() => {
+      updater = new UpdateManager()
+      updater.store.fetcher.webOperation = sinon.stub().resolves({ ok: true, status: 200, statusText: 'Dummy stub' })
+    })
+
+    it('should retry after a 404 rejection from load (nonexistent resources are creatable)', done => {
+      const err404 = new Error('Fetcher: not found')
+      err404.status = 404
+      const loadStub = sinon.stub(updater.store.fetcher, 'load').callsFake(() => {
+        loadMeta(updater.store) // headers of the failed request still supply editability metadata
+        return Promise.reject(err404)
+      })
+
+      updater.update([], [st1], (uri, ok, body) => {
+        try {
+          expect(ok).to.equal(true)
+          expect(loadStub).to.have.been.calledOnce
+          expect(updater.store.fetcher.webOperation).to.have.been.calledOnce
+          done()
+        } catch (e) { done(e) }
+      })
+    })
+
+    it('should load only once and fail helpfully if metadata is still missing', done => {
+      // load succeeds but yields no editability metadata: no retry loop, helpful error
+      const loadStub = sinon.stub(updater.store.fetcher, 'load')
+        .resolves({ ok: true, status: 200, statusText: 'Dummy stub' })
+
+      updater.update([], [st1], (uri, ok, body) => {
+        try {
+          expect(ok).to.equal(false)
+          expect(loadStub).to.have.been.calledOnce
+          expect(body).to.include("still can't figure out what editing protocol")
+          done()
+        } catch (e) { done(e) }
+      })
+    })
+
+    it('promise form should reject helpfully if metadata is still missing after the load', async () => {
+      sinon.stub(updater.store.fetcher, 'load')
+        .resolves({ ok: true, status: 200, statusText: 'Dummy stub' })
+
+      let rejection
+      try {
+        await updater.update([], [st1])
+      } catch (e) {
+        rejection = e
+      }
+      expect(rejection).to.be.instanceOf(Error)
+      expect(rejection.message).to.include("still can't figure out what editing protocol")
+    })
+  })
 })
