@@ -546,6 +546,11 @@ export class Serializer {
   }
   // //////////////////////////////////////////// Atomic Terms
 
+  // Valid lexical forms that can be abbreviated to native Turtle tokens
+  validInteger = new RegExp(/^[+-]?[0-9]+$/)
+  validDecimal = new RegExp(/^[+-]?(?:[0-9]+\.?[0-9]*|\.[0-9]+)$/)
+  validDouble = new RegExp(/^[+-]?(?:[0-9]+\.?[0-9]*|\.[0-9]+)(?:[eE][+-]?[0-9]+)?$/)
+
   //  Deal with term level things and nesting with no bnode structure
   atomicTermToN3 (expr, stats) {
     switch (expr.termType) {
@@ -558,17 +563,25 @@ export class Serializer {
           throw new TypeError('Value of RDF literal node must be a string')
         }
         // var val = expr.value.toString() // should be a string already
+        // Only abbreviate to native Turtle syntax when the lexical form is valid
+        // for the datatype AND expressible as a Turtle token; otherwise fall
+        // through to the verbose "value"^^datatype form so no data is lost.
         if (expr.datatype && this.flags.indexOf('x') < 0) { // Supress native numbers
           switch (expr.datatype.uri) {
 
             case 'http://www.w3.org/2001/XMLSchema#integer':
+              if (!this.validInteger.test(val)) break // Invalid lexical form: serialize verbosely
               return val
 
             case 'http://www.w3.org/2001/XMLSchema#decimal': // In Turtle, must have dot
+              if (!this.validDecimal.test(val)) break // Invalid lexical form: serialize verbosely
               if (val.indexOf('.') < 0) val += '.0'
+              else if (val.charAt(val.length - 1) === '.') val += '0' // Turtle needs a digit after the dot
               return val
 
             case 'http://www.w3.org/2001/XMLSchema#double': {
+              // INF, -INF and NaN are valid xsd:double but have no native Turtle form
+              if (!this.validDouble.test(val)) break // Invalid lexical form: serialize verbosely
               // Must force use of 'e'
               const eNotation = val.toLowerCase().indexOf('e') > 0
               if (val.indexOf('.') < 0 && !eNotation) val += '.0'
@@ -577,7 +590,9 @@ export class Serializer {
             }
 
             case 'http://www.w3.org/2001/XMLSchema#boolean':
-              return expr.value === '1' ? 'true' : 'false'
+              if (val === 'true' || val === '1') return 'true'
+              if (val === 'false' || val === '0') return 'false'
+              break // Invalid lexical form: serialize verbosely
           }
         }
         var str = this.stringToN3(expr.value, this.flags)

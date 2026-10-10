@@ -240,6 +240,173 @@ example:subject schema2:predicate 123e-2 .
 
     })
 
+    describe('booleans', () => {
+        const serializeBoolean = (lexicalForm) => {
+            const doc = sym("https://example.net/doc")
+            const statement = st(
+                sym('https://subject.example'),
+                sym('https://predicate.example'),
+                lit(lexicalForm, undefined, sym("http://www.w3.org/2001/XMLSchema#boolean")),
+                doc
+            )
+            const kb = graph()
+            kb.add(statement)
+            return serialize(doc, kb, null, 'text/turtle')
+        }
+        const expected = (token) => `@prefix : </doc#>.
+
+<https://subject.example> <https://predicate.example> ${token}.
+
+`
+
+        it('lexical form "true" serializes to true', () => {
+            expect(serializeBoolean('true')).to.equal(expected('true'))
+        })
+
+        it('lexical form "false" serializes to false', () => {
+            expect(serializeBoolean('false')).to.equal(expected('false'))
+        })
+
+        it('lexical form "1" serializes to true', () => {
+            expect(serializeBoolean('1')).to.equal(expected('true'))
+        })
+
+        it('lexical form "0" serializes to false', () => {
+            expect(serializeBoolean('0')).to.equal(expected('false'))
+        })
+
+        // Invalid lexical forms must fall through to the verbose form so no data is lost
+        const expectedVerbose = (token) => `@prefix : </doc#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+
+<https://subject.example> <https://predicate.example> ${token}.
+
+`
+
+        it('invalid lexical form "yes" serializes verbosely', () => {
+            expect(serializeBoolean('yes')).to.equal(expectedVerbose('"yes"^^xsd:boolean'))
+        })
+
+        it('invalid lexical form "TRUE" serializes verbosely', () => {
+            expect(serializeBoolean('TRUE')).to.equal(expectedVerbose('"TRUE"^^xsd:boolean'))
+        })
+
+        it('invalid lexical form "2" serializes verbosely', () => {
+            expect(serializeBoolean('2')).to.equal(expectedVerbose('"2"^^xsd:boolean'))
+        })
+
+        it('invalid empty lexical form serializes verbosely', () => {
+            expect(serializeBoolean('')).to.equal(expectedVerbose('""^^xsd:boolean'))
+        })
+
+        it('invalid lexical form "01" serializes verbosely', () => {
+            expect(serializeBoolean('01')).to.equal(expectedVerbose('"01"^^xsd:boolean'))
+        })
+    })
+
+    describe('typed literals with valid and invalid lexical forms', () => {
+        const serializeTyped = (lexicalForm, datatype) => {
+            const doc = sym("https://example.net/doc")
+            const statement = st(
+                sym('https://subject.example'),
+                sym('https://predicate.example'),
+                lit(lexicalForm, undefined, sym(`http://www.w3.org/2001/XMLSchema#${datatype}`)),
+                doc
+            )
+            const kb = graph()
+            kb.add(statement)
+            return serialize(doc, kb, null, 'text/turtle')
+        }
+        const expectedNative = (token) => `@prefix : </doc#>.
+
+<https://subject.example> <https://predicate.example> ${token} .
+
+`
+        const expectedVerbose = (token) => `@prefix : </doc#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+
+<https://subject.example> <https://predicate.example> ${token}.
+
+`
+
+        describe('integers', () => {
+            it('valid lexical forms serialize natively', () => {
+                expect(serializeTyped('42', 'integer')).to.equal(expectedNative('42'))
+                expect(serializeTyped('-7', 'integer')).to.equal(expectedNative('-7'))
+                expect(serializeTyped('+3', 'integer')).to.equal(expectedNative('+3'))
+            })
+
+            it('invalid lexical forms serialize verbosely', () => {
+                expect(serializeTyped('abc', 'integer')).to.equal(expectedVerbose('"abc"^^xsd:integer'))
+                expect(serializeTyped('1.5', 'integer')).to.equal(expectedVerbose('"1.5"^^xsd:integer'))
+                expect(serializeTyped('', 'integer')).to.equal(expectedVerbose('""^^xsd:integer'))
+                expect(serializeTyped('0x10', 'integer')).to.equal(expectedVerbose('"0x10"^^xsd:integer'))
+            })
+        })
+
+        describe('decimals', () => {
+            it('valid lexical forms serialize natively', () => {
+                expect(serializeTyped('3.14', 'decimal')).to.equal(expectedNative('3.14'))
+                expect(serializeTyped('-0.5', 'decimal')).to.equal(expectedNative('-0.5'))
+                expect(serializeTyped('.5', 'decimal')).to.equal(expectedNative('.5'))
+                expect(serializeTyped('5', 'decimal')).to.equal(expectedNative('5.0'))
+                expect(serializeTyped('2.', 'decimal')).to.equal(expectedNative('2.0'))
+            })
+
+            it('invalid lexical forms serialize verbosely', () => {
+                expect(serializeTyped('1.2.3', 'decimal')).to.equal(expectedVerbose('"1.2.3"^^xsd:decimal'))
+                expect(serializeTyped('abc', 'decimal')).to.equal(expectedVerbose('"abc"^^xsd:decimal'))
+                expect(serializeTyped('.', 'decimal')).to.equal(expectedVerbose('"."^^xsd:decimal'))
+                expect(serializeTyped('1e5', 'decimal')).to.equal(expectedVerbose('"1e5"^^xsd:decimal'))
+            })
+        })
+
+        describe('doubles', () => {
+            it('valid lexical forms serialize natively', () => {
+                expect(serializeTyped('1.0e10', 'double')).to.equal(expectedNative('1.0e10'))
+                expect(serializeTyped('1E5', 'double')).to.equal(expectedNative('1E5'))
+                expect(serializeTyped('-3.14e-2', 'double')).to.equal(expectedNative('-3.14e-2'))
+            })
+
+            it('valid xsd:double lexical forms without a native Turtle form serialize verbosely', () => {
+                // INF, -INF and NaN are valid xsd:double values but not valid Turtle DOUBLE tokens
+                expect(serializeTyped('NaN', 'double')).to.equal(expectedVerbose('"NaN"^^xsd:double'))
+                expect(serializeTyped('INF', 'double')).to.equal(expectedVerbose('"INF"^^xsd:double'))
+                expect(serializeTyped('-INF', 'double')).to.equal(expectedVerbose('"-INF"^^xsd:double'))
+            })
+
+            it('invalid lexical forms serialize verbosely', () => {
+                expect(serializeTyped('abc', 'double')).to.equal(expectedVerbose('"abc"^^xsd:double'))
+                expect(serializeTyped('1.2.3', 'double')).to.equal(expectedVerbose('"1.2.3"^^xsd:double'))
+            })
+        })
+
+        describe('invalid lexical forms round-trip without data loss', () => {
+            const roundTrip = (lexicalForm, datatype) => {
+                const doc = sym("https://example.net/doc")
+                const ttl = serializeTyped(lexicalForm, datatype)
+                const kb = graph()
+                parse(ttl, kb, doc.uri, 'text/turtle')
+                return kb.any(sym('https://subject.example'), sym('https://predicate.example'))
+            }
+            const cases = {
+                boolean: ['yes', 'TRUE', '2', '', '01'],
+                integer: ['abc', '1.5', '', '0x10'],
+                decimal: ['1.2.3', 'abc', '.', '1e5'],
+                double: ['NaN', 'INF', '-INF', 'abc', '1.2.3'],
+            }
+            Object.entries(cases).forEach(([datatype, lexicalForms]) => {
+                lexicalForms.forEach(lexicalForm => {
+                    it(`preserves "${lexicalForm}"^^xsd:${datatype}`, () => {
+                        const recovered = roundTrip(lexicalForm, datatype)
+                        expect(recovered.value).to.equal(lexicalForm)
+                        expect(recovered.datatype.uri).to.equal(`http://www.w3.org/2001/XMLSchema#${datatype}`)
+                    })
+                })
+            })
+        })
+    })
+
   describe('namespaces', () => {
     it('producing [prefix][colon] [dot]', () => {
       // when a symbol has a trailing slash, the automatic prefix production results in a prefixed symbol with no local name
