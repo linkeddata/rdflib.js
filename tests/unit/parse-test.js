@@ -214,6 +214,71 @@ ex:myid ex:prop1 [ ex:prop2 [ ex:prop3 "value" ] ].
       })
     })
   })
+
+  // Turtle 1.1 (W3C Recommendation 2014, section 2.4) has two spellings of each directive:
+  // '@prefix p: <iri> .' / '@base <iri> .' and the SPARQL-style 'PREFIX p: <iri>' / 'BASE <iri>',
+  // which are case-insensitive and take no trailing '.'. Cases follow the W3C Turtle test suite.
+  describe('ttl with SPARQL-style directives', () => {
+    const base = 'http://www.w3.org/2013/TurtleTests/doc.ttl'
+    const T = 'http://www.w3.org/2013/TurtleTests/'
+    function parseTtl(content) {
+      const store = DataFactory.graph()
+      parse(content, store, base, 'text/turtle')
+      return store
+    }
+    function only(store) {
+      expect(store.statements).to.have.length(1)
+      const [st] = store.statements
+      return [st.subject.value, st.predicate.value, st.object.value]
+    }
+
+    it('parses PREFIX (sparql_prefix)', () => {
+      const store = parseTtl(`PREFIX : <${T}>\n:s :p :o .`)
+      expect(only(store)).to.eql([T + 's', T + 'p', T + 'o'])
+    })
+
+    it('parses PREFIX case-insensitively (SPARQL_style_prefix)', () => {
+      const store = parseTtl(`PrEfIx p: <${T}>\np:s p:p p:o .`)
+      expect(only(store)).to.eql([T + 's', T + 'p', T + 'o'])
+    })
+
+    it('parses BASE (base-03)', () => {
+      const store = parseTtl(`BASE <${T}>\n<s> <p> <o> .`)
+      expect(only(store)).to.eql([T + 's', T + 'p', T + 'o'])
+    })
+
+    it('parses lowercase base', () => {
+      const store = parseTtl(`base <${T}>\n<s> <p> <o> .`)
+      expect(only(store)).to.eql([T + 's', T + 'p', T + 'o'])
+    })
+
+    it('parses a document that is only a PREFIX line', () => {
+      expect(parseTtl(`PREFIX oslc: <http://open-services.net/ns/core#>\n`).statements).to.have.length(0)
+    })
+
+    it('mixes both spellings in one document', () => {
+      const store = parseTtl(`@prefix a: <${T}a/> .\nPREFIX b: <${T}b/>\na:s b:p a:o .`)
+      expect(only(store)).to.eql([T + 'a/s', T + 'b/p', T + 'a/o'])
+    })
+
+    it('binds the PREFIX namespace in the store', () => {
+      const store = parseTtl(`PREFIX ex: <${T}>\nex:s ex:p ex:o .`)
+      expect(store.namespaces.ex).to.eql(T)
+    })
+
+    it('still parses a prefix named "prefix" or "base"', () => {
+      const store = parseTtl(`@prefix prefix: <${T}> .\n@prefix base: <${T}> .\nprefix:s base:p prefix:o .`)
+      expect(only(store)).to.eql([T + 's', T + 'p', T + 'o'])
+    })
+
+    it('rejects a trailing "." after PREFIX (turtle-syntax-bad-prefix with dot)', () => {
+      expect(() => parseTtl(`PREFIX : <${T}> .\n:s :p :o .`)).to.throw()
+    })
+
+    it('rejects PREFIX with no IRI', () => {
+      expect(() => parseTtl(`PREFIX :\n:s :p :o .`)).to.throw()
+    })
+  })
 }) // ttl
 
   describe('n-triples', () => {

@@ -354,6 +354,11 @@ export class SinkParser {
         if ((i < 0)) {
             return i
         }
+        // Turtle 1.1 SPARQL-style PREFIX/BASE: case-insensitive, and no '.' follows.
+        var j = this.sparqlDirective(str, i)
+        if ((j >= 0)) {
+            return j
+        }
         var j = this.directive(str, i)
         if ((j >= 0)) {
             return this.checkDot(str, j)
@@ -459,47 +464,72 @@ export class SinkParser {
         }
         var j = this.tok("prefix", str, i)
         if ((j >= 0)) {
-            var t = new pyjslib_List([])
-            var i = this.qname(str, j, t)
-            if ((i < 0)) {
-                throw BadSyntax(this._thisDoc, this.lines, str, j, "expected qname after @prefix")
-            }
-            var j = this.uri_ref2(str, i, t)
-            if ((j < 0)) {
-                throw BadSyntax(this._thisDoc, this.lines, str, i, "expected <uriref> after @prefix _qname_")
-            }
-            var ns = t[1].uri
-            if (this._baseURI) {
-                var ns = uripath_join(this._baseURI, ns)
-            }
-            else {
-                assertFudge((ns.indexOf(":") >= 0), "With no base URI, cannot handle relative URI for NS")
-            }
-            assertFudge((ns.indexOf(":") >= 0))
-            this._bindings[t[0][0]] = ( ns)
-
-            this.bind(t[0][0], hexify(ns))
-            return j
+            return this.prefixDirectiveBody(str, j)
         }
         var j = this.tok("base", str, i)
         if ((j >= 0)) {
-            var t = new pyjslib_List([])
-            var i = this.uri_ref2(str, j, t)
-            if ((i < 0)) {
-                throw BadSyntax(this._thisDoc, this.lines, str, j, "expected <uri> after @base ")
-            }
-            var ns = t[0].uri
-            if (this._baseURI) {
-                var ns = uripath_join(this._baseURI, ns)
-            }
-            else {
-                throw BadSyntax(this._thisDoc, this.lines, str, j,  (  ( "With no previous base URI, cannot use relative URI in @base  <" + ns )  + ">" ) )
-            }
-            assertFudge((ns.indexOf(":") >= 0))
-            this._baseURI = ns
-            return i
+            return this.baseDirectiveBody(str, j)
         }
         return -1
+    };
+    /*
+    Turtle 1.1 sparqlPrefix ::= "PREFIX" PNAME_NS IRIREF and sparqlBase ::= "BASE" IRIREF.
+    The keyword is matched case-insensitively, has no leading '@', and must be followed by
+    whitespace, so a prefixed name such as prefix:s or base:p is still read as a term.
+    Returns the index after the IRI (no '.' is consumed), or -1 when this is not one.*/
+    sparqlDirective(str, i) {
+        var whitespace = "\t\n\v\f\r "
+        var keywords = ["prefix", "base"]
+        for (var n = 0; n < keywords.length; n++) {
+            var kw = keywords[n]
+            var k = i + kw.length
+            if (str.slice(i, k).toLowerCase() === kw && k < str.length && whitespace.indexOf(str.charAt(k)) >= 0) {
+                return kw === "prefix"
+                    ? this.prefixDirectiveBody(str, k)
+                    : this.baseDirectiveBody(str, k)
+            }
+        }
+        return -1
+    };
+    prefixDirectiveBody(str, j) {
+        var t = new pyjslib_List([])
+        var i = this.qname(str, j, t)
+        if ((i < 0)) {
+            throw BadSyntax(this._thisDoc, this.lines, str, j, "expected qname after @prefix")
+        }
+        var j = this.uri_ref2(str, i, t)
+        if ((j < 0)) {
+            throw BadSyntax(this._thisDoc, this.lines, str, i, "expected <uriref> after @prefix _qname_")
+        }
+        var ns = t[1].uri
+        if (this._baseURI) {
+            var ns = uripath_join(this._baseURI, ns)
+        }
+        else {
+            assertFudge((ns.indexOf(":") >= 0), "With no base URI, cannot handle relative URI for NS")
+        }
+        assertFudge((ns.indexOf(":") >= 0))
+        this._bindings[t[0][0]] = ( ns)
+
+        this.bind(t[0][0], hexify(ns))
+        return j
+    };
+    baseDirectiveBody(str, j) {
+        var t = new pyjslib_List([])
+        var i = this.uri_ref2(str, j, t)
+        if ((i < 0)) {
+            throw BadSyntax(this._thisDoc, this.lines, str, j, "expected <uri> after @base ")
+        }
+        var ns = t[0].uri
+        if (this._baseURI) {
+            var ns = uripath_join(this._baseURI, ns)
+        }
+        else {
+            throw BadSyntax(this._thisDoc, this.lines, str, j,  (  ( "With no previous base URI, cannot use relative URI in @base  <" + ns )  + ">" ) )
+        }
+        assertFudge((ns.indexOf(":") >= 0))
+        this._baseURI = ns
+        return i
     };
     bind(qn, uri) {
         if ((qn == "")) {
